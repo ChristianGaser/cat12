@@ -29,30 +29,40 @@
 
             <!-- Introduction -->
             <div id="content">
-              <h1>Manual Computational Anatomy Toolbox - CAT12</h1>
+              
+              <h1>Manual Computational Anatomy Toolbox CAT12</h1>
                             
               <!-- ################################################################################# -->
-              <h2 id="intro">Introduction and Overview</h2>
+              <h2 id="intro">Introduction and overview</h2>
               
-              <p class="image right" ><img text-align="center" width=40% height=auto alt="3" src="images/cat_logo.png"></p>
+              <!-- ############################# -->
+              <h4 id="intro_cat12">Introduction</h4>
+              <p class="image right"><img width=100% src="images/human_brain.png"></p>
+              <p>
+                The brain is the most complex organ of the human body, and no two brains are alike. The study of the human brain is still in its infancy, but rapid technical advances in image acquisition and image processing have allowed for ever more refined characterizations of its micro- and macro-structure. Enormous efforts, for example, have been made to map differences between groups (e.g., young vs. old, diseased vs. healthy, male vs. female), to capture changes over time (e.g., from infancy to old age, or in the framework of neuroplasticity, as a result of a clinical intervention), or to assess correlations of brain attributes (e.g., measures of length, volume, shape) with behavioral, cognitive, or clinical parameters.
+              </p>
+              <div class="image left"><img width=60% src="images/cat_logo.png"></div>
+              <p>
+                CAT12 is a powerful suite of tools for morphometric analyses with an intuitive graphical user interface, but also usable as a shell script. CAT is suitable for beginners, casual users, experts, and developers alike providing a comprehensive set of analysis options, workflows, and integrated pipelines. The available analysis streams allow for voxel-based, surface-based, as well as region-based morphometric analyses. Importantly, CAT includes various quality control options and covers the entire analysis workflow, from cross-sectional or longitudinal data processing, to the statistical analysis, and visualization of results. 
+              </p>
+
+              <!-- ############################# -->
+              <h4 id="overview">Overview about the manual</h4>
               <p>This manual is intended to help any user to perform a computational anatomy analysis using the CAT12 Toolbox. Although it mainly focuses on voxel-based morphometry (VBM) other variants of computational analysis such as deformation-based morphometry (DBM), surface-based morphometry (SBM), and region of interest (ROI) morphometric analysis are also presented and can be applied with few changes.</p>
-              The manual can be divided into four main sections:<br/>
-              
+
+              The manual can be divided into four main sections:<br/>              
               <ul>
                 <li>Naturally, a quick guide of how to <a href="#get_started">get started</a> is given at the beginning. This section provides information about <a href="#download">downloading and installing</a> the software and <a href="#starting">starting</a> the Toolbox. Also, a <a href="#basic_vbm">brief overview</a> of the steps of a VBM analysis is given.</li>
                 <li>This is followed by a <a href="#process_data">detailed description of a basic VBM analysis</a> that guides the user step-by-step through the entire process - from preprocessing to contrast selection. This description should provide all the information necessary to successfully analyze most studies.</li>
                 <li>There are some specific cases of VBM analyses, for which the basic analysis workflow has to be adapted. These cases are <a href="#long">longitudinal studies</a> and studies in <a href="#children">children or special patient populations</a>. Relevant changes to a basic VBM analysis are described here and how these changes can be applied. Only the changes are described here - steps such as quality control or smoothing are the same as those described in the basic analysis and are not repeated a second time.</li>
-                <li>The guide concludes with <a href="#reg_info">information about native, normalized, and modulated volumes</a> that determine how the results can be interpreted. Also, an overview of the <a href="#naming">naming conventions</a> used and <a href="#tech_info">technical information</a> is given.</li>
+                <li>The guide concludes with <a href="#add_info">additional information</a> about spaces after registration, naming conventions used and other hints.</li>
               </ul>
-            </div>  
-          
-          
-            <!-- Quick Start Guide -->
-            <div id="content">
               
               <!-- ################################################################################# -->
-              <h2 id="quick">Quick Start Guide</h2>
-              <h4 id="vbm_data">VBM Data</h4>
+              <h2 id="quick">Quick start guide</h2>
+
+              <!-- ############################# -->
+              <h4 id="vbm_data">VBM data</h4>
               
               <ul>
                 <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data using defaults (use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.long');">Segment Longitudinal Data</a> for longitudinal data).</li>
@@ -75,11 +85,11 @@
                 <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x');">Transform and Threshold SPM-maps</a> to (log-scaled) p-maps or correlation maps.</li>
                 <li>Optionally, you can try <a class="function" href="matlab:if exist(fullfile(spm('dir'),'toolbox','TFCE')),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">Threshold-Free Cluster Enhancement</a> (TFCE) with the SPM.mat file of a previously estimated statistical design.</li>
                 <li>Optionally <a class="function" href="matlab:cat_vol_slice_overlay;">Overlay Selected Slices</a>. If you are using log-p scaled maps from "Transform SPM-maps" without thresholds or the TFCE_log maps, use the following values as the lower range for the colormap for the thresholding: 1.3 (P&lt;0.05); 2 (P&lt;0.01); 3 (P&lt;0.001).</li>
-                <li>Optionally estimate results for ROI analysis using <a class="function" href="matlab:cat_stat_analyze_ROIs;">Analyze ROIs</a>. Here, the SPM.mat file of the already estimated statistical design will be used. For more information, see <a href="cat_methods_RBM.html">Atlas creation and ROI based analysis</a>.</li>
+                <li>Optionally estimate results for ROI analysis using <a class="function" href="matlab:cat_stat_analyze_ROIs;">Analyze ROIs</a>. Here, the SPM.mat file of the already estimated statistical design will be used. For more information, see <a href="#atlas">Atlas Creation and ROI based Analysis</a>.</li>
               </ul>
           
               <!-- ############################# -->
-              <h4 id="add_surf">Additional Surface Data</h4>
+              <h4 id="add_surf">Additional surface data</h4>
               
               <ul>
                 <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data and also select "Surface and thickness estimation" under "Writing options" (for longitudinal data use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.long');">Segment Longitudinal Data</a>).</li>
@@ -101,192 +111,222 @@
                 <li>Optionally, you can try <a class="function" href="matlab:if exist(fullfile(spm('dir'),'toolbox','TFCE')),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">Threshold-Free Cluster Enhancement</a> (TFCE) with the SPM.mat file of a previously estimated statistical design.</li>
                 <li>Optionally <a class="function" href="matlab:y=cat_surf_results;">Surface Overlay</a> for both hemispheres. Select the results (preferably saved as log-p maps with "Transform SPM-maps" or the TFCE_log maps with the different methods for multiple comparison correction) for the merged hemispheres to display rendering views of your results.</li>
                 <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surf2roi');">Extract ROI-based Surface Values</a> such as gyrification or fractal dimension to provide ROI analysis. Since version 12.7 extraction of ROI-based thickness is not necessary anymore because this is now included in the segmentation pipeline.</li>
-                <li>Optionally estimate results for ROI analysis using <a class="function" href="matlab:cat_stat_analyze_ROIs;">Analyze ROIs</a>. Here, the SPM.mat file of the already estimated statistical design will be used. For more information, see <a href="cat_methods_RBM.html">Atlas creation and ROI based analysis</a>.</li>
+                <li>Optionally estimate results for ROI analysis using <a class="function" href="matlab:cat_stat_analyze_ROIs;">Analyze ROIs</a>. Here, the SPM.mat file of the already estimated statistical design will be used. For more information, see <a href="#atlas">Atlas Creation and ROI based Analysis</a>.</li>
               </ul>
           
               <!-- ############################# -->
-              <h4 id="add_opts">Additional Options</h4>
+              <h4 id="add_opts">Additional options</h4>
               <p>Additional parameters and options are displayed in the <a class="function" href="matlab:cat12('expert');">CAT12 expert mode</a>. Please note that this mode is for experienced users only.</p>
           
               <!-- ############################# -->
-              <h4 id="errors">Errors During Preprocessing</h4>
+              <h4 id="errors">Errors during preprocessing</h4>
               <p>Please use the <a class="function" href="matlab:cat_io_senderrormail;">Report Error</a> function if any errors during preprocessing occurred. You first have to select the "err" directory, which is located in the folder of the failed record, and finally, the specified zip-file should be attached manually in the mail.</p>
           
               <!-- ############################# -->
               <h4><sup>1</sup>Note to filter sizes for Gaussian smoothing</h4>
               <p>Due to the high accuracy of the spatial registration approaches used in CAT12, you can also try to use smaller filter sizes of only a few millimeter. However, for very small filter sizes or even no filtering, you have to apply a non-parametric permutation test such as the <a class="function" href="matlab:if exist(fullfile(spm('dir'),'toolbox','TFCE')),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">TFCE-statistics</a>. <br/>
               Please also note that for the analysis of cortical folding measures such as gyrification or cortical complexity the filter sizes have to be larger (i.e. in the range of 15-25mm). This is due to the underlying nature of this measure that reflects contributions from both sulci as well as gyri. Therefore, the filter size should exceed the distance between a gyral crown and a sulcal fundus.</p>
-            </div>  
+
           
             <!-- ################################################################################# -->
-            <h2 id="version">Version Information</h2>
+            <h2 id="version">Version information</h2>
             
             <p>
               Preprocessing should remain unaffected until the next minor version number (12.x). New processing of your data is not necessary if the minor version number of CAT12 remains unchanged.
             </p>
             
-            <!-- ############################# -->
-            <h3>Changes in Version CAT12.8.1 (1975)</h3>
-            
-            <u>Changes in preprocessing pipeline (which affects your results compared to CAT12.8)</u>
-            <ul>
-              <li>The longitudinal pipeline has been largely updated and is no longer compatible with preprocessing with version 12.8:
+            <!-- ###################################### -->
+            <h3>Changes in version CAT12.8.1 (1975)</h3>
+            <details>            
+              <summary><u>Changes in preprocessing pipeline (which affects your results compared to CAT12.8)</u></summary>
               <ul>
-                <li>The estimate of subject-specific TPM should now be more stable and less sensitive to changes between time points.</li>
-                <li>For data where the brain/head is still growing between time points and major changes are expected, a new longitudinal development model was added. For this type of data, an adapted pipeline was created that is very similar to the longitudinal aging model, but uses a time point-independent affine registration to adjust for brain/head growth. In addition, this model uses a subject-specific TPM based on the average image.</li>
-                <li>An additional <a href="cat_methods_catlongreport.html">longitudinal report</a> is now provided to better assess differences between time points.</li>
-              </ul></li>
-            </ul>
-        
-            <!-- ############################# -->
-            <h3>Changes in Version CAT12.8 (1830)</h3>
+                <li>The longitudinal pipeline has been largely updated and is no longer compatible with preprocessing with version 12.8:
+                <ul>
+                  <li>The estimate of subject-specific TPM should now be more stable and less sensitive to changes between time points.</li>
+                  <li>For data where the brain/head is still growing between time points and major changes are expected, a new longitudinal development model was added. For this type of data, an adapted pipeline was created that is very similar to the longitudinal aging model, but uses a time point-independent affine registration to adjust for brain/head growth. In addition, this model uses a subject-specific TPM based on the average image.</li>
+                  <li>An additional longitudinal report is now provided to better assess differences between time points.</li>
+                </ul></li>
+              </ul>        
+            </details>
+            
+            <!-- ###################################### -->
+            <h3>Changes in version CAT12.8 (1830)</h3>
                
-            <u>Changes in preprocessing pipeline (which affects your results compared to CAT12.7)</u>
-            <ul>
-              <li>Volumetric templates, atlases, and TPMs are now transformed to MNI152NLin2009cAsym space to better match existing standards. The templates_volume folder is now renamed to ''templates_MNI152NLin2009cAsym'' to indicate the template space used. The Dartel and Geodesic Shooting templates are renamed or relocated:
+            <details>
+              <summary><u>Changes in preprocessing pipeline (which affects your results compared to CAT12.7)</u></summary>
               <ul>
-                <li>templates_volumes/Template_0_IXI555_MNI152_GS.nii &rarr; templates_MNI152NLin2009cAsym/Template_0_GS.nii</li>
-                <li>templates_volumes/Template_1_IXI555_MNI152.nii &rarr; templates_MNI152NLin2009cAsym/Template_1_Dartel.nii</li>
-                <li>templates_volumes/TPM_Age11.5.nii &rarr; templates_MNI152NLin2009cAsym/TPM_Age11.5.nii</li>
-                <li>templates_volumes/Template_T1_IXI555_MNI152_GS.nii &rarr; templates_MNI152NLin2009cAsym/Template_T1.nii</li>
-                <li>spm12/toolbox/FieldMap/T1.nii &rarr; templates_MNI152NLin2009cAsym/T1.nii</li>
-                <li>spm12/toolbox/FieldMap/brainmask.nii &rarr; templates_MNI152NLin2009cAsym/brainmask.nii</li>
-              </ul></li>
-              <li>The volumetric atlases have been revised and are now defined with a spatial resolution of 1mm, except for the Cobra atlas, which is defined with 0.6mm resolution. The labels of the original atlases were either transformed from the original data or recreated using a maximum likelihood approach when manual labels were available for all subjects (Cobra, LPBA40, IBSR, Hammers, Neuromorphometrics). In addition, the original labels are now used for all atlases if possible. Some atlases were updated to include new regions (Julichbrain, Hammers)  and a new atlas of thalamic nuclei was added. Please note that this will also result in slight differences in ROI estimates compared to previous versions.</li>
-              <li>The bounding box of the Dartel and Geodesic Shooting templates has been changed, resulting in a slightly different image size of the spatially registered images (i.e. modulated normalized segmentations). Therefore, older preprocessed data should not (and cannot) be mixed with the new processed data (which is intended).</li>
-              <li>Transformed T1 Dartel/GS surface templates to the new MNI152NLin2009cAsym space:
-              <ul>
-                <li>templates_surfaces/lh.central.Template_T1_IXI555_MNI152_GS.gii  &rarr; templates_surfaces/lh.central.Template_T1.gii </li>
-                <li>templates_surfaces/rh.central.Template_T1_IXI555_MNI152_GS.gii  &rarr; templates_surfaces/rh.central.Template_T1.gii </li>
-                <li>templates_surfaces_32k/lh.central.Template_T1_IXI555_MNI152_GS.gii  &rarr; templates_surfaces_32k/lh.central.Template_T1.gii </li>
-                <li>templates_surfaces_32k/rh.central.Template_T1_IXI555_MNI152_GS.gii  &rarr; templates_surfaces_32k/rh.central.Template_T1.gii </li>
-              </ul></li>
-              <li>The surface pipeline has been optimized to better handle data at different spatial resolutions.</li>
-              <li>Older preprocessing pipelines (12.1, 12.3, 12.6) were removed because their support became too difficult.</li>
-            </ul>
+                <li>Volumetric templates, atlases, and TPMs are now transformed to MNI152NLin2009cAsym space to better match existing standards. The templates_volume folder is now renamed to ''templates_MNI152NLin2009cAsym'' to indicate the template space used. The Dartel and Geodesic Shooting templates are renamed or relocated:
+                <ul>
+                  <li>templates_volumes/Template_0_IXI555_MNI152_GS.nii &rarr; templates_MNI152NLin2009cAsym/Template_0_GS.nii</li>
+                  <li>templates_volumes/Template_1_IXI555_MNI152.nii &rarr; templates_MNI152NLin2009cAsym/Template_1_Dartel.nii</li>
+                  <li>templates_volumes/TPM_Age11.5.nii &rarr; templates_MNI152NLin2009cAsym/TPM_Age11.5.nii</li>
+                  <li>templates_volumes/Template_T1_IXI555_MNI152_GS.nii &rarr; templates_MNI152NLin2009cAsym/Template_T1.nii</li>
+                  <li>spm12/toolbox/FieldMap/T1.nii &rarr; templates_MNI152NLin2009cAsym/T1.nii</li>
+                  <li>spm12/toolbox/FieldMap/brainmask.nii &rarr; templates_MNI152NLin2009cAsym/brainmask.nii</li>
+                </ul></li>
+                <li>The volumetric atlases have been revised and are now defined with a spatial resolution of 1mm, except for the Cobra atlas, which is defined with 0.6mm resolution. The labels of the original atlases were either transformed from the original data or recreated using a maximum likelihood approach when manual labels were available for all subjects (Cobra, LPBA40, IBSR, Hammers, Neuromorphometrics). In addition, the original labels are now used for all atlases if possible. Some atlases were updated to include new regions (Julichbrain, Hammers)  and a new atlas of thalamic nuclei was added. Please note that this will also result in slight differences in ROI estimates compared to previous versions.</li>
+                <li>The bounding box of the Dartel and Geodesic Shooting templates has been changed, resulting in a slightly different image size of the spatially registered images (i.e. modulated normalized segmentations). Therefore, older preprocessed data should not (and cannot) be mixed with the new processed data (which is intended).</li>
+                <li>Transformed T1 Dartel/GS surface templates to the new MNI152NLin2009cAsym space:
+                <ul>
+                  <li>templates_surfaces/lh.central.Template_T1_IXI555_MNI152_GS.gii  &rarr; templates_surfaces/lh.central.Template_T1.gii </li>
+                  <li>templates_surfaces/rh.central.Template_T1_IXI555_MNI152_GS.gii  &rarr; templates_surfaces/rh.central.Template_T1.gii </li>
+                  <li>templates_surfaces_32k/lh.central.Template_T1_IXI555_MNI152_GS.gii  &rarr; templates_surfaces_32k/lh.central.Template_T1.gii </li>
+                  <li>templates_surfaces_32k/rh.central.Template_T1_IXI555_MNI152_GS.gii  &rarr; templates_surfaces_32k/rh.central.Template_T1.gii </li>
+                </ul></li>
+                <li>The surface pipeline has been optimized to better handle data at different spatial resolutions.</li>
+                <li>Older preprocessing pipelines (12.1, 12.3, 12.6) were removed because their support became too difficult.</li>
+              </ul>
+            </details>            
 
-            <u>Important new features</u>
-            <ul>
-              <li>The Mahalanobis distance in the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_cov');">Quality Check</a> is now replaced by the normalized ratio between overall weighted image quality (IQR) and mean correlation. A low ratio indicates good quality before and after preprocessing and means that IQR is highly rated (resulting in a low nominal number/grade) and/or mean correlation is high. This is hopefully a more intuitive measure to combine image quality measurement before and after preprocessing.</li>
-              <li>CAT12 now allows the use of the BIDS directory structure for storing data (not possible for the longitudinal pipeline). A BIDS path can be defined relative to the participant level directory. The segmentation module now supports the input of nii.gz files (not possible for the longitudinal pipeline).</li>
-              <li>The <a class="function" href="matlab:spm_jobman('interactive','cat_stat_factorial_design.m');">Basic Models</a> function has been completely restructured and simplified. There are now only two models available for: (1) cross-sectional data and (2) longitudinal data. Options that are not relevant for VBM or SBM have been removed. In addition, a new experimental option has been added that allows a voxel-wise covariate to be defined. This can be used (depending on the contrast defined) to (1) remove the nuisance effect of structural data (e.g. GM) on functional data or (2) examine the relationship (regression) between functional and structural data. Additionally, an interaction can be modeled to investigate whether the regression between functional and structural data differs between two groups. Please note that the saved vSPM.mat file can only be evaluated with the TFCE toolbox.</li>
-              <li>Added a new function cat_io_data2mat.m to save spatially registered volume or resampled surface data as Matlab data matrix for further use with machine learning tools. Volume data can be resampled to lower spatial resolutions and can optionally be masked to remove non-brain areas.</li>
-              <li>Added a new function <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.ROIsum');">cat_vol_ROI_summarize.m</a> to summarise co-registered volume data within a region of interest (ROI). This tool can be used in order to estimate ROI information for other (co-registered) modalities (i.e. DTI, (rs)fMRI) which can be also defined as 4D data. Several predefined summary functions are available, as well as the possibility to define your own function.</li>
-              <li>Added a new function <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.quality_measures');">cat_stat_quality_measures.m</a> to estimate and save quality measures for very large samples.</li>
-              <li>Added standalone tools for de-facing, DICOM import, and estimating and saving quality measures for large samples.</li>
-            </ul>
+            <details>
+              <summary><u>Important new features</u></summary>
+              <ul>
+                <li>The Mahalanobis distance in the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_cov');">Quality Check</a> is now replaced by the normalized ratio between overall weighted image quality (IQR) and mean correlation. A low ratio indicates good quality before and after preprocessing and means that IQR is highly rated (resulting in a low nominal number/grade) and/or mean correlation is high. This is hopefully a more intuitive measure to combine image quality measurement before and after preprocessing.</li>
+                <li>CAT12 now allows the use of the BIDS directory structure for storing data (not possible for the longitudinal pipeline). A BIDS path can be defined relative to the participant level directory. The segmentation module now supports the input of nii.gz files (not possible for the longitudinal pipeline).</li>
+                <li>The <a class="function" href="matlab:spm_jobman('interactive','cat_stat_factorial_design.m');">Basic Models</a> function has been completely restructured and simplified. There are now only two models available for: (1) cross-sectional data and (2) longitudinal data. Options that are not relevant for VBM or SBM have been removed. In addition, a new experimental option has been added that allows a voxel-wise covariate to be defined. This can be used (depending on the contrast defined) to (1) remove the nuisance effect of structural data (e.g. GM) on functional data or (2) examine the relationship (regression) between functional and structural data. Additionally, an interaction can be modeled to investigate whether the regression between functional and structural data differs between two groups. Please note that the saved vSPM.mat file can only be evaluated with the TFCE toolbox.</li>
+                <li>Added a new function cat_io_data2mat.m to save spatially registered volume or resampled surface data as Matlab data matrix for further use with machine learning tools. Volume data can be resampled to lower spatial resolutions and can optionally be masked to remove non-brain areas.</li>
+                <li>Added a new function <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.ROIsum');">cat_vol_ROI_summarize.m</a> to summarise co-registered volume data within a region of interest (ROI). This tool can be used in order to estimate ROI information for other (co-registered) modalities (i.e. DTI, (rs)fMRI) which can be also defined as 4D data. Several predefined summary functions are available, as well as the possibility to define your own function.</li>
+                <li>Added a new function <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.quality_measures');">cat_stat_quality_measures.m</a> to estimate and save quality measures for very large samples.</li>
+                <li>Added standalone tools for de-facing, DICOM import, and estimating and saving quality measures for large samples.</li>
+              </ul>
+            </details>            
         
-            <!-- ############################# -->
-            <h3>Changes in Version CAT12.7 (1700)</h3>
+            <!-- ###################################### -->
+            <h3>Changes in version CAT12.7 (1700)</h3>
 
-            <u>Changes in preprocessing pipeline (which affects your results compared to CAT12.6)</u>
-            <ul>
-              <li>Geodesic shooting registration and surface estimation are now used by default.</li>
-              <li>The surface pipeline is largely updated: (1) Parameters for surface reconstruction were optimized. (2) Freesurfer distance method Tfs is now implemented, which is computed as the average of  the closest distances from the pial to the white matter surface and from the white matter to the pial surface. This reduces the occurrence of larger thickness values and results in more reliable thickness measures. For mapping of 3D data the old thickness metric from PBT is more appropriate and is still used.</li>
-              <li>An additional longitudinal model is implemented that also takes into account deformations between time points. The use of deformations between the time points makes it possible to estimate and detect larger changes, while subtle effects over shorter periods of time in the range of weeks or a few months can be better detected with the model for small changes.</li>
-              <li>Minor changes were made to the segmentation approach to improve accuracy and reliability.</li>
-              <li>Internal resampling is now using a new ''optimal'' resolution setting to better support high-resolution data.</li>
-              <li>Changed recommendation and defaults for smoothing size to smaller values.</li>
-              <li>Renamed template folder for volumes to templates_volumes.</li>
-              <li>Atlases installed in spm12/atlas are now called cat12_atlasname.</li>
-              <li>The old AAL atlas has been replaced by the AAL3 atlas.</li>
-              <li>Cobra atlas is updated because of some previous inconsistencies.</li>
-            </ul>
-            <u>Important new features</u>
-            <ul>
-              <li>New GUI</li>
-              <li>Added older preprocessing pipelines (12.1, 12.3, 12.6) to provide compatible versions to previous preprocessing. These older preprocessing pipelines are available via the <a class="function" href="matlab:spm_jobman('interactive')">SPM batch editor</a (SPM &rarr; Tools &rarr; CAT12) or through expert mode.</li>
-              <li>Added simple batch for cross-sectional and longitudinal data that combines several processing steps from preprocessing to smoothing. These batches are available via the <a class="function" href="matlab:spm_jobman('interactive')">SPM batch editor</a (SPM &rarr; Tools &rarr; CAT12) or through expert mode.</li>
-              <li>The function <a class="function" href="matlab:y=cat_surf_results;">Display surface results</a> can now also visualize results from VBM analysis and map the 3D volume information onto the surface using an absmax mapping function inside the cortical band. The function is now renamed to ''Surface Overlay''.</li>
-              <li>You can call <a class="function" href="matlab:[hReg xSPM SPM] = cat_spm_results_ui('Setup');">Results</a> now from the CAT12 GUI with some new functionality for surfaces and the option to call TFCE results.</li>
-              <li>CAT12 now uses Piwik for anonymized CAT12 user statistics (i.e. version information, potential errors). See <a href="cat_statistics.html">CAT12 user statistics</a> for more information. This can be optionally disabled in <a class="function" href="matlab:open cat_defaults;">cat_defaults.m</a>.</li>
-              <li>The extraction of ROI-based thickness is not necessary anymore because this is now included in the segmentation pipeline in cat_main.m.</li>
-              <li>Changed gifti-format after resampling to use external dat-files. This increases processing speed and prevents the SPM.mat file for surfaces from becoming too large. This can be optionally disabled in <a class="function" href="matlab:open cat_defaults;">cat_defaults.m</a>.</li>
-              <li>The use of own atlases for ROI processing is now supported.</li>
-              <li>Updated and extended examples for statistical designs and respective contrasts in the CAT12 manual.</li>
-            </ul>
-            
-            <!-- ############################# -->
-            <h3>Changes in Version CAT12.6 (1445)</h3>
+            <details>            
+              <summary><u>Changes in preprocessing pipeline (which affects your results compared to CAT12.6)</u></summary>
+              <ul>
+                <li>Geodesic shooting registration and surface estimation are now used by default.</li>
+                <li>The surface pipeline is largely updated: (1) Parameters for surface reconstruction were optimized. (2) Freesurfer distance method Tfs is now implemented, which is computed as the average of  the closest distances from the pial to the white matter surface and from the white matter to the pial surface. This reduces the occurrence of larger thickness values and results in more reliable thickness measures. For mapping of 3D data the old thickness metric from PBT is more appropriate and is still used.</li>
+                <li>An additional longitudinal model is implemented that also takes into account deformations between time points. The use of deformations between the time points makes it possible to estimate and detect larger changes, while subtle effects over shorter periods of time in the range of weeks or a few months can be better detected with the model for small changes.</li>
+                <li>Minor changes were made to the segmentation approach to improve accuracy and reliability.</li>
+                <li>Internal resampling is now using a new ''optimal'' resolution setting to better support high-resolution data.</li>
+                <li>Changed recommendation and defaults for smoothing size to smaller values.</li>
+                <li>Renamed template folder for volumes to templates_volumes.</li>
+                <li>Atlases installed in spm12/atlas are now called cat12_atlasname.</li>
+                <li>The old AAL atlas has been replaced by the AAL3 atlas.</li>
+                <li>Cobra atlas is updated because of some previous inconsistencies.</li>
+              </ul>
+            </details>            
 
-            <u>Changes in preprocessing pipeline (which affects your results compared to CAT12.5)</u>
-            <ul>
-              <li>Two main parts of the preprocessing of CAT12 were largely updated: (1) Incorrect estimates of the initial affine registration were found to be critical for all subsequent preprocessing steps and mainly concerned skull-stripping and tissue segmentation. This was a particular problem in the brains of older people or children, where the thickness of the skull differs from that of the template. The new estimate of the initial affine registration should now be more robust. In the CAT report, the registered contour of the skull and the brain is now overlayed onto the image to allow for easier quality control. (2) Skull-stripping now uses a new adaptive probability region-growing (APRG) approach, which should also be more robust. APRG refines the probability maps of the SPM approach by region-growing techniques of the gcut approach with a final surface-based optimization strategy. This is currently the method with the most accurate and reliable results.</li>
-              <li>The longitudinal pipeline should now also be more sensitive for the detection of effects over longer time periods with VBM (ROI and SBM approaches are not affected by the length of the period). In earlier versions, the average image was used to estimate the spatial registration parameters for all time points. Sometimes this average image was not as accurate if the images of a subject were too different (e.g. due to large ventricular changes). Now, we rather use the average spatial registration parameters (i.e. deformations) of all time points, which makes the approach more robust for longer periods of time. However, the SPM12 Longitudinal Toolbox can be a good alternative for longer periods of time if you want to analyze your data voxel by voxel. Surface-based preprocessing and also the ROI estimates in CAT12 are not affected by the potentially lower sensitivity to larger changes, as the realigned images are used independently to create cortical surfaces, thickness, or ROI estimates.</li>
-            </ul>
-            <u>Important new features</u>
-            <ul>
-              <li>CAT report now additionally plots the contour of the registered skull and brain onto the image and visualizes skull-stripping. <a class="function" href="matlab:y=cat_surf_results;">Display surface results</a> is largely updated. </li>
-              <li>Parallelization options in CAT12 now enable subsequent batch jobs and are also  supported for longitudinal preprocessing.</li>
-            </ul>
+            <details>            
+              <summary><u>Important new features</u></summary>
+              <ul>
+                <li>New GUI</li>
+                <li>Added older preprocessing pipelines (12.1, 12.3, 12.6) to provide compatible versions to previous preprocessing. These older preprocessing pipelines are available via the <a class="function" href="matlab:spm_jobman('interactive')">SPM batch editor</a (SPM &rarr; Tools &rarr; CAT12) or through expert mode.</li>
+                <li>Added simple batch for cross-sectional and longitudinal data that combines several processing steps from preprocessing to smoothing. These batches are available via the <a class="function" href="matlab:spm_jobman('interactive')">SPM batch editor</a (SPM &rarr; Tools &rarr; CAT12) or through expert mode.</li>
+                <li>The function <a class="function" href="matlab:y=cat_surf_results;">Display surface results</a> can now also visualize results from VBM analysis and map the 3D volume information onto the surface using an absmax mapping function inside the cortical band. The function is now renamed to ''Surface Overlay''.</li>
+                <li>You can call <a class="function" href="matlab:[hReg xSPM SPM] = cat_spm_results_ui('Setup');">Results</a> now from the CAT12 GUI with some new functionality for surfaces and the option to call TFCE results.</li>
+                <li>CAT12 now uses Piwik for anonymized CAT12 user statistics (i.e. version information, potential errors). See <a href="cat_statistics.html">CAT12 user statistics</a> for more information. This can be optionally disabled in <a class="function" href="matlab:open cat_defaults;">cat_defaults.m</a>.</li>
+                <li>The extraction of ROI-based thickness is not necessary anymore because this is now included in the segmentation pipeline in cat_main.m.</li>
+                <li>Changed gifti-format after resampling to use external dat-files. This increases processing speed and prevents the SPM.mat file for surfaces from becoming too large. This can be optionally disabled in <a class="function" href="matlab:open cat_defaults;">cat_defaults.m</a>.</li>
+                <li>The use of own atlases for ROI processing is now supported.</li>
+                <li>Updated and extended examples for statistical designs and respective contrasts in the CAT12 manual.</li>
+              </ul>
+            </details>            
             
-            <!-- ############################# -->
-            <h3>Changes in Version CAT12.5 (1355)</h3>
+            <!-- ###################################### -->
+            <h3>Changes in version CAT12.6 (1445)</h3>
 
-            <u>Changes in preprocessing pipeline (which affects your results compared to CAT12.3)</u>
-            <ul>
-              <li>Detection of white matter hyperintensities (WMHs) is updated and again enabled by default.</li>
-              <li>The default internal interpolation setting is now "Fixed 1 mm" and offers a good trade-off between optimal quality and preprocessing time and memory demands. Standard structural data with a voxel resolution around 1 mm or even data with high in-plane resolution and large slice thickness (e.g. 0.5x0.5x1.5 mm) will benefit from this setting. If you have higher native resolutions the highres option "Fixed 0.8 mm" will sometimes offer slightly better preprocessing quality with an increase of preprocessing time and memory demands.</li>
-            </ul>
-            <u>Important new features</u>
-            <ul>
-              <li>CAT12 can now deal with lesions that have to be set to zero in your image using the Stroke Lesion Correction (SLC) in expert mode. These lesion areas are not used for segmentation or spatial registration, thus these preprocessing steps should be almost unaffected.</li>
-            </ul>
+            <details>            
+              <summary><u>Changes in preprocessing pipeline (which affects your results compared to CAT12.5)</u></summary>
+              <ul>
+                <li>Two main parts of the preprocessing of CAT12 were largely updated: (1) Incorrect estimates of the initial affine registration were found to be critical for all subsequent preprocessing steps and mainly concerned skull-stripping and tissue segmentation. This was a particular problem in the brains of older people or children, where the thickness of the skull differs from that of the template. The new estimate of the initial affine registration should now be more robust. In the CAT report, the registered contour of the skull and the brain is now overlayed onto the image to allow for easier quality control. (2) Skull-stripping now uses a new adaptive probability region-growing (APRG) approach, which should also be more robust. APRG refines the probability maps of the SPM approach by region-growing techniques of the gcut approach with a final surface-based optimization strategy. This is currently the method with the most accurate and reliable results.</li>
+                <li>The longitudinal pipeline should now also be more sensitive for the detection of effects over longer time periods with VBM (ROI and SBM approaches are not affected by the length of the period). In earlier versions, the average image was used to estimate the spatial registration parameters for all time points. Sometimes this average image was not as accurate if the images of a subject were too different (e.g. due to large ventricular changes). Now, we rather use the average spatial registration parameters (i.e. deformations) of all time points, which makes the approach more robust for longer periods of time. However, the SPM12 Longitudinal Toolbox can be a good alternative for longer periods of time if you want to analyze your data voxel by voxel. Surface-based preprocessing and also the ROI estimates in CAT12 are not affected by the potentially lower sensitivity to larger changes, as the realigned images are used independently to create cortical surfaces, thickness, or ROI estimates.</li>
+              </ul>
+            </details>            
+
+            <details>
+              <summary><u>Important new features</u></summary>
+              <ul>
+                <li>CAT report now additionally plots the contour of the registered skull and brain onto the image and visualizes skull-stripping. <a class="function" href="matlab:y=cat_surf_results;">Display surface results</a> is largely updated. </li>
+                <li>Parallelization options in CAT12 now enable subsequent batch jobs and are also  supported for longitudinal preprocessing.</li>
+              </ul>
+            </details>            
             
-            <!-- ############################# -->
-            <h3>Changes in Version CAT12.4 (1342)</h3>
+            <!-- ###################################### -->
+            <h3>Changes in version CAT12.5 (1355)</h3>
+
+            <details>
+              <summary><u>Changes in preprocessing pipeline (which affects your results compared to CAT12.3)</u></summary>
+              <ul>
+                <li>Detection of white matter hyperintensities (WMHs) is updated and again enabled by default.</li>
+                <li>The default internal interpolation setting is now "Fixed 1 mm" and offers a good trade-off between optimal quality and preprocessing time and memory demands. Standard structural data with a voxel resolution around 1 mm or even data with high in-plane resolution and large slice thickness (e.g. 0.5x0.5x1.5 mm) will benefit from this setting. If you have higher native resolutions the highres option "Fixed 0.8 mm" will sometimes offer slightly better preprocessing quality with an increase of preprocessing time and memory demands.</li>
+              </ul>
+            </details>            
+
+            <details>            
+              <summary><u>Important new features</u></summary>
+              <ul>
+                <li>CAT12 can now deal with lesions that have to be set to zero in your image using the Stroke Lesion Correction (SLC) in expert mode. These lesion areas are not used for segmentation or spatial registration, thus these preprocessing steps should be almost unaffected.</li>
+              </ul>
+            </details>            
+            
+            <!-- ###################################### -->
+            <h3>Changes in version CAT12.4 (1342)</h3>
               
             <ul>
               <li>This version had some severe errors in spatial registration which affected all spatially registered data and should not be used anymore.</li>
             </ul>
             
-            <!-- ############################# -->
-            <h3>Changes in Version CAT12.3 (1310)</h3>
+            <!-- ###################################### -->
+            <h3>Changes in version CAT12.3 (1310)</h3>
                
-            <u>Changes in preprocessing pipeline (which affects your results compared to CAT12.2)</u>
-            <ul>
-              <li>Skull-stripping is again slightly changed and the SPM approach is now used as default. The SPM approach works quite well for the majority of data. However, in some rare cases, parts of GM (i.e. in the frontal lobe) might be cut. If this happens the GCUT approach is a good alternative.</li>
-              <li>Spatial adaptive non-local mean (SANLM) filter is again called as a very first step because noise estimation and de-noising works best for original (non-interpolated) data.</li>
-              <li>Detection of white matter hyperintensities (WMHs) is currently disabled by default, because of unreliable results for some data.</li>
-            </ul>
-            <u>Important new features</u>
-            <ul>
-              <li>Cobra atlas has been largely extended and updated.</li>
-            </ul>
-            
-            <!-- ############################# -->
-            <h3>Changes in Version CAT12.2 (1290)</h3>
+            <details>            
+              <summary><u>Changes in preprocessing pipeline (which affects your results compared to CAT12.2)</u></summary>
+              <ul>
+                <li>Skull-stripping is again slightly changed and the SPM approach is now used as default. The SPM approach works quite well for the majority of data. However, in some rare cases, parts of GM (i.e. in the frontal lobe) might be cut. If this happens the GCUT approach is a good alternative.</li>
+                <li>Spatial adaptive non-local mean (SANLM) filter is again called as a very first step because noise estimation and de-noising works best for original (non-interpolated) data.</li>
+                <li>Detection of white matter hyperintensities (WMHs) is currently disabled by default, because of unreliable results for some data.</li>
+              </ul>
+            </details>            
 
-            <u>Changes in preprocessing pipeline (which affects your results compared to CAT12.1)</u>
-            <ul>
-              <li>Skull-stripping now additionally uses SPM12 segmentations by default: The default gcut approach in CAT12.1 removed too much of the surrounding (extracranial) CSF, which led to a slight underestimation of TIV for atrophied brains. The skull-stripping approach based on the SPM12 segmentations prevents this through a more conservative approach. However, sometimes parts of the meninges (i.e. dura mater) or other non-brain parts remain in the GM segmentation. By combining both approaches a more reliable skull-stripping is achieved.</li>
-              <li>More reliable estimation of TIV: The changed skull-stripping also affects the estimation of TIV, which is now more reliable, especially for atrophied brains.</li>
-            </ul>
-            <u>Important new features</u>
-            <ul>
-              <li>Automatic check for design orthogonality and sample homogeneity using SPM.mat in <a class="function" href="matlab:spm_jobman('interactive','cat_stat_factorial_design.m');">Basic Models</a></li>
-              <li>Added equi-volume model by Bok and a multi-save option for <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.vol2surf');">mapping native volumes to individual surfaces.</a></li>
-              <li>Added <a href="matlab:web('https://github.com/ThomasYeoLab/CBIG/tree/master/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal','-browser');">Local-Global Intrinsic Functional Connectivity parcellation</a> by Schaefer et al. for resting-state fMRI data.</li>
-            </ul>
+            <details>            
+              <summary><u>Important new features</u></summary>
+              <ul>
+                <li>Cobra atlas has been largely extended and updated.</li>
+              </ul>
+            </details>            
+            
+            <!-- ###################################### -->
+            <h3>Changes in version CAT12.2 (1290)</h3>
+
+            <details>            
+              <summary><u>Changes in preprocessing pipeline (which affects your results compared to CAT12.1)</u></summary>
+              <ul>
+                <li>Skull-stripping now additionally uses SPM12 segmentations by default: The default gcut approach in CAT12.1 removed too much of the surrounding (extracranial) CSF, which led to a slight underestimation of TIV for atrophied brains. The skull-stripping approach based on the SPM12 segmentations prevents this through a more conservative approach. However, sometimes parts of the meninges (i.e. dura mater) or other non-brain parts remain in the GM segmentation. By combining both approaches a more reliable skull-stripping is achieved.</li>
+                <li>More reliable estimation of TIV: The changed skull-stripping also affects the estimation of TIV, which is now more reliable, especially for atrophied brains.</li>
+              </ul>
+            </details>            
+
+            <details>            
+              <summary><u>Important new features</u></summary>
+              <ul>
+                <li>Automatic check for design orthogonality and sample homogeneity using SPM.mat in <a class="function" href="matlab:spm_jobman('interactive','cat_stat_factorial_design.m');">Basic Models</a></li>
+                <li>Added equi-volume model by Bok and a multi-save option for <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.vol2surf');">mapping native volumes to individual surfaces.</a></li>
+                <li>Added <a href="matlab:web('https://github.com/ThomasYeoLab/CBIG/tree/master/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal','-browser');">Local-Global Intrinsic Functional Connectivity parcellation</a> by Schaefer et al. for resting-state fMRI data.</li>
+              </ul>
+            </details>            
           
             <!-- ################################################################################# -->
-            <h2 id="get_started">Getting Started</h4>
+            <h2 id="get_started">Getting started</h4>
 
             <!-- ############################# -->
-            <h4 id="download">Download and Installation</h4>
+            <h4 id="download">Download and installation</h4>
             
             <ul>
-              <li>The CAT12 Toolbox runs within SPM12. That is, SPM12 must be installed and added to your Matlab search path before the CAT12 Toolbox can be installed (see the <a href="http://www.fil.ion.ucl.ac.uk/spm/">SPM site</a> and <a href="http://en.wikibooks.org/wiki/SPM">SPM Wiki</a> for more help).
+              <li>The CAT12 Toolbox runs within SPM12. That is, SPM12 must be installed and added to your Matlab search path before the CAT12 Toolbox can be installed (see the <a href="matlab:web('http://www.fil.ion.ucl.ac.uk/spm/','-browser')">SPM site</a> and <a href="matlab:web('http://en.wikibooks.org/wiki/SPM','-browser')">SPM Wiki</a> for more help).
               </li>
-              <li><a href="https://neuro-jena.github.io/cat/">Download</a> and unzip the CAT12 Toolbox. You will get a folder named &quot;cat12&quot;, which contains various Matlab files and compiled scripts. Copy the folder &quot;cat12&quot; into the SPM12 &quot;toolbox&quot; folder.
+              <li><a href="matlab:web('https://neuro-jena.github.io/cat/','-browser')">Download</a> and unzip the CAT12 Toolbox. You will get a folder named &quot;cat12&quot;, which contains various Matlab files and compiled scripts. Copy the folder &quot;cat12&quot; into the SPM12 &quot;toolbox&quot; folder.
               </li>
-              <li>On newer MAC OS systems (10.15 or higher: Catalina, Big Sur, Monterey, Ventura) you may need to follow the <a href="https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)#macOS_Catalina">SPM12 installation</a> instructions to prevent issues with MEX files.
+              <li>On newer MAC OS systems (10.15 or higher: Catalina, Big Sur, Monterey, Ventura) you may need to follow the <a href="matlab:web('https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)#macOS_Catalina','-browser')">SPM12 installation</a> instructions to prevent issues with MEX files.
               </li>
-              <li>Older CAT12 versions can be found <a href="http://dbm.neuro.uni-jena.de/cat12/">here</a>.</li>
+              <li>Older CAT12 versions can be found <a href="matlab:web('http://dbm.neuro.uni-jena.de/cat12/','-browser')">here</a>.</li>
             </ul>
 
             <!-- ############################# -->
-            <h4 id="starting">Starting the Toolbox</h4>
+            <h4 id="starting">Starting the toolbox</h4>
             
             <ul>
               <li>Start Matlab</li>
@@ -314,7 +354,7 @@
             </table>
             
             <!-- ############################# -->
-            <h4 id="basic_vbm">Basic VBM Analysis (Overview)</h4>
+            <h4 id="basic_vbm">Basic VBM analysis (overview)</h4>
             
             <p>The CAT12 Toolbox comes with different modules, which may be used for analysis. Usually, a VBM analysis comprises the following steps:</p>
             <u>(a) Preprocessing:</u><br/><br/>
@@ -350,28 +390,28 @@
             <p><b>Figure 3:</b> The Batch Editor is the environment where the analysis is set up. Left: For all settings marked with &quot;&lt;-X&quot;, files have to be selected (&quot;Select Files&quot;). Right: Parameters can be edited and adapted (&quot;Edit Value&quot;).</p>
             
             <!-- ################################################################################# -->
-            <h2 id="overview_process">Overview of CAT12 Processing</h2>
+            <h2 id="overview_process">Overview of CAT12 processing</h2>
             
             <!-- ############################# -->
-            <h4 id="major_process">CAT12 Major Processing Steps</h4>
+            <h4 id="major_process">CAT12 major processing steps</h4>
 
             <p>As shown in <a href="#figure4">Figure 4</a>, CAT's processing workflow comprises two main steps: voxel-based processing and surface-based processing. The former is a prerequisite for the latter, but not the other way round. That is, while voxel-based processing is always required for surface-based analyses, users not interested in surface-based analyses can simply omit this second step to save processing time. The &quot;Voxel-based processing&quot; step (<a href="#figure4">Figure 4</a>, left) can be thought of as one module for tissue segmentation and another one for spatial registration. An optional third module allows for the generation of ROIs and the calculation of ROI-based measures. The &quot;Surface-based processing&quot; step (<a href="#figure4">Figure 4</a>, right) can be thought of as one module for surface creation and another one for surface registration. An optional third module allows for the generation of surfaced-based ROIs and the calculation of ROI-based measures. As shown in <a href="#figure4">Figure 4</a>, the different modules utilize different priors, templates, and atlases. Those are briefly explained in the next paragraph.</p>
 
-            <p><u>Voxel-based processing:</u> While the final tissue segmentation in CAT is independent of tissue priors, the segmentation procedure is initialized using Tissue Probability Maps (TPMs). The standard TPMs (as provided in SPM) suffice for the vast majority of applications, and customized TPMs are only recommended for data obtained in young children. Please note that these TPMs should contain 6 classes: GM/WM/CSF and 3 background classes. For spatial registration, CAT uses DARTEL (Ashburner, 2007) or Geodesic Shooting (Ashburner and Friston, 2011) with predefined templates. Those templates are an appropriate choice for most studies and, again, sample-specific DARTEL or Geodesic Shooting templates may only be advantageous for young children. For the voxel-based ROI analyses, CAT offers a selection of volume-based atlases in the predefined template space. Thus, any atlas-based ROI analysis requires a normalization of the individual scans to CAT's default DARTEL or Geodesic Shooting template. On that note, the aforementioned creation and selection of a customized (rather than the predefined) DARTEL or Geodesic Shooting template will disable the third module for the voxel-based ROI analysis. </p>
+            <p><u>Voxel-based processing:</u> While the final tissue segmentation in CAT is independent of tissue priors, the segmentation procedure is initialized using Tissue Probability Maps (TPMs). The standard TPMs (as provided in SPM) suffice for the vast majority of applications, and customized TPMs are only recommended for data obtained in young children. Please note that these TPMs should contain 6 classes: GM/WM/CSF and 3 background classes. For spatial registration, CAT uses Geodesic Shooting (Ashburner and Friston, 2011) or the older DARTEL approach (Ashburner, 2007) with predefined templates. Those templates are an appropriate choice for most studies and, again, sample-specific Shooting templates may only be advantageous for young children. For the voxel-based ROI analyses, CAT offers a selection of volume-based atlases in the predefined template space. Thus, any atlas-based ROI analysis requires a normalization of the individual scans to CAT's default Shooting template. On that note, the aforementioned creation and selection of a customized (rather than the predefined) DARTEL or Geodesic Shooting template will disable the third module for the voxel-based ROI analysis. </p>
 
-            <p><u>Surface-based processing:</u> During the surface registration, the cortical surfaces of the two hemispheres are registered to the Freesurfer <a href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsAverage">&quot;FsAverage&quot; template</a> (as provided with CAT). For surface-based ROI analyses, CAT provides a selection of surface-based atlases. As the surface registration module uses the Freesurfer &quot;FsAverage&quot; template, surface-based ROI analyses are not impacted by any template modification during voxel-based processing. In contrast to voxel-based ROI analyses, surface-based ROI analyses can, therefore, be applied regardless of whether the predefined or customized versions of the DARTEL or Geodesic Shooting template have been used.</p>
+            <p><u>Surface-based processing:</u> During the surface registration, the cortical surfaces of the two hemispheres are registered to the Freesurfer <a href="matlab:web('https://surfer.nmr.mgh.harvard.edu/fswiki/FsAverage','-browser')">&quot;FsAverage&quot; template</a> (as provided with CAT). For surface-based ROI analyses, CAT provides a selection of surface-based atlases. As the surface registration module uses the Freesurfer &quot;FsAverage&quot; template, surface-based ROI analyses are not impacted by any template modification during voxel-based processing. In contrast to voxel-based ROI analyses, surface-based ROI analyses can, therefore, be applied regardless of whether the predefined or customized versions of the DARTEL or Geodesic Shooting template have been used.</p>
 
             <p><img id="figure4" width=80% height=auto alt="cat_processing_steps" src="images/cat_processing_steps.png"></p>
             <p><b>Figure 4:</b> Overview of CAT's major processing steps.</p>
             
             <!-- ############################# -->
-            <h4 id="process_details">CAT12 Processing Steps in Detail</h4>
+            <h4 id="process_details">CAT12 processing steps in detail</h4>
 
             <p>The modules described in the previous section help understand the CAT's overall processing workflow, including its priors, templates, and atlases. Also, data processing in CAT can be separated into three main processes: (1) the initial voxel-based processing, (2) the main voxel-based processing, and (3) the surface-based processing (optional), as further detailed below and visualized in <a href="#figure5">Figure 5</a>.</p>
 
             <p>The <em>&quot;initial voxel-based processing&quot;</em> begins with a spatial adaptive non-local means (SANLM) denoising filter (Manjon et al., 2010), which is followed by internal resampling to properly accommodate low-resolution images and anisotropic spatial resolutions. The data are then bias-corrected and affine-registered (to further improve the outcomes of the following steps) followed by the standard SPM &quot;unified segmentation&quot; (Ashburner and Friston, 2005). The outcomes of the latter step will provide the starting estimates for the subsequent refined voxel-based processing.</p>
 
-            <p>The <em>&quot;refined voxel-based processing&quot;</em> uses the output from the unified segmentation and proceeds with skull-stripping of the brain. The brain is then parcellated into the left and right hemisphere, subcortical areas, and the cerebellum. Furthermore, local white matter hyperintensities are detected (to be later accounted for during the spatial normalization and cortical thickness estimation). Subsequently, a local intensity transformation of all tissue classes is performed, which is particularly helpful to reduce the effects of higher gray matter intensities in the motor cortex, basal ganglia, or occipital lobe before the final adaptive maximum a posteriori (AMAP) segmentation. This final AMAP segmentation step (Rajapakse et al., 1997), which does not rely on a priori information of the tissue probabilities, is then refined by applying a partial volume estimation (Tohka et al., 2004), which effectively estimates the fractional content for each tissue type per voxel. As a last default step, the tissue segments are spatially normalized to a common reference space using DARTEL (Ashburner, 2007) or Geodesic Shooting (Ashburner and Friston, 2011) registrations.</p>
+            <p>The <em>&quot;refined voxel-based processing&quot;</em> uses the output from the unified segmentation and proceeds with skull-stripping of the brain. The brain is then parcellated into the left and right hemisphere, subcortical areas, and the cerebellum. Furthermore, local white matter hyperintensities are detected (to be later accounted for during the spatial normalization and cortical thickness estimation). Subsequently, a local intensity transformation of all tissue classes is performed, which is particularly helpful to reduce the effects of higher gray matter intensities in the motor cortex, basal ganglia, or occipital lobe before the final adaptive maximum a posteriori (AMAP) segmentation. This final AMAP segmentation step (Rajapakse et al., 1997), which does not rely on a priori information of the tissue probabilities, is then refined by applying a partial volume estimation (Tohka et al., 2004), which effectively estimates the fractional content for each tissue type per voxel. As a last default step, the tissue segments are spatially normalized to a common reference space using Geodesic Shooting (Ashburner and Friston, 2011) registrations.</p>
 
             <div class="box right"><sup>*</sup> Topology defects are holes and handles that prevent the surface from being homeomorphic with a sphere.</div>
 
@@ -381,7 +421,7 @@
             <p><b>Figure 5:</b> Schematic flowchart of CAT's processing pipeline.</p>
             
             <!-- ################################################################################# -->
-            <h2 id="process_data">Preprocessing Data</h2>
+            <h2 id="process_data">Preprocessing data</h2>
             
             <!-- ############################# -->
             <h5 id="module1">First Module: Segment Data</h5>
@@ -412,12 +452,12 @@
               <li>Extended options for CAT12 segmentation &rarr; <em>[use defaults or modify]</em>
               <ul>
                 <li>Again, the defaults provide a solid starting point. Using the extended options you can adjust specific parameters or the strength of different corrections (&quot;0&quot; means no correction and &quot;0.5&quot; is the default value that works best for a large variety of data).</li>
-                <li>CAT12 provides a template for the high-dimensional DARTEL registration that should work for most data. However, a customized DARTEL template can be selected (e.g. for children data) that was created using the DARTEL toolbox. For more information on the necessary steps, see the section &quot;Customized DARTEL Template&quot;.</li>
+                <li>CAT12 provides a template for the high-dimensional Shooting registration that should work for most data. However, a customized Shooting template can be selected (e.g. for children data) that was created using the Shooting toolbox. For more information on the necessary steps, see the section &quot;Customized Shooting Template&quot;.</li>
               </ul></li>
 
               <li>Writing options &rarr; <em>[use defaults or modify]</em>
               <ul>
-                <li>For <b>GM, and WM image volumes</b> see at the end of the document: &quot;Additional information on native, normalized and modulated normalized volumes&quot;.
+                <li>For <b>GM, and WM image volumes</b> see <a href="#reg_info">information about native, normalized, and modulated volumes</a>.
                 <br/><u>Note:</u> The default option &quot;Modulated normalized&quot; results in an analysis of relative differences in regional GM volume that have to be corrected for individual brain size in the statistical analysis using total intracranial volume (TIV).</li>
                 <li>A <b>Bias, noise, and globally intensity corrected T1 image</b>, in which MRI inhomogeneities and noise are removed and intensities are globally normalized, can be written in normalized space. This is useful for quality control and also to create an average image of all normalized T1 images to display/overlay the results.
                 <br/><u>Note:</u> For a basic VBM analysis use the defaults.</li>
@@ -428,7 +468,9 @@
                 <li>Finally, <b>deformation fields</b> can be written. This option is useful to re-apply normalization parameters to other co-registered images (e.g. fMRI or DTI data).
                 <br/><u>Note:</u> For a basic VBM analysis this is not needed.</li>
               </ul></li>
-            </ul>
+            </ul><br/>
+
+            <p>The resulting files are saved in the respective subfolders and are following the CAT12 <a href="#naming">naming convention</a>.</p>
 
             <p><b>Note:</b> If the segmentation fails, this is often due to an unsuccessful initial spatial registration. In this case, you can try to set the origin (anterior commissure) in the Display tool. Place the cursor roughly on the anterior commissure and press &quot;Set Origin&quot; The now displayed correction in the coordinates can be applied to the image with the button &quot;Reorient&quot;. This procedure must be repeated for each data set individually.</p>
             
@@ -530,8 +572,8 @@
               <li>Filename Prefix &rarr; <em>[use defaults or modify]</em></li>
             </ul>
             
-            <!-- ############################# -->
-            <h3 id="build_stats">Building the Statistical Model</h3>
+            <!-- ###################################### -->
+            <h3 id="build_stats">Building the statistical model</h3>
 
             <p>Starting with CAT12.8, a new batch mode is used to create statistical models. Now, only cross-sectional and longitudinal data are distinguished and only factorial designs and a few other necessary models are offered, but covering all possible designs. The advantage of this new batch is that it provides tailored options for VBM and many of the rather confusing and unnecessary options in &quot;Basic Models&quot; or &quot;Specify 2nd-level&quot; have now been removed and some VBM-specific options such as correction for TIV are newly provided. This should make it easier to build the statistical model in CAT12. However, the &quot;Full factorial&quot; design now used for cross-sectional data is a bit more complicated to use. However, you are free to use the old statistical batch from the SPM12 GUI (&quot;Basic Models&quot; or &quot;Specify 2nd-level&quot;) as an alternative.</p>
             <p>Here are some hints on how to relate the old models to the new factorial design. For cross-sectional VBM data, you usually have 1..n samples (which corresponds to factor levels) and optionally covariates and nuisance parameters:</p>
@@ -617,9 +659,9 @@
             </table>
             
             <!-- ############################# -->
-            <h4 id="stat_options">General Notes and Options for Statistical Models</h4>
+            <h4 id="stat_options">General notes and options for statistical models</h4>
             
-            <b>Please note that when using "Basic Models" in the CAT12 GUI, some unnecessary options have been removed compared to the "Basic Models" in SPM12, and some useful additions have been added. We therefore strongly recommend preferring to use the models in CAT12, which offer some advantages especially when defining longitudinal designs.</b><br/><br/>
+            <b>Please note that when using "Basic Models" in the CAT12 GUI, some unnecessary options have been removed compared to the "Basic Models" in SPM12, and some useful options have been added. We therefore strongly recommend preferring to use the models in CAT12, which offer some advantages especially when defining longitudinal designs.</b><br/><br/>
             
             <u>Covariates</u>
             <p>This option allows for the specification of covariates and nuisance variables. TIV correction should be rather defined in &quot;Correction of TIV&quot;.<br/>
@@ -666,6 +708,16 @@
             Please note that the saved vSPM.mat file can only be analyzed with the TFCE toolbox r221 or newer.
             </p>
 
+            <u>Visualization of results</u>
+            <p>There exist different options to call results after statistical analysis:
+            <ol>
+              <li>General function to <a class="function" href="matlab:[hReg xSPM SPM] = cat_spm_results_ui('Setup');">call results</a></li>
+              <li><a class="function" href="matlab:cat_vol_slice_overlay;">Slice Overlay</a> to display volume results (i.e. VBM)</li>
+              <li><a class="function" href="matlab:y=cat_surf_results;">Surface Overlay</a> that allows to overlay results from surfaces or volumes</li>
+            </ol>
+            Please note that options 2 an 3 require that the results are already thresholded (e.g. using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x');">Transform and Threshold SPM-maps</a>) or were analyzed with the <a class="function" href="matlab:if exist(fullfile(spm('dir'),'toolbox','TFCE')),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">TFCE</a> toolbox (preferred approach).
+            </p>
+
             <!-- ############################# -->
             <h5 id="two_sample">Two-sample T-Test</h5>
                         
@@ -693,7 +745,7 @@
             </ul>
 
             <!-- ############################# -->
-            <h5 id="full_fact">Full Factorial Model (for a 2x2 Anova)</h5>
+            <h5 id="full_fact">Full factorial model (for a 2x2 Anova)</h5>
 
             <p>CAT12 &rarr; Statistical Analysis &rarr; Basic Models</p>
 
@@ -757,7 +809,7 @@
 
             
             <!-- ############################# -->
-            <h5 id="mult_regress">Multiple Regression (Linear)</h5>
+            <h5 id="mult_regress">Multiple regression (linear)</h5>
 
             <p>CAT12 &rarr; Statistical Analysis &rarr; Basic Models</p>
 
@@ -788,7 +840,7 @@
             </ul>
             
             <!-- ############################# -->
-            <h5 id="mult_regress_poly">Multiple Regression (Polynomial)</h5>
+            <h5 id="mult_regress_poly">Multiple regression (polynomial)</h5>
 
             <p>To use a polynomial model, you need to estimate the polynomial function of your parameter before analyzing it. To do this, use the function cat_stat_polynomial (included with CAT12 &gt;r1140):<br/>
             <code>y = cat_stat_polynomial(x,order)</code></p>
@@ -830,7 +882,7 @@
             </ul>
                         
             <!-- ############################# -->
-            <h5 id="full_fact_interact">Full Factorial Model (Interaction)</h5>
+            <h5 id="full_fact_interact">Full factorial model (interaction)</h5>
 
             <p>CAT12 &rarr; Statistical Analysis &rarr; Basic Models</p>
 
@@ -883,7 +935,7 @@
             </ul>
             
             <!-- ############################# -->
-            <h5 id="full_fact_poly">Full Factorial Model (Polynomial Interaction)</h5>
+            <h5 id="full_fact_poly">Full factorial model (polynomial interaction)</h5>
 
             <p>To use a polynomial model you have to estimate the polynomial function of your parameter prior to the analysis. Use the function cat_stat_polynomial (provided with CAT12 &gt;r1140) for that purpose:<br/>
             <code>y = cat_stat_polynomial(x,order)</code></p>
@@ -947,7 +999,7 @@
             </ul>
             
             <!-- ############################# -->
-            <h5 id="estimate">Estimating the Statistical Model</h5>
+            <h5 id="estimate">Estimating the statistical model</h5>
 
             <p>CAT12 &rarr; Estimate (Surface) Models</p>
 
@@ -955,7 +1007,7 @@
             Note that for surface data you should rather use this estimation option instead of &quot;Estimate&quot; in the SPM12 GUI, otherwise the underlying surface after calling the results will be mistakenly be the surface of the first selected data set instead of the average surface.
                         
             <!-- ############################# -->
-            <h5 id="ortho">Checking for Design Orthogonality</h5>
+            <h5 id="ortho">Checking for design orthogonality</h5>
 
             <p>If you have modeled TIV as a nuisance parameter, you must check whether TIV is orthogonal (in other words independent) to any other parameter of interest in your analysis (e.g. parameters you are testing for). This means that TIV should not correlate with any other parameter of interest, otherwise not only the variance explained by TIV is removed from your data, but also parts of the variance of your parameter of interest.</p>
             <p>Please use &quot;Overall mean&quot; as &quot;Centering&quot; for the TIV covariate. Otherwise, the orthogonality check sometimes even indicates a meaningful co-linearity only because of scaling issues.</p>
@@ -996,7 +1048,7 @@
             <p>Unfortunately, no clear advice for either of these two approaches can be given and the use of these approaches will also affect the interpretation of your findings.</p>
             
             <!-- ############################# -->
-            <h5 id="contrasts">Defining Contrasts</h5>
+            <h5 id="contrasts">Defining contrasts</h5>
 
             <p>SPM menu &rarr; Results &rarr; <em>[select the SPM.mat file]</em> &rarr; Done (this opens the Contrast Manager) &rarr; Define new contrast (i.e., choose &quot;t-contrast&quot; or &quot;F-contrast&quot;; type the contrast name and specify the contrast by typing the respective numbers, as shown below).</p>
 
@@ -1604,6 +1656,7 @@
             
             <p><u>Getting Results</u></p>
             <div class="box right"><sup>*</sup> To determine the extent threshold empirically (instead of saying 100 voxels or 500 voxels, which is completely arbitrary), simply execute it first without specifying an extent threshold. This gives you an output (i.e., the standard SPM glass brain with significant effects). If you click on &quot;Table&quot; (SPM main menu) you will get a table with all relevant values (MNI coordinates, p-values, cluster size etc.). Below the table you will find additional information, such as &quot;Expected Number of Voxels per Cluster&quot;. Remember this number (this is your empirically determined extent threshold). Re-run SPM &rarr; Results etc. and enter this number when prompted for the &quot;Extent Threshold&quot;. There is also a hidden option in &quot;CAT12 &rarr; Data presentation &rarr; Threshold and transform spmT-maps&quot; to define the extent threshold as p-value or to use the &quot;Expected Number of Voxels per Cluster&quot;.</div>
+            
             <p>SPM menu &rarr; Results &rarr; <em>[select a contrast from Contrast Manager]</em> &rarr; Done</p>
 
             <ul>
@@ -1620,9 +1673,10 @@
               <li>Extent threshold: (either use &quot;none&quot; or specify the number of voxels)<b><sup>*</sup></b></li>
             </ul>
             
-            <!-- ############################# -->
-            <h3 id="long">CAT12 for Longitudinal Data</h3>
+            <!-- ###################################### -->
+            <h3 id="long">CAT12 for longitudinal data</h3>
 
+            <!-- ############################# -->
             <h4>Background</h4>
 
             <p>The majority of morphometric studies are based on cross-sectional data in which one image is acquired for each subject. However, to map structural changes over time (e.g., in the framework of use-dependent plasticity, neurodevelopment, or aging), longitudinal designs that consider additional time points for each subject are necessary. The handling of these longitudinal data requires a customized processing, as a voxel- or point-wise comparability needs to be assured not only across subjects, but also across time points within subjects. This requires an inverse-consistent (or &quot;symmetric&quot;) realignment as well as an intra-subject bias field correction (Ashburner and Ridgway, 2012; Reuter et al., 2010; Reuter and Fischl, 2011). Thus, CAT first realigns the images from all time points using inverse-consistent rigid-body registrations and applies intra-subject bias-field corrections. Subsequently, the resulting images are processed individually (see Figure <a href="#figure4">4</a>, <a href="#figure5">5</a>) using the standard pipeline.</p>
@@ -1634,9 +1688,11 @@
             The first step in all three workflows is the creation of a high-quality average image over all time points. For this purpose, CAT realigns the images from all time points for each participant using inverse-consistent (or symmetric) rigid-body registrations and intra-subject bias field correction. While this is sufficient to create the required average image for the neuroplasticity and aging workflows, the neurodevelopmental workflow requires non-linear registrations in addition. In either case, the resulting average image is segmented using CAT’s regular processing workflow to create a subject-specific tissue probability map (TPM). This TPM is used to enhance the time point-specific processing to create the final segmentations. The final tissue segments are then registered to MNI space to obtain a voxel-comparability across time points and subjects, which differs between all three workflows. In the neuroplasticity workflow, an average of the time point-specific registrations is created to register the tissue segments of all time points to MNI space. The aging workflow does the same in principle but adds additional (very smooth) deformations between the individual images across time points to account for inevitable age-related changes over time (e.g., enlargements of the ventricles). In contrast, the neurodevelopmental workflow needs to account for major changes, such as overall head and brain growth, which requires independent non-linear registrations to MNI space of all images across time points (which are obtained using the default cross-sectional registration model).<br/>
             For surface-based processing, the neuroplasticity and aging models use the processing of the time point average image to create an average surface. The average is then adapted (deformed) to time point specific maps used in the surface creation, whereas the neurodevelopment workflow has to run the independent cross-sectional surface pipeline for each time point.</p>
             
+            <!-- ############################# -->
             <h4>Preprocessing of longitudinal data - overview</h4>
             <p>The CAT12 Toolbox supplies a batch for longitudinal study design. Here, for each subject the respective images need to be selected. Intra-subject realignment, bias correction, segmentation, and spatial registration are calculated automatically. Preprocessed images are written as mwp1r* and mwp2r* for grey and white matter respectively. By selecting the optimized pipeline to detect larger changes an additional &quot;mw&quot; is prepended to the name due to the additional warping and modulation steps. To define the segmentation and registration parameters, the defaults in cat_defaults.m are used. Optionally surfaces can be extracted in the same way as in the cross-sectional pipeline and the realigned tissue segmentations are used for this step.</p>
             
+            <!-- ############################# -->
             <h4>Choose of longitudinal model and comparison to SPM12 longitudinal registration</h4>
             <p>SPM12 also offers a batch for pairwise or serial longitudinal registration. In contrast to CAT12, this method relies on the deformations needed to non-linearly register the images of all time points to the mean image. Local volume changes can be calculated from these deformations, which are then multiplied (modulated) by the segmented mean image.</p>
             <p>However, not only the underlying methods differ between SPM12 and the CAT12 longitudinal, but also the focus of possible applications. SPM12 additionally regularizes the deformations with regard to the time differences between the images and has its strengths more in finding larger effects over longer periods of time (e.g. ageing effects or atrophy). The use of deformations between the time points makes it possible to estimate and detect larger changes, while subtle effects over shorter periods of time in the range of weeks or a few months are more difficult to detect. In contrast, longitudinal preprocessing in CAT12 has been initially developed and optimized to detect more subtle effects over shorter periods of time (e.g. brain plasticity or training effects after a few weeks or even shorter times), but now also offers a longitudinal model that is optimized to detect larger changes. With these two different longitudinal models, CAT12 attempts to combine the advantages of both approaches, providing flexibility for a wide range of potential data.</p>
@@ -1644,7 +1700,7 @@
             <p>Please note that surface-based preprocessing and ROI estimates are not affected by the selected longitudinal model, as the realigned images are used independently to generate cortical surfaces, thickness, or ROI estimates.</p>
             
             <!-- ############################# -->
-            <h4 id="long_opt">Optional Change of Parameters for Preprocessing</h4>
+            <h4 id="long_opt">Optional change of parameters for preprocessing</h4>
 
             <p>You can change the tissue probability map (TPM) via GUI or by changing the entry in the file cat_defaults.m (i.e. for children data). Any parameters that cannot be changed via the GUI must be set in the file cat_defaults.m:</p>
             <p>Change your working directory to &quot;/toolbox/CAT12&quot; in your SPM directory:</p>
@@ -1652,7 +1708,7 @@
             <p>Then enter &quot;open cat_defaults.m&quot; in your matlab command window. The file is opened in the editor. If you are not sure how to change the values, open the module &quot;Segment Data&quot; in the batch editor as a reference.</p>
             
             <!-- ############################# -->
-            <h4 id="long_process">Preprocessing of Longitudinal Data</h4>
+            <h4 id="long_process">Preprocessing of longitudinal data</h4>
 
             <p>CAT12 &rarr; Segment longitudinal data</p>
 
@@ -1678,6 +1734,7 @@
             <p>&rarr; For all other options you can follow the instructions for preprocessing of cross-sectional data as described before. Please note that not all writing options are available for longitudinal data.</p>
             <p>For the naming conventions of all written files see <a href="#naming">Naming Convention of Output Files</a>. The GM segments are mwp1r* (or mwmwp1r* for the model with larger changes) , the WM segments are named mwp2r* (mwmwp2r*) if you have selected the option to modulate the data. Without modulation the leading &quot;m&quot; is omitted.</p>
             
+            <!-- ############################# -->
             <h4>Statistical analysis of longitudinal data - overview</h4>
 
             <p>The main interest in longitudinal studies is in the change of tissue volume over time in a group of subjects or the difference in these changes between two or more groups. The setup of the statistical model needed to evaluate these questions is described in three examples. First, the case of only one group of 8 subjects with 2 time points each (e.g. normal aging) is shown. Then, the case of two groups of subjects with 4 time points is described. Here, we can test for a time by group interaction if we assume that the time points are acquired at the same time and are therefore comparable between the groups. If the time points are not acquired at the same time and are therefore not comparable between the groups, we can use the third design. This design models a time by group interaction using an additional covariate (e.g. age at scanning) and offers more flexibility.</p>
@@ -1687,7 +1744,7 @@
             Again, we recommend using "Basic Models" in CAT12 GUI, where some unnecessary options have been removed compared to "Basic Models" in SPM12 and some useful additions have been added. The same <a href="#stat_options">notes and options</a> apply here as for the cross-section designs.<br/>
 
             <!-- ############################# -->
-            <h5 id="long_one">Longitudinal Data in One Group</h5>
+            <h5 id="long_one">Longitudinal data in one group</h5>
 
             <p>This model supports the analysis between all time points for one group.</p>
             <p>CAT12 &rarr; Statistical Analysis &rarr; Basic Models</p>
@@ -1790,8 +1847,8 @@
                   <li>Factor number &rarr; 1</li>
                 </ul>
 
-            <div class="box right">Don’t use covariates that don’t change over time, such as sex or TIV. These are treated as constant values and ignored in the statistical analysis because the subject factors are defined anyway.<br/>
-            In general, it’s quite difficult to use meaningful covariates in a flexible factorial design that make sense, and in most designs it’s not recommended unless you are absolutely sure of what you are doing.</div>
+              <div class="box right">Don’t use covariates that don’t change over time, such as sex or TIV. These are treated as constant values and ignored in the statistical analysis because the subject factors are defined anyway.<br/>
+              In general, it’s quite difficult to use meaningful covariates in a flexible factorial design that make sense, and in most designs it’s not recommended unless you are absolutely sure of what you are doing.</div>
       
               </ul></li>
             
@@ -1809,7 +1866,7 @@
             </ul>
             
             <!-- ############################# -->
-            <h5 id="long_two">Longitudinal Data in Two (or more) Groups</h5>
+            <h5 id="long_two">Longitudinal data in two (or more) groups</h5>
 
             <p>This model supports the analysis between all time points between two groups.</p>
             <p>CAT12 &rarr; Statistical Analysis &rarr; Basic Models</p>
@@ -1921,8 +1978,8 @@
                   <li>Factor number &rarr; 1</li>
                 </ul>
 
-            <div class="box right">Don’t use covariates that don’t change over time, such as sex or TIV. These are treated as constant values and ignored in the statistical analysis because the subject factors are defined anyway.<br/>
-            In general, it’s quite difficult to use meaningful covariates in a flexible factorial design that make sense, and in most designs it’s not recommended unless you are absolutely sure of what you are doing.</div>
+              <div class="box right">Don’t use covariates that don’t change over time, such as sex or TIV. These are treated as constant values and ignored in the statistical analysis because the subject factors are defined anyway.<br/>
+              In general, it’s quite difficult to use meaningful covariates in a flexible factorial design that make sense, and in most designs it’s not recommended unless you are absolutely sure of what you are doing.</div>
       
             </ul></li>
           
@@ -1940,7 +1997,7 @@
             </ul>
             
             <!-- ############################# -->
-            <h5 id="long_two_interact">Longitudinal Data in Two (or more) Groups with Interaction of Covariate by Group</h5>
+            <h5 id="long_two_interact">Longitudinal data in two (or more) groups with interaction of covariate by group</h5>
 
             <p>This model supports the analysis of linear increase or decreases over time that differ between two groups. In order to analyze non-linear time effects, a polynomial covariate can be used. Furthermore, this model can be also reduced to one group accordingly or you can use other parameters such as performance over time to analyze dependencies to that variable (e.g. linear increase w.r.t. to performance).</p>
             <p>CAT12 &rarr; Statistical Analysis &rarr; Basic Models</p>
@@ -2080,7 +2137,7 @@
             </ul>
 
             <!-- ############################# -->
-            <h5 id="long_contrast">Contrasts for Longitudinal Models</h5>
+            <h5 id="long_contrast">Contrasts for longitudinal models</h5>
 
             <p>SPM menu &rarr; Results &rarr; <em>[select the SPM.mat file]</em> &rarr; Done (this opens the Contrast Manager) &rarr; Define new contrast (i.e., choose &quot;t-contrast&quot; or &quot;F-contrast&quot;; type the contrast name and specify the contrast by typing the respective numbers, as shown below).</p>
 
@@ -2338,14 +2395,14 @@
 
             </table>
             
-            <!-- ############################# -->
-            <h3 id="children">Processing of Data such as Children</h3>
+            <!-- ###################################### -->
+            <h3 id="children">Processing of data such as children</h3>
             <u>Background</u>
-            <p>For most analyses, CAT12 provides all necessary tools. Since the new segmentation algorithm is no longer dependent on Tissue Probability Maps (TPMs) and pre-defined DARTEL templates for healthy adults exist, most questions can be evaluated using the default Toolbox settings. However, the Toolbox settings may not be optimal for some special cases, such as analysis in children or certain patient groups. Below we present strategies for dealing with these specific cases.</p>
+            <p>For most analyses, CAT12 provides all necessary tools. Since the new segmentation algorithm is no longer dependent on Tissue Probability Maps (TPMs) and pre-defined Shooting templates for healthy adults exist, most questions can be evaluated using the default Toolbox settings. However, the Toolbox settings may not be optimal for some special cases, such as analysis in children or certain patient groups. Below we present strategies for dealing with these specific cases.</p>
             
             <u>Customized tissue probability maps - overview</u>
-            <p>For pediatric MRI data, it is a good idea to create customized TPMs, which reflect age and gender of the population. The <a href="https://neuro-jena.github.io/software.html#tom">TOM8 Toolbox</a> provides the necessary parameters to customize these TPMs.<br/>
-            You can also try the <a href="https://www.medizin.uni-tuebingen.de/de/das-klinikum/einrichtungen/kliniken/kinderklinik/kinderheilkunde-iii/forschung-iii/software">CerebroMatic Toolbox</a> by Marko Wilke that uses a more flexible template creation approach and additionally allows for the creation of customized DARTEL templates.<br/>
+            <p>For pediatric MRI data, it is a good idea to create customized TPMs, which reflect age and gender of the population. The <a href="matlab:web('https://neuro-jena.github.io/software.html#tom','-browser')">TOM8 Toolbox</a> provides the necessary parameters to customize these TPMs.<br/>
+            You can also try the <a href="matlab:web('https://www.medizin.uni-tuebingen.de/de/das-klinikum/einrichtungen/kliniken/kinderklinik/kinderheilkunde-iii/forschung-iii/software','-browser')">CerebroMatic Toolbox</a> by Marko Wilke that uses a more flexible template creation approach and additionally allows for the creation of customized Shooting templates.<br/>
             Please note that these TPMs should contain 6 classes: GM/WM/CSF and 3 background classes.</p>
             
             <!-- ############################# -->
@@ -2372,7 +2429,7 @@
             <p>An individual (customized) template can be created for all cases involving a representative number of subjects. This means that an average template of the study sample is created from the tissue segments of the grey matter and white matter tissue segments of all subjects.</p>
             <p>Please note that the use of your own template results in deviations and unreliable results for ROI-based estimations as the atlases are different. Therefore, all ROI outputs in CAT12 are disabled if you use your own customized template.</p>
             
-            <u>Steps to create a customized Dartel template based on your own subjects</u>
+            <u>Steps to create a customized DARTEL template based on your own subjects</u>
             <p>Several steps are required to create normalized tissue segments with customized templates. These steps can be bundled using dependencies in the Batch Editor. The last step (&quot;Normalise to MNI space&quot;) can be repeated with the customized templates if additional output files are required (e.g. you have only saved GM segmentations but are also interested in the WM segmentations or you would like to use a different smoothing size).</p>
             <p>In the first step, the T1 images are segmented and the tissue segments are normalized to the Tissue Probability Maps by means of an affine transformation. Start by selecting the module &quot;Segment Data&quot;.</p>
             <p>CAT12 &rarr; Segment Data</p>
@@ -2433,7 +2490,7 @@
             <p>Please note, that a subsequent smoothing is not necessary before statistics if you have used the option &quot;Normalise to MNI space&quot; with a defined Gaussian FWHM.</p>
             
             <u>Alternative approach</u>
-            <p>Instead of creating your own customized DARTEL template as described above you can also make use of the customized DARTEL templates that are created with the <a href="https://www.medizin.uni-tuebingen.de/de/das-klinikum/einrichtungen/kliniken/kinderklinik/kinderheilkunde-iii/forschung-iii/software">CerebroMatic Toolbox</a> by Marko Wilke.</p>
+            <p>Instead of creating your own customized DARTEL template as described above you can also make use of the customized DARTEL templates that are created with the <a href="matlab:web('https://www.medizin.uni-tuebingen.de/de/das-klinikum/einrichtungen/kliniken/kinderklinik/kinderheilkunde-iii/forschung-iii/software','-browser')">CerebroMatic Toolbox</a> by Marko Wilke.</p>
             
             <u>Initial or re-use of customized DARTEL-templates</u>
             <p>Optionally you can also use either the externally-made or your newly created, customized DARTEL templates directly in the CAT12 Toolbox. This can be helpful if new data is age-wise close to the data used to create the DARTEL template (e.g. you have an ongoing study and some more new subjects are added to the sample). In this case, it is not absolutely necessary to always create a new template and you can simply use the previously created DARTEL template. Finally, an additional registration to MNI (ICBM) space will usually be applied:</p>
@@ -2476,7 +2533,7 @@
             <p>Please note that now the output files have to be smoothed as usual with a Gaussian filter before statistical analyses. Also note that, while ROI analyses will not be disabled, their validity must be critically assessed depending on the DARTEL template used.</p>
             
             <u>Steps to create a customized Shooting template based on your own subjects</u>
-            <p>The steps required to create a customized Shooting template are similar to the Dartel template and you can use the first steps from the description above to save the affine registered segmentations for grey and white matter.</p>
+            <p>The steps required to create a customized Shooting template are similar to the DARTEL template and you can use the first steps from the description above to save the affine registered segmentations for grey and white matter.</p>
             <p>SPM &rarr; Tools &rarr; Shoot Tools &rarr; Run Shooting (create Templates)</p>
             
             Parameters:<br/>
@@ -2515,9 +2572,10 @@
             <p>Optionally you can also use either the externally-made or your newly created, customized Shooting templates directly in the CAT12 Toolbox for new data that should be processed with this template.</p>
             
             <!-- ################################################################################# -->
-            <h2 id="oCA">Other Variants of Computational Morphometry</h2>
-            <!-- ############################# -->
-            <h3 id="dbm">Deformation-based Morphometry (DBM)</h3>
+            <h2 id="oCA">Other variants of computational morphometry</h2>
+            
+            <!-- ###################################### -->
+            <h3 id="dbm">Deformation-based morphometry (DBM)</h3>
 
             <u>Background</u>
             <p>DBM is based on the application of non-linear registration procedures to spatially normalize one brain to another one. The simplest case of spatial normalization is to correct the orientation and size of the brain. In addition to these global changes, a non-linear normalization is necessary to minimize the remaining regional differences due to local deformations. If this local adaptation is possible, the deformations now provide information about the type and localization of the structural differences between the brains and can then be analyzed.</p>
@@ -2552,8 +2610,8 @@
               </ul>
             </ul></li>
             
-            <!-- ############################# -->
-            <h3 id="sbm">Surface-based Morphometry (SBM)</h3>
+            <!-- ###################################### -->
+            <h3 id="sbm">Surface-based morphometry (SBM)</h3>
 
             <u>Background</u>
             <p>Surface-based morphometry has several advantages over the sole use of volumetric data. For example, it has been shown that using brain surface meshes for spatial registration increases the accuracy of brain registration compared to volume-based registration (Desai et al., 2005). Brain surface meshes also permit new forms of analyses, such as gyrification which measure surface complexity in 3D (Yotter et al., 2011b) or cortical thickness (Dahnke et al., 2013; Gaser et al., 2020). In addition, inflation or spherical mapping of the cortical surface mesh raises the buried sulci to the surface so that mapped functional activity in these regions can be made easily visible.</p>
@@ -2640,10 +2698,12 @@
             <p>Do not use the &quot;Estimate&quot; function in the SPM window, but the corresponding function in CAT12. This allows you to automatically overlay the results on the Freesurfer average surface:<br/>
             CAT12 &rarr; Statistical Analysis &rarr; Estimate Surface Models</p>
             
-            <!-- ############################# -->
-            <h3 id="roi">Region of Interest (ROI) Analysis</h3>
+            <!-- ###################################### -->
+            <h3 id="roi">Region of interest (ROI) analysis</h3>
 
             <p>CAT12 enables the estimation of mean tissue volumes (and additional surface parameters such as cortical thickness) for different volume and surface-based atlas maps (Gaser et al., 2016). All of these results are estimated in the native space before any spatial normalization and the mean value inside the ROI is estimated. The results for each dataset are stored as XML files in the label directory. The XML file catROI[s]_*.xml contains information of all atlases as data structure for one dataset and the optional &quot;s&quot; indicates surface atlases. You can use the CAT function &quot;cat_io_xml&quot; to read the XML data as a structure.</p>
+            
+            <p>Please also check <a href="#atlas">Atlas creation and ROI based analysis</a> for more detailed information and a description of the available atlases.</p>
 
             <!-- ############################# -->
             <h4>Additional steps for surface data</h4>
@@ -2656,6 +2716,7 @@
               <li>(Left) Surface Data Files &lt;-X &rarr; Select surface data files such as lh.thickness.* for all subjects</li>
             </ul>
 
+            <!-- ############################# -->
             <h4>Statistical analysis of ROI data</h4>
             <p>Finally, the XML files of several subjects can be analyzed using an existing SPM design with CAT12 &rarr; Analyze ROIs. Here, the SPM.mat file is used to get information about all corresponding label files, but also about your design (including all covariates/confounds you have modeled). In this way, the same statistical analysis saved in the SPM.mat file is applied to your ROI data. You can then select a contrast, a threshold value and a measurement type to be analyzed (e.g. Vgm, Vwm, thickness, gyrification...) and choose between different atlas maps. The results are printed and saved as thresholded log-p volume or surface map:</br>
             <ul>
@@ -2664,7 +2725,8 @@
             </ul>
             
             <p>These maps can be optionally visualized using</br>
-            CAT12 &rarr; Display Results &rarr; Slice Overlay for volume maps or CAT12 &rarr; Display Results &rarr; Surface Overlay<br/>
+            CAT12 &rarr; Display Results &rarr; Slice Overlay for volume maps or </br>
+            CAT12 &rarr; Display Results &rarr; Surface Overlay<br/>
             
             <p>To analyze different measures (e.g. Vgm/Vwm for volumes or thickness/gyrification for surfaces) you can use any existing volume-based analysis to extract different volume measures, or any existing surface-based analysis to extract different surface measures. To give you an example: An existing SPM.mat file with a VBM analysis of GM allows you to analyze ROI measures for both, GM as well as WM. Therefore, it is not necessary to have a SPM.mat file of a VBM analysis of WM. The same applies to surface-based analysis. If you already have an SPM.mat for the analysis of cortical thickness, you can also estimate the ROI analysis for gyrification or fractal dimension. For surfaces, however, it is necessary to extract ROI-based measures for each subject using CAT12 &rarr; ROI Data &rarr; Extract ROI-based surface values prior to this step.</p>
             <p>For ROI analysis of surfaces you can select the SPM.mat file of the analysis, either for the left or right hemisphere, or for the merged hemispheres. The design should be the same and the ROI results are always estimated for both hemispheres.</p>
@@ -2672,7 +2734,7 @@
             
             <!-- ############################# -->
             <h4>Optional extraction of ROI data</h4>
-            <p>Finally, the XML files of several subjects can be combined and saved as CSV file using the &quot;Estimate Mean Values inside ROI&quot; function for further analysis:</p>
+            <p>Finally, the XML files of several subjects can be combined and saved as CSV file using the &quot;Estimate Mean Values inside ROI&quot; function for further analysis (volumes are defined in mL):</p>
             <p>CAT12 &rarr; ROI Data &rarr; Estimate mean values inside ROI</p>
 
             Parameters:<br/>
@@ -2682,15 +2744,18 @@
               <li>Output file &rarr; Define output name for csv file. This name is extended by the atlas name and the name of the measure (e.g. &quot;Vgm&quot; for gray matter volume)</li>
             </ul>
 
-            <p>For each measurement (e.g. &quot;Vgm&quot; for gray matter volume) and each atlas a separate CSV file is written. This works for both volume and surface data, but volume and surface data has to be processed separately with this function (surface-based ROI values are indicated by an additional &quot;s&quot;, e.g. &quot;&quot;catROIs_&quot;&quot;). You can use external software such as Excel or SPSS to import the resulting CSV files for further analysis. Also pay attention to the different interpretations between &quot;.&quot; and &quot;,&quot; depending on your region and language settings on your system.</p>
+            <p>For each measurement (e.g. &quot;Vgm&quot; for gray matter volume) and each atlas a separate CSV file is written. This works for both volume and surface data, but volume and surface data has to be processed separately with this function (surface-based ROI values are indicated by an additional &quot;s&quot;, e.g. &quot;&quot;catROIs_&quot;&quot;). You can use external software such as Excel or SPSS to import the resulting CSV files (volumes are defined in mL) for further analysis. Also pay attention to the different interpretations between &quot;.&quot; and &quot;,&quot; depending on your region and language settings on your system.</p>
             
             <!-- ############################# -->
             <h4>Use of atlas functions in SPM12</h4>
-            <p>You can also use the volume-based atlases delivered with CAT as atlas maps with SPM atlas functions. This is particularly useful if you have used the default VBM processing pipeline, since the CAT12 atlas maps are then in the same DARTEL space as your data. If you have used the default VBM processing pipeline, it is recommended to use CAT12 atlases in the DARTEL space instead of the SPM Neuromorphometrics atlas. To use CAT12 atlases, you must call the cat_install_atlases function once , which copies the atlases to SPM. By default, only Neuromorphometics, LPBA40, and Hammers atlas maps are used, which are identified by a leading &quot;&quot;dartel_&quot;&quot; in the name.</p>
+            <p>You can also use the volume-based atlases delivered with CAT as atlas maps with SPM atlas functions. This is particularly useful if you have used the default VBM processing pipeline, since the CAT12 atlas maps are then in the same Shooting space as your data. If you have used the default VBM processing pipeline, it is recommended to use CAT12 atlases in the Shooting space instead of the SPM Neuromorphometrics atlas. To use CAT12 atlases, you must call the cat_install_atlases function once , which copies the atlases to SPM. By default, only Neuromorphometics, LPBA40, and Hammers atlas maps are used, which are identified by a leading &quot;&quot;dartel_&quot;&quot; in the name.</p>
             <p>Atlas maps for surfaces can be used with the function CAT12 &rarr; Display Results &rarr; Surface Overlay. You can use the data cursor function to display atlas regions under the cursor. In addition, you can use the &quot;&quot;Atlas labeling&quot;&quot; function to print a list of atlas regions of the resulting clusters or overlay the atlas borders on your rendered surface.</p>
             
             <!-- ################################################################################# -->
-            <h2 id="reg_info">Additional Information on Registration</h2>
+            <h2 id="add_info">Additional information</h2>
+
+            <!-- ###################################### -->
+            <h3 id="reg_info">Spaces after registration</h3>
 
             <p>When preprocessing the images (see &quot;First Module: Segment Data&quot;, on pages 5-6), the decision on the normalization parameters determines the interpretation of the analysis results. Please note that some of the output options are only available in the expert mode.</p>
             
@@ -2701,8 +2766,8 @@
             <p>&quot;Modulated normalized&quot; creates tissue class images in alignment with the template, but multiplies (&quot;modulates&quot;) the voxel values with the Jacobian determinant (i.e., linear and non-linear components) derived from the spatial normalization. This is useful for VBM analyses and allows the comparison of the absolute amount of tissue (e.g. &quot;volume&quot; of gray matter; Good et al., 2001; Neuroimage). Please note that in this type of modulation you must use TIV as covariate to correct different brain sizes. An alternative approach is to use global scaling with TIV if TIV is too strongly correlated with your covariates of interest. For more information, see the section &quot;Checking for Design Orthogonality&quot;.</p>
             <p>If you use the expert mode, you can optionally choose whether you want to modulate your data for non-linear terms only, which was the default for previous VBM-toolbox versions. This produces tissue class images in alignment with the template, but the voxel values are only multiplied by the non-linear components. This is useful for VBM analyses and allows comparison of the absolute amount of tissue corrected for individual brain sizes. This option is similar to using &quot;Affine+non-linear&quot; (see above) in combination with &quot;global normalization&quot; (when building the statistical model with the traditional PET design late one). Although this type of modulation was used in as default previous VBM-toolbox versions it is no longer recommended as the use of standard modulation in combination with TIV as covariate provides more reliable results (Malone et al., 2015; Neuroimage).</p>
             
-            <!-- ################################################################################# -->
-            <h2 id="naming">Naming Convention of Output Files</h2>
+            <!-- ###################################### -->
+            <h3 id="naming">Naming convention of output files</h3>
 
             <p>Please note that the resulting files of CAT12 are organized in separate subfolders (e.g. mri, report, surf, label). If you don't want to use subfolders you can change the option &quot;cat12.extopts.subfolders&quot; in cat_default.m to &quot;0&quot;.</p>
 
@@ -2997,30 +3062,30 @@
             <p>ROI data is optionally saved as xml-file catROI [s]_*.xml. The optional &quot;s&quot; indicates surface atlases.</p>
             
             <!-- ################################################################################# -->
-            <h2 id="unix">Calling CAT From the UNIX Command Line</h2>
+            <h2 id="unix">Calling CAT from the UNIX command line</h2>
 
             <p>You can also call CAT as a shell script from the Unix command line. This makes it possible to run the process completely in the background without graphical output and distributes all given data to parallel jobs. This can be useful if you want to run CAT on a computer cluster.</p>
             <p>You can use the shell scripts cat_batch_cat.sh or cat_batch_long.sh (for longitudinal data). Please call the scripts for more information on how to define optional defaults files, for example.</p>
             
             <!-- ############################# -->
             <h4>Standalone versions (precompiled)</h4>
-            <p>The advantage of the standalone version is that no Matlab license is needed. Only the (free) Matlab Runtime R2017b (v93) has to be downloaded. However, there are some limitations (e.g. no parallelization and no interactive help in the GUI version) and the standalone version is mainly intended to run without GUI on Unix systems. Please check the <a href="https://neuro-jena.github.io/enigma-cat12/#standalone">ENIGMA CAT12</a> site fore more information and examples to call CAT12 from shell scripts.</p>
+            <p>The advantage of the standalone version is that no Matlab license is needed. Only the (free) Matlab Runtime R2017b (v93) has to be downloaded. However, there are some limitations (e.g. no parallelization and no interactive help in the GUI version) and the standalone version is mainly intended to run without GUI on Unix systems. Please check the <a href="matlab:web('https://neuro-jena.github.io/enigma-cat12/#standalone','-browser')">ENIGMA CAT12</a> site fore more information and examples to call CAT12 from shell scripts.</p>
             <p>The MATLAB Compiler Runtime (MCR) enables you to run applications compiled within MATLAB using MATLAB Compiler. MCR does not require a MATLAB license and can be used to run the MATLAB compiled program on computers which do not have MATLAB installed. </p>
             <ul class="actions">
-              <li><a href="http://dbm.neuro.uni-jena.de/cat12/cat12_latest_R2017b_MCR_Mac.zip" class="button">CAT12 Standalone for Mac</a></li>
-              <li><a href="ttps://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/maci64/MCR_R2017b_maci64_installer.dmg.zip" class="button">MCR for Mac</a></li>
+              <li><a href="matlab:web('http://dbm.neuro.uni-jena.de/cat12/cat12_latest_R2017b_MCR_Mac.zip','-browser')" class="button">CAT12 Standalone for Mac</a></li>
+              <li><a href="matlab:web('https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/maci64/MCR_R2017b_maci64_installer.dmg.zip','-browser')" class="button">MCR for Mac</a></li>
             </ul>
             <ul class="actions">
-              <li><a href="http://dbm.neuro.uni-jena.de/cat12/cat12_latest_R2017b_MCR_Linux.zip" class="button">CAT12 Standalone for Linux</a></li>
-              <li><a href="https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/glnxa64/MCR_R2017b_glnxa64_installer.zip" class="button">MCR for Linux</a></li>
+              <li><a href="matlab:web('http://dbm.neuro.uni-jena.de/cat12/cat12_latest_R2017b_MCR_Linux.zip','-browser')" class="button">CAT12 Standalone for Linux</a></li>
+              <li><a href="matlab:web('https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/glnxa64/MCR_R2017b_glnxa64_installer.zip','-browser')" class="button">MCR for Linux</a></li>
             </ul>
             <ul class="actions">
-              <li><a href="http://dbm.neuro.uni-jena.de/cat12/cat12_latest_R2017b_MCR_Win.zip" class="button">CAT12 Standalone for Windows</a></li>
-              <li><a href="https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/win64/MCR_R2017b_win64_installer.exe" class="button">MCR for Windows</a></li>
+              <li><a href="matlab:web('http://dbm.neuro.uni-jena.de/cat12/cat12_latest_R2017b_MCR_Win.zip','-browser')" class="button">CAT12 Standalone for Windows</a></li>
+              <li><a href="matlab:web('https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/win64/MCR_R2017b_win64_installer.exe','-browser')" class="button">MCR for Windows</a></li>
             </ul>
           
             <!-- ################################################################################# -->
-            <h2 id="tech_info">Technical Information</h2>
+            <h2 id="methods">Methods</h2>
 
             <div class="box right"><sup>*</sup> The classic SPM12 segmentation is still used in addition, but only to initially remove non-brain tissue from the image and to get a starting estimate for the segmentation.</div>
 
@@ -3057,11 +3122,11 @@
             <div class="box right"><sup>*</sup> Therefore, no additional MNI normalization is necessary.<br/>
             <sup>**</sup> For studies investigating children data, I still recommend creating a customized DARTEL or Geodesic Shooting template. However, it should be noted that this option requires a representative sample with a sufficient number of subjects.</div>
 
-            <p>Another important extension of the SPM12 segmentation is the integration of the DARTEL (Ashburner, 2007) and Geodesic Shooting (Ashburner and Friston, 2011) normalization into the toolbox by already existing DARTEL and Geodesic Shooting templates in MNI space. These templates were derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org) and are available in the MNI space<b><sup>*</sup></b> for six different iteration steps of the DARTEL and Geodesic Shooting normalization. Therefore, the creation of sample-specific DARTEL and Geodesic Shooting templates is no longer necessary for most studies<b><sup>**</sup>.</b></p>
+            <p>Another important extension of the SPM12 segmentation is the integration of the Geodesic Shooting (Ashburner and Friston, 2011) or the older DARTEL (Ashburner, 2007) normalization into the toolbox by already existing DARTEL and Geodesic Shooting templates in MNI space. These templates were derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org) and are available in the MNI space<b><sup>*</sup></b> for six different iteration steps of the DARTEL and Geodesic Shooting normalization. Therefore, the creation of sample-specific DARTEL and Geodesic Shooting templates is no longer necessary for most studies<b><sup>**</sup>.</b></p>
             
 
             <!-- ################################################################################# -->
-            <h2>Atlas creation and ROI based analysis</h2>
+            <h2 id="atlas">Atlas creation and ROI based analysis</h2>
             <p>
               CAT12 allows estimation of tissue volumes (and additional surface parameters such as cortical thickness, gyrification or fractal dimension) for different volume and surface-based atlas maps.
               The mean values within a ROI for volume data (e.g. gray matter volume) are given im mL, while surface ROI values represent the mean value of the surface measures (e.g. thickness).
@@ -3070,12 +3135,14 @@
               If the option "cat.output.ROI" in <a href="matlab:open cat_defaults;">cat_defaults.m</a> is set to "0" no ROI XML files are saved and you have to set this parameter to "1" and preprocess the data again if you are interested in ROI analysis of volume data (for surface data these XML files are always extracted after preprocessing, thus it is not necessary to do this for surface data). If this option is enabled you can select the different atlases in the batch GUI.
             </p>
             
+            <!-- ############################# -->
             <h4 id="Analysis">Additional steps for surface data</h4>
             <p>
               While ROI-based values for VBM (volume) data are automatically saved in the <em>label</em> folder as XML file it is necessary to additionally extract these values for surface data (except for thickness which is automatically extracted during segmentation). This has to be done after preprocessing the data and creating cortical surfaces. 
               You can extract ROI-based values for cortical thickness but also for any other surface parameter that was extracted using the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surf2roi');">Extract Additional Surface Parameters</a> function.   
             </p>
             
+            <!-- ############################# -->
             <h4 id="Analysis">Statistical analysis of ROI data</h4>
             <p>
               Finally, the XML files of several subjects can be analyzed using an already existing SPM design with <a class="function" href="matlab:cat_stat_analyze_ROIs;">Analyze ROIs</a>. Here, the SPM.mat file is used in order to get information about all respective label files, but also about your design (including all covariates/confounds that you have modeled). Thus, the same statistical analysis that is saved in the SPM.mat file is applied to your ROI data. You can then select a contrast, a threshold and a measures to analyze (e.g. Vgm, Vwm, thickness, gyrification...) and can choose between different atlas maps. The results will be printed and saved as thresholded log-p volume or surface map:</p>
@@ -3090,6 +3157,7 @@
               Please note, that if you have moved your data after estimating your original voxel- or surfaced-based statistics the needed ROI files cannot be found.
             </p>
             
+            <!-- ############################# -->
             <h4 id="Extraction">Optional extraction of ROI data</h4>
             <p>
               Optionally, the XML files of several subjects can be also combined and saved for further analysis as CSV file using the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.calcroi');">Estimate Mean Values inside ROI</a> function. 
@@ -3098,10 +3166,11 @@
               The mean values within a ROI for volume data (e.g. gray matter volume) are given im mL, while surface ROI values represent the mean value of the surface measures (e.g. thickness).
             </p>
             
+            <!-- ############################# -->
             <h4 id="Atlas">Use of atlas maps</h4>
             <p>
-              Moreover, you can use the volume-based atlases that are provided with CAT also as atlas maps with <em>SPM atlas functions</em>. This is especially helpful if you have used the default VBM processing pipeline because the CAT12 atlas maps are then in the same Dartel/Shooting space as your data. 
-              Thus, if you have used the default VBM processing pipeline it is strongly recommended to use the CAT12 atlases in Dartel/Shooting space (indicated in the name by a leading ''cat12_'') rather than the SPM Neuromorphometrics atlas.
+              Moreover, you can use the volume-based atlases that are provided with CAT also as atlas maps with <em>SPM atlas functions</em>. This is especially helpful if you have used the default VBM processing pipeline because the CAT12 atlas maps are then in the same Shooting space as your data. 
+              Thus, if you have used the default VBM processing pipeline it is strongly recommended to use the CAT12 atlases in Shooting space (indicated in the name by a leading ''cat12_'') rather than the SPM Neuromorphometrics atlas.
               In order to use CAT12 atlases you have to call the <a class="function" href="matlab:cat_install_atlases">cat_install_atlases</a> function once that will copy the atlases to SPM.
               Atlas maps for surfaces can be used with <a class="function" href="matlab:y=cat_surf_results;">Surface Overlay</a>. Here, the data cursor function allows you to display atlas regions under the cursor. Furthermore, you can use the ''Atlas labeling'' function to print a list of atlas regions of the resulting clusters.
             </p>
@@ -3133,6 +3202,7 @@
             </ul>
       
       
+            <!-- ###################################### -->
             <h3 id="volrois">List of volume-based atlas maps in CAT12</h3>
             <p>
               We prepared different atlas maps for the CAT12 IXI555 space that are stored in the <em>templates_MNI152NLin2009cAsym</em> directory. 
@@ -3286,10 +3356,9 @@
               <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','suit.nii')}}))">volume map</a>. 
             </p>
             You can find more information about this atlas <a href="matlab:edit(fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','suit.txt'));">here</a>.
-            <br />
+            <br/>
             
-            
-            
+            <!-- ###################################### -->
             <h3 id="surfrois">List of surface-based atlas maps (FreeSurfer)</h3>
             <p>
               We also prepared different surface atlas maps for the Freesurfer and HCP (32k) space that are stored in the <em>atlases_surfaces(_32k)</em> directories. 
@@ -3309,7 +3378,7 @@
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_DK40.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.aparc_DK40.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_DK40.freesurfer.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>
-              ), or Dartel/Shooting average surface (
+              ), or Shooting average surface (
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_DK40.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">left</a>,  
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.aparc_DK40.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">right</a>,
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_DK40.freesurfer.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
@@ -3327,7 +3396,7 @@
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_a2009s.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.aparc_a2009s.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_a2009s.freesurfer.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>
-              ), or Dartel/Shooting average surface (
+              ), or Shooting average surface (
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_a2009s.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">left</a>,  
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.aparc_a2009s.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">right</a>,
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_a2009s.freesurfer.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
@@ -3343,7 +3412,7 @@
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_HCP_MMP1.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.aparc_HCP_MMP1.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_HCP_MMP1.freesurfer.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>
-              ), or Dartel/Shooting average surface (
+              ), or Shooting average surface (
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_HCP_MMP1.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">left</a>,  
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.aparc_HCP_MMP1.freesurfer.annot')}},'multisurf',0,'usefsaverage',3))">right</a>,
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.aparc_HCP_MMP1.freesurfer.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
@@ -3359,13 +3428,14 @@
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.Schaefer2018_200Parcels_17Networks_order.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.Schaefer2018_200Parcels_17Networks_order.annot')}},'multisurf',0,'usefsaverage',1))">right</a>,
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.Schaefer2018_200Parcels_17Networks_order.annot')}},'multisurf',1,'usefsaverage',1))">both sides</a>
-              ), or Dartel/Shooting average surface (
+              ), or Shooting average surface (
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.Schaefer2018_200Parcels_17Networks_order.annot')}},'multisurf',0,'usefsaverage',3))">left</a>,  
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','rh.Schaefer2018_200Parcels_17Networks_order.annot')}},'multisurf',0,'usefsaverage',3))">right</a>,
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.Schaefer2018_200Parcels_17Networks_order.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
               ). 
             </p>
 
+            <!-- ###################################### -->
             <h3>References for ROI approach</h3>
 
             <b id="Collins1998">Collins et al. 1998</b>
@@ -3454,87 +3524,166 @@
 
 
             <!-- ################################################################################# -->
-            <h2 id="cite">CAT12 Citation</h2>
+            <h2 id="cite">Citing CAT12</h2>
 
             <p>If you use CAT12, please cite the following references in your work:</p>
             
             <p><u>CAT12 (in General)</u><br/>
-            Gaser C, Dahnke R, Kurth K, Luders E, Alzheimer&quot;s Disease Neuroimaging Initiative. <a href="https://www.biorxiv.org/content/10.1101/2022.06.11.495736">A Computational Anatomy Toolbox for the Analysis of Structural MRI Data.</a> bioRxiv.</p>
+            Gaser C, Dahnke R, Kurth K, Luders E, Alzheimer&quot;s Disease Neuroimaging Initiative. <a href="matlab:web('https://www.biorxiv.org/content/10.1101/2022.06.11.495736','-browser')">
+            A Computational Anatomy Toolbox for the Analysis of Structural MRI Data.</a> bioRxiv.</p>
 
             <p><u>Surface Estimation</u><br/>
-            Dahnke R, Yotter RA, Gaser C. <a href="https://doi.org/10.1016/j.neuroimage.2012.09.050">Cortical thickness and central surface estimation.</a> Neuroimage. 2013 Jan 15;65:336-48.</p>
-            <p>Yotter RA, Dahnke R, Thompson PM, Gaser C. <a href="https://doi.org/10.1002/hbm.21095">Topological correction of brain surface meshes using spherical harmonics.</a> Hum Brain Mapp. 2011 Jul;32(7):1109-24.</p>
+            Dahnke R, Yotter RA, Gaser C. <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2012.09.050','-browser')">
+            Cortical thickness and central surface estimation.</a> Neuroimage. 2013 Jan 15;65:336-48.</p>
+            <p>Yotter RA, Dahnke R, Thompson PM, Gaser C. <a href="matlab:web('https://doi.org/10.1002/hbm.21095','-browser')">
+            Topological correction of brain surface meshes using spherical harmonics.</a> Hum Brain Mapp. 2011 Jul;32(7):1109-24.</p>
 
             <p><u>Cortical Gyrification</u><br/>
-            Luders E, Thompson PM, Narr KL, Toga AW, Jancke L, Gaser C. <a href="https://doi.org/10.1016/j.neuroimage.2005.08.049">A curvature-based approach to estimate local gyrification on the cortical surface.</a> Neuroimage. 2006 Feb 15;29(4):1224-30.</p>
+            Luders E, Thompson PM, Narr KL, Toga AW, Jancke L, Gaser C. <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2005.08.049','-browser')">
+            A curvature-based approach to estimate local gyrification on the cortical surface.</a> Neuroimage. 2006 Feb 15;29(4):1224-30.</p>
             <p>Cortical Complexity (Fractal Dimension)<br/>
-            Yotter RA, Nenadic I, Ziegler G, Thompson PM, Gaser C. <a href="https://doi.org/10.1016/j.neuroimage.2011.02.007">Local cortical surface complexity maps from spherical harmonic reconstructions.</a> Neuroimage. 2011 Jun 1;56(3):961-73.</p>
+            Yotter RA, Nenadic I, Ziegler G, Thompson PM, Gaser C. <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2011.02.007','-browser')">
+            Local cortical surface complexity maps from spherical harmonic reconstructions.</a> Neuroimage. 2011 Jun 1;56(3):961-73.</p>
 
             <p><u>Gray Matter Asymmetry</u><br/>
-            Kurth F, Gaser C, Luders E. <a href="https://doi.org/10.1038/nprot.2015.014">A 12-step user guide for analyzing voxel-wise gray matter asymmetries in statistical parametric mapping (SPM).</a> Nat Protoc. 2015 Feb;10(2):293-304.</p>
+            Kurth F, Gaser C, Luders E. <a href="matlab:web('https://doi.org/10.1038/nprot.2015.014','-browser')">
+            A 12-step user guide for analyzing voxel-wise gray matter asymmetries in statistical parametric mapping (SPM).</a> Nat Protoc. 2015 Feb;10(2):293-304.</p>
 
             <p><u>Anatomical Automatic Labeling Atlas (AAL)</u><br/>
-            Tzourio-Mazoyer N, Landeau B, Papathanassiou D, Crivello F, Etard O, Delcroix N, et al. <a href="https://doi.org/10.1006/nimg.2001.0978">Automated anatomical labelling of activations in spm using a macroscopic anatomical parcellation of the MNI MRI single subject brain.</a> Neuroimage 2002; 15: 273-289.</p>
-            <p>Rolls ET, Huang C, Lin C, Feng J, Joliot M. <a href="https://doi.org/10.1016/j.neuroimage.2019.116189">Automated anatomical labelling atlas 3.</a> Neuroimage 2020; 206:116189.</p>
+            Tzourio-Mazoyer N, Landeau B, Papathanassiou D, Crivello F, Etard O, Delcroix N, et al. <a href="matlab:web('https://doi.org/10.1006/nimg.2001.0978','-browser')">
+            Automated anatomical labelling of activations in spm using a macroscopic anatomical parcellation of the MNI MRI single subject brain.</a> Neuroimage 2002; 15: 273-289.</p>
+            <p>Rolls ET, Huang C, Lin C, Feng J, Joliot M. <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2019.116189','-browser')">
+            Automated anatomical labelling atlas 3.</a> Neuroimage 2020; 206:116189.</p>
             
+            <p><u>Thalamus Atlas</u><br/>
+            Najdenovska E, Alemán-Gómez Y, Battistella G, Descoteaux M, Hagmann P, Jacquemont S, Maeder P, Thiran JP, Fornari E, Bach Cuadra M. <a href="matlab:web('https://doi.org/10.1038/sdata.2018.270','-browser')">
+            In-vivo probabilistic atlas of human thalamic nuclei based on diffusion- weighted magnetic resonance imaging.</a> Sci Data. 2018 Nov 27;5:180270.</p>
+
+            <p><u>Thalamic Nucei Atlas</u><br/>
+            Saranathan M, Iglehart C, Monti M, Tourdias T, Rutt B. <a href="matlab:web('https://doi.org/10.1038/s41597-021-01062-y','-browser')">
+            In vivo high-resolution structural MRI-based atlas of human thalamic nuclei.</a> Sci Data. 2021 Oct 28;8(1):275.</p>
+
+            <p><u>Hammers Atlas</u><br/>
+            Gousias IS, Rueckert D, Heckemann RA, Dyet LE, Boardman JP, Edwards AD, Hammers A. <a href="matlab:web('https://dx.doi.org/10.1016/j.neuroimage.2007.11.034','-browser')">
+            Automatic segmentation of brain MRIs of 2-year-olds into 83 regions of interest.</a> Neuroimage 2008 Apr 1;40(2):672-684.</p>
+
+            <p><u>Mori Atlas</u><br/>
+            Oishi K, Faria A, Jiang H, Li X, Akhter K, Zhang J, Hsu JT, Miller MI, van Zijl PC, Albert M, Lyketsos CG, Woods R, Toga AW, Pike GB, Rosa-Neto P, Evans A, Mazziotta J, Mori S. <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2009.01.002','-browser')">
+            Atlas-based whole brain white matter analysis using large deformation diffeomorphic metric mapping: application to normal elderly and Alzheimer's disease participants.</a> Neuroimage. 2009 46(2):486-99.</p>
+
             <p><u>Anatomy Atlas</u><br/>
-            Eickhoff SB, Stephan KE, Mohlberg H, Grefkes C, Fink GR, Amunts K, Zilles K. <a href="https://doi.org/10.1016/j.neuroimage.2004.12.034">A new SPM toolbox for combining probabilistic cytoarchitectonic maps and functional imaging data.</a> NeuroImage 2005, 25(4), 1325-1335.</p>
+            Eickhoff SB, Stephan KE, Mohlberg H, Grefkes C, Fink GR, Amunts K, Zilles K. <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2004.12.034','-browser')">
+            A new SPM toolbox for combining probabilistic cytoarchitectonic maps and functional imaging data.</a> NeuroImage 2005, 25(4), 1325-1335.</p>
+
+            <p><u>JulichBrain Atlas</u><br/>
+            Amunts K, Mohlberg H, Bludau S, Zilles K. <a href="matlab:web('https://doi.org/10.1126/science.abb4588','-browser')">
+            Julich-Brain - A 3D probabilistic atlas of human brain's cytoarchitecture.</a> Science 2020, 369, 988-99.</p>
 
             <p><u>CoBra Atlas: Hippocampus</u><br/>
-            Winterburn JL, Pruessner JC, Chavez S, Schira MM, Lobaugh NJ, Voineskos AN, Chakravarty MM. <a href="https://doi.org/10.1016/j.neuroimage.2013.02.003">A novel in vivo atlas of human hippocampal subfields using high-resolution 3 T magnetic resonance imaging.</a> Neuroimage. 2013 Jul 1;74:254-65.</p>
+            Winterburn JL, Pruessner JC, Chavez S, Schira MM, Lobaugh NJ, Voineskos AN, Chakravarty MM. <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2013.02.003','-browser')">
+            A novel in vivo atlas of human hippocampal subfields using high-resolution 3 T magnetic resonance imaging.</a> Neuroimage. 2013 Jul 1;74:254-65.</p>
 
             <p><u>CoBra Atlas: Amygdala</u><br/>
-            Entis JJ, Doerga P, Barrett LF, Dickerson BC. <a href="https://doi.org/10.1016/j.neuroimage.2011.12.073>A reliable protocol for the manual segmentation of the human amygdala and its subregions using ultra-high resolution MRI.</a> Neuroimage. 2012 Apr 2;60(2):1226-35.</p>
+            Entis JJ, Doerga P, Barrett LF, Dickerson BC. <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2011.12.073','-browser')">
+            A reliable protocol for the manual segmentation of the human amygdala and its subregions using ultra-high resolution MRI.</a> Neuroimage. 2012 Apr 2;60(2):1226-35.</p>
             
             <p><u>CoBra Atlas: Subcortical Areas</u><br/>
-            Tullo S, Devenyi GA, Patel R, Park MTM, Collins DL, Chakravarty MM. <a href="https://doi.org/10.1038/sdata.2018.107">Warping an atlas derived from serial histology to 5 high-resolution MRIs.</a> Sci Data. 2018 Jun 19;5:180107.</p>
+            Tullo S, Devenyi GA, Patel R, Park MTM, Collins DL, Chakravarty MM. <a href="matlab:web('https://doi.org/10.1038/sdata.2018.107','-browser')">
+            Warping an atlas derived from serial histology to 5 high-resolution MRIs.</a> Sci Data. 2018 Jun 19;5:180107.</p>
             
             <p><u>CoBra Atlas: Cerebellum</u><br/>
-            Park MT, Pipitone J, Baer LH, Winterburn JL, Shah Y, Chavez S, Schira MM,Lobaugh NJ, Lerch JP, Voineskos AN, Chakravarty MM. <a href="https://doi.org/10.1016/j.neuroimage.2014.03.037">Derivation of high-resolution MRI atlases of the human cerebellum at 3T and segmentation using multiple automatically generated templates.</a> Neuroimage. 2014 Jul 15;95:217-31.</p>
+            Park MT, Pipitone J, Baer LH, Winterburn JL, Shah Y, Chavez S, Schira MM,Lobaugh NJ, Lerch JP, Voineskos AN, Chakravarty MM. <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2014.03.037','-browser')">
+            Derivation of high-resolution MRI atlases of the human cerebellum at 3T and segmentation using multiple automatically generated templates.</a> Neuroimage. 2014 Jul 15;95:217-31.</p>
             
             <p><u>LONI Probabilistic Brain Atlas (LPBA40)</u><br/>
-            Shattuck DW, Mirza M, Adisetiyo V, Hojatkashani C, Salamon G, Narr KL, Poldrack RA, Bilder RM, Toga AW. <a href="https://doi.org/10.1016/j.neuroimage.2007.09.031">Construction of a 3D probabilistic atlas of human cortical structures.</a> Neuroimage. 2008 Feb 1;39(3):1064-80.</p>
+            Shattuck DW, Mirza M, Adisetiyo V, Hojatkashani C, Salamon G, Narr KL, Poldrack RA, Bilder RM, Toga AW. <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2007.09.031','-browser')">
+            Construction of a 3D probabilistic atlas of human cortical structures.</a> Neuroimage. 2008 Feb 1;39(3):1064-80.</p>
             
             <p><u>Mori atlas</u><br/>
-            Oishi K, Faria A, Jiang H, Li X, Akhter K, Zhang J, Hsu JT, Miller MI, van Zijl PC, Albert M, Lyketsos CG, Woods R, Toga AW, Pike GB, Rosa-Neto P, Evans A, Mazziotta J, Mori S. <a href="https://doi.org/10.1016/j.neuroimage.2009.01.002">Atlas-based whole brain white matter analysis using large deformation diffeomorphic metric mapping: application to normal elderly and Alzheimer&quot;s disease participants.</a> Neuroimage. 2009 Jun;46(2):486-99.</p>
+            Oishi K, Faria A, Jiang H, Li X, Akhter K, Zhang J, Hsu JT, Miller MI, van Zijl PC, Albert M, Lyketsos CG, Woods R, Toga AW, Pike GB, Rosa-Neto P, Evans A, Mazziotta J, Mori S. <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2009.01.002','-browser')">
+            Atlas-based whole brain white matter analysis using large deformation diffeomorphic metric mapping: application to normal elderly and Alzheimer&quot;s disease participants.</a> Neuroimage. 2009 Jun;46(2):486-99.</p>
             
             <p><u>Desikan-Killiany Atlas (DK40)</u><br/>
-            Desikan RS, SÃ©gonne F, Fischl B, Quinn BT, Dickerson BC, Blacker D, Buckner RL, Dale AM, Maguire RP, Hyman BT, Albert MS, Killiany RJ. <a href="https://doi.org/10.1016/j.neuroimage.2006.01.021">An automated labeling system for subdividing the human cerebral cortex on MRI scans into gyral based regions of interest.</a> Neuroimage. 2006 Jul 1;31(3):968-80.</p>
+            Desikan RS, SÃ©gonne F, Fischl B, Quinn BT, Dickerson BC, Blacker D, Buckner RL, Dale AM, Maguire RP, Hyman BT, Albert MS, Killiany RJ. <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2006.01.021','-browser')">
+            An automated labeling system for subdividing the human cerebral cortex on MRI scans into gyral based regions of interest.</a> Neuroimage. 2006 Jul 1;31(3):968-80.</p>
             
             <p><u>Destrieux Atlas</u><br/>
-            Destrieux C, Fischl B, Dale A, Halgren E. <a href="https://doi.org/10.1016/j.neuroimage.2010.06.010">Automatic parcellation of human cortical gyri and sulci using standard anatomical nomenclature.</a> Neuroimage. 2010 Oct 15;53(1):1-15.</p>
+            Destrieux C, Fischl B, Dale A, Halgren E. <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2010.06.010','-browser')">
+            Automatic parcellation of human cortical gyri and sulci using standard anatomical nomenclature.</a> Neuroimage. 2010 Oct 15;53(1):1-15.</p>
             
             <p><u>Human Connectome Project (HCP) Multi-Modal Parcellation</u><br/>
-            Glasser MF, Coalson TS, Robinson EC, Hacker CD, Harwell J, Yacoub E, Ugurbil K, Andersson J, Beckmann CF, Jenkinson M, Smith SM, Van Essen DC. <a href="https://doi.org/10.1038/nature18933">A multi-modal parcellation of human cerebral cortex.</a> Nature. 2016 Aug 11;536(7615):171-178.</p>
+            Glasser MF, Coalson TS, Robinson EC, Hacker CD, Harwell J, Yacoub E, Ugurbil K, Andersson J, Beckmann CF, Jenkinson M, Smith SM, Van Essen DC. <a href="matlab:web('https://doi.org/10.1038/nature18933','-browser')">
+            A multi-modal parcellation of human cerebral cortex.</a> Nature. 2016 Aug 11;536(7615):171-178.</p>
             
             <p><u>Local-Global Intrinsic Functional Connectivity Parcellation</u><br/>
-            Schaefer A, Kong R, Gordon EM, Laumann TO, Zuo XN, Holmes AJ, Eickhoff SB, Yeo BTT. <a href="https://doi.org/10.1093/cercor/bhx179">Local-Global Parcellation of the Human Cerebral Cortex from Intrinsic Functional Connectivity MRI.</a> Cereb Cortex. 2018 Sep 1;28(9):3095-3114.</p>
+            Schaefer A, Kong R, Gordon EM, Laumann TO, Zuo XN, Holmes AJ, Eickhoff SB, Yeo BTT. <a href="matlab:web('https://doi.org/10.1093/cercor/bhx179','-browser')">
+            Local-Global Parcellation of the Human Cerebral Cortex from Intrinsic Functional Connectivity MRI.</a> Cereb Cortex. 2018 Sep 1;28(9):3095-3114.</p>
             
             <!-- ################################################################################# -->
             <h2 id="refs">References</h2>
 
-            <p>J. Ashburner, K.J. Friston (2005). <a href="https://doi.org/10.1016/j.neuroimage.2005.02.018">Unified segmentation.</a> Neuroimage 26(3):839-51.</p>
-            <p>J. Ashburner (2007): <a href="https://doi.org/10.1016/j.neuroimage.2007.07.007">A fast diffeomorphic image registration algorithm.</a> Neuroimage 38(1):95-113.</p>
-            <p>J. Ashburner, K.J. Friston (2011). <a href="https://doi.org/10.1016/j.neuroimage.2010.12.049">Diffeomorphic registration using geodesic shooting and Gauss-Newton optimisation.</a> Neuroimage 55(3):954-967.</p>
-            <p>J. Ashburner, G.R. Ridgway (2012). <a href="https://doi.org/10.3389/fnins.2012.00197">Symmetric diffeomorphic modeling of longitudinal structural MRI.</a> Front. Neurosci. 6: 197.</p>
-            <p>E. Luders, P.M. Thompson, K.L. Narr, A.W. Toga, L. Jancke, C. Gaser (2006). <a href="https://doi.org/10.1016/j.neuroimage.2005.08.049">A curvature-based approach to estimate local gyrification on the cortical surface.</a> Neuroimage 29(4): 1224-30.</p>
-            <p>C. Gaser, H.-P. Volz, S. Kiebel, S. Riehemann, H. Sauer (1999). <a href="https://doi.org/10.1006/nimg.1999.0458">Detecting structural changes in whole brain based on nonlinear deformations - application to schizophrenia research.</a> Neuroimage 10:107-113.</p>
-            <p>C. Gaser, I. Nenadic, B. Buchsbaum, E. Hazlett, M. S. Buchsbaum (2001). <a href="https://doi.org/10.1006/nimg.2001.0771">Deformation-based morphometry and its relation to conventional volumetry of brain lateral ventricles in MRI.</a> Neuroimage 13:1140-1145.</p>
-            <p>C. Gaser, R. Dahnke, P.M. Thompson, F. Kurth, E. Luders, Alzheimer&quot;s Disease Neuroimaging Initiative. <a href="https://www.biorxiv.org/content/10.1101/2022.06.11.495736">A Computational Anatomy Toolbox for the Analysis of Structural MRI Data.</a> bioRxiv</p>
-            <p>R. Dahnke, R. Yotter, C. Gaser (2012a). <a href="https://doi.org/10.1016/j.neuroimage.2012.09.050">Cortical thickness and central surface estimation.</a> Neuroimage 65: 336-348.</p>
-            <p>R. Dahnke, G. Ziegler, C. Gaser (2012b). <a href="http://www.neuro.uni-jena.de/hbm2012/HBM2012-Dahnke02.pdf">Local Adaptive Segmentation.</a> OHBM 2012</p>
-            <p>R. Desai, E. Liebenthal, E.T. Possing, E. Waldron, J.R. Binder (2005). <a href="https://doi.org/10.1016/j.neuroimage.2005.03.024">Volumetric vs. surface-based alignment for localization of auditory cortex activation.</a> Neuroimage 26(4):1019-29.</p>
-            <p>C.D. Good, I.S. Johnsrude, J. Ashburner, R.N. Henson, K.J. Friston, R.S. Frackowiak (2001). <a href="https://doi.org/10.1006/nimg.2001.0786">A voxel-based morphometric study of ageing in 465 normal adult human brains.</a> Neuroimage 14(1 Pt 1):21-36.</p>
-            <p>I.B. Malone, K.K. Leung, S. Clegg, J. Barnes, J.L. Whitwell, J. Ashburner, N.C. Fox, G.R. Ridgway (2015). <a href="https://doi.org/10.1016/j.neuroimage.2014.09.034">Accurate automatic estimation of total intracranial volume: a nuisance variable with less nuisance.</a> Neuroimage 104:366-72.</p>
-            <p>J. Manjon, P Coupe, L. Marti-Bonmati, D.L. Collins, M. Robles (2010). <a href="https://doi.org/10.1002/jmri.22003">Adaptive Non-Local Means Denoising of MR Images With Spatially Varying Noise Levels.</a> Journal of Magnetic Resonance Imaging 31: 192-203.</p>
-            <p>J.C. Rajapakse, J.N. Giedd, J.L. Rapoport (1997). <a href="https://doi.org/10.1109/42.563663">Statistical Approach to Segmentation of Single-Channel Cerebral MR Images.</a> IEEE Trans. Med. Imag. 16(2):176-186.</p>
-            <p>M. Reuter, B. Fischl (2011). <a href="https://doi.org/10.1016/j.neuroimage.2011.02.076">Avoiding asymmetry-induced bias in longitudinal image processing.</a> Neuroimage 57: 19-21.</p>
-            <p>M. Reuter, H.D. Rosas, B. Fischl (2010). <a href="https://doi.org/10.1016/j.neuroimage.2010.07.020">Highly accurate inverse consistent registration: a robust approach.</a> Neuroimage 53: 1181-1196.</p>
-            <p>J. Tohka, A. Zijdenbos, A. Evans (2004). <a href="https://doi.org/10.1016/j.neuroimage.2004.05.007">Fast and robust parameter estimation for statistical partial volume models in brain MRI.</a> Neuroimage 23(1):84-97.</p>
-            <p>R.A. Yotter, R. Dahnke, P.M. Thompson, C. Gaser (2011a). <a href="https://doi.org/10.1002/hbm.21095">Topological Correction of Brain Surface Meshes Using Spherical Harmonics.</a> Human Brain Mapping 32(7): 1109-24. </p>
-            <p>R.A. Yotter, G. Ziegler, I. Nenadic, P.M. Thompson, C. Gaser (2011b). <a href="https://doi.org/10.1016/j.neuroimage.2011.02.007">Local cortical surface complexity maps from spherical harmonic reconstructions.</a> Neuroimage 56(3): 961-973. </p>
-            <p>R.A. Yotter, P.M. Thompson, C. Gaser (2011c). <a href="https://doi.org/10.1111/j.1552-6569.2010.00484.x">Algorithms to Improve the Re-Parameterization of Spherical Mappings of Brain.</a> Journal of Neuroimaging 21(2):e134-47. </p>
-            <p>R.A. Yotter, G. Ziegler, P.M. Thompson, C. Gaser (2011d). <a href="http://www.neuro.uni-jena.de/hbm2011/Yotter02.pdf">Diffeometric Anatomical Registration on the Surface.</a> OHBM 2011</p>
+            <p>J. Ashburner, K.J. Friston (2005). <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2005.02.018','-browser')">
+            Unified segmentation.</a> Neuroimage 26(3):839-51.</p>
+            
+            <p>J. Ashburner (2007): <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2007.07.007','-browser')">A fast diffeomorphic image registration algorithm.</a> Neuroimage 38(1):95-113.</p>
+            
+            <p>J. Ashburner, K.J. Friston (2011). <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2010.12.049','-browser')">
+            Diffeomorphic registration using geodesic shooting and Gauss-Newton optimisation.</a> Neuroimage 55(3):954-967.</p>
+            
+            <p>J. Ashburner, G.R. Ridgway (2012). <a href="matlab:web('https://doi.org/10.3389/fnins.2012.00197','-browser')">
+            Symmetric diffeomorphic modeling of longitudinal structural MRI.</a> Front. Neurosci. 6: 197.</p>
+            
+            <p>E. Luders, P.M. Thompson, K.L. Narr, A.W. Toga, L. Jancke, C. Gaser (2006). <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2005.08.049','-browser')">
+            A curvature-based approach to estimate local gyrification on the cortical surface.</a> Neuroimage 29(4): 1224-30.</p>
+            
+            <p>C. Gaser, H.-P. Volz, S. Kiebel, S. Riehemann, H. Sauer (1999). <a href="matlab:web('https://doi.org/10.1006/nimg.1999.0458','-browser')">
+            Detecting structural changes in whole brain based on nonlinear deformations - application to schizophrenia research.</a> Neuroimage 10:107-113.</p>
+            
+            <p>C. Gaser, I. Nenadic, B. Buchsbaum, E. Hazlett, M. S. Buchsbaum (2001). <a href="matlab:web('https://doi.org/10.1006/nimg.2001.0771','-browser')">
+            Deformation-based morphometry and its relation to conventional volumetry of brain lateral ventricles in MRI.</a> Neuroimage 13:1140-1145.</p>
+            
+            <p>C. Gaser, R. Dahnke, P.M. Thompson, F. Kurth, E. Luders, Alzheimer&quot;s Disease Neuroimaging Initiative. <a href="matlab:web('https://www.biorxiv.org/content/10.1101/2022.06.11.495736','-browser')">
+            A Computational Anatomy Toolbox for the Analysis of Structural MRI Data.</a> bioRxiv</p>
+            
+            <p>R. Dahnke, R. Yotter, C. Gaser (2012a). <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2012.09.050','-browser')">
+            Cortical thickness and central surface estimation.</a> Neuroimage 65: 336-348.</p>
+            <p>R. Dahnke, G. Ziegler, C. Gaser (2012b). <a href="matlab:web('http://www.neuro.uni-jena.de/hbm2012/HBM2012-Dahnke02.pdf','-browser')">Local Adaptive Segmentation.</a> OHBM 2012</p>
+            
+            <p>R. Desai, E. Liebenthal, E.T. Possing, E. Waldron, J.R. Binder (2005). <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2005.03.024','-browser')">
+            Volumetric vs. surface-based alignment for localization of auditory cortex activation.</a> Neuroimage 26(4):1019-29.</p>
+            
+            <p>C.D. Good, I.S. Johnsrude, J. Ashburner, R.N. Henson, K.J. Friston, R.S. Frackowiak (2001). <a href="matlab:web('https://doi.org/10.1006/nimg.2001.0786','-browser')">
+            A voxel-based morphometric study of ageing in 465 normal adult human brains.</a> Neuroimage 14(1 Pt 1):21-36.</p>
+            
+            <p>I.B. Malone, K.K. Leung, S. Clegg, J. Barnes, J.L. Whitwell, J. Ashburner, N.C. Fox, G.R. Ridgway (2015). <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2014.09.034','-browser')">
+            Accurate automatic estimation of total intracranial volume: a nuisance variable with less nuisance.</a> Neuroimage 104:366-72.</p>
+            
+            <p>J. Manjon, P Coupe, L. Marti-Bonmati, D.L. Collins, M. Robles (2010). <a href="matlab:web('https://doi.org/10.1002/jmri.22003','-browser')">
+            Adaptive Non-Local Means Denoising of MR Images With Spatially Varying Noise Levels.</a> Journal of Magnetic Resonance Imaging 31: 192-203.</p>
+            
+            <p>J.C. Rajapakse, J.N. Giedd, J.L. Rapoport (1997). <a href="matlab:web('https://doi.org/10.1109/42.563663','-browser')">
+            Statistical Approach to Segmentation of Single-Channel Cerebral MR Images.</a> IEEE Trans. Med. Imag. 16(2):176-186.</p>
+            
+            <p>M. Reuter, B. Fischl (2011). <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2011.02.076','-browser')">
+            Avoiding asymmetry-induced bias in longitudinal image processing.</a> Neuroimage 57: 19-21.</p>
+            
+            <p>M. Reuter, H.D. Rosas, B. Fischl (2010). <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2010.07.020','-browser')">
+            Highly accurate inverse consistent registration: a robust approach.</a> Neuroimage 53: 1181-1196.</p>
+            
+            <p>J. Tohka, A. Zijdenbos, A. Evans (2004). <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2004.05.007','-browser')">
+            Fast and robust parameter estimation for statistical partial volume models in brain MRI.</a> Neuroimage 23(1):84-97.</p>
+            
+            <p>R.A. Yotter, R. Dahnke, P.M. Thompson, C. Gaser (2011a). <a href="matlab:web('https://doi.org/10.1002/hbm.21095','-browser')">
+            Topological Correction of Brain Surface Meshes Using Spherical Harmonics.</a> Human Brain Mapping 32(7): 1109-24. </p>
+            
+            <p>R.A. Yotter, G. Ziegler, I. Nenadic, P.M. Thompson, C. Gaser (2011b). <a href="matlab:web('https://doi.org/10.1016/j.neuroimage.2011.02.007','-browser')">
+            Local cortical surface complexity maps from spherical harmonic reconstructions.</a> Neuroimage 56(3): 961-973. </p>
+            
+            <p>R.A. Yotter, P.M. Thompson, C. Gaser (2011c). <a href="matlab:web('https://doi.org/10.1111/j.1552-6569.2010.00484.x','-browser')">
+            Algorithms to Improve the Re-Parameterization of Spherical Mappings of Brain.</a> Journal of Neuroimaging 21(2):e134-47. </p>
+            
+            <p>R.A. Yotter, G. Ziegler, P.M. Thompson, C. Gaser (2011d). <a href="matlab:web('http://www.neuro.uni-jena.de/hbm2011/Yotter02.pdf','-browser')">
+            Diffeometric Anatomical Registration on the Surface.</a> OHBM 2011</p>
 
             <p class="hl">15-10-2022<br/>
             Christian Gaser <a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a><br/>
@@ -3547,111 +3696,135 @@
       </div>
 
       <!-- Sidebar -->
-        <div id="sidebar">
-          <div class="inner">
+      <div id="sidebar">
+        <div class="inner">
 
-            <!-- Menu -->
-              <nav id="menu">
-                <ul>
-                  <li><a href="#intro">Introduction and Overview</a></li>
-                  <li>
-                    <span class="opener">Quick start guide</span>
-                    <ul>
-                      <li><a href="#vbm_data">VBM Data</a></li>
-                      <li><a href="#add_surf">Additional Surface Data</a></li>
-                      <li><a href="#add_opts">Additional Options</a></li>
-                      <li><a href="#errors">Errors During Preprocessi</a></li>
-                    </ul>
-                  </li>
-                  <li><a href="#versiom">Version Information</a></li>
-                  <li>
-                    <span class="opener">How to start</span>
-                    <ul>
-                      <li><a href="#download">Download and Installation</a></li>
-                      <li><a href="#starting">Starting the Toolbox</a></li>
-                      <li><a href="#basic_vbm">Basic VBM Analysis (Overview)</a></li>
-                    </ul>
-                  </li>
-                  <li>
-                    <span class="opener">Overview of CAT12 Processing</span>
-                    <ul>
-                      <li><a href="#major_process">CAT12 Major Processing Steps</a></li>
-                      <li><a href="#process_details">CAT12 Processing Steps in Detail</a></li>
-                    </ul>
-                  </li>
-                  
-                      
-                  <li>
-                    <span class="opener">Preprocessing Data</span>
-                    <ul>
-                      <li><a href="#module1">First Module: Segment Data</a></li>
-                      <li><a href="#module2">Second Module: Display Slices (optionally)</a></li>
-                      <li><a href="#module3">Third Module: Estimate Total Intracranial Volume (TIV)</a></li>
-                      <li><a href="#module4">Fourth Module: Check Sample Homogeneity</a></li>
-                      <li><a href="#module5">Fifth Module: Smooth</a></li>
-                    </ul>
-                  </li>
+          <!-- Menu -->
+            <nav id="menu">
+              <ul>
+                <li><a href="#intro">Introduction and Overview</a></li>
+                <li>
+                  <span class="opener">Quick start guide</span>
+                  <ul>
+                    <li><a href="#vbm_data">VBM data</a></li>
+                    <li><a href="#add_surf">Additional surface data</a></li>
+                    <li><a href="#add_opts">Additional options</a></li>
+                    <li><a href="#errors">Errors during preprocessing</a></li>
+                  </ul>
+                </li>
+                <li><a href="#versiom">Version information</a></li>
+                <li>
+                  <span class="opener">How to start</span>
+                  <ul>
+                    <li><a href="#download">Download and installation</a></li>
+                    <li><a href="#starting">Starting the toolbox</a></li>
+                    <li><a href="#basic_vbm">Basic VBM analysis (overview)</a></li>
+                  </ul>
+                </li>
+                <li>
+                  <span class="opener">Overview of CAT12 processing</span>
+                  <ul>
+                    <li><a href="#major_process">CAT12 major processing steps</a></li>
+                    <li><a href="#process_details">CAT12 processing steps in detail</a></li>
+                  </ul>
+                </li>
+                
+                    
+                <li>
+                  <span class="opener">Preprocessing Data</span>
+                  <ul>
+                    <li><a href="#module1">First module: Segment Data</a></li>
+                    <li><a href="#module2">Second module: display slices (optionally)</a></li>
+                    <li><a href="#module3">Third module: Estimate total intracranial volume (TIV)</a></li>
+                    <li><a href="#module4">Fourth module: Check sample homogeneity</a></li>
+                    <li><a href="#module5">Fifth module: Smooth</a></li>
+                  </ul>
+                </li>
 
-                  <li>
-                    <span class="opener">Building the Statistical Model</span>
-                    <ul>
-                      <li><a href="#stat_options">General Notes and Options for Statistical Models</a></li>
-                      <li><a href="#two_sample">Two-sample T-Test</a></li>
-                      <li><a href="#full_fact">Full Factorial Model (for a 2x2 Anova)</a></li>
-                      <li><a href="#mult_regress">Multiple Regression (Linear)</a></li>
-                      <li><a href="#mult_regress_poly">Multiple Regression (Polynomial)</a></li>
-                      <li><a href="#full_fact_interact">Full Factorial Model (Interaction)</a></li>
-                      <li><a href="#full_fact_poly">Full Factorial Model (Polynomial Interaction)</a></li>
-                      <li><a href="#estimate">Estimating the Statistical Model</a></li>
-                      <li><a href="#ortho">Checking for Design Orthogonality</a></li>
-                      <li><a href="#contrasts">Defining Contrasts</a></li>
-                    </ul>
-                  </li>
+                <li>
+                  <span class="opener">Building the statistical model</span>
+                  <ul>
+                    <li><a href="#stat_options">General notes and options for statistical models</a></li>
+                    <li><a href="#two_sample">Two-sample T-test</a></li>
+                    <li><a href="#full_fact">Full factorial model (for a 2x2 Anova)</a></li>
+                    <li><a href="#mult_regress">Multiple regression (linear)</a></li>
+                    <li><a href="#mult_regress_poly">Multiple regression (polynomial)</a></li>
+                    <li><a href="#full_fact_interact">Full factorial model (interaction)</a></li>
+                    <li><a href="#full_fact_poly">Full factorial model (polynomial interaction)</a></li>
+                    <li><a href="#estimate">Estimating the statistical model</a></li>
+                    <li><a href="#ortho">Checking for design orthogonality</a></li>
+                    <li><a href="#contrasts">Defining contrasts</a></li>
+                  </ul>
+                </li>
 
-                  <li>
-                    <span class="opener">CAT12 for Longitudinal Data</span>
-                    <ul>
-                      <li><a href="#long_opt">Optional Change of Parameters for Preprocessing</a></li>
-                      <li><a href="#long_process">Preprocessing of Longitudinal Data</a></li>
-                      <li><a href="#long_one">Longitudinal Data in One Group</a></li>
-                      <li><a href="#long_two">Longitudinal Data in Two (or more) Groups</a></li>
-                      <li><a href="#long_two_interact">Longitudinal Data in Two (or more) Groups with Interaction of Covariate by Group</a></li>
-                      <li><a href="#long_contrast">Contrasts for Longitudinal Models</a></li>
-                    </ul>
-                  </li>
+                <li>
+                  <span class="opener">CAT12 for longitudinal data</span>
+                  <ul>
+                    <li><a href="#long_opt">Optional change of parameters for preprocessing</a></li>
+                    <li><a href="#long_process">Preprocessing of longitudinal data</a></li>
+                    <li><a href="#long_one">Longitudinal data in one group</a></li>
+                    <li><a href="#long_two">Longitudinal data in wwo (or more) groups</a></li>
+                    <li><a href="#long_two_interact">Longitudinal data in two (or more) groups with interaction of covariate by group</a></li>
+                    <li><a href="#long_contrast">Contrasts for longitudinal models</a></li>
+                  </ul>
+                </li>
 
-                  <li>
-                    <span class="opener">Processing of Data such as Children</span>
-                    <ul>
-                      <li><a href="#tpm">Customized Tissue Probability Maps</a></li>
-                      <li><a href="#cust_templates">Customized Dartel- or Shooting-Template</a></li>
-                    </ul>
-                  </li>
+                <li>
+                  <span class="opener">Processing of data such as children</span>
+                  <ul>
+                    <li><a href="#tpm">Customized tissue probability maps</a></li>
+                    <li><a href="#cust_templates">Customized Dartel- or Shooting-Template</a></li>
+                  </ul>
+                </li>
 
-                  <li>
-                    <span class="opener">Other Variants of Computational Morphometry</span>
-                    <ul>
-                      <li><a href="#dbm">Deformation-based Morphometry (DBM)</a></li>
-                      <li><a href="#sbm">Surface-based Morphometry (SBM)</a></li>
-                      <li><a href="#roi">Region of Interest (ROI) Analysis</a></li>
-                    </ul>
-                  </li>
+                <li>
+                  <span class="opener">Other variants of computational morphometry</span>
+                  <ul>
+                    <li><a href="#dbm">Deformation-based morphometry (DBM)</a></li>
+                    <li><a href="#sbm">Surface-based morphometry (SBM)</a></li>
+                    <li><a href="#roi">Region of interest (ROI) analysis</a></li>
+                  </ul>
+                </li>
 
-                  <li><a href="#reg_info">Additional Information on Registration</a></li>
-                  <li><a href="#naming">Naming Convention of Output Files</a></li>
-                  <li><a href="#unix">Calling CAT From the UNIX Command Line</a></li>
-                  <li><a href="#tech_info">Technical Information</a></li>
-                  <li><a href="#cite">CAT12 Citation</a></li>
-                  <li><a href="#refs">References</a></li>
-                </ul>
-              </nav>
+                <li>
+                  <span class="opener">Additional information</span>
+                  <ul>
+                    <li><a href="#reg_info">Spaces after registration</a></li>
+                    <li><a href="#naming">Naming convention of output files</a></li>
+                    <li><a href="#unix">Calling CAT from the UNIX command line</a></li>
+                  </ul>
+                </li>
 
-            </div>
+                <li>
+                  <span class="opener">Additional tools</span>
+                  <ul>
+                    <li><a href="#vbm_tool">VBM tools</a></li>
+                    <li><a href="#sbm_tool">Surface tools</a></li>
+                    <li><a href="#roi_tool">ROI tools</a></li>
+                  </ul>
+                </li>
+
+                <li>
+                  <span class="opener">Methods</span>
+                  <ul>
+                    <li><a href="#vox_proc">Voxel-based processing</a></li>
+                    <li><a href="#surf_proc">Surface-based processing</a></li>
+                    <li><a href="#atlas">Atlas creation and ROI based analysis</a></li>
+                    <li><a href="#qc">Quality control</a></li>
+                  </ul>
+                </li>
+
+                <li><a href="#cite">Citing CAT12</a></li>
+                <li><a href="#refs">References</a></li>
+              </ul>
+            </nav>
+
           </div>
+        </div>
 
       </div>
 
-    <!-- Scripts -->
+      <!-- Scripts -->
       <script src="js/jquery.min.js"></script>
       <script src="js/browser.min.js"></script>
       <script src="js/breakpoints.min.js"></script>

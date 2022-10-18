@@ -201,7 +201,7 @@ for ali=1:numel(atlaslist)
   end
   if any(~cellfun('isempty',strfind(atlaslist(ali),'thalamic_nuclei')))
     ROI.help = [ROI.help; strrep({
-        '(MAI) Atlas of human thalamic nuclei (based on hi-res T2 from 9 subjects with 11 regions):'
+        '(MAI) Atlas of human thalamic nuclei (based on hi-res T2 from 9 subjects with 22 regions):'
         '    Saranathan M, Iglehart C, Monti M, Tourdias T, Rutt B. In vivo high-resolution structural MRI-based atlas of human thalamic nuclei. Sci Data. 2021 Oct 28;8(1):275.'
         ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
   end
