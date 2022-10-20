@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2123 | rdahnke | 2022-10-20 10:53:46
+
+Changed paths:
+ M CHANGES.txt
+ M cat_batch_long.m
+ M cat_batch_long.sh
+ M cat_conf_long.m
+
+
+Fixed:  Corrected handling of printlong variable in long shell batch.
+------------------------------------------------------------------------
 r2122 | gaser | 2022-10-18 17:26:11
 
 Changed paths:
