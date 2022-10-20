@@ -1,4 +1,4 @@
-function cat_batch_long(namefile,output_surface,long_model,cat_defaults,export_dartel)
+function cat_batch_long(namefile,output_surface,long_model,cat_defaults,export_dartel,printlong)
 % wrapper for using batch mode (see cat_batch_long.sh)
 %
 % namefile       - array of file names
@@ -80,6 +80,15 @@ else
   end
 end
 
+if nargin < 6
+  printlong = 2;
+else
+  % string argument has to be converted 
+  if isstr(printlong)
+    printlong = str2num(printlong);
+  end
+end
+
 matlabbatch{1}.spm.tools.cat.long.datalong.subjects{1} = names;
 matlabbatch{1}.spm.tools.cat.long.nproc = 0;
 matlabbatch{1}.spm.tools.cat.long.modulate = 1;
@@ -87,6 +96,7 @@ matlabbatch{1}.spm.tools.cat.long.modulate = 1;
 % update parameters
 matlabbatch{1}.spm.tools.cat.long.output.surface = output_surface;
 matlabbatch{1}.spm.tools.cat.long.longmodel = long_model;
+matlabbatch{1}.spm.tools.cat.long.printlong = printlong; 
 matlabbatch{1}.spm.tools.cat.long.dartel = 2*export_dartel; % affine registered data
 
 warning off

@@ -222,6 +222,7 @@ printlong.tag     = 'printlong';
 printlong.name    = 'Create CAT long report';
 printlong.labels  = {'No','Yes (volume only)','Yes (volume and surfaces)'};
 printlong.values  = {0 1 2};
+printlong.hidden  = expert<1;
 printlong.def     = @(val)cat_get_defaults('extopts.print', val{:});
 printlong.help    = {
   'Create final longitudinal CAT report that requires Java.'

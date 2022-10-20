@@ -15,13 +15,19 @@
 
 matlab=matlab   # you can use other matlab versions by changing the matlab parameter
 cwd=$(dirname "$0")
+if [ "$cwd" == "." ] # if someone call the batch within the cat12 directory
+then 
+   cwd=$(pwd); 
+fi
 cat12_dir=$cwd
 spm12=$(dirname "$cwd")
 spm12=$(dirname "$spm12")
+spm12dir=spm12
 LOGDIR=$PWD
 export_dartel=0
 output_surface=1
 long_model=1
+printlong=2 
 time=`date "+%Y%b%d_%H%M"`
 defaults_tmp=/tmp/defaults$$.m
 fg=0
@@ -71,6 +77,11 @@ parse_args ()
       --model* | -model*)
         exit_if_empty "$optname" "$optarg"
         long_model=$optarg
+        shift
+        ;;
+      --print* | longlong*)
+        exit_if_empty "$optname" "$optarg"
+        printlong=$optarg
         shift
         ;;
       --matlab* | -m*)
@@ -272,7 +283,7 @@ run_cat12 ()
   echo Check $vbmlog for logging information
   echo
 
-  COMMAND="cat_batch_long('${TMP}','${output_surface}','${long_model}','${defaults_tmp}','${export_dartel}')"
+  COMMAND="addpath('${spm12}'); cat_batch_long('${TMP}','${output_surface}','${long_model}','${defaults_tmp}','${export_dartel}','{printlong}')"
   echo Running ${ARG_LIST}
   echo > $vbmlog
   echo ---------------------------------- >> $vbmlog
@@ -314,7 +325,7 @@ cat <<__EOM__
 
 USAGE:
   cat_batch_long.sh filenames|filepattern [-d default_file] [-m matlabcommand] 
-                      [-log logdir] [-ns] [-large] [-model longmodel] [-e] [-nj] 
+                      [-log logdir] [-ns] [-large] [-model longmodel] [-printlong printlong] [-e] [-nj] 
   
   -m <FILE>   | --matlab  <FILE>        matlab command (default $matlab)
   -d <FILE>   | --defaults <FILE>       optional default file (default ${cat12_dir}/cat_defaults.m)
@@ -330,6 +341,10 @@ USAGE:
                                           1 - detect small changes (i.e. due to plasticity)
                                           2 - detect large changes (i.e. ageing or development)
                                           3 - save results for both models 1 and 2
+  -printlong  | --printlong             print longitudinal report
+                                          0 - no printing
+                                          1 - print report but only volume results
+                                          2 - print full report (default)
   -b          | --bids                  use default BIDS path (i.e. '../derivatives/CAT12.x_rxxxx')
   -bf <STRING>| --bids_folder <STRING>  define BIDS path
 
