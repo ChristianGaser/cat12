@@ -759,7 +759,9 @@ n_thresholded = min(find(H.data.avg_abs_zscore_sorted > threshold_zsc));
 if ~isempty(n_thresholded) && job.verb
   fprintf('\nThese data have a mean absolute Z-score above 2 standard deviations.\n');
   fprintf('This does not necessarily mean that you have to exclude these data. However, these data have to be carefully checked:\n');
-  for i=n_thresholded:n_subjects % just switch this improve readability in case of different fname length
+  
+  fprintf('IQR / mean absolute Z-score / filename\n');
+  for i = n_thresholded:n_subjects % just switch this improve readability in case of different fname length
     if isfield(H.xml,'QM') && ~isempty(H.xml.QM)
       cat_io_cprintf([0.5 0 0.5],'  %3.3f:', H.xml.QM(i,end) );
     end

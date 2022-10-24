@@ -199,16 +199,15 @@ function tools = cat_conf_tools(expert)
   tools.tag    = 'tools';
   tools.values = { ...
     showslice, ...                        cat.stat.pre 
-    ... qa, ...                           cat.stat.pre
-    qa, ...                               
     check_cov, ...                        cat.stat.pre
     check_cov_old, ...                    cat.stat.pre
     quality_measures, ...                 cat.stat.pre
+    qa, ...                               cat.stat.pre
     check_SPM, ...                        cat.stat.pre
     ...
     calcvol, ...                          cat.stat.pre
     calcroi, ...                          cat.stat.pre
-      ROIsum, ...
+    ROIsum, ...
     iqr, ...                              cat.stat.pre
     ...
     T2x, F2x, T2x_surf, F2x_surf, ...     cat.stat.models?
@@ -2893,7 +2892,7 @@ function quality_measures = conf_quality_measures(globals)
 
   quality_measures         = cfg_exbranch;
   quality_measures.tag     = 'quality_measures';
-  quality_measures.name    = 'Check sample homogeneity for very large samples using mean Z-score';
+  quality_measures.name    = 'Estimate sample homogeneity for very large samples';
   quality_measures.val     = {data,globals,csv_name};
   quality_measures.prog    = @cat_stat_quality_measures;
   quality_measures.help    = {
@@ -3003,7 +3002,7 @@ function [check_homogeneity, check_cov] = conf_check_cov(data_xml,outdir,fname,s
   check_homogeneity        = cfg_exbranch;
   check_homogeneity.val    = {sample,sel_xml,globals,nuisance};
   check_homogeneity.tag    = 'check_homogeneity';
-  check_homogeneity.name   = 'Check sample homogeneity using Z-score';
+  check_homogeneity.name   = 'Check sample homogeneity';
   check_homogeneity.prog   = @cat_stat_homogeneity;
   check_homogeneity.help   = {
     'In order to identify data with poor data quality or even artefacts you can use this function. 3D images have to be in the same orientation with same voxel size and dimension (e.g. normalized images without smoothing) while surfaces have to be resampled and smoothed using the same parameters. The idea of this tool is to check the Z-score of all data across the sample.'

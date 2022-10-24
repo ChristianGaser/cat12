@@ -1,5 +1,5 @@
 #! /bin/bash
-# Tool for adding revision and date to m-files that were prepared in cat12/cat12.
+# Tool for adding revision and date to m-files that were prepared in cat12.
 # ______________________________________________________________________
 #
 # Christian Gaser, Robert Dahnke
