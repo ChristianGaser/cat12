@@ -1,4 +1,24 @@
 ------------------------------------------------------------------------
+r2124 | gaser | 2022-10-24 11:52:19
+
+Changed paths:
+ M CHANGES.txt
+ M Makefile
+ M cat_conf_tools.m
+ M cat_progress_bar.m
+ M cat_stat_homogeneity.m
+ M doc/index.html
+ M update_revision.sh
+
+
+Changed: Renamed the multiple tools to check homogeneity.
+Changed: Added description of output to cat_stat_homogeneity.m.
+Changed: Updated html doc.
+Fixed:   Added try command to waitbar-call in cat_progress_bar to prevent errors
+         if progress window was closed.
+
+
+------------------------------------------------------------------------
 r2123 | rdahnke | 2022-10-20 10:53:46
 
 Changed paths:
