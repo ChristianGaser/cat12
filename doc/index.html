@@ -3505,10 +3505,13 @@
             <details>            
               <summary><u>Can I overlay more than one result on the surface?</u></summary>
               Use the following command to allow RGB overlay of up to 3 results: <a class="function" href="matlab:y=cat_surf_results('rgb',spm_select([1 3],'mesh'));">cat_surf_results('rgb',spm_select([1 3],'mesh'));</a><br>
-              Please note that the surface maps should be thresholded (i.e. using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x');">Transform and Threshold SPM-maps</a>)
-              
+              Please note that the surface maps should be thresholded (i.e. using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x');">Transform and Threshold SPM-maps</a>)              
             </details>            
             
+            <details>            
+              <summary><u>The old "Check Sample Homogeneity" tool was quite useful for finding duplicate subjects in large samples. The new homogeneity tool, which uses Z-score, no longer supports this.</u></summary>
+              Estimating the Z-score is much faster than calculating the covariance matrix between all scans, especially for larger samples. However, the old tool is still available <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_cov');">here</a>.
+            </details>            
 
 -->
             <!-- ################################################################################# -->
@@ -3702,7 +3705,7 @@
                     <li><a href="#errors">Errors during preprocessing</a></li>
                   </ul>
                 </li>
-                <li><a href="#versiom">Version information</a></li>
+                <li><a href="#version">Version information</a></li>
                 <li>
                   <span class="opener">How to start</span>
                   <ul>

@@ -61,7 +61,7 @@ switch lower(action)
         else
           str = sprintf('%.f%%',iter/n_iterations*100);
         end
-        waitbar(iter/n_iterations,Fwaitbar,str);
+        try, waitbar(iter/n_iterations,Fwaitbar,str); end
           
         % save old values
         time_old = clock;
