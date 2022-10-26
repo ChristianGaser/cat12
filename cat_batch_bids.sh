@@ -15,10 +15,12 @@
 # sub-*/ses-*/anat/sub-*T1w.nii*
 
 if [ "$1" = "" ]; then
-  echo usage:  $0 bids_directories
+  echo usage:  $0 bids_directoriy
   exit
 fi
 
+subjid=$( basename $1 ) # note that only one subject id should be inputted at the time.
+dirname=$(dirname $1 ) 
 cat12_dir=$cwd
 matlab=matlab # you can use other matlab versions by changing the matlab parameter
 default="cat_defaults_bids.m" # define own defaults file here
@@ -33,6 +35,8 @@ rp=" --rp " # additionally estimate affine registered segmentations (cross-secti
 bids_folder_cross="../derivatives/CAT12.8.1"     # define BIDS path for cross-sectional data
 bids_folder_long="../derivatives/CAT12.8.1_long" # define BIDS path for longitudinal data
 fg=" --fg " # keep process in foreground which might be neccessary for batch/queue systems
+log_folder="${dirname}/derivatives/logs_CAT12.8.1/${subjid}" # the directory for the log files. 
+                                                             # Must contain the subject id 
 
 for i in ${@}/; do
   count=0 # count files
@@ -46,16 +50,14 @@ for i in ${@}/; do
     # first check for nii.gz
     if [ ! -n "$t1" ]; then
       t1=`ls ${j}/anat/sub*T1w.nii 2>/dev/null`
-
       # if not found then check for nii
-      if [ ! -n "$t1" ]; then
-        break
-      fi  
+    fi
+    # update list and count if something is  found 
+    if [ -n "$t1" ]; then
+      list="${list} ${t1}"  
+      count=`expr $count + 1`  
     fi  
     
-    # update list and count
-    list="${list} ${t1}"  
-    count=`expr $count + 1`  
   done
 
   # nothing found
@@ -64,9 +66,9 @@ for i in ${@}/; do
   else
     # use cross-sectional pipeline for single files
     if [ "${count}" -eq "1" ]; then
-      ${cat12_dir}/cat_batch_cat.sh $list -p 1 $fg --matlab $matlab --defaults $default $no_surf $rp --bids_folder $bids_folder_cross
+      ${cat12_dir}/cat_batch_cat.sh $list -p 1 $fg --matlab $matlab --defaults $default $no_surf $rp --bids_folder $bids_folder_cross --logdir $log_folder
     else # otherwise call longitudinal pipeline
-      ${cat12_dir}/cat_batch_long.sh $list $fg --matlab $matlab --defaults $default --model $model $no_surf $export_dartel --bids_folder $bids_folder_long
+      ${cat12_dir}/cat_batch_long.sh $list $fg --matlab $matlab --defaults $default --model $model $no_surf $export_dartel --bids_folder $bids_folder_long --logdir $log_folder
     fi    
   fi
     

@@ -82,7 +82,8 @@ for i = 1:n
     mx(i) = max(data{i}(:));
   else
   
-    [pth,nam,ext] = spm_fileparts(deblank(data(i,:)));
+    fname = deblank(data(i,:));
+    [pth,nam,ext] = spm_fileparts(fname);
 
     % 1 - txt; 2 - volume; 3 - mesh; 4 - Freesurfer
     if strcmp(ext,'.txt')
@@ -97,14 +98,14 @@ for i = 1:n
 
     switch filetype
     case 1
-      [cdata{i}, mn(i), mx(i)] = loadsingle_txt(deblank(data(i,:)));
+      [cdata{i}, mn(i), mx(i)] = loadsingle_txt(fname);
     case 2
-      [cdata{i}, mn(i), mx(i)] = loadsingle(nifti(data(i,:)));
+      [cdata{i}, mn(i), mx(i)] = loadsingle(nifti(fname));
     case 3
-      [cdata{i}, mn(i), mx(i)] = loadsingle(spm_data_hdr_read(data(i,:)));
+      [cdata{i}, mn(i), mx(i)] = loadsingle(gifti(fname));
     case 4
       try
-        [cdata{i}, mn(i), mx(i)] = loadsingleFS(deblank(data(i,:)));
+        [cdata{i}, mn(i), mx(i)] = loadsingleFS(fname);
       catch
         error('Unknown data format');
       end
@@ -213,7 +214,7 @@ else
   error('Parameter xrange does not consist of two entries');
 end
 
-fig = figure(13);
+fig = figure;
 set(fig,'MenuBar', 'none', 'Position',[100, 0, opt.winsize]);
 
 for j = 1:n
@@ -321,7 +322,7 @@ function [udat, mn, mx] = loadsingle(V)
 if isa(V,'nifti')
   udat(:,:,:) = V.dat(:,:,:);
 else
-  udat = spm_data_read(V);
+  udat = V.cdata(:);
 end
 
 % remove zero background
@@ -363,7 +364,7 @@ function [udat, mn, mx] = loadsingleFS(P)
 % reads a binary curvature file into a vector with single data type
 %
 
-udat = cat_io_FreeSurfer('read_surf',filename);
+udat = cat_io_FreeSurfer('read_surf_data',P);
 
 mx = max(udat(:));
 mn = min(udat(:));
