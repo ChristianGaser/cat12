@@ -1,4 +1,16 @@
 ------------------------------------------------------------------------
+r2125 | gaser | 2022-10-26 13:45:37
+
+Changed paths:
+ M CHANGES.txt
+ M cat_batch_bids.sh
+ M cat_plot_histogram.m
+
+
+Changed: Included some of Jussi Tohkas modifications into cat_batch_bids.sh.
+Fixed:   Reading of Freesurfer and gifti data in cat_plot_histogram was 
+         erronous.
+------------------------------------------------------------------------
 r2124 | gaser | 2022-10-24 11:52:19
 
 Changed paths:
