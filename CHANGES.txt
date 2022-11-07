@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2131 | gaser | 2022-11-08 00:16:30
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M cat_update.m
+ M doc/cat.html
+ M spm_cat12.m
+
+
+Changed: Added old html folder and PDF manual to file that are removed during 
+         update.
+------------------------------------------------------------------------
 r2130 | gaser | 2022-11-08 00:03:30
 
 Changed paths:
