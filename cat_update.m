@@ -93,7 +93,7 @@ end
 if update
   overwrite = spm_input(sprintf('Update to r%d',rnew),1,'yes|no',[1 0],1);
   d0 = spm('Dir');
-  d  = fileparts(which('cat12'));
+  d  = fileparts(fileparts(which('cat12')));
   
   if overwrite
     try
@@ -107,7 +107,7 @@ if update
       
       % delete old html folder
       htmldir = fullfile(fileparts(mfilename('fullpath')),'html');
-      rmdir(htmldir, 's');
+      if exist(htmldir,'dir'), rmdir(htmldir, 's'); end
 
       % delete old CAT12 manual
       pdffile = fullfile(fileparts(mfilename('fullpath')),'CAT12-Manual.pdf');
@@ -178,20 +178,20 @@ if update
       end
     end
     
+    % open version information if difference between release numbers 
+    % is large enough
+    if rnew > r+20
+      web(fullfile(fileparts(mfilename('fullpath')),'doc','index.html#version'));
+    end
+    
     [warnmsg, msgid] = lastwarn;
     switch msgid
-      case ''
-        % open version information if difference between release numbers 
-        % is large enough
-        if rnew > r+20
-          web(fullfile(fileparts(mfilename('fullpath')),'html','cat_versions.html'));
-        end
       case 'MATLAB:extractArchive:unableToCreate'
         fprintf('          Update failed: check folder permission.\n');
       case 'MATLAB:extractArchive:unableToOverwrite'
         fprintf('          Update failed: check file permissions.\n');
       otherwise
-        fprintf('          Update failed: %s.\n',warnmsg);
+        fprintf('          Warning %s.\n',warnmsg);
     end  
   else    
     web([url sprintf('cat12_r%d.zip',rnew)],'-browser');
