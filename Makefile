@@ -25,7 +25,7 @@ STARGET3=${STARGET3_HOST}:${STARGET3_FOLDER}
 
 MATLAB_FILES=Contents.* cat_*.m spm_cat12.m tbx_cfg_cat.m sliderPanel.m slice_overlay.m cat_run* compile.m
 C_FILES=Amap.[ch] ornlm_float.c sanlm_float.c MrfPrior.c Pve.c Kmeans.c cat_*.c* cat_*.mex* vollib.c genus0.[ch] tricases.h spm_diffeo_old.mex*
-MISC_FILES=CAT12-Manual.pdf README.md CHANGES.txt INSTALL.txt doc html standalone templates_MNI152NLin2009cAsym templates_surfaces templates_surfaces_32k atlases_surfaces atlases_surfaces_32k cat12.* CAT.* distribute_to_server.sh cat_*.sh  cat_long_main*txt glass_brain.mat
+MISC_FILES=README.md CHANGES.txt INSTALL.txt doc standalone templates_MNI152NLin2009cAsym templates_surfaces templates_surfaces_32k atlases_surfaces atlases_surfaces_32k cat12.* CAT.* distribute_to_server.sh cat_*.sh  cat_long_main*txt glass_brain.mat
 
 FILES=${MATLAB_FILES} ${C_FILES} ${MISC_FILES}
 
@@ -65,20 +65,15 @@ install3: copy_longmode
 # print available commands
 help:
 	-@echo Available commands:
-	-@echo clean install zip scp scp_manual scp_precompile scp_standalone doc update cp_binaries archive check_pipeline checklist precompile standalone
+	-@echo clean install zip scp scp_precompile scp_standalone docs update cp_binaries archive check_pipeline checklist precompile standalone
 
 #make html documentation
-doc:
-	-@cat html/cat.txt | sed -e 's/VERSION/'${NEWVERSION}'/g' -e 's/RELNUMBER/r'${REVISION}'/g' -e 's/DATE/'${DATE}'/g' > html/cat.html
-	-@cp -R html/* ../cat12-help/
-	-@perl -p -i -e "s/\','-browser'\);//g" ../cat12-help/*.html
-	-@perl -p -i -e "s/\','-browser'\)//g" ../cat12-help/*.html
-	-@perl -p -i -e "s/matlab:web\(\'//g" ../cat12-help/*.html
-	-@perl -p -i -e "s/matlab:try,open\(fullfile\(spm\(\'dir\'\)\,\'toolbox\'\,\'cat12\'\,\'CAT12-Manual.pdf\'\)\)\;end/http\:\/\/www\.neuro\.uni-jena\.de\/cat12\/CAT12-Manual\.pdf/g" ../cat12-help/*.html
-	-@cp ../cat12-help/cat.html ../cat12-help/index.html
+docs:
+	-@cat doc/cat.txt | sed -e 's/VERSION/'${NEWVERSION}'/g' -e 's/RELNUMBER/r'${REVISION}'/g' -e 's/DATE/'${DATE}'/g' > doc/cat.html
+	-@cp -R doc/* ../cat12-help/
 
 # update version numbers
-update: doc copy_longmode
+update: docs copy_longmode
 	-@git fetch
 	-@echo '% Computational Anatomy Toolbox' > Contents.m
 	-@echo '% Version' ${REVISION}' ('${NEWVERSION}')' ${DATE} >> Contents.m
@@ -100,15 +95,10 @@ zip: update clean
 	-@zip ${ZIPFOLDER}/${ZIPFILE} -rm cat12
 
 # scp release
-scp: doc zip
+scp: docs zip
 	-@echo scp to http://${STARGET_HOST}/cat12/${ZIPFILE}
-	-@scp -P ${PORT} CHANGES.txt CAT12-Manual.pdf ${ZIPFOLDER}/${ZIPFILE} ${STARGET}
+	-@scp -P ${PORT} CHANGES.txt ${ZIPFOLDER}/${ZIPFILE} ${STARGET}
 	-@bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${ZIPFILE} ${STARGET_FOLDER}/cat12_latest.zip"
-
-# scp manual
-scp_manual:
-	-@echo scp CAT12-Manual.pdf to http://${STARGET}
-	-@scp -P ${PORT} CAT12-Manual.pdf ${STARGET}
 
 # scp deployed versions
 scp_precompile:
