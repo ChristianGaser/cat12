@@ -259,12 +259,14 @@ end
 
 spm('FnBanner',mfilename,cat_version);
 [Finter,Fgraph] = spm('FnUIsetup','CAT12.8.1');
-url = fullfile(fileparts(mfilename('fullpath')),'html','cat.html');
-spm_help('!Disp',url,'',Fgraph,'Computational Anatomy Toolbox for SPM12');
+url = fullfile(fileparts(mfilename('fullpath')),'doc','cat.html');
 
 % open interactive help for newer version because display of html pages does not work anymore
 if cat_io_matlabversion > 20212
-  web(fullfile(catdir,'html','cat.html'));
+  pos = Fgraph.Position(3:4);
+  web(url,'-noaddressbox','-new')
+else
+  spm_help('!Disp',url,'',Fgraph,'Computational Anatomy Toolbox for SPM12');
 end
 
 % check that binaries for surface tools are running 
