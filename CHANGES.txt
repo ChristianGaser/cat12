@@ -1,4 +1,25 @@
 ------------------------------------------------------------------------
+r2126 | gaser | 2022-11-07 22:44:23
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M Makefile
+ M cat12.m
+ M cat_install_tfce.m
+ M cat_update.m
+ M doc/cat.html
+AM doc/cat.txt
+ M doc/css/main.css
+ M doc/index.html
+ M spm_cat12.m
+
+
+Changed: Many changes to implement the new html help.
+Changed: Updated Makefile to consider new html help.
+Changed: Updated and moved cat.txt from html to doc folder.
+Added:   Added css style file for entry page.
+------------------------------------------------------------------------
 r2125 | gaser | 2022-10-26 13:45:37
 
 Changed paths:

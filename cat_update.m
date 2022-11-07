@@ -3,7 +3,7 @@ function varargout = cat_update(update)
 %
 % FORMAT [sts, msg] = cat_update(update)
 % sts    - status code:
-%        NaN - CAT server not accessible
+%        NaN - server not accessible
 %        Inf - no updates available
 %        0   - CAT installation up-to-date
 %        n   - new revision <n> is available for download
@@ -35,9 +35,9 @@ end
 url = 'http://www.neuro.uni-jena.de/cat12/';
 
 if ~nargin
-    update = false;
+  update = false;
 else
-    update = true;
+  update = true;
 end
 
 r = 0;
@@ -93,6 +93,7 @@ end
 if update
   overwrite = spm_input(sprintf('Update to r%d',rnew),1,'yes|no',[1 0],1);
   d0 = spm('Dir');
+  d  = fileparts(which('cat12'));
   
   if overwrite
     try
@@ -183,6 +184,9 @@ if update
         fprintf('          Update failed: check file permissions.\n');
       otherwise
         fprintf('          Update failed: %s.\n',warnmsg);
-    end      
+    end  
+  else    
+    web([url sprintf('cat12_r%d.zip',rnew)],'-browser');
+    fprintf('Unzip file to %s\n',d);
   end
 end
