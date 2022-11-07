@@ -3,7 +3,7 @@
 # $Id$
 
 OLDVERSION="CAT12.8.1"
-NEWVERSION="CAT12.8.1"
+NEWVERSION="CAT12.8.2"
 REVISION=`git rev-list --count HEAD`
 DATE=`git log --date short |grep "Date:"|head -1|cut -f2 -d':'|sed -e s'/ //g'`
 

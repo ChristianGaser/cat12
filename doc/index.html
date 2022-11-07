@@ -72,11 +72,11 @@
               Select the gray or white matter segmentations from the first step.</li>
               <li><a class="function" href="matlab:spm_jobman('interactive','','spm.spatial.smooth');">Smooth</a> data (recommended start value 6-8mm<sup>1</sup>).<br>
               Select the gray or white matter segmentations from the first step.</li>
-              <li>Specify the <a class="function" href="matlab:spm_jobman('interactive','cat_stat_factorial_design.m');">2nd-level Model</a> with the smoothed gray or white matter segmentations and check for design orthogonality and sample homogeneity:
+              <li>Specify the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">2nd-level Model</a> with the smoothed gray or white matter segmentations and check for design orthogonality and sample homogeneity:
               <ul>
-                <li>Use "Full factorial" for cross-sectional data.</li>
+                <li>Select "Two-sample t-test" or "Multiple regression" or use "Full factorial" for any cross-sectional data.</li>
                 <li>Use "Flexible factorial" for longitudinal data.</li>
-                <li>Use TIV as covariate (confound) to correct different brain sizes and select centering with overall mean.</li>
+                <li>Use TIV as covariate (confound) to correct different brain sizes.</li>
                 <li>Select threshold masking with an absolute value of 0.1. This threshold can ultimately be increased to 0.2 or even 0.25 if you still notice non-brain areas in your analysis.</li>
                 <li>If you find a considerable correlation between TIV and any other parameter of interest it is advisable to use global scaling with TIV. For more information, refer to <a href="index.html#ortho">Orthogonality</a>.</li>
               </ul></li>
@@ -97,9 +97,9 @@
               <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfresamp');">Resample & smooth</a> surface data (suggested starting value 12mm for cortical thickness and 20-25mm for folding measures<b><sup>1</sup></b>, use the default merging of hemispheres).<br>
               Select the "lh.thickness.*" data in the folder "surf". The resampled data are named "s12.mesh.resampled_32k.thickness.*" for 12mm smoothed, merged hemispheres that were resampled to 32k template space.</li>
               <li>Check data quality of the resampled data using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_homogeneity');">Sample Homogeneity</a>.</li>
-              <li>Build <a class="function" href="matlab:spm_jobman('interactive','cat_stat_factorial_design.m');">2nd-level Model</a> for the resampled data and check for design orthogonality and sample homogeneity.
+              <li>Build <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">2nd-level Model</a> for the resampled data and check for design orthogonality and sample homogeneity.
               <ul>
-                <li>Use "Full factorial" for cross-sectional data.</li>
+                <li>Select "Two-sample t-test" or "Multiple regression" or use "Full factorial" for any cross-sectional data.</li>
                 <li>Use "Flexible factorial" for longitudinal data.</li>
                 <li>It is not necessary to use TIV as a covariate (confound) because cortical thickness or other surface values are usually not dependent on TIV.</li>
                 <li>It is not necessary to use any threshold masking.</li>
@@ -134,6 +134,21 @@
               Preprocessing should remain unaffected until the next minor version number (12.x). New processing of your data is not necessary if the minor version number of CAT12 remains unchanged.
             </p>
             
+            <!-- ###################################### -->
+            <h3>Changes in version CAT12.8.2 (2130)</h3>
+
+            <details>
+              <summary><u>Important new features</u></summary>
+              <ul>
+                <li>The CAT12 manual is now converted to HTML and merged with the online help to a single HTML file with interactive Matlab links that can be called in Matlab.</li>
+                <li>Added new thalamic nuclei <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','thalamic_nuclei.nii')}}))">atlas</a>.</li>
+                <li>Moved some rarely used CAT12 options to expert mode.</li>
+                <li>Added many new options to <a class="function" href="matlab:y=cat_surf_results;">visualize 3D (VBM) results</a> (e.g. new glass brain)</li>
+                <li>The tool to check <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_homogeneity');">Sample Homogeneity</a>. has many new options and is now based on calculation of Z-score which is much faster for larger samples./li>
+                <li>New <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">Basic Models</a> to easier define cross-sectional and longitudinal statistical designs. Some unnecessary options have been removed compared to "Basic Models" in SPM12 and some useful options have been added.</li>
+              </ul>
+            </details>            
+
             <!-- ###################################### -->
             <h3>Changes in version CAT12.8.1 (1975)</h3>
             <details>            
@@ -182,7 +197,7 @@
               <ul>
                 <li>The Mahalanobis distance in the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_homogeneity');">Quality Check</a> is now replaced by the normalized ratio between overall weighted image quality (IQR) and mean correlation. A low ratio indicates good quality before and after preprocessing and means that IQR is highly rated (resulting in a low nominal number/grade) and/or mean correlation is high. This is hopefully a more intuitive measure to combine image quality measurement before and after preprocessing.</li>
                 <li>CAT12 now allows the use of the BIDS directory structure for storing data (not possible for the longitudinal pipeline). A BIDS path can be defined relative to the participant level directory. The segmentation module now supports the input of nii.gz files (not possible for the longitudinal pipeline).</li>
-                <li>The <a class="function" href="matlab:spm_jobman('interactive','cat_stat_factorial_design.m');">Basic Models</a> function has been completely restructured and simplified. There are now only two models available for: (1) cross-sectional data and (2) longitudinal data. Options that are not relevant for VBM or SBM have been removed. In addition, a new experimental option has been added that allows a voxel-wise covariate to be defined. This can be used (depending on the contrast defined) to (1) remove the nuisance effect of structural data (e.g. GM) on functional data or (2) examine the relationship (regression) between functional and structural data. Additionally, an interaction can be modeled to investigate whether the regression between functional and structural data differs between two groups. Please note that the saved vSPM.mat file can only be evaluated with the TFCE toolbox.</li>
+                <li>The <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">Basic Models</a> function has been completely restructured and simplified. There are now only two models available for: (1) cross-sectional data and (2) longitudinal data. Options that are not relevant for VBM or SBM have been removed. In addition, a new experimental option has been added that allows a voxel-wise covariate to be defined. This can be used (depending on the contrast defined) to (1) remove the nuisance effect of structural data (e.g. GM) on functional data or (2) examine the relationship (regression) between functional and structural data. Additionally, an interaction can be modeled to investigate whether the regression between functional and structural data differs between two groups. Please note that the saved vSPM.mat file can only be evaluated with the TFCE toolbox.</li>
                 <li>Added a new function cat_io_data2mat.m to save spatially registered volume or resampled surface data as Matlab data matrix for further use with machine learning tools. Volume data can be resampled to lower spatial resolutions and can optionally be masked to remove non-brain areas.</li>
                 <li>Added a new function <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.ROIsum');">cat_vol_ROI_summarize.m</a> to summarise co-registered volume data within a region of interest (ROI). This tool can be used in order to estimate ROI information for other (co-registered) modalities (i.e. DTI, (rs)fMRI) which can be also defined as 4D data. Several predefined summary functions are available, as well as the possibility to define your own function.</li>
                 <li>Added a new function <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.quality_measures');">cat_stat_quality_measures.m</a> to estimate and save quality measures for very large samples.</li>
@@ -302,7 +317,7 @@
             <details>            
               <summary><u>Important new features</u></summary>
               <ul>
-                <li>Automatic check for design orthogonality and sample homogeneity using SPM.mat in <a class="function" href="matlab:spm_jobman('interactive','cat_stat_factorial_design.m');">Basic Models</a></li>
+                <li>Automatic check for design orthogonality and sample homogeneity using SPM.mat in <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">Basic Models</a></li>
                 <li>Added equi-volume model by Bok and a multi-save option for <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.vol2surf');">mapping native volumes to individual surfaces.</a></li>
                 <li>Added <a href="https://github.com/ThomasYeoLab/CBIG/tree/master/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal">Local-Global Intrinsic Functional Connectivity parcellation</a> by Schaefer et al. for resting-state fMRI data.</li>
               </ul>
@@ -660,7 +675,7 @@
             <!-- ############################# -->
             <h4 id="stat_options">General notes and options for statistical models</h4>
             
-            <b>Please note that when using <a class="function" href="matlab:spm_jobman('interactive','cat_stat_factorial_design.m');">"Basic Models"</a> in the CAT12 GUI, some unnecessary options have been removed compared to the "Basic Models" in SPM12, and some useful options have been added. We therefore strongly recommend preferring to use the models in CAT12, which offer some advantages especially when defining longitudinal designs.</b><br><br>
+            <b>Please note that when using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">"Basic Models"</a> in the CAT12 GUI, some unnecessary options have been removed compared to the "Basic Models" in SPM12, and some useful options have been added. We therefore strongly recommend preferring to use the models in CAT12, which offer some advantages especially when defining longitudinal designs.</b><br><br>
             
             <u>Covariates</u><br>
             This option allows for the specification of covariates and nuisance variables. TIV correction should be rather defined in &quot;Correction of TIV&quot;.<br>
@@ -684,7 +699,7 @@
               <li><em>ANCOVA</em>: Here, any variance that can be explained by TIV is removed from your data (i.e. in every voxel or vertex). This is the preferred option when there is no correlation between TIV and your parameter of interest. For example, a parameter of interest may be a variable in a multiple regression design that you want to relate to your structural data. If TIV is correlated with this parameter, not only will the variance explained by TIV be removed from your data, but also parts of the variance of your parameter of interest, which should be avoided.<br>
               Note that for two-sample T-tests and Anova with more than 2 groups, an interaction is modeled between TIV and group that prevents any group differences from being removed from your data, even if TIV differs between your groups.<br>
               Use the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.chec_SPM');">Check Design Orthogonality</a> option to test for any correlations between your parameters.</li>
-              <li><em>Global scaling</em>: If TIV correlates with your parameter of interest, you should rather use global scaling with TIV. The easiest way to define global scaling is to use <a class="function" href="matlab:spm_jobman('interactive','cat_stat_factorial_design.m');">"Basic Models"</a> in the CAT12 GUI. If you prefer "Basic Models" in SPM12, see <a href="#ortho">here</a> for a detailed description how to define global scaling.</li>
+              <li><em>Global scaling</em>: If TIV correlates with your parameter of interest, you should rather use global scaling with TIV. The easiest way to define global scaling is to use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">"Basic Models"</a> in the CAT12 GUI. If you prefer "Basic Models" in SPM12, see <a href="#ortho">here</a> for a detailed description how to define global scaling.</li>
               <li><em>No</em>: Use this option to disable TIV correction for deformation- or surface-based data where TIV correction is not necessary.</li>
             </ol>
 
@@ -1734,7 +1749,7 @@
             <p>These examples should cover most analyses - the number of time points / groups just needs to be adjusted. Unlike the analysis of cross-sectional data, as described above, we need to use the flexible factorial model, which takes into account that the time points for each subject are dependent data.</p>
             <p>Please note that it's not strictly necessary to use TIV as a covariate (nuisance) because we are analyzing intra-individual effects that do not need to be corrected and TIV should not change over time.</p>
             
-            Again, we recommend using <a class="function" href="matlab:spm_jobman('interactive','cat_stat_factorial_design.m');">"Basic Models"</a> in CAT12 GUI, where some unnecessary options have been removed compared to "Basic Models" in SPM12 and some useful additions have been added. The same <a href="#stat_options">notes and options</a> apply here as for the cross-section designs.<br>
+            Again, we recommend using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">"Basic Models"</a> in CAT12 GUI, where some unnecessary options have been removed compared to "Basic Models" in SPM12 and some useful options have been added. The same <a href="#stat_options">notes and options</a> apply here as for the cross-section designs.<br>
 
             <!-- ############################# -->
             <h5 id="long_one">Longitudinal data in one group</h5>
