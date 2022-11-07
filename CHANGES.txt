@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2129 | gaser | 2022-11-08 00:02:32
+
+Changed paths:
+ M CHANGES.txt
+ M Makefile
+ M doc/index.html
+
+
+Changed: Updated CAT12 HTML doc.
+Changed: Updated version number.
+------------------------------------------------------------------------
 r2128 | gaser | 2022-11-07 22:48:43
 
 Changed paths:
@@ -649,11 +660,11 @@ Changed paths:
  M cat_plot_scatter.m
 
 
-Chamged: Many changed to cat_plot_scatter.m:
+Chamged: Many changes to cat_plot_scatter.m:
            - added new options to set color and fontsize and to save plot as image
            - changed default setting for 'filled' and also changed syntax to be 
              more compatible to scatter function
-           - confodence interval is not plotted with transparency and some more 
+           - confidence interval is not plotted with transparency and some more 
              space to corners
 Changed: Corrected order of colors for horizontal violin plot and corrected slight 
          skew of density plot.
@@ -1208,7 +1219,7 @@ Changed paths:
 
 
 Fixed:   Corrected wrong parameter name in cat_conf_tools.m.
-         ------------------------------------------------------------------------
+------------------------------------------------------------------------
 r2056 | gaser | 2022-07-29 18:26:41
 
 Changed paths:
@@ -1228,7 +1239,7 @@ Changed: Renamed original cat_stat_check_cov2.m to cat_stat_check_cov.m.
 Changed: Updated all functions that call cat_stat_check_cov and removed this
          option for surfaces because this is now located in tools for both 
          volumes and surfaces.
-         ------------------------------------------------------------------------
+------------------------------------------------------------------------
 r2055 | gaser | 2022-07-29 18:07:41
 
 Changed paths:
@@ -1245,7 +1256,8 @@ Changed: Set group-specific AnCova as default for TIV correction in
 Changed: Removed sone old options in cat_stat_showslice_all.m that are not 
          needed anymore.
 Changed: Many smaller changes to cat_stat_check_cov2.m to remove inconsitencies.         
-Changed: Prepared cat_stat_check_SPM.m for new z-score check.------------------------------------------------------------------------
+Changed: Prepared cat_stat_check_SPM.m for new z-score check.
+------------------------------------------------------------------------
 r2054 | gaser | 2022-07-28 17:43:44
 
 Changed paths:
@@ -1258,7 +1270,8 @@ A  cat_stat_check_SPM2.m
 Changed: Prepared  factorial design to also allow check for sample homogeneity.
 Changed: Added multiple regression and 2-sample t-test again to factorial 
          design.
-Added:   New tool for checking favtoial designs.------------------------------------------------------------------------
+Added:   New tool for checking factorial designs.
+------------------------------------------------------------------------
 r2052 | gaser | 2022-07-28 01:40:04
 
 Changed paths:
