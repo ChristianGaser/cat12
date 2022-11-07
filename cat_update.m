@@ -105,6 +105,14 @@ if update
         spm_unlink(name);
       end
       
+      % delete old html folder
+      htmldir = fullfile(fileparts(mfilename('fullpath')),'html');
+      rmdir(htmldir, 's');
+
+      % delete old CAT12 manual
+      pdffile = fullfile(fileparts(mfilename('fullpath')),'CAT12-Manual.pdf');
+      spm_unlink(pdffile);
+
       % delete old atlas files
       atlasfiles = dir(fullfile(fileparts(mfilename('fullpath')),'atlases_surfaces','*.*'));
       for i=1:length(atlasfiles)
