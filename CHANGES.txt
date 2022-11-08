@@ -1,4 +1,77 @@
 ------------------------------------------------------------------------
+r2135 | gaser | 2022-11-08 23:00:18
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_tools.m
+ M cat_parallelize.m
+ M cat_run.m
+ M cat_stat_check_cov_old.m
+ M cat_stat_homogeneity.m
+ M cat_surf_results.m
+ M cat_surf_surf2roi.m
+ M cat_vol_slice_overlay.m
+ M cat_vol_slice_overlay_rgb_ui.m
+ M cat_vol_slice_overlay_ui.m
+R  html/icons/file_cat_log.png -> doc/icons/file_cat_log.png
+R  html/icons/file_cat_report.png -> doc/icons/file_cat_report.png
+R  html/icons/file_cat_report_surf.png -> doc/icons/file_cat_report_surf.png
+R  html/icons/file_cat_reportlong.png -> doc/icons/file_cat_reportlong.png
+R  html/icons/file_cat_xml.png -> doc/icons/file_cat_xml.png
+R  html/icons/file_delete.png -> doc/icons/file_delete.png
+R  html/icons/file_delete_restore.png -> doc/icons/file_delete_restore.png
+R  html/icons/file_export.png -> doc/icons/file_export.png
+R  html/icons/file_new.png -> doc/icons/file_new.png
+R  html/icons/file_open.png -> doc/icons/file_open.png
+R  html/icons/file_pdf.png -> doc/icons/file_pdf.png
+R  html/icons/file_print.png -> doc/icons/file_print.png
+R  html/icons/file_save.png -> doc/icons/file_save.png
+R  html/icons/file_search.png -> doc/icons/file_search.png
+R  html/icons/file_spm_view.png -> doc/icons/file_spm_view.png
+R  html/icons/file_spm_view_p0.png -> doc/icons/file_spm_view_p0.png
+R  html/icons/file_surf.png -> doc/icons/file_surf.png
+R  html/icons/file_surfc.png -> doc/icons/file_surfc.png
+R  html/icons/greenarrowicon.png -> doc/icons/greenarrowicon.png
+R  html/icons/list_del.png -> doc/icons/list_del.png
+R  html/icons/list_new.png -> doc/icons/list_new.png
+R  html/icons/redo.png -> doc/icons/redo.png
+R  html/icons/refresh.png -> doc/icons/refresh.png
+R  html/icons/settings.png -> doc/icons/settings.png
+R  html/icons/status_failed.old.png -> doc/icons/status_failed.old.png
+R  html/icons/status_failed.png -> doc/icons/status_failed.png
+R  html/icons/status_forbiden.png -> doc/icons/status_forbiden.png
+R  html/icons/status_help.png -> doc/icons/status_help.png
+R  html/icons/status_help2.png -> doc/icons/status_help2.png
+R  html/icons/status_info.png -> doc/icons/status_info.png
+R  html/icons/status_passed.png -> doc/icons/status_passed.png
+R  html/icons/status_warning_hard.png -> doc/icons/status_warning_hard.png
+R  html/icons/status_warning_soft.png -> doc/icons/status_warning_soft.png
+R  html/icons/tool_data_cursor.png -> doc/icons/tool_data_cursor.png
+R  html/icons/tool_fit.png -> doc/icons/tool_fit.png
+R  html/icons/tool_hand.png -> doc/icons/tool_hand.png
+R  html/icons/tool_pointer.png -> doc/icons/tool_pointer.png
+R  html/icons/tool_zoom_in.png -> doc/icons/tool_zoom_in.png
+R  html/icons/tool_zoom_out.png -> doc/icons/tool_zoom_out.png
+R  html/icons/trash_auto.png -> doc/icons/trash_auto.png
+R  html/icons/trash_col_add.png -> doc/icons/trash_col_add.png
+R  html/icons/trash_col_rm.png -> doc/icons/trash_col_rm.png
+R  html/icons/trash_row_add.png -> doc/icons/trash_row_add.png
+R  html/icons/trash_row_rm.png -> doc/icons/trash_row_rm.png
+R  html/icons/trash_tip_add.png -> doc/icons/trash_tip_add.png
+R  html/icons/trash_tip_rm.png -> doc/icons/trash_tip_rm.png
+R  html/icons/undo.png -> doc/icons/undo.png
+
+
+Changed: Moved icons folder from html to doc.
+Changed: Create logs folder in current directory rather than in cat12.
+Changed: Changed path of T1 image in cat_vol_slice_overlay_ui.m
+Changed: Use cat_progress_bar in cat_surf_surf2roi.m.
+Fixed:   Corrected outofrange field in cat_vol_slice_overlay.m.
+Fixed:   Added try/catch to disable interpreter in cat_surf_results.m because
+         it's not working on all Matlab versions.
+Fixed:   Commented out multi-subject imcalc in cat_conf_tools.m because it was
+         not working with newer SPM12 versions.
+------------------------------------------------------------------------
 r2133 | gaser | 2022-11-08 00:47:58
 
 Changed paths:

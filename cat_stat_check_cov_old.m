@@ -698,7 +698,7 @@ if job.verb
     'Style','Pushbutton','enable','on','ToolTipString','Data selection','CData',icon);
 
   % load icon and scale it to double 0..1 and set background to 0.94 to hide it
-  icon = imread(fullfile(fileparts(mfilename('fullpath')),'html','icons','tool_fit.png')); 
+  icon = imread(fullfile(fileparts(mfilename('fullpath')),'doc','icons','tool_fit.png')); 
   icon = double(icon)./double(max(icon(:))); icon(icon==0) = 0.94; 
   H.naviui.zoomReset = uicontrol(H.figure,...
     'Units','normalized','position',H.pos.scZoomReset,...
