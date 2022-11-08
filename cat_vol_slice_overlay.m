@@ -229,7 +229,7 @@ else
 end
 
 if range(1) >= 0
-  SO.img(2).outofrange = {1, size(SO.img(2).cmap, 1)};
+  SO.img(2).outofrange = {0, size(SO.img(2).cmap, 1)};
 else
   SO.img(2).outofrange = {1, 1};
   % use bivariate colormap if OV was not defined
@@ -728,7 +728,7 @@ if sum(sum(BB-[-90 -126 -72;90 90 108])) == 0
   fprintf('WARNING: Check that %s is really compatible to new template in MNI152NLin2009cAsym template space. If not, you should use the old T1-template from CAT12.7 or older for overlay.\n',SO.img(2).vol.fname);
 end
 
-if ~nargin
+if ~nargout
   clear OV
 end
 

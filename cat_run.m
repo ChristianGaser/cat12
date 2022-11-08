@@ -107,7 +107,7 @@ end
 % directories and just write in a ../spm12/toolbox/cat12/log subdirectory.
 % Do not forget that this is only about the additional log files and 
 % not real data output. 
-% If there are no writing rights in the directory the same is probably true 
+% If there are no writing permissions in the directory the same is probably true 
 % for other SPM dirs and the user has to change the working directory anyway. 
 % So we create an error so that the user can change this. 
 if isempty(logdir)
@@ -115,13 +115,14 @@ if isempty(logdir)
     SPMdir  = spm_str_manip(data,'h');
     SPMdiri = find(~cellfun('isempty',SPMdir),1);
     if ~isempty(SPMdiri)
-      logdir = fullfile(fileparts(mfilename('fullpath')),'logs'); % log already exist as file
+%      logdir = fullfile(fileparts(mfilename('fullpath')),'logs'); % log already exist as file
+      logdir = 'logs'; % log already exist as file
       if ~exist(logdir,'dir')
         try
           mkdir(logdir); 
         catch
-          cat_io_cprintf('cat_parallelize:CATlogs',['Cannot create directory for logs within the CAT12 directory. \n' ...
-            'Please choose another working directory with writing rights to save the log-files. ']);
+          cat_io_cprintf('cat_parallelize:CATlogs',['Cannot create directory for logs. \n' ...
+            'Please choose another working directory with writing permissions to save the log-files. ']);
         end 
       end
     else

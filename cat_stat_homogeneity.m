@@ -331,6 +331,7 @@ for i=1:n_subjects
   % find raw/p0 files
   H.files.raw{i} = fullfile(fileparts(pth),[subjname ee]);
   H.files.p0{i}  = fullfile(mri_folder,['p0' subjname '.nii']);
+  
   if isBIDS
   % get BIDS raw diretory of this subject by looking for the derivatives
   % directory. The parent path give us the BIDS main directory where the 
@@ -344,6 +345,7 @@ for i=1:n_subjects
 
     H.files.raw{i}  = fullfile(BIDSrawdir,BIDSsubdirs,[subjname ee]);
   end
+  
   H.files.rawgz{i} = [H.files.raw{i} '.gz']; 
   if ~exist(H.files.raw{i},'file'), H.files.raw{i} = ''; end
   if isempty(H.files.raw{i}) && exist(H.files.rawgz{i},'file') && ~exist('foundrawgz','var')
@@ -351,8 +353,6 @@ for i=1:n_subjects
     foundrawgz = true; %#ok<NASGU> 
   end
   if ~exist(H.files.p0{i}, 'file'), H.files.p0{i}  = ''; end
-  
-  
 
   if exist(xml_file,'file')
     H.job.data_xml{i} = xml_file;
@@ -1031,15 +1031,21 @@ H.dpui.text = uicontrol(H.mainfig,...
 % enable some buttons only if respective files are available
 if H.isxml, H.status.xml = true;
 else H.status.xml = false; end
-if isfield(H.status,'raw') && ~isempty(H.files.raw{1}), H.status.raw = true;
+
+if isfield(H.files,'raw') && ~isempty(H.files.raw{1}), H.status.raw = true;
 else H.status.raw = false; end
+
 if isfield(H.files,'p0') && ~isempty(H.files.p0{1}), H.status.p0 = true;
 else H.status.p0 = false; end %  && ~isempty(H.files.raw{numel(H.sample)})
-H.status.rawp0 = H.status.raw || H.status.p0;
+
+H.status.rawp0 = H.status.raw && H.status.p0;
+
 if isfield(H.files,'log') && ~isempty(H.files.log{1}), H.status.log = true;
 else H.status.log = false; end
+
 if H.repeated_anova && isfield(H.files,'jpg_long') && ~isempty(H.files.jpg_long{1}), H.status.reportlong = true;
 else H.status.reportlong = false; end
+
 if isfield(H.files,'jpg') && ~isempty(H.files.jpg{1}), H.status.report = true;
 else H.status.report = false; end
 
@@ -1102,7 +1108,7 @@ return
 function icon = load_icon(name)
 %-----------------------------------------------------------------------
 
-icon = imread(fullfile(fileparts(mfilename('fullpath')),'html','icons',name)); 
+icon = imread(fullfile(fileparts(mfilename('fullpath')),'doc','icons',name)); 
 icon = double(icon)./double(max(icon(:))); icon(icon==0) = 0.94; 
 
 return
@@ -2123,6 +2129,7 @@ switch option
   case 1,
     do_rerun(obj,event_obj,false);
     set(H.naviui.select,'BackGroundColor',[0.95 0.95 0.95]);
+    set(H.delui.new,'enable','off');
     datacursormode('on');
 end
 
@@ -2350,7 +2357,7 @@ end
 pos_mouse = get(event_obj, 'Position');
 if H.mouse.xold == pos_mouse
   txt = get(findall(H.mainfig,'Type','hggroup'),'String');
-  return;
+  if isempty(txt), return; end
 end
 
 H.mouse.xold = pos_mouse;
@@ -2439,7 +2446,6 @@ if strcmp(get(H.delui.remove,'enable'),'off')
   if H.status.report,     set(H.dpui.report,    'enable','on'); end
   if H.status.raw,        set(H.dpui.raw,       'enable','on'); end
   if H.status.rawp0,      set(H.dpui.rawp0,     'enable','on'); end
-  if H.status.p0,         set(H.dpui.p0,        'enable','on'); end
   if H.status.log,        set(H.dpui.log,       'enable','on'); end
   if H.status.reportlong, set(H.dpui.reportlong,'enable','on'); end
   
