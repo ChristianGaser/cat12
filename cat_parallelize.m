@@ -109,7 +109,7 @@ function varargout = cat_parallelize(job,func,datafield)
   % Another thing that we want to avoid is to fill some of the SPM
   % directories and just write in a ../spm12/toolbox/cat12/log subdirectory.
   % Do not forget that this is only about the additional log files and 
-  % not real data output. If there are no writing rights in the directory 
+  % not real data output. If there are no writing permissions in the directory 
   % the same is probably true for other SPM dirs and the user has to change
   % the working directory anyway. 
   if isempty(logdir)
@@ -117,13 +117,14 @@ function varargout = cat_parallelize(job,func,datafield)
       SPMdir  = spm_str_manip(data,'h');
       SPMdiri = find(~cellfun('isempty',SPMdir),1);
       if ~isempty(SPMdiri)
-        logdir = fullfile(fileparts(mfilename('fullpath')),'logs'); % log already exist as file
+%        logdir = fullfile(fileparts(mfilename('fullpath')),'logs'); % log already exist as file
+        logdir = 'logs'; % log already exist as file
         if ~exist(logdir,'dir')
           try
             mkdir(logdir); 
           catch
-            error('cat_parallelize:CATlogs',['Cannot create directory for logs within the CAT12 directory. \n' ...
-              'Please choose another working directory with writing rights to save the log-files. ']);
+            error('cat_parallelize:CATlogs',['Cannot create directory for logs. \n' ...
+              'Please choose another working directory with writing permissions to save the log-files. ']);
           end 
         end
       else

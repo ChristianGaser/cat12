@@ -58,24 +58,24 @@ slices = slices{ind};
 
 for i=(1:size(name,1))+1
   SO.img(i).background = 0;
-	SO.img(i).vol = spm_vol(deblank(name(i-1,:)));
-	SO.img(i).prop = 1;
+  SO.img(i).vol = spm_vol(deblank(name(i-1,:)));
+  SO.img(i).prop = 1;
 
-	cmap = zeros(64,3);
-	cmap(:,i-1) = (1:64)'/64;	
-	SO.img(i).cmap = cmap;
+  cmap = zeros(64,3);
+  cmap(:,i-1) = (1:64)'/64; 
+  SO.img(i).cmap = cmap;
 
-	if range(1)==range(2)
-		[mn mx] = cg_max(SO.img(i).vol);
-		SO.img(i).range = [mn mx];
-	else SO.img(i).range = range; end
-	SO.img(i).func = 'i1(i1==0)=NaN;';
+  if range(1)==range(2)
+    [mn mx] = cg_max(SO.img(i).vol);
+    SO.img(i).range = [mn mx];
+  else SO.img(i).range = range; end
+  SO.img(i).func = 'i1(i1==0)=NaN;';
 
-	if range(1) > 0
-		SO.img(i).outofrange = {0,size(SO.img(i).cmap,1)};
-	else
-		SO.img(i).outofrange = {1,0};
-	end
+  if range(1) > 0
+    SO.img(i).outofrange = {0,size(SO.img(i).cmap,1)};
+  else
+    SO.img(i).outofrange = {1,0};
+  end
 end
 
 SO.transform = transform;
@@ -95,32 +95,32 @@ xy = xy(ind,:);
 
 SO.xslices = xy(:,1);
 switch lower(SO.transform)
-	case 'sagittal'
-		dim = xy.*SO.img(1).vol.dim(2:3);
-	case 'coronal'
-		dim = xy.*SO.img(1).vol.dim([1 3]);
-	case 'axial'
-		dim = xy.*SO.img(1).vol.dim(1:2);
+  case 'sagittal'
+    dim = xy.*SO.img(1).vol.dim(2:3);
+  case 'coronal'
+    dim = xy.*SO.img(1).vol.dim([1 3]);
+  case 'axial'
+    dim = xy.*SO.img(1).vol.dim(1:2);
 end
 screensize = get(0,'screensize');
 
 scale = screensize(3:4)./dim;
 % scale image only if its larger than screensize
 if min(scale) < 1
-	fig_size = min(scale)*dim*0.975;
+  fig_size = min(scale)*dim*0.975;
 else
-	fig_size = dim;
+  fig_size = dim;
 end
 
 h = figure(12);
 set(h,...
-	'Position',[1 1 fig_size],...
-	'MenuBar','none',...
-	'Resize','off',...
-	'PaperType','A4',...
-	'PaperUnits','normalized',...
-	'PaperPositionMode','auto',...
-	'Visible','off');
+  'Position',[1 1 fig_size],...
+  'MenuBar','none',...
+  'Resize','off',...
+  'PaperType','A4',...
+  'PaperUnits','normalized',...
+  'PaperPositionMode','auto',...
+  'Visible','off');
 
 SO.figure = h;
 SO.area.units='pixels';
@@ -130,10 +130,10 @@ slice_overlay
 % save image
 saving = spm_input('Save png images?','+1','yes|no',[1 0],2);
 if saving
-	[pt,nm] = fileparts(nm);
-	imaname = spm_input('Filename','+1','s',[nm '_' lower(transform) '.png']);
-	slice_overlay('print',imaname,'print -dpng -painters -noui')
-	fprintf('Image %s saved.\n',imaname);
+  [pt,nm] = fileparts(nm);
+  imaname = spm_input('Filename','+1','s',[nm '_' lower(transform) '.png']);
+  slice_overlay('print',imaname,'print -dpng -painters -noui')
+  fprintf('Image %s saved.\n',imaname);
 end
 
 return
@@ -144,18 +144,18 @@ nn = round(n^0.4);
 if n>8, x = nn:round(n/nn); else x = 1:n; end
 xy=[];
 for i=1:length(x)
-	y = round(n/x(i));
-	% check whether y is to small
-	while y*x(i)<n, y = y + 1; end
-	if i>2
-		if y*x(i-1)<n, xy = [xy; [x(i) y]]; end
-	else xy = [xy; [x(i) y]]; end
+  y = round(n/x(i));
+  % check whether y is to small
+  while y*x(i)<n, y = y + 1; end
+  if i>2
+    if y*x(i-1)<n, xy = [xy; [x(i) y]]; end
+  else xy = [xy; [x(i) y]]; end
 end
 
 % change order of x and y
 for i=1:size(xy,2)
-	yx = [xy(i,2) xy(i,1)];
-	xy = [xy; yx];
+  yx = [xy(i,2) xy(i,1)];
+  xy = [xy; yx];
 end
 
 % remove duplicates
@@ -167,9 +167,9 @@ function s = remove_zeros(s)
 
 pos = length(s);
 while pos>1
-	if strcmp(s(pos),'0')
-		s(pos)='';
-		pos = pos-1;
-	else break
-	end
+  if strcmp(s(pos),'0')
+    s(pos)='';
+    pos = pos-1;
+  else break
+  end
 end

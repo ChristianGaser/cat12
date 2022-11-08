@@ -189,7 +189,7 @@ function tools = cat_conf_tools(expert)
   %urqio                       = conf_vol_urqio; % this cause problems
   iqr                         = conf_stat_IQR(data_xml);
   qa                          = conf_vol_qa(expert,outdir);
-  multi_subject_imcalc        = conf_vol_imcalc(prefix);
+  %multi_subject_imcalc        = conf_vol_imcalc(prefix);
   
   
 % create main batch 
@@ -220,13 +220,13 @@ function tools = cat_conf_tools(expert)
     spmtype, ...                          cat.pre.vtools.
     headtrimming, ...                     cat.pre.vtools.
     resize, ...                           cat.pre.vtools. 
-    multi_subject_imcalc, ...             cat.pre.vtools. 
+    ...multi_subject_imcalc, ...             cat.pre.vtools. 
     ...
     realign, ...                          cat.pre.long.?          % hidden
     shootlong,...                         cat.pre.long.?          % hidden
     biascorrlong,...                      cat.pre.long.?          % hidden
     createTPMlong, ...                    cat.pre.long.createTPM  % hidden
-    long_report, ...                  cat.pre.long.report     % hidden
+    long_report, ...                      cat.pre.long.report     % hidden
     ...
     createTPM, ...                        
     nonlin_coreg, ...                     cat.pre.vtools.
