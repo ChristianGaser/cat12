@@ -1,4 +1,22 @@
 ------------------------------------------------------------------------
+r2136 | gaser | 2022-11-10 09:46:49
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M cat_main_reportfig.m
+ M cat_run_job1639.m
+ M cat_surf_createCS2.m
+ M cat_surf_fun.m
+ M doc/cat.html
+
+
+Fixed: Corrected typo in cat_main_reportfig.m.
+Fixed: Added check whether usprior field exists.
+Fixed: Added check whether fie exists to loadSurf function in 
+       cat_surf_createCS2.m.
+Fixed: Force conversion to double type in cat_surf_fun.m.
+------------------------------------------------------------------------
 r2135 | gaser | 2022-11-08 23:00:18
 
 Changed paths:

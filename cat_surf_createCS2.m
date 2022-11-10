@@ -1394,7 +1394,7 @@ end
     
       if opt.SRP==3, facevertexcdata = Tfs; end
       
-      %% RD202107: do not correct in to problematic regions that suffer from to fine sampling
+      %% RD202107: do not correct in too problematic regions that suffer from too fine sampling
       if opt.localsmooth
         for ix = 1:2 % two main interations
           M   = spm_mesh_smooth(CS); 
@@ -1879,7 +1879,14 @@ end
 
 %=======================================================================
 function CS1 = loadSurf(P)
-  CS = gifti(P);
+  if ~exist(P,'file'), error('Surface file %s could not be found due to previous processing errors.',P); end 
+  
+  try
+    CS = gifti(P);
+  catch
+    error('Surface file %s could not be read due to previous processing errors.',P);
+  end
+  
   CS1.vertices = CS.vertices; CS1.faces = CS.faces; 
   if isfield(CS,'cdata'), CS1.cdata = CS.cdata; end
 end
