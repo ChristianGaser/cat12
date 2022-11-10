@@ -731,7 +731,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
               VT0x = spm_vol(VT.fname);
             else
               VT0x = VT0; 
-              VT0x.fname = spm_file(VTOx.fname,'prefix','x'); 
+              VT0x.fname = spm_file(VT0x.fname,'prefix','x'); 
             end
           end
         end
