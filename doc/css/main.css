@@ -184,7 +184,7 @@ input, select, textarea {
   }
 
   /*- Headings */
-  h1, h2, h3, h4, h5 {
+  h1, h2, h3, h4, h5, h6 {
     color: #59abe3;
     color: #3a759e;
     font-weight: 200;
@@ -228,6 +228,11 @@ input, select, textarea {
     border-bottom-color: #666;
   }
   
+  h6 {
+    margin-top: 0.8em;
+    margin-bottom: .5em;
+    font-size: 1.1em;
+  }
 
   @media screen and (max-width: 736px) {
 

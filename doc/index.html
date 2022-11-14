@@ -70,7 +70,7 @@
               Select the xml-files that are saved in the "report" folder.</li>
               <li>Check the data quality with <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_homogeneity');">Sample Homogeneity</a> for VBM data (optionally consider TIV and age as nuisance variables).<br>
               Select the gray or white matter segmentations from the first step.</li>
-              <li><a class="function" href="matlab:spm_jobman('interactive','','spm.spatial.smooth');">Smooth</a> data (recommended start value 6-8mm<sup>1</sup>).<br>
+              <li><a class="function" href="matlab:spm_jobman('interactive','','spm.spatial.smooth');">Smooth</a> data (recommended start value 6mm<sup>1</sup>).<br>
               Select the gray or white matter segmentations from the first step.</li>
               <li>Specify the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">2nd-level Model</a> with the smoothed gray or white matter segmentations and check for design orthogonality and sample homogeneity:
               <ul>
@@ -84,6 +84,7 @@
               <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x');">Transform and Threshold SPM-maps</a> to (log-scaled) p-maps or correlation maps.</li>
               <li>Optionally, you can try <a class="function" href="matlab:if exist('spm_TFCE'),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">Threshold-Free Cluster Enhancement</a> (TFCE) with the SPM.mat file of a previously estimated statistical design.</li>
               <li>Optionally <a class="function" href="matlab:cat_vol_slice_overlay;">Overlay Selected Slices</a>. If you are using log-p scaled maps from "Transform SPM-maps" without thresholds or the TFCE_log maps, use the following values as the lower range for the colormap for the thresholding: 1.3 (P&lt;0.05); 2 (P&lt;0.01); 3 (P&lt;0.001).</li>
+              <li>Optionally use <a class="function" href="matlab:y=cat_surf_results;">Surface Overlay</a> for visualization of your results. Select the results (preferably saved as log-p maps with "Transform SPM-maps" or the TFCE_log maps with the different methods for multiple comparison correction) to display rendering views, slice overlay, and a glassbrain of your results.</li>
               <li>Optionally estimate results for ROI analysis using <a class="function" href="matlab:cat_stat_analyze_ROIs;">Analyze ROIs</a>. Here, the SPM.mat file of the already estimated statistical design will be used. For more information, see <a href="#atlas">Atlas Creation and ROI based Analysis</a>.</li>
             </ul>
         
@@ -108,7 +109,7 @@
               <li><a class="function" href="matlab:cat_stat_spm;">Estimate</a> the surface model and finally call <a class="function" href="matlab:[hReg xSPM SPM] = cat_spm_results_ui('Setup');">Results</a>.</li>
               <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x_surf');">Transform and Threshold SPM-maps</a> to (log-scaled) p-maps or correlation maps.</li>
               <li>Optionally, you can try <a class="function" href="matlab:if exist('spm_TFCE'),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">Threshold-Free Cluster Enhancement</a> (TFCE) with the SPM.mat file of a previously estimated statistical design.</li>
-              <li>Optionally <a class="function" href="matlab:y=cat_surf_results;">Surface Overlay</a> for both hemispheres. Select the results (preferably saved as log-p maps with "Transform SPM-maps" or the TFCE_log maps with the different methods for multiple comparison correction) for the merged hemispheres to display rendering views of your results.</li>
+              <li>Optionally use <a class="function" href="matlab:y=cat_surf_results;">Surface Overlay</a> for visualization of your results. Select the results (preferably saved as log-p maps with "Transform SPM-maps" or the TFCE_log maps with the different methods for multiple comparison correction) for the merged hemispheres to display rendering views of your results.</li>
               <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surf2roi');">Extract ROI-based Surface Values</a> such as gyrification or fractal dimension to provide ROI analysis. Since version 12.7 extraction of ROI-based thickness is not necessary anymore because this is now included in the segmentation pipeline.</li>
               <li>Optionally estimate results for ROI analysis using <a class="function" href="matlab:cat_stat_analyze_ROIs;">Analyze ROIs</a>. Here, the SPM.mat file of the already estimated statistical design will be used. For more information, see <a href="#atlas">Atlas Creation and ROI based Analysis</a>.</li>
             </ul>
@@ -123,7 +124,7 @@
         
             <!-- ############################# -->
             <h5><sup>1</sup>Note to filter sizes for Gaussian smoothing</h5>
-            <p>Due to the high accuracy of the spatial registration approaches used in CAT12, you can also try to use smaller filter sizes of only a few millimeter. However, for very small filter sizes or even no filtering, you have to apply a non-parametric permutation test such as the <a class="function" href="matlab:if exist('spm_TFCE'),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">TFCE-statistics</a>. <br>
+            <p>Smoothing increases the signal-to-noise ratio. The matched filter theorem states that the filter that matches your signal maximizes the signal-to-noise ratio. If we expect signal with a Gaussian shape and a FWHM of, say 6mm in our images, then this signal will be best detected after we smooth our images with a 6mm FWHM Gaussian filter. If you are trying to study small areas like the amygdala, we can use smaller filter sizes because of the small size of these regions. For larger regions like the cerebellum, the effects are better detected with larger filters.<br>
             Please also note that for the analysis of cortical folding measures such as gyrification or cortical complexity the filter sizes have to be larger (i.e. in the range of 15-25mm). This is due to the underlying nature of this measure that reflects contributions from both sulci as well as gyri. Therefore, the filter size should exceed the distance between a gyral crown and a sulcal fundus.</p>
 
           
@@ -3278,7 +3279,7 @@
       
       
             <!-- ###################################### -->
-            <h3 id="volrois">List of volume-based atlas maps in CAT12</h3>
+            <h5 id="volrois">List of volume-based atlas maps in CAT12</h5>
             <p>
               We prepared different atlas maps for the MNI152NLin2009cAsym space that are stored in the <em>templates_MNI152NLin2009cAsym</em> directory. 
               For each atlas you can find a CSV file with the ROI IDs, short and full names. 
@@ -3296,7 +3297,7 @@
                 fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','lpba40.nii');
                 fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','hammers.nii');}} ) )">Display all three volumetric atlas maps.</a> 
        
-            <h5 id="Neuromorphometrics">Neuromorphometrics</h5>
+            <h6 id="Neuromorphometrics">Neuromorphometrics</h6>
             <p>
               Maximum probability tissue labels derived from the "MICCAI 2012 Grand Challenge and Workshop on Multi-Atlas Labeling" 
               (<a href="http://www.neuromorphometrics.com/2012_MICCAI_Challenge_Data.html">Details</a>). 
@@ -3310,7 +3311,7 @@
             You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','neuromorphometrics.txt'));">here</a>.
             <p style="text-align:center;"><img src="images/CAT_surf_atlas_neuromorphometrics.png" width=90% alt="Neuromorphometrics (2012)" ><p>
 
-            <h5 id="LPBA">LPBA40</h5>
+            <h6 id="LPBA">LPBA40</h6>
             <p>
               The LONI Probabilistic Brain Atlas (LPBA40) is a series of maps of brain anatomic regions <a href="#Shattuck2008">(Shattuck et al. 2008)</a>. 
               These maps were produced from a set of whole-head MRI of 40 human volunteers. 
@@ -3323,7 +3324,7 @@
             You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','lpba40.txt'));">here</a>.
             <p style="text-align:center;"><img src="images/CAT_surf_atlas_lpba40.png" width=90% alt="LPBA40 (Shattuck et al. 2008)" ><p>
 
-            <h5 id="Hammers">Hammers</h5>
+            <h6 id="Hammers">Hammers</h6>
             <p>
               This atlas, based on Alexander Hammers' brain atlas based on 20 subjects, made available for the Euripides project, Nov 2009 <a href="#Hammers2003">(Hammers et al. 2003</a>,<a href="#Gousias2008">Gousias et al. 2008)</a>. 
             </p><p>
@@ -3333,7 +3334,7 @@
             You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','hammers.txt'));">here</a>.
             <p style="text-align:center;"><img src="images/CAT_surf_atlas_hammers.png" width=90% alt="Hammers (Hammers et al. 2003)" ><p>
 
-            <h5 id="Cobra">Cobra</h5>
+            <h6 id="Cobra">Cobra</h6>
             <p>
               The Cobra atlas is build from 4 atlases that are provided by the <a href="http://cobralab.ca/atlases">Computational Brain Anatomy Laboratory</a> at the Douglas Institute (CoBra Lab).
               The 4 atlases are based on high-resolution (0.3mm isotropic voxel size) images of the amygdala, hippocampus, subcortical structures and the cerebellum. Please note that the original labels were changed in order to allow a combined atlas.
@@ -3344,7 +3345,7 @@
             </p>
             You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','cobra.txt'));">here</a>.
 
-            <h5 id="IBSR">IBSR</h5>
+            <h6 id="IBSR">IBSR</h6>
             <p>
               18 subjectes of the <a href="http://www.nitrc.org/projects/ibsr">IBSR V2</a> dataset, with low quality T1 data, but good label maps. 
             </p>
@@ -3354,7 +3355,7 @@
             </p>
             You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','ibsr.txt'));">here</a>.
 
-            <h5 id="Mori">Mori</h5>
+            <h6 id="Mori">Mori</h6>
             <p>
               This atlas is based on the <a href="http://wiki.slicer.org/slicerWiki/index.php/Slicer3:Mori-Atlas_labels">"Slicer3:Mori_Atlas_labels_JHU-MNI_SS_Type-II"</a> atlas of Version 2010-05 <a href="#Oishi">by Oishi et al. 2009</a>. 
             </p>
@@ -3363,7 +3364,7 @@
               <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','mori.nii')}}))">volume map</a>.
             You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','mori.txt'));">here</a>.
 
-            <h5 id="Thalamus">Thalamus</h5>
+            <h6 id="Thalamus">Thalamus</h6>
             <p>
               This atlas is based on the <a href="https://wp.unil.ch/mial/probabilistic-atlas-of-thalamic_nuclei/">atlas of human thalamic nuclei</a> <a href="#Najdenovska">by Najdenovska et al. 2018</a>. 
             </p>
@@ -3372,7 +3373,7 @@
               <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','thalamus.nii')}}))">volume map</a>.
             You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','thalamus.txt'));">here</a>.
 
-            <h5 id="ThalamicNuclei">Thalamic Nuclei</h5>
+            <h6 id="ThalamicNuclei">Thalamic Nuclei</h6>
             <p>
               This atlas is based on the <a href="https://github.com/thalamicseg/thomas_new/">atlas of human thalamic nuclei</a> <a href="#Saranathan">by Saranathan et al. 2021</a>. 
             </p>
@@ -3382,7 +3383,7 @@
             You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','thalamic_nuclei.txt'));">here</a>.
 
 
-            <h5 id="AAL3">AAL (Automated Anatomical Labeling) version 3</h5>
+            <h6 id="AAL3">AAL (Automated Anatomical Labeling) version 3</h6>
             <p>
               Parcellation aligned on Collins brain <a href="#Collins1998">(Collins et al. 1998,</a><a href="#Tzourio2002">Tzourio-Mazoyer et al. 2002)</a>.
             </p>
@@ -3391,7 +3392,7 @@
             </p>
             You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','aal3.txt'));">here</a>.
 
-            <h5 id="Anatomy">Anatomy version 3</h5>
+            <h6 id="Anatomy">Anatomy version 3</h6>
             <p>
               This atlas is based on <a href="http://www.fz-juelich.de/inm/inm-1/DE/Forschung/_docs/SPMAnatomyToolbox/SPMAnatomyToolbox_node.html">probabilistic cytoarchitectonic maps and functional imaging data
             </a> by <a href="#Eickhoff2005">Eickhoff et al. 2005.</a>
@@ -3401,7 +3402,7 @@
               <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','anatomy3.nii')}}))">volume map</a>.
             You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','anatomy3.txt'));">here</a>.
 
-            <h5 id="JulichBrain">JulichBrain</h5>
+            <h6 id="JulichBrain">JulichBrain</h6>
             <p>
               This atlas is based on <a href="https://kg.ebrains.eu/search/instances/Dataset/3fde2768-e845-4fc3-a425-61e2c1fb6db7">whole-brain parcellation of the Julich-Brain Cytoarchitectonic Atlas (v2.6)</a> by <a href="#Amunts2020">Amunts et al. 2020.</a>
             </p>
@@ -3410,7 +3411,7 @@
               <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','julichbrain.nii')}}))">volume map</a>.
             You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','julichbrain.txt'));">here</a>.
 
-            <h5 id="Schaefer">Local-Global Intrinsic Functional Connectivity Parcellation</h5>
+            <h6 id="Schaefer">Local-Global Intrinsic Functional Connectivity Parcellation</h6>
             <p>
               These <a href="https://github.com/ThomasYeoLab/CBIG/tree/master/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal">atlases</a> by <a href="#Schaefer2018">Schaefer et al. 2018</a> are available for different numbers of parcellations (100, 200, 400, 600) and are based on resting state data from 1489 subjects. 
             </p>
@@ -3420,7 +3421,7 @@
             </p>
             You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','schaefer.txt'));">here</a>.
 
-            <h5 id="SUIT">Atlas of the human cerebellum</h5>
+            <h6 id="SUIT">Atlas of the human cerebellum</h6>
             <p>
               This atlas by <a href="#Diedrichsen2009">Diedrichsen et al. 2009</a> is based on <a href="https://github.com/DiedrichsenLab/cerebellar_atlases">atlas of the human cerebellum</a>.
             </p>
@@ -3432,7 +3433,7 @@
             <br>
             
             <!-- ###################################### -->
-            <h3 id="surfrois">List of surface-based atlas maps (FreeSurfer)</h3>
+            <h5 id="surfrois">List of surface-based atlas maps (FreeSurfer)</h5>
             <p>
               We also prepared different surface atlas maps for the Freesurfer and HCP (32k) space that are stored in the <em>atlases_surfaces(_32k)</em> directories. 
               You can find more information about the atlases in <a href="matlab:edit(fullfile(fileparts(which('cat12')),'atlases_surfaces','atlases_surfaces.man'));">atlases_surfaces.man</a>.
@@ -3441,7 +3442,7 @@
               See <a href="https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation">Freesurfer WIKI</a> for further information.
             </p>
         
-            <h5 id="FS_DK40">Desikan-Killiany (DK40) Atlas</h5>
+            <h6 id="FS_DK40">Desikan-Killiany (DK40) Atlas</h6>
             <p>
               This atlas is also known as the 'Desikan-Killiany-Tourville' (DKT) cortical atlas. 
               It is a gyral based atlas: ie, a gyrus was defined as running between the bottoms of two adjacent sulci <a href="#DK2006">(Desikan Killiany et al. 2006)</a>. 
@@ -3459,7 +3460,7 @@
             </p>
             <p style="text-align:center;"><img src="images/CAT_surf_atlas_DKT40.png" width=90% alt="Desikan Killiany Tourville et al. 2010" ><p>
 
-            <h5 id="FS_Destrieux2009">Destrieux Atlas (2009)</h5>
+            <h6 id="FS_Destrieux2009">Destrieux Atlas (2009)</h6>
             <p>
               This atlas is also known as the 'Destrieux' cortical atlas <a>(Fischl et al. 2004)</a>.
               It is based on a parcellation scheme that first divided the cortex into gyral and sulcal regions, the limit between both being given by the curvature value of the surface. 
@@ -3477,7 +3478,7 @@
             </p>
             <p style="text-align:center;"><img src="images/CAT_surf_atlas_Destrieux.png" width=90% alt="Destrieux 2009" ><p>
 
-            <h5 id="FS_HCP">Human Connectome Project (HCP) Multi-Modal Parcellation</h5>
+            <h6 id="FS_HCP">Human Connectome Project (HCP) Multi-Modal Parcellation</h6>
             <p>
               This atlas is based on delineations based on cortical architecture, function, connectivity, and/or topography in a group of 210 healthy young adults by <a href="#Glasser2016">Glasser et al. 2016.</a>.
             </p><p>
@@ -3492,7 +3493,7 @@
               ). 
             </p>
 
-            <h5 id="FS_Schaefer">Local-Global Intrinsic Functional Connectivity Parcellation</h5>
+            <h6 id="FS_Schaefer">Local-Global Intrinsic Functional Connectivity Parcellation</h6>
             <p>
               These <a href="https://github.com/ThomasYeoLab/CBIG/tree/master/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal">atlases</a> by <a href="#Schaefer2018">Schaefer et al. 2018</a> are available for different numbers of parcellations (100, 200, 400, 600) and are based on resting state data from 1489 subjects. 
             </p>
@@ -3509,7 +3510,7 @@
             </p>
 
             <!-- ###################################### -->
-            <h3>References for ROI approach</h3>
+            <h5>References for ROI approach</h5>
 
             <b id="Collins1998">Collins et al. 1998</b>
             <p>
@@ -3595,6 +3596,91 @@
               NeuroImage 39 (3): 1064-1070.<br>
             </p>
 
+
+            <!-- ################################################################################# -->
+            <h4 id="qc">CAT report and quality control</h4>
+
+            <p>
+              CAT now also prints image quality measurements <a href="#Dahnke:2022">(Dahnke et al. 2022)</a> and major global subjects specific measures in addition to the used preprocessing parameters.
+              These data are further saved in the "cat_*.xml" files for each subject that can be read by <a class="function" href="matlab:cat_io_xml">cat_io_xml</a>.  
+            </p>
+            
+            <h5>Image quality measures</h5>
+            <p>
+              Due to the wide range of rating and marking systems, the rating was defined for a percentage range and a numerical scaling that allows mapping to nominal numbers or letters with chromatic variants ("+" and "-") shown in table below. 
+              The obtained quality ratings range from 0.5 (100 rating points (rps)) to 10.5 (0 rps) with values around 1 and 2 describing (very) good image quality (grad A and B) and values around 5 (grad E) and higher (grad F, < 50 rps) indicating problematic images.
+              The scaling of the QMs was performed on the basis of theoretical aspects and the analysis of synthetic and real MRI data, especially the BWP (Brain Web Phantom; <a href="#Collins:1998">Collins et al. 1998</a>).
+            </p> 
+            <p style="text-align:center;"><img src="images/cat_qa_rating-table.jpg" width=90% height=auto alt="Quality rating" ><p>
+            <p>
+              The image quality measures describe the properties of the image before CAT12 processing. 
+              They were estimated by using the tissue segmentation and were (nearly) independent of subject sex and health status. 
+            </p>
+            <ul>
+              <li>
+                <b>NCR (Noise Contrast Ratio):</b>
+                <p>
+                  The NCR measures the local standard deviation in the optimized WM segment and is scaled by the minimum tissue contrast.
+                </p>
+              </li>
+              <li>
+                <b>ICR  (Inhomogeneity Contrast Ratio):</b>
+                <p>
+                  The ICR is measured as the global standard deviation within the optimized WM segment and is scaled by the minimum tissue contrast. 
+                </p>
+              </li> 
+              <li>
+                <b>RES (RMS resolution):</b>
+                <p>
+                  To describe the resolution of an image, the RMS value of the voxel size is used. 
+                  Outliers with exceptionally low resolutions in one of the <it>x y z</it> dimensions are weighted much stronger than outliers with high resolutions, resulting in an asymmetric penalization. 
+                </p>
+              </li>
+            </ul>
+            <p>
+              The resulting ratings were combined as weighted average image quality rating <b>IQR</b> <a href="#Dahnke:2022">(Dahnke et al. 2022)</a>. 
+              Tests of different databases such as ADNI, IXI, INDI, OASIS, PPMI etc. demonstrated that published data got good quality ratings in general. 
+              Please note that <it>excellent</it> rating is defined for extraordinary good images that can be achieved by averaging several ultra high resolution scans on high field systems (e.g. <a href="#Winterburn:2013">Winterburn et al. 2013</a>), 
+              and that typical scientific (clinical) data is expected to get just <it>good</it> to <it>satisfactory</it> ratings.
+            </p>
+            <p style="text-align:center;"><img src="images/cat_qa_rating-distribution.png" width=80% height=auto alt="Quality distribution of large projects" ><p>
+            <p>
+              Low image quality can lead to underestimation of the GM in most preprocessings <a href="#Reuter:2015">(Reuter et al. 2015</a>, <a href="#Dahnke:2022">Dahnke et al. 2022)</a>.
+              The following figure shows the effect of motion artifacts on IQR and the relative GM volume rGMV of a children dataset processed by 5 different tissue segmentations.
+            </p> 
+            <p style="text-align:center;"><img src="images/cat_qa_expert.png" width=90% height=auto alt="Quality rating" ><p>
+                          
+            <h5>References for quality control</h5>
+            <b id="Collins:1998">Collins et al. 1998</b>
+            <p>
+              Collins DL, Zijdenbos AP, Kollokian V, Sled JG, Kabani NJ, Holmes CJ, Evans AC. </br>
+              <a href="https://doi.org/10.1109/42.712135">
+                Design and construction of a realistic digital brain phantom.</br>
+              </a>
+              IEEE Transactions on Medical Imaging 1998;  17(3), 463-468.
+            </p>
+            <b id="Dahnke:2022">Dahnke et al. 2022</b>
+            <p>
+              Dahnke R, Ziegler G, Großkreutz J, Gaser C.</br> 
+              Retrospective quality assurance in T1 images.</br> 
+              In preparation.
+            </p>
+            <b id="Reuter:2015">Reuter et al. 2015</b>
+            <p>
+              Reuter M, Tisdall MD, Qureshi A, Buckner RL, van der Kouwe AJW, Fischl B.</br> 
+              <a href="https://doi.org/10.1016/j.neuroimage.2014.12.006">
+                Head motion during MRI acquisition reduces gray matter volume and thickness estimates.</br> 
+              </a>
+              NeuroImage 2015, 107, 107-115.
+            </p>
+            <b id="Winterburn:2014">Winterburn et al. 2013</b>
+            <p>
+              Winterburn JL, Pruessner JC, Chavez S, Schira, MM, Lobaugh NJ, Voineskos AN, Chakravarty MM.</br> 
+              <a href="https://doi.org/10.1016/j.neuroimage.2013.02.003">
+                A novel in vivo atlas of human hippocampal subfields using high-resolution 3 T magnetic resonance imaging.</br> 
+              </a>
+              NeuroImage 2013, 74, 254-265. 
+            </p>
 
             <!-- ################################################################################# -->
 <!--
