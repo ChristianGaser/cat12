@@ -2437,7 +2437,8 @@ if H.repeated_anova
 end
 
 % only enable select
-datacursormode('on');
+% does not work and I am not sure whether this is necessary at all
+%datacursormode('on');
 
 % enable buttons
 if strcmp(get(H.delui.remove,'enable'),'off')
