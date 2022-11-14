@@ -1,4 +1,20 @@
 ------------------------------------------------------------------------
+r2137 | gaser | 2022-11-15 00:52:39
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M cat_stat_homogeneity.m
+ M doc/cat.html
+ M doc/css/main.css
+ M doc/index.html
+
+
+Changed: Added Quality check to the html manual and updated information about
+         smoothing and matched filter theorem.
+Fixed:   Corrected error in cat_stat_homogeneity.m due to wrong datacursormode 
+         command.
+------------------------------------------------------------------------
 r2136 | gaser | 2022-11-10 09:46:49
 
 Changed paths:
@@ -12,7 +28,7 @@ Changed paths:
 
 
 Fixed: Corrected typo in cat_main_reportfig.m.
-Fixed: Added check whether usprior field exists.
+Fixed: Added check whether useprior field exists.
 Fixed: Added check whether fie exists to loadSurf function in 
        cat_surf_createCS2.m.
 Fixed: Force conversion to double type in cat_surf_fun.m.
