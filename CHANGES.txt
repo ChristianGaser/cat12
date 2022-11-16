@@ -1,4 +1,23 @@
 ------------------------------------------------------------------------
+r2138 | gaser | 2022-11-16 23:59:37
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M cat12.m
+ M cat_conf_tools.m
+ M cat_stat_homogeneity.m
+ M cat_stat_spm2x.m
+ M cat_surf_coregvol2surf.m
+ M doc/cat.html
+
+
+Changed: Added again transformation to effect size d to cat_stat_spm2x.m, but 
+         extended help text and added recommendations for use.
+Fixed:   Slice display in cat_stat_homogeneity.m used the wrong file order.          
+Fixed:   Corrected typo in cat12.m
+Fixed:   Updated cat_surf_coregvol2surf.m batch with correct fieldnames.
+------------------------------------------------------------------------
 r2137 | gaser | 2022-11-15 00:52:39
 
 Changed paths:

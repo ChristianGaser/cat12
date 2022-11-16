@@ -2535,8 +2535,8 @@ function [T2x,T2x_surf,F2x,F2x_surf] = conf_T2x
   sel               = cfg_menu;
   sel.name          = 'Convert t value to';
   sel.tag           = 'sel';
-  sel.labels        = {'p','-log(p)','correlation coefficient cc','standard Normal (z-score) distribution','apply thresholds without conversion'};
-  sel.values        = {1,2,3,6,5};
+  sel.labels        = {'p','-log(p)','correlation coefficient cc (only for regression)','effect size d (only for 2-sample t-test)','Z-score','apply thresholds without conversion'};
+  sel.values        = {1,2,3,4,6,5};
   sel.val           = {2};
   sel.help          = {'Select conversion of t-value'};
 
@@ -2682,13 +2682,17 @@ function [T2x,T2x_surf,F2x,F2x_surf] = conf_T2x
   T2x.prog = @cat_stat_spm2x;
   T2x.vout = @vout_stat_spm2x;
   T2x.help = {
-    'This function transforms t-maps to P, -log(P), r, or z-maps.'
+    'This function transforms t-maps to P, -log(P), r, d, or Z-maps.'
     'The following formulas are used:'
     '--------------------------------'
-    'correlation coefficient:'
+    'correlation coefficient (only for regression):'
     '            t'
     '  r = ------------------'
     '        sqrt(t^2 + df)'
+    'effect size d (only for 2-sample t-test):'
+    ' d = 2*t/sqrt(df(2))'
+    'Z-score:'
+    ' Z = spm_t2z(t,df(2))'
     'p-value:'
     '  p = 1-spm_Tcdf'
     'log p-value:'
@@ -2706,9 +2710,10 @@ function [T2x,T2x_surf,F2x,F2x_surf] = conf_T2x
     '   Type_Contrast_Pheight_Pextent_K_Neg'
     '   Type:      P    - p-value'
     '              logP - log p-value'
+    '              D    - effect size d'
     '              R    - correlation coefficient'
     '              T    - t-value'
-    '              Z    - z-value'
+    '              Z    - Z-score'
     '   Contrast:  name used in the contrast manager with replaced none valid'
     '              strings'
     '   Pheight:   p    - uncorrected p-value in % (p<0.05 will coded with "p5")'
@@ -2750,7 +2755,7 @@ function [T2x,T2x_surf,F2x,F2x_surf] = conf_T2x
   sel               = cfg_menu;
   sel.name          = 'Convert F value to';
   sel.tag           = 'sel';
-  sel.labels        = {'p','-log(p)','coefficient of determination R^2','apply thresholds without conversion'};
+  sel.labels        = {'p','-log(p)','coefficient of determination R^2 (only for regression)','apply thresholds without conversion'};
   sel.values        = {1,2,3,4};
   sel.val           = {2};
   sel.help          = {'Select conversion of F-value'};
@@ -2784,7 +2789,7 @@ function [T2x,T2x_surf,F2x,F2x_surf] = conf_T2x
     'This function transforms F-maps to P, -log(P), or R2-maps.'
     'The following formulas are used:'
     '--------------------------------'
-    'coefficient of determination R2:'
+    'coefficient of determination R2 (only for regression):'
     '               1'
     '  R2 = ------------------'
     '        1 + F*(p-1)/n-p)'

@@ -634,7 +634,7 @@ popm = 0.780;          % x-position of the control elements
 
 H.pos = struct(...
     'fig',    [10 10 1.3*ws(3) 1.1*ws(3)],...% figure
-    'cbar',   [0.045 0.050 0.700 0.020],...  % colorbar for figure
+    'cbar',   [0.045 0.035 0.700 0.020],...  % colorbar for figure
     'plot',   [0.050 0.050 0.700 0.825],...  % scatter plot
     ...
     'close',  [0.775 0.935 0.100 0.040],...  % close button
@@ -2373,22 +2373,13 @@ if isempty(x)
   return
 end
 
-if H.mesh_detected 
-  % show two render views for meshes: texture and Z-score
-  show_mesh;
-else
-  % show image slice
-  show_image_slice;
-%  show_glassbrain;
-end
-
 % text info for data cursor window
 txt = {sprintf('%s',H.filename.m{x})};
 
 % prevent that that function is called again if position has not changed or
 % subject for long. data has not changed for showing raw data
 if H.repeated_anova && (isfield(H,'show_sel') && (H.show_sel == 4 || H.show_sel == 5))
-  if any(x == H.mouse.x) % && (H.repeated_anova && (H.show_sel == 4 || H.show_sel == 5))
+  if any(x == H.mouse.x)
     return
   else
     H.mouse.x = x;
@@ -2397,6 +2388,14 @@ elseif x == H.mouse.x(1) % && (H.repeated_anova && (H.show_sel == 4 || H.show_se
   return
 else 
   H.mouse.x = x;
+end
+
+if H.mesh_detected 
+  % show two render views for meshes: texture and Z-score
+  show_mesh;
+else
+  % show image slice
+  show_image_slice;
 end
 
 if ~H.mesh_detected
