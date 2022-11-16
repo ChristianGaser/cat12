@@ -10,9 +10,19 @@ function out = cat_stat_spm2x(job)
 % ---------------------------------------------
 % correlation coefficient:
 %
-%      t
+%             t
 % r = ------------------
-%   sqrt(t^2 + df)
+%       sqrt(t^2 + df)
+%
+% ---------------------------------------------
+% effect size d
+%
+% d = 2*t/sqrt(df(2));
+%
+% ---------------------------------------------
+% Z-score
+%
+% Z = spm_t2z(t,df(2));
 %
 % ---------------------------------------------
 % p-value:
@@ -31,9 +41,9 @@ function out = cat_stat_spm2x(job)
 % ---------------------------------------------
 % coefficient of determination R2:
 %
-%          1
+%                  1
 % R2 = 1 - ------------------
-%     1 + F*(p-1)/n-p)
+%           1 + F*(p-1)/n-p)
 %
 % ---------------------------------------------
 % p-value:
@@ -50,7 +60,7 @@ function out = cat_stat_spm2x(job)
 %
 % Examples:
 % p-value -log10(1-P)
-% 0.1   1
+% 0.1     1
 % 0.05    1.30103 (-log10(0.05))
 % 0.01    2
 % 0.001   3
@@ -72,20 +82,18 @@ function out = cat_stat_spm2x(job)
 %        R2 - coefficient of determination
 %        F  - F-value
 %
-% Contrast:  name used in the contrast manager while replacing none valid 
-%        strings
+% Contrast:  name used in the contrast manager while replacing none valid strings
 %  
 % Pheight:   p  - uncorrected p-value in % (p<0.05 will coded with "p5")
 %          pFWE - p-value with FWE correction in %
 %          pFDR - p-value with FDR correction in %
 %        
 % Pextent:   pk  - uncorr. extent p-value in % (p<0.05 coded with "p5")
-%        pkFWE - extent p-value with FWE correction in %
+%          pkFWE - extent p-value with FWE correction in %
 %
 % K:       extent threshold in voxels
 %
-% Neg:     image also shows thresholded inverse effects (e.g. neg. 
-%        values) 
+% Neg:     image also shows thresholded inverse effects (e.g. neg. values) 
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -158,12 +166,12 @@ else
     stat = 'T';
     P = spm_select(Inf,'^(spmT|nullT).*(img|nii|gii)','Select T-images');
     sel = spm_input('Convert t value to?',1,'m',...
-      '1-p|-log(1-p)|correlation coefficient cc|effect size d|apply thresholds without conversion|standard Normal (Z-score) distribution',1:6, 2);
+      '1-p|-log(1-p)|correlation coefficient cc (only for regression)|effect size d (only for 2-sample t-test)|apply thresholds without conversion|Z-score',1:6, 2);
   else
     stat = 'F';
     P = spm_select(Inf,'^spmF.*(img|nii|gii)','Select F-images');
     sel = spm_input('Convert F value to?',1,'m',...
-      '1-p|-log(1-p)|coefficient of determination R^2|apply thresholds without conversion',1:4, 2);
+      '1-p|-log(1-p)|coefficient of determination R^2 (only for regression)|apply thresholds without conversion',1:4, 2);
   end
   
   %-Get height threshold
@@ -588,7 +596,7 @@ for i=1:size(P,1)
           if maxZ(j) < 0, found_neg = 1; end
           if maxZ(j) > 0, found_pos = 1; end
           
-          if sel == 2, valname = 'p-value'; else valname = 'Value'; end
+          if sel == 2, valname = 'p-value'; else valname = [STAT '-value']; end
 
           % print header if the first pos./neg. result was found
           if found_pos && ~print_header_pos
@@ -596,14 +604,14 @@ for i=1:size(P,1)
             fprintf('\n______________________________________________________');
             fprintf('\n%s: Positive effects\n%s',name,atlas_name);
             fprintf('\n______________________________________________________\n\n');
-            fprintf('%1s-%5s\t%12s\t%15s\t%s\n\n',STAT,valname,'Cluster-Size','  xyz [mm] ','Overlap of atlas region');
+            fprintf('%7s\t%12s\t%15s\t%s\n\n',valname,'Cluster-Size','  xyz [mm] ','Overlap of atlas region');
             print_header_pos = 1;
           end
           if found_neg && ~print_header_neg
             fprintf('\n______________________________________________________');
             fprintf('\n%s: Negative effects\n%s',name,atlas_name);
             fprintf('\n______________________________________________________\n\n');
-            fprintf('%1s-%5s\t%12s\t%15s\t%s\n\n',STAT,valname,'Cluster-Size','  xyz [mm] ','Overlap of atlas region');
+            fprintf('%7s\t%12s\t%15s\t%s\n\n',valname,'Cluster-Size','  xyz [mm] ','Overlap of atlas region');
             print_header_neg = 1;
           end
           if ~found_pos && ~found_neg
