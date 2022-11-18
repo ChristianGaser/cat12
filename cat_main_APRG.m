@@ -85,20 +85,23 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th,cutstr)
   %        brain mask Yb in the center of the brain, ie. we allow brain 
   %        tissue in the CSF far from the skull. 
   if T3th(1) < T3th(3)
-    Yc   = single(P(:,:,:,3))/255 .* ...
+    Ycc = max( single(P(:,:,:,3))/255 , cat_vol_morph( single(sum(P(:,:,:,1:3),4))/255 , 'ldc',5,vx_vol) .* ...
+      max(0,min(1,1 - ( max(0, Ysrc - cth) / abs( mean(res.mn(res.lkp(:)==1).*res.mg(res.lkp(:)==1)' ) - cth ) ) )) );
+    Yc  = single(P(:,:,:,3))/255 .* ...
       max(0,min(1,1 - ( max(0, Ysrc - cth) / abs( mean(res.mn(res.lkp(:)==1).*res.mg(res.lkp(:)==1)' ) - cth ) + ...
                         max(0,-Ysrc + cth) / abs( mean(res.mn(res.lkp(:)==4).*res.mg(res.lkp(:)==4)' ) - cth ) ) ));
-  else
+ else
+    Ycc  = 0; 
     Yc   = single(P(:,:,:,3))/255 .* ...
       max(0,min(1,1 - ( max(0,Ysrc - cth) / abs( min(res.mn(res.lkp==3)) - mean(res.mn(res.lkp==1)) )) ));
   end
-  Ycg  = (single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255 - Yc) .* ...
+  Ycg  = Ycc + (single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255 - Yc) .* ...
     max(0,min(1,1 - (0.5*abs(Ysrc - T3th(2)) / abs(diff(T3th(1:2))) ) ));
-
+%%
 
   % improved brain mask by region growing
   %  Yb .. improving the brain mask is necessary in case of missing
-  %        structures (e.g. in children) or failed registration where 
+  %        structures (e.g.in children) or failed registration where 
   %        the TPM does not fit well and the CSF include brain tissue
   %        simply by chance.
   BGth = min(cat_stat_nanmean(Ysrc( P(:,:,:,6)>128 )),clsint(6));
@@ -121,9 +124,10 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th,cutstr)
   else % T2/PD ... more tolerant
     Yb   = min(1,Yb + cat_vol_morph(smooth3(sum(P(:,:,:,1:3),4))>200,'ldc',1,vx_vol));
   end
+  %%
   Yb   = cat_vol_morph(Yb>0.8,'ldo',1.9,vx_vol);
   Yb   = cat_vol_morph(Yb,'ldc',1.9,vx_vol);
-  
+ 
   
   %% mask for region growing and WM-GM region growing
   Yb2  = single(cat_vol_morph(Yb,'de',1.9,vx_vol)); 
@@ -273,7 +277,7 @@ end
   %  Ym .. combination of brain tissue and CSF that is further corrected
   %        for noise (median) and smoothness (Laplace) and finally 
   %        threshholded 
-  Ym  = min(1,Yc + single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255 + Yb);
+  Ym  = min(1,Yc + single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255 + Yb + (smooth3(Ycc)>0.5));
   Ym  = cat_vol_median3(Ym,Ym>0 & Ym<1);  % remove noise 
   % region-growing 
   Ym2 = Ym; Ym2(Ym2==0)=nan;
@@ -320,6 +324,11 @@ end
     end
     cutstr = cutstrs(cutstrid(1));
   end
+  % MP2Rage
+  if res.mn(res.lkp==3)<res.mn(res.lkp==max(res.lkp) & res.mg'>0.5)
+    Yb = Yb | Ycc>0.5; 
+  end
+
 
 
   %% normalize this map depending on the cutstr parameter 

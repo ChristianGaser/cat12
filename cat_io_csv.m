@@ -42,7 +42,7 @@ function varargout = cat_io_csv(filename,varargin)
     end
   else
     [pp,ff,ee] = fileparts(filename);
-    if ~strcmp(ee,'.csv'); ee='.csv'; end
+    %if ~strcmp(ee,'.csv'); ee='.csv'; end
     filename = fullfile(pp,[ff ee]); 
   end     
   if strcmp(action,'w')
@@ -65,6 +65,7 @@ function varargout = cat_io_csv(filename,varargin)
   def.finaldelimiter  = 0;
   
   opt = cat_io_checkinopt(opt,def);
+  opt.delimiter = cat_io_strrep(opt.delimiter,{'t','n'},{'\t','\n'});
   if opt.komma==',' && opt.komma == opt.delimiter, opt.delimiter = ';'; end
 
   switch action

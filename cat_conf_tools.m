@@ -689,12 +689,12 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   csvfile.tag         = 'csvfile';
   csvfile.name        = 'CSV file';
   csvfile.filter      = 'any';
-  csvfile.ufilter     = '.*csv';
+  csvfile.ufilter     = '.*\\.(csv|tsv)';
   csvfile.val         = {{''}};
   csvfile.help        = {
-   ['Select one CSV file that contains further information, e.g. age or sex.  The first line has to be the header with the name of the variables.  ' ...
+   ['Select one CSV/TSV file that contains further information, e.g. age or sex.  The first line has to be the header with the name of the variables.  ' ...
     'The first row has to include an unique identifier for the selected subjects files give above, e.g. the subject ID, the filename, or path if the filename is not unique. ' ...
-    'For instance, a file IXI_IOP_493 can be identified by the subject ID 493 given in the IXI CSV table. ' ...
+    'For instance, a file IXI_IOP_493 can be identified by the subject ID 493 given in the IXI CSV/TSV table. ' ...
     'However, filenames in BIDS are not suited for identification and you has to specify the "Path/filename selector" to select the directory entry that include the ID. ']
     ''
     };
@@ -705,19 +705,19 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   % The CSV selection is a bit more tricky. 
   fields              = cfg_entry;
   fields.tag          = 'fields';
-  fields.name         = 'XML and CSV fieldnames';
+  fields.name         = 'XML and CSV/TSV fieldnames';
   fields.strtype      = 's+';
   fields.num          = [0 inf]; 
   fields.val          = {{'ALLCSV'}};
   fields.help         = {
-   ['Enter the fieldnames (XML) or columns names (CSV) you want to get here. ' ...
+   ['Enter the fieldnames (XML) or columns names (CSV/TSV) you want to get here. ' ...
     'The fieldnames where used to create the depency object and will be converted to variables. ' ...
     'The CSV columns should be useable as variable otherwise you have to rename them in the file. ' ...
-    'You can use ALLCSV to create variables of all CSV header fields. ' ] 
+    'You can use ALLCSV to create variables of all CSV/TSV header fields. ' ] 
     ''
    ['E.g. the catxml contain the TIV in the subfield "subjectmeasures.vol_TIV" that will create the depency variable "subjectmeasures_vol_TIV". ' ...
     'To extract one value of a matrix or cell field use the matlab specification, e.g., to extract the GM value from "subjectmeasures.vol_CGW" use "subjectmeasures.vol_CGW(2)"' ...
-    'For the CSV file the rows has to be select by using the same name, but will be converted into a variable a field "sex(1=m,2=f)" will result in "sex_1m_2f". ']
+    'For the CSV/TSV file the rows has to be select by using the same name, but will be converted into a variable a field "sex(1=m,2=f)" will result in "sex_1m_2f". ']
     ''
     'Enter one field per row (what creates a cellstr), e.g.:'
     '  AGE'                           
@@ -977,10 +977,10 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   csvdelkom           = cfg_menu;
   csvdelkom.tag       = 'seg';
   csvdelkom.name      = 'CSV delimiter and comma';
-  csvdelkom.labels    = {',.',';,',';.',' ,',' .'}; % ... space/tab? ' ,',' .' 
-  csvdelkom.values    = {',.',';,',';.',' ,',' .'};
+  csvdelkom.labels    = {',.',';,',';.',' ,',' .','t.','t,'}; % ... space/tab? ' ,',' .' 
+  csvdelkom.values    = {',.',';,',';.',' ,',' .','t.','t.'};
   csvdelkom.val       = {',.'}; 
-  csvdelkom.help      = {'Delimiter and comma in the CSV file. '};
+  csvdelkom.help      = {'Delimiter and comma in the CSV/TSV file. '};
 
   write               = cfg_entry;
   write.tag           = 'fname';
@@ -1004,8 +1004,8 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   csvid.val           = {[]}; 
   csvid.help          = {
    ['Because the filename (=0 or []) does not allways defines the subject ID you can select another directory of the file path. ' ...
-    'E.g., for the file ".../myProject/GROUP/SUB01/TP01/T1w/001.nii" you have to define the 3rd ancestor (=-3), ' ...
-    'whereas ".../myProject/GROUP/SUB01/TP01/T1w/report/catxml_001.xml" would require the 4th ancestor (=-4). ']
+    'E.g., for the file ".../myProject/GROUP/SUB01/TP01/T1w/001.nii" you have to define the 3rd ancestor (=3), ' ...
+    'whereas ".../myProject/GROUP/SUB01/TP01/T1w/report/catxml_001.xml" would require the 4th ancestor (=4). ']
     ''
     };
   
@@ -1061,7 +1061,31 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   idselector.name     = 'ID filename selector';
   idselector.val      = {csvid filesel fileseps};
   idselector.help     = {'Selectors to define the subject ID by a given path/filename, e.g., the IXI filename also include a site ID and weighting: "IXI002-Guys-0815-T1.nii'};
-    
+
+
+  %{
+  csvid               = cfg_entry;
+  csvid.tag           = 'csvIDfd';
+  csvid.name          = 'Subpath selector';
+  csvid.strtype       = 'w';
+  csvid.num           = [0 inf]; 
+  csvid.val           = {[]}; 
+  csvid.help          = {
+   ['Because the filename (=0 or []) does not allways defines the subject ID you can select another directory of the file path. ' ...
+    'E.g., for the file ".../myProject/GROUP/SUB01/TP01/T1w/001.nii" you have to define the 3rd ancestor (=3), ' ...
+    'whereas ".../myProject/GROUP/SUB01/TP01/T1w/report/catxml_001.xml" would require the 4th ancestor (=4). ']
+    ''
+    };
+  %}
+  csvIDcol          = cfg_entry;
+  csvIDcol.tag      = 'csvIDcol';
+  csvIDcol.name     = 'CSV column ID selector';
+  csvIDcol.strtype  = 'w';
+  csvIDcol.num      = [1 1]; 
+  csvIDcol.val      = {1};
+  csvIDcol.help     = {''};
+  
+
   verb                                = cfg_menu;
   verb.tag                            = 'verb';
   verb.name                           = 'Verbose output';
@@ -1077,19 +1101,19 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   getCSVXML           = cfg_exbranch;
   getCSVXML.tag       = 'getCSVXML';
   getCSVXML.name      = 'XML/CSV readout';
-  getCSVXML.val       = {files csvfile csvdelkom xmlfields fields fnamefields idselector outdir write verb};
+  getCSVXML.val       = {files csvfile csvdelkom csvIDcol xmlfields fields fnamefields idselector outdir write verb};
   getCSVXML.prog      = @cat_stat_getCSVXMLfield;
   getCSVXML.vout      = @vout_stat_getCSVXML;
   getCSVXML.hidden    = expert<1;
   getCSVXML.help      = {
-    'This batch allows to extract XML and CSV entries and filename-parts for a given list of a subset of (processed) files to use the in statistical models.  ' 
+    'This batch allows to extract XML and CSV/TSV entries and filename-parts for a given list of a subset of (processed) files to use the in statistical models.  ' 
     '' % XML block
    ['The XML extraction of the CAT*.xml allows for instance to extract informations from the CAT prepcrocessing, such as global volumes, image quality ratings or preprocessing setting, ' ...
     'You need to select the processed files that define the used subjects, e.g. the "catxml_*.xml" or the "lh.thickness.*.gii" files or the original images. ' ...
     'Moreover, specific atlas regions can be extracted from CAT atlas XML files. '] % is this useful ? Use a predefined batch for it, eg. by automaticly analyse the CSV atlas files
     '' % CSV block
    ['Many databases use CSV files to store information such as "IXI_ID; SEX_ID; HEIGHT; WEIGHT; ...; AGE" for the IXI dataset.  ' ...
-    'You also need to select the delimiter type of the CSV file and specify how to distinguish the part of the filename that contains the subject ID (this must be the first column in the CSV file) and the fieldnames (e.g. "SEX_ID" or "AGE").']
+    'You also need to select the delimiter type of the CSV/TSV file and specify how to distinguish the part of the filename that contains the subject ID (this must be the first column in the CSV file) and the fieldnames (e.g. "SEX_ID" or "AGE").']
     '' % FILE selector block ?
     'You can write the results into a text file or you can use the DEPENDENCY function of the SPM batches by choosing the column-wise output vectors. '
     ''
@@ -4451,11 +4475,10 @@ return
 
 %_______________________________________________________________________
 function dep = vout_io_data2mat(varargin)
-    
   dep            = cfg_dep;
   dep.sname      = 'Saved mat-file';
-  dep.src_output = substruct('.','fname','()',{':'});
-  dep.tgt_spec   = cfg_findspec({{'strtype','e','strtype','r'}});
+  dep.src_output = substruct('.','fname');
+  dep.tgt_spec   = cfg_findspec({{'filter','mat','strtype','e'}});
 return;
 
 %------------------------------------------------------------------------
