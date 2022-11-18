@@ -477,6 +477,10 @@ if ~isfield(res,'spmpp')
   catch
     [prob,indx,indy,indz,ath] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res);
   end
+  if sum(sum(sum(prob(:,:,:,1)))) < sum(Ycls{1}(:)) * 0.5
+    % there is a bug with empty images CG7T >> catch with old function
+    [prob,indx,indy,indz,ath] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res);
+  end
   
   % RD202101: Update image intensity normalization based on the the AMAP
   %           segmentation but not the AMAP thresholds
