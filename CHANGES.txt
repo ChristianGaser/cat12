@@ -1,4 +1,48 @@
 ------------------------------------------------------------------------
+r2139 | rdahnke | 2022-11-18 16:02:13
+
+Changed paths:
+ M CHANGES.txt
+ M cat_batch_spm.m
+ M cat_batch_spm.sh
+ M cat_conf_stools.m
+ M cat_conf_tools.m
+ M cat_io_csv.m
+ M cat_io_data2mat.m
+ M cat_main.m
+ M cat_main_APRG.m
+ M cat_main_LASs.m
+ M cat_main_gintnorm1639.m
+ M cat_main_updateSPM1639.m
+ M cat_stat_getCSVXMLfield.m
+ M cat_surf_createCS.m
+AD internal/cat_defaults_fastlong.m
+
+
+(1) Fixed:  Updated settings of resample/smooth batch to filter multiple input 
+            dependencies in cat_conf_stools.
+(2) Fixed:  Extended cat_io_csv to support TSV files. Unfinished corrections in	
+            cat_conf_tools and cat_stat_getCSVXMLfield to improve usablity for 
+            CSV and TSV files in general.  
+(3) Fixed:  Small changes and corrections in cat_io_data2mat and its dependency 
+            defintions but there is some bug in using dependencies as input,
+            e.g., from the SPM file selector.
+(4) Fixed:  Tiny corrections in cat_main and cat_main_LASs for 7T data.
+(5) Fixed:  Corrected brain extraction problems of missing CSF in MP2Rage data 
+            in cat_main_APRG, gintnorm1639, and cat_main_updateSPM1639
+(6) Fixed:  Corrected path bug in cat_surf_createCS by using the V0 rather than 
+            the V similar to cat_surf_createCS2).    
+(7) New:    Added option to cat_batch_spm.sh and cat_batch_spm.m to create 
+            variables before calling the matlabbatch, e.g., to use variable
+            input files or parameters. Added another option to extend the matlab
+            path and automatically added the path of the called batch file.
+            Small bug fixes to set up parameters and catch errors. 
+(8) New:    Added code in cat_main_updateSPM1639 to characterize the SPM
+            segmentation and store the result in the res structure that is 
+            saved in the CAT XML.
+(9) New:    Added a batch for smoothing and downsampling of volumes and 
+            estimation of surface measures and resampling and smooting.               
+               ------------------------------------------------------------------------
 r2138 | gaser | 2022-11-16 23:59:37
 
 Changed paths:

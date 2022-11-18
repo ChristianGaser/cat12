@@ -22,12 +22,13 @@ function out = cat_stat_getCSVXMLfield(job)
   def.fields    = {};   % set of variables names for extraction ... preselection TIV IQR ...
                         % the variables were extracted and a depency for each created
   def.seg       = ',.'; % delimiter/komma setting {',.',';,',';.'} 
+  def.csvIDcol  = 1;
   def.csvIDfd   = 0;    % defines compontent of the pathname to match the subject
   def.outdir    = '';   % output directory
   def.fname     = '';   % write output files
   def.dep       = 0;    % internal variable to test dependencies
   def.verb      = 1; 
-  
+    
   job = cat_io_checkinopt(job,def); 
   out = struct(); 
   
@@ -185,7 +186,7 @@ function out = cat_stat_getCSVXMLfield(job)
     % get field names
     csvvars = genvarname(cat_io_strrep(cat_io_strrep(cat_io_strrep( csv(1,1:end) ,replaceset{1,1},replaceset{1,2}),replaceset{2,1},replaceset{2,2}),'__','_'));
     %% get original ids
-    csvids  = csv(2:end,1);
+    csvids  = csv(2:end,job.csvIDcol);
     lx      = max(length(num2str(max(cell2mat(csvids))))); 
     if isnumeric( cell2mat(csvids(1)) )
       for si = 1:numel(csvids)
@@ -215,7 +216,7 @@ function out = cat_stat_getCSVXMLfield(job)
     [csvsvars,csvsvari,csvsvarj] = intersect( csvvars , fields );
   end
   
-  
+  %%
   nsubs = max([numel(Pxml),numel(Pnii)]); 
   if ~isempty(job.fnamefields)
     %%
@@ -278,7 +279,7 @@ function out = cat_stat_getCSVXMLfield(job)
       if ~isempty( job.idselector.csvIDfd ) || job.idselector.csvIDfd~=0
         for pi = 0:job.idselector.csvIDfd(1)
           [pp,ff0] = spm_fileparts(pp);
-          if  job.csvIDfd(1)==pi || pi>job.idselector.csvIDfd(2)
+          if  job.idselector.csvIDfd(1)==pi || pi>job.idselector.csvIDfd(2)
             if diff(job.idselector.csvIDfd)
               ff = [ff0 filesep ff];   
             else

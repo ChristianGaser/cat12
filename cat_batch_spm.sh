@@ -19,6 +19,8 @@ display=0         # use nodisplay option for matlab or not
 LOGDIR=$PWD
 spm12=$(dirname "$cwd")
 spm12=$(dirname "$spm12")
+mpath="'"$(dirname "$1 ")"'"
+ivar=
 
 ########################################################
 # run main
@@ -47,9 +49,11 @@ parse_args ()
     exit 1
   fi
 
+
   while [ $# -gt 0 ]; do
     optname="`echo $1 | sed 's,=.*,,'`"
     optarg="`echo $2 | sed 's,^[^=]*=,,'`"
+    optarg2="`echo $3 | sed 's,^[^=]*=,,'`"
     case "$1" in
       --matlab* | -m*)
         exit_if_empty "$optname" "$optarg"
@@ -76,6 +80,38 @@ parse_args ()
         help
         exit 1
         ;;
+      -p | --path)
+        exit_if_empty "$optname" "$optarg"
+        mpath="$mpath,'$optarg'"
+        shift
+        ;;
+      -f | --files)
+      # read all files until nothing remains or the next command is coming and
+      # pack everything into a matlab cellstr
+      	  exit_if_empty2 "$optname" "$optarg" "$optarg2"
+      	  ivar="$ivar,'$optarg',{'$optarg2'"
+      	  runon=1
+      	  shift
+      	  shift
+		  while [ $# -gt 0 ] && [ $runon -gt 0 ]; do
+			case "$2" in
+				-*)
+					runon=0
+					;;
+				*) 
+					ivar="$ivar;'$2'"
+					shift
+					;;
+			esac
+		  done
+		  ivar=$ivar"}"
+		  ;;
+      -i | --var | --ivar)
+        exit_if_empty2 "$optname" "$optarg" "$optarg2"
+        ivar="$ivar,'$optarg',$3"
+        shift
+        shift
+        ;;
       -*)
         echo "`basename $0`: ERROR: Unrecognized option \"$1\"" >&2
         ;;
@@ -85,13 +121,11 @@ parse_args ()
     esac
     shift
   done
-
 }
 
 ########################################################
 # check arguments
 ########################################################
-
 exit_if_empty ()
 {
   local desc val
@@ -105,6 +139,22 @@ exit_if_empty ()
     exit 1
   fi
 }
+exit_if_empty2 ()
+{
+  local desc var val
+
+  desc="$1"
+  shift
+  var="$2"
+  shift
+  val="$*"
+
+  if [ ! -n "$val" ]; then
+    echo 'ERROR: No argument given with \"$desc\" command line argument!' >&2
+    exit 1
+  fi
+}
+
 
 ########################################################
 # run batch
@@ -153,7 +203,13 @@ run_batch ()
     
   file=`echo $file| sed -e 's/\.m//g'`
 
-  X="cat_batch_spm('${file}')"
+  # prepare matlab code with additional path 
+  X="addpath($mpath); cat_batch_spm('${file}'${ivar})"
+  
+  echo SPM command:
+  echo "  "$X; 
+  echo
+
   echo Running $file
   echo > $spmlog
   echo ---------------------------------- >> $spmlog
@@ -163,9 +219,10 @@ run_batch ()
   echo $0 $file >> $spmlog
   echo >> $spmlog
   if [ $display == 0 ]; then
-    nohup ${matlab} -nodisplay "$nojvm" -nosplash -r $X >> $spmlog 2>&1 &
+    #nohup 
+    ${matlab} -nodisplay "$nojvm" -nosplash -r "$X" #>> $spmlog 2>&1 &
   else
-    nohup ${matlab} -nosplash -r $X >> $spmlog 2>&1 &
+    nohup ${matlab} -nosplash -r $X #>> $spmlog 2>&1 &
   fi
   exit 0
 }
@@ -195,9 +252,28 @@ USAGE:
    cat_batch_spm.sh batchfile.m [-d] [-m matlabcommand]
    
   -m  <FILE>  | --matlab <FILE>         matlab command (matlab version) (default $matlab)
-  -d  <FILE>  | --display <FILE>        use display option in matlab in case that batch file needs graphical output
+  -d  <FILE>  | --display <FILE>        use display option in matlab in case that 
+                                        batch file needs graphical output
   -l  <FILE>  | --logdir                directory for log-file (default $LOGDIR)
   -nj         | --nojvm                 supress call of jvm using the -nojvm flag
+  -p  <PATH>  | --mpath <PATH>          add directory to matlab path (the path of
+                                        the called file is added automaticly)
+  -f  <varname> <FILES> | -files <varname> 
+                                        Create a cellstr by a set of files,e.g.,
+                                         -f data path1/file1.ext path2/file2.ext 
+                                        will create a matlab variable 
+                                          data = {'path1/file1.ext';'path1/file1.ext'};                                       
+  -i  <varname> "<variable>"  |  --ivar <varname> "<variable>" 
+                                        Create a variable "varname" to be used in  
+                                        the matlabbatch to set up variables, e.g.,
+                                        to specify directories, files, or options.  
+                                        Examples: 
+                                         (1) To create a simple matrix:
+                                             -i mat   "[0 8 1 5]"                                       
+                                         (2) To create a structure with subfields:
+                                             -i opt   "struct('flag1',1,'verb',0,'files',{'file.ext})"
+                                         (3) To create a cell array with filenames:
+                                             -i files "{'path1/fname1.ext','path2/fname2.ext'}"         
 
    Only one batch filename is allowed. Optionally you can set the matlab command 
    with the "-m" option. As default no display is used (via the -nodisplay option 
@@ -211,6 +287,12 @@ EXAMPLE
    cat_batch_spm.sh test_batch.m -m /usr/local/bin/matlab7
    This command will process the batch file test_batch.m. As matlab command 
    /usr/local/bin/matlab7 will be used.
+   
+   cat_batch_spm.sh /Users/cat/matlabbatches/batch_prepana_smoothandmore.m 
+     -m /Applications/MATLAB_R2020a.app/bin/matlab 
+     -f pdirs /Volumes/drive/MRData/ADNI/derivatives/CAT12.8.1/sub-ADNI002S0955
+              /Volumes/drive/MRData/ADNI/derivatives/CAT12.8.1/sub-ADNI002S0954
+     -i vdata "{'mwp1'}" -i smoothing "[4 8]"  
    
 INPUT:
    batch file saved as matlab-script or mat-file
