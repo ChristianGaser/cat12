@@ -216,7 +216,7 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm1639(Ysrc,Ycls
   elseif T3th3(1)<T3th3(2) && T3th3(2)<T3th3(3) % T1
     %%
     BGmin = min(Ysrc(~isnan(Ysrc(:)) & ~isinf(Ysrc(:)))); 
-    T3th3(1) = min( min(clsints(3,0)) , mean(Ysrc(Ycls{3}(:)>240))); 
+    T3th3(1) = min( [ min(clsints(3,0)) , mean(Ysrc(Ycls{3}(:)>240) ) , median(Ysrc(Ycls{3}(:)>16)) ] ); % RD202211: added median value of nearly whole CSF
     BGcon = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),median(Ysrc(Ycls{end}(:)>128))]);
     %T3th3 = [max( min(res.mn(res.lkp==3 & res.mg'>0.3/sum(res.lkp==3)))*.05 + .95*max(res.mn(res.lkp==2 & res.mg'>0.3/sum(res.lkp==2))) , ...
     %              min(res.mn(res.lkp==3 & res.mg'>0.3/sum(res.lkp==3)))) ...
@@ -495,7 +495,11 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm1639(Ysrc,Ycls
     BGcon = max([BGmin*1.1,T3th3(1) - cat_stat_nanmean(diff(T3th3)),median(Ysrc(Ycls{end}(:)>128))]);
     BMth  = max(BGmin,min(BGcon,T3th(1) - diff(T3th(1:2)))); %max(0.01,cat_stat_nanmedian(Ysrc(Ybm(:))));
     Ywm   = (Ycls{2}>128  & Yg<gth) | ((Ym-Ydiv*2)>(1-0.05*cat_stat_nanmean(vx_vol)) & Yb2); % intensity | structure (neonate contast problem)
-    Ycm   = smooth3((Ycls{3}>240 | Ym<0.4) & Yg<gth*3 & Yb & ~Ywm & Ycls{1}<8 & Ysrc>BMth & Ym<0.7)>0.5; % important to avoid PVE!
+    if BGth > cat_stat_nanmedian(Ysrc(Ycls{3}(:)>128)) % RD202211: MP2RAGE
+      Ycm   = smooth3((Ycls{3}>16 | Ym<0.4) & Yg<gth*3 & Yb & ~Ywm & Ysrc>BMth & Ym<0.7)>0.5 & Yg<.2 & Ycls{1}<8 ; % important to avoid PVE! ... but no CSF is also not good 
+    else
+      Ycm   = smooth3((Ycls{3}>240 | Ym<0.4) & Yg<gth*3 & Yb & ~Ywm & Ycls{1}<8 & Ysrc>BMth & Ym<0.7)>0.5; % important to avoid PVE!
+    end
 
     % If SPM get totaly wrong maps due to bad image orientations our 
     % segment were incorrect too (or empty) and peak estimation fail.
@@ -534,12 +538,19 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm1639(Ysrc,Ycls
     %% final peaks and intensity scaling
     %  -----------------------------------------------------------------
     T3th3 = T3th_cls;
-    T3th  = [min(Ysrcr(~isnan(Ysrcr(:)) & ~isinf(Ysrcr(:)))) BMth min(BGth,mean([BMth,T3th3(1)])) T3th3 ...
-              T3th3(end) + diff(T3th3([1,numel(T3th3)])/2) ... WM+
-              max(T3th3(end)+diff(T3th3([1,numel(T3th3)])/2) , ... max
-              max(Ysrcr(~isnan(Ysrcr(:)) & ~isinf(Ysrcr(:))))) ];
-    T3thx = [0,0.02,0.05,1:5];
-
+    if BGth > CSFth % RD202211: MP2RAGE
+      T3th  = [min(Ysrcr(~isnan(Ysrcr(:)) & ~isinf(Ysrcr(:)))) T3th3 ...
+                T3th3(end) + diff(T3th3([1,numel(T3th3)])/2) ... WM+
+                max(T3th3(end)+diff(T3th3([1,numel(T3th3)])/2) , ... max
+                max(Ysrcr(~isnan(Ysrcr(:)) & ~isinf(Ysrcr(:))))) ];
+      T3thx = [0,1:5];
+    else
+      T3th  = [min(Ysrcr(~isnan(Ysrcr(:)) & ~isinf(Ysrcr(:)))) BMth min(BGth,mean([BMth,T3th3(1)])) T3th3 ...
+                T3th3(end) + diff(T3th3([1,numel(T3th3)])/2) ... WM+
+                max(T3th3(end)+diff(T3th3([1,numel(T3th3)])/2) , ... max
+                max(Ysrcr(~isnan(Ysrcr(:)) & ~isinf(Ysrcr(:))))) ];
+      T3thx = [0,0.02,0.05,1:5];
+    end
 
     % intensity scaling
     Ym    = Ysrc; 

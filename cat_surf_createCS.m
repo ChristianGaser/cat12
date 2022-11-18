@@ -113,7 +113,7 @@ cstime = clock;
   Psurf = struct(); 
 
   % correction for 'n' prefix for noise corrected and/or interpolated files
-  [pp,ff]   = spm_fileparts(V.fname);
+  [pp0,ff]   = spm_fileparts(V0.fname);
 
   if exist('job','var')
     [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(V0.fname,job);
@@ -132,8 +132,8 @@ cstime = clock;
     elseif opt.fast == 1
       surffolder = [ surffolder '_preview'];
     end
-    pp = spm_str_manip(pp,'h'); % remove 'mri' in pathname that already exists
-    if ~exist(fullfile(pp,surffolder),'dir'), mkdir(fullfile(pp,surffolder)); end
+    pp0 = spm_str_manip(pp0,'h'); % remove 'mri' in pathname that already exists
+    if ~exist(fullfile(pp0,surffolder),'dir'), mkdir(fullfile(pp0,surffolder)); end
   end
   
   % get original filename without 'n'
@@ -293,14 +293,14 @@ cstime = clock;
   defect_number = 0; 
 
   % correct '../' parts in directory for BIDS structure
-  pp_surffolder = fullfile(pp,surffolder);
+  pp_surffolder = fullfile(pp0,surffolder);
   [stat, val] = fileattrib(pp_surffolder);
   if stat, pp_surffolder = val.Name; end
     
   for si=1:numel(opt.surf)
    
     % surface filenames
-    Pm         = fullfile(pp,mrifolder, sprintf('m%s',ff));    % raw
+    Pm         = fullfile(pp0,mrifolder, sprintf('m%s',ff));    % raw
     Praw       = fullfile(pp_surffolder,sprintf('%s.central.nofix.%s.gii',opt.surf{si},ff));    % raw
     Psphere0   = fullfile(pp_surffolder,sprintf('%s.sphere.nofix.%s.gii',opt.surf{si},ff));     % sphere.nofix
     Pcentral   = fullfile(pp_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff));          % central
@@ -541,7 +541,7 @@ cstime = clock;
     % now in the range of 0.1..0.9
     Vpp           = cat_io_writenii(V,Yppt,'',sprintf('%s.pp',opt.surf{si}),'percentage position map','uint8',[0,1/255],[1 0 0 0]);
     Vpp1          = Vpp; 
-    Vpp1.fname    = fullfile(pp,mrifolder,sprintf('%s.pp1%s.nii',opt.surf{si},ff));
+    Vpp1.fname    = fullfile(pp0,mrifolder,sprintf('%s.pp1%s.nii',opt.surf{si},ff));
     vmat2         = spm_imatrix(Vpp1.mat);
     Vpp1.dim(1:3) = round(Vpp1.dim .* abs(vmat2(7:9)*(1 + iscerebellum)));   % use double resolution in case of cerebellum
     vmat2(7:9)    = sign(vmat2(7:9)).*[1 1 1]/(1 + iscerebellum);            % use double resolution in case of cerebellum

@@ -1,4 +1,4 @@
-function varargout = cat_io_data2mat(opt)
+function out = cat_io_data2mat(opt)
 % Save spatially registered volume or resampled surface data as Matlab data matrix for further 
 % use with machine learning tools such as relevance/support vector approaches or Gaussian Process
 % models. Spatial structure of the data is not considered. 
@@ -113,8 +113,12 @@ for i = 1:n_confounds
 end
 
 fname = opt.fname;
+out.fname{1} = fname; 
 outdir = opt.outdir{1};
 if ~isempty(outdir)
+  if ~exist(outdir,'dir')
+    mkdir(outdir);
+  end
   fname = fullfile(outdir,fname);
 end
 
@@ -278,6 +282,6 @@ end
 save(fname,'Y','label','dim','V','ind');
 fprintf('Save data (Y,label,V,dim,ind) in %s.\n',fname);
 
-if nargout == 1
-  varargout{1}.fname = fname;
-end
+%if nargout == 1
+%  varargout{1}.fname = fname;
+%end

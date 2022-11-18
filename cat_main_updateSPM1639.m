@@ -27,7 +27,82 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   
   d = res.image(1).dim(1:3);
 
- 
+  %% RD20221102: Characterize usefulness of SPM classification.
+  %  Analyse and store basic information of the SPM segmentation to improve
+  %  handling of different protocols such as MP2rage. In general SPM gives 
+  %  some clear sharp tissue output but in some cases (e.g., registration/
+  %  segmenation errors) the tissues are quite smooth. See also help entry.
+  %  I use 20 buckets to get the number of voxels below 25%, 50%, and 75%, 
+  %  but also get 90% etc. 
+  hbuckets = 20; 
+  if isfield(res,'spmP0'), res = rmfield(res,'spmP0'); end
+  for ti = 1:size(P,4)
+    Pti = P(:,:,:,ti); 
+    res.spmP0.hstbuckets    = 256/(hbuckets*2):256/hbuckets:256; 
+    res.spmP0.hst(ti,:)     = hist(Pti(Pti(:)>0),256/(hbuckets*2):256/hbuckets:256) / sum(Pti(:)>0); %#ok<HIST> 
+    res.spmP0.hstsumi(ti,:) = 1 - cumsum(res.spmP0.hst(ti,:)); 
+    res.spmP0.mn(ti)        = cat_stat_nanmean(   single(Pti(Pti(:)>0)) / 255 ); 
+    res.spmP0.sd(ti)        = cat_stat_nanstd(    single(Pti(Pti(:)>0)) / 255 ); 
+    res.spmP0.md(ti)        = cat_stat_nanmedian( single(Pti(Pti(:)>0)) / 255 ); 
+    %res.spmP0.Q1(ti)       = cat_stat_nanmedian( single(Pti( Pti(:)<res.spmP0.md(ti)*255 ) ) / 255); 
+    %res.spmP0.Q2(ti)       = cat_stat_nanmedian( single(Pti( Pti(:)>res.spmP0.md(ti)*255 ) ) / 255); 
+  end
+  res.spmP0.help = { ...
+    'This structure contains some parameters to characterize the initial SPM segmentation to detect possible problems. ' 
+    sprintf('It contains a normalized histogram (hst) of %d buckets sampled at hstbuckets (center point with borders inbetween!). ',hbuckets) 
+    'The inverse cumultative sum of the histogram (hstsumi) defines how many values are above the histogram bucket. ' 
+    'A good segment should include a high proposion of high probable voxels. ' 
+    'Moreover, we saved the mean(mn), standard deviation (sd), median(md) of the individual tissue desnity maps of SPM. ' 
+    'In general, higher mn, md, Q1/2 and lower sd values (<.5) are expected otherwise segmentation is maybe inproper. ' 
+     };
+  clear Pti;
+  % RD20221102: Add warnings 
+  % These threshold are arbitrary choosen and updates are maybe required!
+  if job.extopts.expertgui>1 && ...
+    ( any( res.spmP0.md(1:3) < [.5 .9 .3],2) || any( res.spmP0.mn(1:3) < [.4 .7 .2],2) || ...
+      any( any( res.spmP0.hstsumi(1:3,round(hbuckets*[.25,.50,.75])) < [0.6 0.5 0.4; 0.8 0.7 0.6; 0.5 0.2 0.05 ] )) )
+      cat_io_addwarning('cat_main_updateSPM:lowSPMseg',...
+        sprintf(['Low SPM segmentation quality with larger areas of mixed tissues. \\\\n' ...
+                 '  Median: GM=%0.2f, WM=%0.2f, CSF=%0.2f \\\\n' ...
+                 '  Mean:   GM=%0.2f, WM=%0.2f, CSF=%0.2f'], ...
+                 res.spmP0.md(1:3),res.spmP0.mn(1:3)),2,[1 2]);
+  end
+  
+  %% RD20221102: Intensity overlap in brain tissue classes 
+  %  Besides the probabilty we may check also the intensities. If two
+  %  classes show a high overlap of intensities the segmentation is mabe 
+  %  inaccurate.
+  minprob = 32; hbuckets = 30;
+  trange = [min(res.mn(res.lkp<6)) max(res.mn(res.lkp<6))]; 
+  trange = trange + [ -diff(trange) +diff(trange) ] / 4; 
+  trange = trange(1) : diff(trange)/(hbuckets-2) : trange(2);
+  res.spmP0.hstibuckets = trange;
+  for ti=1:6
+    htmp = hist(Ysrc(P(:,:,:,ti)>minprob),trange); %#ok<HIST> 
+    res.spmP0.hsti(ti,:) = htmp; %.Values;
+  end
+  res.spmP0.hstidiffCGW = [ 
+    mean( abs(diff(res.spmP0.hsti(1:2:3,:))) ./ max(eps,sum(res.spmP0.hsti(1:2:3,:)))), ...
+    mean( abs(diff(res.spmP0.hsti(1:2,:)))   ./ max(eps,sum(res.spmP0.hsti(1:2,:)))), ...
+    mean( abs(diff(res.spmP0.hsti(2:3,:)))   ./ max(eps,sum(res.spmP0.hsti(2:3,:))))];
+  res.spmP0.hstidiff = mean( min([ 
+    abs(diff(res.spmP0.hsti(1:2,:)))   ./ max(eps,sum(res.spmP0.hsti(1:2,:))); 
+    abs(diff(res.spmP0.hsti(2:3,:)))   ./ max(eps,sum(res.spmP0.hsti(2:3,:))); 
+    abs(diff(res.spmP0.hsti(1:2:3,:))) ./ max(eps,sum(res.spmP0.hsti(1:2:3,:))); 
+    ]));
+  res.spmP0.help = [res.spmP0.help; {
+    sprintf('The hsti is the histogram of the T1 image for each class (prob>%0.2%%,%d buckets) ',minprob/255,hbuckets)};
+    'that are combined into the average intensity difference between classes histidiff with 1 for the ideal case without overlap and 0 for high overlap. '];
+  if job.extopts.expertgui>1 && res.spmP0.hstidiff<0.5
+      cat_io_addwarning('cat_main_updateSPM:highIntOverlapBetweenClasses',...
+        sprintf('High overlap of image intensies in different classes\\\\n  CG=%0.2f,GW=%0.2f,CW=%0.2f,CGW=%0.2f',res.spmP0.hstidiffCGW,res.spmP0.hstidiff),2,[1 2]);
+  end
+  if 0
+    %%
+    figure, hold on; histogram(Ysrc(P(:,:,:,1)>minprob),trange); histogram(Ysrc(P(:,:,:,2)>minprob),trange); histogram(Ysrc(P(:,:,:,3)>minprob),trange);
+
+  end
+  %%
   stime2 = cat_io_cmd('  Update Segmentation','g5','',job.extopts.verb-1,stime2); 
   
 
@@ -434,7 +509,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
     Ygm = Ygm & Yp0<2/3 & Yb & Yg<cat_stat_nanmean(Yg(P(:,:,:,1)>64)) & Ydiv<cat_stat_nanmean(Ydiv(P(:,:,:,1)>64)); % add GM with low SPM prob ... 
     Ygm = Ygm & (Ysrc>cat_stat_nansum(T3th(1:2).*[0.5 0.5])) & (Ysrc<cat_stat_nansum(T3th(2:3).*[0.2 0.8])); % but good intensity
     Ygm(smooth3(Ygm)<0.5)=0; 
-    clear Yg Ydiv;
+    clear Ydiv;
     Ygm = uint8(Ygm); 
     P(:,:,:,5) = P(:,:,:,5) .* (1-Ygm);
     P(:,:,:,3) = P(:,:,:,3) .* (1-Ygm);
@@ -443,7 +518,13 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
     Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
     clear Ywm Ygm;
 
+    %% RD20221108: update CSF to reduce problems in MP2rage
+    Ycsf = uint8( (Ysrc < min( res.mn(res.lkp==3)) * 0.7 + 0.3 * min( res.mn(res.lkp==1)) )  &  Yb  & Yg<.3);
+    for ti = setdiff(1:size(P,4),3), P(:,:,:,ti) = P(:,:,:,ti) .* (1-Ycsf); end
+    P(:,:,:,3) = cat_vol_ctype(single(P(:,:,:,3)) + 255*single(Ycsf));
+    Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
     
+
     %% remove brain tissues outside the brainmask ...
     %  tissues > skull (within the brainmask)
     Yhdc = uint8(smooth3( Ysrc/T3th(3).*(Ybb>cat_vol_ctype(0.2*255)) - Yp0 )>0.5); 
@@ -481,7 +562,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
       spm_progress_bar('set',iter);
   end
 
-  % update segmentation for error report
+  %% update segmentation for error report
   Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
   [cat_err_res.init.Yp0,cat_err_res.init.BB] = cat_vol_resize(Yp0,'reduceBrain',vx_vol,2,Yp0>0.5); 
   cat_err_res.init.Yp0 = cat_vol_ctype(cat_err_res.init.Yp0/3*255);

@@ -2203,9 +2203,10 @@ if isfield(job,'sample')
   end
 end
 % First we have to catch possible dependency definition problems.
-if isobject(job.data_surf) && numel(job.data_surf)>1 % simple file input
+if 0 % RD202211: should be ok to allow it and also a warning is not really required
+  % if isobject(job.data_surf) && numel(job.data_surf)>1 % simple file input 
   error('cat_surf_resamp:FileDepError',...
-   ['CAT resample and smooth support only one dependeny per file input \n' ...
+   ['CAT resample and smooth support only one dependency per file input \n' ...
     'to support further separate processing. ']); 
 elseif iscell(job.data_surf)
   nDEP = zeros(numel(job.data_surf));
@@ -2229,8 +2230,12 @@ end
 %% here we have to extract the texture name to have useful output names
 mname = repmat({''},1,numel(job.data_surf));
 if isobject(job.data_surf) 
-  sep       = strfind(job.data_surf.sname,':');
-  mname{1}  = spm_str_manip( cat_io_strrep( job.data_surf.sname(sep+1:end) , {' ','Left'} ,{'' ''}) ); 
+  sep       = strfind(job.data_surf(1).sname,':');
+  if numel(job.data_surf) > 1
+    mname{1}  = [ job.data_surf(1).sname 'multiple measures' ]; 
+  else
+    mname{1}  = spm_str_manip( cat_io_strrep( job.data_surf.sname(sep+1:end) , {' ','Left'} ,{'' ''}) ); 
+  end
 elseif iscell(job.data_surf) 
   for i=1:numel(job.data_surf)
     if isobject(job.data_surf{i})

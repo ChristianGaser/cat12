@@ -455,7 +455,9 @@ function Ygi = cat_vol_noPVE(Ygi,vx_vol,mres,dist,iter)
   end
   for i=1:iter
     Ygi      = cat_vol_median3(Ygi,Ygi>0,Ygi>0);
-    [Ygistd,Ygimean] = cat_vol_localstat(Ygi,Ygi>0,dist,4); 
+    %[Ygistd,Ygimean] = cat_vol_localstat(Ygi,Ygi>0,dist,4); 
+    Ygistd   = cat_vol_localstat(Ygi,Ygi>0,dist,4); 
+    Ygimean  = cat_vol_localstat(Ygi,Ygi>0,dist,1); 
     Ygx      = Ygi<(Ygimean-Ygistd/4) | Ygi>(Ygimean+Ygistd/2); 
     Ygi(Ygx) = Ygimean(Ygx);
     clear Ygx;
