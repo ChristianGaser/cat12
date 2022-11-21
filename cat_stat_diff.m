@@ -17,8 +17,6 @@ function cat_stat_diff(P,rel,glob)
 % ______________________________________________________________________
 % $Id$
 
-global SWD
-
 % get filenames
 %----------------------------------------------------------------------------
 if nargin < 3, glob = 0; end
@@ -27,9 +25,9 @@ if nargin < 2, rel = 0; end
 if nargin == 0
     % select images for each subject
     don = 0;
-    for i = 1:1000,
-        P = spm_select([0 Inf],'.*(img|nii|gii)',['Image(s)/Surface(s), subj ' num2str(i)]);
-        if size(P,1) < 2, don = 1; break; end;
+    for i = 1:1000
+        P = spm_select([0 Inf],{'mesh','image'},['Image(s)/Surface(s), subj ' num2str(i)]);
+        if size(P,1) < 2, don = 1; break; end
         try
           V{i} = spm_data_hdr_read(P);
         catch
@@ -50,12 +48,12 @@ if isfield(V{1}(1).private,'cdata')
      surf = 1;
 else surf = 0; end
   
-for i = 1:length(V);
+for i = 1:length(V)
     Vi = V{i};
     
     n = length(Vi);
     % compute global means to normalize images to same value
-    if glob & ~surf
+    if glob && ~surf
        gm = zeros(n,1);
        disp('Calculating globals...');
        for j=1:n, gm(j) = spm_global(Vi(j)); end
