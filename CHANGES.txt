@@ -1,4 +1,33 @@
 ------------------------------------------------------------------------
+r2140 | gaser | 2022-11-21 23:06:12
+
+Changed paths:
+ M .gitattributes
+ M .gitignore
+ M CHANGES.txt
+ M Makefile
+ M cat_conf_tools.m
+ M cat_stat_diff.m
+ M cat_surf_results.m
+ M cat_update.m
+A  templates_MNI152NLin2009cSym/Template_0_GS.nii
+A  templates_MNI152NLin2009cSym/Template_1_GS.nii
+A  templates_MNI152NLin2009cSym/Template_2_GS.nii
+A  templates_MNI152NLin2009cSym/Template_3_GS.nii
+A  templates_MNI152NLin2009cSym/Template_4_GS.nii
+
+
+Added:   Added new template folder for symmetrical MNI152NLin2009c shooting
+         template for lateralization analysis.
+Changed: Updated .gitattribute and .gitignore to consider new template folder
+Changed: Slightly updated help text in cat_conf_tools.m.
+Changed: Updated filter selection in cat_stat_diff.m to prevent trouble for 4D 
+         images.
+Changed: Replaced error message in cat_update by simple printout.
+Changed: Removed revision info from standalone zip-files in Makefile.
+Fixed:   Corrected wrong coding for rotate3d in cat_surf_results.m
+Fixed:   Handling of 4D data in cat_vol_ctype.m was not yet working.
+------------------------------------------------------------------------
 r2139 | rdahnke | 2022-11-18 16:02:13
 
 Changed paths:
@@ -42,7 +71,7 @@ AD internal/cat_defaults_fastlong.m
             saved in the CAT XML.
 (9) New:    Added a batch for smoothing and downsampling of volumes and 
             estimation of surface measures and resampling and smooting.               
-               ------------------------------------------------------------------------
+------------------------------------------------------------------------
 r2138 | gaser | 2022-11-16 23:59:37
 
 Changed paths:
