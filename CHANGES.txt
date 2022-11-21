@@ -1,4 +1,21 @@
 ------------------------------------------------------------------------
+r2141 | gaser | 2022-11-21 23:35:20
+
+Changed paths:
+ M CHANGES.txt
+
+
+Added:   Added new template folder for symmetrical MNI152NLin2009c shooting
+         template for lateralization analysis.
+Changed: Updated .gitattribute and .gitignore to consider new template folder
+Changed: Slightly updated help text in cat_conf_tools.m.
+Changed: Updated filter selection in cat_stat_diff.m to prevent trouble for 4D 
+         images.
+Changed: Replaced error message in cat_update by simple printout.
+Changed: Removed revision info from standalone zip-files in Makefile.
+Fixed:   Corrected wrong coding for rotate3d in cat_surf_results.m
+Fixed:   Handling of 4D data in cat_vol_ctype.m was not yet working.
+------------------------------------------------------------------------
 r2140 | gaser | 2022-11-21 23:06:12
 
 Changed paths:
