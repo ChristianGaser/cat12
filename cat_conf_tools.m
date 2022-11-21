@@ -100,8 +100,8 @@ function tools = cat_conf_tools(expert)
   intlim.num        = [1 inf];
   intlim.val        = {100};
   intlim.help       = {
-    'General intensity limitation to remove strong outliers by using 100%% of the original histogram values. '
-    'You can also specify the lower and upper boundary seperatlym, e.g. [80 99], what will keep only 80%% of the (many) low (background values) but 99%% of the (rew) high intensity (skull) values. ' 
+    'General intensity limitation to remove strong outliers by using 100% of the original histogram values. '
+    'You can also specify the lower and upper boundary seperatlym, e.g. [80 99], what will keep only 80% of the (many) low (background values) but 99% of the (rew) high intensity (skull) values. ' 
     ''
   };
 
@@ -2921,7 +2921,7 @@ function quality_measures = conf_quality_measures(globals)
 
   quality_measures         = cfg_exbranch;
   quality_measures.tag     = 'quality_measures';
-  quality_measures.name    = 'Estimate sample homogeneity for very large samples';
+  quality_measures.name    = 'Save sample homogeneity for very large samples';
   quality_measures.val     = {data,globals,csv_name};
   quality_measures.prog    = @cat_stat_quality_measures;
   quality_measures.help    = {
