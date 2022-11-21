@@ -56,7 +56,7 @@ end
 if ~sts
   sts = NaN;
   msg = sprintf('Cannot access %s. Please check your proxy and/or firewall to allow access.\nYou can download your update at %s\n',url,url); 
-  if ~nargout, error(msg); else varargout = {sts, msg}; end
+  if ~nargout, fprintf(msg); else varargout = {sts, msg}; end
   return
 end
 

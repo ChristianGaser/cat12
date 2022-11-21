@@ -21,6 +21,7 @@ INSTALL.txt
 # but consider nifti in template folders
 !templates_MNI152NLin2009cAsym/*.nii
 !templates_MNI152NLin2009cAsym_1mm/*.nii
+!templates_MNI152NLin2009cSym/*.nii
 !templates_external/*.nii
 !templates_animals/*nii
 !templates_volumes_not_distributed/*nii
@@ -28,7 +29,6 @@ INSTALL.txt
 # exclude some folders
 /logs
 /data
-cat12-html/
 check_pipeline/
 /private
 /cattest

@@ -3356,10 +3356,10 @@ switch H.cursor_mode
         fprintf('The adjusted raw values are available at the MATLAB command line as variable ''y''\n');
       end
     end
-  case 6 % enable/disable rotate3d
+  case 7 % enable/disable rotate3d
     clearDataCursorPlot(H);
     rotate3d;
-    fprintf('Use mouse to rotate views.\n');
+    fprintf('Use mouse to rotate views and right mouse click for more options.\n');
 end
 
 %==========================================================================
