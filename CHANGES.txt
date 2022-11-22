@@ -1,4 +1,18 @@
 ------------------------------------------------------------------------
+r2145 | gaser | 2022-11-22 07:48:43
+
+Changed paths:
+ M CHANGES.txt
+A  templates_MNI152NLin2009cSym/Template_0_GS.nii
+A  templates_MNI152NLin2009cSym/Template_1_GS.nii
+A  templates_MNI152NLin2009cSym/Template_2_GS.nii
+A  templates_MNI152NLin2009cSym/Template_3_GS.nii
+A  templates_MNI152NLin2009cSym/Template_4_GS.nii
+
+
+Changed: Again added new symmetrical templates.
+
+------------------------------------------------------------------------
 r2144 | gaser | 2022-11-22 07:45:35
 
 Changed paths:
