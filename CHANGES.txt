@@ -1,4 +1,41 @@
 ------------------------------------------------------------------------
+r2146 | gaser | 2022-11-23 12:10:44
+
+Changed paths:
+ M .gitattributes
+ M CHANGES.txt
+A  cat_amap.mexmaca64
+ M cat_conf_tools.m
+A  cat_ornlm.mexmaca64
+ M cat_plot_scatter.m
+A  cat_sanlm.mexmaca64
+ M cat_stat_spm2x.m
+A  cat_vbdist.mexmaca64
+A  cat_vol_downcut.mexmaca64
+A  cat_vol_eidist.mexmaca64
+A  cat_vol_genus0.mexmaca64
+A  cat_vol_gradient3.mexmaca64
+A  cat_vol_interp3f.mexmaca64
+A  cat_vol_laplace3.mexmaca64
+A  cat_vol_laplace3R.mexmaca64
+A  cat_vol_localstat.mexmaca64
+A  cat_vol_median3.mexmaca64
+A  cat_vol_median3c.mexmaca64
+A  cat_vol_pbtp.mexmaca64
+A  cat_vol_pbtp2.mexmaca64
+A  cat_vol_simgrow.mexmaca64
+ M compile.m
+A  templates_MNI152NLin2009cAsym/brainmask_GM.nii
+A  templates_MNI152NLin2009cAsym/brainmask_GMtight.nii
+ M templates_MNI152NLin2009cAsym/templates.man
+
+
+Added:   Created new GM brainmask for VBM analysis in 
+         templates_MNI152NLin2009cAsym.
+Changed: Compiled mex-files for MACA64 and updated compile.m.
+Changed: Updated help text for conversion to stamdard normal distribution
+         (z-value).
+------------------------------------------------------------------------
 r2145 | gaser | 2022-11-22 07:48:43
 
 Changed paths:
