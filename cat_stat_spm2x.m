@@ -20,7 +20,7 @@ function out = cat_stat_spm2x(job)
 % d = 2*t/sqrt(df(2));
 %
 % ---------------------------------------------
-% Z-score
+% Standard normal (Z-value)
 %
 % Z = spm_t2z(t,df(2));
 %
