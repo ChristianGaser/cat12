@@ -44,12 +44,12 @@
 % brainmask.nii
 % ------------------------------
 % Image derived from average_305_mask_1mm.mnc, which was originally
-% supplied  by  Alan  Evans,  MNI,  Canada (ICBM, NIH P-20 project,
-% Principal  Investigator  John  Mazziotta).   The  original  image
+% supplied by Alan Evans, MNI, Canada (ICBM, NIH P-20 project,
+% Principal Investigator John Mazziotta). The original image
 % contained ones and zeros, where ones represented voxels that were
-% part of the brain.  It was subsequently  smoothed  using  an  8mm
-% FWHM  Gaussian.   This  volume  can be used to weight the spatial
-% normalisation so that the final solution  is  not  influenced  by
+% part of the brain. It was subsequently smoothed using an 8mm
+% FWHM Gaussian. This volume can be used to weight the spatial
+% normalisation so that the final solution is not influenced by
 % voxels outside the brain.
 %
 % brainmask_T1.nii
@@ -58,5 +58,16 @@
 % the label image to obtain a brainmask for masking registered images in 
 % MNI152NLin2009cAsym space.
 %
+% brainmask_GM.nii
+% ------------------------------
+% Brainmask for GM VBM analysis derived from Template_?_GS.nii which was 
+% smoothed with FWHM of 6mm and with the following thresholds:
+% sGM > 0.25 & (sGM+sWM)>0.1
+%
+% brainmask_GMtight.nii
+% ------------------------------
+% A more tight brainmask for GM VBM analysis derived from Template_?_GS.nii 
+% with the following thresholds:
+% GM > 0.2 & (GM+WM)>0.1
 --------------------------------------------------------------------------------
 $Id$
