@@ -110,6 +110,12 @@ else
   cmap      = 'jet';
 end
 
+if nargin < 2
+  printf('Arguments missing. Syntax: cat_plot_scatter(X,Y)\n');
+  hAxes = [];
+  return
+end
+
 % define plot of confidence band
 plot_variance = @(x,lower,upper,color,alpha) set(fill([x,x(end:-1:1)],[upper,lower(end:-1:1)],color),...
    'EdgeColor',color,'FaceAlpha',alpha);

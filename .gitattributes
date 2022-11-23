@@ -222,3 +222,5 @@ templates_animals/dog_T1.nii filter=lfs diff=lfs merge=lfs -text
 templates_animals/monkey_oldworld_T1.nii filter=lfs diff=lfs merge=lfs -text
 templates_animals/monkey_oldworld_Template_3.nii filter=lfs diff=lfs merge=lfs -text
 templates_external/y_MNIColin27_to_MNI152NLin2009cAsym.nii filter=lfs diff=lfs merge=lfs -text
+templates_MNI152NLin2009cAsym/brainmask_GM.nii filter=lfs diff=lfs merge=lfs -text
+templates_MNI152NLin2009cAsym/brainmask_GMtight.nii filter=lfs diff=lfs merge=lfs -text
