@@ -1,4 +1,16 @@
 ------------------------------------------------------------------------
+r2147 | gaser | 2022-11-24 17:13:44
+
+Changed paths:
+ M CHANGES.txt
+A  cat_stat_orth_nuisance.m
+ M cat_system.m
+
+
+Added:   New function cat_stat_orth_nuisance.m to orthogonalize nuisance 
+         parameters w.r.t. covariate of interest.
+Changed: Added additional trial to change file permissions of cat_system fails.
+------------------------------------------------------------------------
 r2146 | gaser | 2022-11-23 12:10:44
 
 Changed paths:

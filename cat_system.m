@@ -60,6 +60,23 @@ else
   warning on
 end
 
+% if not successful try it again after changing the file attributes to "+x"
+if ST > 1
+  if ispc
+    fileattrib(fullfile(CATDir,'*'),'+x');
+    olddir = pwd;
+    cd(CATDir);
+    [ST, RS] = system(cmd);
+    cd(olddir);
+  else
+    fileattrib(fullfile(CATDir,'*'),'+x','a');
+    cmd = fullfile(CATDir,cmd);
+    warning off % this is to prevent warnings by calling cat12 from the shell script
+    [ST, RS] = system(cmd);
+    warning on
+  end
+end
+
 if nargout > 0
   [status,result] = cat_check_system_output(ST,RS,verb,trerr);
 else
@@ -89,7 +106,7 @@ if ST > 1
   else
     [ST, RS] = system('uname -a');
   end
-  str = sprintf('\nWARNING: Surface processing will not work because\n(1) CAT binaries are not compatible to your system or\n(2) File permissions are not correct (for unix use chmod a+x) or\n(3) Antivirus software in Windwos or Gatekeeper in MAC OS is blocking to execute binaries\nSystem: %s\n',RS);
+  str = sprintf('\nWARNING: Surface processing will not work because\n(1) File permissions are not correct (for unix use chmod a+x) or\n(1) CAT binaries are not compatible to your system or\n(3) Antivirus software in Windwos or Gatekeeper in MAC OS is blocking to execute binaries\nSystem: %s\n',RS);
   cat_io_cmd(str,'warning');
   helpdlg(str,'Error Using Surface Tools');
   
