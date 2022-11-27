@@ -10,7 +10,7 @@ function varargout = cat_io_csv(filename,varargin)
 %
 %   filename            = string with or without csv
 %   C                   = cell with chars and numbers {'Hallo' 'Welt'; 1 2.3}
-%   sheet               = '' - NOT WORKING YET
+%   sheet               = lines of the csv file (to get the header)
 %   pos                 = 'A3:B4' - position of the Data
 %   opt.delimiter       = ','
 %      .komma           = '.' 
@@ -40,10 +40,6 @@ function varargout = cat_io_csv(filename,varargin)
       if nargout>0, varargout{1}=cell(); end
       return;
     end
-  else
-    [pp,ff,ee] = fileparts(filename);
-    %if ~strcmp(ee,'.csv'); ee='.csv'; end
-    filename = fullfile(pp,[ff ee]); 
   end     
   if strcmp(action,'w')
     if nargin < 1+(nargout==0), C = {}; else, C = varargin{1}; end
@@ -58,14 +54,28 @@ function varargout = cat_io_csv(filename,varargin)
   if nargin < 3+(nargout==0), pos   = '';       else, pos   = varargin{3-(nargout>0)}; end
   if nargin < 4+(nargout==0), opt   = struct(); else, opt   = varargin{4-(nargout>0)}; end  
   
-  def.delimiter       = ',';
+  [~,~,ee] = fileparts(filename);
+  switch action
+    case {'read','r'}
+      if strcmp(ee,'.tsv')
+        def.delimiter = '\t'; 
+      else
+        def.delimiter = ''; % auto
+      end
+    case {'write','w'}
+      if strcmp(ee,'.tsv')
+        def.delimiter = '\t'; 
+      else
+        def.delimiter = ',';
+      end
+  end
   def.komma           = '.'; 
   def.linedelimiter   = '\n'; 
   def.format          = '%0.4f';
   def.finaldelimiter  = 0;
   
   opt = cat_io_checkinopt(opt,def);
-  opt.delimiter = cat_io_strrep(opt.delimiter,{'t','n'},{'\t','\n'});
+  opt.delimiter = cat_io_strrep(opt.delimiter,{'t','n','\\'},{'\t','\n','\'});
   if opt.komma==',' && opt.komma == opt.delimiter, opt.delimiter = ';'; end
 
   switch action
@@ -86,18 +96,48 @@ function C=readcsv(filename,sheet,pos,opt)
   % set filename and load if it exist
   if ~exist(filename,'file'), fprintf('File "%s" does not exist./n',filename); C={}; return; end
 
+  % auto detection
+  if isempty( opt.delimiter ) 
+    [~,~,ee] = fileparts(filename);
+    switch ee
+      case '.tsv'
+        opt.delimiter = '\t'; 
+        if isempty( opt.komma )
+          opt.komma   = '.';
+        end
+      case '.csv'
+        % read the header
+        fid = fopen(filename);
+        hdr = textscan(fid,'%q',1,'delimiter',opt.linedelimiter); hdr = hdr{1};
+        fclose(fid);
+
+        % we asume that this should be 
+        hdrk = textscan(hdr{1},'%q','delimiter',',')'; hdrk=hdrk{1}';
+        hdrs = textscan(hdr{1},'%q','delimiter',';')'; hdrs=hdrs{1}';
+        if numel(hdrk) > numel(hdrs)
+          opt.delimiter = ',';
+          opt.komma     = '.'; 
+        else 
+          opt.delimiter = ';'; 
+        end
+        
+    end
+  end
+
   % read file and convert from string to cell
   fid = fopen(filename);
   %mv = version; mvi = strfind(mv,'R');
  % if str2double(mv(mvi+1:mvi+4)) < 2015 % old ... str2double(mv(mvi+1:mvi+4)) > 2013 &&
  %   C1  = textscan(fid,'%q','delimiter',opt.linedelimiter,'BufSize',2^24); C1=C1{1};
  % else % new
-    C1  = textscan(fid,'%q','delimiter',opt.linedelimiter); C1=C1{1};
+ if isnumeric(sheet) 
+   C1  = textscan(fid,'%q',sheet,'delimiter',opt.linedelimiter); C1=C1{1};
+ else
+   C1  = textscan(fid,'%q','delimiter',opt.linedelimiter); C1=C1{1};
+ end
  % end
   fclose(fid);
-  
-  % na toll... textscan entfernt den zweiten ", aber lässt den ersten
-  % stehen... die haben doch den arsch offen... 
+
   % The matlab textscan removes the second " of quoted csv-entries. 
   % Try to find the next delimiter and to replace the ". 
   for i=1:size(C1,1)
@@ -186,7 +226,7 @@ function writecsv(filename,C,sheet,pos,opt)
 
   % read old file if there is one an merge the cells where C isn't
   % specified the old value still exist
-  if exist(filename,'file')
+  if 0 %exist(filename,'file')
     fid = fopen(filename); 
     MO  = textscan(fid,'%s','delimiter',opt.linedelimiter); MO = MO{1};
     fclose(fid);
@@ -223,7 +263,7 @@ function writecsv(filename,C,sheet,pos,opt)
     if opt.finaldelimiter
       M{i}=[M{i} opt.linedelimiter];
     else
-      M{i}=[M{i}(1:end-1) opt.linedelimiter];
+      M{i}=[M{i}(1:end - numel(opt.delimiter) ) opt.linedelimiter];
     end
   end
   M=cell2mat(M');
