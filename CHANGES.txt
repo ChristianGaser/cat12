@@ -1,4 +1,26 @@
 ------------------------------------------------------------------------
+r2148 | rdahnke | 2022-11-27 21:31:16
+
+Changed paths:
+ M CHANGES.txt
+A  batches/cat12_batch_prepana_smoothandmore.m
+ M cat_conf_tools.m
+ M cat_io_csv.m
+A  cat_io_struct2cell.m
+ M cat_stat_getCSVXMLfield.m
+ M doc/cat.html
+ M doc/cat.txt
+
+
+Fixed:     Correct padding of cat.html.
+New:       Added cat_io_struct2cell to support recursive data conversion and 
+           unfolding of a structure (required for XML field extraction). 
+Changed:   Modified cat_io_csv to support detections of field delimiter and 
+           handling of TSV files. 
+Changed:   Strong update of cat_stat_getCSVXMLfield function and the related 
+           matlabbatches.                
+
+------------------------------------------------------------------------
 r2147 | gaser | 2022-11-24 17:13:44
 
 Changed paths:

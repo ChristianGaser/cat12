@@ -18,6 +18,7 @@
       <p align="center" style="text-align:center;"><a href="matlab:web(fullfile(fileparts(which('cat12')),'doc','index.html#quick'),'-new');">Open ''Quick Start Guide'' in external window</a></p>      
     </div>
 
+    <div style="padding-left: 5%; padding-bottom: 30px; width: 90%; ">
       <h2>Description</h2>
       <p>This toolbox is a an extension to <a href="matlab:web('http://www.fil.ion.ucl.ac.uk/spm/software/spm12','-new');">SPM12</a> (Wellcome Department of Cognitive Neurology) to provide computational anatomy. This covers diverse morphometric methods such as voxel-based morphometry (VBM), surface-based morphometry (SBM), deformation-based morphometry (DBM), and ROI- or label-based morphometry. It is developed by Christian Gaser and Robert Dahnke (Jena University Hospital, Departments of Psychiatry and Neurology) and free but copyright software, distributed under the terms of the <a href="matlab:web('http://www.gnu.org/licenses/gpl-2.0.html','-new');">GNU General Public Licence</a> as published by the Free Software Foundation; either version 2 of the Licence, or (at your option) any later version. If you use any CAT12 code for commercial application, please send a <a href="mailto:christian.gaser@uni-jena.de">mail</a>.
       </p>
@@ -34,7 +35,7 @@
       Gaser C, Dahnke R, P.M. Thompson, Kurth K, Luders E, Alzheimer's Disease Neuroimaging Initiative.<br>
       <a href="matlab:web('https://www.biorxiv.org/content/10.1101/2022.06.11.495736','-new');">A Computational Anatomy Toolbox for the Analysis of Structural MRI Data.</a>
       </p>
-            
+    </div>        
   
     <div id="footer">
       <p>Copyright (C) Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
