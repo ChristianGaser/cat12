@@ -184,7 +184,7 @@ function tools = cat_conf_tools(expert)
   biascorrlong                = conf_longBiasCorr(data,expert,prefix);
   data2mat                    = conf_io_data2mat(data,outdir);
   boxplot                     = conf_io_boxplot(outdir,subdir,prefix,expert);
-  getCSVXML                   = cat_cfg_getCSVXML(outdir,expert);
+  [getCSVXML,getXML,getCSV]   = cat_cfg_getCSVXML(outdir,expert);
   file_move                   = conf_io_file_move; 
   %urqio                       = conf_vol_urqio; % this cause problems
   iqr                         = conf_stat_IQR(data_xml);
@@ -237,6 +237,8 @@ function tools = cat_conf_tools(expert)
     ...
     boxplot, ...                          cat.stat.eval ... print of XML data by the boxplot function and saving as images  
     getCSVXML, ...                        cat.stat.eval ... read out of XML/CSV data and export as batch dependency 
+    getXML, ...
+    getCSV, ...
     file_move, ...
     ...                                   
     };
@@ -668,7 +670,7 @@ function long_report = conf_long_report(data_vol,data_xml,expert)
     };
 return
 %_______________________________________________________________________
-function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
+function [getCSVXML,getXML,getCSV] = cat_cfg_getCSVXML(outdir,expert)
 % -------------------------------------------------------------------------
 % Batch to read out of XML/CSV data and export as batch dependency/file.
 % 
@@ -677,11 +679,13 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
 
   % n-files, e.g. XML for direct extraction or nii/gii as selector
   files               = cfg_files;
-  files.num           = [1 Inf];
+  files.num           = [0 Inf];
   files.tag           = 'files';
-  files.name          = 'Subjects';
+  files.name          = 'XML files';
   files.filter        = 'any';
-  files.help          = {'Select XML/NIFTI/GIFTI files of subjects those XML/CSV data should be extracted. '};
+  files.ufilter       = '^cat_.*\.xml$';
+  files.val           = {{''}};
+  files.help          = {'Select XML files of subjects those XML/CSV data should be extracted. '};
   
   % 0..1-file ... maybe n later
   csvfile             = cfg_files;
@@ -689,7 +693,7 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   csvfile.tag         = 'csvfile';
   csvfile.name        = 'CSV file';
   csvfile.filter      = 'any';
-  csvfile.ufilter     = '.*\\.(csv|tsv)';
+  csvfile.ufilter     = '.*\.(csv|tsv)$';
   csvfile.val         = {{''}};
   csvfile.help        = {
    ['Select one CSV/TSV file that contains further information, e.g. age or sex.  The first line has to be the header with the name of the variables.  ' ...
@@ -700,6 +704,10 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
     };
  
  
+
+% -------------------------------------------------------------------------
+% general definition
+% -------------------------------------------------------------------------
   % set of variables names for extraction ... preselection TIV IQR ...
   % the variables were extracted and a depency for each created
   % The CSV selection is a bit more tricky. 
@@ -708,290 +716,70 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   fields.name         = 'XML and CSV/TSV fieldnames';
   fields.strtype      = 's+';
   fields.num          = [0 inf]; 
-  fields.val          = {{'ALLCSV'}};
+  fields.val          = {{''}};
+%  fields.hidden       = expert < 2; 
   fields.help         = {
-   ['Enter the fieldnames (XML) or columns names (CSV/TSV) you want to get here. ' ...
-    'The fieldnames where used to create the depency object and will be converted to variables. ' ...
-    'The CSV columns should be useable as variable otherwise you have to rename them in the file. ' ...
-    'You can use ALLCSV to create variables of all CSV/TSV header fields. ' ] 
-    ''
-   ['E.g. the catxml contain the TIV in the subfield "subjectmeasures.vol_TIV" that will create the depency variable "subjectmeasures_vol_TIV". ' ...
-    'To extract one value of a matrix or cell field use the matlab specification, e.g., to extract the GM value from "subjectmeasures.vol_CGW" use "subjectmeasures.vol_CGW(2)"' ...
-    'For the CSV/TSV file the rows has to be select by using the same name, but will be converted into a variable a field "sex(1=m,2=f)" will result in "sex_1m_2f". ']
+   ['Enter (part of) the fieldnames (XML) or columns names (CSV/TSV) or column numbers (positve to select or negative values as final deselection). ' ...
+    'The fieldnames (XML) or headerentries (CSV/TSV) are used to create the dependency objects and will be converted to variables. ' ...
+    'The CSV/TSV columns have to have unique names and non-standard characters are replaces. '] 
+   ['To extract one value of a matrix or cell field of an XML fiedl use the matlab specification, e.g., ' ...
+    'to extract the GM value from "subjectmeasures.vol_CGW" use "subjectmeasures.vol_CGW(2)".' ]
     ''
     'Enter one field per row (what creates a cellstr), e.g.:'
     '  AGE'                           
     '  SEX_ID_(1=m,2=f)'             
     '  subjectmeasures.vol_TIV'       
     '  subjectmeasures.vol_abs_CGW(2)'
-    '  ALLCSV'
+    '  1'
     ''
     };
   
-    
-  % quality measures (expert)
-  QMfield               = cfg_menu;
-  QMfield.tag           = 'xmlfieldsQualityMeasures';
-  QMfield.name          = 'Image quality';
-  QMfield.labels        = {
-    'Noise Contrast Ratio (NCR)'
-    'Inhomogeny Contrast Ratio (ICR)'
-    'Resolution RMSE (resRMS)'
-    'Minimum tissue contrast'
-    };
-  QMfield.values        = {
-    'qualitymeasures.NCR'
-    'qualitymeasures.ICR'
-    'qualitymeasures.res_RMS'
-    'qualitymeasures.contrast'
-    };
-  QMfield.val           = {'qualitymeasures.NCR'};
-  QMfield.help          = {'CAT preprocessing image quality measures (not normalized).' ''};
+% -------------------------------------------------------------------------
+% 
+% -------------------------------------------------------------------------
   
-  
-  % quality ratings 
-  QRfield               = cfg_menu;
-  QRfield.tag           = 'xmlfieldsQualityRating';
-  QRfield.name          = 'Image quality ratings';
-  QRfield.labels        = {
-    'Image Quality Rating (IQR)'
-    'Noise Contrast Ratio (NCR)'
-    'Inhomogeny Contrast Ratio (ICR)'
-    'Resolution RMSE (resRMS)'
-    'Minimum tissue contrast'
-    };
-  QRfield.values        = {
-    'qualityratings.IQR'
-    'qualityratings.NCR'
-    'qualityratings.ICR'
-    'qualityratings.res_RMS'
-    'qualityratings.contrast'
-    };
-  QRfield.val           = {'qualityratings.IQR'};
-  QRfield.help          = {'CAT preprocessing image quality ratings (normalized marks).' ''};
-  
-  
-  % surface measures
-  SMfield               = cfg_menu;
-  SMfield.tag           = 'xmlfieldsSurfMeasure';
-  SMfield.name          = 'Surface quality';
-  SMfield.labels        = {
-    ... 'Surface Euler number'
-    'Surface defect area'
-    'Surface defect number'
-    'Surface intensity RMSE'
-    'Surface position RMSE'
-    'Surface self-intersections'
-    };
-  SMfield.values        = {
-    ... 'qualitymeasures.SurfaceEulerNumber'
-    'qualitymeasures.SurfaceDefectArea'
-    'qualitymeasures.SurfaceDefectNumber'
-    'qualitymeasures.SurfaceIntensityRMSE'
-    'qualitymeasures.SurfacePositionRMSE'
-    'qualitymeasures.SurfaceSelfIntersections'
-    };
-  SMfield.val           = {'qualitymeasures.SurfaceDefectArea'};
-  SMfield.help          = {'CAT preprocessing surface quality measures (not normalized). ' ''};
-  
-  
-  % segmenation measures
-  USMfield               = cfg_menu;
-  USMfield.tag           = 'xmlfieldsSPMmeasures';
-  USMfield.name          = 'Unified segmentation validation measures';
-  USMfield.labels        = {
-    'SPM log-likelyhood'
-    'SPM tissue peak 1 (def. GM)'
-    'SPM tissue peak 2 (def. WM)'
-    'SPM tissue peak 3 (def. CSF1)'
-    'SPM tissue peak 4 (def. CSF2)'
-    'SPM tissue volume 1 (GM)'
-    'SPM tissue volume 2 (WM)'
-    'SPM tissue volume 3 (CSF)'
-    'SPM tissue volume 4 (HD1)'
-    'SPM tissue volume 5 (HD2)'
-    'SPM tissue volume 6 (BG)'
-    ...'CAT skull-stripping parameter'
-    ...'CAT high BG parameter'
-    };
-  USMfield.values        = {
-    'SPMpreprocessing.ll'
-    'SPMpreprocessing.mn(1)'
-    'SPMpreprocessing.mn(2)'
-    'SPMpreprocessing.mn(3)'
-    'SPMpreprocessing.mn(4)'
-    'ppe.SPMvols0(1)'
-    'ppe.SPMvols0(2)'
-    'ppe.SPMvols0(3)'
-    'ppe.SPMvols0(4)'
-    'ppe.SPMvols0(5)'
-    'ppe.SPMvols0(6)'
-    ...'ppe.skullstrippedpara'
-    ...'ppe.highBGpara'
-    ...reg.ll
-    ...reg.dt, rmsdt
-    };
-  USMfield.val           = {'SPMpreprocessing.ll'};
-  USMfield.help          = {'SPM preprocessing measures for evaluation of the preprocessing. The tissue peaks depend on the defined number of SPM peaks within a class (default=[1 1 2 3 4 2]). The volumes depend on the TPM that are by default GM, MW, CSF, HD1 (hard tissue), HD2 (soft tissue), backgroun (BG). ' ''};
-  USMfield.hidden        = expert<2; 
-  
-  
-  % individual measures
-  IMfield               = cfg_menu;
-  IMfield.tag           = 'xmlfieldsMorphMeasures';
-  IMfield.name          = 'Morphometric measures';
-  IMfield.labels        = {
-    'Total Intracranial Volume (TIV)'
-    'Total Surface Area (TSA)'
-    'Mean cortical thickness'
-    'Cortical thickness standard deviation'
-    'Relative CSF volume'
-    'Relative GM  volume'
-    'Relative WM  volume'
-    'Relative WMH volume'
-    'Absolute CSF volume'
-    'Absolute GM  volume'
-    'Absolute WM  volume'
-    'Absolute WMH volume'
-    };
-  IMfield.values        = {
-    'subjectmeasures.vol_TIV'
-    'subjectmeasures.surf_TSA'
-    'subjectmeasures.dist_thickness{1}(1)'
-    'subjectmeasures.dist_thickness{1}(2)'
-    'subjectmeasures.vol_rel_CGW(1)'
-    'subjectmeasures.vol_rel_CGW(2)'
-    'subjectmeasures.vol_rel_CGW(3)'
-    'subjectmeasures.vol_rel_CGW(4)'
-    'subjectmeasures.vol_abs_CGW(1)'
-    'subjectmeasures.vol_abs_CGW(2)'
-    'subjectmeasures.vol_abs_CGW(3)'
-    'subjectmeasures.vol_abs_CGW(4)'
-    ...'ppe.reg.rmsdt'
-    ...'ppe.reg.rmsdtc'
-    };
-  IMfield.val           = {'subjectmeasures.vol_TIV'};
-  IMfield.help          = {'Global morphometric measures. ' ''};
-  
-  
-  % individual measures
-  PDfield               = cfg_menu;
-  PDfield.tag           = 'xmlfieldsQualityMeasures';
-  PDfield.name          = 'Predefined XML fields';
-  PDfield.labels        = {
-    'Total Intracranial Volume (TIV)'
-    'Total Surface Area (TSA)'
-    ...
-    'Image Quality Rating (IQR)'
-    'Noise Contrast Ratio (NCR)'
-    'Inhomogeny Contrast Ratio (ICR)'
-    'Resolution RMSE (resRMS)'
-    'Minimum tissue contrast'
-    ...
-    'Surface defect area'
-    'Surface defect number'
-    };
-  PDfield.values        = {
-    'subjectmeasures.vol_TIV'
-    'subjectmeasures.surf_TSA'
-    ...
-    'qualitratings.IQR'
-    'qualitratings.NCR'
-    'qualitratings.ICR'
-    'qualitratings.res_RMS'
-    'qualitratings.contrast'
-    ...
-    'qualitymeasures.SurfaceDefectArea'
-    'qualitymeasures.SurfaceDefectNumber'
-    };
-  PDfield.val           = {'subjectmeasures.vol_TIV'};
-  PDfield.help          = {'Predefined XML fields. ' ''};
-  
-  % - groupname     ... %  opt.names       = [];            % array of group names
-  setname               = cfg_entry;
-  setname.tag           = 'setname';
-  setname.name          = 'Name';
-  setname.help          = {'Name of the dataset that replaces the number of the set. ' ''}; 
-  setname.strtype       = 's';
-  setname.num           = [0 Inf];
-  setname.val           = {''};
- 
-  % - title 
-  ftitle              = setname; 
-  ftitle.name         = 'title';
-  ftitle.tag          = 'Plot title';
-  ftitle.help         = {'Name of figure' ''};
-  ftitle.val          = {''};
-  % - yname (measure/scala)
-  fname               = setname; 
-  fname.name          = 'name';
-  fname.tag           = 'Measure name';
-  fname.help          = {'Name of the measure ploted at the y-axis. ' ''};
-  %
-  fspec               = setname; 
-  fspec.name          = 'name';
-  fspec.tag           = 'Measure name';
-  fspec.help          = {'Name of the measure ploted at the y-axis. ' ''};
-  %  opt.ylim        = [-inf inf];    % y-axis scaling
-  ylim                = cfg_entry;
-  ylim.tag            = 'ylim';
-  ylim.name           = 'y-axis limits';
-  ylim.help           = {'Limitation of x-axis. '}; 
-  ylim.strtype        = 'r';
-  ylim.num            = [1 2];
-  ylim.val            = {[-inf inf]}; 
-  %  opt.subsets     = false(1,numel(data)); 
-  
-  xmlfield0           = cfg_exbranch;
-  xmlfield0.tag       = 'xmlfieldsFull';
-  xmlfield0.name      = 'Data field (full)';
-  xmlfield0.val       = { ftitle  , fname , fspec , ylim}; 
-  xmlfield0.help      = {'Specify set properties such as name or color' ''};
-  
-  
-  xmlfield            = cfg_entry;
-  xmlfield.tag        = 'xmlfieldsSimple';
-  xmlfield.name       = 'Data field';
-  xmlfield.help       = { 
-   ['Specify field for data extraction that result in one value per file, e.g., ' ...
-    'measures.vol_rel_CGW(1) to extract the first (CSF) volume value. '] ''};
-  xmlfield.strtype    = 's';
-  xmlfield.num        = [1 Inf];
-  xmlfield.def        = @(val) 'subjectmeasures.vol_TIV';
-  
-  xmlfields           = cfg_repeat;
-  xmlfields.tag       = 'xmlfields';
-  xmlfields.name      = 'XML fields';
-  if expert>1
-    xmlfields.values  = {xmlfield,xmlfield0,PDfield,USMfield,QMfield,QRfield,SMfield,IMfield};
-  else
-    xmlfields.values  = {xmlfield,xmlfield0,PDfield};
-  end
-  xmlfields.val       = {};
-  xmlfields.num       = [0 Inf];
-  xmlfields.forcestruct = 1;
-  xmlfields.help      = {'Specify manually grouped XML files.'};
-  
+
+  xmlsets           = cfg_menu;
+  xmlsets.tag       = 'xmlsets';
+  xmlsets.name      = 'CAT XML export field sets';
+  %if expert
+    xmlsets.labels    = {'default','expert','developer','full'};
+    xmlsets.values    = {'default','expert','developer','full'};
+  %else
+  %  xmlsets.labels    = {'default','expert','developer'};
+  %  xmlsets.values    = {'default','expert','developer'};
+  %end
+  xmlsets.val       = {'default'}; 
+  xmlsets.help      = {'Predefined sets of CAT XML parameters. '};
+
+
+
   % ------
-  
   csvdelkom           = cfg_menu;
   csvdelkom.tag       = 'seg';
-  csvdelkom.name      = 'CSV delimiter and comma';
+  csvdelkom.name      = 'CSV/TSV delimiter and comma';
   csvdelkom.labels    = {',.',';,',';.',' ,',' .','t.','t,'}; % ... space/tab? ' ,',' .' 
   csvdelkom.values    = {',.',';,',';.',' ,',' .','t.','t.'};
   csvdelkom.val       = {',.'}; 
+  csvdelkom.hidden    = expert < 2; 
   csvdelkom.help      = {'Delimiter and comma in the CSV/TSV file. '};
 
-  write               = cfg_entry;
-  write.tag           = 'fname';
-  write.name          = 'Write outputs file name';
-  write.strtype       = 's';
-  write.val           = {''};
-  write.num           = [0 inf];
-  write.help          = {
-   ['Write outputs in multiple TXT files and add the number of subjects and the name of the variable, ' ...
-    'e.g. "IXI" with "555" subjects and "subjectmeasures.vol_TIV" will result in "IXI555_subjectmeasures_vol_TIV". ' ...
-    'Do not write anything when empty. ']
+  write               = cfg_menu;
+  write.tag           = 'write';
+  write.name          = 'Writing options';
+  write.labels        = {'tables','text','all','none'}; % ... space/tab? ' ,',' .' 
+  write.values        = {{'csv','tsv','mat'}, {'txt'}, {'csv','tsv','mat','txt'}, {''}};
+  write.val           = {{'csv','tsv','mat'}}; 
+  write.help          = {'Writing of different outputs as tables, as csv, tsv, and mat files, and/or as single vector/column as text file. '};
+
+  fname               = cfg_entry;
+  fname.tag           = 'fname';
+  fname.name          = 'Write outputs file name';
+  fname.strtype       = 's';
+  fname.val           = {'<fn>_nf<nf>_nl<nl>'};
+  fname.num           = [1 inf];
+  fname.help          = {
+    'Name to write output files with <fn>, <nf>, and <nl> as keywords to use the original file name, the number of fields, and number of subjects. ' 
     ''
     };
 
@@ -1052,6 +840,7 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   fnamefields.values  = {fnamefield}; 
   fnamefields.val     = {};
   fnamefields.num     = [0 Inf];
+  fnamefields.hidden  = expert < 2; 
   %fnamefields.forcestruct = 0;
   fnamefields.help    = {'Selectors to define the subject ID by a given path/filename, e.g., the IXI filename also include a site ID and weighting: "IXI002-Guys-0815-T1.nii'};
   
@@ -1085,7 +874,14 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
   csvIDcol.val      = {1};
   csvIDcol.help     = {''};
   
-
+  csvselcol          = cfg_entry;
+  csvselcol.tag      = 'csvselcol';
+  csvselcol.name     = 'CSV selector column';
+  csvselcol.strtype  = 'w';
+  csvselcol.num      = [1 1]; 
+  csvselcol.val      = {0};
+  csvselcol.help     = {'Define the number of a column to select (=1) and unselect/skip (=0 or empty) rows. If the setting is 0 then all rows are used. ' ''};
+  
   verb                                = cfg_menu;
   verb.tag                            = 'verb';
   verb.name                           = 'Verbose output';
@@ -1098,13 +894,19 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
     ''
     };
   
+
+  % this is the general batch that is still in development
   getCSVXML           = cfg_exbranch;
   getCSVXML.tag       = 'getCSVXML';
   getCSVXML.name      = 'XML/CSV readout';
-  getCSVXML.val       = {files csvfile csvdelkom csvIDcol xmlfields fields fnamefields idselector outdir write verb};
+  if expert 
+    getCSVXML.val     = {files csvfile xmlsets csvIDcol  fields fnamefields idselector fname outdir write verb}; % xmlfields
+  else
+    getCSVXML.val     = {files csvfile xmlsets fname outdir write verb};
+  end
   getCSVXML.prog      = @cat_stat_getCSVXMLfield;
   getCSVXML.vout      = @vout_stat_getCSVXML;
-  getCSVXML.hidden    = expert<1;
+  getCSVXML.hidden    = expert < 2; 
   getCSVXML.help      = {
     'This batch allows to extract XML and CSV/TSV entries and filename-parts for a given list of a subset of (processed) files to use the in statistical models.  ' 
     '' % XML block
@@ -1118,6 +920,31 @@ function getCSVXML = cat_cfg_getCSVXML(outdir,expert)
     'You can write the results into a text file or you can use the DEPENDENCY function of the SPM batches by choosing the column-wise output vectors. '
     ''
     'Problems can occure if the ID is not fully unique, i.e. if a ID (e.g. 1) is part of another ID (e.g. 101), or if an ID is used multiple times. '
+    };
+
+  % simplified XML batch
+  getXML           = cfg_exbranch;
+  getXML.tag       = 'getXML';
+  getXML.name      = 'XML readout';
+  getXML.val       = {files xmlsets fields fname outdir write verb};
+  getXML.prog      = @cat_stat_getCSVXMLfield;
+  getXML.vout      = @vout_stat_getCSVXML;
+  getXML.help      = {
+    'This batch allows to extract XML data fields from a set of files that can be saved as CSV/TSV/TXT files or used as matlabbatch dependencies, e.g., for statistical models. ' 
+    };
+
+  % simplified CSV batch 
+  % + selector for columns (data)?  > hmm this could be given by a number/columnstr (e.g., AA=27)
+  %                                   but it is only relevant in huge files to avoid long deps list 
+  % + selector for rows (subject)?  > no, critical to match it but it could be useful to specify one column as a selctor 
+  getCSV           = cfg_exbranch;
+  getCSV.tag       = 'getCSV';
+  getCSV.name      = 'CSV readout';
+  getCSV.val       = {csvfile csvselcol fields fname outdir write verb};
+  getCSV.prog      = @cat_stat_getCSVXMLfield;
+  getCSV.vout      = @vout_stat_getCSVXML;
+  getCSV.help      = {
+    'This batch allows to extract columns from one CSV/TSV file that can be saved as CSV/TSV/TXT files or as matlabbatch dependencies, e.g., for statistical models. ' 
     };
 return
 
@@ -3525,9 +3352,7 @@ function boxplot = conf_io_boxplot(outdir,subdir,name,expert)
   %     Computer + SPM + CAT revision
   
   
-  
-  % ---
-  
+
   % quality measures (expert)
   QMfield               = cfg_menu;
   QMfield.tag           = 'xmlfields';
@@ -3726,7 +3551,8 @@ function boxplot = conf_io_boxplot(outdir,subdir,name,expert)
   xmlfields.num       = [1 Inf];
   xmlfields.forcestruct;
   xmlfields.help      = {'Specify manually grouped XML files.'};
-  
+
+
   % ------
   
   
@@ -4541,18 +4367,19 @@ function dep = vout_stat_getCSVXML(job)
   dep = cfg_dep;
 
   job.dep = 1; 
-  if isempty( job.files )
+  if ( isfield(job,'xmlfile') && ~isempty( job.files )   && ~isempty(job.files{1}) ) || ...
+     ( isfield(job,'csvfile') && ~isempty( job.csvfile ) && ~isempty(job.csvfile{1}) )
     out = cat_stat_getCSVXMLfield(job); 
 
     FN = fieldnames(out);
-    if iscell(job.fields)
+    %if isfield(job,'fields') && iscell(job.fields)
       for fni = 1:numel(FN)
         dep(end + (fni>1))  = cfg_dep; 
         dep(end).sname      = sprintf('%s',FN{fni});
         dep(end).src_output = substruct('.',FN{fni},'()',{':'});
         dep(end).tgt_spec   = cfg_findspec({}); %{{'filter',,'strtype','e'}});
       end
-    end
+    %end
   end
 return
 function dep = vout_file_move(job)

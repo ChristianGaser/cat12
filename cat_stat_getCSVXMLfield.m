@@ -1,7 +1,24 @@
 function out = cat_stat_getCSVXMLfield(job)
-%cat_stat_getCSVXMLfield(job). Extract subject specific fields from CSV/XML
+%cat_stat_getCSVXMLfield. Extract file/line specific fields from CSV/XML
+% This function extract data from given CSV and XML files. 
 %
+%  out = cat_stat_getCSVXMLfield(job)
 %
+%  job         .. matlabjob structure
+%   .files     .. XML files (cellstr)
+%   .csvfile   .. CSV file (cellstr)
+%   .xmlsets   .. predefined XML fields (default = 'full'; 
+%                  'default', 'expert', 'developer', 'full')
+%   .fields    .. set of searchstring for field extraction
+%   .csvIDcol  .. column that defines the fields in the CSV file (def. = 1)
+%
+%   .csvIDfd   .. field that defines the dataIDs (eg. subject)
+%   .outdir    .. output directory (default = '', i.e., current directory)
+%   .write     .. datatype to export, e.g. {'mat','csv','tsv','txt'}
+%   .fname     .. output file name, default '<fn>_nf<nf>_nl<nl>', where 
+%                 <fn>, <nf>, and <nl> are replaced by filename, number of 
+%                 fields (columns) and lines.
+%   .verb      .. be verbose  
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -11,87 +28,108 @@ function out = cat_stat_getCSVXMLfield(job)
 % ______________________________________________________________________
 % $Id$ 
 
+%
+% TODO
+% == XML == 
+% * multi entry probem, fields with more than 1 element (in case of char lines)
+%   - creation of subentries *_1 ... *_n in case of less elements 
+%     >> parameter for limit? with default = 9?
+%
+% * check of known XML types?
+%   - cat_* vs. catlong_* vs. catROI*
+%   - mixing/merging of types?
+%     > merging (adding fields) >> independend second batch
+%     > mixing (adding lines) >> not useful fil there is no overlap
+%     > would require to analyse all XML fields
+%       >> create error while processing and exclude files
+%
+% * test of correct processing
+%   - cat_        .. ok
+%   - catlong_    .. ok but only parameters
+%   - catROI(s)_  .. NOT OK only first entry, char converting problem!
+%   - test of missing fields 
+%   - missing information? >> missing entires? 
+%
+% == CSV ==
+% * field search with columnsID ?
+% 
+% == CSV/XML == 
+% * ... 
+%
+% == general
+% * CODING of variables 
+%
+% * documentation
+% * tests
+% * cleanup
+%    
+
 
 %#ok<*ASGLU,*AGROW>
   
-  def.files     = {};   % n-files, e.g. XML for direct extraction or nii/gii as selector
+  def.files     = {''}; % n-files, e.g. XML for direct extraction or nii/gii as selector
   def.csvfile   = {''}; % 0..1-file ... maybe n later
-  def.xmlfields = {};
-  def.label     = {};
-  def.labels    = {};
+  def.xmlfields = {};   % manuel predefinition of XML field 
+  def.label     = {};   % manuel predefinition of CAT ROI labels ... currently no used
+  def.labels    = {};   % manuel predefinition of CAT ROI labels ... currently no used
+  def.xmlsets   = '';   %
+  def.xmlmatlim = 9;    % limitation to split of matrix elements
+  def.fnamefields         = struct('');
+  def.idselector.csvIDfd  = [1 1];
+  def.idselector.fileseps = '_-.';
   def.fields    = {};   % set of variables names for extraction ... preselection TIV IQR ...
                         % the variables were extracted and a depency for each created
-  def.seg       = ',.'; % delimiter/komma setting {',.',';,',';.'} 
+  def.seg       = ',.'; % delimiter/komma setting {',.',';,',';.'} .. for export
   def.csvIDcol  = 1;
   def.csvIDfd   = 0;    % defines compontent of the pathname to match the subject
   def.outdir    = '';   % output directory
-  def.fname     = '';   % write output files
+  def.write     = {'mat','csv','tsv'}; 
+  def.fname     = '';   % write output files‚
   def.dep       = 0;    % internal variable to test dependencies
   def.verb      = 1; 
     
   job = cat_io_checkinopt(job,def); 
   out = struct(); 
-  
+
+  % simplification of some variables 
   job.csvfile = char(job.csvfile); 
   job.outdir  = char(job.outdir); 
-  if numel(job.csvIDfd)==1, job.csvIDfd(2) = job.csvIDfd; end
- 
-  % merge XML and normal fields
-  %job.fields = job.fields 
-  
+  %if numel(job.csvIDfd)==1, job.csvIDfd(2) = job.csvIDfd; end % currently not use 
+   
   if job.dep 
+    % prepare dependencies in matlab batch mode and handle empty inputs 
     job.files = job.files(1); 
     job.verb  = 0; 
-    if isempty(job.fields) || isempty(job.files) || strcmp(char(job.files),'<UNDEFINED>')
+    if ... (isempty(job.xmlsets) && isempty(job.xmlfields)) || ... isempty(job.fields) && 
+      isempty(job.files) || strcmp(char(job.files),'<UNDEFINED>') || strcmp(char(job.files),'<')
       return
     end
-  else
-    % new banner
-    if job.verb, spm('FnBanner',mfilename); end
   end 
   
-  
+
   
   %% try to find XML files
-  %if job.verb, fprintf('  Select XML files\n'); end
-  % analyse dir structure
-  [pp,ff,ee] = spm_fileparts(job.files{1});  
-  switch ee
-    case '.xml'
-      Pxml = job.files; 
-      for xi = 1:numel(Pxml)
-        [pp,ff,ee] = spm_fileparts(Pxml{xi}); 
-        Pnii{xi} = fullfile(pp,[ff(5:end) ee]);
-      end
-    case '.gii'
-      % easy
-      sinfo = cat_surf_info( job.files ); 
-      Pxml  = {sinfo(:).catxml}';
-      Pnii  = {sinfo(:).catxml}';
-      %Pnii  = cellstr( [char(spm_str_manip(Pxml,'hh')) repmat(filesep,numel(Pxml),1) char(spm_str_manip(Pxml,'t'))] );
-    case '.nii'
-      % ########### this may need an external function ##########  
-      % cat_vol_info
-      %for fi = 1:numel(job.files)   
-      %  [ppi,ffi,eei] = spm_fileparts(job.files{fi});
-      %end
-      
-      %[pp0,pp1] = spm_fileparts(pp); 
-      %if ~strcmp(pp1,'surf') || ~strcmp(pp1,'mri') || ~strcmp(pp1,'label')
-      %  pp0 = pp; pp1 = ''; 
-      %else
-      %  pp1 = 'report'; 
-      %end
-      Pnii = job.files; 
-      Pxml = cellstr(spm_file(Pnii,'prefix',['report' filesep 'cat_'],'ext','xml'));
+  %  ----------------------------------------------------------------------
+  %  The original goal was to use also other nifti/gifti input generally
+  %  used for statistical analysis.
+  if ~isempty( job.files{1} )
+    [pp,ff,ee] = spm_fileparts(job.files{1});  
+    [~,fname]  = spm_fileparts(job.files{1}); 
+    Pxml = job.files; 
 
-      %error('cat_stat_getCSVXMLfield:badFileType','ERROR: Unsupportet file type "%s"',ee);
-    otherwise
-      error('cat_stat_getCSVXMLfield:badFileType','ERROR: Unsupportet file type "%s".\n',ee);
+    % get original file 
+    for xi = 1:numel(Pxml)
+      [pp,ff,ee] = spm_fileparts(Pxml{xi}); 
+      Pnii{xi} = fullfile(pp,[ff(5:end) ee]);
+    end
+  else
+    Pxml  = {};
+    Pnii  = {};
+    fname = ''; 
   end
-  
-    % check XML files
-  if exist('Pxml','var') && ~isempty(Pxml)
+    
+  % check XML files
+  if ~isempty(Pxml)
     for fi = 1:numel(Pxml)   
       if ~exist(Pxml{fi},'file') 
         if exist('sinfo','var')
@@ -108,16 +146,16 @@ function out = cat_stat_getCSVXMLfield(job)
         end
       end
     end
-  elseif exist('Pnii','var') && ~isempty(Pnii)
-    for fi = 1:numel(Pnii)   
-      if ~exist(Pnii{fi},'file')
-        cat_io_cprintf('warn','  ERROR: Cannot find XML input %d: "%s".\n',fi,Pnii{fi})
-      end
-    end
   end
-  
-  
+
+  Pxmlff = spm_str_manip(Pxml,'tr');
+  if any( contains(Pxmlff,'cat_') ) && any( contains(Pxmlff,'catlong_') ) || ...
+     any( contains(Pxmlff,'cat_') ) && any( contains(Pxmlff,'catROI') )   
+    error(sprintf('%s:mixedCATxmls',mfilename),'Mixxed CAT XML files are not supported.'); 
+  end
+
   % check volume label files if ROIs where selected
+  %{
   if ~isempty( job.label )
     Plabel  = cellstr(spm_file(Pnii,'prefix',['label' filesep 'catROI_'] ,'ext','xml'));
     for fi = 1:numel(Plabel)   
@@ -129,35 +167,151 @@ function out = cat_stat_getCSVXMLfield(job)
       end
     end
   end
-  
-  
-  % check surface label files if ROIs where selected
-  if ~isempty( job.labels )
-    Plabels = cellstr(spm_file(Pnii,'prefix',['label' filesep 'catROIs_'],'ext','xml'));
-    for fi = 1:numel(Plabels)   
-      if ~exist(Plabels{fi},'file') 
-        Plabels{fi} = cellstr(spm_file(Pnii,'prefix','catROIs_' ,'ext','xml'));
-        if ~exist(Plabels{fi},'file') 
-          Plabels{fi} = ''; 
-        end
-      end
-    end
-  end
-  
+  %}
+
+
 
     
   
-  % create useful fieldnames
+  % create useful fieldnames of the given (search) fields (both XML as CSV)
   replaceset = {
-    {' ','\t',',','.','&'}  '_' ;         
-    {'(',')','{','}','[',']','='}  ''; 
+      {' ','\t',',','','&'}         '_' ;         
+      {'(',')','{','}','[',']','='}  ''  ; 
     };
-  if ~isempty( job.fields )
+  if ~isempty( job.fields ) && ~isempty( job.fields{1} )
     fields = genvarname(cat_io_strrep(cat_io_strrep(cat_io_strrep( job.fields ,replaceset{1,1},replaceset{1,2}),replaceset{2,1},replaceset{2,2}),'__','_'));
+    fields = cat_io_strrep(fields,'x0x2E','.');
+    for si = numel(fields):-1:1
+      if ~isnan( str2double(job.fields{si}) ), fields(si) = []; end
+    end 
   else
     fields = {};
   end
-  xmlfields = {};  
+
+
+
+
+  % (predefined) XML fields
+  % -----------------------------------------------------------------------
+  if ~isempty( job.xmlsets ) && ~isempty( job.files ) && ~isempty( job.files{1} )
+    % field can be listed multiple times as we use unqiue at the end
+    xmlfn0 = {
+      ... subjectmeasures
+       'subjectmeasures.vol_TIV'
+       'subjectmeasures.surf_TSA'
+       'subjectmeasures.vol_abs_WMH'
+       ... quality rating
+       'qualityratings.IQR'
+       ... software 
+       'software.version_cat'
+       'software.revision_cat'
+       'software.date'
+       };
+    xmlfn1 = {
+        ... subjectmeasures
+        'subjectmeasures.vol_TIV'
+        'subjectmeasures.surf_TSA'
+        'subjectmeasures.dist_thickness{1}(1)'
+        'subjectmeasures.dist_thickness{1}(2)'
+        'subjectmeasures.vol_rel_CGW(1)'
+        'subjectmeasures.vol_rel_CGW(2)'
+        'subjectmeasures.vol_rel_CGW(3)'
+        'subjectmeasures.vol_rel_CGW(4)'
+        'subjectmeasures.vol_abs_CGW(1)'
+        'subjectmeasures.vol_abs_CGW(2)'
+        'subjectmeasures.vol_abs_CGW(3)'
+        'subjectmeasures.vol_abs_CGW(4)'
+        ... quality ratings
+        'qualityratings.IQR'
+        'qualityratings.NCR'
+        'qualityratings.ICR'
+        'qualityratings.res_RMS'
+        'qualityratings.contrast'
+        ... quality measures
+        'qualitymeasures.NCR'
+        'qualitymeasures.ICR'
+        'qualitymeasures.res_RMS'
+        'qualitymeasures.contrast'
+        ... quality surface measures 
+        'qualitymeasures.SurfaceEulerNumber'
+        'qualitymeasures.SurfaceDefectArea'
+        'qualitymeasures.SurfaceDefectNumber'
+          };
+    xmlfn2 = {
+        ... quality surface measures 
+        'qualitymeasures.SurfaceEulerNumber'
+        'qualitymeasures.SurfaceDefectArea'
+        'qualitymeasures.SurfaceDefectNumber'
+        'qualitymeasures.SurfaceIntensityRMSE'
+        'qualitymeasures.SurfacePositionRMSE'
+        'qualitymeasures.SurfaceSelfIntersections'    
+        ... preprocessing measures SPM 
+        'SPMpreprocessing.ll'
+        'SPMpreprocessing.mn(1)'
+        'SPMpreprocessing.mn(2)'
+        'SPMpreprocessing.mn(3)'
+        'SPMpreprocessing.mn(4)'
+        'ppe.SPMvols0(1)'
+        'ppe.SPMvols0(2)'
+        'ppe.SPMvols0(3)'
+        'ppe.SPMvols0(4)'
+        'ppe.SPMvols0(5)'
+        'ppe.SPMvols0(6)'
+        ...'ppe.skullstrippedpara'
+        ...'ppe.highBGpara'
+        ...reg.ll
+        ...reg.dt, rmsdt
+      };
+
+%#################    
+% ========= multiple entry export ... ROI label fiels ??? ======= ???
+% ok for tables but not for dependencies 
+%#################    
+    % read first file to get the XML fields to create the dependency output
+    % assumes that all files are equal!
+    xml     = cat_io_xml( Pxml{1} );
+    [xmlfull,xmlcell] = cat_io_struct2cell( xml );
+
+    % match/select fields
+    if ~isempty( job.fields ) && isempty( job.fields{1} )
+      xmlfull = xmlfull( contains( xmlfull, fields ) );
+    end
+
+    % define xmlfields depending on the sets 
+    [pp,ff,ee] = spm_fileparts(job.files{1}); 
+    if numel(ff) > 4 && strcmp( ff(1:4) , 'cat_' )
+      switch job.xmlsets 
+        case 'default'
+          xmlfields = unique( xmlfn0 );
+        case 'expert'
+          xmlfields = unique( [ xmlfn0 ; xmlfn1 ]);
+        case 'developer'
+          xmlfields = unique( [ xmlfn0 ; xmlfn1 ; xmlfn2 ]);
+        case 'full'
+          xmlfields = xmlfull;
+      end
+    elseif ( numel(ff) > 7 && strcmp( ff(1:7) , 'catROI_'  ) ) || ... 
+           ( numel(ff) > 8 && strcmp( ff(1:7) , 'catROIs_' ) )
+      % ROI handling 
+      % ... select ATLAS ?
+      % ... select ROI ? 
+      % ... no dependencies only tables ? 
+      %    side merge?
+
+    elseif numel(ff) > 8 && strcmp( ff(1:8) , 'catlong_' )
+      xmlfields = xmlfull;
+    else
+      xmlfields = xmlfull;
+    end
+  else
+    xmlfields = {};  
+  end
+
+  % match/select
+  if ~isempty( job.fields ) && ~isempty( job.fields{1} )
+    xmlfields = xmlfields( contains( lower(xmlfields), lower(fields) ) );
+  end
+
   if ~isempty( job.xmlfields )
     for fxi = 1:numel(job.xmlfields)
       FN = fieldnames( job.xmlfields{fxi} ); 
@@ -166,44 +320,103 @@ function out = cat_stat_getCSVXMLfield(job)
       end
     end
   end
+
+
+
   
-  
+
   %% get CSV data
+  %  ----------------------------------------------------------------------
   % also as output list
-  clear out; 
-  out.files = job.files;
+  out = rmfield( out ,'files');  
   
-  if ~isempty(job.csvfile) && ~strcmp(job.csvfile,'<UNDEFINED>')
+  if ~isempty(job.csvfile) && ~strcmp(job.csvfile,'<UNDEFINED>') 
   % rename fielnames
-   
-    if job.verb, fprintf('  Read CSV files .. '); end
     if ~exist(job.csvfile,'file')
       error('cat_stat_getCSVXMLfield:noCSVfile','ERROR: No CSV file at this path "%s".\n',job.csvfile); 
     end
     
+    [~,fname] = spm_fileparts(job.csvfile);  
+
     % get table
-    csv = cat_io_csv(job.csvfile,'','',struct('delimiter',job.seg(1),'komma',job.seg(2)));
-    % get field names
-    csvvars = genvarname(cat_io_strrep(cat_io_strrep(cat_io_strrep( csv(1,1:end) ,replaceset{1,1},replaceset{1,2}),replaceset{2,1},replaceset{2,2}),'__','_'));
-    %% get original ids
-    csvids  = csv(2:end,job.csvIDcol);
-    lx      = max(length(num2str(max(cell2mat(csvids))))); 
-    if isnumeric( cell2mat(csvids(1)) )
-      for si = 1:numel(csvids)
-        csvids{si} = num2str(csvids{si},sprintf('%%0%dd',lx)); 
+    if isfield(job,'dep') && job.dep
+      csv = cat_io_csv(job.csvfile,1); % read only header
+    else
+      csv = cat_io_csv(job.csvfile);
+    end
+    csvvars = genvarname(cat_io_strrep(cat_io_strrep(cat_io_strrep( csv(1,1:end) , ...
+      replaceset{1,1},replaceset{1,2}),replaceset{2,1},replaceset{2,2}),'__','_'))';
+  
+    % get original ids
+    if ~( isfield(job,'dep') && job.dep ) 
+      csvids  = csv(2:end,job.csvIDcol);
+      try
+        lx      = max(length(num2str(max(cell2mat(csvids))))); 
+        if isnumeric( cell2mat(csvids(1)) )
+          for si = 1:numel(csvids)
+            csvids{si} = num2str(csvids{si},sprintf('%%0%dd',lx)); 
+          end
+        end
       end
     end
-    %% csvidsl = cellfun('length',csvids);
-    if ~isempty( [ cell2mat(strfind(fields,'ALLCSV')) cell2mat(strfind(fields,'ALL')) ] )
-      csvsvars = csvvars; 
-      csvsvari = 1:numel(csvvars); 
-      csvsvarj = unique( [ cell2mat(strfind(fields,'ALLCSV')) cell2mat(strfind(fields,'ALL')) ] ); 
-    else
-      [csvsvars,csvsvari,csvsvarj] = intersect( csvvars , fields );
+
+    % remove lines
+    if isfield(job,'csvselcol') && job.csvselcol > 0 && job.csvselcol < size(csv,2)
+      % remove empty entries
+      csvrm = cellfun(@isempty, csv(2:end,job.csvselcol) ); 
+      csv([false;csvrm],:)  = [];
+      csvids(csvrm)         = [];
+
+      % remove NaN and entries
+      if isnumeric( csv(2:end,job.csvselcol) )
+        csvrm = isnan(cell2mat(csv(2:end,job.csvselcol)));
+      else
+        csvrm = contains(lower(csv(2:end,job.csvselcol)),'n/a');
+      end
+      csv([false;csvrm],:)  = [];
+      csvids(csvrm)         = [];
+      
+      % remove zeros 
+      if isnumeric( csv(2:end,job.csvselcol) )
+        csvrm = cell2mat(csv(2:end,job.csvselcol)) == 0;
+        csv([false;csvrm],:)  = [];
+        csvids(csvrm)         = [];
+      end
+    elseif isfield(job,'csvselcol') && job.csvselcol >= size(csv,2)
+      error(sprintf('%s:csvselcol',mfilename),'There is no column number %d. ',job.csvselcol)
     end
+
+
+    % match/select
+    if ~isempty( job.fields ) && ~isempty( job.fields{1} )
+      if isempty( fields ) && all(cellfun(@str2num, job.fields) < 0)
+        % if only negative values are given than we need to init them
+        csvsvari = 1:numel(csvvars);
+      else 
+        csvsvari = [];
+        for si = 1:numel( job.fields )
+          if ~isnan( str2double(job.fields{si}))  && str2double(job.fields{si})  > 0
+            csvsvari = [ csvsvari ; si ];
+          end
+        end
+      end
+      csvsvari = [csvsvari find( contains( lower(csvvars), lower(fields) ) )];
+      for si = 1:numel( job.fields )
+        if  ~isnan( str2double(job.fields{si}))  && str2double(job.fields{si}) < 0
+          csvsvari = setdiff( csvsvari , si );
+        end
+      end
+      csvsvars = csvvars( csvsvari );  
+      csvsvarj = [];
+    else
+      csvsvars = csvvars; 
+      csvsvari = 1:numel(csvvars);
+      csvsvarj = [];
+    end
+
     if job.verb 
-      fprintf('Found %d CSV fields:  ',numel(csvsvars)); 
-      for fni=1:numel(csvsvars), cat_io_cprintf('b','%s  ',csvsvars{fni}); end
+      fprintf('Found %d CSV fields:  \n',numel(csvsvars)); 
+      for fni=1:numel(csvsvars), cat_io_cprintf('b','% 6d) %s\n',fni,csvsvars{fni}); end
       fprintf('\n');
       if isempty(csvvars)
         fprintf('The CSV has the following fields (If it looks strange, check the deliminator):\n  '); 
@@ -217,15 +430,13 @@ function out = cat_stat_getCSVXMLfield(job)
   end
   
   %%
-  nsubs = max([numel(Pxml),numel(Pnii)]); 
-  if ~isempty(job.fnamefields)
+  nsubs = numel(Pxml); 
+  if ~isempty(job.fnamefields) && isfield( job.fnamefields(fi) , 'csvIDfd' ) && ~isempty(job.fnamefields(fi).csvIDfd)
     %%
     for fi = 1:numel(job.fnamefields)
       for si = 1:nsubs
         if exist('Pxml','var') && ~isempty(Pxml)
           pp = Pxml{si}; ff=''; P{si} = Pxml{si}; 
-        elseif exist('Pnii','var') && ~isempty(Pnii)
-          pp = Pnii{si}; ff=''; P{si} = Pnii{si}; 
         end
         for pi = 0:job.fnamefields(fi).csvIDfd(1)
           [pp,ff0] = spm_fileparts(pp);
@@ -260,9 +471,33 @@ function out = cat_stat_getCSVXMLfield(job)
         end
       end
     end
+  elseif exist('csv','var') && size(csv,1) > 1
+    nsubs = size(csv,1) - 1; 
+  else
+    nsubs = 0; 
   end
   
+
   
+
+  
+  if isfield(job,'dep') && job.dep
+  % -----------------------------------------------------------------------
+  % prepare output for dependencies
+  % -----------------------------------------------------------------------
+
+% ========== what in case of (XML) fields with mutliple elements? ==============  
+    [xmlvars,xmlvarsi] = setdiff( xmlfields , csvsvars );
+    xmlvarsf = cat_io_strrep(xmlvars,{'.','(',')','{','}'},{'_','','','',''}); 
+    for fni = 1:numel(xmlvarsf)
+      eval(sprintf('out.%s = nan;',xmlvarsf{fni})); 
+    end 
+    for fni = 1:numel(csvsvars)
+      eval(sprintf('out.%s = nan;',csvsvars{fni})); 
+    end
+
+    return
+  end
   
   
   %% CSV read out
@@ -270,43 +505,48 @@ function out = cat_stat_getCSVXMLfield(job)
   for fi = 1:numel(csvsvars)
     for si = 1:nsubs
       %%
-      if 0 %exist('Pxml','var') && ~isempty(Pxml) % not working yet
-        pp = Pxml{si}; ff=''; P{si} = Pxml{si}; 
-      elseif exist('Pnii','var') && ~isempty(Pnii)
-        pp = Pnii{si}; ff=''; P{si} = Pnii{si}; 
-      end
-      %%
-      if ~isempty( job.idselector.csvIDfd ) || job.idselector.csvIDfd~=0
-        for pi = 0:job.idselector.csvIDfd(1)
-          [pp,ff0] = spm_fileparts(pp);
-          if  job.idselector.csvIDfd(1)==pi || pi>job.idselector.csvIDfd(2)
-            if diff(job.idselector.csvIDfd)
-              ff = [ff0 filesep ff];   
-            else
-              ff = ff0; 
+      if ~isempty( Pnii )
+        if 0 %exist('Pxml','var') && ~isempty(Pxml) % not working yet
+          pp = Pxml{si}; ff=''; P{si} = Pxml{si}; 
+        elseif exist('Pnii','var') && ~isempty(Pnii)
+          pp = Pnii{si}; ff=''; P{si} = Pnii{si}; 
+        else 
+          pp = ''; ff = ''; 
+        end
+        
+        %%
+        if ~isempty( job.idselector.csvIDfd ) || job.idselector.csvIDfd~=0
+          for pi = 0:job.idselector.csvIDfd(1)
+            [pp,ff0] = spm_fileparts(pp);
+            if  job.idselector.csvIDfd(1)==pi || pi>job.idselector.csvIDfd(2)
+              if diff(job.idselector.csvIDfd)
+                ff = [ff0 filesep ff];   
+              else
+                ff = ff0; 
+              end
             end
           end
+          [pp,ff,ee] = spm_fileparts(ff); 
+  
+          pp  = cat_io_strrep(ff,num2cell(job.idselector.fileseps),repmat({filesep},size(job.idselector.fileseps))); 
+          pps = textscan(pp,'%s','Delimiter',filesep); 
+          if numel(job.idselector.filesel)>1
+            ff  = pps{1}{job.idselector.filesel(1):job.idselector.filesel(2)};
+          elseif numel(job.idselector.filesel)==1        
+            ff  = pps{1}{job.idselector.filesel(1)};
+          end
         end
-        [pp,ff,ee] = spm_fileparts(ff); 
-
-%%
-        pp  = cat_io_strrep(ff,num2cell(job.idselector.fileseps),repmat({filesep},size(job.idselector.fileseps))); 
-        pps = textscan(pp,'%s','Delimiter',filesep); 
-        if numel(job.idselector.filesel)>1
-          ff  = pps{1}{job.idselector.filesel(1):job.idselector.filesel(2)};
-        elseif numel(job.idselector.filesel)==1        
-          ff  = pps{1}{job.idselector.filesel(1)};
-        end
-     end
       
-
-
-      %%
-      ids = []; idsl = [];
-      for sii = 1:numel(csvids)
-        if ~isempty( strfind( csvids{sii} ,ff ) ) ||  ~isempty( strfind( ff , csvids{sii} ) )
-          ids = [ids sii]; idsl = [idsl length(csvids{sii})];
+        %%
+        ids = []; idsl = [];
+        for sii = 1:numel(csvids)
+          if ~isempty( strfind( csvids{sii} ,ff ) ) ||  ~isempty( strfind( ff , csvids{sii} ) )
+            ids = [ids sii]; idsl = [idsl length(csvids{sii})];
+          end
         end
+      else
+        ids  = si;
+        idsl = si;
       end
      
       %% remove double entries by bad ids (eg. the id="1" can also be found in "101" 
@@ -331,11 +571,11 @@ function out = cat_stat_getCSVXMLfield(job)
         out.(csvsvars{fi}){si,1} = csv{ids + 1,csvsvari(fi)}; 
       end
       if ~isempty(ids) && fi == 1, out.ids{si,1} = csv{ids + 1}; end
-
     end    
     if  isnumeric( out.(csvsvars{fi}){1} )
       clear temp
       try 
+        error
         temp = cell2mat(out.(csvsvars{fi})); 
         out = rmfield(out,csvsvars{fi});
         out.(csvsvars{fi}) = temp;
@@ -357,79 +597,6 @@ function out = cat_stat_getCSVXMLfield(job)
       end
     end
   end
-  
-  
-  
-  
-  %% extract XML data
-  % read XML data
-  if ~isempty( job.label ) && ~isempty(Plabel)
-    % read data (verbose)
-    if job.verb, fprintf('  Read volume label files .. '); end
-    LAB   = cat_io_xml(Plabel); 
-    ROI   = job.label;
-    ROIf  = cat_io_strrep(ROI,{'.','(',')','{','}'},{'_','','','',''});  
-    ROIid = zeros(size(ROI)); 
-    for ri = 1:numel(ROI)
-      f1 = find(ROI{ri}=='(',1); 
-      fe = find(ROI{ri}==')',1); 
-      if ~isempty(f1) && ~isempty(fe)
-       ROIid(ri) = str2double( ROI{ri}(f1+1:fe-1));
-      end
-    end
-    if job.verb, fprintf(' done. \n'); end
-    
-    %% check if fields exist 
-    for fi = numel(ROI):-1:1
-      try
-        eval(sprintf('LAB(1).%s;',ROI{fi})); 
-      catch
-        ROI(fi)  = [];
-        ROIf(fi) = []; 
-      end
-    end
-    
-    %% set up variables
-    for si = 1:numel(LAB)
-      for fi = 1:numel(ROI)
-        try
-          eval(sprintf('val = LAB(si).%s;',ROI{fi})); 
-        catch 
-          if isnumeric(outr.(ROIf{fi}){1})
-            val = NaN;
-          else
-            val = 'NaN'; 
-          end
-        end
-        outr.(ROIf{fi})(si) = val; 
-      end
-    end
-    
-    %% write result as file
-    for fi = 1:numel(ROI)
-      Plabelr{fi} = fullfile(job.outdir,sprintf('%s%d_label_%s_%s.txt',job.fname,numel(job.files),ROIf{fi},...
-        LAB(1).neuromorphometrics.names{ ROIid(fi) })); 
-      hr = fopen(Plabelr{fi},'w'); 
-      fprintf('  Write volume label: "%s"\n',spm_file( Plabelr{fi} ,'link',sprintf('open(''%s'')',Plabelr{fi}))); 
-      for si = 1:numel(outr.(ROIf{fi})) %spm_file( Ptxt{fni} ,'link',sprintf('open(''%s'')',Ptxt{fni})));    
-        fprintf(hr,'%f\n', outr.(ROIf{fi})(si));
-      end
-      fclose(hr); 
-    end
-  end
-  
-  
-  
-  %%
-  if ~isempty( job.labels )
-    if ~isempty(Plabels)
-      if job.verb, fprintf('  Read surface label files .. '); end
-      LABs  = cat_io_xml(Plabels); 
-      ROIs  = job.label;
-      ROIsf = cat_io_strrep(ROIs,{'.'},{'_'}); 
-    end
-  end
-  
   
   
   if ~isempty(Pxml)
@@ -454,27 +621,41 @@ function out = cat_stat_getCSVXMLfield(job)
 
     % print existing fields
     if job.verb 
-      fprintf('Found %d XML fields:  ',numel(xmlvars)); 
-      for fni=1:numel(xmlvars), cat_io_cprintf('b','%s ',xmlvars{fni}); end
+      fprintf('Found %d XML fields:  \n',numel(xmlvars)); 
+      for fni=1:numel(xmlvars), cat_io_cprintf('b','    %s \n',xmlvars{fni}); end
       fprintf('\n');
     end
 
+    %%
     for si = 1:numel(XML)
       for fi = 1:numel(xmlvars)
+% =========== SPLIT multiple values ? - if yes then how many? ===========        
         try
+          clear val;
           eval(sprintf('val = XML(si).%s;',xmlvars{fi})); 
         catch 
-          if isnumeric(out.(xmlvarsf{fi}){1})
+          if isnumeric(out.(xmlvarsf{fi})(1))
             val = NaN;
+          elseif iscell(out.(xmlvarsf{fi})(1))
+            if isnumeric(out.(xmlvarsf{fi}){1})
+              var = NaN; 
+            else
+              var = 'NaN';
+            end
           else
             val = 'NaN'; 
           end
         end
-        if iscell( val )
-          out.(xmlvarsf{fi}){si} = val; 
+        if iscell( val ) 
+          if ~iscell( val{1} )
+            out.(xmlvarsf{fi}){si,1} = val; 
+          else
+            out.(xmlvarsf{fi}){si,1} = 'NA'; 
+          end
         else
-          out.(xmlvarsf{fi})(si) = val; 
+          out.(xmlvarsf{fi})(si,1) = val(1); 
         end
+     
       end
     end
 
@@ -491,136 +672,153 @@ function out = cat_stat_getCSVXMLfield(job)
       else
         fprintf('  Missed %d fields:      ',numel(missed)); 
       end
-      for fni=1:numel(missed), cat_io_cprintf('r','%s ',missed{fni}); end
+      for fni=1:numel(missed), cat_io_cprintf('r','%s \n',missed{fni}); end
       fprintf('\n');
 
       fprintf('Further %d XML fields: ',numel(xmlvars)); 
-      for fni=1:numel(csvvars), cat_io_cprintf('b','%s  ',csvvars{fni}); end
+      for fni=1:numel(csvvars), cat_io_cprintf('b','%s \n',csvvars{fni}); end
       fprintf('\n');
 
     end
 
 
     if job.dep
+      eval(out)
       return
     end
   end
-  
-  
     
-  
-  
-  %% write output files
-  if ~isempty(job.fname) 
-    FN   = fieldnames(out); 
-    
-    if isempty(job.outdir), job.outdir = pwd; end
-    Pcsv = fullfile(job.outdir,sprintf('%s%d.csv',job.fname,numel(job.files))); 
-    Ptxt = cell(numel(FN),1); 
-    scsv  = cell(numel(job.files),numel(FN)); 
-    
+
+
+
+  %% coding
+  % -----------------------------------------------------------------------
+  if 0 %job.coding
     for fni = 1:numel(FN)
-      Ptxt{fni} = fullfile(job.outdir,sprintf('%s%d_%s.txt',job.fname,numel(job.files),FN{fni})); 
-      
-      h = fopen(Ptxt{fni},'w'); 
       scsv{1,fni} = FN{fni};
       if iscell(out.(FN{fni})) 
         if ischar(out.(FN{fni}){1})
           %% convert ordinary values into integer and save the coding as well as the original values seperatly
-          %out.([FN{fni} 'o']) = out.(FN{fni});
-          [out.([FN{fni} '_org']), out.([FN{fni} '_code']), out2.(FN{fni}) ] = unique(out.(FN{fni}));
-          Ptxto{fni} = fullfile(job.outdir,sprintf('%s%d_%s_original.txt',job.fname,numel(job.files),FN{fni})); 
-          Ptxtc{fni} = fullfile(job.outdir,sprintf('%s%d_%s_coding.txt'  ,job.fname,numel(job.files),FN{fni})); 
-          ho = fopen(Ptxto{fni},'w'); 
-          hc = fopen(Ptxtc{fni},'w'); 
-          fprintf(hc,'Coding of "%s":\n',FN{fni}); 
-          for cii = 1:numel(out.([FN{fni} '_org']))
-            fprintf(hc,'%d: %s\n', out.([FN{fni} '_code'])(cii), out.([FN{fni} '_org']){cii});
-          end
-          fclose(hc); 
-          
-        end
-        %%
-        for si = 1:numel(out.(FN{fni}))
-          if iscell(out.(FN{fni}){si})
-            for cii = 1:numel(out.(FN{fni}{si}))
-              if ischar(out.(FN{fni}){si})
-                scsv{si+1,li} = [scsv{si+1,li} sprintf('%d,',out2.(FN{fni}){si})];
-                fprintf(h ,'%d,',out.([FN{fni} '_code']){si});
-                fprintf(ho,'%s,',out.([FN{fni} '_org']){si});
-                scsv{si+1,li} = [scsv{si+1,li} sprintf('%s,',out.(FN{fni}){si})];
-              elseif out.(FN{fni}){si} == round(out.(FN{fni}){si})
-                fprintf(h ,'%d,',out.(FN{fni}){si});
-                fprintf(ho,'%d,',out.(FN{fni}){si});
-                scsv{si+1,li} = [scsv{si+1,li} sprintf('%d,',out.(FN{fni}){si})];
-              else
-                fprintf(h ,'%f,',out.(FN{fni}){si});
-                fprintf(ho,'%f,',out.(FN{fni}){si});
-                scsv{si+1,li} = [scsv{si+1,li} sprintf('%f,',out.(FN{fni}){si})];
-              end
-            end
-            fprintf(h ,'\n');
-            fprintf(ho,'\n');
-          elseif ischar(out.(FN{fni}){si})
-            fprintf(h ,'%d\n',out.([FN{fni} '_code']));
-            fprintf(ho,'%s\n',out.(FN{fni}){si});
-            scsv{si+1,fni} = sprintf('%s',out.(FN{fni}){si});
-          elseif out.(FN{fni}){si} == round(out.(FN{fni}){si})
-            fprintf(h ,'%d\n',out.(FN{fni}){si});
-%            fprintf(ho,'%d\n',out.(FN{fni}){si});
-            scsv{si+1,fni} = sprintf('%d',out.(FN{fni}){si});
-          else            
-            fprintf(h ,'%f\n',out.(FN{fni}){si});
-            fprintf(ho,'%f\n',out.(FN{fni}){si});
-            scsv{si+1,fni} = sprintf('%f',out.(FN{fni}){si});
+          try
+            [out2.([FN{fni} '_org']), out2.([FN{fni} '_code']), out2.([FN{fni} 'c']) ] = unique(out.(FN{fni}));
+          catch
+            out2.([FN{fni} '_org'])  = out.(FN{fni}); 
+            out2.([FN{fni} '_code']) = out.(FN{fni}); 
+            out2.([FN{fni} 'c'])     = out.(FN{fni}); 
           end
         end
-      elseif ischar(out.(FN{fni}))
-%        fprintf(h ,'%s\n',out.(FN{fni}));
-        fprintf(h ,'%d\n',out.([FN{fni} '_code']));
-        fprintf(ho,'%s\n',out.(FN{fni}));
-        for si = 1:numel(out.(FN{fni}))
-          scsv{si+1,fni} = sprintf('%s',out.(FN{fni})(si));
-        end
-      elseif out.(FN{fni}) == round(out.(FN{fni}))
-        fprintf(h ,'%d\n',out.(FN{fni}));
-        for si = 1:numel(out.(FN{fni}))
-          scsv{si+1,fni} = sprintf('%d',out.(FN{fni})(si));
-        end
-      else
-        fprintf(h ,'%f\n',out.(FN{fni}));
-        for si = 1:numel(out.(FN{fni}))
-          scsv{si+1,fni} = sprintf('%f',out.(FN{fni})(si));
-        end
-      end
-      fclose(h); 
-      try 
-        if ~isempty(out.(FN{fni})) && iscell( out.(FN{fni}) ) && ischar(out.(FN{fni}){1})
-          fclose(ho);
-        end
-      catch 
-        disp; 
-      end
-%      out = rmfield(out,FN{fni}); out.(FN{fni}) = out2.(FN{fni}); 
-    end
-    
-    if job.verb
-      fprintf('  Write %d files to ',numel(FN)); cat_io_cprintf('b',sprintf('%s',job.outdir)); fprintf(':\n'); 
-      for fni = 1:numel(Ptxt)
-        fprintf('    %s\n',spm_file( Ptxt{fni} ,'link',sprintf('open(''%s'')',Ptxt{fni})));    
       end
     end
-    
-    if job.verb > 1
-      fprintf('\n'); 
-      disp(scsv)
-    end
-    
-    % write CSV filef
-    cat_io_csv(Pcsv,scsv,struct('delimiter',job.seg(1),'komma',job.seg(2)));  
- 
   end
   
+
+
+  %% prepare and write output 
+  %  ----------------------------------------------------------------------
+  FN   = fieldnames(out); 
+  nSN  = numel(out.(FN{1}));
+
+  % udpate filenames
+  if exist('fname','var')   
+    job.fname = cat_io_strrep(job.fname,{'<FNAME>'  , '<fname>'  , '<fn>', '<FN>'}, fname);
+    job.fname = cat_io_strrep(job.fname,{'<NFIELDS>', '<nfields>', '<nf>', '<NF>'}, sprintf('%d',numel(FN)-1)); 
+    job.fname = cat_io_strrep(job.fname,{'<NLINES>' , '<nlines>' , '<nl>', '<NL>'}, sprintf('%d',nSN));
+  end
+
+  % create output directory and prepare filenames 
+  if isempty(job.outdir), job.outdir = pwd; end
+  Pcsv = fullfile(job.outdir,sprintf('%s.csv',job.fname)); 
+  Ptsv = fullfile(job.outdir,sprintf('%s.tsv',job.fname)); 
+  Pmat = fullfile(job.outdir,sprintf('%s.mat',job.fname)); 
+  Ptxt = cell(numel(FN),1); 
+  scsv = cell(numel(job.files),numel(FN)); 
+
+
+  % create table and write TXT output
+  for fni = 1:numel(FN)
+    if contains('txt',job.write)
+      Ptxt{fni} = fullfile(job.outdir,sprintf('%s_%s.txt',job.fname,FN{fni})); 
+      h = fopen(Ptxt{fni},'w');
+    else
+      h = 0; 
+    end
+    scsv{1,fni} = FN{fni};
+    if iscell(out.(FN{fni})) 
+      for si = 1:numel(out.(FN{fni}))
+        if iscell(out.(FN{fni}){si})
+          for cii = 1:numel(out.(FN{fni}{si}))
+            if ischar(out.(FN{fni}){si})
+              scsv{si+1,li} = [scsv{si+1,li} sprintf('%s ',out.(FN{fni}){si})];
+              if h, fprintf(h ,'%s ',out.(FN{fni}){si}); end
+            elseif out.(FN{fni}){si} == round(out.(FN{fni}){si})
+              scsv{si+1,li} = [scsv{si+1,li} sprintf('%d ',out.(FN{fni}){si})];
+              if h, fprintf(h ,'%d ',out.(FN{fni}){si}); end
+            else
+              scsv{si+1,li} = [scsv{si+1,li} sprintf('%f ',out.(FN{fni}){si})];
+              if h, fprintf(h ,'%f ',out.(FN{fni}){si}); end
+            end
+          end
+          if h, fprintf(h ,'\n'); end
+        elseif ischar(out.(FN{fni}){si})
+          scsv{si+1,fni} = sprintf('%s',out.(FN{fni}){si});
+          if h, fprintf(h ,'%s\n',out.(FN{fni}){si}); end
+        elseif out.(FN{fni}){si} == round(out.(FN{fni}){si})
+          scsv{si+1,fni} = sprintf('%d',out.(FN{fni}){si});
+          if h, fprintf(h ,'%d\n',out.(FN{fni}){si}); end
+        else            
+          scsv{si+1,fni} = sprintf('%f',out.(FN{fni}){si});
+          if h, fprintf(h ,'%f\n',out.(FN{fni}){si}); end
+        end
+      end
+    elseif ischar(out.(FN{fni}))
+      for si = 1:numel(out.(FN{fni}))
+        scsv{si+1,fni} = sprintf('%s',out.(FN{fni})(si));
+        if h, fprintf(h ,'%s\n',out.(FN{fni})(si,:)); end
+      end
+    elseif out.(FN{fni}) == round(out.(FN{fni}))
+      for si = 1:numel(out.(FN{fni}))
+        scsv{si+1,fni} = sprintf('%d',out.(FN{fni})(si));
+        if h, fprintf(h ,'%d\n',out.(FN{fni})(si,:)); end
+      end
+    else
+      for si = 1:numel(out.(FN{fni}))
+        scsv{si+1,fni} = sprintf('%f',out.(FN{fni})(si));
+        if h, fprintf(h ,'%f\n',out.(FN{fni}){si}); end
+      end
+    end
+  end
+  
+  % just print table
+  if job.verb > 1
+    fprintf('\nDipslay first 10 rows and columns:\n'); 
+    disp(scsv(1:10,1:10))
+  end
+
+  % write CSV file
+  if contains('csv',job.write)
+    cat_io_csv(Pcsv,scsv,struct('delimiter',job.seg(1),'komma',job.seg(2)));  
+    if job.verb
+      fprintf('  %s\n',spm_file( Pcsv ,'link',sprintf('open(''%s'')',Pcsv)));    
+    end
+  end
+
+  % write TSV file
+  if contains('tsv',job.write)
+    cat_io_csv(Ptsv,scsv);  
+    if job.verb
+      fprintf('  %s\n',spm_file( Ptsv ,'link',sprintf('open(''%s'')',Ptsv)));    
+    end
+  end
+
+  % write MAT file
+  if contains('mat',job.write)
+    cat_io_csv(Pmat,'scsv');  
+    if job.verb
+      fprintf('  %s\n',spm_file( Pmat ,'link',sprintf('open(''%s'')',Pmat)));    
+    end
+  end
+  
+
   if job.verb, fprintf('Done\n'); end  
 end
   
