@@ -1,4 +1,22 @@
 ------------------------------------------------------------------------
+r2149 | rdahnke | 2022-11-29 14:50:04
+
+Changed paths:
+ M CHANGES.txt
+ M cat_main1639.m
+ M cat_main_APRG.m
+ M cat_main_LASs.m
+ M cat_main_gintnorm1639.m
+ M cat_main_reportfig.m
+ M cat_main_updateSPM1639.m
+ M cat_surf_render2.m
+
+
+Fixed:     Corrected settings to handle MP2Rage in cat_main_updateSPM1639, 
+           cat_main_APRG, cat_main_LASs, and cat_main_gintnorm1639.     
+Fixed:     Added try-catch to avoid problems in fast surface rendering.
+
+------------------------------------------------------------------------
 r2148 | rdahnke | 2022-11-27 21:31:16
 
 Changed paths:

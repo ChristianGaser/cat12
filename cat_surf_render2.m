@@ -445,7 +445,9 @@ switch lower(action)
         for pi=1:numel(H.patch)
           setappdata(H.patch(pi),'colourmap',labelmap); 
         end
-        cat_surf_render2('clim',H.axis,labelmapclim); 
+        try
+          cat_surf_render2('clim',H.axis,labelmapclim); % RD20221129: Sometimes problems in fast surfaces 
+        end
         colormap(labelmap); try caxis(labelmapclim); end
 
         if numel(labelnam)>0
