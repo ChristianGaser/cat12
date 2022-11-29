@@ -293,19 +293,19 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
       Ysrcm  = cat_vol_localstat(Ysrc .* Ywm,Ywm,1,wmtht); 
       Ysrcs  = cat_vol_localstat(Ysrcm,Ysrcm>0,2,4);
       Ysrcm(Ysrcs>mean(Ysrcs(Ysrcs(:)>0) + std(Ysrcs(Ysrcs(:)>0) ))) = 0;
-      Ysrcm  = cat_vol_noPVE(Ysrcm,vx_vol,2); 
+      Ysrcm  = cat_vol_noPVE(Ysrcm,res.isMP2RAGE,vx_vol,2); 
       Ysrca  = Ysrcm; 
       Ysrcmw = cat_vol_approx(Ysrcm,'nh',vx_vol,4); Ysrcmw = cat_vol_smooth3X(Ysrcmw,2); 
 
       Ysrcm  = cat_vol_localstat(Ysrc ./ TSth(1) .* TSth(2) .* (Ycls{1}>4),(Ygm & Ycls{1}>4),1,1);%Ygm & 
-      Ysrcm  = cat_vol_noPVE(Ysrcm,vx_vol,2); 
+      Ysrcm  = cat_vol_noPVE(Ysrcm,res.isMP2RAGE,vx_vol,2); 
       Ysrcs  = cat_vol_localstat(Ysrcm,Ysrcm>0,4,4);
       Ysrcm(Ysrcs>mean(Ysrcs(Ysrcs(:)>0)+std(Ysrcs(Ysrcs(:)>0) ))) = 0;
       Ysrca  = Ysrca + Ysrcm; 
       Ysrcmg = cat_vol_approx(Ysrcm,'nh',vx_vol,4); Ysrcmg = cat_vol_smooth3X(Ysrcmg,LASfs); 
 
       Ysrcm  = cat_vol_localstat(Ysrc ./ TSth(3) .* TSth(2) .* (Ycm & Ycls{3}>4),(Ycm & Ycls{3}>4),1,1); 
-      Ysrcm  = cat_vol_noPVE(Ysrcm,vx_vol,2); 
+      Ysrcm  = cat_vol_noPVE(Ysrcm,res.isMP2RAGE,vx_vol,2); 
       Ysrcs  = cat_vol_localstat(Ysrcm,Ysrcm>0,2,4);
       Ysrcm(Ysrcs>mean(Ysrcs(Ysrcs(:)>0)+std(Ysrcs(Ysrcs(:)>0) ))) = 0;
       Ysrca  = Ysrca + Ysrcm; 
@@ -327,7 +327,7 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
       Ysrcm2 = Ysrcm; 
       YM = cat_vol_morph(Ysrcm>0,'d') & Yp0>1 & Ysrcm==0; Ysrcm2(YM) = Ysrc(YM);
       Ysrcm2 = cat_vol_localstat(Ysrcm2,Ysrcm2>0,2,wmtht); Ysrcm(YM) = Ysrcm2(YM);
-      Ysrcm  = cat_vol_noPVE(Ysrcm,vx_vol,2); 
+      Ysrcm  = cat_vol_noPVE(Ysrcm,res.isMP2RAGE,vx_vol,2); 
 
       % major correction outside the brain 
       [Yi ,resT2] = cat_vol_resize(Ysrcm,'reduceV',vx_vol,mres,32,'meanm'); % maximum reduction for the WM
@@ -344,12 +344,12 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
     %% GM
     stime2 = cat_io_cmd('    GM intensity','g5','',debug,stime2);  
     Yi = Ysrc ./ max(eps,Ylab{2}) .* (Ycls{1}>128) .* (Yp0>0);
-    Yi = cat_vol_noPVE(Yi,vx_vol,1);
+    Yi = cat_vol_noPVE(Yi,res.isMP2RAGE,vx_vol,1);
     Yi  = cat_vol_localstat(Yi,Yi>0,4,4);
     Yi(Yi>mean(Yi(Yi(:)>0)+std(Yi(Yi(:)>0) ))) = 0;
     if ~debug, clear Yhdm; end
     [Yir,resT2] = cat_vol_resize(Yi,'reduceV',vx_vol,mres,32,'meanm'); if ~debug, clear Yi; end
-    Yir = cat_vol_noPVE(Yir,vx_vol,1);
+    Yir = cat_vol_noPVE(Yir,res.isMP2RAGE,vx_vol,1);
     Yir = cat_vol_approx(Yir,'nh',resT2.vx_volr,2); 
     Yir = cat_vol_smooth3X(Yir,LASfs * 2); 
     Ylab{1} = cat_vol_resize(Yir,'dereduceV',resT2) .* Ylab{2};  
@@ -364,10 +364,10 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
     %% CSF & BG
     % no adaptation yet
     Yi = Ysrc ./ max(eps,Ylab{2}) .* (smooth3(Ycm)>.6) .* (Yp0>0);
-    Yi = cat_vol_noPVE(Yi,vx_vol,2,3,2);
+    Yi = cat_vol_noPVE(Yi,res.isMP2RAGE,vx_vol,2,3,2);
     if ~debug, clear Yhdm; end
     [Yir,resT2] = cat_vol_resize(Yi,'reduceV',vx_vol,mres/2,32,'meanm'); if ~debug, clear Yi; end
-    Yir = cat_vol_noPVE(Yir,vx_vol,2);
+    Yir = cat_vol_noPVE(Yir,res.isMP2RAGE,vx_vol,2);
     Yir = cat_vol_approx(Yir,'nh',resT2.vx_volr,2); 
     Yir = cat_vol_smooth3X(Yir,LASfs * 4); 
     Ylab{3} = cat_vol_resize(Yir,'dereduceV',resT2) .* Ylab{2};  
@@ -444,7 +444,7 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
 
 
 end
-function Ygi = cat_vol_noPVE(Ygi,vx_vol,mres,dist,iter)
+function Ygi = cat_vol_noPVE(Ygi,newversion,vx_vol,mres,dist,iter)
   if ~exist('dist','var'), dist=2; end
   if ~exist('iter','var'), iter=1; end
   if ~exist('mres','var'), mres=1; end
@@ -455,9 +455,12 @@ function Ygi = cat_vol_noPVE(Ygi,vx_vol,mres,dist,iter)
   end
   for i=1:iter
     Ygi      = cat_vol_median3(Ygi,Ygi>0,Ygi>0);
-    %[Ygistd,Ygimean] = cat_vol_localstat(Ygi,Ygi>0,dist,4); 
-    Ygistd   = cat_vol_localstat(Ygi,Ygi>0,dist,4); 
-    Ygimean  = cat_vol_localstat(Ygi,Ygi>0,dist,1); 
+    if newversion
+      Ygistd  = cat_vol_localstat(Ygi,Ygi>0,dist,4); 
+      Ygimean = cat_vol_localstat(Ygi,Ygi>0,dist,1); 
+    else
+      [Ygistd,Ygimean] = cat_vol_localstat(Ygi,Ygi>0,dist,4); 
+    end
     Ygx      = Ygi<(Ygimean-Ygistd/4) | Ygi>(Ygimean+Ygistd/2); 
     Ygi(Ygx) = Ygimean(Ygx);
     clear Ygx;
