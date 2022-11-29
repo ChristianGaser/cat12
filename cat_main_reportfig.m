@@ -1444,9 +1444,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
           end
           %% hrange      = srange(1) + boxwidth/2:boxwidth:srange(2);
           if strcmpi(renderer,'opengl')
-            i=1; hSD{i} = cat_surf_display(struct('data',PCS{i},'readsurf',0,'expert',2,...
-              'multisurf',1,'view',sview{i},'menu',0,'parent',hCS{i},'verb',0,'caxis',srange,'imgprint',struct('do',0))); 
-          
+            try
+              i=1; hSD{i} = cat_surf_display(struct('data',PCS{i},'readsurf',0,'expert',2,...
+                'multisurf',1,'view',sview{i},'menu',0,'parent',hCS{i},'verb',0,'caxis',srange,'imgprint',struct('do',0))); 
+            end
+            
             for i = 2:numel(hCS)
               hSD{i} = cat_surf_display(struct('data',PCS{i},'readsurf',0,'expert',2,...
                 'multisurf',0,'view',sview{i},'menu',0,'parent',hCS{i},'verb',0,'caxis',srange,'imgprint',struct('do',0))); 
