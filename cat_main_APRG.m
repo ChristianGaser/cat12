@@ -84,14 +84,18 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th,cutstr)
   %        boundary. Due to failed registration we directly use the 
   %        brain mask Yb in the center of the brain, ie. we allow brain 
   %        tissue in the CSF far from the skull. 
-  if T3th(1) < T3th(3)
-    Ycc = max( single(P(:,:,:,3))/255 , cat_vol_morph( single(sum(P(:,:,:,1:3),4))/255 , 'ldc',5,vx_vol) .* ...
-      max(0,min(1,1 - ( max(0, Ysrc - cth) / abs( mean(res.mn(res.lkp(:)==1).*res.mg(res.lkp(:)==1)' ) - cth ) ) )) );
+  if T3th(1) < T3th(3) % T1 
+    if res.isMP2RAGE % additional CSF in MP2Rage
+      Ycc = max( single(P(:,:,:,3))/255 , cat_vol_morph( single(sum(P(:,:,:,1:3),4))/255 , 'ldc',5,vx_vol) .* ...
+        max(0,min(1,1 - ( max(0, Ysrc - cth) / abs( mean(res.mn(res.lkp(:)==1).*res.mg(res.lkp(:)==1)' ) - cth ) ) )) );
+    else
+      Ycc  = zeros(size(Ysrc)); 
+    end
     Yc  = single(P(:,:,:,3))/255 .* ...
       max(0,min(1,1 - ( max(0, Ysrc - cth) / abs( mean(res.mn(res.lkp(:)==1).*res.mg(res.lkp(:)==1)' ) - cth ) + ...
                         max(0,-Ysrc + cth) / abs( mean(res.mn(res.lkp(:)==4).*res.mg(res.lkp(:)==4)' ) - cth ) ) ));
- else
-    Ycc  = 0; 
+  else
+    Ycc  = zeros(size(Ysrc)); 
     Yc   = single(P(:,:,:,3))/255 .* ...
       max(0,min(1,1 - ( max(0,Ysrc - cth) / abs( min(res.mn(res.lkp==3)) - mean(res.mn(res.lkp==1)) )) ));
   end
@@ -325,7 +329,7 @@ end
     cutstr = cutstrs(cutstrid(1));
   end
   % MP2Rage
-  if res.mn(res.lkp==3)<res.mn(res.lkp==max(res.lkp) & res.mg'>0.5)
+  if res.isMP2RAGE
     Yb = Yb | Ycc>0.5; 
   end
 
