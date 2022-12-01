@@ -63,13 +63,13 @@ end
 % if not successful try it again after changing the file attributes to "+x"
 if ST > 1
   if ispc
-    fileattrib(fullfile(CATDir,'*'),'+x');
+    try, fileattrib(fullfile(CATDir,'*'),'+x'); end
     olddir = pwd;
     cd(CATDir);
     [ST, RS] = system(cmd);
     cd(olddir);
   else
-    fileattrib(fullfile(CATDir,'*'),'+x','a');
+    try, fileattrib(fullfile(CATDir,'*'),'+x','a'); end
     cmd = fullfile(CATDir,cmd);
     warning off % this is to prevent warnings by calling cat12 from the shell script
     [ST, RS] = system(cmd);

@@ -14,7 +14,7 @@ function varargout = cat_surf_results(action, varargin)
 %
 %  * cat_surf_results('rgb',filename(s)) 
 %  Init display for RGB overlay of up to 3 selected file(s)
-
+%
 %  * cat_surf_results('batch',job) 
 %  See cat_conf_stools.
 %
@@ -78,7 +78,7 @@ function varargout = cat_surf_results(action, varargin)
 %  * cat_surf_results('print',fpart); 
 %  Save render as png image file. The parameter fpart has to be a structure
 %  with the fields 'outdir','prefix', and 'suffix' but can be optionally
-%  skipped to estimte the filename automatically.
+%  skipped to estimate the filename automatically.
 %
 % ______________________________________________________________________
 %
@@ -1264,22 +1264,22 @@ switch lower(action)
     if nargin>1
       fparts = varargin{1};
     else
-      fparts.outdir = {''};
+      fparts.outdir = '';
       fparts.prefix = '';
       fparts.suffix = '';
     end
     
-    if iscell(fparts.outdir), fparts.outdir{1}; end
+    if iscell(fparts.outdir), fparts.outdir = fparts.outdir{1}; end
     [pp,ff] = spm_fileparts( H.S1.name );
     if isempty(fparts.outdir)
-      fparts.outdir{1} = pp; 
+      fparts.outdir = pp; 
     end
     [tmp, pathname, ext] = spm_fileparts(pp);
-    filenames = fullfile(fparts.outdir,[pathname ext '_' fparts.prefix ff fparts.suffix '.png']); %#ok<AGROW>
+    filename = fullfile(fparts.outdir,[pathname ext '_' fparts.prefix ff fparts.suffix '.png']); %#ok<AGROW>
 
-    save_image(1,1,filenames);
+    save_image(1,1,filename);
     
-    varargout{1} = filenames; 
+    varargout{1} = filename; 
     
   otherwise   
     error('Unknown action "%s"!\n',action); 
@@ -2790,8 +2790,8 @@ for i = 1:n
     H.Pvol_sel = Pvol;
     
     % print warning if no SPM.mat file was found
-    if ~exist(fullfile(pp, 'SPM.mat'), 'file')
-      fprintf('Warning: Please ensure that %s is spatially registered and is located in CAT12 Dartel/Shooting space.\n',[ff ee]);
+    if ~exist(fullfile(pp, 'SPM.mat'), 'file') || ~exist(fullfile(pp, 'vSPM.mat'), 'file')
+      fprintf('Warning: Please ensure that %s is spatially registered to the new MNI152NLin2009cAsym template space.\n',[ff ee]);
     end
   else
     P0{i} = deblank(P(i,:));

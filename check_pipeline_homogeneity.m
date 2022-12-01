@@ -62,7 +62,7 @@ else % selected cross-sectional data
   job.data_vol{1} = files;
 end
 
-cat_stat_homogeneity(job);
+cat_stat_check_cov_old(job);
 [pth filename] = spm_fileparts(deblank(data(sel,:)));
  
 name = ['check_cov' filename '.png'];
