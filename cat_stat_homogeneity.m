@@ -96,6 +96,9 @@ end
 % check for repeated anova design with long. data
 if isfield(job,'factorial_design') && isfield(job.factorial_design,'des') && isfield(job.factorial_design.des,'fblock')
   H.repeated_anova = true;
+elseif isfield(job,'factorial_design') && isfield(job.factorial_design,'spmmat')
+  load(job.factorial_design.spmmat{1})
+  H.repeated_anova = ~isempty(SPM.xX.iB);
 else
   H.repeated_anova = false;
 end
@@ -607,15 +610,32 @@ if job.verb, cat_progress_bar('Clear'); end
 
 % get data for each subject in longitudinal designs
 if H.repeated_anova
-  fsubject = H.job.factorial_design.des.fblock.fsuball.fsubject;
-  n_subjects_long = numel(fsubject);
-  H.ind_subjects_long = cell(numel(fsubject),1);
-  n = 0;
-  for i = 1:n_subjects_long
-    n_scans = numel(fsubject(i).scans);
-    % find time points in all subjects
-    H.ind_subjects_long{i} = ismember(1:n_subjects,n + (1:n_scans));
-    n = n + n_scans;
+  if isfield(job.factorial_design,'des')
+    fsubject = job.factorial_design.des.fblock.fsuball.fsubject;
+    n_subjects_long = numel(fsubject);
+    H.ind_subjects_long = cell(numel(fsubject),1);
+    n = 0;
+    for i = 1:n_subjects_long
+      n_scans = numel(fsubject(i).scans);
+      % find time points in all subjects
+      H.ind_subjects_long{i} = ismember(1:n_subjects,n + (1:n_scans));
+      n = n + n_scans;
+    end
+  else
+    [rw,cl] = find(SPM.xX.I == length(SPM.xX.iB)); % find column which codes subject factor (length(SPM.xX.iB) -> n_subj)
+    subj_col = cl(1);
+    n_subjects_long = max(SPM.xX.I(:,subj_col));
+
+    H.ind_subjects_long = cell(n_subjects_long,1);
+    n = 0;
+    for i = 1:n_subjects_long
+      ind_subj = find(SPM.xX.I(:,subj_col)==i);
+      n_scans = numel(ind_subj);
+      % find time points in all subjects
+      H.ind_subjects_long{i} = ismember(1:n_subjects,n + (1:n_scans));
+      n = n + n_scans;
+    end
+    
   end
 end
 
@@ -1299,7 +1319,7 @@ for i = 1:max(H.sample)
   set(H.ui.scatter,'MarkerFaceColor',MarkerEdgeColor,'MarkerFaceAlpha',0.4,'MarkerEdgeAlpha',0.5);
 end
 
-% connect point of each subject for long. designs
+% connect points of each subject for long. designs
 if H.repeated_anova
   
   % use IQR*zscore if available

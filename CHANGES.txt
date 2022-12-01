@@ -1,4 +1,16 @@
 ------------------------------------------------------------------------
+r2151 | gaser | 2022-12-01 11:35:59
+
+Changed paths:
+ M CHANGES.txt
+ M cat_stat_check_SPM.m
+ M cat_stat_homogeneity.m
+
+
+Changed: Removed some unnecessary lines in cat_stat_check_SPM.m.
+Changed: Added check for longitudinal designs if design matrix is not given as
+         argument in job parameter to cat_stat_homogeneity.m.
+------------------------------------------------------------------------
 r2150 | gaser | 2022-12-01 10:59:13
 
 Changed paths:
