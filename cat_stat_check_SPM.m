@@ -27,20 +27,24 @@ function job = cat_stat_check_SPM(job)
 if ~nargin
   error('No argument given.\n');
 else
-  spmmat = fullfile(char(job.dir),'SPM.mat');
+  if isfield(job,'dir') 
+    spmmat = fullfile(char(job.dir),'SPM.mat');
+  else
+    spmmat = job.spmmat{1};
+  end
   if exist(spmmat,'file'), load(spmmat);
   else error('File %s not found.',spmmat); end
   
-  if isfield(job.check_SPM,'check_SPM_ortho')
-    check_ortho  = job.check_SPM.check_SPM_ortho;
+  if isfield(job,'check_SPM_ortho')
+    check_ortho  = job.check_SPM_ortho;
   else
     check_ortho = false;
   end
-  check_zscore = isfield(job.check_SPM.check_SPM_zscore,'do_check_zscore');
+  check_zscore = isfield(job.check_SPM_zscore,'do_check_zscore');
   
   if check_zscore
-    use_unsmoothed_data = job.check_SPM.check_SPM_zscore.do_check_zscore.use_unsmoothed_data;
-    adjust_data         = job.check_SPM.check_SPM_zscore.do_check_zscore.adjust_data;
+    use_unsmoothed_data = job.check_SPM_zscore.do_check_zscore.use_unsmoothed_data;
+    adjust_data         = job.check_SPM_zscore.do_check_zscore.adjust_data;
   else
     use_unsmoothed_data = false;
     adjust_data         = false;
@@ -174,10 +178,10 @@ if check_zscore
   end
   
   % batch mode 
-  if nargin > 0 && isfield(job.check_SPM.check_SPM_zscore.do_check_zscore,'save')
-    job_check_zscore.fname  = job.check_SPM.check_SPM_zscore.do_check_zscore.fname; 
-    job_check_zscore.outdir = job.check_SPM.check_SPM_zscore.do_check_zscore.outdir; 
-    job_check_zscore.save   = job.check_SPM.check_SPM_zscore.do_check_zscore.save; 
+  if nargin > 0 && isfield(job.check_SPM_zscore.do_check_zscore,'save')
+    job_check_zscore.fname  = job.check_SPM_zscore.do_check_zscore.fname; 
+    job_check_zscore.outdir = job.check_SPM_zscore.do_check_zscore.outdir; 
+    job_check_zscore.save   = job.check_SPM_zscore.do_check_zscore.save; 
   end
 
   % use external defined window
@@ -200,23 +204,23 @@ if check_ortho
   fprintf('-------------------------------------------\n');
   h = check_orthogonality(SPM.xX);
   
-  if nargin > 0 && isfield(job.check_SPM.check_SPM_zscore,'do_check_zscore') && isfield(job.check_SPM.check_SPM_zscore.do_check_zscore,'save')
+  if nargin > 0 && isfield(job.check_SPM_zscore,'do_check_zscore') && isfield(job.check_SPM_zscore.do_check_zscore,'save')
     %%
-    if ~isempty(job.check_SPM.check_SPM_zscore.do_check_zscore.fname)
+    if ~isempty(job.check_SPM_zscore.do_check_zscore.fname)
     dpi = cat_get_defaults('print.dpi'); 
     if isempty(dpi), dpi = 150; end
 
-    if isempty(job.check_SPM.check_SPM_zscore.do_check_zscore.outdir{1}), job.check_SPM.check_SPM_zscore.do_check_zscore.outdir{1} = pwd; end
+    if isempty(job.check_SPM_zscore.do_check_zscore.outdir{1}), job.check_SPM_zscore.do_check_zscore.outdir{1} = pwd; end
 
     % save
     warning('OFF','MATLAB:print:UIControlsScaled');
-    fname = fullfile(job.check_SPM.check_SPM_zscore.do_check_zscore.outdir{1},[job.check_SPM.check_SPM_zscore.do_check_zscore.fname 'DesignOrthogonality.png']);
+    fname = fullfile(job.check_SPM_zscore.do_check_zscore.outdir{1},[job.check_SPM_zscore.do_check_zscore.fname 'DesignOrthogonality.png']);
     try, print(h, '-dpng', '-opengl', sprintf('-r%d',dpi), fname); end
     warning('ON','MATLAB:print:UIControlsScaled');
     end
 
     
-    if job.check_SPM.check_SPM_zscore.do_check_zscore.save>1
+    if job.check_SPM_zscore.do_check_zscore.save>1
       close(h)
     end
   end

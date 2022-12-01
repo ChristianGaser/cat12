@@ -1,4 +1,41 @@
 ------------------------------------------------------------------------
+r2150 | gaser | 2022-12-01 10:59:13
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M Makefile
+ M cat12.m
+ M cat_stat_check_SPM.m
+ M cat_stat_homogeneity.m
+ M cat_surf_results.m
+ M cat_system.m
+ M cat_vol_groupwise_ls.m
+AD cat_vol_groupwise_ls_orig.m
+ M cat_vol_img2mip.m
+ M check_pipeline.sh
+ M check_pipeline_homogeneity.m
+ M doc/cat.html
+ M doc/index.html
+A  spm_diffeo.mexa64
+A  spm_diffeo.mexmaca64
+A  spm_diffeo.mexmaci64
+A  spm_diffeo.mexw32
+A  spm_diffeo.mexw64
+AD spm_diffeo_old.m
+
+
+Added:   New maca64-compiled mex-files.
+Changed: cat_vol_groupwise_ls.m is now using the newer version of SPM_diffeo 
+         that is now also provided with CAT12.
+Changed: Added flag to define Matlab version in check_pipeline.sh.
+Fixed:   Corrected call to new homogeneity tool in check_pipeline_homogeneity.m.         
+Fixed:   Printed RGB colors in cat_vol_img2mip.m are now correct.
+Fixed:   Some markers for the scatterplot in cat_stat_homogeneity were not 
+         allowed for all Matlab versions.
+Fixed:   Call of cat_stat_check_SPM from CAT12 GUI was not correct.
+Fixed:   Corrected use of different parameter fields in of cat_stat_check_SPM.m.
+Fixed:   Corrected some smaller issues with filenames in cat_surf_results.m.------------------------------------------------------------------------
 r2149 | rdahnke | 2022-11-29 14:50:04
 
 Changed paths:
@@ -14143,7 +14180,7 @@ A       spm_diffeo_old.mexmaci64
 A       spm_diffeo_old.mexw64
 
 Added: spm_diffeo.mexmaci from previous SPM12 release that were more stable for
-non-linear longitduinal registration.
+non-linear longitudinal registration.
 
 ------------------------------------------------------------------------
 r1572 | gaser | 2020-03-02 12:50:29 +0100 (Mon, 02 Mar 2020) | 19 lines

@@ -14,6 +14,7 @@
 ########################################################
 version='check_pipeline.sh $Id$'
 
+matlab=matlab # you can use other matlab versions by changing the matlab parameter
 spm12_tmp=/tmp/spm12_$$
 calc_tmp=/tmp/calc$$
 proc_dir=$PWD
@@ -62,6 +63,11 @@ parse_args ()
     optname="`echo $1 | sed 's,=.*,,'`"
     optarg="`echo $2 | sed 's,^[^=]*=,,'`"
     case "$1" in
+      --matlab* | -m*)
+          exit_if_empty "$optname" "$optarg"
+          matlab=$optarg
+          shift
+          ;;
       --release* | -r*)
           exit_if_empty "$optname" "$optarg"
           release=$optarg
@@ -284,9 +290,9 @@ run_pipeline ()
   # run cat12 in foreground with all files in tmp folder
   if [ "$SIZE_OF_ARRAY" -gt 0 ]; then
     if [ -f "${spm12_tmp}/toolbox/cat12/cat_batch_cat.sh" ]; then
-      ${spm12_tmp}/toolbox/cat12/cat_batch_cat.sh -l ${proc_dir} ${bg_flag} ${calc_tmp}/*.[in][mi][gi] 
+      ${spm12_tmp}/toolbox/cat12/cat_batch_cat.sh -m ${matlab} -l ${proc_dir} ${bg_flag} ${calc_tmp}/*.[in][mi][gi] 
     else
-      ${spm12_tmp}/toolbox/cat12/cat_batch_vbm.sh -l ${proc_dir} ${bg_flag} ${calc_tmp}/*.[in][mi][gi] 
+      ${spm12_tmp}/toolbox/cat12/cat_batch_vbm.sh -m ${matlab} -l ${proc_dir} ${bg_flag} ${calc_tmp}/*.[in][mi][gi] 
     fi
   fi
   
@@ -294,9 +300,9 @@ run_pipeline ()
     large=`grep "\-large" ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh`
     # call "-large" option only if available for that release
     if [ -n "$large" ]; then
-      ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh -large ${bg_flag_long} ${calc_tmp}/long/*.[in][mi][gi]
+      ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh -m ${matlab} -large ${bg_flag_long} ${calc_tmp}/long/*.[in][mi][gi]
     else
-      ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh ${bg_flag_long} ${calc_tmp}/long/*.[in][mi][gi] 
+      ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh -m ${matlab} ${bg_flag_long} ${calc_tmp}/long/*.[in][mi][gi] 
     fi
   fi
   
@@ -454,11 +460,12 @@ help ()
 cat <<__EOM__
 
 USAGE:
-  check_pipeline.sh -s spm12_folder [-p process_id] [-r cat12_zip_file] [-d proc_folder] [-b number_of_processes] [-ns] [-f file_list | filenames]
+  check_pipeline.sh -s spm12_folder [-m matlab_command] [-p process_id] [-r cat12_zip_file] [-d proc_folder] [-b number_of_processes] [-ns] [-f file_list | filenames]
   
    --release <FILE|URL> | -r <FILE|URL> zip-file of CAT12 release that will be used for checking. If no zip-file is given, then the current CAT12 release will be used.
    --spm <DIR>          | -s <DIR>      folder of spm12 installation
    --dir <DIR>          | -d <DIR>      folder for writing processed files and results (default $proc_folder)
+   --matlab <FILE>      | -m  <FILE>    matlab command (matlab version) (default matlab)
    --file <FILE>        | -f <FILE>     list with file names for checking
    --post <STRING>      | -p <STRING>   post-process given pid
    --bg                 | -b            run check_pipeline.sh in the background
