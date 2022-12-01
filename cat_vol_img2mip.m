@@ -68,9 +68,10 @@ end
 V = spm_vol(P);
 M   = V(1).mat;
 
+col = {'R','G','B'};
 for i=1:n
   if n > 1
-    fprintf('%s color: %s\n',col{i},V(i).fname);
+    fprintf('%s color: %s\n',col{OV.RGB_order(i)},V(i).fname);
   end
   XYZ{i} = [];
   Y{i}   = [];
@@ -113,6 +114,8 @@ for j = 1:V(1).dim(3)
 end
 cat_progress_bar('Clear');
 
+[pt,nm,xt] = fileparts(P(1,:));
+
 if style
 
   % show new glassbrain
@@ -120,7 +123,6 @@ if style
     fig = figure(OV.fig_mip);
   else
     fig = figure(OV.fig_mip);
-    [pt,nm,xt] = fileparts(P(1,:));
     png_name = ['mip' num2str(n) '_' nm '.png'];
     set(fig, 'MenuBar', 'none','Position',[10 10 2*182 2*200],'Name',nm,'NumberTitle','off');
   end

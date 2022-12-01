@@ -1270,7 +1270,7 @@ for i=1:length(H.xml.QMzscore)
 end
 
 % create marker for different samples
-marker = char('o','s','d','^','v','<','>','_','|','.','+','*');
+marker = char('o','s','d','^','v','<','>','.','+','*');
 while max(H.sample) > numel(marker), marker = [marker; marker]; end
 
 if sel % show QM measure on x-axis

@@ -36,7 +36,6 @@ function out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s
 % modified version (added masked registration) of
 % John Ashburner
 % spm_groupwise_ls.m 6844 2016-07-28 20:02:34Z john $
-%
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -117,7 +116,7 @@ B = se3_basis;
 % Set boundary conditions 
 %-----------------------------------------------------------------------
 spm_field('boundary',1); % Bias correction - Neumann
-spm_diffeo_old('boundary',0);     % Diffeomorphism  - circulant
+spm_diffeo('boundary',0);     % Diffeomorphism  - circulant
 
 % Computations for figuring out how many grid levels are likely to work
 %-----------------------------------------------------------------------
@@ -147,7 +146,7 @@ end
 %-----------------------------------------------------------------------
 for level = 2:numel(pyramid)
     for i=numel(Nii):-1:1
-        pyramid(level).img(i).f   = spm_diffeo_old('restrict',pyramid(level-1).img(i).f);
+        pyramid(level).img(i).f   = spm_diffeo('restrict',pyramid(level-1).img(i).f);
         pyramid(level).img(i).f(~isfinite(pyramid(level).img(i).f)) = 0;
         s1 = [size(pyramid(level-1).img(i).f) 1];
         s2 = [size(pyramid(level  ).img(i).f) 1];
@@ -161,7 +160,7 @@ end
 %-----------------------------------------------------------------------
 for level=1:numel(pyramid)
     for i=1:numel(Nii)
-        pyramid(level).img(i).f = spm_diffeo_old('bsplinc',pyramid(level).img(i).f,ord);
+        pyramid(level).img(i).f = spm_diffeo('bsplinc',pyramid(level).img(i).f,ord);
     end
 end
 
@@ -274,9 +273,9 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
 
             if all(isfinite(b_settings(i,:)))
                 vxi           = sqrt(sum(img(i).mat(1:3,1:3).^2));
-                spm_diffeo_old('boundary',1);
-                param(i).bias = spm_diffeo_old('resize',param(i).bias,size(img(i).f));
-                spm_diffeo_old('boundary',0);
+                spm_diffeo('boundary',1);
+                param(i).bias = spm_diffeo('resize',param(i).bias,size(img(i).f));
+                spm_diffeo('boundary',0);
                 bmom          = spm_field('vel2mom', param(i).bias, [vxi b_settings(i,:)*sc]);
                 param(i).eb   = sum(bmom(:).*param(i).bias(:));
                 clear bmom
@@ -286,12 +285,12 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
             end
 
             if all(isfinite(w_settings(i,:)))
-                param(i).v0   = spm_diffeo_old('resize',param(i).v0,d);
+                param(i).v0   = spm_diffeo('resize',param(i).v0,d);
                 for i1=1:3
                     s = pyramid(level).d(i1)/pyramid(level+1).d(i1);
                     param(i).v0(:,:,:,i1) = param(i).v0(:,:,:,i1)*s;
                 end
-                m0          = spm_diffeo_old('vel2mom',param(i).v0,[vx w_settings(i,:)*sc]);
+                m0          = spm_diffeo('vel2mom',param(i).v0,[vx w_settings(i,:)*sc]);
                 param(i).ev = sum(sum(sum(sum(m0.*param(i).v0))));
                 clear m0
             else
@@ -444,7 +443,7 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
                 gra  = zeros(12,1);
                 for m=1:d(3)
                     if all(isfinite(w_settings(i,:)))
-                        dt    = spm_diffeo_old('det',param(i).J(:,:,m,:,:));
+                        dt    = spm_diffeo('det',param(i).J(:,:,m,:,:));
                         y     = transform_warp(M,param(i).y(:,:,m,:));
                     else
                         dt    = ones(d(1:2),'single');
@@ -453,10 +452,10 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
                         y     = transform_warp(M,y);
                     end
 
-                    f     = spm_diffeo_old('bsplins',img(i).f,y,ord);
+                    f     = spm_diffeo('bsplins',img(i).f,y,ord);
 
                     if all(isfinite(b_settings(i,:)))
-                        ebias = exp(spm_diffeo_old('samp',param(i).bias,y));
+                        ebias = exp(spm_diffeo('pullc',param(i).bias,y));
                     else
                         ebias = ones(size(f),'single');
                     end
@@ -623,7 +622,7 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
 
                     for m=1:d(3)
                         if all(isfinite(w_settings(i,:)))
-                            dt    = spm_diffeo_old('det',param(i).J(:,:,m,:,:))*abs(det(M(1:3,1:3)));
+                            dt    = spm_diffeo('det',param(i).J(:,:,m,:,:))*abs(det(M(1:3,1:3)));
                             y     = transform_warp(M,param(i).y(:,:,m,:));
                         else
                             dt    = ones(d(1:2),'single')*abs(det(M(1:3,1:3)));
@@ -632,8 +631,8 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
                             y     = transform_warp(M,y);
                         end
 
-                        f           = spm_diffeo_old('bsplins',img(i).f,y,ord);
-                        ebias       = exp(spm_diffeo_old('samp',param(i).bias,y));
+                        f           = spm_diffeo('bsplins',img(i).f,y,ord);
+                        ebias       = exp(spm_diffeo('pullc',param(i).bias,y));
 
                         msk         = isfinite(f) & isfinite(ebias);
                         smu         = mu(:,:,m).*ebias;
@@ -652,8 +651,8 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
                     else
                         y    = transform_warp(M,identity(d));
                     end
-                    gra  = spm_diffeo_old('push',gra,y,size(param(i).bias));
-                    Hess = spm_diffeo_old('push',Hess,y,size(param(i).bias));
+                    gra  = spm_diffeo('push',gra,y,size(param(i).bias));
+                    Hess = spm_diffeo('push',Hess,y,size(param(i).bias));
                     clear y
 
                     vxi           = sqrt(sum(img(i).mat(1:3,1:3).^2));
@@ -699,12 +698,12 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
                     M    = img(i).mat\param(i).R*M_avg;
 
                     for m=1:d(3)
-                        dt    = spm_diffeo_old('det',param(i).J(:,:,m,:,:))*abs(det(M(1:3,1:3)));
+                        dt    = spm_diffeo('det',param(i).J(:,:,m,:,:))*abs(det(M(1:3,1:3)));
                         y     = transform_warp(M,param(i).y(:,:,m,:));
-                        f     = spm_diffeo_old('bsplins',img(i).f,y,ord);
+                        f     = spm_diffeo('bsplins',img(i).f,y,ord);
 
                         if all(isfinite(b_settings(i,:)))
-                            ebias = exp(spm_diffeo_old('samp',param(i).bias,y));
+                            ebias = exp(spm_diffeo('pullc',param(i).bias,y));
                         else
                             ebias = ones(size(f),'single');
                         end
@@ -738,8 +737,8 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
                     Hess        = Hess*prec(i);
                     gra         = gra*prec(i);
 
-                    gra         = gra + spm_diffeo_old('vel2mom',param(i).v0,[vx w_settings(i,:)*sc]);
-                    param(i).v0 = param(i).v0 - spm_diffeo_old('fmg',Hess, gra, [vx w_settings(i,:)*sc 2 2]); % Gauss-Newton
+                    gra         = gra + spm_diffeo('vel2mom',param(i).v0,[vx w_settings(i,:)*sc]);
+                    param(i).v0 = param(i).v0 - spm_diffeo('fmg',Hess, gra, [vx w_settings(i,:)*sc 2 2]); % Gauss-Newton
 
                     clear Hess gra
                 end
@@ -765,7 +764,7 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
             %-----------------------------------------------------------------------
             for i=1:numel(param)
                 if all(isfinite(w_settings(i,:)))
-                    m0          = spm_diffeo_old('vel2mom',param(i).v0,[vx w_settings(i,:)*sc]);
+                    m0          = spm_diffeo('vel2mom',param(i).v0,[vx w_settings(i,:)*sc]);
                     param(i).ev = sum(sum(sum(sum(m0.*param(i).v0))));
                     clear m0
                 end
@@ -931,10 +930,10 @@ if need_mom
             M   = img(i).mat\param(i).R*M_avg;
 
             for m=1:d(3)
-                dt    = spm_diffeo_old('det',param(i).J(:,:,m,:,:));
+                dt    = spm_diffeo('det',param(i).J(:,:,m,:,:));
                 y     = transform_warp(M,param(i).y(:,:,m,:));
-                f     = spm_diffeo_old('bsplins',img(i).f,y,ord);
-                ebias = exp(spm_diffeo_old('samp',param(i).bias,y));
+                f     = spm_diffeo('bsplins',img(i).f,y,ord);
+                ebias = exp(spm_diffeo('pullc',param(i).bias,y));
                 b     = (f-mu(:,:,m).*ebias).*ebias.*dt;
                 b(~isfinite(b)) = 0;
                 mom(:,:,m) = b;
@@ -1030,7 +1029,7 @@ if need_jac
     out.jac = {};
     for i=numel(param):-1:1
         if all(isfinite(w_settings(i,:)))
-            dt = spm_diffeo_old('det',param(i).J);
+            dt = spm_diffeo('det',param(i).J);
             if any(strcmp('wjac',output))
                 [pth,nam]   = fileparts(Nii(i).dat.fname);
                 nam         = fullfile(pth,['j_' nam '.nii']);
@@ -1058,7 +1057,7 @@ if need_div
     out.div = {};
     for i=1:numel(param)
         if all(isfinite(w_settings(i,:)))
-            dv = spm_diffeo_old('div',param(i).v0);
+            dv = spm_diffeo('div',param(i).v0);
             if any(strcmp('wdiv',output))
                 [pth,nam]   = fileparts(Nii(i).dat.fname);
                 nam         = fullfile(pth,['dv_' nam '.nii']);
@@ -1132,7 +1131,7 @@ for m=1:d(3)
         M = img(i).mat\param(i).R*M_avg;
         if ~isempty(param(i).y)
             y     = transform_warp(M,param(i).y(:,:,m,:));
-            Dt{i} = spm_diffeo_old('det',param(i).J(:,:,m,:,:))*abs(det(M(1:3,1:3)));
+            Dt{i} = spm_diffeo('det',param(i).J(:,:,m,:,:))*abs(det(M(1:3,1:3)));
         else
             Dt{i} = ones(d(1:2),'single')*abs(det(M(1:3,1:3)));
             y     = zeros([d(1:2) 1 3],'single');
@@ -1140,9 +1139,9 @@ for m=1:d(3)
             y     = transform_warp(M,y);
         end
 
-        F{i}  = spm_diffeo_old('bsplins',img(i).f,y,ord);
+        F{i}  = spm_diffeo('bsplins',img(i).f,y,ord);
         if ~isempty(param(i).bias)
-            Bf{i} = exp(spm_diffeo_old('bsplins',param(i).bias,y,[1 1 1 ord(4:end)])); % Trilinear
+            Bf{i} = exp(spm_diffeo('bsplins',param(i).bias,y,[1 1 1 ord(4:end)])); % Trilinear
         else
             Bf{i} = ones(d(1:2),'single');
         end
@@ -1192,7 +1191,7 @@ for m=1:d(3)
         M = img(i).mat\param(i).R*M_avg;
         if ~isempty(param(i).y)
             y     = transform_warp(M,param(i).y(:,:,m,:));
-            Dt{i} = spm_diffeo_old('det',param(i).J(:,:,m,:,:))*abs(det(M(1:3,1:3)));
+            Dt{i} = spm_diffeo('det',param(i).J(:,:,m,:,:))*abs(det(M(1:3,1:3)));
         else
             Dt{i} = ones(d(1:2),'single')*abs(det(M(1:3,1:3)));
             y     = zeros([d(1:2) 1 3],'single');
@@ -1211,13 +1210,13 @@ for m=1:d(3)
                 Jm = repmat(reshape(single(M(1:3,1:3)),[1 1 3 3]),[d(1) d(2) 1 1]);
             end
 
-            [F{i} ,d1,d2,d3]  = spm_diffeo_old('bsplins',img(i).f,y,ord); 
+            [F{i} ,d1,d2,d3]  = spm_diffeo('bsplins',img(i).f,y,ord); 
             Df{1} = Jm(:,:,1,1).*d1 + Jm(:,:,2,1).*d2 + Jm(:,:,3,1).*d3;
             Df{2} = Jm(:,:,1,2).*d1 + Jm(:,:,2,2).*d2 + Jm(:,:,3,2).*d3;
             Df{3} = Jm(:,:,1,3).*d1 + Jm(:,:,2,3).*d2 + Jm(:,:,3,3).*d3;
 
             if ~isempty(param(i).bias)
-                [Bf{i},d1,d2,d3]  = spm_diffeo_old('bsplins',param(i).bias,y,[1 1 1 ord(4:end)]); % Trilinear
+                [Bf{i},d1,d2,d3]  = spm_diffeo('bsplins',param(i).bias,y,[1 1 1 ord(4:end)]); % Trilinear
                 Bf{i} = exp(Bf{i});
                 Db{1} = Jm(:,:,1,1).*d1 + Jm(:,:,2,1).*d2 + Jm(:,:,3,1).*d3;
                 Db{2} = Jm(:,:,1,2).*d1 + Jm(:,:,2,2).*d2 + Jm(:,:,3,2).*d3;
@@ -1230,9 +1229,9 @@ for m=1:d(3)
             end
             clear d1 d2 d3
         else
-            F{i}  = spm_diffeo_old('bsplins',img(i).f,y,ord);
+            F{i}  = spm_diffeo('bsplins',img(i).f,y,ord);
             if ~isempty(param(i).bias)
-                Bf{i} = exp(spm_diffeo_old('bsplins',param(i).bias,y,[1 1 1 ord(4:end)])); % Trilinear
+                Bf{i} = exp(spm_diffeo('bsplins',param(i).bias,y,[1 1 1 ord(4:end)])); % Trilinear
             else
                 Bf{i} = ones(d(1:2),'single');
             end
