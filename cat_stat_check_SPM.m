@@ -122,11 +122,6 @@ if check_zscore
   if repeated_anova
     [rw,cl] = find(xX.I == length(xX.iB)); % find column which codes subject factor (length(xX.iB) -> n_subj)
     subj_col = cl(1);
-    if subj_col == 3
-      group_col = 2;
-    else
-      group_col = 3;
-    end           
     n_samples = max(xX.I(:,subj_col));
     
   else
