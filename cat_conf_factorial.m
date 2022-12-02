@@ -1063,10 +1063,103 @@ globals2.help    = {
                    ''
 }';
 
+%--------------------------------------------------------------------------
+% name Name
+%--------------------------------------------------------------------------
+name         = cfg_entry;
+name.tag     = 'name';
+name.name    = 'Name';
+name.help    = {'Name of contrast.'};
+name.strtype = 's';
+name.num     = [1 Inf];
+
+%--------------------------------------------------------------------------
+% convec T-contrast weights vector
+%--------------------------------------------------------------------------
+convec         = cfg_entry;
+convec.tag     = 'weights';
+convec.name    = 'Weights vector';
+convec.help    = {
+    'Enter T-contrast weights vector.'
+    'This is done similarly to the contrast manager. A 1 x n vector should be entered for T-contrasts.'
+    'Contrast weight vectors will be padded with zeros to the correct length.'
+    };
+convec.strtype = 'r';
+convec.num     = [1 Inf];
+
+%==========================================================================
+% tcon T-contrast
+%==========================================================================
+tcon      = cfg_branch;
+tcon.tag  = 'tcon';
+tcon.name = 'T-contrast';
+tcon.val  = {name convec};
+tcon.help = {
+    '* Simple one-dimensional contrasts for an SPM{T}'
+    ''
+    'A simple contrast for an SPM{T} tests the null hypothesis c''B=0 against the one-sided alternative c''B>0, where c is a column vector. '
+    ''
+    '    Note that throughout SPM, the transpose of the contrast weights is used for display and input. That is, you''ll enter and visualise c''. For an SPM{T} this will be a row vector.'
+    ''
+    'For example, if you have a design in which the first two columns of the design matrix correspond to the effects for "baseline" and "active" conditions respectively, then a contrast with weights c''=[-1,+1,0,...] (with zero weights for any other parameters) tests the hypothesis that there is no "activation" (the parameters for both conditions are the same), against the alternative that there is some activation (i.e. the parameter for the "active" condition is greater than that for the "baseline" condition). The resulting SPM{T} (created by spm_getSPM.m) is a statistic image, with voxel values the value of the t-statistic for the specified contrast at that location. Areas of the SPM{T} with high voxel values indicate evidence for "activation". To look for areas of relative "de-activation", the inverse contrast could be used c''=[+1,-1,0,...].'
+    ''
+    'Similarly, if you have a design where the third column in the design matrix is a covariate, then the corresponding parameter is essentially a regression slope, and a contrast with weights c''=[0,0,1,0,...] (with zero weights for all parameters but the third) tests the hypothesis of zero regression slope, against the alternative of a positive slope. This is equivalent to a test no correlation, against the alternative of positive correlation. If there are other terms in the model beyond a constant term and the covariate, then this correlation is apartial correlation, the correlation between the data Y and the covariate, after accounting for the other effects.'
+    }';
+
+  %--------------------------------------------------------------------------
+% convec F-contrast weights matrix
+%--------------------------------------------------------------------------
+convec         = cfg_entry;
+convec.tag     = 'weights';
+convec.name    = 'Weights matrix';
+convec.help    = {
+    'Enter F-contrast weights matrix.'
+    'This is done similarly to the contrast manager.'
+    'Contrast weight matrices will be padded with zeros to the correct length.'
+    };
+convec.strtype = 'r';
+convec.num     = [Inf Inf];
+
+%==========================================================================
+% fcon F-contrast
+%==========================================================================
+fcon      = cfg_branch;
+fcon.tag  = 'fcon';
+fcon.name = 'F-contrast';
+fcon.val  = {name convec};
+fcon.help = {
+    '* Linear constraining matrices for an SPM{F}'
+    ''
+    'The null hypothesis c''B=0 can be thought of as a (linear) constraint on the full model under consideration, yielding a reduced model. Taken from the viewpoint of two designs, with the full model an extension of the reduced model, the null hypothesis is that the additional terms in the full model are redundent.'
+    ''
+    'Statistical inference proceeds by comparing the additional variance explained by full design over and above the reduced design to the error variance (of the full design), an "Extra Sum-of-Squares" approach yielding an F-statistic for each voxel, whence an SPM{F}.'
+    ''
+    }';
+
+%--------------------------------------------------------------------------
+% consess Contrast Sessions
+%--------------------------------------------------------------------------
+consess        = cfg_repeat;
+consess.tag    = 'consess';
+consess.name   = 'Contrast Sessions';
+consess.help   = {
+    'For general linear model Y = XB + E with data Y, desgin matrix X, parameter vector B, and (independent) errors E, a contrast is a linear combination of the parameters c''B. Usually c is a column vector, defining a simple contrast of the parameters, assessed via an SPM{T}. More generally, c can be a matrix (a linear constraining matrix), defining an "F-contrast" assessed via an SPM{F}.'
+    ''
+    'The vector/matrix c contains the contrast weights. It is this contrast weights vector/matrix that must be specified to define the contrast. The null hypothesis is that the linear combination c''B is zero. The order of the parameters in the parameter (column) vector B, and hence the order to which parameters are referenced in the contrast weights vector c, is determined by the construction of the design matrix.'
+    ''
+    'There are two types of contrast in SPM: simple contrasts for SPM{T}, and "F-contrasts" for SPM{F}.'
+    ''
+    'For a thorough theoretical treatment, see the Human Brain Function book and the statistical literature referenced therein.'
+    ''
+    }';
+consess.values = {tcon fcon};
+consess.num    = [0 Inf];
+  
+
 voxel_cov         = cfg_branch;
 voxel_cov.tag     = 'voxel_cov';
 voxel_cov.name    = 'Voxel-wise covariate (experimental!)';
-voxel_cov.val     = {cov iCFI iCC2 globals2};
+voxel_cov.val     = {cov iCFI iCC2 globals2 consess};
 voxel_cov.help    = {
     'This experimental option allows the specification of a voxel-wise covariate. This can be used (depending on the contrast defined) to (1) remove the confounding effect of structural data (e.g. GM) on functional data or (2) investigate the relationship (regression) between functional and structural data.'
     ''
@@ -1345,7 +1438,10 @@ end
 
 % call SPM factorial design
 out = spm_run_factorial_design(job);
-job = cat_stat_check_SPM(job);
+
+if isfield(job.check_SPM.check_SPM_zscore,'do_check_zscore') || job.check_SPM.check_SPM_ortho
+  job = cat_stat_check_SPM(job);
+end
 
 if voxel_covariate
   cat_stat_spm(out.spmmat{1});
@@ -1359,10 +1455,41 @@ if voxel_covariate
     SPM.xC(nc+1).gSF = gSF;
   end
     
-  % contrast should be defined right after model creation
-  [Ic0,xCon] = spm_conman(SPM,'T',Inf,...
-        '  Select contrast(s)...',' ',1);
-      
+  if isempty(job.des.fd.voxel_cov.consess)
+    % contrast should be defined right after model creation
+    [Ic0,xCon] = spm_conman(SPM,'T',Inf,...
+          '  Select contrast(s)...',' ',1);
+  else
+    job2.spmmat = cellstr(fullfile(SPM.swd,'SPM.mat'));
+    job2.delete = 1;
+    Ic0 = [];
+    for i = 1:numel(job.des.fd.voxel_cov.consess)
+      job2.consess{i} = job.des.fd.voxel_cov.consess{i};
+      if isfield(job2.consess{i},'tcon')
+        job2.consess{i}.tcon.sessrep = 'none';
+      else
+        job2.consess{i}.fcon.sessrep = 'none';
+      end
+    end
+    spm_run_con(job2);
+    for i = 1:numel(job.des.fd.voxel_cov.consess)
+      if isfield(job2.consess{i},'tcon')
+        [c,I,emsg,imsg] = spm_conman('ParseCon',job2.consess{i}.tcon.weights,SPM.xX.xKXs,'T');
+        DxCon = spm_FcUtil('Set',job2.consess{i}.tcon.name,'T','c',c,SPM.xX.xKXs);
+      else
+        [c,I,emsg,imsg] = spm_conman('ParseCon',job2.consess{i}.tcon.weights,SPM.xX.xKXs,'F');
+        DxCon = spm_FcUtil('Set',job2.consess{i}.fcon.name,'F','c',job2.consess{i}.fcon.weights,SPM.xX.xKXs);
+      end
+      if isempty(SPM.xCon)
+          SPM.xCon = DxCon;
+      elseif ~isempty(DxCon)
+          SPM.xCon(end+1) = DxCon;
+      end
+      Ic0 = [Ic0 length(SPM.xCon)];
+      xCon = SPM.xCon;
+    end
+  end
+  
   % set threshold values to skip interactive selection because we don't need that
   xSPM = SPM;
   xSPM.xCon      = xCon;
@@ -1372,7 +1499,7 @@ if voxel_covariate
   xSPM.u         = 0.001;
   xSPM.k         = 0;
   
-  [SPM,xSPM] = spm_getSPM(xSPM);
+  SPM = spm_contrasts(xSPM,Ic0);
 
   % save new voxel-wise vSPM.mat and remove SPM.mat because it should not
   % be used anymore

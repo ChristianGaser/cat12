@@ -40,6 +40,12 @@ else
   else
     check_ortho = false;
   end
+  
+  if ~isfield(job,'check_SPM_zscore')
+    job.check_SPM_zscore = job.check_SPM.check_SPM_zscore;
+    job.check_SPM_ortho = job.check_SPM.check_SPM_ortho;
+  end
+  
   check_zscore = isfield(job.check_SPM_zscore,'do_check_zscore');
   
   if check_zscore
@@ -204,13 +210,13 @@ if check_ortho
     if ~isempty(job.check_SPM_zscore.do_check_zscore.fname)
     dpi = cat_get_defaults('print.dpi'); 
     if isempty(dpi), dpi = 150; end
-
-    if isempty(job.check_SPM_zscore.do_check_zscore.outdir{1}), job.check_SPM_zscore.do_check_zscore.outdir{1} = pwd; end
-
-    % save
-    warning('OFF','MATLAB:print:UIControlsScaled');
-    fname = fullfile(job.check_SPM_zscore.do_check_zscore.outdir{1},[job.check_SPM_zscore.do_check_zscore.fname 'DesignOrthogonality.png']);
-    try, print(h, '-dpng', '-opengl', sprintf('-r%d',dpi), fname); end
+  
+      if isempty(job.check_SPM_zscore.do_check_zscore.outdir{1}), job.check_SPM_zscore.do_check_zscore.outdir{1} = pwd; end
+  
+      % save
+      warning('OFF','MATLAB:print:UIControlsScaled');
+      fname = fullfile(job.check_SPM_zscore.do_check_zscore.outdir{1},[job.check_SPM_zscore.do_check_zscore.fname 'DesignOrthogonality.png']);
+      try, print(h, '-dpng', '-opengl', sprintf('-r%d',dpi), fname); end
     warning('ON','MATLAB:print:UIControlsScaled');
     end
 
