@@ -189,6 +189,7 @@ function tools = cat_conf_tools(expert)
   %urqio                       = conf_vol_urqio; % this cause problems
   iqr                         = conf_stat_IQR(data_xml);
   qa                          = conf_vol_qa(expert,outdir);
+  catreport                   = conf_main_report(data_xml,outdir,expert);
   %multi_subject_imcalc        = conf_vol_imcalc(prefix);
   
   
@@ -235,6 +236,7 @@ function tools = cat_conf_tools(expert)
     avg_img, ...                          cat.pre.vtoolsexp.
     data2mat, ...                         cat.pre.vtools.
     ...
+    catreport, ...
     boxplot, ...                          cat.stat.eval ... print of XML data by the boxplot function and saving as images  
     getCSVXML, ...                        cat.stat.eval ... read out of XML/CSV data and export as batch dependency 
     getXML, ...
@@ -247,6 +249,58 @@ function tools = cat_conf_tools(expert)
   %if expert 
   %  tools.values = [tools.values,{urqio}]; 
   %end
+return
+%_______________________________________________________________________
+function report = conf_main_report(data_xml,outdir,expert)
+%conf_main_report. Retrospective creation of CAT report.
+
+  data_xml.tag      = 'files';
+  data_xml.name     = 'CAT XML files'; 
+  data_xml.help     = {
+    'Select CAT XML files from the report directories of the subjects those report has to be (re)generated.'
+  };
+
+  Pm                = data_xml;
+  Pm.name           = 'Intensity Normalized Images';
+  Pm.tag            = 'Pm';
+  Pm.filter         = {'image','^m.*\.(nii.gz)$'};
+  Pm.hidden         = expert < 1;
+  Pm.help           = {
+    'Select bias corrected images to replace the default settings. '
+    'The same subjects has to be used as for the XML files. '
+  };
+
+  Pp0               = data_xml;
+  Pp0.name          = 'Label maps';
+  Pp0.tag           = 'Pp0';
+  Pp0.filter        = {'image','^p0.*\.(nii.gz)$'};
+  Pp0.hidden        = expert < 1;
+  Pp0.help          = {
+    'Select segmentation label images to replace the default settings. '
+    'The same subjects has to be used as for the XML files. '
+  };
+
+  print             = cfg_menu;
+  print.tag         = 'print';
+  print.name        = 'Print setting';
+  print.labels      = {'volume only','volume and surfaces'};
+  print.values      = {1 2};
+  print.def         = @(val)cat_get_defaults('extopts.print', val{:});
+  print.hidden      = expert < 1; 
+  print.help        = {
+    'Create final CAT report that requires Java. '
+  };
+
+  % remove old image field    
+  report            = cfg_exbranch;
+  report.val        = {data_xml Pm Pp0 print outdir}; % xmlfields
+  report.help       = {[...
+    'Retrospective creation of the CAT report PDF/JPG by using the CAT preprocessing XML file, e.g., ' ...
+    'when report creation was not possible or failed. ']};
+  report.tag        = 'catreport';
+  report.vout       = @vout_report;
+  report.prog       = @cat_main_report;
+  report.name       = 'Retrospective CAT Report';
 return
 %_______________________________________________________________________
 function imcalc = conf_vol_imcalc(prefix)
@@ -4104,6 +4158,17 @@ function cdep = vout_urqio(job)
     cdep(1)=[];
   end
 %%
+return;
+%_______________________________________________________________________
+function dep = vout_report(varargin)
+  dep(1)            = cfg_dep;
+  dep(1).sname      = 'CAT PDF Report';
+  dep(1).src_output = substruct('.','files','()',{':'});
+  dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  dep(2)            = cfg_dep;
+  dep(2).sname      = 'CAT JPG Report';
+  dep(2).src_output = substruct('.','filesj','()',{':'});
+  dep.tgt_spec   = cfg_findspec({{'filter','any','strtype','e'}});
 return;
 %_______________________________________________________________________
 function dep = vout_sanlm(varargin)

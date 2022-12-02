@@ -167,10 +167,12 @@ function str = cat_main_reportstr(job,res,qa)
     str{1}(end).value = [str{1}(end).value sprintf(' / %s{%s}',cp{1},APPstr{job.extopts.APP+1})];
 
     % 1 line 3: COM
-    if isfield(job.extopts,'setCOM') && isfield(catdef.extopts,'setCOM') && job.extopts.setCOM == catdef.extopts.setCOM, cp{1} = npara; else, cp{1} = cpara; end
-    COMstr = {'noCOM','COM'}; COMstr{10+1} = 'noTPM'; COMstr{11+1} = 'fTPM'; COMstr{120+1} = 'noMSK';
-    str{1}(end).name  = [str{1}(end).name(1:end-1) ' / setCOM ']; 
-    str{1}(end).value = [str{1}(end).value sprintf(' / %s{%s}',cp{1},COMstr{job.extopts.setCOM+1})];
+    if isfield(job.extopts,'setCOM') && isfield(catdef.extopts,'setCOM') 
+      if job.extopts.setCOM == catdef.extopts.setCOM, cp{1} = npara; else, cp{1} = cpara; end
+      COMstr = {'noCOM','COM'}; COMstr{10+1} = 'noTPM'; COMstr{11+1} = 'fTPM'; COMstr{120+1} = 'noMSK';
+      str{1}(end).name  = [str{1}(end).name(1:end-1) ' / setCOM ']; 
+      str{1}(end).value = [str{1}(end).value sprintf(' / %s{%s}',cp{1},COMstr{job.extopts.setCOM+1})];
+    end
 
     % display only abnormal values
     if isfield(job.extopts,'affmod') && any(job.extopts.affmod ~= 0),
@@ -206,7 +208,7 @@ function str = cat_main_reportstr(job,res,qa)
       str{1}(end).name  = [str{1}(end).name(1:end-1) 'LBC /'];
       str{1}(end).value = [str{1}(end).value sprintf('%s{%s}',cp{1},LBCstr{LBC})]; % {round(job.opts.LBC*4)+1}
     end
-    if job.opts.biasacc>0
+    if isfield(job.opts,'biasacc') && job.opts.biasacc>0
       if job.opts.biasacc == catdef.opts.biasstr, cp{1} = npara; else, cp{1} = cpara; end % yes, catdef.opts.biasstr!
       biasacc = {'ultralight','light','medium','strong','heavy'};
       str{1}(end).name  = [str{1}(end).name(1:end-1) 'biasstr '];  
@@ -214,7 +216,7 @@ function str = cat_main_reportstr(job,res,qa)
       if job.extopts.expertgui % add the value ... too long ... 
         str{1}(end).value = [str{1}(end).value sprintf('(%0.2f,reg:%0.0e;fwhm:%0.0f)',job.opts.biasacc,job.opts.biasreg,job.opts.biasfwhm)]; 
       end
-    elseif job.opts.biasstr>0
+    elseif isfield(job.opts,'biasacc') && job.opts.biasstr>0
       if job.opts.biasstr == catdef.opts.biasstr, cp{1} = npara; else, cp{1} = cpara; end
       biasstr = {'ultralight','light','medium','strong','heavy'};
       str{1}(end).name  = [str{1}(end).name(1:end-1) 'biasstr '];  
@@ -319,15 +321,17 @@ function str = cat_main_reportstr(job,res,qa)
   % ############
   % WMHC in case of SPM segmentation is SPM
   % ############
-    if job.extopts.expertgui
-      str{1} = [str{1} struct('name', 'KAMAP / WMHC / SLC / SRP / restype:','value',...
+    if isfield(job.extopts,'spm_kamap')
+      if job.extopts.expertgui && isfield(job.extopts,'SRP')
+        str{1} = [str{1} struct('name', 'KAMAP / WMHC / SLC / SRP / restype:','value',...
              sprintf('%s{%d} / %s{%d} / %s{%d} / %s{%d} / %s{%s}',...
             cp{1},job.extopts.spm_kamap, cp{2},job.extopts.WMHC, cp{3},job.extopts.SLC, cp{4},job.extopts.SRP, cp{5},restype))];
-    else
-      kamapstr  = {'SPM US','','KAMAP'};  
-      wmhcstr   = {'none (WMH=GM)','temporary (WMH=GM)','(WMH=WM)','own class'};
-      str{1} = [str{1} struct('name', 'Initial Segmentation / WMH Correction / Int. Res.:',...
-        'value',sprintf('%s{%s} / %s{%s} / %s{%s}',cp{1},kamapstr{job.extopts.spm_kamap+1}, cp{2},wmhcstr{job.extopts.WMHC+1}, cp{5},restype))];
+      else
+        kamapstr  = {'SPM US','','KAMAP'};  
+        wmhcstr   = {'none (WMH=GM)','temporary (WMH=GM)','(WMH=WM)','own class'};
+        str{1} = [str{1} struct('name', 'Initial Segmentation / WMH Correction / Int. Res.:',...
+          'value',sprintf('%s{%s} / %s{%s} / %s{%s}',cp{1},kamapstr{job.extopts.spm_kamap+1}, cp{2},wmhcstr{job.extopts.WMHC+1}, cp{5},restype))];
+      end
     end
     if ~strcmp(restype, 'native')
       str{1}(end).value = [str{1}(end).value sprintf('(%s{%0.2f %0.2f})',npara, job.extopts.restypes.(restype))];

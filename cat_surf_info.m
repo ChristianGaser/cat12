@@ -381,6 +381,10 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb,useavg)
               sinfo(i).Pmesh = sinfo(i).fname;
             end
           end
+          Pcentral = fullfile(sinfo(i).pp,[strrep(sinfo(i).ff,['.' sinfo(i).texture],'.central') '.gii']);
+          if exist(Pcentral,'file') && ~useavg
+            sinfo(i).Pmesh = Pcentral;
+          end
         otherwise
           sinfo(i).Pdata =sinfo(i).fname;
           if exist(Pcentral,'file') && ~useavg
