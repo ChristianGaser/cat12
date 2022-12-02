@@ -858,7 +858,7 @@ switch lower(action)
           labeldir = sinfo1(1).pp;
         end
         % find nii-files
-        if exist(labeldir,'dir') && exist(labeldir,'dir')
+        if exist(labeldir,'dir')
           H.niftis = [ ...
             cat_vol_findfiles(labeldir,sprintf('m%s.nii',sinfo1(1).name),struct('maxdepth',1)); 
             cat_vol_findfiles(labeldir,sprintf('mi%s.nii',sinfo1(1).name),struct('maxdepth',1)); 
@@ -3118,10 +3118,11 @@ for pi=pis
   end
 
   if size(C,1) ~= size(curv,1)
-    error('cat_surf_render:add_wrong_mesh',[...
+    warning('cat_surf_render:add_wrong_mesh',[...
       'Colordata does not fit to underlying mesh.\n' ...
       '  Colordata:   %d values\n' ...
       '  Surface:     %d vertices'],size(curv,1),size(C,1) );
+    return
   end
 
  %C = repmat(~any(v,1),3,1)' .* curv + repmat(any(v,1),3,1)' .* C;
