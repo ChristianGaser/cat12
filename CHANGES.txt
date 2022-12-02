@@ -1,4 +1,19 @@
 ------------------------------------------------------------------------
+r2152 | gaser | 2022-12-02 16:35:36
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M Makefile
+ M cat_conf_factorial.m
+ M cat_stat_check_SPM.m
+ M doc/cat.html
+
+
+Changed: Added contrast field to cat_conf_factorial to define contrasts for 
+         voxel-wise covariate.
+Fixed:   Corrected fieldnames in cat_stat_check_SPM that were different.
+------------------------------------------------------------------------
 r2151 | gaser | 2022-12-01 11:35:59
 
 Changed paths:

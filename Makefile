@@ -84,6 +84,7 @@ update: docs copy_longmode
 	-@cat INSTALL_info.txt >> INSTALL.txt
 	-@cp cat_spm_results_ui.m ../tfce/
 	-@perl -p -i -e "s/${OLDVERSION}/${NEWVERSION}/g" spm_cat12.m
+	-@chmod a+x CAT.*/*
 
 # zip release
 zip: update clean
