@@ -1,4 +1,14 @@
 ------------------------------------------------------------------------
+r2155 | gaser | 2022-12-02 16:37:30
+
+Changed paths:
+ M CHANGES.txt
+
+
+Changed: Added contrast field to cat_conf_factorial to define contrasts for 
+         voxel-wise covariate.
+Fixed:   Corrected fieldnames in cat_stat_check_SPM that were different.
+------------------------------------------------------------------------
 r2152 | rdahnke | 2022-12-02 12:53:43
 
 Changed paths:
