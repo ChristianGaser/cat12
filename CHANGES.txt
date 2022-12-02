@@ -1,18 +1,22 @@
 ------------------------------------------------------------------------
-r2152 | gaser | 2022-12-02 16:35:36
+r2152 | rdahnke | 2022-12-02 12:53:43
 
 Changed paths:
  M CHANGES.txt
- M Contents.m
- M Makefile
- M cat_conf_factorial.m
- M cat_stat_check_SPM.m
- M doc/cat.html
+ M cat_conf_tools.m
+ M cat_main1639.m
+ M cat_main_reportfig.m
+ M cat_main_reportstr.m
+ M cat_surf_info.m
+ M cat_surf_rename.m
+ M cat_surf_render2.m
 
 
-Changed: Added contrast field to cat_conf_factorial to define contrasts for 
-         voxel-wise covariate.
-Fixed:   Corrected fieldnames in cat_stat_check_SPM that were different.
+New:     Added matlabbatch cat_main_report for retrospective creation of CAT 
+         reports based on the XML file in cat_conf_tools. 
+Changed: Small addaptions to use cat_main_reportstr, cat_main_reportfig,
+         cat_surf_render2, cat_surf_info and cat_surf_rename
+         for the retrospective report generation. 
 ------------------------------------------------------------------------
 r2151 | gaser | 2022-12-01 11:35:59
 

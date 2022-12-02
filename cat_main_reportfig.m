@@ -206,7 +206,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     case {'bcgwhw','bcgwhn','bcgwhg'} 
       % CAT colormap with larger range colorrange from 0 (BG) to 1 (WM) to 2 (HD).  
       ytick        = [1,5:5:60];
-      if job.extopts.inv_weighting
+      if isfield(job.extopts,'inv_weighting') && job.extopts.inv_weighting
         Tth = [cat_stat_kmeans(Ym(Yp0(:)>0.5 & Yp0(:)<1.5),2,0),...
                cat_stat_kmeans(Ym(Yp0(:)>1.5 & Yp0(:)<2.5),5,0),...
                cat_stat_kmeans(Ym(Yp0(:)>2.5 & Yp0(:)<3.5),2,0)]; 
@@ -257,7 +257,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   end
   %if job.extopts.WMHC<1
   %  yticklabelp0{end-2} = ' \color[rgb]{1,0,1}no WMHC!';
-  if isfield(qa,'subjectmeasures')
+  if isfield(qa,'subjectmeasures') && isfield(qa.subjectmeasures, 'vol_rel_WMH') 
     if job.extopts.WMHC<2 
       if qa.subjectmeasures.vol_rel_WMH>0.01 || ...
         (qa.subjectmeasures.vol_abs_WMH / qa.subjectmeasures.vol_abs_CGW(3) )>0.02
@@ -613,6 +613,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         try spm_orthviews('BB', res.bb ./ mean(scale)); end
         dispmat = R; 
     end
+  else
+    dispmat = eye(4);
   end
   
   
@@ -749,7 +751,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         VT0x.pinfo = repmat([1;0],1,size(Yo,3));
         VT0x.dat(:,:,:) = Yo; 
 
-        if job.extopts.inv_weighting
+        if isfield(job.extopts,'inv_weighting') && job.extopts.inv_weighting
           Tth  = [cat_stat_kmeans(Yo(Yp0(:)>0.5 & Yp0(:)<1.5),2,0),...
                   cat_stat_kmeans(Yo(Yp0(:)>1.5 & Yp0(:)<2.5),5,0),...
                   cat_stat_kmeans(Yo(Yp0(:)>2.5 & Yp0(:)<3.5),2,0)]; 
@@ -779,7 +781,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
           end
           image((60:-1:1)','Parent',cc{1});
 
-          if job.extopts.inv_weighting
+          if isfield(job.extopts,'job.extopts.inv_weighting') && job.extopts.inv_weighting
             set(cc{1},'YTick',ytick,'YTickLabel',fliplr(yticklabeli),'XTickLabel','','XTick',[],'TickLength',[0 0],...
               'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal','YAxisLocation','right','xcolor',fontcolor,'ycolor',fontcolor);
           else  
@@ -864,7 +866,9 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         spm_orthviews('window',hhp0,[0 single(WMth)*cmmax]);
         spm_orthviews('addtruecolourimage',hhp0,Vidiff, BCGWH,0.4,maxdiff,-maxdiff); 
         spm_orthviews('redraw');
-        spm_orthviews('Reposition',[-25 0 0]);
+        if ~all(all(dispmat==eye(4)))
+          spm_orthviews('Reposition',[-25 0 0]);
+        end
         if 1
           spm_orthviews('Caption',hhp0,sprintf('WM tissue changes (FWHM %d mm)',res.long.smoothvol),'FontName',fontname,'FontSize',fontsize-1,'color',fontcolor,'FontWeight','Bold');
         end
@@ -931,6 +935,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       VO.dt      = [spm_type('FLOAT32') spm_platform('bigend')];
 
       % create main brackground image
+      if isempty(Yl1)
+        job.extopts.report.useoverlay = 0; 
+      elseif max(Yl1(:)) == 1
+        job.extopts.report.useoverlay = 3; 
+      end
       switch job.extopts.report.useoverlay
         case 0 % old default that shows only brain tissues
           VO.dat(:,:,:) = single(Yp0/3);
@@ -1073,7 +1082,15 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       % Yp0 legend 
       try
         spm_orthviews('window',hhp0,[0 cmmax]);
-        spm_orthviews('Reposition',[-25 0 0]); 
+        if all(all(dispmat==eye(4)))
+          % set new BB based on the segmentation 
+          V2 = VO; 
+          V2.dat(:,:,:) = Yp0; 
+          bb = spm_get_bbox( V2 , .5);
+          spm_orthviews('BB',bb*1.2);
+        else
+          spm_orthviews('Reposition',[-25 0 0]); 
+        end
         if ~isfield(res,'long')
           spm_orthviews('Caption',hhp0,'p0*.nii (Segmentation)','FontName',fontname,'FontSize',fontsize-1,'color',fontcolor,'FontWeight','Bold');
         end
@@ -1448,14 +1465,20 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
               i=1; hSD{i} = cat_surf_display(struct('data',PCS{i},'readsurf',0,'expert',2,...
                 'multisurf',1,'view',sview{i},'menu',0,'parent',hCS{i},'verb',0,'caxis',srange,'imgprint',struct('do',0))); 
             end
-            
+
             for i = 2:numel(hCS)
-              hSD{i} = cat_surf_display(struct('data',PCS{i},'readsurf',0,'expert',2,...
-                'multisurf',0,'view',sview{i},'menu',0,'parent',hCS{i},'verb',0,'caxis',srange,'imgprint',struct('do',0))); 
+              try
+                hSD{i} = cat_surf_display(struct('data',PCS{i},'readsurf',0,'expert',2,...
+                  'multisurf',0,'view',sview{i},'menu',0,'parent',hCS{i},'verb',0,'caxis',srange,'imgprint',struct('do',0))); 
+              end
             end
             
             % rigid reorientation + isotropic scaling
-            imat = spm_imatrix(res.Affine); Rigid = spm_matrix([imat(1:6) ones(1,3)*mean(imat(7:9)) 0 0 0]); clear imat;
+            if isfield(res,'Affine')
+              imat = spm_imatrix(res.Affine); Rigid = spm_matrix([imat(1:6) ones(1,3)*mean(imat(7:9)) 0 0 0]); clear imat;
+            else
+              Rigid = eye(4);
+            end
             for i = 1:numel(hSD)
               for ppi = 1:numel(hSD{i}{1}.patch)
                 try
@@ -1688,8 +1711,12 @@ if 1
   else
     longstr = ''; 
   end
-  job.imgprint.fname  = fullfile(pth_reportfolder,['cat' longstr 'report_'  nam '.' job.imgprint.type]); 
-  job.imgprint.fnamej = fullfile(pth_reportfolder,['cat' longstr 'reportj_' nam '.jpg']);
+  if ~isfield(job,'imgprint') || ~isfield(job.imgprint,'fname')
+    job.imgprint.fname  = fullfile(pth_reportfolder,['cat' longstr 'report_'  nam '.' job.imgprint.type]); 
+  end
+  if ~isfield(job,'imgprint') || ~isfield(job.imgprint,'fnamej')
+    job.imgprint.fnamej = fullfile(pth_reportfolder,['cat' longstr 'reportj_' nam '.jpg']);
+  end
 
   % save old settings of the SPM figure
   fgold.PaperPositionMode = get(fg,'PaperPositionMode');
@@ -1738,8 +1765,12 @@ if 1
   
   % the PDF is is an image because openGL is used but -painters would not look good for surfaces ... 
   try % does not work in headless mode without java
-    print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
-    print(fg, job.imgprint.ftype('jpeg'), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fnamej); 
+    if ~isempty(job.imgprint.fname)
+      print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
+    end
+    if ~isempty(job.imgprint.fnamej)
+      print(fg, job.imgprint.ftype('jpeg'), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fnamej);
+    end
   end
 
   %% reset font settings
@@ -1783,9 +1814,14 @@ if 1
   set(fg,'PaperPositionMode',fgold.PaperPositionMode,'resize',fgold.resize,'PaperPosition',fgold.PaperPosition);
   clear fgold
   
-  % be verbose
+  % be verbose ... but just one row to work in the retrospective batch mode
   try
-    fprintf('Print ''Graphics'' figure to: \n  %s\n',job.imgprint.fname);
+    if ~isempty(job.imgprint.fname)
+      fprintf('  %s\n',job.imgprint.fname); %Print ''Graphics'' figure to: \n  
+    end
+    if isempty(job.imgprint.fname) && ~isempty(job.imgprint.fnamej)
+      fprintf('  %s\n',job.imgprint.fname); % Print ''Graphics'' figure to: \n
+    end
   end
 end
 
