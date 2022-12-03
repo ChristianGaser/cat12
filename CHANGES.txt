@@ -1,4 +1,12 @@
 ------------------------------------------------------------------------
+r2156 | rdahnke | 2022-12-03 14:08:53
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_tools.m
+
+
+Fixed:    Small corrections on the CAT report batch.------------------------------------------------------------------------
 r2155 | gaser | 2022-12-02 16:37:30
 
 Changed paths:
