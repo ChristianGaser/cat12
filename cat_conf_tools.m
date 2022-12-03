@@ -255,7 +255,9 @@ function report = conf_main_report(data_xml,outdir,expert)
 %conf_main_report. Retrospective creation of CAT report.
 
   data_xml.tag      = 'files';
-  data_xml.name     = 'CAT XML files'; 
+  data_xml.name     = 'CAT XML files';
+  data_xml.val      = {};
+  data_xml.num      = [1 Inf];
   data_xml.help     = {
     'Select CAT XML files from the report directories of the subjects those report has to be (re)generated.'
   };
