@@ -1687,7 +1687,7 @@ SD.help   = {
   'In addition, sulcal depth can be transformed with sqrt-function to render the data more normally distributed, which is the recommended option for further statistical analysis.'
   ''
 };
-SD.labels = {'No','Yes','Transformed with sqrt'};
+SD.labels = {'No','Sulcal depth','Sulcal depth (transformed with sqrt)'};
 SD.values = {0,1,2};
 
 
