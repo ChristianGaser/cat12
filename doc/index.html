@@ -95,7 +95,7 @@
               <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data and also select "Surface and thickness estimation" under "Writing options" (for longitudinal data use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.long');">Segment Longitudinal Data</a>).<br>
               The surfaces data are saved in the folder "surf" and are named "?h.thickness.*" for cortical thickness.</li>
               <li>Optionally, <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfextract');">Extract Additional Surface Parameters</a> (e.g. sulcal depth, gyrification, cortical complexity).</li>
-              <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfresamp');">Resample & smooth</a> surface data (suggested starting value 12mm for cortical thickness and 20-25mm for folding measures<b><sup>1</sup></b>, use the default merging of hemispheres).<br>
+              <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfresamp');">Resample & smooth</a> surface data (suggested starting value 12mm for cortical thickness and sulcal depth and 20-25mm for folding measures<b><sup>1</sup></b>, use the default merging of hemispheres).<br>
               Select the "lh.thickness.*" data in the folder "surf". The resampled data are named "s12.mesh.resampled_32k.thickness.*" for 12mm smoothed, merged hemispheres that were resampled to 32k template space.</li>
               <li>Check data quality of the resampled data using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_homogeneity');">Sample Homogeneity</a>.</li>
               <li>Build <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">2nd-level Model</a> for the resampled data and check for design orthogonality and sample homogeneity.
@@ -3061,15 +3061,15 @@
             <p>The advantage of the standalone version is that no Matlab license is needed. Only the (free) Matlab Runtime R2017b (v93) has to be downloaded. However, there are some limitations (e.g. no parallelization and no interactive help in the GUI version) and the standalone version is mainly intended to run without GUI on Unix systems. Please check the <a href="https://neuro-jena.github.io/enigma-cat12/#standalone">ENIGMA CAT12</a> site fore more information and examples to call CAT12 from shell scripts.</p>
             <p>The MATLAB Compiler Runtime (MCR) enables you to run applications compiled within MATLAB using MATLAB Compiler. MCR does not require a MATLAB license and can be used to run the MATLAB compiled program on computers which do not have MATLAB installed. </p>
             <ul class="actions">
-              <li><a href="https://www.neuro.uni-jena.de/cat12/cat12_latest_R2017b_MCR_Mac.zip" class="button">CAT12 Standalone for Mac</a></li>
+              <li><a href="http://141.35.69.218/cat12/cat12_latest_R2017b_MCR_Mac.zip" class="button">CAT12 Standalone for Mac</a></li>
               <li><a href="https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/maci64/MCR_R2017b_maci64_installer.dmg.zip" class="button">MCR for Mac</a></li>
             </ul>
             <ul class="actions">
-              <li><a href="https://www.neuro.uni-jena.de/cat12/cat12_latest_R2017b_MCR_Linux.zip" class="button">CAT12 Standalone for Linux</a></li>
+              <li><a href="http://141.35.69.218/cat12/cat12_latest_R2017b_MCR_Linux.zip" class="button">CAT12 Standalone for Linux</a></li>
               <li><a href="https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/glnxa64/MCR_R2017b_glnxa64_installer.zip" class="button">MCR for Linux</a></li>
             </ul>
             <ul class="actions">
-              <li><a href="https://www.neuro.uni-jena.de/cat12/cat12_latest_R2017b_MCR_Win.zip" class="button">CAT12 Standalone for Windows</a></li>
+              <li><a href="http://141.35.69.218/cat12/cat12_latest_R2017b_MCR_Win.zip" class="button">CAT12 Standalone for Windows</a></li>
               <li><a href="https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/win64/MCR_R2017b_win64_installer.exe" class="button">MCR for Windows</a></li>
             </ul>
           
