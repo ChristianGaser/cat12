@@ -1,4 +1,18 @@
 ------------------------------------------------------------------------
+r2159 | gaser | 2022-12-07 15:18:51
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M cat_conf_factorial.m
+ M cat_conf_stools.m
+ M doc/cat.html
+ M doc/index.html
+
+
+Changed: Updated help text in cat_conf_stools.m.
+Fixed:   Corrected file selection in cat_conf_factorial.m that hided meshes.
+------------------------------------------------------------------------
 r2158 | rdahnke | 2022-12-03 14:14:35
 
 Changed paths:
@@ -23,7 +37,8 @@ Changed paths:
  M cat_conf_tools.m
 
 
-Fixed:    Small corrections on the CAT report batch.------------------------------------------------------------------------
+Fixed:    Small corrections on the CAT report batch.
+------------------------------------------------------------------------
 r2155 | gaser | 2022-12-02 16:37:30
 
 Changed paths:
