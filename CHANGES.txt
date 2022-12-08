@@ -1,4 +1,23 @@
 ------------------------------------------------------------------------
+r2160 | gaser | 2022-12-08 14:12:11
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M cat_conf_factorial.m
+ M cat_surf_results.m
+ M cat_vol_slice_overlay.m
+ M cat_vol_slice_overlay_ui.m
+ M doc/cat.html
+
+
+Changed: Added new clip flag to cat_vol_slice_overlay that replaces the func 
+         flag and allows to create colorbar that is gray for values below
+         the threshold.
+Changed: Updated cat_surf_results to use new clipping flag for columes.         
+Fixed:   Corrected check for fields for voxel-wise covariates in 
+         cat_conf_factorial.m
+------------------------------------------------------------------------
 r2159 | gaser | 2022-12-07 15:18:51
 
 Changed paths:

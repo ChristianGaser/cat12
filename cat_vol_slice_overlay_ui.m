@@ -64,8 +64,11 @@ OV.name = char(fullfile(cat_get_defaults('extopts.pth_templates'),'Template_4_GS
 % Be careful: intensities below the lower range are not shown!
 OV.range   =[[0.5 1]; [126 139]];
 
-% OV.func can be used to set the image to defined values (e.g. NaN) for the given range
-%OV.func = 'i1(i1>log10(0.05) & i1<-log10(0.05))=NaN;';
+% OV.clip can be used to set the image to defined values (e.g. NaN) for the given range
+% This is quite helpful for log-scaled p-maps without any threshold (e.g. after TFCE) and 
+% allows to define the threshold afterwards
+% The example below thresholds the log-scaled p-map with p<0.05 for positive as well as negative effects
+%OV.clip = [log10(0.05) -log10(0.05)];
 
 % selection of slices and orientations
 % if OV.slices_str is an empty string then slices with local maxima are estimated automatically
