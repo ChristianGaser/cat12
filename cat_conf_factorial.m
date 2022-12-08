@@ -1455,7 +1455,7 @@ if voxel_covariate
     SPM.xC(nc+1).gSF = gSF;
   end
     
-  if isempty(job.des.fd.voxel_cov.consess)
+  if isempty(job.des.(fname).voxel_cov.consess)
     % contrast should be defined right after model creation
     [Ic0,xCon] = spm_conman(SPM,'T',Inf,...
           '  Select contrast(s)...',' ',1);
@@ -1463,8 +1463,8 @@ if voxel_covariate
     job2.spmmat = cellstr(fullfile(SPM.swd,'SPM.mat'));
     job2.delete = 1;
     Ic0 = [];
-    for i = 1:numel(job.des.fd.voxel_cov.consess)
-      job2.consess{i} = job.des.fd.voxel_cov.consess{i};
+    for i = 1:numel(job.des.(fname).voxel_cov.consess)
+      job2.consess{i} = job.des.(fname).voxel_cov.consess{i};
       if isfield(job2.consess{i},'tcon')
         job2.consess{i}.tcon.sessrep = 'none';
       else
@@ -1472,7 +1472,7 @@ if voxel_covariate
       end
     end
     spm_run_con(job2);
-    for i = 1:numel(job.des.fd.voxel_cov.consess)
+    for i = 1:numel(job.des.(fname).voxel_cov.consess)
       if isfield(job2.consess{i},'tcon')
         [c,I,emsg,imsg] = spm_conman('ParseCon',job2.consess{i}.tcon.weights,SPM.xX.xKXs,'T');
         DxCon = spm_FcUtil('Set',job2.consess{i}.tcon.name,'T','c',c,SPM.xX.xKXs);
