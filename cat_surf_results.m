@@ -96,7 +96,7 @@ warning off MATLAB:subscripting:noSubscriptsSpecified
 
 %-Input parameters
 %--------------------------------------------------------------------------
-if ~nargin, clearvars -global H OV; action = 'Disp'; end
+if ~nargin, clearvars -global H OV x y; action = 'Disp'; end
 
 if ~ischar(action)
   varargin = {action varargin{:}};
@@ -1294,9 +1294,17 @@ global H OV
 H.thresh_value = thresh;
 H.clip = [true -thresh thresh];
 
+if ~H.isvol
+  mn = min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:)));
+  mx = max(max(H.S{1}.Y(:)), max(H.S{2}.Y(:)));
+else
+  mn = H.Pvol_mn{H.results_sel};
+  mx = H.Pvol_mx{H.results_sel};
+end
+
 if H.logP(H.results_sel) && (H.S{1}.thresh < -log10(0.05))
   set(H.thresh, 'Enable', 'on');
-  if min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0 && H.n_surf == 1
+  if mn < 0 && H.n_surf == 1
     set(H.hide_neg, 'Enable', 'on');
 %    set(H.hide_neg, 'Value', 0);
   end
@@ -1306,8 +1314,6 @@ else
 %  set(H.hide_neg, 'Value', 0);
 end
 
-mn = min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:)));
-mx = max(max(H.S{1}.Y(:)), max(H.S{2}.Y(:)));
 if mn > H.clip(2) && mx < H.clip(3)
   set(H.slider{1}, 'Visible', 'off');
   set(H.slider{2}, 'Visible', 'off');
@@ -1360,6 +1366,7 @@ for ind = 1:5
   end
   
   setappdata(H.patch(ind), 'clip', H.clip);
+  setappdata(H.patch(ind), 'clim', H.clim);
   col = getappdata(H.patch(ind), 'col');
   d = getappdata(H.patch(ind), 'data');
   H = updateTexture(H, ind, d, col, H.show_transp);
@@ -1744,7 +1751,7 @@ else
   set(H.thresh, 'Enable', 'off');
 end
 
-if min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0 & H.n_surf == 1
+if min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0 && H.n_surf == 1
   set(H.hide_neg, 'Enable', 'on');
   set(H.hide_neg, 'Value', 0);
 else
@@ -1808,9 +1815,15 @@ global OV
 
 if ~isfield(H,'Pvol_sel') || isempty(H.Pvol{1}), return; end
 
+if ~H.isvol
+  mn = min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:)));
+  mx = max(max(H.S{1}.Y(:)), max(H.S{2}.Y(:)));
+else
+  mn = H.Pvol_mn{H.results_sel};
+  mx = H.Pvol_mx{H.results_sel};
+end
+
 % check whether values are above threshold and close windows and return if not
-mn = min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:)));
-mx = max(max(H.S{1}.Y(:)), max(H.S{2}.Y(:)));
 if (mn < 0 && mn > -H.thresh_value) && (mx >= 0 && mx < H.thresh_value)
   try, close(OV.fig); end
   try, close(OV.fig_mip); end
@@ -1835,8 +1848,13 @@ else
 end
 
 % clipping if defined
-if ~isempty(H.clip) && ~isnan(H.clip(2)) && ~isnan(H.clip(3))
-  OV.func = sprintf('i1(i1>%g & i1<%g)=NaN;',H.clip(2),H.clip(3));
+if ~isempty(H.clip)
+  if ~isnan(H.clip(2)) && ~isnan(H.clip(3))
+    OV.clip = H.clip(2:3);
+  else
+    OV.clip = [Inf -Inf];
+  end
+  OV.func = sprintf('i1(i1>%f & i1<%f)=NaN;',OV.clip(1),OV.clip(2));
 else
   OV.func = 'i1(i1==0)=NaN;';
 end
@@ -1890,8 +1908,8 @@ end
 % don't update these fields if already existing because an interactive change is planned
 if ~isfield(OV,'atlas')
   OV.atlas = 'none';
-  OV.slices_str = '-30:5:60';
-  OV.xy = [4 5];
+  OV.slices_str = '-55:5:60';
+  OV.xy = [5 5];
   OV.transform = char('axial');
 end
 
@@ -2788,6 +2806,9 @@ for i = 1:n
     H.isvol(i) = 1;
     H.Pvol{i} = Pvol;
     H.Pvol_sel = Pvol;
+    vol = spm_read_vols(spm_vol(Pvol));
+    H.Pvol_mn{i} = min(vol(:));
+    H.Pvol_mx{i} = max(vol(:));
     
     % print warning if no SPM.mat file was found
     if ~exist(fullfile(pp, 'SPM.mat'), 'file') || ~exist(fullfile(pp, 'vSPM.mat'), 'file')

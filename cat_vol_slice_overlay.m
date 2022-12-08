@@ -76,6 +76,21 @@ if ~isfield(OV,'cmap')
   OV.cmap = hot(256);
 end
 
+% clip colorbar
+if isfield(OV,'clip') && all(isfinite(OV.clip))
+  ncol = length(OV.cmap);
+  col_step = (OV.range(2) - OV.range(1)) / ncol;
+  cmin = max([1, ceil((OV.clip(1) - OV.range(1)) / col_step)]);
+  cmax = min([ncol, floor((OV.clip(2) - OV.range(1)) / col_step)]);
+  OV.cmap(cmin:cmax, :) = repmat([0.5 0.5 0.5], (cmax - cmin + 1), 1);
+  if isfield(OV,'func')
+    fprintf('Do not use OV.func and OV.clip together\n');
+  end
+  OV.func = sprintf('i1(i1>%f & i1<%f)=NaN;',OV.clip(1),OV.clip(2));
+else
+  OV.clip = [Inf -Inf];
+end
+
 % black background by default
 if ~isfield(OV,'bkg_col')
   SO.bkg_col = [0 0 0];
@@ -153,7 +168,6 @@ else
   compare_to_threshold = @(a,b) ge(a,b);
 end
 
-[path, tmp] = spm_fileparts(OV.name);
 img = OV.name;
 
 n_slice = size(OV.slices_str, 1);
@@ -289,8 +303,6 @@ else
   end
 end
 
-
-
 % get position of graphic figure
 pos1 = spm('Winsize', 'Graphics');
 
@@ -419,23 +431,30 @@ if ~isempty(SO.cbar) && SO.cbar == 2 && logP
 
   % check whether lower threshold is P=0.05 and change values for YTick at
   % threshold
-  if abs(OV.range(1)) >= 1.3 && abs(OV.range(1)) <= 1.4
-    YTick_step = ceil((OV.range(2) - OV.range(1)) / numel(YTick));
-    if OV.range(1) <= - 1.3 && OV.range(1) >= - 1.4
-      values = [round(OV.range(1)):YTick_step:round(OV.range(2))];
-      mid = (numel(YTick)+1)/2;
-      values(mid-1:mid+1) = [log10(0.05) 0 -log10(0.05)];
+    if ~isempty(OV.clip) && abs(OV.clip(2)) >= 1.3 && abs(OV.clip(2)) <= 1.4 && OV.range(2) > OV.range(1)
+      YTick_step = ceil((OV.range(2) - OV.range(1)) / numel(YTick));
+      if OV.clip(1) <= - 1.3 && OV.clip(1) >= - 1.4 && OV.range(1) < 0
+        values = [round(OV.range(1)):YTick_step:round(OV.range(2))];
+        mid = find(YTick==0);
+        if ~isempty(mid)
+          values(mid-1:mid+1) = [log10(0.05) 0 -log10(0.05)];
+        else
+          values(values == -1) =  log10(0.05);
+          values(values == 1)  = -log10(0.05);
+        end
+      else
+        values = [0:YTick_step:round(OV.range(2))];
+        values(2) = -log10(0.05);
+      end
+      
     else
-      values = [0:YTick_step:round(OV.range(2))];
-      values(2) = -log10(0.05);      
-    end
-  else
-    mn = floor(min(YTick));
-    mx = ceil(max(YTick));
+      mn = floor(min(YTick));
+      mx = ceil(max(YTick));
 
-    % only allow integer values
-    values = floor(mn:mx);
-  end
+      % only allow integer values
+      values = floor(mn:mx);
+    end
+
      
   pos = get(get(gca, 'YLabel'), 'position');
   pos(1) = 2.5;
@@ -445,7 +464,7 @@ if ~isempty(SO.cbar) && SO.cbar == 2 && logP
   
   YTickLabel = cell(length(YTick),1);
   for i = 1:length(YTick)
-    if YTick(i) > 0
+    if YTick(i) > 0 && YTick(i) >= OV.clip(2)
       if YTick(i) > 7
         % use 1E-x notation
         YTickLabel{i} = sprintf('%g', 10^(-YTick(i)));
@@ -453,7 +472,7 @@ if ~isempty(SO.cbar) && SO.cbar == 2 && logP
         % use 0.000x notation
         YTickLabel{i} = remove_zeros(sprintf('%3.7f', 10^(-YTick(i))));
       end
-    elseif YTick(i) < 0
+    elseif YTick(i) < 0 && YTick(i) <= OV.clip(1)
       if YTick(i) < -7
         % use 1E-x notation
         YTickLabel{i} = sprintf('-%g', 10^(YTick(i)));
