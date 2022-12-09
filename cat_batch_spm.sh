@@ -21,6 +21,8 @@ spm12=$(dirname "$cwd")
 spm12=$(dirname "$spm12")
 mpath="'"$(dirname "$1 ")"'"
 ivar=
+fg=0
+nojvm=""
 
 ########################################################
 # run main
@@ -66,6 +68,10 @@ parse_args ()
       --nojvm | -nj*)
         exit_if_empty "$optname" "$optarg"
         nojvm=" -nojvm "
+        ;;
+      --fg* | -fg*)
+        exit_if_empty "$optname" "$optarg"
+        fg=1
         ;;
       --logdir* | -l*)
         exit_if_empty "$optname" "$optarg"
@@ -218,11 +224,17 @@ run_batch ()
   echo >> $spmlog
   echo $0 $file >> $spmlog
   echo >> $spmlog
+  
   if [ $display == 0 ]; then
-    #nohup 
-    ${matlab} -nodisplay "$nojvm" -nosplash -r "$X" #>> $spmlog 2>&1 &
+    str_display=" -nodisplay "
   else
-    nohup ${matlab} -nosplash -r $X #>> $spmlog 2>&1 &
+    str_display=""
+  fi
+  
+  if [ "$fg" -eq 0 ]; then
+    nohup ${matlab} "$str_display" "$nojvm" -nosplash -r "$X" >> $spmlog 2>&1 &
+  else
+    nohup ${matlab} "$str_display" "$nojvm" -nosplash -r "$X" >> $spmlog 2>&1
   fi
   exit 0
 }
@@ -256,6 +268,7 @@ USAGE:
                                         batch file needs graphical output
   -l  <FILE>  | --logdir                directory for log-file (default $LOGDIR)
   -nj         | --nojvm                 supress call of jvm using the -nojvm flag
+  -fg         | --fg                    do not run matlab process in background
   -p  <PATH>  | --mpath <PATH>          add directory to matlab path (the path of
                                         the called file is added automaticly)
   -f  <varname> <FILES> | -files <varname> 
