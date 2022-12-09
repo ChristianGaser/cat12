@@ -1,4 +1,16 @@
 ------------------------------------------------------------------------
+r2161 | gaser | 2022-12-09 10:26:13
+
+Changed paths:
+ M CHANGES.txt
+ M Makefile
+ M cat_batch_cat.sh
+ M cat_batch_spm.sh
+
+
+Changed: Added fg flag to cat_batch_spm.sh and changed call to always uzse 
+        nohup.
+        ------------------------------------------------------------------------
 r2160 | gaser | 2022-12-08 14:12:11
 
 Changed paths:

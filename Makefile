@@ -60,6 +60,7 @@ install2: copy_longmode
 install3: copy_longmode
 	-@echo install on ${STARGET3}
 	-@bash -c "ssh ${STARGET3_HOST} 'test ! -d ${STARGET3_FOLDER} || rm -rf ${STARGET3_FOLDER}/*'"
+	-@bash -c "ssh ${STARGET3_HOST} 'test -d ${STARGET3_FOLDER} || mkdir ${STARGET3_FOLDER}'"
 	-@scp -r ${FILES} ${STARGET3}/
 
 # print available commands
