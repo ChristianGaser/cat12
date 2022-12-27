@@ -241,7 +241,12 @@ function varargout = cat_parallelize(job,func,datafield)
     %  --------------------------------------------------------------------
     test    = 0; lim    = 200; ptime    = 0.5; % exist file?
     testpid = 0; limpid = 400; ptimepid = 2.0; % get PID
-    ptimesid = 1 * 30;                        % update every minute? 
+    if ~isempty(strfind(func,'cat_long_multi_run'))
+      ptimesid = 30;  % update every 30s for long. segmentation
+    else
+      ptimesid = 2;   % update every 2s for all remaining functions
+    end
+
     while test<lim
       if ~exist(log_name{i},'file')
         pause(ptime); 
