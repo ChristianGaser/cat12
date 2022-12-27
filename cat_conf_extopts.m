@@ -252,16 +252,13 @@ shooting.help   = {
   ''
 };
 
+% only allow Shooting in default mode
 if expert==0
   registration        = cfg_choice;
   registration.tag    = 'registration';
   registration.name   = 'Spatial Registration';
-  registration.values = {dartel shooting};
-  if cat_get_defaults('extopts.regstr')==0
-    registration.val  = {dartel};
-  else
-    registration.val  = {shooting};
-  end
+  registration.values = {shooting};
+  registration.val  = {shooting};
 else
   if expert==1
     method        = cfg_choice;
@@ -289,7 +286,6 @@ registration.help   = {
   'The registration time is typically about 3, 10, and 5 minutes for Dartel, Shooting, and optimized Shooting for the default registration resolution. '
   ''
 }; 
-registration.hidden = expert<1;
 
 %---------------------------------------------------------------------
 
