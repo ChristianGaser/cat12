@@ -2782,7 +2782,7 @@ function quality_measures = conf_quality_measures(globals)
   data          = cfg_files;
   data.name     = 'Sample data';
   data.tag      = 'data';
-  data.filter   = {'image','mesh'};
+  data.filter   = {'image','resampled.*\.(gii)$'};
   data.num      = [1 Inf];
   data.help     = {'These are the (spatially registered or resampled) data. They must all have the same data dimension, orientation, voxel or mesh size etc. Furthermore, it is recommended to use unsmoothed files.'};
 
@@ -3979,7 +3979,7 @@ function data2mat = conf_io_data2mat(data,outdir)
   resolution.val     = {4};
   resolution.help    = {
     'Volume data can be saved with a lower spation resolution which is especially helpful with further use with machine learning tools such as relevance/support vector approaches or Gaussian Process models. Spatial structure of the data is not considered.'
-    'Recommended resampling values are 3-8mm. For BrainAGE we obtained bes prediction accuracy with values of 4 or 8mm.'
+    'Recommended resampling values are 3-8mm. For BrainAGE we obtained best prediction accuracy with values of 4 or 8mm.'
   };
 
   c                  = cfg_entry;

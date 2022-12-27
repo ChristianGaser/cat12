@@ -1,4 +1,31 @@
 ------------------------------------------------------------------------
+r2162 | gaser | 2022-12-27 17:00:50
+
+Changed paths:
+ M CHANGES.txt
+ M cat12.m
+ M cat_conf_extopts.m
+ M cat_conf_factorial.m
+ M cat_conf_tools.m
+ M cat_parallelize.m
+ M cat_run.m
+ M cat_stat_spm2x.m
+ M cat_surf_parameters.m
+ M cat_surf_resamp.m
+ M doc/index.html
+ M git_ci_log
+
+Changed: Added again option for registration method for support use of 
+         customized templazes in cat_conf_extopts.m.
+Changed: Added file filter for meshe in cat_conf_factorial.m to only allow
+         selecting resampled data.
+Changed: Shortened time between parallized processes to 2s to get rid of the
+         long waiting time for most processes, but recognize if long. 
+         segmentation is used and use 30s.
+Changed: Removed some old calls in cat_run.m that are not used anympre.
+Changed: Updated help function for cat_surf_parameters.m.
+Changed: Replaced try/catch by file checking in cat_surf_resamp.m.
+------------------------------------------------------------------------
 r2161 | gaser | 2022-12-09 10:26:13
 
 Changed paths:
@@ -10,7 +37,7 @@ Changed paths:
 
 Changed: Added fg flag to cat_batch_spm.sh and changed call to always uzse 
         nohup.
-        ------------------------------------------------------------------------
+------------------------------------------------------------------------
 r2160 | gaser | 2022-12-08 14:12:11
 
 Changed paths:
