@@ -65,10 +65,12 @@ function vout = cat_surf_resamp(varargin)
       P = char(varargin{1}.data_surf);
     end
     job  = varargin{1}; 
-  else
+  elseif nargin > 1
     spm_clf('Interactive'); 
     P  = cellstr(spm_select([1 inf],'any','Select surface data'));
     job = struct();
+  else
+    error('No argument given.')
   end
 
   if ~isfield(job,'fwhm_surf')
@@ -368,14 +370,14 @@ function vout = cat_surf_resamp(varargin)
         % combine left and right and optionally cerebellar meshes
         switch numel(exist_hemi)
           case {2,4}
-            try
+            if exist(Pfwhm_all{1},'file') && exist(Pfwhm_all{2},'file')
               evalc('M0 = gifti({Pfwhm_all{1}, Pfwhm_all{2}})');
               evalc('M  = gifti(spm_mesh_join([M0(1) M0(2)]))');
-            catch
+            else
               warning('off','MATLAB:subscripting:noSubscriptsSpecified');
               if exist(Pfwhm_all{1},'file'), delete(Pfwhm_all{1}); end
               if exist(Pfwhm_all{2},'file'), delete(Pfwhm_all{2}); end
-              cat_io_cprintf('err',sprintf('%sERROR - Error in merge sides of %s!\n',pstr,fullfile(pp,Pfwhm)));
+              cat_io_cprintf('err',sprintf('%sERROR - Error in merging sides of %s!\n',pstr,fullfile(pp,Pfwhm)));
               listpp.error = listpp.error + 1; 
               continue
             end

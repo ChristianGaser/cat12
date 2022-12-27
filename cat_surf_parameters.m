@@ -16,14 +16,16 @@ function varargout = cat_surf_parameters(job)
 %    .GI        .. estimate absolute mean curvature (default 0)
 %    .FD        .. estimate fractal dimension (Yotter:2012; default 0)
 %    .SD        .. estimate sulcal depth (default 0)
+%    .tGI       .. estimate Toro's GI (default 0)
 %    = experimental measures = (only cat_get_defaults('extopts.expertgui')>1)
+%    .lGI       .. estimate Schaer's lGI (default 0)
 %    .GIL       .. estimate Laplacian-based gyrification index 
 %                  is a numeric in case of default users (default 0)
 %                  is a structure in case of expert users 
 %    .area      .. estimate area (not implemented; default 0)
 %    .surfaces  .. further cortical surfaces
-%     .IS       .. create inner surface (default 0)
-%     .OS       .. create outer surface (default 0)
+%    .IS        .. create inner surface (default 0)
+%    .OS        .. create outer surface (default 0)
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -51,7 +53,7 @@ function varargout = cat_surf_parameters(job)
   def.norm        = 0;  % apply inital surface normalization for job.normmeasure (GI measures) using cat_surf_scaling 
                         % [0-none,1-default,12-affine,1-radius,11-hullradius,2-area,21-hullarea,30-surfacevolume,31-hullvolume];
   def.normprefix  = 'n';
-  def.FS_HOME     = '/Volumes/WD4TBE2/TMP/freesurfer';
+  def.FS_HOME     = '/Volumes/WD4TBE2/TMP/freesurfer'; % necessary for Schaer's lGI
 % output parameter of validated measures 
   def.GI          = 0;  % estimate absolute mean curvature
   def.FD          = 0;  % estimate fractal dimension (Yotter:2012)
@@ -86,11 +88,7 @@ function varargout = cat_surf_parameters(job)
   % split job and data into separate processes to save computation time
   if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index')) && numel(job.data_surf)>1 % no parallel processsing for just one file 
   
-    if nargout==1
-      varargout{1} = cat_parallelize(job,mfilename,'data_surf');
-    else
-      varargout{1} = cat_parallelize(job,mfilename,'data_surf');
-    end
+    varargout{1} = cat_parallelize(job,mfilename,'data_surf');
     return
   end
 
@@ -157,6 +155,7 @@ function varargout = cat_surf_parameters(job)
         PFD     = fullfile(pp,strrep(ff,'central','fractaldimension'));
         Parea   = fullfile(pp,strrep(ff,'central','area'));                
         Pgmv{1} = fullfile(pp,strrep(ff,'central','gmv'));                 % RD202005: need projection based version for tests
+
         % - measures with/without normalization 
         switch job.norm %num2str( job.norm , '%d' )
           case 0,  prefix = '';                                          % no normalization ''
@@ -376,6 +375,9 @@ function varargout = cat_surf_parameters(job)
         
         
         
+
+
+
         if job.tGI
         %% Toro's gyrification index
           for ti = 1:numel( job.tGI ) 

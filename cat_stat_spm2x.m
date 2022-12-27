@@ -15,7 +15,8 @@ function out = cat_stat_spm2x(job)
 %       sqrt(t^2 + df)
 %
 % ---------------------------------------------
-% effect size d
+% (uncorrected) effect size d without Bessel 
+% correction for unequal sample sizes
 %
 % d = 2*t/sqrt(df(2));
 %
@@ -74,13 +75,13 @@ function out = cat_stat_spm2x(job)
 % Naming convention of the transformed files:
 % Type_Contrast_Pheight_Pextent_K_Neg
 %
-% Type:  P  - p-value
+% Type:  P    - p-value
 %        logP - log p-value
-%        R  - correlation coefficient
-%        D  - effect size
-%        T  - t-value
-%        R2 - coefficient of determination
-%        F  - F-value
+%        R    - correlation coefficient
+%        D    - effect size
+%        T    - t-value
+%        R2   - coefficient of determination
+%        F    - F-value
 %
 % Contrast:  name used in the contrast manager while replacing none valid strings
 %  

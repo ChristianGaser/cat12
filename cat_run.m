@@ -43,14 +43,6 @@ function varargout = cat_run(job)
 n_subjects = numel(job.data);
 if n_subjects == 1, job.nproc = 0; end
 
-%{ send Matlab version to server
-if cat_get_defaults('extopts.send_info')
-  urlinfo = sprintf('%s%s%s%s%s%s%d',cat_version,'%2F',computer,'%2F','processed',...
-     '%2F',n_subjects);
-  cat_io_send_to_server(urlinfo);
-end
-%}
-
 if isfield(job.output,'BIDS')
   if isfield(job.output.BIDS,'BIDSyes')
     BIDSfolder = job.output.BIDS.BIDSyes.BIDSfolder;
@@ -248,7 +240,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     %  --------------------------------------------------------------------
     test    = 0; lim    = 200; ptime    = 0.5; % exist file?
     testpid = 0; limpid = 400; ptimepid = 2.0; % get PID
-    ptimesid = 1 * 30;                        % update every minute? 
+    ptimesid = 1 * 30;                         % update every minute? 
     while test<lim
       if ~exist(log_name{i},'file')
         pause(ptime); 
