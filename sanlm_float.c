@@ -668,14 +668,14 @@ void anlm(float* ima, int v, int f, int use_rician, const int* dims)
   ThreadArgs = (myargument*) calloc( Nthreads,sizeof(myargument));
 
   if (pthread_mutex_init(&mutex, NULL) != 0)
-	{
-			printf("\n mutex init failed\n");
-			exit(1);
-	}
+  {
+      printf("\n mutex init failed\n");
+      exit(1);
+  }
 
   for (i=0; i<Nthreads; i++)
   {         
-	/* Make Thread Structure   */
+  /* Make Thread Structure   */
     ini = (i*dims[2])/Nthreads;
     fin = ((i+1)*dims[2])/Nthreads;  
     ThreadArgs[i].cols = dims[0];

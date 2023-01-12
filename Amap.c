@@ -453,7 +453,7 @@ void EstimateSegmentation(double *src, unsigned char *label, unsigned char *prob
        to allow masked smoothing */
     if(bias_fwhm > 0.0) {
       for(j = 0; j < vol; j++) {
-        if(label[index] == 0) bias[j] = 0.0;
+        if(label[j] == 0) bias[j] = 0.0;
         else bias[j] = 0.001;
       }
     }
