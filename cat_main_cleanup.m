@@ -32,7 +32,7 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
   %% estimate the ROI
   % ------------------------------------------------------------------
   % This part removes menignes next to the skull and between large 
-  % structes.
+  % structures.
   % ------------------------------------------------------------------
   Yvt  = cat_vol_morph(NS(Yl1b,LAB.VT) | NS(Yl1b,LAB.BG),'dd',vxv*3);  % ventricle ... no cleanup here
   Yp0  = single(prob(:,:,:,1))/255*2 + single(prob(:,:,:,2))/255*3 + single(prob(:,:,:,3))/255;
