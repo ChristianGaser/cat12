@@ -35,17 +35,16 @@ else
   if exist(spmmat,'file'), load(spmmat);
   else error('File %s not found.',spmmat); end
   
-  if isfield(job,'check_SPM_ortho')
-    check_ortho  = job.check_SPM_ortho;
-  else
-    check_ortho = false;
-  end
-  
   if ~isfield(job,'check_SPM_zscore')
     job.check_SPM_zscore = job.check_SPM.check_SPM_zscore;
     job.check_SPM_ortho = job.check_SPM.check_SPM_ortho;
   end
   
+  if isfield(job,'check_SPM_ortho')
+    check_ortho  = job.check_SPM_ortho;
+  else
+    check_ortho = false;
+  end
   check_zscore = isfield(job.check_SPM_zscore,'do_check_zscore');
   
   if check_zscore
