@@ -7,7 +7,7 @@ Changed paths:
  M doc/index.html
 
 Changed: Updated CAT12 online manual (Orthogonalization).
-Fixed:   Corected err ro in cat_stat_check_SPM.m where the check for 
+Fixed:   Corected error in cat_stat_check_SPM.m where the check for 
          orthogonality was not correct recognized. 
 ------------------------------------------------------------------------
 r2163 | gaser | 2023-01-12 17:59:59
