@@ -39,7 +39,11 @@ end
 try
   feval(@cat_sanlm,single(rand(6,6,6)),1,3);
 catch
-  if ismac 
+  if strcmpi(spm_check_version,'octave')
+    cd(pth)
+    compile
+    feval(@cat_sanlm,single(rand(6,6,6)),1,3);
+  elseif ismac 
     CATDir = fullfile(catdir);
     web('https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)#Troubleshooting');
     cat_io_cmd(sprintf('\nThe following commands will be executed as administrator to allow execution of CAT12 binaries and mex-files.\n Please now type admin password to call sudo\n'),'warning');

@@ -127,7 +127,7 @@ switch lower(action)
     end
     
     % close old figures
-    if ishandle(12),close(12);end;if ishandle(21),close(21);end;
+    if ishandle(12),close(12);end;if ishandle(22),close(22);end;
 
     % remove any existing data
     if exist('H','var')
@@ -205,7 +205,7 @@ switch lower(action)
       'ovmin',  [0.050 0.125 0.425 0.100],'ovmax',   [0.525 0.125 0.425 0.100],... 
       'save',   [0.050 0.050 0.425 0.050],'close',   [0.525 0.050 0.425 0.050]);
         
-    H.figure = figure(22);
+    H.figure = figure(23);
     clf(H.figure);
   
     set(H.figure, 'MenuBar', 'none', 'Position', H.pos{1}.fig, ...
@@ -1847,8 +1847,8 @@ else
   OV.reference_range = [0.2 1.0];                        
 end
 
-% clipping if defined
-if ~isempty(H.clip)
+% clipping if (meaningful) defined
+if ~isempty(H.clip) && H.clip(2) ~= H.clip(3)
   if ~isnan(H.clip(2)) && ~isnan(H.clip(3))
     OV.clip = H.clip(2:3);
   else
@@ -1914,7 +1914,8 @@ if ~isfield(OV,'atlas')
 end
 
 % show MIP and keep position if window exists
-OV.fig = 21;
+OV.fig = 22;
+
 if ishandle(OV.fig)
   cat_vol_slice_overlay(OV);
 else
@@ -2805,19 +2806,19 @@ for i = 1:n
     P0{i} = Pout; 
     H.isvol(i) = 1;
     H.Pvol{i} = Pvol;
-    H.Pvol_sel = Pvol;
     vol = spm_read_vols(spm_vol(Pvol));
-    H.Pvol_mn{i} = min(vol(:));
-    H.Pvol_mx{i} = max(vol(:));
+    H.Pvol_mn{i} = min(vol(vol ~= 0));
+    H.Pvol_mx{i} = max(vol(vol ~= 0));
     
     % print warning if no SPM.mat file was found
-    if ~exist(fullfile(pp, 'SPM.mat'), 'file') || ~exist(fullfile(pp, 'vSPM.mat'), 'file')
+    if ~exist(fullfile(pp, 'SPM.mat'), 'file') && ~exist(fullfile(pp, 'vSPM.mat'), 'file')
       fprintf('Warning: Please ensure that %s is spatially registered to the new MNI152NLin2009cAsym template space.\n',[ff ee]);
     end
   else
     P0{i} = deblank(P(i,:));
   end
 end
+H.Pvol_sel = H.Pvol{1};
 
 P0   = char(P0);
 info = cat_surf_info(P0,0);

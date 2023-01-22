@@ -94,7 +94,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
     abs(diff(res.spmP0.hsti(1:2:3,:))) ./ max(eps,sum(res.spmP0.hsti(1:2:3,:))); 
     ]));
   res.spmP0.help = [res.spmP0.help; {
-    sprintf('The hsti is the histogram of the T1 image for each class (prob>%0.2%%,%d buckets) ',minprob/255,hbuckets)};
+    sprintf('The hsti is the histogram of the T1 image for each class (prob>%0.2f,%d buckets) ',minprob/255,hbuckets)};
     'that are combined into the average intensity difference between classes histidiff with 1 for the ideal case without overlap and 0 for high overlap. '];
   if job.extopts.expertgui>1 && res.spmP0.hstidiff<0.5
       cat_io_addwarning('cat_main_updateSPM:highIntOverlapBetweenClasses',...
