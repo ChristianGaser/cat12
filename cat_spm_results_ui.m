@@ -294,8 +294,9 @@ switch lower(Action), case 'setup'                         %-Set up results
       if exist(fullfile(fileparts(fileparts(mfilename('fullpath'))),'TFCE'),'dir')
         [spmmatfile, sts] = spm_select(1,'^SPM\.mat$','Select SPM.mat');
         swd = spm_file(spmmatfile,'fpath');
+        cd(swd)
         warning off
-        load(fullfile(swd,'SPM.mat'),'SPM','xSPM');
+        load('SPM.mat','SPM','xSPM');
         warning on
 
         [Ic,xCon] = spm_conman(SPM,'T&F',Inf,'    Select contrast(s)...','',1);
