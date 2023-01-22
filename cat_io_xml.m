@@ -52,28 +52,6 @@ function varargout = cat_io_xml(file,varargin)
 % ______________________________________________________________________
 
   onlyxml = 0; 
-  if strcmpi(spm_check_version,'octave')
-    pkglist = pkg('list'); 
-    if isempty(pkglist) || all( strfind( [pkglist{:}.name] , 'io') == 0 )  
-      pkg install -forge io
-    end
-    pkg load io
-    try 
-      % add java files
-      xmljava{1} = fullfile(fileparts(mfilename('fullpath')),'Octave','xercesImpl.jar'); 
-      xmljava{2} = fullfile(fileparts(mfilename('fullpath')),'Octave','xml-apis.jar'); 
-      % call them
-      for xi=1:numel(xmljava), eval(sprintf('javaaddpath("%s");',xmljava{xi})); end
-      % test function 
-      xmlread;
-    catch e
-      if strcmp(e.message,'xmlread: no Java JRE or JDK detected, exiting')
-        onlyxml = 1; 
-      end
-    end
-    
-  end
-
 
 
   verbose = 0;
@@ -188,8 +166,9 @@ function varargout = cat_io_xml(file,varargin)
       try
         if usejava('jvm')
           xml_write(file,S);
-        elseif strcmpi(spm_check_version,'octave') && ~onlyxml
-          xmlwrite(file,S);
+        elseif strcmpi(spm_check_version,'octave')
+          warning off all
+          savexml(file,'S');
         end
       catch %#ok<*NASGU> % can write xml file??
         % This can be a warning as far as we have the mat.
@@ -211,8 +190,8 @@ function varargout = cat_io_xml(file,varargin)
             try
               if usejava('jvm')
                 S = xml_read(file);
-              elseif strcmpi(spm_check_version,'octave') && ~onlyxml
-                S = xmlread(file);
+              elseif strcmpi(spm_check_version,'octave')
+                S = loadxml(file);
               end
             catch 
               error('MATLAB:cat_io_xml:write+ReadErr','Can''t read XML-file ''%s'' for update!\n',file);
@@ -223,8 +202,8 @@ function varargout = cat_io_xml(file,varargin)
         try
           if usejava('jvm')
             S = xml_read(file);
-          elseif strcmpi(spm_check_version,'octave') && ~onlyxml
-            S = xmlread(file);
+          elseif strcmpi(spm_check_version,'octave')
+            S = loadxml(file);
           end
         catch 
           error('MATLAB:cat_io_xml:write+ReadErr','Can''t read XML-file ''%s'' for update!\n',file);
@@ -248,8 +227,9 @@ function varargout = cat_io_xml(file,varargin)
       try
         if usejava('jvm')
           xml_write(file,S);
-        elseif strcmpi(spm_check_version,'octave') && ~onlyxml
-          xmlwrite(file,S);
+        elseif strcmpi(spm_check_version,'octave')
+          warning off all
+          savexml(file,'S');
         end
       catch 
         warning('MATLAB:cat_io_xml:writeErr','Can''t write XML-file ''%s''!\n',file);
@@ -271,7 +251,7 @@ function varargout = cat_io_xml(file,varargin)
           if usejava('jvm')
             S = xml_read(file);
           elseif strcmpi(spm_check_version,'octave') 
-            S = xmlread(file);
+            S = loadxml(file);
           end
           warning on
         catch 

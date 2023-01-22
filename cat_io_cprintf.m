@@ -215,7 +215,7 @@ else
   end
   % The following is for debug use only:
   %global docElement el debugData
-  if ~exist('el','var') || isempty(el),  el=handle([]);  end  %#ok mlint short-circuit error ("used before defined")
+  if ~strcmpi(spm_check_version,'octave') && (~exist('el','var') || isempty(el)),  el=handle([]);  end  %#ok mlint short-circuit error ("used before defined")
   if nargin<1, showDemo(majorVersion,minorVersion); return;  end
   if isempty(style),  return;  end
   % #### begin extended styles ####

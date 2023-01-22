@@ -150,7 +150,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     /* such as cat_run_job.APRGs:196 where the old call "Ymx  = Ybgd./(Ybd+Ybgd);" was working but 
      * the new version caused a treshold in an image with INF that lead to an empty brainmask 
      * Although, this can be solved by "Ymx  = min(1,Ybgd./(Ybd+Ybgd));" I do not know other 
-     * problematic call now and this should maybe change later. 
+     * problematic call now and this should maybe changed later. 
      */
     if (L[i]>=0.5) D[i]=0.0; else D[i]=FLT_MAX; 
     if (L[i]>255.0)  

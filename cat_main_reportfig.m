@@ -970,7 +970,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       % CAT atlas labeling
       LAB = job.extopts.LAB;
       NS  = @(Ys,s) Ys==s | Ys==s+1;
-      if job.extopts.report.useoverlay>1
+      if job.extopts.report.useoverlay>1 && ~strcmpi(spm_check_version,'octave')
         try spm_orthviews('window',hhp0,[0 2]); end
         V2 = VO;
         switch job.extopts.report.useoverlay
