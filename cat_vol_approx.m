@@ -199,7 +199,7 @@ function cat_tst_pre_approx
   PM{1} = (cat_vbdist(PM{1},true(size(PM{1})),[1.5 1 1]) + ...
           cat_vol_smooth3X(rand(PTsize)*20,2) + cat_vol_smooth3X(randn(PTsize)*20)) <PTsize(1)/2; 
   
-  ds('d2','',[1 1 1],PT{1},PT{2},PT{1}.*PM{1},PT{2}.*PM{1},32)
+  ds('d2','',[1 1 1],PT{1},PT{2},PT{1}.*PM{1},PT{2}.*PM{1},32);
 
   
   %%

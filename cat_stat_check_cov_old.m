@@ -1,4 +1,4 @@
-function varargout = cat_stat_check_cov(job)
+function varargout = cat_stat_check_cov_old(job)
 %cat_stat_check_cov. To check covariance across sample.
 %
 % Images have to be in the same orientation with same voxel size

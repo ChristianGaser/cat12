@@ -94,9 +94,12 @@ function varargout = compile(comp,test,verb)
       'cat_sanlm.c sanlm_float.c'
     };
     % internal c-functions
-    nc{2} = {
-      'cat_vol_cMRegularizarNLM3D.c'
-    };
+    % does not yet work for octave
+    if  ~strcmpi(spm_check_version,'octave')
+        nc{2} = {
+        'cat_vol_cMRegularizarNLM3D.c'
+      };
+    end
     rc   = cell(1,2);   % results of c-function comiling
     rcc  = cell(1,2);   % results of c-function comiling
     nce  = cell(1,2);   % number of errors

@@ -54,7 +54,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   cstime = clock; 
   
   if strcmpi(spm_check_version,'octave')
-    cat_io_addwarning('cat_surf_createCS:noSRP','Correction of surface collisions is not yet available under Octave.',2,[1 1])
+    cat_io_addwarning('cat_surf_createCS2:noSRP','Correction of surface collisions is not yet available under Octave.',2,[1 1])
     opt.SRP = 0; 
   end
  

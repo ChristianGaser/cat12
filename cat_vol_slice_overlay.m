@@ -77,7 +77,7 @@ if ~isfield(OV,'cmap')
 end
 
 % clip colorbar
-if isfield(OV,'clip') && all(isfinite(OV.clip))
+if isfield(OV,'clip') && all(isfinite(OV.clip)) && OV.clip(2) ~= OV.clip(1)
   ncol = length(OV.cmap);
   col_step = (OV.range(2) - OV.range(1)) / ncol;
   cmin = max([1, ceil((OV.clip(1) - OV.range(1)) / col_step)]);
@@ -409,7 +409,7 @@ set(h, ...
     'PaperPositionMode', 'auto', ...
     'NumberTitle', 'off', ...
     'Name', nm, ...
-    'Visible', 'off');
+    'Visible', 'on');
 
 SO.figure = h;
 SO.area.units = 'pixels';
@@ -938,7 +938,7 @@ vcorners = [1 1 1; D(1) 1 1; 1 D(2) 1; D(1:2) 1; ...
 corners = T * [vcorners; ones(1, 8)];
 
 SO.slices = spm_input('Slices to display (mm)', '+1', 'e', XYZ_unique{orientn});
-SO.figure = figure(21);
+SO.figure = figure(22);
 
 % and do the display
 if dispf, slice_overlay; end

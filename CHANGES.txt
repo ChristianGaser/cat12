@@ -1,4 +1,33 @@
 ------------------------------------------------------------------------
+r2166 | gaser | 2023-01-22 23:40:08
+
+Changed paths:
+ M CHANGES.txt
+ M cat_io_cprintf.m
+ M cat_io_xml.m
+ M cat_main_reportfig.m
+ M cat_main_reportstr.m
+ M cat_main_updateSPM1639.m
+ M cat_run.m
+ M cat_spm_results_ui.m
+ M cat_stat_check_cov_old.m
+ M cat_surf_createCS2.m
+ M cat_surf_results.m
+ M cat_vbdist.c
+ M cat_vol_approx.m
+ M cat_vol_slice_overlay.m
+ M compile.m
+ M spm_cat12.m
+
+Changed: Made many changes for octave compatibility.
+Fixed:   Corrected wrong arguments in sprintf command in 
+         cat_main_updateSPM1639.m
+Fixed:   Contrasts were sometimes not recognized in cat_spm_results_ui.m because
+         we have to go into the analysis folder.
+Fixed:   Clipping should be ignored for cat_vol_slice_overlay if lower and upper 
+         clipping values are equal.
+Fixed:   Figure in cat_vol_slice_overlay_ui.m was set to unvisible.
+------------------------------------------------------------------------
 r2164 | gaser | 2023-01-14 21:46:06
 
 Changed paths:
