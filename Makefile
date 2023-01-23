@@ -6,6 +6,7 @@ OLDVERSION="CAT12.8.1"
 NEWVERSION="CAT12.8.2"
 REVISION=`git rev-list --count HEAD`
 DATE=`git log --date short |grep "Date:"|head -1|cut -f2 -d':'|sed -e s'/ //g'`
+VERSION=`echo ${NEWVERSION} | sed -e 's/CAT//g'`
 
 ZIPFOLDER=/Users/gaser/matlab/cat12
 
@@ -76,6 +77,7 @@ docs:
 # update version numbers
 update: docs copy_longmode
 	-@git fetch
+	-@git tag -f v${VERSION} -m "Release version ${VERSION}"
 	-@echo '% Computational Anatomy Toolbox' > Contents.m
 	-@echo '% Version' ${REVISION}' ('${NEWVERSION}')' ${DATE} >> Contents.m
 	-@cat Contents_info.txt >> Contents.m
@@ -99,7 +101,7 @@ zip: update clean
 # scp release
 scp: docs zip
 	-@echo scp to http://${STARGET_HOST}/cat12/${ZIPFILE}
-	-@scp -P ${PORT} CHANGES.txt ${ZIPFOLDER}/${ZIPFILE} ${STARGET}
+	-@scp -O -P ${PORT} CHANGES.txt ${ZIPFOLDER}/${ZIPFILE} ${STARGET}
 	-@bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${ZIPFILE} ${STARGET_FOLDER}/cat12_latest.zip"
 
 # scp deployed versions
@@ -108,13 +110,13 @@ scp_precompile:
 	-@find ${PRECOMPILED} -type f -name .DS_Store -exec rm {} \;
 	-@chmod -R a+r,go-w ${PRECOMPILED}
 	-@find ${PRECOMPILED} -type f \( -name "*.sh" -o -name "spm12" \) -exec chmod a+x {} \;
-	-@for i in Linux Mac; do \
+	-@for i in Linux; do \
 	   mkdir -p ${NEWVERSION}_R2017b_MCR_$${i} ;\
 	   ln -s ${PRECOMPILED}/MCR_$${i}/*spm12* ${PRECOMPILED}/MCR_$${i}/readme.txt ${PRECOMPILED}/MCR_$${i}/MCR_v93.webloc ${NEWVERSION}_R2017b_MCR_$${i}/ ;\
 	   cp -r standalone ${NEWVERSION}_R2017b_MCR_$${i}/ ;\
 	   cp -r standalone ${PRECOMPILED}/MCR_$${i}/ ;\
 	   zip ${ZIPFOLDER}/${NEWVERSION}_R2017b_MCR_$${i}.zip -r ${NEWVERSION}_R2017b_MCR_$${i} ; \
-	   scp -P ${PORT} ${ZIPFOLDER}/${NEWVERSION}_R2017b_MCR_$${i}.zip  ${STARGET}; \
+	   scp -O -P ${PORT} ${ZIPFOLDER}/${NEWVERSION}_R2017b_MCR_$${i}.zip  ${STARGET}; \
 	   bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${NEWVERSION}_R2017b_MCR_$${i}.zip ${STARGET_FOLDER}/cat12_latest_R2017b_MCR_$${i}.zip"; \
 	done
 	-@rm -r ${NEWVERSION}_R2017b_MCR*
@@ -187,7 +189,7 @@ precompile:
 	-@echo    cd spm12/config
 	-@echo    spm_make_standalone
 #	-@echo    "Ubuntu 19.10 (run spm12_R2017b on paris to compile) : mv /Users/gaser/spm/standalone/spm12.ctf ${PRECOMPILED}/MCR_Linux/"
-	-@echo    "Ubuntu 17.10 (run spm12_R2017b on MacBook to compile) : mv /Users/gaser/spm/standalone/spm12.ctf ${PRECOMPILED}/MCR_Linux/"
+	-@echo    "Ubuntu 17.10 (run spm12_R2017b with desktop on MacBook to compile) : mv /Users/gaser/spm/standalone/spm12.ctf ${PRECOMPILED}/MCR_Linux/"
 	-@echo    "Windows 10: mv /Users/gaser/spm/standalone/spm12.[ce][tx][fe] ${PRECOMPILED}/MCR_Win/"
 	-@echo    "Mac OS (run spm12_R2017b): rm -rf ${PRECOMPILED}/MCR_Mac/spm12.app; mv /Users/gaser/spm/standalone/spm12.app ${PRECOMPILED}/MCR_Mac/"
 	-@echo    
