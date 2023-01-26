@@ -8,7 +8,6 @@
 % The Dartel toolbox was used to create the template and finally images
 % were transformed to MNI152NLin2009cAsym space.
 %
-%
 % Template_?_GS.nii
 % ---------------------------------
 % Geodesic shooting templates with 5 iteration steps
@@ -19,7 +18,6 @@
 %
 % The Geodesic Shooting toolbox was used to create the template and finally 
 % images were transformed to MNI152NLin2009cAsym space.
-%
 %
 % Template_T1.nii 
 % ---------------------------------
@@ -39,7 +37,6 @@
 % numbers the right hemisphere. In order to create this atlas several atlases 
 % such as AAL, Broadman, IXI, and Hammers atlas and the IBASPM toolbox
 % (http://www.thomaskoenig.ch/Lester/ibaspm.htmAnatomy) were used.
-%
 %
 % brainmask.nii
 % ------------------------------

@@ -40,12 +40,13 @@ function cat_vol_img2mip(OV,style)
 
 if nargin < 1
   OV = spm_select([1 3],'image','Select images');
-  style = 1;
 end
 
 def = struct('name',OV,'func','i1(i1==0)=NaN;','cmap',jet(64),'range',...
   [-Inf Inf],'gamma_scl',0.7,'save_image','','RGB_order',1:3,'Pos',...
-  [10 10], 'bkg_col',[0 0 0], 'fig_mip', 12, 'cbar', 1);
+  [10 10], 'bkg_col',[0 0 0], 'fig_mip', 12, 'cbar', 2);
+
+style = 1;
     
 if ischar(OV)
   OV = def;
@@ -66,6 +67,17 @@ if n > 3
 end
 
 V = spm_vol(P);
+
+% we use different affine corrections to better fit into the MIP
+if style
+  Affine = spm_matrix([0.5 0 -1.5 0 0 0 1 1 0.98 0 0 0]);
+else
+  Affine = spm_matrix([0.5 2.5 3.5 0 0 0 0.95 0.95 0.95 0.1 0.1 0.1]);     
+end
+for i=1:n
+  V(i).mat = Affine * V(i).mat;
+end
+
 M   = V(1).mat;
 
 col = {'R','G','B'};
@@ -127,7 +139,8 @@ if style
     set(fig, 'MenuBar', 'none','Position',[10 10 2*182 2*200],'Name',nm,'NumberTitle','off');
   end
   
-  S = struct('dark',all(OV.bkg_col==0),'cmap',OV.cmap,'grid',false,'colourbar',~isempty(OV.cbar),'order',style);
+  if isempty(OV.cbar), OV.cbar = 0; end
+  S = struct('dark',all(OV.bkg_col==0),'cmap',OV.cmap,'grid',false,'colourbar',OV.cbar,'order',style);
   cat_vol_glassbrain(Y{1},XYZ{1},S);
 
   set(gca,'units','pixels'); x = get(gca,'position');
