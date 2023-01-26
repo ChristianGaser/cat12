@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2169 | gaser | 2023-01-26 14:34:04
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+A  cat_vol_addtruecolourimage.m
+ M doc/cat.html
+ M doc/index.html
+
+Added:   Added function to overlay 2..12 images either as multiple overlay or
+         as RGB overlay for up to 3 images.
+Changed: Added link to new subcortical atlas.
+------------------------------------------------------------------------
 r2168 | gaser | 2023-01-26 09:51:10
 
 Changed paths:
