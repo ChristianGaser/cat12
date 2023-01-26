@@ -128,10 +128,19 @@ function cat_vol_display_label(job)
   % only one label for all maps :/
   if size(job.data,1)<=2
     [pp,dsp] = fileparts(V(i).fname);
-    dsp = spm_atlas('Load',['cat12_' dsp]);
+    if ~exist(fullfile(spm('dir'),'atlas',['cat12_' dsp '.nii']))
+      try
+        cat_install_atlases
+        spm_atlas('Load',['cat12_' dsp]);
+      catch
+        error('Error while installing atlases into %s.\nPlease check writing permissions.',fullfile(spm('dir'),'atlas'));
+      end
+    else
+      dsp = spm_atlas('Load',['cat12_' dsp]);
+    end
     for ii=1:numel(st.vols)
       if ~isempty(st.vols{ii})
-        st.vols{ii}.display = dsp;
+        st.vols{ii}.display = {dsp};
       end
     end
     spm_ov_display('redraw');
