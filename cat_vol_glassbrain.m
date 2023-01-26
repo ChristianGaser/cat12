@@ -10,6 +10,8 @@ function fig = cat_vol_glassbrain(X,pos,varargin)
 %   S.detail        - glass brain detail level:
 %                     0=LOW, 1=NORMAL, 2=HIGH      - Default: 1
 %   S.grid          - overlay grid                 - Default: false
+%   S.colourbar     - show colorbar                - Default: false
+%                     0 - no, 1 - with string min/max, 2 - with min/max value 
 % Output:
 %   fig             - Handle for generated figure
 %__________________________________________________________________________
@@ -43,7 +45,7 @@ if ~isfield(S, 'dark'),     S.dark = false; end
 if ~isfield(S, 'cmap'),     S.cmap = 'gray'; end
 if ~isfield(S, 'detail'),   S.detail = 1; end
 if ~isfield(S, 'grid'),     S.grid = false; end
-if ~isfield(S, 'colourbar'),S.colourbar = false; end
+if ~isfield(S, 'colourbar'),S.colourbar = 0; end
 
 M = [-2 0 0 92;0 2 0 -128;0 0 2 -74;0 0 0 1];
 dim = [91 109 91];
@@ -163,7 +165,10 @@ else
   set(gcf,'color','w');
 end
 
-if S.colourbar
+if S.colourbar > 1
+  text(175,170,sprintf('%0.2f',rmin),'color',~c(1,:),'fontsize',12,'horizontalalignment','center');
+  text(175,105,sprintf('%0.2f',rmax),'color',~c(1,:),'fontsize',12,'horizontalalignment','center');
+elseif S.colourbar == 1
   if rmin < 0
     text(175,170,'-max','color',~c(1,:),'fontsize',12,'horizontalalignment','center');
   else
@@ -194,7 +199,9 @@ switch orient
   case 'top'
     xform = [0 -1 0; 1 0 0; 0 0 1]*[0.185 0 0; 0 0.185 0; 10.5 173 1];
   case 'back'
-    xform = [0.185 0 0; 0 -0.185 0; 120 89 1];
+%    xform = [0.185 0 0; 0 -0.185 0; 120 89 1];
+    % xform was distorted for coronal slice
+    xform = [1.05 0 0; 0 1.05 0; 0 0 1]*[0.185 0 0; 0 -0.185 0; 118 92 1];
   case 'side'
     xform = [0.185 0 0; 0 -0.185 0; 10.5 89 1];
 end

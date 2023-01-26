@@ -1,4 +1,31 @@
 ------------------------------------------------------------------------
+r2168 | gaser | 2023-01-26 09:51:10
+
+Changed paths:
+ M .gitattributes
+ M CHANGES.txt
+ M cat_defaults.m
+ M cat_vol_glassbrain.m
+ M cat_vol_img2mip.m
+ M doc/index.html
+A  templates_MNI152NLin2009cAsym/Tian_Subcortex_S4_7T.csv
+A  templates_MNI152NLin2009cAsym/Tian_Subcortex_S4_7T.nii
+A  templates_MNI152NLin2009cAsym/Tian_Subcortex_S4_7T.txt
+ M templates_MNI152NLin2009cAsym/templates.man
+ M templates_MNI152NLin2009cAsym_1mm/Template_0_GS1mm.nii
+ M templates_MNI152NLin2009cAsym_1mm/Template_1_GS1mm.nii
+ M templates_MNI152NLin2009cAsym_1mm/Template_2_GS1mm.nii
+ M templates_MNI152NLin2009cAsym_1mm/Template_3_GS1mm.nii
+ M templates_MNI152NLin2009cAsym_1mm/Template_4_GS1mm.nii
+
+Added:   Added new subcortical atlas bi Tian et al.
+Changed: Updated cat_defaults.m and online documentation to consider new atlas.
+Changed: Added slight position corrections to cat_vol_glassbrain.m and
+         cat_vol_img2mip.m to better fit MNI152NLin2009cAsym atlas to the
+         saved MIPs.
+Fixed:   Corrected 1mm GS template in x-axis by -0.5mm because of small
+         discrepancies to the 1.5mm atlas.
+------------------------------------------------------------------------
 r2167 | gaser | 2023-01-23 10:49:36
 
 Changed paths:
