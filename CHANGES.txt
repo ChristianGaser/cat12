@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2170 | gaser | 2023-01-26 17:32:29
+
+Changed paths:
+ M CHANGES.txt
+ M cat_vol_display_label.m
+ M doc/index.html
+ M templates_MNI152NLin2009cAsym/Tian_Subcortex_S4_7T.csv
+
+Changed: Updated and corrected atlas information for new subcortical atlas in 
+         csv file and online documentation.
+Changed: Added check to cat_vol_display_label.m if new atlases were not yet 
+         installed.         
+------------------------------------------------------------------------
 r2169 | gaser | 2023-01-26 14:34:04
 
 Changed paths:
