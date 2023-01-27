@@ -1,4 +1,18 @@
 ------------------------------------------------------------------------
+r2171 | gaser | 2023-01-27 13:13:31
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M Makefile
+ M cat_run.m
+ M doc/cat.html
+ D git_ci_log
+
+Changed: Updated Makefile for Octave installation.
+Fixed:   Shooting caused issues on Octave and I had to set back the limnitation
+         to Dartel for Ocatve use.
+------------------------------------------------------------------------
 r2170 | gaser | 2023-01-26 17:32:29
 
 Changed paths:

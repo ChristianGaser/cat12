@@ -1006,6 +1006,18 @@ function job = update_job(job)
   end
   
   
+  if strcmpi(spm_check_version,'octave') && job.extopts.regstr > 0
+    warning('cat_run:noShooting','No Shooting registration possible under Octave yet. Switch to Dartel registration.')
+    job.extopts.regstr = 0; 
+    if isfield(job.extopts,'regmethod')
+      job.extopts.regmethod = rmfield(job.extopts.regmethod,'shooting');
+    else
+      job.extopts = rmfield(job.extopts,'shooting');
+    end
+    job.extopts.dartel.darteltpm = cat_get_defaults('extopts.darteltpm');
+  end
+
+  
   %% set Dartel/Shooting templates
   if isfield(job.extopts,'regmethod') 
     if isfield(job.extopts.regmethod,'dartel')
