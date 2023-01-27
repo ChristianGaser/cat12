@@ -12,6 +12,7 @@ ZIPFOLDER=/Users/gaser/matlab/cat12
 
 TARGET=/Users/gaser/spm/spm12/toolbox/cat12
 TARGET2=/Volumes/UltraMax/spm12/toolbox/cat12
+TARGET4=/Users/gaser/spm/spm-octave/toolbox/cat12
 
 PRECOMPILED=/Users/gaser/matlab/Matlab_R2017b
 
@@ -63,6 +64,13 @@ install3: copy_longmode
 	-@bash -c "ssh ${STARGET3_HOST} 'test ! -d ${STARGET3_FOLDER} || rm -rf ${STARGET3_FOLDER}/*'"
 	-@bash -c "ssh ${STARGET3_HOST} 'test -d ${STARGET3_FOLDER} || mkdir ${STARGET3_FOLDER}'"
 	-@scp -r ${FILES} ${STARGET3}/
+
+# install for octave
+install4: copy_longmode
+	-@echo install
+	-@test ! -d ${TARGET4} || rm -rf ${TARGET4}/*
+	-@mkdir -p ${TARGET4}
+	-@cp -R ${FILES} ${TARGET4}/
 
 # print available commands
 help:
