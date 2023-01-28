@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2172 | gaser | 2023-01-28 21:40:16
+
+Changed paths:
+ M CHANGES.txt
+ M README.md
+ M cat_update.m
+ M doc/index.html
+
+Changed: Updated informtion about standalone versions ins Readme.md.
+Changed: Added option to download only to cat_update.m.
+------------------------------------------------------------------------
 r2171 | gaser | 2023-01-27 13:13:31
 
 Changed paths:
