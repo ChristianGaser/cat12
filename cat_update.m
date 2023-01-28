@@ -91,7 +91,7 @@ else
 end
 
 if update
-  overwrite = spm_input(sprintf('Update to r%d',rnew),1,'yes|no',[1 0],1);
+  overwrite = spm_input(sprintf('Update to r%d',rnew),1,'m','yes|no|download only',[1 -1 0],1);
   d0 = spm('Dir');
   d  = fileparts(fileparts(which('cat12')));
   
@@ -193,7 +193,7 @@ if update
       otherwise
         fprintf('          Warning %s.\n',warnmsg);
     end  
-  else    
+  elseif overwrite == 0
     web([url sprintf('cat12_r%d.zip',rnew)],'-browser');
     fprintf('Unzip file to %s\n',d);
   end
