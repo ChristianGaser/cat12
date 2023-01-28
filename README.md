@@ -30,6 +30,9 @@ The MATLAB Compiler Runtime (MCR) enables you to run applications compiled withi
 
 |CAT12 Standalone|MCR|
 |---|---:|
-|[Mac](http://141.35.69.218/cat12/cat12_latest_R2017b_MCR_Mac.zip) |[Mac](https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/maci64/MCR_R2017b_maci64_installer.dmg.zip)|
-[Linux](http://141.35.69.218/cat12/cat12_latest_R2017b_MCR_Linux.zip) |[Linux](https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/glnxa64/MCR_R2017b_glnxa64_installer.zip)|
+<!--|[Mac](http://141.35.69.218/cat12/cat12_latest_R2017b_MCR_Mac.zip) |[Mac](https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/maci64/MCR_R2017b_maci64_installer.dmg.zip)|
 [Windows](http://141.35.69.218/cat12/cat12_latest_R2017b_MCR_Win.zip) |[Windows](https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/win64/MCR_R2017b_win64_installer.exe)|
+-->
+[Linux](http://141.35.69.218/cat12/cat12_latest_R2017b_MCR_Linux.zip) |[Linux](https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/glnxa64/MCR_R2017b_glnxa64_installer.zip)|
+
+Please contact [me](mailto:christian.gaser@uni-jena.de) if you need versions for MacOS or Windows.
