@@ -91,7 +91,10 @@ function cat_run_job1639(job,tpm,subj)
       cat_io_cprintf('warn',sprintf('External diary log is written to "%s".\n',get(0,'DiaryFile'))); 
     end
   else
-    usediary = 0; 
+    % always use diary and don't check for old one for Octave
+    usediary = 1;
+    diary(catlog); 
+    diary on; 
   end
   
   % print current CAT release number and subject file
