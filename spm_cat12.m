@@ -40,9 +40,16 @@ try
   feval(@cat_sanlm,single(rand(6,6,6)),1,3);
 catch
   if strcmpi(spm_check_version,'octave')
+    oldpath = pwd;
     cd(pth)
     compile
     feval(@cat_sanlm,single(rand(6,6,6)),1,3);
+    cd(oldpath)
+    
+    % check that patches and updates exist
+    if ~exist('savexml') || ~exist('fcnchk')
+      error('Please update and patch SPM12 first')
+    end
   elseif ismac 
     CATDir = fullfile(catdir);
     web('https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)#Troubleshooting');

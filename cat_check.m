@@ -36,7 +36,11 @@ function varargout = cat_check(action,varargin)
     case 'checkinopt',    varargout{1} = cat_io_checkinopt(varargin);
     otherwise, error('MATLAB:cat_check','Unknown action ''%s''',action);       
   end
-  warning(warnstat(1).state,'all');
+  if strcmpi(spm_check_version,'octave')
+    warning('on','all');
+  else
+    warning(warnstat(1).state,'all');
+  end
 end
 
 function varargout = cat_checkinfiles(varargin)

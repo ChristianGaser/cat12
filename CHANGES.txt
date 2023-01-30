@@ -1,4 +1,20 @@
 ------------------------------------------------------------------------
+r2173 | gaser | 2023-01-30 09:33:25
+
+Changed paths:
+ M CHANGES.txt
+ M cat_check.m
+ M cat_run_job1639.m
+ M cat_vol_glassbrain.m
+ M cat_vol_morph.m
+ M spm_cat12.m
+
+Changed: Added flag to cat_vol_glassbrain.m to control (symmetrical) range of 
+         colorbar.
+Changed: Updated some more functions to run under Octave.
+Fixed:   Corrected handling of lab function in cat_vol_morph.m and removed 
+         subfunction that was not used anymore.
+------------------------------------------------------------------------
 r2172 | gaser | 2023-01-28 21:40:16
 
 Changed paths:
