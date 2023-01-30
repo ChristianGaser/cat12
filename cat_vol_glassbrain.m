@@ -12,6 +12,8 @@ function fig = cat_vol_glassbrain(X,pos,varargin)
 %   S.grid          - overlay grid                 - Default: false
 %   S.colourbar     - show colorbar                - Default: false
 %                     0 - no, 1 - with string min/max, 2 - with min/max value 
+%   S.sym_range     - symmetric range if neg. values are present
+%                                                  - Default: false
 % Output:
 %   fig             - Handle for generated figure
 %__________________________________________________________________________
@@ -46,6 +48,8 @@ if ~isfield(S, 'cmap'),     S.cmap = 'gray'; end
 if ~isfield(S, 'detail'),   S.detail = 1; end
 if ~isfield(S, 'grid'),     S.grid = false; end
 if ~isfield(S, 'colourbar'),S.colourbar = 0; end
+if ~isfield(S, 'sym_range'),S.sym_range = false; end
+
 
 M = [-2 0 0 92;0 2 0 -128;0 0 2 -74;0 0 0 1];
 dim = [91 109 91];
@@ -58,18 +62,17 @@ if ~isempty(ind)
   X(ind) = [];
 end
 
-if any(X<0) && any(X>0)
-  div = 1;
+% use symmetric range if defined and negative values exist
+if any(X<0) && any(X>0) && S.sym_range
+  rmin = -max(abs(X));
+  rmax =  max(abs(X));
 else
-  div = 0;
+  rmin = min(X);
+  rmax = max(X);
 end
 
 [~,id] = sort(abs(X),'ascend');
-if div
-  [~,bin] = histc(X,linspace(-max(abs(X)),max(abs(X)),65));
-else
-  [~,bin] = histc(X,linspace(min(abs(X)),max(abs(X)),65));
-end
+[~,bin] = histc(X,linspace(rmin,rmax,65));
 
 % saggital plane
 %----------------------------------------------------------------------
@@ -122,12 +125,6 @@ if S.colourbar
   for ii = 42:52
     p_col(ii,14:78) = linspace(2,65,numel(14:78));
   end
-  if div
-    rmin = -max(abs(X));
-  else
-    rmin = min(abs(X));
-  end
-  rmax = max(abs(X));
 end
 
 
