@@ -573,7 +573,7 @@ if Hc.y_found
 
   vstruct = struct('showdata',vshowdata,'box',vbox,'outliers',voutliers,'style',Hc.style);
   if exist('groupcolor','var') && ~isempty(groupcolor)
-    vstruct = setfield(vstruct,'groupcolor',groupcolor);
+    vstruct.groupcolor = groupcolor;
   end
 
   if isempty(yy{1}), return, end
@@ -582,7 +582,7 @@ if Hc.y_found
   if Hc.adjust, title_name = ['adjusted ' title_name]; end
 
   % don't plot for multiple covariates because the plot might not be correct
-  if covariate && numel(SPM.xX.iC) < 2
+  if covariate% && numel(SPM.xX.iC) < 2
 
     % previous plot must be deleted
     clf
@@ -607,11 +607,11 @@ if Hc.y_found
     for i=1:n_effects
       x2 = xx{i};
       y2 = mean(yy{i},2);
-      plot(x2,y2,'.','MarkerSize',Hc.MS,'Color',Hc.col(i,:));
-
-      P = polyfit(x2,y2,1);       
-      % plot trend line
-      Hc.line{i} = plot(xx_array,polyval(P,xx_array),'Color',Hc.col(i,:),'LineWidth',Hc.LW);
+      if n_effects > 1
+        cat_plot_scatter(x2,y2,'MSize',Hc.MS,'Color',Hc.col(i,:),'PlotType','scatter');
+      else
+        cat_plot_scatter(x2,y2,'MSize',Hc.MS,'Fit_Poly',1);
+      end
     end
 
     % for repeated anovas also plot connected lines if defined
@@ -636,9 +636,9 @@ if Hc.y_found
 
     if Hc.legend
       if n_effects == 2
-        legend(names(1,:),['Fit ' names(1,:)],names(2,:),['Fit ' names(2,:)])
+        legend(['95% CI ' names(1,:)],names(1,:),['Fit ' names(1,:)],['95% CI ' names(2,:)],names(2,:),['Fit ' names(2,:)])
       else
-        legend(names(1,:),['Fit ' names(1,:)])
+        legend('95% CI',names(1,:),'Fit')
       end
     end
 
