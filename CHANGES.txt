@@ -1,4 +1,21 @@
 ------------------------------------------------------------------------
+r2174 | gaser | 2023-01-31 15:41:18
+
+Changed paths:
+ M CHANGES.txt
+ M Makefile
+ M cat_main1639.m
+ M cat_stat_confplot_spm.m
+ M cat_vol_glassbrain.m
+ M cat_vol_img2mip.m
+
+Changed: Added again release information to standalone version in Makefile.
+Changed: Added scatter density plot to cat_stat_confplot_spm.m.
+Changed: Added new roi option to cat_vol_img2mip.m and opportunity to provide
+         nifti strcuture as input to prevent loading files.
+Changed: New roi flag for overlaying ROI#s onto MIP view.         
+Fixed:   Check for 'stable' option for unique command in cat_main1639.m.
+------------------------------------------------------------------------
 r2173 | gaser | 2023-01-30 09:33:25
 
 Changed paths:

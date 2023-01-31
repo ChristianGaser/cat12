@@ -43,13 +43,13 @@ end
 assert(length(X) == length(pos), ['number of values do not match '...
   'number of positions!']);
 
-if ~isfield(S, 'dark'),     S.dark = false; end
-if ~isfield(S, 'cmap'),     S.cmap = 'gray'; end
-if ~isfield(S, 'detail'),   S.detail = 1; end
-if ~isfield(S, 'grid'),     S.grid = false; end
-if ~isfield(S, 'colourbar'),S.colourbar = 0; end
-if ~isfield(S, 'sym_range'),S.sym_range = false; end
-
+if ~isfield(S,'dark'),      S.dark = false; end
+if ~isfield(S,'cmap'),      S.cmap = 'gray'; end
+if ~isfield(S,'detail'),    S.detail = 1; end
+if ~isfield(S,'grid'),      S.grid = false; end
+if ~isfield(S,'colourbar'), S.colourbar = 0; end
+if ~isfield(S,'sym_range'), S.sym_range = false; end
+if ~isfield(S,'roi'),       S.roi = []; end
 
 M = [-2 0 0 92;0 2 0 -128;0 0 2 -74;0 0 0 1];
 dim = [91 109 91];
@@ -60,6 +60,12 @@ ind = find(pos(:,1) < 1 | pos(:,1) > dim(1) | pos(:,2) < 1 | pos(:,2) > dim(2) |
 if ~isempty(ind)
   pos(ind,:) = [];
   X(ind) = [];
+end
+
+tbin = zeros(size(X));
+if ~isempty(S.roi)
+  tbin(find(S.roi)) = 1;
+  X(S.roi & isnan(X)) = 0;
 end
 
 % use symmetric range if defined and negative values exist
@@ -77,6 +83,7 @@ end
 % saggital plane
 %----------------------------------------------------------------------
 p_sag = NaN(dim(2),dim(3));
+t_sag = zeros(dim(2),dim(3));
 
 for ii = 1:length(id)
     
@@ -85,6 +92,9 @@ for ii = 1:length(id)
   
   if p1 > 0 && p1 <= dim(2) && p2 > 0 && p2 <= dim(3)
     p_sag(p1,p2) = bin(id(ii));
+    if ~isempty(S.roi)
+      t_sag(p1,p2) = tbin(id(ii));
+    end
   end
   
 end
@@ -92,6 +102,7 @@ end
 % coronal plane
 %----------------------------------------------------------------------
 p_cor = NaN(dim(1),dim(3));
+t_cor = zeros(dim(1),dim(3));
 
 for ii = 1:length(id)
     
@@ -100,6 +111,9 @@ for ii = 1:length(id)
   
   if p1 > 0 && p1 <= dim(1) && p2 > 0 && p2 <= dim(3)
     p_cor(p1,p2) = bin(id(ii));
+    if ~isempty(S.roi)
+      t_cor(p1,p2) = tbin(id(ii));
+    end
   end  
 end
 
@@ -107,6 +121,7 @@ end
 % axial plane
 %----------------------------------------------------------------------
 p_axi = NaN(dim(2),dim(1));
+t_axi = zeros(dim(2),dim(1));
 
 for ii = 1:length(id)
     
@@ -115,6 +130,9 @@ for ii = 1:length(id)
   
   if p1 > 0 && p1 <= dim(2) && p2 > 0 && p2 <= dim(1)
     p_axi(p1,p2) = bin(id(ii));
+    if ~isempty(S.roi)
+      t_axi(p1,p2) = tbin(id(ii));
+    end
   end
 end
 
@@ -127,13 +145,20 @@ if S.colourbar
   end
 end
 
-
 % combine and plot
 %---------------------------------------------------------------------
-p_all = [rot90(p_sag,1) fliplr(rot90(p_cor,1));...
-rot90(p_axi,1) rot90(p_col,1)];
+p_all = [rot90(p_sag,1) fliplr(rot90(p_cor,1));rot90(p_axi,1) rot90(p_col,1)];
 p_all(isnan(p_all)) = 0;
+if ~isempty(S.roi)
+  t_all = [rot90(t_sag,1) fliplr(rot90(t_cor,1));rot90(t_axi,1) rot90(zeros(size(p_col)),1)];
+end
+
 imagesc(p_all)
+if ~isempty(S.roi)
+  hold on
+  contour(t_all,1,'Color',[0.5 0.5 0.5],'LineWidth',3)
+  hold off
+end
 set(gca,'XTickLabel',{},'YTickLabel',{});
 axis image
 
