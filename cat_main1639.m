@@ -769,7 +769,11 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
   %  sum(Yth1(Yth1(:)>median(Yth1(Yth1(:)>0))*2 ))./sum(Yth1(Yth1(:)>0)) > 0.1 > error
     if debug, tic; end
     if job.extopts.SRP >= 20
-      surf = unique(surf,'stable'); 
+      try
+        surf = unique(surf,'stable'); 
+      else
+        surf = unique(surf); 
+      end
       %% RD202107: Load Shooting template to correct severe defects in the
       %           parahippocampla gyrus. Previously also used to stabilize 
       %           the cerebellum but it introduce some Shooting problems.
