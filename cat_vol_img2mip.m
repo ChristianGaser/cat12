@@ -1,4 +1,4 @@
-function cat_vol_img2mip(OV,style)
+function cat_vol_img2mip(OV)
 % Visualise up to 3 images as RGB colored MIP (glass brain)
 % ______________________________________________________________________
 %
@@ -44,7 +44,7 @@ end
 
 def = struct('name',OV,'func','i1(i1==0)=NaN;','cmap',jet(64),'range',...
   [-Inf Inf],'gamma_scl',0.7,'save_image','','RGB_order',1:3,'Pos',...
-  [10 10], 'bkg_col',[0 0 0], 'fig_mip', 12, 'cbar', 2);
+  [10 10],'bkg_col',[0 0 0],'fig_mip',12,'cbar',2,'roi',[]);
 
 style = 1;
     
@@ -53,9 +53,31 @@ if ischar(OV)
 else
   OV = cat_io_checkinopt(OV,def); 
 end
-P = OV.name;
 
-n = size(P,1);
+if ischar(OV.name)
+  V = spm_vol(OV.name);
+  dim = V(1).dim;
+  fname = V(1).fname;
+elseif isa(OV.name,'nifti')
+  V = OV.name;
+  dim = V(1).dat.dim;
+  fname = V(1).dat.fname;
+else
+  error('You have to either define a nifti structure or a filename as input.');
+end
+
+n = numel(V);
+if ~isempty(OV.roi)
+  if ~isa(OV.name,'nifti')
+    error('The ROI option cannot only be used in conjunction with nifti structure as OV.');
+  end
+  if n > 1
+    error('The ROI option cannot be used for multiple images.');
+  end
+  if any(size(OV.roi) ~= dim)
+    error('Dimension of ROI and image data differs.');
+  end
+end
 
 % new glassbrain does not yet support RGB MIP
 if n > 1
@@ -66,9 +88,8 @@ if n > 3
   error('At maximum 3 images are allowed.');
 end
 
-V = spm_vol(P);
-
-% we use different affine corrections to better fit into the MIP
+% we use different affine corrections to better fit MN2009cAsym into the
+% existing MIPs
 if style
   Affine = spm_matrix([0.5 0 -1.5 0 0 0 1 1 0.98 0 0 0]);
 else
@@ -87,27 +108,40 @@ for i=1:n
   end
   XYZ{i} = [];
   Y{i}   = [];
+  if ~isempty(OV.roi)
+    ROI{i} = logical([]);
+  end
 end
 
 Origin = V(1).mat\[0 0 0 1]';
 vox    = sqrt(sum(V(1).mat(1:3,1:3).^2));
 
 mnI = 1e15; mxI = -1e15;
-cat_progress_bar('Init',V(1).dim(3),'Mip',' ');
-for j = 1:V(1).dim(3)
+cat_progress_bar('Init',dim(3),'Mip',' ');
+for j = 1:dim(3)
   B  = spm_matrix([0 0 -j 0 0 0 1 1 1]);
   M1 = inv(B);
   
   for i=1:n
     % read slice and flip for MIP
-    i1  = spm_slice_vol(V(i),M1,V(i).dim(1:2),1);
+    if isa(V(i),'nifti')
+      i1  = V(i).dat(:,:,j);
+    else
+      i1  = spm_slice_vol(V(i),M1,V(i).dim(1:2),1);
+    end
     i1 = flipud(i1);
 
     % apply defined function
     eval(OV.func)
         
     % find indices
-    [Qc Qr] = find(isfinite(i1) & i1 ~=0 );
+    if ~isempty(OV.roi)
+      roi = flipud(OV.roi(:,:,j));
+      [Qc Qr] = find((isfinite(i1) & i1 ~=0) | roi ~= 0);
+    else
+      [Qc Qr] = find(isfinite(i1) & i1 ~=0);
+    end
+    
     Q = sub2ind(size(i1),Qc,Qr);
         
     if ~isempty(Q)
@@ -119,6 +153,9 @@ for j = 1:V(1).dim(3)
       mxI = max(mxI, max(i1(Q)));
       
       Y{i} = [Y{i}; i1(Q)];
+      if ~isempty(OV.roi)
+        ROI{i} = [ROI{i}; roi(Q)];
+      end
     end
   end
   
@@ -126,13 +163,14 @@ for j = 1:V(1).dim(3)
 end
 cat_progress_bar('Clear');
 
-[pt,nm,xt] = fileparts(P(1,:));
+[pt,nm,xt] = fileparts(fname);
 
 if style
 
   % show new glassbrain
   if ishandle(OV.fig_mip)
     fig = figure(OV.fig_mip);
+    set(fig, 'Name',nm);
   else
     fig = figure(OV.fig_mip);
     png_name = ['mip' num2str(n) '_' nm '.png'];
@@ -140,7 +178,11 @@ if style
   end
   
   if isempty(OV.cbar), OV.cbar = 0; end
-  S = struct('dark',all(OV.bkg_col==0),'cmap',OV.cmap,'grid',false,'colourbar',OV.cbar,'order',style);
+  S = struct('dark',all(OV.bkg_col==0),'cmap',OV.cmap,'grid',false,'colourbar',OV.cbar,...
+    'order',style);
+  if ~isempty(OV.roi)
+    S.roi = ROI{1};
+  end
   cat_vol_glassbrain(Y{1},XYZ{1},S);
 
   set(gca,'units','pixels'); x = get(gca,'position');
