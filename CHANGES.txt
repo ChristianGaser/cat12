@@ -1,4 +1,18 @@
 ------------------------------------------------------------------------
+r2175 | gaser | 2023-02-03 08:47:50
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M cat_surf_results.m
+ M cat_vol_glassbrain.m
+ M doc/cat.html
+ M doc/index.html
+
+Changed: Updated online documentation.
+Changed: Updated roi option in cat_vol_glassbrain.m and calls in 
+         call_surf_results.m.
+------------------------------------------------------------------------
 r2174 | gaser | 2023-01-31 15:41:18
 
 Changed paths:
