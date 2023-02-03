@@ -1898,9 +1898,9 @@ end
 % show MIP and keep position if window exists
 OV.fig_mip = 12;
 if ishandle(OV.fig_mip)
-  cat_vol_img2mip(OV, true);
+  cat_vol_img2mip(OV);
 else
-  cat_vol_img2mip(OV, true);
+  cat_vol_img2mip(OV);
   pos = get(gcf,'Position');
   set(gcf,'Position',[H.SS(3) - pos(3) 0 pos(3:4)]);
 end
