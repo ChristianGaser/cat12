@@ -64,8 +64,9 @@ end
 
 tbin = zeros(size(X));
 if ~isempty(S.roi)
-  tbin(find(S.roi)) = 1;
-  X(S.roi & isnan(X)) = 0;
+  tbin(S.roi>0) = 1;
+  X(isnan(X)) = 0;
+%  X(S.roi>0) = 1;
 end
 
 % use symmetric range if defined and negative values exist
@@ -131,6 +132,59 @@ for ii = 1:length(id)
   if p1 > 0 && p1 <= dim(2) && p2 > 0 && p2 <= dim(1)
     p_axi(p1,p2) = bin(id(ii));
     if ~isempty(S.roi)
+      t_axi(p1,p2) = tbin(id(ii));
+    end
+  end
+end
+
+
+
+if ~isempty(S.roi)
+  X(S.roi>0) = 1;
+
+  [~,id] = sort(abs(X),'ascend');
+  [~,bin] = histc(X,linspace(rmin,rmax,65));
+
+  % saggital plane
+  %----------------------------------------------------------------------
+  t_sag = zeros(dim(2),dim(3));
+
+  for ii = 1:length(id)
+
+    p1 = pos(id(ii),2);
+    p2 = pos(id(ii),3);
+
+    if p1 > 0 && p1 <= dim(2) && p2 > 0 && p2 <= dim(3)
+      t_sag(p1,p2) = tbin(id(ii));
+    end
+
+  end
+
+  % coronal plane
+  %----------------------------------------------------------------------
+  t_cor = zeros(dim(1),dim(3));
+
+  for ii = 1:length(id)
+
+    p1 = pos(id(ii),1);
+    p2 = pos(id(ii),3);
+
+    if p1 > 0 && p1 <= dim(1) && p2 > 0 && p2 <= dim(3)
+      t_cor(p1,p2) = tbin(id(ii));
+    end  
+  end
+
+
+  % axial plane
+  %----------------------------------------------------------------------
+  t_axi = zeros(dim(2),dim(1));
+
+  for ii = 1:length(id)
+
+    p1 = pos(id(ii),2);
+    p2 = pos(id(ii),1);
+
+    if p1 > 0 && p1 <= dim(2) && p2 > 0 && p2 <= dim(1)
       t_axi(p1,p2) = tbin(id(ii));
     end
   end
