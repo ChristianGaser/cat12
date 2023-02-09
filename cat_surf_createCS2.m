@@ -1322,7 +1322,7 @@ end
 if opt.SRP>2 % SRP23
 %% RD20210401: Optimization of white/pial/quantil surfaces 
 %  The idea of using the deformation of the central to pial/white surface
-%  based on the Ypp map but does not realy work 
+%  based on the Ypp map but does not really work 
 
     cmd = sprintf('CAT_SurfDistance -mean -thickness "%s" "%s" "%s"',Ppbt,Pcentral,Pthick);
     cat_system(cmd,opt.verb-3);
