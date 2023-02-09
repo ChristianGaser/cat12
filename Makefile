@@ -138,10 +138,11 @@ scp_standalone: scp_precompile
 # copy binaries after cross-compiling
 cp_binaries: 
 	-@echo copy binaries
-	-@test ! -f ~/Dropbox/c/CAT/build-*/Progs/*.o || rm ~/Dropbox/c/CAT/build-*/Progs/*.o
-	-@for i in CAT.glnx86/CAT*; do cp ~/Dropbox/c/CAT/build-x86_64-pc-linux/Progs/`basename $${i}` CAT.glnx86/ ; done
-	-@for i in CAT.w32/CAT*; do cp ~/Dropbox/c/CAT/build-i586-mingw32/Progs/`basename $${i}` CAT.w32/ ; done
-	-@for i in CAT.maci64/CAT*; do cp ~/Dropbox/c/CAT/build-native/Progs/`basename $${i}` CAT.maci64/ ; done
+	-@test ! -f ~/Dropbox/GitHub/CAT-Surface/build-*/Progs/*.o || rm ~/Dropbox/GitHub/CAT-Surface/build-*/Progs/*.o
+	-@for i in CAT.glnx86/CAT*; do cp ~/Dropbox/GitHub/CAT-Surface/build-x86_64-pc-linux/Progs/`basename $${i}` CAT.glnx86/ ; done
+	-@for i in CAT.w32/CAT*; do cp ~/Dropbox/GitHub/CAT-Surface/build-i586-mingw32/Progs/`basename $${i}` CAT.w32/ ; done
+	-@for i in CAT.maci64/CAT*; do cp ~/Dropbox/GitHub/CAT-Surface/build-native/Progs/`basename $${i}` CAT.maci64/ ; done
+	-@for i in CAT.maca64/CAT*; do cp ~/Dropbox/GitHub/CAT-Surface/build-native-arm64/Progs/`basename $${i}` CAT.maca64/ ; done
 
 # print check list for releasing
 checklist:
