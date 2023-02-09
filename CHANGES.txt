@@ -1,4 +1,16 @@
 ------------------------------------------------------------------------
+r2177 | gaser | 2023-02-09 17:14:05
+
+Changed paths:
+A  CAT.glnx86/CAT_MarchingCubesGenus0
+A  CAT.maca64/CAT_MarchingCubesGenus0
+A  CAT.maci64/CAT_MarchingCubesGenus0
+A  CAT.w32/CAT_MarchingCubesGenus0.exe
+ M CHANGES.txt
+
+Changed: Updated CAT-binaries and added new Marching Cubes method.
+Changed: Added support for Apple ARM64 to Makefile.
+------------------------------------------------------------------------
 r2176 | gaser | 2023-02-09 17:11:51
 
 Changed paths:
