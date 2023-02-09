@@ -12,6 +12,7 @@ CAT.glnx86/CAT_FixTopology filter=lfs diff=lfs merge=lfs -text
 CAT.glnx86/CAT_FractalDimension filter=lfs diff=lfs merge=lfs -text
 CAT.glnx86/CAT_Hausdorff filter=lfs diff=lfs merge=lfs -text
 CAT.glnx86/CAT_Isometize filter=lfs diff=lfs merge=lfs -text
+CAT.glnx86/CAT_MarchingCubesGenus0 filter=lfs diff=lfs merge=lfs -text
 CAT.glnx86/CAT_MarkDefects filter=lfs diff=lfs merge=lfs -text
 CAT.glnx86/CAT_RefineMesh filter=lfs diff=lfs merge=lfs -text
 CAT.glnx86/CAT_ResampleSphericalSurf filter=lfs diff=lfs merge=lfs -text
@@ -39,6 +40,7 @@ CAT.maca64/CAT_FixTopology filter=lfs diff=lfs merge=lfs -text
 CAT.maca64/CAT_FractalDimension filter=lfs diff=lfs merge=lfs -text
 CAT.maca64/CAT_Hausdorff filter=lfs diff=lfs merge=lfs -text
 CAT.maca64/CAT_Isometize filter=lfs diff=lfs merge=lfs -text
+CAT.maca64/CAT_MarchingCubesGenus0 filter=lfs diff=lfs merge=lfs -text
 CAT.maca64/CAT_MarkDefects filter=lfs diff=lfs merge=lfs -text
 CAT.maca64/CAT_RefineMesh filter=lfs diff=lfs merge=lfs -text
 CAT.maca64/CAT_ResampleSphericalSurf filter=lfs diff=lfs merge=lfs -text
@@ -66,6 +68,7 @@ CAT.maci64/CAT_FixTopology filter=lfs diff=lfs merge=lfs -text
 CAT.maci64/CAT_FractalDimension filter=lfs diff=lfs merge=lfs -text
 CAT.maci64/CAT_Hausdorff filter=lfs diff=lfs merge=lfs -text
 CAT.maci64/CAT_Isometize filter=lfs diff=lfs merge=lfs -text
+CAT.maci64/CAT_MarchingCubesGenus0 filter=lfs diff=lfs merge=lfs -text
 CAT.maci64/CAT_MarkDefects filter=lfs diff=lfs merge=lfs -text
 CAT.maci64/CAT_RefineMesh filter=lfs diff=lfs merge=lfs -text
 CAT.maci64/CAT_ResampleSphericalSurf filter=lfs diff=lfs merge=lfs -text
@@ -93,6 +96,7 @@ CAT.w32/CAT_FixTopology.exe filter=lfs diff=lfs merge=lfs -text
 CAT.w32/CAT_FractalDimension.exe filter=lfs diff=lfs merge=lfs -text
 CAT.w32/CAT_Hausdorff.exe filter=lfs diff=lfs merge=lfs -text
 CAT.w32/CAT_Isometize.exe filter=lfs diff=lfs merge=lfs -text
+CAT.w32/CAT_MarchingCubesGenus0.exe filter=lfs diff=lfs merge=lfs -text
 CAT.w32/CAT_MarkDefects.exe filter=lfs diff=lfs merge=lfs -text
 CAT.w32/CAT_RefineMesh.exe filter=lfs diff=lfs merge=lfs -text
 CAT.w32/CAT_ResampleSphericalSurf.exe filter=lfs diff=lfs merge=lfs -text
