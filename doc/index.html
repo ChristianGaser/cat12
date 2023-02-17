@@ -3154,13 +3154,16 @@
             
             <i>White Matter Hyperintensity Correction (WMHC)</i>
             <p>The greater dependency of AMAP PVE segmentation on image intensities requires detection and handling of <i>White Matter Hyperintensities</i> (WMHs, <a href="https://dx.doi.org/10.13140/RG.2.2.26753.20326">Dahnke et al. 2019)</a>.
-            An atlas-region-growing strategy is used to detect WMHs and assign them to GM (like in VBM8, default), WM, or as a separate class. 
+            An atlas-region-growing strategy is used to detect WMHs and assign them to GM (like in VBM8, default), WM, or as a separate class.</p>
 <!--            For details see <a href="cat_methods_WMHC.html">WMHC</a>.</p> -->
             
             <i>Stroke Lesion Correction (SLC)</i></p>
-            <p>To avoid improper volumetric deformations in stroke lesions, CAT allows to suppress strong (high-frequent) deformation in the Dartel/Shooting registration schemes (<a href="#Fig1">Figure 1</a>). 
+            <p>To avoid improper volumetric deformations in stroke lesions, CAT allows to suppress strong (high-frequent) deformation in the Dartel/Shooting registration schemes. 
             The lesions have to be set to zero (e.g., by using the  <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.maskimg');">Manual image (lesion) masking</a> batch) and the SLC flag has to be activate in the <a class="function" href="matlab:cat('expert');">expert mode</a> of CAT.
             The functions are still in development and a customized surface registration has not yet been implemented.</p> 
+            <p><img id="figure4" width=80% alt="cat_SLC" src="images/cat_SLC_msk_c0009s0010t01A.png"</p>
+            <figcaption><b>Stroke Lesion Correction</b> Shown is the grey matter segmentation of subject <i>SLC_msk_c0009s0010t01</i> from the <a href="http://fcon_1000.projects.nitrc.org/indi/retro/atlas.html">ATLAS</a> database without (left) and with <i>Stroke Lesion Correction</i> (SLC; right)</figcaption>
+            </p>
 
             <!-- ################################################################################# -->
             <h4 id="surf_proc">Surface-based preprocessing</h4>
@@ -3700,8 +3703,13 @@
             </p>
 
             <!-- ################################################################################# -->
-<!--
+
             <h2 id="faq">FAQ</h2>
+            
+            <details>            
+              <summary><u>The old "Check Sample Homogeneity" tool was quite useful for finding duplicate subjects in large samples. The new homogeneity tool, which uses Z-score, no longer supports this.</u></summary>
+              Estimating the Z-score is much faster than calculating the covariance matrix between all scans, especially for larger samples. However, the old tool is still available <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_homogeneity');">here</a>.
+            </details>            
 
             <details>            
               <summary><u>Can I overlay more than one result on the surface?</u></summary>
@@ -3709,12 +3717,95 @@
               Please note that the surface maps should be thresholded (i.e. using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x');">Transform and Threshold SPM-maps</a>)              
             </details>            
             
+
+
+
+
             <details>            
-              <summary><u>The old "Check Sample Homogeneity" tool was quite useful for finding duplicate subjects in large samples. The new homogeneity tool, which uses Z-score, no longer supports this.</u></summary>
-              Estimating the Z-score is much faster than calculating the covariance matrix between all scans, especially for larger samples. However, the old tool is still available <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_homogeneity');">here</a>.
+              <summary><u>Which of the morphological measures (grey matter or cortical thickness) is the best to assess atrophy/neurodegeneration in Alzheimer's disease?</u></summary>
+              Cortical thickness is the better biological measure of Alzheimer's disease, while grey matter volume is more sensitive. This is because surface reconstruction is more susceptible to image quality problems and thickness is estimated in the sub-millimetre range, whereas images have a spatial resolution of about 1 mm. In Alzheimer's disease, however, atrophy is quite pronounced, so cortical thickness is also a reliable indicator of these effects. Grey matter volume, on the other hand, has the advantage of providing additional measurements in the hippocampus and amygdala, which are key structures in Alzheimer's disease. I would definitely try both and decide based on the results.
             </details>            
 
--->
+            <details>            
+              <summary><u>How can I run CAT12 on a HPC system?</u></summary>
+              On the HPC I would prefer to call CAT12 from the shell without display. Here you can either use the standalone version of CAT12 (without need of Matlab license) or the standard version. <br>
+              The <a href="https://neuro-jena.github.io/enigma-cat12/">ENIGMA-CAT12 protocol</a> describes the available steps. You can decide with two flags (-ns, -e) whether you call the standalone or standard version.<br>
+              Standalone version:<brY
+              /software/CAT12.8.2_MCR/standalone/cat_standalone.sh -m /software/CAT12.8.2_MCR/v93 \<br>
+              -b /software/CAT12.8.1_MCR/standalone/cat_standalone_segment_enigma.m \<br>
+              /data/enigma-data/raw/sub*.nii.gz<br>
+              Standard version:<br>
+              your_spm12_folder/toolbox/cat12/standalone/cat_standalone.sh -ns -e -m /usr/local/bin/matlab \<br>
+              -b your_spm12_folder/toolbox/cat12/standalone/cat_standalone_segment_enigma.m \<br>
+              -s your_spm12_folder /data/enigma-data/raw/sub*.nii.gz
+            </details>            
+
+            <details>            
+              <summary><u>I have doubts about controlling for TIV in surface analysis. I read in the CAT manual that TIV should not be added as a covariate, but I couldn't find the reason why. I have observed small but significant effects of TIV on surface measures of certain ROIs, and have also seen some papers using TIV as a covariate in cortical thickness and gyrification analyses. Is it methodologically wrong to include TIV as a covariate in SBM using CAT?</u></summary>
+              Usually cortical thickness is quite robust to changes in TIV, so it's not necessary to control for it. However, there may be data where this will additionally remove variance from your data that is related to brain size, and there is no clear rule that it should not be included. Therefore, you can optionally use TIV as a nuisance parameter to help remove variance that is not related to your parameter of interest in your data.
+            </details>            
+
+            <details>            
+              <summary><u>Is there a way to extract ROI data using a different atlas to the one used during pre-processing?</u></summary>
+              Unfortunately, not. You have to select the atlas before processing the data.
+            </details>            
+
+            <details>            
+              <summary><u>I see that some dura are classified as GM in some of the subjects. Would you recommend trying some of the other skull stripping options or doing some manual edits? This is happening in a few subjects.</u></summary>
+              Some MR sequences show more difficulty in skull-stripping and my personal experience is that changing the skull-stripping approach in CAT12 does not really help much. However, you can try the older gcut method or the SPM approach in CAT12. Usually the remaining non-brain areas lead to higher local variance. Therefore, it is less likely to find effects in these areas, which is probably not a problem.
+            </details>            
+
+            <details>            
+              <summary><u>I would like to use CAT12 for VBM/SBM analyses with my stroke patients. I have lesion masks (manually traced on T2w images) but I am wondering how to mask out the lesion in CAT12 pre-processing?</u></summary>
+              CAT12 can now deal with lesions that have to be set to zero in your image using the Stroke Lesion Correction (SLC) in expert mode. These lesion areas are not used for segmentation or spatial registration, thus these preprocessing steps should be almost unaffected. If you have created masks you can apply these masks using the <a class="function" href="matlab:spm_jobman('interactive','','matlabbatch{1}.spm.tools.cat.tools.maskimg');">Lesion masking</a> tool in CAT12.
+            </details>            
+
+            <details>            
+              <summary><u>Can I convert my T-maps to effect size maps?</u></summary>
+              You can use the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x');">threshold and transform spmT plots</a> function to do this. Note, however, that the conversion to Cohen's d is only useful for 2-sample t-tests and the conversion to correlation coefficient is only useful for linear regression. The same applies to the conversion to R2 for F maps.
+            </details>            
+
+            <details>            
+              <summary><u>Is there any plan to extend the current CAT12 segmentation based only on T1w images to include FLAIR or T2 images?</u></summary>
+              No, there are no plans to include T2 or FLAIR in CAT12 in the near future. However, I would try to see if your additional T2 or FLAIR really helps to get a more accurate segmentation. While skull-stripping will definitely benefit from multi-channel segmentation, segmentation between GM and WM will often lead to less accurate results due to the lower contrast-to-noise ratio of T2 or FLAIR sequences.<br>
+              If you are trying to use FLAIR images to detect white matter hyperintensities (WMHs), you can try the LST toolbox. Here you can detect and fill the lesions to obtain a corrected T1 image.
+            </details>            
+
+            <details>            
+              <summary><u>Is there a workflow to use the resampled surfaces for permutation analyses in FSL randomise or PALM?</u></summary>
+              Randomize will not work with surfaces, but PALM supports gifti files. Thus, the resampled files should work with PALM.
+            </details>            
+
+            <details>            
+              <summary><u>If I use atlas ROI tools in CAT12 there are two different Neuromorphometric atlases listed. Which one should I use?</u></summary>
+              SPM12 provides the Neuromorphometric atlas in the MNI space that is used in SPM12. Please take care that you always use the atlases that are in CAT12 MNI152NLin2009cAsym space. These are indicated by a leading "cat12_" in the name.
+            </details>            
+
+            <details>            
+              <summary><u>I am using the TFCE toolbox to correct a cortical thickness analysis done with CAT12. Unexpectedly, my results after TFCE using a correction are extremely large at p<0.05 FWE compared to uncorrected results at p<0.001 and I am wondering if something might be wrong.</u></summary>
+              In rare cases, such a strong difference may be seen, especially for surface analysis. You may have a large and distributed effect that is significant at p<0.05 or 0.01 uncorrected. This large cluster is simply emphasised by its size by the TFCE approach. I would therefore recommend that you check your results for the parametric SPM test using a more liberal threshold and see if this is similar to the pattern you get with the TFCE.
+            </details>            
+
+            <details>            
+              <summary><u>I have processed my data on different platforms and obtain slightly different results if I calculate the differences between the GM segmentations for the same data set.</u></summary>
+              Unfortunately this can happen and has been investigated in this <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0038234">paper</a> for the Freesurfer software. The authors also found different results for different OS X versions, probably due to the use of different software libraries. Personally, I haven't investigated the effect of different OS X versions, but I can confirm that different Matlab versions and operating systems will cause deviations using CAT12. However, the effect on the resulting statistical analysis is rather subtle. Some clusters change slightly in size, and even if some local values are changed the overall difference is quite small and will not affect your statistical results too much.
+            </details>  
+                      
+            <details>            
+              <summary><u>I have done the VBM processing with the CAT12 pipeline (as explained in the manual) and with the classical SPM12 DARTEL pipeline as explained in the John Ashburner <a href="https://www.fil.ion.ucl.ac.uk/~john/misc/VBMclass15.pdf">tutorial</a>. The results of these two pipelines give me a different result.</u></summary>
+              There are many differences in the pre-processing approaches between SPM12 and CAT12, and as is often the case, different methods give different results (even between CAT12 versions there are differences in the results). In CAT12 I also apply noise reduction, local adaptive segmentation and other methods that can affect the results. The only advice I can give is to choose the approach that best fits your hypothesis. It might also help to lower the thresholds to see the differences more clearly.
+            </details>       
+                 
+            <details>            
+              <summary><u>What are the units of the ROI values that are extracted in the csv file?</u></summary>
+              These are the mean volumes (separate for GM/WM) derived in native space and are defined in mL.
+            </details>   
+                     
+            <details>            
+              <summary><u>Why is smoothing recommended for fractal dimension analysis (and doesn't interfere with it)? It seems that smoothing would always end up reducing the FD (flattening over complexity/detail) and thus make it difficult to compare the FD between subjects.</u></summary>
+              Gaussian smoothing can be thought of as a weighted sum (average) of surrounding neighbours. The spatial scale of folding measures, such as gyrification or fractal dimension, is only meaningful when considering an area that spans the distance between a gyrus and a sulcus. Thus, Gaussian smoothing is the correct way to account for the spatial scale of folding measures, and this is also the reason why the recommended smoothing size is larger compared to thickness measures.
+            </details>            
+
             <!-- ################################################################################# -->
             <h2 id="cite">Citing CAT12</h2>
 
@@ -4013,8 +4104,8 @@
                   </ul>
                 </li>
 
-                <li><a href="#faq">FAQ</a></li>
 -->
+                <li><a href="#faq">FAQ</a></li>
                 <li><a href="#cite">Citing CAT</a></li>
                 <li><a href="#refs">References</a></li>
 <!--
