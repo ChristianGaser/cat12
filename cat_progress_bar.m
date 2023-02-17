@@ -34,7 +34,11 @@ switch lower(action)
         time_old = clock;
         progress_step = 1;
 
-        Fwaitbar = waitbar(0,arg2,'Name',arg2);
+        try
+          Fwaitbar = waitbar(0,arg2,'Name',arg2);
+        catch
+          Fwaitbar = waitbar(0,arg2);
+        end
 
     % Set
     %-------------------------------------------------------------------
