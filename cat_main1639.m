@@ -771,7 +771,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
     if job.extopts.SRP >= 20
       try
         surf = unique(surf,'stable'); 
-      else
+      catch
         surf = unique(surf); 
       end
       %% RD202107: Load Shooting template to correct severe defects in the
