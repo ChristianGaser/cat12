@@ -1,4 +1,34 @@
 ------------------------------------------------------------------------
+r2180 | gaser | 2023-02-24 16:44:28
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M cat_defaults.m
+ M cat_main.m
+ M cat_main1639.m
+ M cat_plot_circular.m
+ M cat_progress_bar.m
+ M cat_stat_check_cov_old.m
+ M cat_stat_homogeneity.m
+ M cat_stat_quality_measures.m
+AM cat_surf_createCS3.m
+ M cat_vol_morph.m
+ M check_pipeline.sh
+ M doc/cat.html
+ M templates_MNI152NLin2009cAsym/neuromorphometrics.csv
+
+Changed: Prepared calls to new CS3 surface pipeline in many functions.
+Changed: Updated help text for cat_plot_circular.m.
+Changed: Replaced try/catch calls in cat_progress_bar by check for image handle.
+Changed: Added checks for EC_abs and defect_size parameter to consider new CS3 
+         surface pipeline that is not providing these values anymore.
+Changed: Added some more fields for circular plots to neuromorphometrics atlas.
+Added:   New Surface pipeline cat_surf_createCS3.m that uses volume-based
+         topology correction that prevents many issues in surface processing and
+         also uses adaptive vdist that controls mesh resolution w.r.t. spatial
+         resolution of the input images.           
+------------------------------------------------------------------------
 r2179 | gaser | 2023-02-17 10:34:34
 
 Changed paths:
@@ -608,7 +638,8 @@ Fixed:   Some markers for the scatterplot in cat_stat_homogeneity were not
          allowed for all Matlab versions.
 Fixed:   Call of cat_stat_check_SPM from CAT12 GUI was not correct.
 Fixed:   Corrected use of different parameter fields in of cat_stat_check_SPM.m.
-Fixed:   Corrected some smaller issues with filenames in cat_surf_results.m.------------------------------------------------------------------------
+Fixed:   Corrected some smaller issues with filenames in cat_surf_results.m.
+------------------------------------------------------------------------
 r2149 | rdahnke | 2022-11-29 14:50:04
 
 Changed paths:

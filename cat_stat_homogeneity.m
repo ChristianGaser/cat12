@@ -404,7 +404,7 @@ for i=1:n_subjects
   if H.mesh_detected
     if isfield(xml.qualityratings,'NCR')
     % check for newer available surface measures
-      if isfield(xml.subjectmeasures,'EC_abs')
+      if isfield(xml.subjectmeasures,'EC_abs') && isfinite(xml.subjectmeasures.EC_abs) && isfinite(xml.subjectmeasures.defect_size)
         H.xml.QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR xml.subjectmeasures.EC_abs xml.subjectmeasures.defect_size];
       else
         H.xml.QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR NaN NaN];
