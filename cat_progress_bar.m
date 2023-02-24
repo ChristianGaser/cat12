@@ -65,7 +65,7 @@ switch lower(action)
         else
           str = sprintf('%.f%%',iter/n_iterations*100);
         end
-        try, waitbar(iter/n_iterations,Fwaitbar,str); end
+        if ishandle(Fwaitbar), waitbar(iter/n_iterations,Fwaitbar,str); end
           
         % save old values
         time_old = clock;
@@ -73,7 +73,7 @@ switch lower(action)
     % Clear
     %-------------------------------------------------------------------
     case 'clear'
-        try, delete(Fwaitbar); end
+        if ishandle(Fwaitbar), delete(Fwaitbar); end
 
     % Error
     %-------------------------------------------------------------------

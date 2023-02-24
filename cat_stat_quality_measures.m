@@ -159,7 +159,7 @@ if isxml
     if mesh_detected
       if isfield(xml.qualityratings,'NCR')
       % check for newer available surface measures
-        if isfield(xml.subjectmeasures,'EC_abs')
+        if isfield(xml.subjectmeasures,'EC_abs') && isfinite(xml.subjectmeasures.EC_abs) && isfinite(xml.subjectmeasures.defect_size)
           QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR xml.subjectmeasures.EC_abs xml.subjectmeasures.defect_size];
         else
           QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR NaN NaN];

@@ -283,6 +283,8 @@ run_pipeline ()
   # set ROI output and surface output
   if [ $volumes_only -eq 0 ]; then
     echo "cat.output.surface = 1;" >> ${spm12_tmp}/toolbox/cat12/cat_defaults.m
+  else
+    echo "cat.output.surface = 0;" >> ${spm12_tmp}/toolbox/cat12/cat_defaults.m
   fi
   echo "cat.output.ROI = 1;" >> ${spm12_tmp}/toolbox/cat12/cat_defaults.m
   echo "cat.extopts.ignoreErrors = 1;" >> ${spm12_tmp}/toolbox/cat12/cat_defaults.m
