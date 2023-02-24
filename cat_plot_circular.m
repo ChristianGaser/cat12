@@ -1,6 +1,5 @@
 function h = cat_plot_circular(data, opt)
-
-% cat_plot_circular Plots correlation matrix as a cat_plot_circular
+% cat_plot_circular Plots correlation/connection matrix as a circular plot
 %
 % usage: vargout = cat_plot_circular(data,opt);
 %
@@ -20,9 +19,25 @@ function h = cat_plot_circular(data, opt)
 %                   correlations and the color in the second row for
 %                   positive correlations.
 %
-%     opt.ncolor    Change color of the nodes with an RGB triplet.
+%     opt.tcolor    Change text color.
+%
+%     opt.bcolor    Change background color.
+%
+%     opt.ncolor    Change node colors of the doughnut plot.
+%
+%     opt.maxlinewidth Maximal line width for connections.
+%
+%     opt.doughnut  Value of doughnut chart.
+%
+%     opt.gap       Gap between doughnut chart.
+%
+%     opt.mwidth    Multiply width of doughnut chart.
+%
+%     opt.fontsize  Font size
 %
 %     opt.saveas    Save figure as image (e.g. png or pdf).
+%
+%     opt.fig       Figure handle.
 %
 %   H = cat_plot_circular(...) Returns a structure with handles to the graphic objects
 %
@@ -43,14 +58,13 @@ function h = cat_plot_circular(data, opt)
 %   cat_plot_circular(x)
 %
 %   % Supply custom labels as ['aa'; 'bb'; 'cc'; ...] or {'Hi','how','are',...}
-%   cat_plot_circular(x, repmat(('a':'j')',1,2))
-%   cat_plot_circular(x, {'Hi','how','is','your','day?', 'Do','you','like','cat_plot_circulars?','NO!!'})
+%   cat_plot_circular(x, struct('label',repmat(('a':'j')',1,2)))
 %
 %   % Customize curve colors
-%   cat_plot_circular([],[],[1,0,1;1 1 0])
+%   cat_plot_circular(x,struct('ccolor',[1,0,1;1 1 0])) 
 %
 %   % Customize node color
-%   cat_plot_circular([],[],[],[0,1,0])
+%   cat_plot_circular(x,struct('ncolor',[0,1,0]))
 %
 %   % Customize manually other aspects
 %   h   = cat_plot_circular;
@@ -81,7 +95,10 @@ t      = (0.01: 0.005 :0.99)';
 ecolor = [.25 .103922 .012745];
 
 % Some defaults
-if nargin < 1 || isempty(data);        data      = (rand(50)*2-1).^29;                                  end
+if nargin < 1 || isempty(data)
+  data = (rand(50)*2-1).^29;
+end
+
 sz = size(data);
 
 % default parameter
@@ -93,6 +110,7 @@ def.doughnut       = [];            % value of doughnut chart
 def.gap            = [];            % gap between doughnut chart
 def.mwidth         = [];            % multiply width of doughnut chart
 def.saveas         = '';            % save image
+def.figure         = [];            % figure handle
 def.fontsize       = 8;             % Fontsize
 def.tcolor         = [0.0 0.0 0.0]; % text color
 def.bcolor         = [1.0 1.0 1.0]; % background color
@@ -145,7 +163,11 @@ end
 %% Engine
 
 % Create figure
-figure('renderer','opengl','visible','off')
+if isempty opt.fig
+  figure('renderer','opengl','visible','off')
+else
+  figure(opt.fig,'renderer','opengl','visible','off')
+end
 axes('NextPlot','add')
 
 % Index only low triangular matrix without main diag
@@ -180,7 +202,7 @@ if ~isempty(opt.doughnut)
     opt.doughnut = opt.doughnut';
   end
   if length(data) ~= size(opt.doughnut,1)
-    error('cat_plot_circular:validDoughnut','Size if data and doughnut differs.');
+    error('cat_plot_circular:validDoughnut','Size of data and doughnut differs.');
   end
   step2  = tau/size(opt.doughnut,1);
   theta2 = -.25*tau : step2 : .75*tau - step2;
