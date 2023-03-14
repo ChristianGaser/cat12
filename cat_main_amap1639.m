@@ -11,8 +11,8 @@ function [prob,indx,indy,indz,th] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res)
 % prob .. new AMAP segmenation (4D)
 % ind* .. index elements to asign a subvolume
 % Ymi  .. local intensity normalized source image
-% Yb   .. brain mask
-% Yb0  .. origina brain mask 
+% Yb   .. brain mask (SPM12)
+% Yb0  .. original brain mask 
 % Ycls .. SPM segmentation 
 % job  .. SPM/CAT parameter structure
 % res  .. SPM segmentation structure

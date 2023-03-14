@@ -283,8 +283,10 @@ run_pipeline ()
   # set ROI output and surface output
   if [ $volumes_only -eq 0 ]; then
     echo "cat.output.surface = 1;" >> ${spm12_tmp}/toolbox/cat12/cat_defaults.m
+    str_surf=""
   else
     echo "cat.output.surface = 0;" >> ${spm12_tmp}/toolbox/cat12/cat_defaults.m
+    str_surf=" -ns "
   fi
   echo "cat.output.ROI = 1;" >> ${spm12_tmp}/toolbox/cat12/cat_defaults.m
   echo "cat.extopts.ignoreErrors = 1;" >> ${spm12_tmp}/toolbox/cat12/cat_defaults.m
@@ -302,9 +304,9 @@ run_pipeline ()
     large=`grep "\-large" ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh`
     # call "-large" option only if available for that release
     if [ -n "$large" ]; then
-      ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh -m ${matlab} -large ${bg_flag_long} ${calc_tmp}/long/*.[in][mi][gi]
+      ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh -m ${matlab} ${str_surf} -large ${bg_flag_long} ${calc_tmp}/long/*.[in][mi][gi]
     else
-      ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh -m ${matlab} ${bg_flag_long} ${calc_tmp}/long/*.[in][mi][gi] 
+      ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh -m ${matlab} ${str_surf} ${bg_flag_long} ${calc_tmp}/long/*.[in][mi][gi] 
     fi
   fi
   

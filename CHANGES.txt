@@ -1,4 +1,155 @@
 ------------------------------------------------------------------------
+r2181 | gaser | 2023-03-14 14:52:51
+
+Changed paths:
+ M CAT.glnx86/CAT_3dVol2Surf
+ M CAT.glnx86/CAT_AddValuesToSurf
+ M CAT.glnx86/CAT_AverageSurfaces
+ M CAT.glnx86/CAT_BlurSurfHK
+ M CAT.glnx86/CAT_Central2Pial
+ M CAT.glnx86/CAT_DeformSurf
+ M CAT.glnx86/CAT_DumpCurv
+ M CAT.glnx86/CAT_DumpSurfArea
+ M CAT.glnx86/CAT_DumpSurfaceRatio
+ M CAT.glnx86/CAT_FixTopology
+ M CAT.glnx86/CAT_FractalDimension
+ M CAT.glnx86/CAT_Hausdorff
+ M CAT.glnx86/CAT_Isometize
+ M CAT.glnx86/CAT_MarchingCubesGenus0
+ M CAT.glnx86/CAT_MarkDefects
+ M CAT.glnx86/CAT_RefineMesh
+ M CAT.glnx86/CAT_ResampleSphericalSurf
+ M CAT.glnx86/CAT_ResampleSphericalSurfSPH
+ M CAT.glnx86/CAT_ResampleSurf
+ M CAT.glnx86/CAT_SelfIntersect
+ M CAT.glnx86/CAT_SeparatePolygon
+ M CAT.glnx86/CAT_SmoothConvexity
+AD CAT.glnx86/CAT_SmoothDiffusion
+ M CAT.glnx86/CAT_SulcusDepth
+ M CAT.glnx86/CAT_Surf2Sphere
+ M CAT.glnx86/CAT_Surf2Vol
+ M CAT.glnx86/CAT_SurfDistance
+ M CAT.glnx86/CAT_WarpSurf
+ M CAT.maca64/CAT_3dVol2Surf
+ M CAT.maca64/CAT_AddValuesToSurf
+ M CAT.maca64/CAT_AverageSurfaces
+ M CAT.maca64/CAT_BlurSurfHK
+ M CAT.maca64/CAT_Central2Pial
+ M CAT.maca64/CAT_DeformSurf
+ M CAT.maca64/CAT_DumpCurv
+ M CAT.maca64/CAT_DumpSurfArea
+ M CAT.maca64/CAT_DumpSurfaceRatio
+ M CAT.maca64/CAT_FixTopology
+ M CAT.maca64/CAT_FractalDimension
+ M CAT.maca64/CAT_Hausdorff
+ M CAT.maca64/CAT_Isometize
+ M CAT.maca64/CAT_MarchingCubesGenus0
+ M CAT.maca64/CAT_MarkDefects
+ M CAT.maca64/CAT_RefineMesh
+ M CAT.maca64/CAT_ResampleSphericalSurf
+ M CAT.maca64/CAT_ResampleSphericalSurfSPH
+ M CAT.maca64/CAT_ResampleSurf
+ M CAT.maca64/CAT_SelfIntersect
+ M CAT.maca64/CAT_SeparatePolygon
+ M CAT.maca64/CAT_SmoothConvexity
+AD CAT.maca64/CAT_SmoothDiffusion
+ M CAT.maca64/CAT_SulcusDepth
+ M CAT.maca64/CAT_Surf2Sphere
+ M CAT.maca64/CAT_Surf2Vol
+ M CAT.maca64/CAT_SurfDistance
+ M CAT.maca64/CAT_WarpSurf
+ M CAT.maci64/CAT_3dVol2Surf
+ M CAT.maci64/CAT_AddValuesToSurf
+ M CAT.maci64/CAT_AverageSurfaces
+ M CAT.maci64/CAT_BlurSurfHK
+ M CAT.maci64/CAT_Central2Pial
+ M CAT.maci64/CAT_DeformSurf
+ M CAT.maci64/CAT_DumpCurv
+ M CAT.maci64/CAT_DumpSurfArea
+ M CAT.maci64/CAT_DumpSurfaceRatio
+ M CAT.maci64/CAT_FixTopology
+ M CAT.maci64/CAT_FractalDimension
+ M CAT.maci64/CAT_Hausdorff
+ M CAT.maci64/CAT_Isometize
+ M CAT.maci64/CAT_MarchingCubesGenus0
+ M CAT.maci64/CAT_MarkDefects
+ M CAT.maci64/CAT_RefineMesh
+ M CAT.maci64/CAT_ResampleSphericalSurf
+ M CAT.maci64/CAT_ResampleSphericalSurfSPH
+ M CAT.maci64/CAT_ResampleSurf
+ M CAT.maci64/CAT_SelfIntersect
+ M CAT.maci64/CAT_SeparatePolygon
+ M CAT.maci64/CAT_SmoothConvexity
+AD CAT.maci64/CAT_SmoothDiffusion
+ M CAT.maci64/CAT_SulcusDepth
+ M CAT.maci64/CAT_Surf2Sphere
+ M CAT.maci64/CAT_Surf2Vol
+ M CAT.maci64/CAT_SurfDistance
+ M CAT.maci64/CAT_WarpSurf
+ M CAT.w32/CAT_3dVol2Surf.exe
+ M CAT.w32/CAT_AddValuesToSurf.exe
+ M CAT.w32/CAT_AverageSurfaces.exe
+ M CAT.w32/CAT_BlurSurfHK.exe
+ M CAT.w32/CAT_Central2Pial.exe
+ M CAT.w32/CAT_DeformSurf.exe
+ M CAT.w32/CAT_DumpCurv.exe
+ M CAT.w32/CAT_DumpSurfArea.exe
+ M CAT.w32/CAT_DumpSurfaceRatio.exe
+ M CAT.w32/CAT_FixTopology.exe
+ M CAT.w32/CAT_FractalDimension.exe
+ M CAT.w32/CAT_Hausdorff.exe
+ M CAT.w32/CAT_Isometize.exe
+ M CAT.w32/CAT_MarchingCubesGenus0.exe
+ M CAT.w32/CAT_MarkDefects.exe
+ M CAT.w32/CAT_RefineMesh.exe
+ M CAT.w32/CAT_ResampleSphericalSurf.exe
+ M CAT.w32/CAT_ResampleSphericalSurfSPH.exe
+ M CAT.w32/CAT_ResampleSurf.exe
+ M CAT.w32/CAT_SelfIntersect.exe
+ M CAT.w32/CAT_SeparatePolygon.exe
+ M CAT.w32/CAT_SmoothConvexity.exe
+AD CAT.w32/CAT_SmoothDiffusion.exe
+ M CAT.w32/CAT_SulcusDepth.exe
+ M CAT.w32/CAT_Surf2Sphere.exe
+ M CAT.w32/CAT_Surf2Vol.exe
+ M CAT.w32/CAT_SurfDistance.exe
+ M CAT.w32/CAT_WarpSurf.exe
+ M CHANGES.txt
+ M Contents.m
+ M cat_defaults.m
+ M cat_long_main.m
+ M cat_long_multi_run.m
+ M cat_main1639.m
+ M cat_main_amap1639.m
+ M cat_main_reportstr.m
+ M cat_main_updateSPM1639.m
+ M cat_stat_analyze_ROIs.m
+ M cat_surf_createCS2.m
+ M cat_surf_createCS3.m
+ M cat_surf_create_TPM_hull_surface.m
+ M cat_surf_surf2roi.m
+ M cat_vol_morph.m
+ M cat_vol_sanlm.m
+ M check_pipeline.sh
+ M doc/cat.html
+ M templates_MNI152NLin2009cAsym/Tian_Subcortex_S4_7T.nii
+
+Changed: Rescued old cat_vol_sanlm from r1980 that worked much better and 
+         renamed current version to cat_vol_sanlm2180.m.
+Changed: Updated CAT binaries to newer version.
+Changed: Set new CS3 surface pipeline as default.
+Changed: Added flag for filtering avg images with SANLM to cat_long_main.m.
+Changed: Many changes to new CS3 surface pipeline that now additionally uses
+         brainmask from gcut.
+Changed: Suppress output of surface parameters in cat_main_reportfig.m if values
+         are not defined (i.e. for new CS3 pipeline).
+Changed: Disabled isMP2RAGE flag in cat_main_updateSPM1639.m that worked not
+         correct.
+Changed: Removed progress bar from cat_surf_surf2roi.m.
+Fixed:   Corrected bug in cat_vol_morph.m where the lab-option was not always
+         considered correctly.
+Fixed:   Corrected orientation of Tians Subcortical atlas.
+         ------------------------------------------------------------------------
 r2180 | gaser | 2023-02-24 16:44:28
 
 Changed paths:
@@ -1756,10 +1907,10 @@ Changed paths:
  M cat_vol_sanlm2.m
 
 
-Changed: Supress output of cat_progress_bar for values close to 0%.
+Changed: Suppress output of cat_progress_bar for values close to 0%.
 Changed: Changed many cat_progress_bar calls back to spm_progress_bar because
          during preprocessing multiple calls to cat_progress_bar are annoying.
-Fixed:   Corrected bug in cat_surf_results.m for drwaing log-scale for even 
+Fixed:   Corrected bug in cat_surf_results.m for drawing log-scale for even 
          number of XTick values.
 Fixed:   Corrected some smaller bugs in cat_stat_homogeneity.m for meshes.
 
@@ -5001,7 +5152,7 @@ M       cat_surf_createCS2.m
 M       cat_vol_headtrimming.m
 M       cat_vol_sanlm.m
 
-(1) Fixed:   Reversed unwanded submission of cat_surf_createCS in previous version.
+(1) Fixed:   Reversed unwanted submission of cat_surf_createCS in previous version.
 (2) Fixed:   Corrected problems in cat_io_volctype with small changes in 
              cat_stat_histth and cat_io_headtrimming.
 (3) Fixed:   Added missed variable in cat_vol_sanlm. 
