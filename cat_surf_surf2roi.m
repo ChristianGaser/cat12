@@ -65,9 +65,7 @@ function varargout = cat_surf_surf2roi(job)
   if ~isfield(job,'rdata')
     job.rdata = cat_vol_findfiles(fullfile(fileparts(mfilename('fullpath')),'atlases_surfaces'),{'lh.aparc_*'});
   end
-  
-  cat_progress_bar('Init',numel(job.rdata) * sum(cellfun('length',job.cdata)),'Atlases','Atlases Completed');
-    
+      
   %% ROI evaluation
   FN = fieldnames(job.avg);
   
@@ -75,7 +73,7 @@ function varargout = cat_surf_surf2roi(job)
 
   [tmp, pth_templates] = fileparts(cat_get_defaults('extopts.pth_templates'));
   % processing
-  [CATrel, CATver] = cat_version; counter = 1; 
+  [CATrel, CATver] = cat_version; 
   for ri=1:numel(job.rdata)
     %% load atlas map
     %  load the cdata that describe the ROIs of each hemisphere and
@@ -216,15 +214,11 @@ function varargout = cat_surf_surf2roi(job)
                 delete(char(cat_surf_rename(sinfo,'dataname',[sinfo.dataname '.resampledBySurf2roi'],'ee','','side','rh')));
               end
             end
-          end
-          
-          cat_progress_bar('Set',counter); counter = counter + 1; 
+          end          
         end
       end
     end
   end
-
-  cat_progress_bar('Clear');
 
   if nargout==1, varargout{1}.xmlname = xmlname; end
   

@@ -376,7 +376,7 @@ function str = cat_main_reportstr(job,res,qa)
     sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.ICR),mark2grad(qa.qualityratings.ICR))))]; % not important and more confusing 
   str{2} = [str{2} struct('name','\bf Weighted average (IQR):','value',marks2str(qa.qualityratings.IQR,...
     sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.IQR),mark2grad(qa.qualityratings.IQR))))];
-  if isfield(qa.qualitymeasures,'SurfaceEulerNumber') && ~isempty(qa.qualitymeasures.SurfaceEulerNumber)
+  if isfield(qa.qualitymeasures,'SurfaceEulerNumber') && ~isempty(qa.qualitymeasures.SurfaceEulerNumber)  && isfinite(qa.qualitymeasures.SurfaceEulerNumber)
     if job.extopts.expertgui
       if isfield(qa.qualitymeasures,'SurfaceDefectNumber') && ~isempty(qa.qualitymeasures.SurfaceDefectNumber) 
         str{2} = [str{2} struct('name',' Surface Euler / defect number:','value',marks2str(qa.qualityratings.SurfaceEulerNumber,...
@@ -392,7 +392,7 @@ function str = cat_main_reportstr(job,res,qa)
     end
   end
   
-  if isfield(qa.qualitymeasures,'SurfaceDefectArea') && ~isempty(qa.qualitymeasures.SurfaceDefectArea) && ~any(job.output.surface == [5 6])
+  if isfield(qa.qualitymeasures,'SurfaceDefectArea') && ~isempty(qa.qualitymeasures.SurfaceDefectArea) && ~any(job.output.surface == [5 6])  && isfinite(qa.qualitymeasures.SurfaceDefectArea)
     if job.extopts.expertgui
       str{2} = [str{2} struct('name',' Defect area:','value',marks2str(qa.qualityratings.SurfaceDefectArea,...
                 sprintf('%0.2f%%', qa.qualitymeasures.SurfaceDefectArea)))];

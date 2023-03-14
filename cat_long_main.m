@@ -226,6 +226,7 @@ if prepavg
   matlabbatch{mbi}.spm.tools.cat.tools.sanlm.intlim               = 100;
   matlabbatch{mbi}.spm.tools.cat.tools.sanlm.rician               = 0;
   matlabbatch{mbi}.spm.tools.cat.tools.sanlm.replaceNANandINF     = 1;
+  matlabbatch{1}.spm.tools.cat.tools.sanlm.nlmfilter.optimized.NCstr = 12; % lightavg
   
   if prepavg>1
   % The trimming may increase the speed of the longitudinal realignment and 

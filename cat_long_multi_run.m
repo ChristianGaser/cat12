@@ -196,12 +196,19 @@ if isdeployed
   if (length(txt_contents) == length(m_contents) && any(txt_contents ~= m_contents)) || (length(txt_contents) ~= length(m_contents))
     [status, mesg] = copyfile(job_name,m_job_name,'f');
     if ~status
-      fprintf(mesg);
-      fprintf('\nIf you do not have write permissions, the administrator should copy the %s file to %s after installing the precompiled version. This prevents overwriting the read-only file.\n',job_name,m_job_name);
-      return
+      % try to save the file to current folder, but it'snot sure that this always works
+      [pth,name] = fileparts(m_job_name);
+      m_job_name = fullfile('.',name);
+      [status, mesg] = copyfile(job_name,m_job_name,'f');
     end
   end
   
+end
+
+if ~exist(m_job_name,'file')
+  fprintf(mesg);
+  fprintf('\nIf you do not have write permissions, the administrator should copy the %s file to %s after installing the precompiled version. This prevents overwriting the read-only file.\n',job_name,m_job_name);
+  return
 end
 
 % mirror jobs for all subjects
