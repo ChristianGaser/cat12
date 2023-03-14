@@ -792,12 +792,17 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
       if ~isfield(job.extopts,'close_parahipp'),  job.extopts.close_parahipp  = cat_get_defaults('extopts.close_parahipp'); end
       if ~isfield(job.extopts,'pbtmethod'),       job.extopts.pbtmethod       = cat_get_defaults('extopts.pbtmethod'); end
       if ~isfield(job.extopts,'reduce_mesh'),     job.extopts.reduce_mesh     = 1; end % cat_get_defaults('extopts.reduce_mesh'); end
-      %if ~isfield(job.output,'pp'),               job.output.pp               = struct('native',0,'warped',0,'dartel',0);  end % this is now in defaults and not required here 
       if ~isfield(job.output,'surf_measures'),    job.output.surf_measures    = 1; end % developer
       %%
       if job.extopts.SRP >= 30
+        % Yb0 was modified in cat_main_amap* for some conditions and we can use it as better mask in 
+        % cat_surf_createCS3 except for inv_weighting or if gcut was not used
+        if ~(job.extopts.gcutstr>0 && ~job.inv_weighting)
+          Yb0(:) = 1;
+        end
+
         [Yth1, S, Psurf, qa.createCS] = ...
-          cat_surf_createCS3(VT,VT0,Ymix,Yl1,YMF,YT,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
+          cat_surf_createCS3(VT,VT0,Ymix,Yl1,YMF,YT,Yb0,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
           'outputpp',job.output.pp,'surf_measures',job.output.surf_measures, ...
           'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,...
           'scale_cortex', job.extopts.scale_cortex, 'add_parahipp', job.extopts.add_parahipp, 'close_parahipp', job.extopts.close_parahipp,  ....

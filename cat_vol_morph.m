@@ -122,13 +122,13 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
   
   nn = n; n = double(n); n(1) = round(n(1)); 
   switch lower(action)
-    case {'l'}
+    case {'l','lab'}
       nv = ceil(nn(1) ./ mean(vx_vol)); 
     otherwise
       nv = ceil(nn ./ vx_vol); % used to enlarge images for closing
   end
   switch lower(action)
-    case {'l','lcc','lco','labcclose','labcopen', ...
+    case {'l','lab','lcc','lco','labcclose','labcopen', ...
               'lc','lo','labclose','labopen', ...
               'ldc','ldo','labdistclose','labdistopen'}
       % not return in this case

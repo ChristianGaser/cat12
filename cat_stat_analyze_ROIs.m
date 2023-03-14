@@ -393,11 +393,13 @@ if n_corr > 2
   p_tissue = p(defined_measure);
   [Psort0, indP0] = sort(p_tissue);
   HBcorr = (length(Psort0):-1:1)';
+  
   % sometimes we have to transpose HBcorr for some unkwown reasons
-  if ~all(size(p) == size(HBcorr))
-    HBcorr = HBcorr';
+  HBcorr_ind = HBcorr(indP0);
+  if ~all(size(p_tissue) == size(HBcorr_ind))
+    HBcorr_ind = HBcorr_ind';
   end
-  p_tissue = p_tissue.*HBcorr(indP0);
+  p_tissue = p_tissue.*HBcorr_ind;
   Pcorr{3} = ones(size(p));
   Pcorr{3}(defined_measure) = p_tissue;
 
@@ -405,7 +407,13 @@ if n_corr > 2
     p_tissue = 1 - p(defined_measure);
     [Psort0, indP0] = sort(p_tissue);
     HBcorr = length(Psort0):-1:1;
-    p_tissue = p_tissue.*HBcorr(indP0);
+
+    % sometimes we have to transpose HBcorr for some unkwown reasons
+    HBcorr_ind = HBcorr(indP0);
+    if ~all(size(p_tissue) == size(HBcorr_ind))
+      HBcorr_ind = HBcorr_ind';
+    end
+    p_tissue = p_tissue.*HBcorr_ind;    
     Pcorr_inv{3} = ones(size(p));
     Pcorr_inv{3}(defined_measure) = p_tissue;
   end
