@@ -66,7 +66,7 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull)
   % define filename
   [pp,Pname,ee] = spm_fileparts(Ptpm); Pname = strrep([Pname ee],'.nii',''); 
   if human
-    if strcmp(pp,fullfile(spm('dir'),'tpm')) && strcmp(Pname,TPM) % default 
+    if strcmp(pp,fullfile(spm('dir'),'tpm')) && strcmp(Pname,'TPM') % default 
       if skull > 0
         Phull = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces',sprintf('bh.headbrain%s.%s.gii',species,Pname));
       else
@@ -168,7 +168,7 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull)
     mati = spm_imatrix(tpm.V(1).mat); 
     if mati(7)<0, Sh.faces = [Sh.faces(:,1) Sh.faces(:,3) Sh.faces(:,2)]; end
     try
-      save(gifti(struct('faces',Sh.faces,'vertices',Sh.vertices)),Phull);   
+      save(gifti(struct('faces',Sh.faces,'vertices',Sh.vertices)),Phull,'Base64Binary');   
     catch
       if exist(Phull,'file')
         fprintf('Warning: Could not update %s with newer version. Please change write permissions.\n',Phull);

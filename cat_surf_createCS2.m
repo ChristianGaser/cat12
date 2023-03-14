@@ -350,7 +350,6 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
       useprior = useprior & copyfile(fullfile(pp1_surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff1)),Pspherereg,'f');
       
       if ~useprior
-fullfile(pp1_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff1))
         warn_str = sprintf('Surface files for %s not found. Move on with individual surface extraction.\n',pp1_surffolder);
         fprintf('\nWARNING: %s',warn_str);
         cat_io_addwarning('cat_surf_createCS2:noPiorSurface', warn_str);

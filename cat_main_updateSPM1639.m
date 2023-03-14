@@ -21,7 +21,9 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   [pth,nam] = spm_fileparts(res.image0(1).fname); %#ok<ASGLU> % original   
   
   % RD202211: Added SPM based detection of high intensity backgronds of MP2Rage scans
-  res.isMP2RAGE = min( res.mn(res.lkp==3 & res.mg'>0.2) ) < min( res.mn(res.lkp==max(res.lkp) & res.mg'>0.2) ); 
+  %res.isMP2RAGE = min( res.mn(res.lkp==3 & res.mg'>0.2) ) < min( res.mn(res.lkp==max(res.lkp) & res.mg'>0.2) ); 
+  % CG20230227 disabled detection because it was not working properly
+  res.isMP2RAGE = false; 
     
   % voxel size parameter
   vx_vol  = sqrt(sum(res.image(1).mat(1:3,1:3).^2));    % voxel size of the processed image
