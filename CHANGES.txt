@@ -1,4 +1,14 @@
 ------------------------------------------------------------------------
+r2184 | gaser | 2023-03-22 17:25:30
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M doc/cat.html
+ M doc/index.html
+
+Changed: Added more detailed description of WMH detection to manual.
+------------------------------------------------------------------------
 r2183 | gaser | 2023-03-17 15:19:17
 
 Changed paths:
