@@ -1,10 +1,10 @@
-function out = cat_io_data2mat(opt)
+function out = cat_io_data2mat(opt,par,scaling)
 % Save spatially registered volume or resampled surface data as Matlab data matrix for further 
 % use with machine learning tools such as relevance/support vector approaches or Gaussian Process
 % models. Spatial structure of the data is not considered. 
 % Volume data will be optionally masked to remove non-brain areas
 % 
-% FORMAT cat_io_data2mat(opt)
+% FORMAT cat_io_data2mat(opt,scaling)
 %
 % volume or surface data:
 % opt.data       - cell of char array of filenames
@@ -15,6 +15,13 @@ function out = cat_io_data2mat(opt)
 % additional parameters for volume data only:
 % opt.resolution - resampling spatial resolution for volume data
 % opt.mask       - optional brainmask for volume data
+% opt.fwhm       - optional Gaussian smoothing kernel size in FWHM
+%
+% additional parameters to be saved with mat file:
+% par            - structure with parameter as name and the values
+%
+% scaling        - optionally either a vector for user-specified scaling data or a 
+%                  constant (2 for global scaling)
 %
 % saved parameters:
 % Y          - data matrix with size number of subjects x number of voxels/vertices
@@ -24,13 +31,15 @@ function out = cat_io_data2mat(opt)
 % V          - structure array containing data information of surface or resampled volume
 %
 % Examples:
-% Select recursively all 8mm smoothed gray matter segments from folder1
+% Select recursively all gray matter segments from folder1
 % for the 1st sample and folder 2 from the 2nd sample and save resampled data 
-% with 4mm resampling spatial resolution (please note that for several samples
+% with 4mm resampling spatial resolution after filtering with fwhm of 8mm.
+% Additionally save age and male as parameter in the mat-file.
 % the parameter "files" should be defined as "{files}")
-% files{1} = spm_select('FPListRec',folder1,'^s8mwp1.*\.nii$');
-% files{2} = spm_select('FPListRec',folder2,'^s8mwp1.*\.nii$');
-% cat_io_data2mat(struct('data',{files},'resolution',4,'mask',cat_get_defaults('extopts.brainmask'),'fname','Data.mat'));
+% files{1} = spm_select('FPListRec',folder1,'^mwp1.*\.nii$');
+% files{2} = spm_select('FPListRec',folder2,'^mwp1.*\.nii$');
+% cat_io_data2mat(struct('data',{files},'resolution',4,'fwhm',8,'mask',cat_get_defaults('extopts.brainmask'),...
+%    'fname','Data.mat'),struct('age',age,'male',male));
 %
 % Select recursively all 12mm smoothed and resampled thickness data from current folder
 % and save Data.mat in subfolder test
@@ -66,6 +75,9 @@ if isfield(opt,'data') % use simpler field structure for call as script
   end
   if isfield(opt,'resolution')
     resolution = opt.resolution;
+  end
+  if isfield(opt,'fwhm')
+    fwhm = opt.fwhm;
   end
 elseif isfield(opt.data_type,'vol_data') % volume data
   brainmask = char(opt.data_type.vol_data.mask);
@@ -112,14 +124,14 @@ for i = 1:n_confounds
   confounds = [confounds opt.c{i}];
 end
 
-fname = opt.fname;
-out.fname{1} = fname; 
+outname = opt.fname;
+out.fname{1} = outname; 
 outdir = opt.outdir{1};
 if ~isempty(outdir)
   if ~exist(outdir,'dir')
     mkdir(outdir);
   end
-  fname = fullfile(outdir,fname);
+  outname = fullfile(outdir,outname);
 end
 
 % 3D data
@@ -156,7 +168,7 @@ else
 end
 
 % global scaling
-if nargin > 3
+if nargin > 2
   % user specified scaling
   if isvector(scaling)
     % check size of scaling vector
@@ -175,7 +187,7 @@ if nargin > 3
     fprintf('Calculating globals\n')
     for j=1:n_samples     
       for i = 1:n_subjects(j)
-        % compute as mean voxel value (within per image fullmean/8 mask)
+        % compute mean voxel value (within per image fullmean/8 mask)
         if ~spm_mesh_detect(V{1}(1))
           g = spm_global(V{j}(i));
         else
@@ -199,45 +211,69 @@ C = zeros(n_all_subjects);
 
 % 3D data
 if ~spm_mesh_detect(V{1}(1))
-  cat_progress_bar('Init',Vres.dim(3),'reading...','planes completed');
-  ind = [];
+  M1     = cell(Vres.dim(3),1);
+  
+  if isempty(brainmask)
+    mask_ind = ones(Vres.dim,'logical');
+  else
+    mask_ind = zeros(Vres.dim,'logical');
+  end
+  ind = find(mask_ind);
+  
   for sl=1:Vres.dim(3)
     % read mask
     M = spm_matrix([0 0 sl 0 0 0 1 1 1]);
-    if ~isempty(brainmask)
     
+    if ~isempty(brainmask)
       Mm  = Vres.mat\Vm.mat\M;
       mask_slice = spm_slice_vol(Vm,Mm,Vres.dim(1:2),1);
-      ind0 = find(mask_slice > 0.5);
-    else
-      ind0 = find(ones(Vres.dim(1:2)));
+      mask_ind(:,:,sl) = mask_slice > 0.5;
     end
-    M1  = Vres.mat\V{1}(1).mat\M;
-    
-    ind = [ind; ind0];
-    clear mask_slice
-  
-    % read data inside mask
-    if ~isempty(ind0)
-      yslice = [];
-      for j=1:n_samples
-        y = zeros(n_subjects(j), length(ind0));
-          for i = 1:n_subjects(j)
-              try
-                d = spm_slice_vol(V{j}(i),M1,Vres.dim(1:2),1);
-              catch
-                fprintf('File %s could not be read\n',V{j}(i).fname);
-                return
-              end
-              y(i,:) = d(ind0);
-          end
-        yslice = [yslice; y];
-      end
-      Y = [Y yslice];
-    end
-    cat_progress_bar('Set',sl)
+    M1{sl} = Vres.mat\V{1}(1).mat\M;
   end
-  cat_progress_bar('Clear')
+  
+    
+  for j=1:n_samples
+    cat_progress_bar('Init',n_subjects(j),'reading...','subjects completed');
+    yi = zeros(n_subjects(j), sum(mask_ind(:)), 'single');
+    for i = 1:n_subjects(j)
+
+      vol = spm_read_vols(V{j}(i));
+      
+      % optional smoothing if fwhm is defined
+      if exist('fwhm','var')
+        if numel(fwhm) == 1
+          fwhm = repmat(fwhm,1,3);
+        end
+        if sum(fwhm) > 0
+          spm_smooth(vol,vol,fwhm,0);
+        end
+      end
+
+      ysl = [];
+      for sl=1:Vres.dim(3)
+    
+        % read data inside mask
+        if ~isempty(mask_ind(:,:,sl))
+          try
+            d = spm_slice_vol(vol,M1{sl},Vres.dim(1:2),1);
+          catch
+            fprintf('File %s could not be read\n',V{j}(i).fname);
+            return
+          end
+        end
+        ysl = [ysl; d(mask_ind(:,:,sl))];
+        
+      end
+      yi(i,:) = single(ysl);
+      
+      cat_progress_bar('Set',i)
+    end
+    cat_progress_bar('Clear')
+    
+    Y = [Y; yi];
+  end
+
 else % meshes
   Y = zeros(n_all_subjects,numel(ind));
   count = 1;
@@ -279,9 +315,19 @@ else
   V = Vres;
 end
 
-save(fname,'Y','label','dim','V','ind');
-fprintf('Save data (Y,label,V,dim,ind) in %s.\n',fname);
+save(outname,'Y','label','dim','V','ind');
+fprintf('Save data (Y,label,V,dim,ind) in %s.\n',outname);
 
-%if nargout == 1
-%  varargout{1}.fname = fname;
-%end
+% add additional parameters if defined
+if nargin > 1
+  fnames = fieldnames(par);
+  str = [];
+  fprintf('Append:');
+  for i = 1:numel(fnames)
+    name = fnames{i};
+    eval([name '=par.(name);']);
+    save(outname,'-append',name);
+    fprintf(' %s',name);
+  end
+  fprintf('\n');
+end

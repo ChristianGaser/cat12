@@ -713,7 +713,7 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
       correct_mesh = 1;
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none  0  1  -1  .1 ' ...   
                      'avg  %0.3f  %0.3f .2  .1  5  0 "0.5"  "0.5"  n 0  0  0 %d %g  0.0 0 %d'], ...          
-                      Vpp_side.fname,Pcentral,Pcentral,-0.1, 0.1, 100, 0.01,correct_mesh); 
+                      Vpp_side.fname,Pcentral,Pcentral,-0.1,0.1,100,0.01,correct_mesh); 
       cat_system(cmd,opt.verb-3);
     end
     
