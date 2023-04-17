@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2185 | gaser | 2023-04-17 10:23:42
+
+Changed paths:
+ M CHANGES.txt
+ M cat_io_data2mat.m
+ M cat_surf_createCS3.m
+ M doc/index.html
+
+Changed: Many changes to cat_io_data2mat.m to easier use it to prepare BrainAGE
+         data and allow internal smoothing.
+------------------------------------------------------------------------
 r2184 | gaser | 2023-03-22 17:25:30
 
 Changed paths:
