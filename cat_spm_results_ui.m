@@ -300,8 +300,9 @@ switch lower(Action), case 'setup'                         %-Set up results
         warning on
 
         [Ic,xCon] = spm_conman(SPM,'T&F',Inf,'    Select contrast(s)...','',1);
-        if ~isempty(xCon(Ic).Vspm) && exist(SPM.swd,'dir')
-          xCon(Ic).Vspm = spm_data_hdr_read(fullfile(SPM.swd,xCon(Ic).Vspm.fname));
+        if ~isempty(xCon(Ic).Vspm)
+          [pth,nam,xt] = fileparts(xCon(Ic).Vspm.fname);
+          xCon(Ic).Vspm = spm_data_hdr_read(fullfile(swd,[nam xt]));
         end
         SPM.Ic = Ic; SPM.xCon = xCon;
         SPM.swd = swd;
@@ -312,7 +313,7 @@ switch lower(Action), case 'setup'                         %-Set up results
             [pp2,ff2,xx2] = spm_fileparts(SPM.xVol.G);
             if ~isempty(strfind(ff2,'.central.freesurfer')) | ~isempty(strfind(ff2,['.central.' cat_get_defaults('extopts.shootingsurf')]))
               if strfind(pp2,'templates_surfaces_32k')
-                SPM.xVol.G = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k',[ff2 xx2])
+                SPM.xVol.G = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k',[ff2 xx2]);
               else
                 SPM.xVol.G = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces',[ff2 xx2]);
               end
