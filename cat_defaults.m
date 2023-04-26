@@ -304,35 +304,35 @@ if isdeployed, cat.extopts.expertgui = 1; end
 %  tissue      = {['csf','gm','wm','brain','none']}  - tissue classes for volume estimation
 %  use         = [ 0 | 1 ]                           - default setting to use this atlas 
 cat.extopts.atlas       = { ... 
-  fullfile(cat.extopts.pth_templates,'neuromorphometrics.nii')   0  {'csf','gm','wm'}   1; ... % atlas based on 35 subjects
-  fullfile(cat.extopts.pth_templates,'lpba40.nii')               0  {'gm','wm'}         1; ... % atlas based on 40 subjects
-  fullfile(cat.extopts.pth_templates,'cobra.nii')                0  {'gm','wm'}         1; ... % hippocampus-amygdala-cerebellum-subcortex, 5 subjects, 0.6 mm voxel size 
-  fullfile(cat.extopts.pth_templates,'hammers.nii')              0  {'csf','gm','wm'}   0; ... % atlas based on 30 subjects with 95 regions
-  fullfile(cat.extopts.pth_templates,'thalamus.nii')             0  {'gm'}              1; ... % thalamic nuclei based on DTI from 70 subjects with 14 regions
-  fullfile(cat.extopts.pth_templates,'thalamic_nuclei.nii')      0  {'gm'}              1; ... % thalamic nuclei based on hi-res T2 from 9 subjects with 22 regions
-  fullfile(cat.extopts.pth_templates,'suit.nii')                 0  {'gm','wm'}         1; ... % cerebellar lobes from 20 subjects
-  fullfile(cat.extopts.pth_templates,'ibsr.nii')                 0  {'csf','gm','wm'}   0; ... % less regions, 18 subjects, low-res T1 image quality
-  fullfile(cat.extopts.pth_templates,'aal3.nii')                 1  {'gm'}              0; ... % many regions, but only labeled on one subject 
-  fullfile(cat.extopts.pth_templates,'mori.nii')                 1  {'gm','wm'}         0; ... % only one subject, but with WM regions
-  fullfile(cat.extopts.pth_templates,'anatomy3.nii')             1  {'gm','wm'}         0; ... % 93 regions, 10 subjects
-  fullfile(cat.extopts.pth_templates,'julichbrain.nii')          1  {'gm','wm'}         0; ... % many regions, 10 subjects
-  fullfile(cat.extopts.pth_templates,'Tian_Subcortex_S4_7T.nii') 1  {'gm'}              0; ... % 62 subcortical regions, 183 subjects
-  fullfile(cat.extopts.pth_templates,'Schaefer2018_100Parcels_17Networks_order.nii') 1 {'gm','wm'} 0; ... % atlas based on rsfMRI data from 1489 subjects
-  fullfile(cat.extopts.pth_templates,'Schaefer2018_200Parcels_17Networks_order.nii') 1 {'gm','wm'} 0; ... % atlas based on rsfMRI data from 1489 subjects
-  fullfile(cat.extopts.pth_templates,'Schaefer2018_400Parcels_17Networks_order.nii') 1 {'gm','wm'} 0; ... % atlas based on rsfMRI data from 1489 subjects
-  fullfile(cat.extopts.pth_templates,'Schaefer2018_600Parcels_17Networks_order.nii') 1 {'gm','wm'} 0; ... % atlas based on rsfMRI data from 1489 subjects
+  fullfile(cat.extopts.pth_templates,'neuromorphometrics.nii')                       0  {'csf','gm','wm'}   1; ... % atlas based on 35 subjects
+  fullfile(cat.extopts.pth_templates,'lpba40.nii')                                   0  {'gm','wm'}         1; ... % atlas based on 40 subjects
+  fullfile(cat.extopts.pth_templates,'cobra.nii')                                    0  {'gm','wm'}         1; ... % hippocampus-amygdala-cerebellum-subcortex, 5 subjects, 0.6 mm voxel size 
+  fullfile(cat.extopts.pth_templates,'hammers.nii')                                  0  {'csf','gm','wm'}   0; ... % atlas based on 30 subjects with 95 regions
+  fullfile(cat.extopts.pth_templates,'thalamus.nii')                                 0  {'gm'}              1; ... % thalamic nuclei based on DTI from 70 subjects with 14 regions
+  fullfile(cat.extopts.pth_templates,'thalamic_nuclei.nii')                          0  {'gm'}              1; ... % thalamic nuclei based on hi-res T2 from 9 subjects with 22 regions
+  fullfile(cat.extopts.pth_templates,'suit.nii')                                     0  {'gm','wm'}         1; ... % cerebellar lobes from 20 subjects
+  fullfile(cat.extopts.pth_templates,'ibsr.nii')                                     0  {'csf','gm','wm'}   0; ... % less regions, 18 subjects, low-res T1 image quality
+  fullfile(cat.extopts.pth_templates,'aal3.nii')                                     1  {'gm'}              0; ... % many regions, but only labeled on one subject 
+  fullfile(cat.extopts.pth_templates,'mori.nii')                                     1  {'gm','wm'}         0; ... % only one subject, but with WM regions
+  fullfile(cat.extopts.pth_templates,'anatomy3.nii')                                 1  {'gm','wm'}         0; ... % 93 regions, 10 subjects
+  fullfile(cat.extopts.pth_templates,'julichbrain.nii')                              1  {'gm','wm'}         0; ... % many regions, 10 subjects
+  fullfile(cat.extopts.pth_templates,'Tian_Subcortex_S4_7T.nii')                     1  {'gm'}              0; ... % 62 subcortical regions, 183 subjects
+  fullfile(cat.extopts.pth_templates,'Schaefer2018_100Parcels_17Networks_order.nii') 1  {'gm','wm'}         0; ... % atlas based on rsfMRI data from 1489 subjects
+  fullfile(cat.extopts.pth_templates,'Schaefer2018_200Parcels_17Networks_order.nii') 1  {'gm','wm'}         0; ... % atlas based on rsfMRI data from 1489 subjects
+  fullfile(cat.extopts.pth_templates,'Schaefer2018_400Parcels_17Networks_order.nii') 1  {'gm','wm'}         0; ... % atlas based on rsfMRI data from 1489 subjects
+  fullfile(cat.extopts.pth_templates,'Schaefer2018_600Parcels_17Networks_order.nii') 1  {'gm','wm'}         0; ... % atlas based on rsfMRI data from 1489 subjects
 }; 
 
 % { name fileid GUIlevel use } - in development
 cat.extopts.satlas      = { ... 
-  'Desikan'                fullfile(catdir,'atlases_surfaces','lh.aparc_a2009s.freesurfer.annot')                        0   1;  
-  'Destrieux'              fullfile(catdir,'atlases_surfaces','lh.aparc_DK40.freesurfer.annot')                          0   1;  
-  'HCP'                    fullfile(catdir,'atlases_surfaces','lh.aparc_HCP_MMP1.freesurfer.annot')                      0   0; 
+  'Desikan'                fullfile(catdir,'atlases_surfaces','lh.aparc_a2009s.freesurfer.annot')                   0   1;  
+  'Destrieux'              fullfile(catdir,'atlases_surfaces','lh.aparc_DK40.freesurfer.annot')                     0   1;  
+  'HCP'                    fullfile(catdir,'atlases_surfaces','lh.aparc_HCP_MMP1.freesurfer.annot')                 0   0; 
   ... Schaefer atlases ...
-  'Schaefer2018_100P_17N'  fullfile(catdir,'atlases_surfaces','lh.Schaefer2018_100Parcels_17Networks_order.annot')       1   0; 
-  'Schaefer2018_200P_17N'  fullfile(catdir,'atlases_surfaces','lh.Schaefer2018_200Parcels_17Networks_order.annot')       0   0;
-  'Schaefer2018_400P_17N'  fullfile(catdir,'atlases_surfaces','lh.Schaefer2018_400Parcels_17Networks_order.annot')       1   0; 
-  'Schaefer2018_600P_17N'  fullfile(catdir,'atlases_surfaces','lh.Schaefer2018_600Parcels_17Networks_order.annot')       1   0; 
+  'Schaefer2018_100P_17N'  fullfile(catdir,'atlases_surfaces','lh.Schaefer2018_100Parcels_17Networks_order.annot')  1   0; 
+  'Schaefer2018_200P_17N'  fullfile(catdir,'atlases_surfaces','lh.Schaefer2018_200Parcels_17Networks_order.annot')  0   0;
+  'Schaefer2018_400P_17N'  fullfile(catdir,'atlases_surfaces','lh.Schaefer2018_400Parcels_17Networks_order.annot')  1   0; 
+  'Schaefer2018_600P_17N'  fullfile(catdir,'atlases_surfaces','lh.Schaefer2018_600Parcels_17Networks_order.annot')  1   0; 
 }; 
 
 
