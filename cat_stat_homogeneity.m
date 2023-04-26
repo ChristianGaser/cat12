@@ -19,7 +19,7 @@ function varargout = cat_stat_homogeneity(job)
 %  .xM               .. optional mask information from SPM.xM
 %
 % varargout          .. output structure 
-%  .zscore           .. absolute mean Z-score
+%  .zscore           .. quartic mean Z-score
 %  .table            .. Z-score table
 %  .sorttable        .. sorted Z-score table
 %  .threshold_zsc    .. lower threshold for Z-score (mean - 4*std)
@@ -205,14 +205,14 @@ end
 
 H.xml.QM = ones(n_subjects,3);
 H.xml.QM_names = char('Noise','Bias','Weighted overall image quality (IQR)');
-H.xml.QM_names_multi = char('Noise & Mean absolute Z-score','Bias & Mean absolute Z-score','Weighted IQR & Mean absolute Z-score');
+H.xml.QM_names_multi = char('Noise & Quartic Mean Z-score','Bias & Quartic Mean Z-score','Weighted IQR & Quartic Mean Z-score');
 H.xml.QM_order = -ones(1,3);
 
 % add some more entries for surfaces
 if H.mesh_detected
   H.xml.QM = ones(n_subjects,5);
   H.xml.QM_names = char(H.xml.QM_names,'Euler number','Size of topology defects');
-  H.xml.QM_names_multi = char(H.xml.QM_names_multi,'Euler number & Mean absolute Z-score','Size of topology defects & Mean absolute Z-score');
+  H.xml.QM_names_multi = char(H.xml.QM_names_multi,'Euler number & Quartic Mean Z-score','Size of topology defects & Quartic Mean Z-score');
   H.xml.QM_order = -ones(1,5);
 end
 
@@ -456,12 +456,12 @@ if isfield(job,'c') && ~isempty(job.c) && ~isfield(job,'factorial_design')
       H.xml.QM = [H.xml.QM job.c{i}];
       H.xml.QM_order = [H.xml.QM_order 0];
       H.xml.QM_names = char(H.xml.QM_names, sprintf('Covariate %d',i));
-      H.xml.QM_names_multi = char(H.xml.QM_names_multi, sprintf('Covariate %d & Mean absolute Z-score',i));
+      H.xml.QM_names_multi = char(H.xml.QM_names_multi, sprintf('Covariate %d & Quartic Mean Z-score',i));
     else
       H.xml.QM = job.c{i};
       H.xml.QM_order = 0;
       H.xml.QM_names = sprintf('Covariate %d',i);
-      H.xml.QM_names_multi = sprintf('Covariate %d & Mean absolute Z-score',i);
+      H.xml.QM_names_multi = sprintf('Covariate %d & Quartic Mean Z-score',i);
     end
   end
 end
@@ -602,8 +602,10 @@ for i = 1:n_subjects
   % calculate Z-score
   zscore = (Ytmp(ind) - H.data.Ymean(ind))./H.data.Ystd(ind);
   
-  % and use mean of Z-score as overall measure
-  H.data.avg_abs_zscore(i) = mean(abs(zscore));
+  % use mean of Z-score as overall measure, but emphasize outliers by
+  % using power operation
+  power_scale = 4;
+  H.data.avg_abs_zscore(i) = mean((abs(zscore).^power_scale))^(1/power_scale);
   if job.verb, cat_progress_bar('Set',i); end
 end
 if job.verb, cat_progress_bar('Clear'); end
@@ -774,13 +776,13 @@ H.filename = struct('s',{fname_s},'e',{fname_e},'m',{fname_m});
 [H.data.avg_abs_zscore_sorted, H.ind_sorted] = sort(H.data.avg_abs_zscore,'ascend');
 
 threshold_zsc = mean(H.data.avg_abs_zscore) + 2*std(H.data.avg_abs_zscore);
-n_thresholded = min(find(H.data.avg_abs_zscore_sorted > threshold_zsc));
+n_thresholded = find(H.data.avg_abs_zscore_sorted > threshold_zsc, 1 );
 
 if ~isempty(n_thresholded) && job.verb
-  fprintf('\nThese data have a mean absolute Z-score above 2 standard deviations.\n');
+  fprintf('\nThese data have a quartic mean Z-score above 2 standard deviations.\n');
   fprintf('This does not necessarily mean that you have to exclude these data. However, these data have to be carefully checked:\n');
   
-  fprintf('IQR / mean absolute Z-score / filename\n');
+  fprintf('IQR / Quartic mean Z-score / filename\n');
   for i = n_thresholded:n_subjects % just switch this improve readability in case of different fname length
     if isfield(H.xml,'QM') && ~isempty(H.xml.QM)
       cat_io_cprintf([0.5 0 0.5],'  %3.3f:', H.xml.QM(i,end) );
@@ -801,7 +803,7 @@ end
 if job.verb
   
   create_menu;
-  show_boxplot(H.data.avg_abs_zscore,'Mean absolute Z-score  ',-1);
+  show_boxplot(H.data.avg_abs_zscore,'Quartic Mean Z-score  ',-1);
 
   if isfield(job,'save') && job.save
     %% filenames
@@ -894,36 +896,36 @@ H.ui.show = uicontrol(H.mainfig,...
 
 % check whether we have to add entries from quality measures or covariates
 if isempty(H.xml.QM)
-  str  = { 'Boxplot','Mean absolute Z-score'};
-  % average absolute Z-score vs. file order
+  str  = { 'Boxplot','Quartic Mean Z-score'};
+  % average quartic Z-score vs. file order
   H.X = [H.data.avg_abs_zscore (1:numel(H.data.avg_abs_zscore))'];
   show_QMzscore(H.X,0); % show file order on x-axis
 else
-  % average absolute Z-score vs. QM measures
+  % average quartic Z-score vs. QM measures
   H.X = [H.data.avg_abs_zscore H.xml.QM];
   
-  str  = { 'Boxplot','Mean absolute Z-score'};
+  str  = { 'Boxplot','Quartic Mean Z-score'};
   for i = 1:size(H.xml.QM,2)
     str{i+2} = deblank(H.xml.QM_names(i,:));
   end
     
   if H.isxml
-    % estimate product between weighted overall quality (IQR) and mean absolute Z-score 
+    % estimate product between weighted overall quality (IQR) and quartic mean Z-score 
     H.xml.QMzscore = H.X(:,1).*H.X(:,2);
-    str{i+3} = 'Weighted IQR x Mean absolute Z-score';
+    str{i+3} = 'Weighted IQR x Quartic Mean Z-score';
     show_QMzscore(H.X,4); % show IQR on x-axis
   else
     show_QMzscore(H.X,0); % show file order on x-axis
   end
 end
 
-tmp  = { {@show_boxplot, H.data.avg_abs_zscore, 'Mean absolute Z-score', -1}};
+tmp  = { {@show_boxplot, H.data.avg_abs_zscore, 'Quartic Mean Z-score', -1}};
 for i = 1:size(H.xml.QM,2)
   tmp{i+1} = {@show_boxplot, H.xml.QM(:,i), deblank(H.xml.QM_names(i,:)), H.xml.QM_order(i)};
 end
 
 if H.isxml
-  tmp{i+2} = {@show_boxplot, H.xml.QMzscore, 'Weighted IQR x Mean absolute Z-score  ', -1};
+  tmp{i+2} = {@show_boxplot, H.xml.QMzscore, 'Weighted IQR x Quartic Mean Z-score  ', -1};
 end
 
 H.ui.boxp = uicontrol(H.mainfig,...
@@ -938,9 +940,9 @@ H.ui.boxp = uicontrol(H.mainfig,...
 
 % if QM values are available allow IQR and surface parameters, but skip
 % noise and bias as first 2 entries
-str  = { 'Scatterplot','Mean absolute Z-score'};
+str  = { 'Scatterplot','Quartic Mean Z-score'};
 if isempty(H.xml.QM)
-  tmp  = {{@show_QMzscore, H.X, 0}}; % just mean absolute Z-score with file order
+  tmp  = {{@show_QMzscore, H.X, 0}}; % just quartic mean Z-score with file order
 else
   tmp  = {{@show_QMzscore, H.X, 0}}; % file order
   if H.isxml
@@ -1240,7 +1242,9 @@ if ~H.mesh_detected && isfield(H.ui,'alpha')
 end
 
 if isfield(H.ui,'alpha'), set(H.ui.text,'Visible','off'); end
-if isfield(H,'delui') && isfield(H.delui,'remove') set(H.delui.remove,'Enable','off'); end
+if isfield(H,'delui') && isfield(H.delui,'remove') 
+  set(H.delui.remove,'Enable','off'); 
+end
 
 if isfield(H,'status')
   if H.status.report,     set(H.dpui.report,    'enable','off'); end
@@ -1261,7 +1265,7 @@ H.ax = axes('Position',H.pos.plot,'Parent',H.mainfig,'Color',[.6 .6 .6]);
 axes(H.ax);
 grid on
 
-% estimate product between QM-value and mean absolute Z-score
+% estimate product between QM-value and quartic mean Z-score
 if sel
   H.xml.QMzscore = X(:,1).*X(:,sel);
 else
@@ -1277,12 +1281,7 @@ end
 
 % because we use a splitted colormap we have to set the color
 % values explicitely
-if sel == 4 && min(H.xml.QMzscore) > 1 % IQR and min > 1
-  QMzscore_scaled = 63*(H.xml.QMzscore-1)/2; % scale 1..3
-  QMzscore_scaled(QMzscore_scaled > 63) = 63;
-else
-  QMzscore_scaled = 63*(H.xml.QMzscore-min_QMzscore)/(max_QMzscore-min_QMzscore); % scale min..max
-end
+QMzscore_scaled = 63*(H.xml.QMzscore-min_QMzscore)/(max_QMzscore-min_QMzscore); % scale min..max
 
 H.C = zeros(length(H.xml.QMzscore),3);
 for i=1:length(H.xml.QMzscore)
@@ -1356,7 +1355,7 @@ if ~sel
 end
 
 xlabel(xstr,'FontSize',H.FS-1,'FontWeight','Bold');
-ylabel('<----- Best ---      Mean absolute Z-score      --- Worst ------>  ','FontSize',H.FS-1,'FontWeight','Bold');
+ylabel('<----- Best ---      Quartic Mean Z-score      --- Worst ------>  ','FontSize',H.FS-1,'FontWeight','Bold');
 
 % add colorbar
 H.ui.cbar = axes('Position',H.pos.cbar+[0 0.9 0 0],'Parent',H.mainfig);
@@ -1364,25 +1363,20 @@ image((1:64));
 
 if sel
   if ~quality_order
-    xstr = sprintf('%s x mean absolute Z-score',deblank(H.xml.QM_names(sel-1,:)));
+    xstr = sprintf('%s x quartic mean Z-score',deblank(H.xml.QM_names(sel-1,:)));
   else
-    xstr = sprintf('<----- Best ---      %s x mean absolute Z-score     --- Worst ------>  ',deblank(H.xml.QM_names(sel-1,:)));
+    xstr = sprintf('<----- Best ---      %s x quartic mean Z-score     --- Worst ------>  ',deblank(H.xml.QM_names(sel-1,:)));
   end
 else
-  xstr = sprintf('<----- Best ---      mean absolute Z-score     --- Worst ------>  ');
+  xstr = sprintf('<----- Best ---      quartic mean Z-score     --- Worst ------>  ');
 end
 title(xstr,'FontSize',H.FS+1,'FontWeight','Bold');
 
 colormap(H.cmap)
 
 % display YTick with 5 values (limit accuracy for floating numbers)
-if sel == 4 && min(H.xml.QMzscore) > 1 % IQR
-  set(H.ui.cbar,'YTickLabel','','YTick','', 'XTick',linspace(1,64,5),'XTickLabel',...
-    round(100*linspace(1,3,5))/100,'TickLength',[0 0]);
-else
-  set(H.ui.cbar,'YTickLabel','','YTick','', 'XTick',linspace(1,64,5),'XTickLabel',...
+set(H.ui.cbar,'YTickLabel','','YTick','', 'XTick',linspace(1,64,5),'XTickLabel',...
     round(100*linspace(min_QMzscore,max_QMzscore,5))/100,'TickLength',[0 0]);
-end
 
 % update index of worst files
 [tmp, H.ind_sorted_display] = sort(H.xml.QMzscore(H.ind),'ascend');
@@ -2288,7 +2282,7 @@ else
   H.ind = ~ismember((1:numel(H.sample)),H.del);
 end
 
-show_boxplot(H.data.avg_abs_zscore(H.ind),'Mean absolute Z-score  ',-1);  
+show_boxplot(H.data.avg_abs_zscore(H.ind),'Quartic Mean Z-score  ',-1);  
 if H.isxml
   show_QMzscore(H.X,4);
 else

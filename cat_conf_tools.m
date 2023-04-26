@@ -2919,8 +2919,8 @@ function [check_homogeneity, check_cov] = conf_check_cov(data_xml,outdir,fname,s
   check_homogeneity.help   = {
     'In order to identify data with poor data quality or even artefacts you can use this function. 3D images have to be in the same orientation with same voxel size and dimension (e.g. normalized images without smoothing) while surfaces have to be resampled and smoothed using the same parameters. The idea of this tool is to check the Z-score of all data across the sample.'
     ''
-    'The Z-score is calculated for all data and the mean (absolute) for each data is plotted using a boxplot and the indicated filenames. The larger the mean absolute Z-score the more deviant is this data from the sample mean. In the plot, outliers from the sample are usually isolated from the majority of data which are clustered around the sample mean. The mean absolute Z-score is plotted at the y-axis and the x-axis reflects the data order.'
-    'If you have loaded quality measures, you can also display the product between weighted overall image quality (IQR) and mean absolute Z-score. These two are the most important measures for assessing data quality.'
+    'The Z-score is calculated for all data and the quartic mean (using a power of 4) for each data is plotted using a boxplot and the indicated filenames. The larger the quartic mean Z-score the more deviant is this data from the sample mean. The reason we apply a power of 4 to the z-score (quartic) is to give outliers a greater weight and make them more obvious in the plot. In the plot, outliers from the sample are usually isolated from the majority of data which are clustered around the sample mean. The quartic mean Z-score is plotted at the y-axis and the x-axis reflects the data order.'
+    'If you have loaded quality measures, you can also display the product between weighted overall image quality (IQR) and quartic mean Z-score. These two are the most important measures for assessing data quality.'
   };
 
 %_______________________________________________________________________
