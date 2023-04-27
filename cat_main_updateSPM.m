@@ -19,6 +19,11 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
 
   [pth,nam] = spm_fileparts(res.image0(1).fname); %#ok<ASGLU> % original   
 
+  % RD202211: Added SPM based detection of high intensity backgronds of MP2Rage scans
+  %res.isMP2RAGE = min( res.mn(res.lkp==3 & res.mg'>0.2) ) < min( res.mn(res.lkp==max(res.lkp) & res.mg'>0.2) ); 
+  % CG20230227 disabled detection because it was not working properly
+  res.isMP2RAGE = false; 
+  
   % voxel size parameter
   vx_vol  = sqrt(sum(res.image(1).mat(1:3,1:3).^2));    % voxel size of the processed image
   vx_vol0 = sqrt(sum(res.image0(1).mat(1:3,1:3).^2));
@@ -545,6 +550,14 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
       P(:,:,:,1) = cat_vol_ctype(single(P(:,:,:,1)) + 255*single(Ygm));
       Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
       clear Ywm Ygm;
+
+      %% RD20221108: update CSF to reduce problems in MP2rage
+      if res.isMP2RAGE
+        Ycsf = uint8( (Ysrc < min( res.mn(res.lkp==3)) * 0.7 + 0.3 * min( res.mn(res.lkp==1)) )  &  Yb  & Yg<.3);
+        for ti = setdiff(1:size(P,4),3), P(:,:,:,ti) = P(:,:,:,ti) .* (1-Ycsf); end
+        P(:,:,:,3) = cat_vol_ctype(single(P(:,:,:,3)) + 255*single(Ycsf));
+        Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
+      end   
 
       %% head to CSF
       Ycsf = (Ysrc > T3th(1) -  min( abs( [ diff(T3th(1:2)) diff(T3th(1:2:3)) ] ))/2 ) & ...
