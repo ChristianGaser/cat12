@@ -819,7 +819,10 @@ function cat_run_job1639(job,tpm,subj)
           [ppt,fft] = spm_fileparts(job.opts.tpm{1});
           isLONGtpm = strcmp(fft(1:min(numel(fft),7)),'longTPM');
           if exist('Ybg','var') && job.extopts.setCOM ~= 120 % setCOM == 120 - useCOM,useMaffreg,noMask
-            if (isfield(job,'useprior') && ~isempty(job.useprior)) || (isfield(job.extopts,'new_release') && job.extopts.new_release)
+            if strcmp(ff(1:5),'navg_') || ...
+               (isfield(job,'useprior') && ~isempty(job.useprior)) || ...
+               (isfield(job.extopts,'new_release') && job.extopts.new_release)
+              cat_io_cprintf('g8','  Use new longitudinal background setting. ');
               % new minimal masking approach in longitudinal processing to avoid backgound peak erros and for future releases 
               Ymsk        = cat_vol_morph( ~Ybg ,'dd',10,vx_vol) & ...          % remove voxels far from head
                               ~( Ybg & rand(size(Ybg))>0.5) & ...               % have a noisy corona
