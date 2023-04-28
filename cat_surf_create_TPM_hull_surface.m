@@ -1,4 +1,4 @@
-function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull)
+function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull,onlytmp)
 % _________________________________________________________________________
 % Creates a surface of the brain and headmask and save the data in one file
 % named as "bh.headbrain.$TPM-filename$.gii" in the cat surface directory.
@@ -13,6 +13,7 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull)
 %   skull .. create outline without skull
 %   Phull .. filename of the surface file 
 %   Shull .. export surface in case of reading/writing errors
+%   onlytmp .. only temporary output
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -62,6 +63,9 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull)
   if ~exist('skull','var')
     skull = 1;
   end
+  if ~exist('onlytmp','var')
+    onlytmp = 1;
+  end
   
   % define filename
   [pp,Pname,ee] = spm_fileparts(Ptpm); Pname = strrep([Pname ee],'.nii',''); 
@@ -71,7 +75,15 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull)
         Phull = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces',sprintf('bh.headbrain%s.%s.gii',species,Pname));
       else
         Phull = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces',sprintf('bh.brain%s.%s.gii',species,Pname));
-      end    
+      end 
+      % no species in fname - default 
+      if ~exist('Phull','file')
+        if skull > 0
+          Phull = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces',sprintf('bh.headbrain.%s.gii',Pname));
+        else
+          Phull = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces',sprintf('bh.brain.%s.gii',Pname));
+        end 
+      end
     else
       if skull > 0
         Phull = fullfile(pp,sprintf('bh.headbrain%s.%s.gii',species,Pname));
@@ -90,6 +102,16 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull)
   % nothing to do - just return filename 
   if ~cat_io_rerun(Ptpm,Phull,0,0), return; end
     
+
+  % if the file is not existing we have to (temporary) create it 
+  if onlytmp
+    [~,Pname,ee] = spm_fileparts(Ptpm); Pname = strrep([Pname ee],'.nii',''); 
+    Phull = fullfile(tempdir,sprintf('bh.headbrain%s.%s.gii',species,Pname));
+
+    % if we have already done it in this matlab session then just return filename 
+    if ~cat_io_rerun(Ptpm,Phull,0,0), return; end
+  end
+  
   
   % load SPM-TPM-structure
   if ~exist('tpm','var')

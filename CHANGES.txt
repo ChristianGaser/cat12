@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------
-r2188 | gaser | 2023-04-28 17:15:41
+r2190 | gaser | 2023-04-28 17:15:41
 
 Changed paths:
  M CHANGES.txt
@@ -13,6 +13,46 @@ Changed: Also changed the calculation to quartic mean Z-score for
 Fixed:   Corrected bug in cat_stat_homogeneity.m where defined report folder
          was not used for xml search.
 
+------------------------------------------------------------------------
+r2189 | rdahnke | 2023-04-28 11:33:47
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_extopts.m
+ M cat_main_reportfig.m
+ M cat_surf_create_TPM_hull_surface.m
+
+Fixed:      Added CS3 pipeline in expert/developer GUI.
+Fixed:      Correction of headbrain template surface settings in 
+            cat_surf_create_TPM_hull_surface.m
+Changed:    Added overlay of white/pial surface in cat_main_reportfig.
+------------------------------------------------------------------------
+r2188 | rdahnke | 2023-04-27 16:19:04
+
+Changed paths:
+ M CHANGES.txt
+AD batches/OASIS_bones_CT2MRI.m
+AD bones_seg.m
+ M cat_conf_tools.m
+ M cat_io_mergeStruct.m
+ M cat_io_updateStruct.m
+ M cat_main.m
+ M cat_main1639.m
+ M cat_main_updateSPM.m
+ M cat_main_updateSPM1639.m
+ M cat_run.m
+ M cat_run_job1639.m
+AD templates_surfaces/bh.brain.human.TPM.gii
+AD templates_surfaces/bh.headbrain.human.TPM.gii
+
+Fixed:    Reactivated multi_subject_imcalc for developers in cat_conf_tools.
+Fixed:    Corrections in cat_io_mergeStruct and cat_io_updateStruct.
+Fixed:    Added CS3 surface pipeline case in cat_main.
+Fixed:    Added missing variable for SPM-CAT pipeline in cat_main[1639].
+Fixed:    Corrected fixed TPM loop number in cat_main_updateSPM1639.
+Fixed:    Corrected typos in CHANGES.txt
+Changed:  Be verbose in special longitudinal background model case in 
+          cat_run_job1639 (new_release only). 
 ------------------------------------------------------------------------
 r2186 | gaser | 2023-04-26 17:29:33
 
@@ -604,7 +644,7 @@ Changed paths:
 Changed: Added again release information to standalone version in Makefile.
 Changed: Added scatter density plot to cat_stat_confplot_spm.m.
 Changed: Added new roi option to cat_vol_img2mip.m and opportunity to provide
-         nifti strcuture as input to prevent loading files.
+         nifti structure as input to prevent loading files.
 Changed: New roi flag for overlaying ROI#s onto MIP view.         
 Fixed:   Check for 'stable' option for unique command in cat_main1639.m.
 ------------------------------------------------------------------------
@@ -632,7 +672,7 @@ Changed paths:
  M cat_update.m
  M doc/index.html
 
-Changed: Updated informtion about standalone versions ins Readme.md.
+Changed: Updated information about standalone versions ins Readme.md.
 Changed: Added option to download only to cat_update.m.
 ------------------------------------------------------------------------
 r2171 | gaser | 2023-01-27 13:13:31
@@ -646,8 +686,8 @@ Changed paths:
  D git_ci_log
 
 Changed: Updated Makefile for Octave installation.
-Fixed:   Shooting caused issues on Octave and I had to set back the limnitation
-         to Dartel for Ocatve use.
+Fixed:   Shooting caused issues on Octave and I had to set back the limitation
+         to Dartel for Octave use.
 ------------------------------------------------------------------------
 r2170 | gaser | 2023-01-26 17:32:29
 
@@ -740,7 +780,7 @@ Fixed:   Contrasts were sometimes not recognized in cat_spm_results_ui.m because
          we have to go into the analysis folder.
 Fixed:   Clipping should be ignored for cat_vol_slice_overlay if lower and upper 
          clipping values are equal.
-Fixed:   Figure in cat_vol_slice_overlay_ui.m was set to unvisible.
+Fixed:   Figure in cat_vol_slice_overlay_ui.m was set to invisible.
 ------------------------------------------------------------------------
 r2164 | gaser | 2023-01-14 21:46:06
 
@@ -750,8 +790,8 @@ Changed paths:
  M doc/index.html
 
 Changed: Updated CAT12 online manual (Orthogonalization).
-Fixed:   Corected error in cat_stat_check_SPM.m where the check for 
-         orthogonality was not correct recognized. 
+Fixed:   Corrected error in cat_stat_check_SPM.m where the check for 
+         orthogonality was not correct recognised. 
 ------------------------------------------------------------------------
 r2163 | gaser | 2023-01-12 17:59:59
 
@@ -780,13 +820,13 @@ Changed paths:
  M git_ci_log
 
 Changed: Added again option for registration method for support use of 
-         customized templazes in cat_conf_extopts.m.
-Changed: Added file filter for meshe in cat_conf_factorial.m to only allow
+         customised templates in cat_conf_extopts.m.
+Changed: Added file filter for meshes in cat_conf_factorial.m to only allow
          selecting resampled data.
-Changed: Shortened time between parallized processes to 2s to get rid of the
-         long waiting time for most processes, but recognize if long. 
+Changed: Shortened time between paralellized processes to 2s to get rid of the
+         long waiting time for most processes, but recognise if long. 
          segmentation is used and use 30s.
-Changed: Removed some old calls in cat_run.m that are not used anympre.
+Changed: Removed some old calls in cat_run.m that are not used anymore.
 Changed: Updated help function for cat_surf_parameters.m.
 Changed: Replaced try/catch by file checking in cat_surf_resamp.m.
 ------------------------------------------------------------------------
@@ -799,8 +839,8 @@ Changed paths:
  M cat_batch_spm.sh
 
 
-Changed: Added fg flag to cat_batch_spm.sh and changed call to always uzse 
-        nohup.
+Changed: Added fg flag to cat_batch_spm.sh and changed call to always use 
+         nohup.
 ------------------------------------------------------------------------
 r2160 | gaser | 2022-12-08 14:12:11
 
@@ -817,7 +857,7 @@ Changed paths:
 Changed: Added new clip flag to cat_vol_slice_overlay that replaces the func 
          flag and allows to create colorbar that is gray for values below
          the threshold.
-Changed: Updated cat_surf_results to use new clipping flag for columes.         
+Changed: Updated cat_surf_results to use new clipping flag for volumes.         
 Fixed:   Corrected check for fields for voxel-wise covariates in 
          cat_conf_factorial.m
 ------------------------------------------------------------------------
@@ -886,7 +926,7 @@ Changed paths:
 
 New:     Added matlabbatch cat_main_report for retrospective creation of CAT 
          reports based on the XML file in cat_conf_tools. 
-Changed: Small addaptions to use cat_main_reportstr, cat_main_reportfig,
+Changed: Small addaptations to use cat_main_reportstr, cat_main_reportfig,
          cat_surf_render2, cat_surf_info and cat_surf_rename
          for the retrospective report generation. 
 ------------------------------------------------------------------------
@@ -1026,7 +1066,7 @@ A  templates_MNI152NLin2009cAsym/brainmask_GMtight.nii
 Added:   Created new GM brainmask for VBM analysis in 
          templates_MNI152NLin2009cAsym.
 Changed: Compiled mex-files for MACA64 and updated compile.m.
-Changed: Updated help text for conversion to stamdard normal distribution
+Changed: Updated help text for conversion to standard normal distribution
          (z-value).
 ------------------------------------------------------------------------
 r2145 | gaser | 2022-11-22 07:48:43
@@ -1132,10 +1172,10 @@ AD internal/cat_defaults_fastlong.m
 (1) Fixed:  Updated settings of resample/smooth batch to filter multiple input 
             dependencies in cat_conf_stools.
 (2) Fixed:  Extended cat_io_csv to support TSV files. Unfinished corrections in	
-            cat_conf_tools and cat_stat_getCSVXMLfield to improve usablity for 
+            cat_conf_tools and cat_stat_getCSVXMLfield to improve usability for 
             CSV and TSV files in general.  
 (3) Fixed:  Small changes and corrections in cat_io_data2mat and its dependency 
-            defintions but there is some bug in using dependencies as input,
+            definitions but there is some bug in using dependencies as input,
             e.g., from the SPM file selector.
 (4) Fixed:  Tiny corrections in cat_main and cat_main_LASs for 7T data.
 (5) Fixed:  Corrected brain extraction problems of missing CSF in MP2Rage data 
@@ -1151,7 +1191,7 @@ AD internal/cat_defaults_fastlong.m
             segmentation and store the result in the res structure that is 
             saved in the CAT XML.
 (9) New:    Added a batch for smoothing and downsampling of volumes and 
-            estimation of surface measures and resampling and smooting.               
+            estimation of surface measures and resampling and smoothing.               
 ------------------------------------------------------------------------
 r2138 | gaser | 2022-11-16 23:59:37
 
@@ -1372,7 +1412,7 @@ Changed paths:
 
 Changed: Included some of Jussi Tohkas modifications into cat_batch_bids.sh.
 Fixed:   Reading of Freesurfer and gifti data in cat_plot_histogram was 
-         erronous.
+         erroneous.
 ------------------------------------------------------------------------
 r2124 | gaser | 2022-10-24 11:52:19
 
@@ -1893,7 +1933,7 @@ Changed paths:
  M cat_stat_homogeneity.m
 
 
-Fixed:   Extended file search to suport BIDS in cat_stat_homogeneity.
+Fixed:   Extended file search to support BIDS in cat_stat_homogeneity.
          Display segmentation also if no raw images were available.  
          Added colorful output, warnings and errors to improve readability. 
 ------------------------------------------------------------------------

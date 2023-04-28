@@ -650,7 +650,7 @@ else
 %  We simply use the SPM segmentation as it is without further modelling of
 %  a PVE or other refinements. 
 %  ------------------------------------------------------------------------
-  [Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,job] = ...
+  [Ym,Ymi,Yp0b,Yb,Yl1,Yy,YMF,indx,indy,indz,qa,job] = ...
     cat_main_SPMpp(Ysrc,Ycls,Yy,job,res);
   fprintf('%5.0fs\n',etime(clock,stime)); 
 end
@@ -789,8 +789,14 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
       if ~isfield(job.output,'surf_measures'),    job.output.surf_measures    = 1; end % developer
       
       if job.extopts.SRP >= 30
+       % Yb0 was modified in cat_main_amap* for some conditions and we can use it as better mask in 
+        % cat_surf_createCS3 except for inv_weighting or if gcut was not used
+        if ~(job.extopts.gcutstr>0 && ~job.inv_weighting)
+          Yb0(:) = 1;
+        end
+
         [Yth1, S, Psurf, qa.createCS] = ...
-          cat_surf_createCS3(VT,VT0,Ymix,Yl1,YMF,YT,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
+          cat_surf_createCS3(VT,VT0,Ymix,Yl1,YMF,YT,Yb0,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
           'outputpp',job.output.pp,'surf_measures',job.output.surf_measures, ...
           'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,...
           'scale_cortex', job.extopts.scale_cortex, 'add_parahipp', job.extopts.add_parahipp, 'close_parahipp', job.extopts.close_parahipp,  ....
@@ -1171,7 +1177,7 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
 
 return
 
-function [Ycls,Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,job] = cat_main_SPMpp(Ysrc,Ycls,Yy,job,res)
+function [Ycls,Ym,Ymi,Yp0b,Yb,Yl1,Yy,YMF,indx,indy,indz,qa,job] = cat_main_SPMpp(Ysrc,Ycls,Yy,job,res)
 %% SPM segmentation input  
 %  ------------------------------------------------------------------------
 %  Here, DARTEL and PBT processing is prepared. 
@@ -1248,7 +1254,7 @@ function [Ycls,Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,job] = cat_main_SPMpp(Ys
   indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
   indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
   Yp0b = Yp0(indx,indy,indz);
-  clear Yp0 Yb; 
+  clear Yp0; 
   
   % load atlas map and prepare filling mask YMF
   % compared to CAT default processing, we have here the DARTEL mapping, but no individual refinement 
