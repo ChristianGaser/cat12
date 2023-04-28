@@ -661,8 +661,8 @@ else
 %  We simply use the SPM segmentation as it is without further modelling of
 %  a PVE or other refinements. 
 %  ------------------------------------------------------------------------
-  [Ycls,Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,job] = ...
-    cat_main_SPMpp(Ysrc,Ycls,Yy,job,res);
+  [Ycls,Ym,Ymi,Yp0b,Yb0,Yl1,Yy,YMF,indx,indy,indz,qa,job] = ...
+    cat_main_SPMpp(Ysrc,Ycls,Yy,job,res); 
   fprintf('%5.0fs\n',etime(clock,stime)); 
 end
 
@@ -1180,7 +1180,7 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
 
 return
 
-function [Ycls,Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,job] = cat_main_SPMpp(Ysrc,Ycls,Yy,job,res)
+function [Ycls,Ym,Ymi,Yp0b,Yb,Yl1,Yy,YMF,indx,indy,indz,qa,job] = cat_main_SPMpp(Ysrc,Ycls,Yy,job,res)
 %% SPM segmentation input  
 %  ------------------------------------------------------------------------
 %  Here, DARTEL and PBT processing is prepared. 
@@ -1257,7 +1257,7 @@ function [Ycls,Ym,Ymi,Yp0b,Yl1,Yy,YMF,indx,indy,indz,qa,job] = cat_main_SPMpp(Ys
   indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
   indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
   Yp0b = Yp0(indx,indy,indz);
-  clear Yp0 Yb; 
+  clear Yp0; 
   
   % load atlas map and prepare filling mask YMF
   % compared to CAT default processing, we have here the DARTEL mapping, but no individual refinement 

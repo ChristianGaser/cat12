@@ -1265,6 +1265,24 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     % ... cleanup this part of code when finished ...
     
     Psurf2 = Psurf;
+
+    % create temporary boundary surfaces for the report
+    if ~exist(Psurf2(2).Pwhite,'file') && ~exist(Psurf2(2).Ppial,'file')
+      tempsurf = 1; 
+
+      surfs = {'Ppial','Pwhite'}; sx = [-0.5 0.5]; 
+      for surfi = 1:2  % boundary surfaces
+        for si = 1:2   % brain sides
+          cmd = sprintf('CAT_Central2Pial "%s" "%s" "%s" %0.1f', ...
+            Psurf2(si).Pcentral, Psurf2(si).Pthick,Psurf2(si).(surfs{surfi}),sx(surfi)); 
+          cmdx{surfi,si} = cmd; 
+          cat_system(cmd,0);
+        end
+      end
+    else
+      tempsurf = 0; 
+    end
+
     % phite/pial surface in segmentation view number 2 or 3
     if exist(Psurf2(1).Pwhite,'file') && exist(Psurf2(1).Ppial,'file'), ids = 1:p0id; else, ids = []; end % job.extopts.expertgui==2 && 
     for ix=1:numel(Psurf2) 
@@ -1315,6 +1333,14 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         ccl{idi+1} = axes('Position',[st.vols{idi}.ax{3}.ax.Position(1) st.vols{idi}.ax{3}.ax.Position(2)-0.05+0.005*(idi~=1) 0.017 0.02],'Parent',fg);
         plot(ccl{idi+1},[0 1],[0 0],'k-'); axis(ccl{idi+1},'off')
         lg{idi+1} = text(1.2,0,stxt,'Parent',ccl{idi+1},'FontName',fontname,'Fontsize',fontsize-2,'color',fontcolor);
+      end
+
+      % cleanup
+      if tempsurf
+        for xi=1:numel(Psurf)
+          delete(Psurf(xi).Ppial);
+          delete(Psurf(xi).Pwhite);
+        end
       end
     end
     
