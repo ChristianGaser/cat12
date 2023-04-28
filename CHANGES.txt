@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2189 | rdahnke | 2023-04-28 11:33:47
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_extopts.m
+ M cat_main_reportfig.m
+ M cat_surf_create_TPM_hull_surface.m
+
+Fixed:      Added CS3 pipeline in expert/developer GUI.
+Fixed:      Correction of headbrain template surface settings in 
+            cat_surf_create_TPM_hull_surface.m
+Changed:    Added overlay of white/pial surface in cat_main_reportfig.
+------------------------------------------------------------------------
 r2188 | rdahnke | 2023-04-27 16:19:04
 
 Changed paths:
