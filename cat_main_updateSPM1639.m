@@ -82,7 +82,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   trange = trange + [ -diff(trange) +diff(trange) ] / 4; 
   trange = trange(1) : diff(trange)/(hbuckets-2) : trange(2);
   res.spmP0.hstibuckets = trange;
-  for ti=1:6
+  for ti=1:size(P,4)
     htmp = hist(Ysrc(P(:,:,:,ti)>minprob),trange); %#ok<HIST> 
     res.spmP0.hsti(ti,:) = htmp; %.Values;
   end

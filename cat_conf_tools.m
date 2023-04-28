@@ -175,7 +175,7 @@ function tools = cat_conf_tools(expert)
   calcvol                     = conf_stat_TIV;
   spmtype                     = conf_io_volctype(data,intlim,spm_type,prefix,suffix,verb,expert,lazy);
   calcroi                     = conf_roi_fun(outdir);
-  [~,~,ROIsum]           = cat_conf_ROI(expert);
+  [~,~,ROIsum]                = cat_conf_ROI(expert);
   resize                      = conf_vol_resize(data,prefix,expert,outdir);
   avg_img                     = conf_vol_average(data,outdir);
   realign                     = conf_vol_series_align(data);
@@ -190,7 +190,7 @@ function tools = cat_conf_tools(expert)
   iqr                         = conf_stat_IQR(data_xml);
   qa                          = conf_vol_qa(expert,outdir);
   catreport                   = conf_main_report(data_xml,outdir,expert);
-  %multi_subject_imcalc        = conf_vol_imcalc(prefix);
+  multi_subject_imcalc        = conf_vol_imcalc(prefix,expert);
   
   
 % create main batch 
@@ -221,7 +221,7 @@ function tools = cat_conf_tools(expert)
     spmtype, ...                          cat.pre.vtools.
     headtrimming, ...                     cat.pre.vtools.
     resize, ...                           cat.pre.vtools. 
-    ...multi_subject_imcalc, ...             cat.pre.vtools. 
+    multi_subject_imcalc, ...             cat.pre.vtools. 
     ...
     realign, ...                          cat.pre.long.?          % hidden
     shootlong,...                         cat.pre.long.?          % hidden
@@ -305,7 +305,7 @@ function report = conf_main_report(data_xml,outdir,expert)
   report.name       = 'Retrospective CAT Report';
 return
 %_______________________________________________________________________
-function imcalc = conf_vol_imcalc(prefix)
+function imcalc = conf_vol_imcalc(prefix,expert)
 %conf_vol_imcalc. Like spm_imcalc but to run the same operation for many subjects. 
 
   imcalc            = spm_cfg_imcalc;
@@ -339,6 +339,7 @@ function imcalc = conf_vol_imcalc(prefix)
   imcalc.tag        = 'mimcalc';
   imcalc.vout       = @vout_mimcalc;
   imcalc.prog       = @cat_vol_mimcalc;
+  imcalc.hidden     = expert < 1; 
   imcalc.name       = 'Multi-subject Image Calculator';
 return
 %_______________________________________________________________________

@@ -321,6 +321,8 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
   %grades    = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
   %mark2grad = @(mark) grades{max(1,min(numel(grades),max(max(isnan(mark)*numel(grades),1),round((mark+2/3)*3-3))))};
   
+  err       = struct('aff',0,'vbm',0,'sbm',0,'else',0,'warn0',0,'warn1',0,'warn2',0); 
+        
   allcatalerts   = 0;
   allcatwarnings = 0; 
   if job.getPID
@@ -359,7 +361,6 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
         fprintf('Completed volumes (see catlog files for details!):\n');
         
         % some variables 
-        err         = struct('aff',0,'vbm',0,'sbm',0,'else',0,'warn0',0,'warn1',0,'warn2',0); 
         cid         = 0;
         PIDactive   = ones(size(catSID));
         catSIDlast  = zeros(size(catSID));
