@@ -1,6 +1,6 @@
 function cat_stat_quality_measures(job)
-%To check Z-score across sample and save quality 
-% measures in csv file.
+% To check Z-score across sample using quartic mean z-score and  
+% save quality measures in csv file.
 %
 % Images have to be in the same orientation with same voxel size
 % and dimension (e.g. spatially registered images)
@@ -257,17 +257,19 @@ for i = 1:n_subjects
     tmp = tmp*gSF(i)/mean(gSF);
   end
   % calculate Z-score  
-  zscore = ((tmp(ind) - Ymean(ind)).^2)./Ystd(ind);
+  zscore = (tmp(ind) - Ymean(ind))./Ystd(ind);
 
   % calculate glassbrain with emphasized Z-score
-  Ytmp(ind) = zscore.^5;
+  Ytmp(ind) = zscore.^4;
   Ytmp = reshape(Ytmp,size(tmp));
   d1 = d1 + squeeze(sum(Ytmp,1));
   d2 = d2 + squeeze(sum(Ytmp,2));
   d3 = d3 + squeeze(sum(Ytmp,3));
   
-  % and use mean of Z-score as overall measure
-  mean_zscore(i) = mean(zscore);
+  % use mean of Z-score as overall measure, but emphasize outliers by
+  % using power operation
+  power_scale = 4;
+  mean_zscore(i) = mean((abs(zscore).^power_scale))^(1/power_scale);
 end
 fprintf('\n');
 
@@ -292,7 +294,7 @@ if 0
 end
 
 if isxml
-  % estimate product between weighted overall quality (IQR) and mean Z-score
+  % estimate product between weighted overall quality (IQR) and quartic mean Z-score
   IQR = QM(:,3);
   IQRratio = (mean_zscore/std(mean_zscore)).*(IQR/std(IQR));
   if mesh_detected
@@ -312,7 +314,7 @@ end
 
 fprintf(fid,'Path;Name;Mean Z-score');
 if isxml
-  fprintf(fid,';Weighted overall image quality (IQR);Normalized product of IQR and Mean Z-score');
+  fprintf(fid,';Weighted overall image quality (IQR);Normalized product of IQR and quartic mean Z-score');
   if mesh_detected
     fprintf(fid,';Euler Number;Size of topology defects\n');
   else
