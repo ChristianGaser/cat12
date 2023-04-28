@@ -289,13 +289,16 @@ for i=1:n_subjects
   data_name = strrep(data_name,'_rigid','');
   
   % detect if BIDS file structure is used
-  % (hope this is unique enought - would be possible to add CAT12. as subdirectory) 
+  % (hope this is unique enough - would be possible to add CAT12 as subdirectory) 
   BIDSdir   = [filesep 'derivatives' filesep]; 
   isBIDS    = contains( pth , BIDSdir );
 
-  if ( isfield(job,'sel_xml') && isfield(job.sel_xml,'select_dir') ) 
+  if isBIDS 
     % in case of BIDS CAT wrote all files into this directory 
     report_folder = pth; 
+  elseif ( isfield(job,'sel_xml') && isfield(job.sel_xml,'select_dir') ) 
+    % in case of BIDS CAT wrote all files into this directory 
+    report_folder = job.sel_xml.select_dir{1}; 
   else % use relative folder for autom. search
     report_folder = fullfile(pth,'..','report');
     if ~exist(report_folder,'dir'), report_folder = pth; end
@@ -608,6 +611,7 @@ for i = 1:n_subjects
   H.data.avg_abs_zscore(i) = mean((abs(zscore).^power_scale))^(1/power_scale);
   if job.verb, cat_progress_bar('Set',i); end
 end
+
 if job.verb, cat_progress_bar('Clear'); end
 
 % get data for each subject in longitudinal designs
