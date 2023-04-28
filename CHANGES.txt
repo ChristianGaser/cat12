@@ -1,4 +1,19 @@
 ------------------------------------------------------------------------
+r2188 | gaser | 2023-04-28 17:15:41
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M cat_stat_homogeneity.m
+ M cat_stat_quality_measures.m
+ M doc/cat.html
+
+Changed: Also changed the calculation to quartic mean Z-score for 
+         cat_stat_quality_measures.m
+Fixed:   Corrected bug in cat_stat_homogeneity.m where defined report folder
+         was not used for xml search.
+
+------------------------------------------------------------------------
 r2186 | gaser | 2023-04-26 17:29:33
 
 Changed paths:
