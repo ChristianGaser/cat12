@@ -174,6 +174,7 @@ function tools = cat_conf_tools(expert)
   maskimg                     = conf_vol_maskimage(data,prefix);
   calcvol                     = conf_stat_TIV;
   spmtype                     = conf_io_volctype(data,intlim,spm_type,prefix,suffix,verb,expert,lazy);
+  xml2csv                     = conf_io_xml2csv(outdir,expert);
   calcroi                     = conf_roi_fun(outdir);
   [~,~,ROIsum]                = cat_conf_ROI(expert);
   resize                      = conf_vol_resize(data,prefix,expert,outdir);
@@ -239,6 +240,7 @@ function tools = cat_conf_tools(expert)
     catreport, ...
     boxplot, ...                          cat.stat.eval ... print of XML data by the boxplot function and saving as images  
     getCSVXML, ...                        cat.stat.eval ... read out of XML/CSV data and export as batch dependency 
+    xml2csv, ...
     getXML, ...
     getCSV, ...
     file_move, ...
@@ -725,6 +727,81 @@ function long_report = conf_long_report(data_vol,data_xml,expert)
   long_report.hidden    = expert<1;
   long_report.help      = {
     };
+return
+%_______________________________________________________________________
+function xml2csv = conf_io_xml2csv(outdir,expert)
+% -------------------------------------------------------------------------
+% Read structures/XML-files and export and transform it to a table/CSV-file
+% 
+% RD202304
+% -------------------------------------------------------------------------
+  
+  % n-files, e.g. XML for direct extraction or nii/gii as selector
+  files               = cfg_files;
+  files.num           = [1 Inf];
+  files.tag           = 'files';
+  files.name          = 'XML files';
+  files.filter        = 'any';
+  files.ufilter       = '^cat_.*\.xml$';
+  files.val           = {{''}};
+  files.help          = {'Select XML files of one type (e.g., "cat_", "catROI_" or "catROIs"). '};
+
+  % filename
+  fname             = cfg_entry;
+  fname.tag         = 'fname';
+  fname.name        = 'Filename';
+  fname.strtype     = 's';
+  fname.num         = [0 inf];
+  fname.val         = {'CATxml.csv'}; 
+  fname.help        = {'CSV filename.' };
+  
+  % expert output options
+  % fieldnames
+  fieldnames            = cfg_entry;
+  fieldnames.tag        = 'fieldnames';
+  fieldnames.name       = 'Fieldnames ';
+  fieldnames.strtype    = 's+';
+  fieldnames.val        = {{''}};
+  fieldnames.num        = [0 inf];
+  fieldnames.help       = {
+     'Define keywords or complete fields to limit the extraction (empty = include all), i.e. only fields that inlclude these strings are used. '
+     'In case of catROI-files you can limit the extraction to specific atlas, regions, or tissues. '
+     'In case of cat-files you can limit the extraction to specific parameters ("opts" or "extopts") or measures ("q. '
+    };
+
+  % avoidfields
+  avoidfields            = cfg_entry;
+  avoidfields.tag        = 'avoidfields';
+  avoidfields.name       = 'Fieldnames ';
+  avoidfields.strtype    = 's+';
+  avoidfields.val        = {{''}};
+  avoidfields.num        = [0 inf];
+  avoidfields.help       = {
+     'Define keywords or complete fields that should be avoided/excluded (empty = exclude none), i.e. fields that inlclude such strings even they were included before. '
+     'In case of catROI-files you can limit the extraction to specific atlas, regions, or tissues. '
+     'In case of cat-files you can limit the extraction to specific parameters or measures. '
+    };
+
+
+  report           = cfg_menu;
+  report.tag       = 'report';
+  report.name      = 'CAT XML export field sets';
+  report.labels    = {'default','parameters','no parameters'};
+  report.values    = {'default','paraonly'  ,'nopara'       };
+  report.val       = {'default'}; 
+  report.help      = {'Predefined sets of CAT XML parameters. '};
+
+  
+  xml2csv           = cfg_exbranch;
+  xml2csv.tag       = 'xml2csv';
+  xml2csv.name      = 'XML2CSV';
+  xml2csv.val       = {files fname outdir fieldnames avoidfields report};
+  xml2csv.prog      = @cat_io_xml2csv;
+  %xml2csv.vout      = @vout_long_report; 
+  xml2csv.help      = {
+    'Export XML files (e.g. the cat preprocessing results or catROI-files) as a CSV table. '
+    };
+
 return
 %_______________________________________________________________________
 function [getCSVXML,getXML,getCSV] = cat_cfg_getCSVXML(outdir,expert)
