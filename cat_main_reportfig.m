@@ -1275,7 +1275,6 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         for si = 1:2   % brain sides
           cmd = sprintf('CAT_Central2Pial "%s" "%s" "%s" %0.1f', ...
             Psurf2(si).Pcentral, Psurf2(si).Pthick,Psurf2(si).(surfs{surfi}),sx(surfi)); 
-          cmdx{surfi,si} = cmd; 
           cat_system(cmd,0);
         end
       end
@@ -1335,15 +1334,16 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         lg{idi+1} = text(1.2,0,stxt,'Parent',ccl{idi+1},'FontName',fontname,'Fontsize',fontsize-2,'color',fontcolor);
       end
 
-      % cleanup
-      if tempsurf
-        for xi=1:numel(Psurf)
-          delete(Psurf(xi).Ppial);
-          delete(Psurf(xi).Pwhite);
-        end
-      end
     end
     
+    % cleanup
+    if tempsurf
+      for xi=1:numel(Psurf)
+        delete(Psurf(xi).Ppial);
+        delete(Psurf(xi).Pwhite);
+      end
+    end
+  
     % remove menu
     %if ~debug, spm_orthviews('RemoveContext',idi); end 
   end
