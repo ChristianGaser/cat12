@@ -1,4 +1,18 @@
 ------------------------------------------------------------------------
+r2192 | rdahnke | 2023-04-29 16:43:17
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_tools.m
+ M cat_io_struct2table.m
+ M cat_io_xml2csv.m
+ M cat_main_reportfig.m
+
+Fixed:      Corrected bug of the just added boundary surface visualisation in 
+            cat_main_reportfig.
+Changed:    Added option for verbose output and the sum progress bar in 
+            cat_io_struct2table.
+New:        Added (new) XML2CSV export function and batch. ------------------------------------------------------------------------
 r2190 | gaser | 2023-04-28 17:15:41
 
 Changed paths:
