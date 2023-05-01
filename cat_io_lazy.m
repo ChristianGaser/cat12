@@ -36,9 +36,10 @@ function run = cat_io_lazy(files,filedates,verb,force)
   if ~exist('verb','var'),  verb  = 0.5; end
   if ~exist('force','var'), force = 1; end
   
-  % only use that function in developer mode because it's simply too dangerous if files
-  % are not processed if already existing and parameter changed
+  % only use that function in developer mode because it's simply too dangerous 
+  % if files are not processed if already existing and parameter changed
   if cat_get_defaults('extopts.expertgui') < 2 && ~force 
+    if verb, cat_io_cprintf([0.5 0.0 0.0],' Reprocessing! \n'); end
     run = zeros(size(files));
     return
   end
