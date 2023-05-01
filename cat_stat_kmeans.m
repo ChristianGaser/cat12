@@ -13,6 +13,17 @@ function [mu,su,nu] = cat_stat_kmeans(y,k,s)
 %  su .. vector of class std 
 %  nu .. vector of class percentage of values
 %
+% examples: 
+%   d1 = randn(1,10000); 
+%   d2 = [randn(1,1000) - 3  ,  randn(1,10000) + 3]; 
+%   d3 = [randn(1,1000) - 1  ,  randn(1,10000) + 1]; 
+%   d4 = [randn(1,100)/2 + 0.5 ,  randn(1,1000)/2 + 2.2,  randn(1,700)/2 + 3.8];
+%
+%   [mn,sd] = cat_stat_kmeans(d1,1)
+%   [mn,sd] = cat_stat_kmeans(d2,2)
+%   [mn,sd] = cat_stat_kmeans(d3,2)
+%   [mn,sd] = cat_stat_kmeans(d4,3)
+%
 % modified version of
 % spm_kmeans1.m 1143 2008-02-07 19:33:33Z spm $
 % ______________________________________________________________________
@@ -72,11 +83,15 @@ for loops = 1:1000
 end  
 
 % Compute variances and mixing proportions
-for j=1:k
-  if isempty(y(i==j))
-    su(j) = std(d(j,:));
-  else
-    su(j) = std(y(i==j));
+if k==1
+  su(1) = std(y(1,:));
+else
+  for j=1:k
+    if isempty(y(i==j))
+      su(j) = std(d(j,:));
+    else
+      su(j) = std(y(i==j));
+    end
   end
 end
 
