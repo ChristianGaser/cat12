@@ -43,9 +43,9 @@ function Yg = cat_vol_grad(Ym,vx_vol,method,repNaN)
  
   % averaging 
   switch method
-    case 0, Yg = gx./vx_vol(1) + gy./vx_vol(2) + gz./vx_vol(3);                 % simple sum
-    case 1, Yg = abs(gx./vx_vol(1)) + abs(gy./vx_vol(2)) + abs(gz./vx_vol(3));  % absolute sum
-    case 2, Yg = (gx.^2 + gy.^2 + gz.^2).^(0.5);                                % gradient length
+    case 0, Yg = gx./vx_vol(1) + gy./vx_vol(2) + gz./vx_vol(3);                       % simple sum
+    case 1, Yg = abs(gx./vx_vol(1)) + abs(gy./vx_vol(2)) + abs(gz./vx_vol(3));        % absolute sum
+    case 2, Yg = ((gx/vx_vol(1)).^2 + (gy/vx_vol(2)).^2 + (gz/vx_vol(3)).^2).^(0.5);  % gradient length
   end
   
   % restore nan 
