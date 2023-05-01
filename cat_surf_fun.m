@@ -334,7 +334,7 @@ function S = cat_surf_tlink(S1,S2)
      error(['Surfaces has to have the same number of vertices and faces.' ...
             'Use tfs, tmin, or tmax functions otherwise']);
   end
-  S.facevertexcdata = sum((S1.vertices - S2.vertices).^2,2).^2;
+  S.facevertexcdata = sum((S1.vertices - S2.vertices).^2,2).^(1/2);
   S.vertices        = mean(cat(3,S1.vertices,S2.vertices),3);
   S.faces           = S1.faces;
 end

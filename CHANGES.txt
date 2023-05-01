@@ -1,4 +1,26 @@
 ------------------------------------------------------------------------
+r2193 | rdahnke | 2023-05-01 08:38:48
+
+Changed paths:
+ M CHANGES.txt
+ M cat_io_addwarning.m
+ M cat_io_lazy.m
+ M cat_io_rerun.m
+ M cat_plot_boxplot.m
+ M cat_stat_kmeans.m
+ M cat_surf_fun.m
+ M cat_vol_grad.m
+ M cat_vol_resize.m
+
+Changed:    Added verbose flag to cat_io_addwarning.
+Changed:    Improved verbose command line output of cat_io_lazy/rerun.
+Changed:    Added (transparency) scatter plot (option) in cat_vol_boxplot.           
+Fixed:      Corrected small bugs of special cases in cat_vol_boxplot. 
+Fixed:      Small corrections of special cases in cat_stat_kmeans. 
+Fixed:      Corrected bug in cat_surf_fun. 
+Fixed:      Corrected bug in vx_vol access in cat_vol_resize. 
+Fixed:      Corrected definition of a special use case in cat_vol_grad. 
+------------------------------------------------------------------------
 r2192 | rdahnke | 2023-04-29 16:43:17
 
 Changed paths:
