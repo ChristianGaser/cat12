@@ -1,4 +1,18 @@
 ------------------------------------------------------------------------
+r2192 | gaser | 2023-05-02 23:37:42
+
+Changed paths:
+ M CHANGES.txt
+ M cat_main_reportfig.m
+ M cat_run_job1639.m
+ M doc/index.html
+
+Changed: Updated FAQ in CAt12 manual.
+Fixed:   Corrected bug in cat_main_reportfig.m where the order of the temporary
+         surfaces was wrong.
+Fixed:   Corrected bug in cat_main_reportfig.m where the surface overlay was not 
+         working because the temporary surfaces were deleted too early.
+------------------------------------------------------------------------
 r2190 | gaser | 2023-04-28 17:15:41
 
 Changed paths:
