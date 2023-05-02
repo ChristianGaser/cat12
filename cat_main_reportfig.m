@@ -1270,7 +1270,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     if ~exist(Psurf2(2).Pwhite,'file') && ~exist(Psurf2(2).Ppial,'file')
       tempsurf = 1; 
 
-      surfs = {'Ppial','Pwhite'}; sx = [-0.5 0.5]; 
+      surfs = {'Pwhite','Ppial'}; sx = [-0.5 0.5]; 
       for surfi = 1:2  % boundary surfaces
         for si = 1:2   % brain sides
           cmd = sprintf('CAT_Central2Pial "%s" "%s" "%s" %0.1f', ...
@@ -1334,13 +1334,13 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         plot(ccl{idi+1},[0 1],[0 0],'k-'); axis(ccl{idi+1},'off')
         lg{idi+1} = text(1.2,0,stxt,'Parent',ccl{idi+1},'FontName',fontname,'Fontsize',fontsize-2,'color',fontcolor);
       end
-
-      % cleanup
-      if tempsurf
-        for xi=1:numel(Psurf)
-          delete(Psurf(xi).Ppial);
-          delete(Psurf(xi).Pwhite);
-        end
+    end
+    
+    % cleanup
+    if tempsurf
+      for xi=1:numel(Psurf)
+        delete(Psurf(xi).Ppial);
+        delete(Psurf(xi).Pwhite);
       end
     end
     
