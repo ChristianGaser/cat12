@@ -1,4 +1,4 @@
-function [TH2,T]=cat_io_struct2table(S,F)
+function [TH2,T] = cat_io_struct2table(S,F,verb)
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -10,7 +10,7 @@ function [TH2,T]=cat_io_struct2table(S,F)
 
   if ~exist('F','var') || isempty(F) || (ischar(F) && F=='*') || ...
     (iscell(F) && ~all(cellfun('isempty',strfind(F,'*'))))
-    F = get_fieldnames(S);
+    F = getFN(S,1024);
   end
 
   TH=cell(1,numel(F)); 
@@ -18,8 +18,17 @@ function [TH2,T]=cat_io_struct2table(S,F)
     TH{fi} = strrep(F{fi},'.','_');
   end
 
+  if ~exist('verb','var'), verb = 1; end
+
+  spm_clf('Interactive'); 
+  spm_progress_bar('Init',numel(S),'struct2table','entry');
+
+
   T=cell(numel(S),numel(F)); TH2=TH;
   for si=1:numel(S)
+    % be verbose with progressbar
+    if numel(S)>10, end
+
     fields=''; ef=0;
     for fi=1:numel(F)
       try
@@ -38,29 +47,76 @@ function [TH2,T]=cat_io_struct2table(S,F)
         end
       catch
         fields=sprintf('%s,%s',fields,F{fi});  
- %       fprintf('Miss field %d - ''%s'' in %d!\n',fi,F{fi},si);
+        if verb
+          fprintf('Miss field %d - ''%s'' in %d!\n',fi,F{fi},si);
+        end
         T{si,fi+ef} = [];
         TH2{fi+ef}  = TH{fi};
       end
     end
     if ~isempty(fields)
-      fprintf('Miss field [%s] in %d!\n',fields(2:end),si);
+      if verb
+        fprintf('Miss field [%s] in %d!\n',fields(2:end),si);
+      end
     end
+
+    spm_progress_bar('Set',si);
   end
+
+  % clear progressbar
+  spm_progress_bar('Clear');
 end
-function fnS = get_fieldnames(S)
-  fnS = fieldnames(SN);
-  for fnSi=1:numel(fnS)
-    if isfield(S,fnS{fnSi}) 
-      if RepByEmpty || ~isempty(SN.(fnS{fnSi}))
-        if isstruct(SN.(fnS{fnSi})) 
-          S.(fnS{fnSi}) = get_fieldnames(S.(fnS{fnSi}),SN.(fnS{fnSi}),RepByEmpty);
+% =========================================================================
+function FNS = getFN(SS,dimlim)
+%getFN(S). Recursive extraction of structure elements as string to eval. 
+
+  if ~exist('dimlim','var'), dimlim = 10; end
+
+  if isempty(SS)
+    FNS = SS;
+  else
+    S   = SS(1);
+    FN  = fieldnames(S);
+    FNS = {};
+    for fni = 1:numel(FN)
+      % need this for useful order of fields
+      acc = num2str( 1 + round( log10( numel( S.(FN{fni}) ))) );
+
+      if isstruct( S.(FN{fni}) )
+        % recursive call in case of structures
+        FNI = getFN(S.(FN{fni}),dimlim); 
+        if numel(S.(FN{fni})) == 1
+          for fnii = 1:numel(FNI)
+            FNI{fnii} = [FN{fni} '.' FNI{fnii}]; 
+          end
         else
-          S.(fnS{fnSi}) = SN.(fnS{fnSi});
+          FNI = {};
+          for fnii = 1:numel(FNI)
+            for sii = 1:numel(S.(FN{fni}))
+              FNI = [FNI; sprintf(['%s(%0' acc 'd).%s'], FN{fni}, sii, FNI{fnii})]; %#ok<AGROW> 
+            end
+          end
+        end
+      elseif ischar( S.(FN{fni}) ) 
+        FNI{1} = sprintf('%s', FN{fni} ); 
+      elseif iscellstr( S.(FN{fni}) ) %#ok<ISCLSTR> 
+        FNI = {};
+        for fnii = 1:min(dimlim,numel( S.(FN{fni}) ))
+          FNI = [FNI; sprintf(['%s{%0' acc 'd}'],FN{fni},fnii) ]; %#ok<AGROW> 
+        end
+      else
+        if numel( S.(FN{fni}) ) == 1
+          FNI{1} = sprintf('%s',FN{fni});
+        else
+          % just extract a limited number of elements
+          FNI = {};
+          for fnii = 1:min(dimlim,numel( S.(FN{fni}) ))
+            FNI = [FNI; sprintf(['%s(%0' acc 'd)'],FN{fni},fnii) ]; %#ok<AGROW> 
+          end
         end
       end
-    else
-      S.(fnS{fnSi}) = SN.(fnS{fnSi});
+      FNS = [FNS; FNI]; %#ok<AGROW> 
     end
+    FNS = unique(FNS);
   end
 end

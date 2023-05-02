@@ -27,6 +27,7 @@ function [out,s] = cat_plot_boxplot(data,opt)
 %  opt.ygrid       = 1;              activate y-grid-lines
 %  opt.gridline    = '-';            grid line-style
 %  opt.box         = 1;              plot box
+%  opt.usescatter  = 0;              use scatter plot (with transparency)
 %  opt.outliers    = 1;              plot outliers
 %  opt.violin      = 0;              violin-plot: 0 - box plot; 1 - violin plot; 2 - violin + thin box plot
 %  opt.boxwidth    = 0.8;            width of box
@@ -168,6 +169,7 @@ if isnumeric(data)
 end
 
 % disable connected time points if you have defined more than one sample
+offset = 0;
 if isfield(opt,'I') && ~isempty(opt.I)
   
   % transpose if necessary
@@ -243,6 +245,7 @@ def.boxwidth    = 0.8;
 def.box         = 1;
 def.outliers    = 1;
 def.violin      = 0;  
+def.usescatter  = 0; 
 def.fontsize    = [];         % empty = default font size
 def.showdata    = 0;  
 def.datasymbol  = '.';  
@@ -801,7 +804,14 @@ for i=1:qn
     else
       y = (ii-offset)*ones(length(data{ii}),1)+jitter_kde; x = data{ii}(:);
     end
-     plot(x,y,opt.datasymbol,'Color',scl*0.3*opt.groupcolor(ii,:));
+    if opt.usescatter
+      sc = scatter(x,y,opt.datasymbol,'MarkerEdgeColor',scl*0.3*opt.groupcolor(ii,:),...
+        'MarkerFaceColor',scl*0.3*opt.groupcolor(ii,:),...
+        'MarkerEdgeAlpha',0.1 + 0.9/numel(x).^.3,'MarkerFaceAlpha',0.1 + 0.9/numel(x).^.3);
+      if opt.datasymbol, sc.SizeData = 12; end % dotlike but with transparency 
+    else
+      plot(x,y,opt.datasymbol,'Color',[scl*0.3*opt.groupcolor(ii,:)]);
+    end
   elseif opt.showdata == 3
     if i==1, hold on; end
     if opt.vertical
@@ -809,7 +819,7 @@ for i=1:qn
     else
       y = ([-.025*ones(length(data{i}),1) .025*ones(length(data{i}),1)]+i)'; x = ([data{i}(:) data{i}(:)])';
     end
-     line(x,y,'Color',scl*0.4*opt.groupcolor(i,:));
+    line(x,y,'Color',scl*0.4*opt.groupcolor(i,:));
   end
 
   if opt.median == 1
@@ -934,7 +944,7 @@ for i=1:qn
       end
     end
     for i=1:numel(f2), uistack(f2(i),'bottom'); end
-    uistack(h1,'bottom')
+    if exist('h1','var'), uistack(h1,'bottom'); end 
     if opt.ygrid>1, uistack(h2,'bottom'); end
   end
   

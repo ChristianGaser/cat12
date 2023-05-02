@@ -37,9 +37,10 @@ function run = cat_io_rerun(files,filedates,verb,force)
   if ~exist('force','var'), force = 0; end
   files = cellstr(files);
 
-  % only use that function in developer mode because it's simply too dangerous if files
-  % are not processed if already existing and parameter changed
-  if cat_get_defaults('extopts.expertgui') < 2 && ~force 
+  % only use that function in developer mode because it's simply too dangerous
+  % if files are not processed if already existing and parameter changed
+  if cat_get_defaults('extopts.expertgui') < 2 || force 
+    if verb, cat_io_cprintf([0.5 0.0 0.0],' Reprocessing! \n'); end
     run = ones(size(files));
     return
   end
@@ -103,6 +104,12 @@ function run = cat_io_rerun(files,filedates,verb,force)
             run{fi} = [fdata(:).datenum] >= fdata2.datenum;
           else
             run(fi) = fdata.datenum >= fdata2.datenum;
+          end
+        elseif verb > 1
+          if numel(files)==1
+            cat_io_cprintf([0.5 0.0 0.0],' Input file 2: %50s: %s\n',spm_str_manip( filedates{fi}, 'a50'),'missing');          
+          else
+            cat_io_cprintf([0.5 0.0 0.0],' Input file 2-%02d: %50s: %s\n',fi,spm_str_manip( filedates{fi},'a50'),'missing');
           end
         end
       elseif ~isempty(filedates) && isdatetime( filedates(fi,:) )
