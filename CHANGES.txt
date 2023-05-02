@@ -1,4 +1,21 @@
 ------------------------------------------------------------------------
+r2194 | rdahnke | 2023-05-02 13:24:46
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_tools.m
+ M cat_io_xml2csv.m
+ M cat_stat_marks.m
+
+Changed:    Extended quality evaluation batch in cat_conf_tools to support 
+            different qa-versions for experts. 
+Changed:    Updated cat_stat_marks to support different default scalings of 
+            different QA versions.             
+New:        Added cat_vol_qa2 that focuses on data preparation and evaluation
+            to call different (older) QA versions.             
+New:        Added different versions of cat_vol_qa20* to support broader 
+            development and tests (that also include the ECR measure).
+             ------------------------------------------------------------------------
 r2193 | rdahnke | 2023-05-01 08:38:48
 
 Changed paths:

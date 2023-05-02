@@ -174,7 +174,6 @@ function tools = cat_conf_tools(expert)
   maskimg                     = conf_vol_maskimage(data,prefix);
   calcvol                     = conf_stat_TIV;
   spmtype                     = conf_io_volctype(data,intlim,spm_type,prefix,suffix,verb,expert,lazy);
-  xml2csv                     = conf_io_xml2csv(outdir,expert);
   calcroi                     = conf_roi_fun(outdir);
   [~,~,ROIsum]                = cat_conf_ROI(expert);
   resize                      = conf_vol_resize(data,prefix,expert,outdir);
@@ -186,6 +185,7 @@ function tools = cat_conf_tools(expert)
   data2mat                    = conf_io_data2mat(data,outdir);
   boxplot                     = conf_io_boxplot(outdir,subdir,prefix,expert);
   [getCSVXML,getXML,getCSV]   = cat_cfg_getCSVXML(outdir,expert);
+  xml2csv                     = conf_io_xml2csv(outdir);
   file_move                   = conf_io_file_move; 
   %urqio                       = conf_vol_urqio; % this cause problems
   iqr                         = conf_stat_IQR(data_xml);
@@ -729,7 +729,7 @@ function long_report = conf_long_report(data_vol,data_xml,expert)
     };
 return
 %_______________________________________________________________________
-function xml2csv = conf_io_xml2csv(outdir,expert)
+function xml2csv = conf_io_xml2csv(outdir)
 % -------------------------------------------------------------------------
 % Read structures/XML-files and export and transform it to a table/CSV-file
 % 
@@ -742,7 +742,7 @@ function xml2csv = conf_io_xml2csv(outdir,expert)
   files.tag           = 'files';
   files.name          = 'XML files';
   files.filter        = 'any';
-  files.ufilter       = '^cat_.*\.xml$';
+  files.ufilter       = '^cat.*\.xml$';
   files.val           = {{''}};
   files.help          = {'Select XML files of one type (e.g., "cat_", "catROI_" or "catROIs"). '};
 
@@ -751,7 +751,7 @@ function xml2csv = conf_io_xml2csv(outdir,expert)
   fname.tag         = 'fname';
   fname.name        = 'Filename';
   fname.strtype     = 's';
-  fname.num         = [0 inf];
+  fname.num         = [1 inf];
   fname.val         = {'CATxml.csv'}; 
   fname.help        = {'CSV filename.' };
   
@@ -759,20 +759,21 @@ function xml2csv = conf_io_xml2csv(outdir,expert)
   % fieldnames
   fieldnames            = cfg_entry;
   fieldnames.tag        = 'fieldnames';
-  fieldnames.name       = 'Fieldnames ';
+  fieldnames.name       = 'Included fieldnames';
   fieldnames.strtype    = 's+';
-  fieldnames.val        = {{''}};
+  fieldnames.val        = {{' '}};
   fieldnames.num        = [0 inf];
   fieldnames.help       = {
      'Define keywords or complete fields to limit the extraction (empty = include all), i.e. only fields that inlclude these strings are used. '
      'In case of catROI-files you can limit the extraction to specific atlas, regions, or tissues. '
-     'In case of cat-files you can limit the extraction to specific parameters ("opts" or "extopts") or measures ("q. '
+     'In case of cat-files you can limit the extraction to specific parameters ("opts" or "extopts") or QC ratings ("qualityratings"). '
+     ''
     };
 
   % avoidfields
   avoidfields            = cfg_entry;
   avoidfields.tag        = 'avoidfields';
-  avoidfields.name       = 'Fieldnames ';
+  avoidfields.name       = 'Excluded fieldnames';
   avoidfields.strtype    = 's+';
   avoidfields.val        = {{''}};
   avoidfields.num        = [0 inf];
@@ -780,16 +781,17 @@ function xml2csv = conf_io_xml2csv(outdir,expert)
      'Define keywords or complete fields that should be avoided/excluded (empty = exclude none), i.e. fields that inlclude such strings even they were included before. '
      'In case of catROI-files you can limit the extraction to specific atlas, regions, or tissues. '
      'In case of cat-files you can limit the extraction to specific parameters or measures. '
+     ''
     };
 
 
   report           = cfg_menu;
   report.tag       = 'report';
   report.name      = 'CAT XML export field sets';
-  report.labels    = {'default','parameters','no parameters'};
+  report.labels    = {'default','only processing parameters','no processing parameters'};
   report.values    = {'default','paraonly'  ,'nopara'       };
   report.val       = {'default'}; 
-  report.help      = {'Predefined sets of CAT XML parameters. '};
+  report.help      = {'Predefined sets of CAT XML values in case of "cat_" processing XML files (no effect in other XMLs). '};
 
   
   xml2csv           = cfg_exbranch;
@@ -1545,7 +1547,7 @@ function qa = conf_vol_qa(expert,outdir)
   catlab.tag      = 'catp0'; 
   catlab.name     = 'Default with CAT label map';
   catlab.help     = {['Select CAT label map with brain tissues (p0*.nii).  Also label maps created by other tissue segmentations can be used, ' ...
-    'as long the following labeling is used: CSF=1, GM=2, and WM=3 with intermediate PVE values (e.g., 2.32 for 68% GM and 32% WM.  ']};
+    'as long the following labeling is used: CSF=1, GM=2, and WM=3 with optinal intermediate PVE values (e.g., 2.32 for 68% GM and 32% WM).  ']};
   
   catsegp         = data; 
   catsegp.ufilter = '^p1.*';
@@ -1575,10 +1577,10 @@ function qa = conf_vol_qa(expert,outdir)
   seg.tag         = 'seg';
   seg.name        = 'Brain tissue segmentation';
   seg.help        = {'Select tissue segments of other segmentations' ''}; 
-  
-% FSL segment maps  
 
-% FS label map
+% other posible cases
+% - FSL segment maps  
+% - FS label map
 
   model           = cfg_choice; 
   model.tag       = 'model';
@@ -1586,7 +1588,7 @@ function qa = conf_vol_qa(expert,outdir)
   model.values    = {catlab,catsegp,spmsegc,seg}; 
   model.val       = {catlab}; 
   model.help      = {[ ...
-    'Select a input segmentation for the estimation of the quality measures. ' ...
+    'Select input segmentations in the same image space as the original images for estimation of quality measures/ratings. ' ...
     'The default model is developed for typcial structural T1/T2/PD-based images with a given brain tissue classification. ']}; 
    
   
@@ -1597,46 +1599,65 @@ function qa = conf_vol_qa(expert,outdir)
   prefix.name     = 'Filename prefix';
   prefix.strtype  = 's';
   prefix.num      = [0 Inf];
-  prefix.val      = {'qc_'};
-  prefix.help     = {'Specify the string to be prepended to the filenames of the XML file(s). ' ''};
+  if expert
+    prefix.val    = {'VERSION_'};
+    prefix.help   = {'Specify the string to be prepended to the filenames of the XML file(s), where VERSION is replaced by the selected QA file without underlines (eg. "catvolqc201901_"). ' ''};
+  else
+    prefix.val    = {'qce_'};
+    prefix.help   = {'Specify the string to be prepended to the filenames of the XML file(s). ' ''};
+  end
+% ############## automatic replacement ?   
 
+  version         = cfg_menu;
+  version.tag     = 'version';
+  version.name    = 'Version';
+  if expert > 1
+    version.labels  = {'current','update2023','update2022','201901_202301','202110','201901','201602'};
+    version.values  = {'cat_vol_qa','cat_vol_qa202301','cat_vol_qa202207b','cat_vol_qa201901_202301','cat_vol_qa202110','cat_vol_qa201901','cat_vol_qa201602'};
+  else
+    version.labels  = {'current','202110','201901','201602'};
+    version.values  = {'cat_vol_qa','cat_vol_qa202110','cat_vol_qa201901','cat_vol_qa201602'};
+  end
+  % remove undefined cases
+  for vi = numel(version.values):-1:1
+    if ~exist(version.values{vi},'file')
+      version.values(vi) = []; 
+      version.labels(vi) = []; 
+    end
+  end
+  version.val     = {'cat_vol_qa'};
+  version.hidden  = expert<1;
+  version.help    = {
+    'Select different version of QC processing. '
+  };
   
-% Definition of own XML subfield to extend the CAT-XML file 
-%{
-  fdname          = cfg_entry; 
-  fdname.tag      = 'fdname';
-  fdname.name     = 'XML-fieldname';
-  fdname.strtype  = 's';
-  fdname.num      = [0 Inf];
-  fdname.val      = {'qc'};
-  fdname.help     = {
-    'Specify the field name in the "quality_measure" subfield that will include the quality measurements and ratings. ' ''}; 
-  
-  update          = cfg_menu;
-  update.tag      = 'fdupdate';
-  update.name     = 'Update result';
-  update.labels   = {'No' 'Yes'};
-  update.values   = {0 1};
-  update.val      = {1}; 
-  update.hidden   = ~expert; 
-  update.help     = {['Update (replace) an existing datafield. ' ...
-    'Otherwise, the data and time of this estimation process are added to the new fieldname. '];''};
-%}
+  rerun         = cfg_menu;
+  rerun.tag     = 'rerun';
+  rerun.name    = 'Force reprocessing in case of existing results';
+  rerun.labels  = {'Yes','No'};
+  rerun.values  = {2,0};
+  rerun.val     = {2};
+  rerun.hidden  = expert<2;
+  rerun.help    = {
+    'Do not process data if the resulting xml/mat files already exists. '
+  };
   
   verb            = cfg_menu;
   verb.tag        = 'verb';
   verb.name       = 'Print results';
-  verb.labels     = {'0' '1'};
-  verb.values     = {0 1};
-  verb.val        = {1}; 
+  verb.labels     = {'no' 'yes'};
+  verb.values     = {0 2 };
+  verb.val        = {2}; 
   verb.help       = {'Print progress and results. ';''};
 
   outdir.val{1}   = {'report'}; 
+  outdir.help     = {'Create sub-directory within the main directory.'};
+% could be confusing ... writes into the current report directory (defined by mri from the preprocessing) 
   
   opts            = cfg_branch;
   opts.tag        = 'opts';
   opts.name       = 'Options';
-  opts.val        = {outdir, prefix, verb }; % fdname, update,
+  opts.val        = {version, prefix, verb , rerun }; % outdir, 
   opts.help       = {'Basic options. ' ''};
 
   % main
@@ -1644,7 +1665,7 @@ function qa = conf_vol_qa(expert,outdir)
   qa.tag          = 'iqe';
   qa.name         = 'Image quality estimation';
   qa.val          = {data, model, opts};
-  qa.prog         = @cat_vol_qa; 
+  qa.prog         = @cat_vol_qa2; 
   qa.vfiles       = @vout_qa; % XML files + values
   qa.hidden       = expert<2;
   qa.help         = {'Image quality estimation based on a set of images and a given set of input segmentation defined by different models. '};

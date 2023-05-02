@@ -59,6 +59,8 @@ function varargout = cat_io_xml2csv(job)
   % TODO: 
   % - define some special user-cases for the cat_*.xml?
   % - setup for CSV / TSV export?
+  % - write error in case of too large matrices
+  % - dependencies
 
 
 
