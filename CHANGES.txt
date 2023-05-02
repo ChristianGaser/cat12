@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------
-r2192 | gaser | 2023-05-02 23:37:42
+r2196 | gaser | 2023-05-02 23:37:42
 
 Changed paths:
  M CHANGES.txt
@@ -12,6 +12,68 @@ Fixed:   Corrected bug in cat_main_reportfig.m where the order of the temporary
          surfaces was wrong.
 Fixed:   Corrected bug in cat_main_reportfig.m where the surface overlay was not 
          working because the temporary surfaces were deleted too early.
+------------------------------------------------------------------------
+r2195 | rdahnke | 2023-05-02 14:55:45
+
+Changed paths:
+ M CHANGES.txt
+
+Fixed:    Added missing files of previous update.
+------------------------------------------------------------------------
+r2194 | rdahnke | 2023-05-02 13:24:46
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_tools.m
+ M cat_io_xml2csv.m
+ M cat_stat_marks.m
+
+Changed:    Extended quality evaluation batch in cat_conf_tools to support 
+            different qa-versions for experts. 
+Changed:    Updated cat_stat_marks to support different default scalings of 
+            different QA versions.             
+New:        Added cat_vol_qa2 that focuses on data preparation and evaluation
+            to call different (older) QA versions.             
+New:        Added different versions of cat_vol_qa20* to support broader 
+            development and tests (that also include the ECR measure).
+             
+------------------------------------------------------------------------
+r2193 | rdahnke | 2023-05-01 08:38:48
+
+Changed paths:
+ M CHANGES.txt
+ M cat_io_addwarning.m
+ M cat_io_lazy.m
+ M cat_io_rerun.m
+ M cat_plot_boxplot.m
+ M cat_stat_kmeans.m
+ M cat_surf_fun.m
+ M cat_vol_grad.m
+ M cat_vol_resize.m
+
+Changed:    Added verbose flag to cat_io_addwarning.
+Changed:    Improved verbose command line output of cat_io_lazy/rerun.
+Changed:    Added (transparency) scatter plot (option) in cat_vol_boxplot.           
+Fixed:      Corrected small bugs of special cases in cat_vol_boxplot. 
+Fixed:      Small corrections of special cases in cat_stat_kmeans. 
+Fixed:      Corrected bug in cat_surf_fun. 
+Fixed:      Corrected bug in vx_vol access in cat_vol_resize. 
+Fixed:      Corrected definition of a special use case in cat_vol_grad. 
+------------------------------------------------------------------------
+r2192 | rdahnke | 2023-04-29 16:43:17
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_tools.m
+ M cat_io_struct2table.m
+ M cat_io_xml2csv.m
+ M cat_main_reportfig.m
+
+Fixed:      Corrected bug of the just added boundary surface visualisation in 
+            cat_main_reportfig.
+Changed:    Added option for verbose output and the sum progress bar in 
+            cat_io_struct2table.
+New:        Added (new) XML2CSV export function and batch. 
 ------------------------------------------------------------------------
 r2190 | gaser | 2023-04-28 17:15:41
 
@@ -201,7 +263,7 @@ Changed paths:
 A  cat_vol_sanlm2180.m
 
 Added:   Renamed cat_vol_sanlm.m from r2180 to cat_vol_sanlm2180.m.
-         ------------------------------------------------------------------------
+------------------------------------------------------------------------
 r2181 | gaser | 2023-03-14 14:52:51
 
 Changed paths:
@@ -352,7 +414,7 @@ Changed: Removed progress bar from cat_surf_surf2roi.m.
 Fixed:   Corrected bug in cat_vol_morph.m where the lab-option was not always
          considered correctly.
 Fixed:   Corrected orientation of Tians Subcortical atlas.
-         ------------------------------------------------------------------------
+------------------------------------------------------------------------
 r2180 | gaser | 2023-02-24 16:44:28
 
 Changed paths:

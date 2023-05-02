@@ -1,4 +1,4 @@
-function varargout = cat_io_addwarning(id,mess,level,nline,data,usebox)
+function varargout = cat_io_addwarning(id,mess,level,nline,data,usebox,verb)
 %cat_io_addwarning. Collect preprocessing warnings in CAT12
 % Uses the global struture cat_err_res to collect warnings in the CAT12
 % preprocessing function cat_run_job, cat_run_main, etc. 
@@ -30,6 +30,7 @@ function varargout = cat_io_addwarning(id,mess,level,nline,data,usebox)
 %            e.g., parameter or test results that cause the warning
 %            (in development)
 %   usebox .. add a box around the message for command line output
+%   verb   .. be verbose
 %
 % Examples: 
 %   cat_io_addwarning('reset') 
@@ -68,6 +69,7 @@ function varargout = cat_io_addwarning(id,mess,level,nline,data,usebox)
     if ~exist('level','var'),   level = 1;  end
     if ~exist('data','var'),    data  = {}; end
     if ~exist('usebox','var'),  usebox = 1; end
+    if ~exist('verb','var'),    verb   = 1; end
     % expert = cat_get_defaults('extopts.expertgui');  % not sure if the expert setting work
     
     if numel(nline) == 1
@@ -125,23 +127,25 @@ function varargout = cat_io_addwarning(id,mess,level,nline,data,usebox)
     end
     
     % print output
-    if nline2(1)>0, fprintf('\n'); end
-    warnstr = strrep(mess,'\\n',['\n' box(usebox).i '             ']); 
-    if level==0
-      cat_io_cmd(sprintf([box(usebox).s box(usebox).i 'NOTE %02d:     ' id '\n' box(usebox).i '             ' warnstr box(usebox).e ],numel(cat_io_addwarning(0))),'note');
-    elseif level==1
-      cat_io_cmd(sprintf([box(usebox).s box(usebox).i 'WARNING %02d:  ' id '\n' box(usebox).i '             ' warnstr box(usebox).e ],numel(cat_io_addwarning(1))),'warning');
-    elseif level==2
-      cat_io_cmd(sprintf([box(usebox+1).s box(usebox+1).i 'ALERT %02d:    ' id '\n' box(usebox+1).i '             ' warnstr box(usebox+1).e ],numel(cat_io_addwarning(2))),'error');
-    elseif level==3
-      warning(id,warnstr)
-    else
-      error(id,warnstr)
-    end
-    if nline2(2) == 1 
-      fprintf('\n'); 
-    elseif nline2(2) == 2
-      fprintf('\n'); cat_io_cmd(' ','');
+    if verb
+      if nline2(1)>0, fprintf('\n'); end
+      warnstr = strrep(mess,'\\n',['\n' box(usebox).i '             ']); 
+      if level==0
+        cat_io_cmd(sprintf([box(usebox).s box(usebox).i 'NOTE %02d:     ' id '\n' box(usebox).i '             ' warnstr box(usebox).e ],numel(cat_io_addwarning(0))),'note');
+      elseif level==1
+        cat_io_cmd(sprintf([box(usebox).s box(usebox).i 'WARNING %02d:  ' id '\n' box(usebox).i '             ' warnstr box(usebox).e ],numel(cat_io_addwarning(1))),'warning');
+      elseif level==2
+        cat_io_cmd(sprintf([box(usebox+1).s box(usebox+1).i 'ALERT %02d:    ' id '\n' box(usebox+1).i '             ' warnstr box(usebox+1).e ],numel(cat_io_addwarning(2))),'error');
+      elseif level==3
+        warning(id,warnstr)
+      else
+        error(id,warnstr)
+      end
+      if nline2(2) == 1 
+        fprintf('\n'); 
+      elseif nline2(2) == 2
+        fprintf('\n'); cat_io_cmd(' ','');
+      end
     end
   end
   
