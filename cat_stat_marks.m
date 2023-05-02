@@ -31,7 +31,12 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
 %#ok<*NASGU,*STRNU>
 
   rev = '$Rev$';
-  
+  try
+    dbs = dbstack; 
+    qav = dbs(2).name; 
+  catch
+    qav = ''; 
+  end
   
 % used measures and marks:
 % ______________________________________________________________________
@@ -45,10 +50,11 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
   def.WMdepth   = [2.50  1.0; 1.50  1.0];            % absolute  expected thickness
   def.CSFdepth  = [1.25  1.0; 0.25  0.5];            % absolute  expected thickness
   def.CHvsCG    = [ 0.9  0.6;  0.1  0.4;    9    1]; % relation 
-  NM=[0.0466 0.3949]; %NM = [NM(1) NM(1)+(NM(2)-NM(1))/5*6];  
-  BM=[0.2178 1.1169*2]; %BM = [BM(1) BM(1)+(BM(2)-BM(1))/3*6];
-  %CM=[1/3    1/12];   CM = [CM(1)-CM(2)/2 CM(2)-CM(2)/2];
-  CM=[1/2 1/6]; CM = [CM(1)+diff(CM)/12 CM(2)+diff(CM)/12];
+  def.noise     = [0.0466 0.3949];                   % noise:  NM=[0.0466 0.3949]; %NM = [NM(1) NM(1)+(NM(2)-NM(1))/5*6];  
+  def.bias      = [0.2178 1.1169 * 2 ];              % bias:   BM=[0.2178 1.1169*2]; %BM = [BM(1) BM(1)+(BM(2)-BM(1))/3*6];
+  %CM=[1/2 1/6]; CM = [CM(1)+diff(CM)/12 CM(2)+diff(CM)/12]; %CM=[1/3    1/12];   CM = [CM(1)-CM(2)/2 CM(2)-CM(2)/2];
+  CM=[1/3 0]; %CM = [CM(1)+diff(CM)/12 CM(2)+diff(CM)/12]; %CM=[1/3    1/12];   CM = [CM(1)-CM(2)/2 CM(2)-CM(2)/2];
+  def.contrast  = CM;                                % contrast
   def.QS        = { 
 % -- structure ---------------------------------------------------------
 % 'measure'  'fieldname'       'marktpye'    markrange        help
@@ -71,7 +77,8 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
   % - resolution - 
    'qualitymeasures'  'res_vx_vol'            'linear'    [  0.50   3.00]  'voxel dimensions'
    'qualitymeasures'  'res_RMS'               'linear'    [  0.50   3.00]  'RMS error of voxel size'
-   'qualitymeasures'  'res_ECR'               'linear'    [  0.02   1.00]  'normalized gradient slope of the white matter boundary'
+   'qualitymeasures'  'res_ECR'               'normal'    [  0.125  1.00]  'normalized gradient slope of the white matter boundary' % [0.3222 0.5413]
+   'qualitymeasures'  'res_ECRmm'             'normal'    [  0.125  1.00]  'normalized gradient slope of the white matter boundary' % [0.3222 0.5413]
   %'qualitymeasures'  'res_MVR'               'linear'    [  0.50   3.00]  'mean voxel resolution'
   %'qualitymeasures'  'res_vol'               'linear'    [  0.125    27]  'voxel volume'
   %'qualitymeasures'  'res_isotropy'          'linear'    [  1.00   8.00]  'voxel isotropy'
@@ -83,10 +90,10 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
    'qualitymeasures'  'contrast'              'linear'    [  CM(1)   CM(2)]  'contrast between tissue classes' % das geht nicht
    'qualitymeasures'  'contrastr'             'linear'    [  CM(1)   CM(2)]  'contrast between tissue classes'
   % - noise & contrast -
-   'qualitymeasures'  'NCR'                   'linear'    [  NM(1)   NM(2)]  'noise to contrast ratio' 
+   'qualitymeasures'  'NCR'                   'linear'    def.noise          'noise to contrast ratio' 
   %'qualitymeasures'  'CNR'                   'linear'    [1/NM(1) 1/NM(2)]  'contrast to noise ratio'
   % - inhomogeneity & contrast -
-   'qualitymeasures'  'ICR'                   'linear'    [  BM(1)   BM(2)]  'inhomogeneity to contrast ratio' 
+   'qualitymeasures'  'ICR'                   'linear'    def.bias           'inhomogeneity to contrast ratio' 
  %  'qualitymeasures'  'ICRk'                  'linear'    [  1.095   1.80]  'inhomogeneity to contrast ratio' 
   %'qualitymeasures'  'CIR'                   'linear'    [1/BM(1) 1/BM(2)]  'contrast to inhomogeneity ratio'
   % - subject measures / preprocessing measures -
@@ -273,8 +280,12 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
     
     case 'init'    % ausgabe einer leeren struktur
       varargout{1} = QS;
-      varargout{2} = {'NCR','ICR','res_RMS','res_ECR','contrastr'}; % ,'res_BB' is not working now 
-    
+      switch qav
+        case {'cat_vol_qa202110','cat_vol_qa201901'} % older version 
+          varargout{2} = {'NCR','ICR','res_RMS','contrastr'}; % ,'res_BB' is not working now 
+        otherwise
+          varargout{2} = {'NCR','ICR','res_RMS','res_ECRmm','res_ECR','contrastr'}; % ,'res_BB' is not working now 
+      end
       
     case 'marks'    % ausgabe einer leeren struktur
       varargout{1} = def.QS;

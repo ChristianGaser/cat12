@@ -503,7 +503,7 @@ function varargout=cat_vol_resize(T,operation,varargin)
       else
         error('ERROR:reduceBrain: unknown error using d.');
       end
-      d = round(d./[vx_vol vx_vol]);
+      d = round(d./vx_vol([1 1 2 2 3 3]));
       
       if numel(varargin)>2 && ndims(varargin{3})==3
         M = varargin{3};
