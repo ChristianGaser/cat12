@@ -1,12 +1,14 @@
 function out = cat_vol_tfce(in, dh, E, H, calc_neg, invert)
 % Apply threshold-free cluster enhancement (TFCE) and scale the image to
-% have the same intensity distribution as the input
+% have the same intensity distribution as the input to strengthen large 
+% connected regions for clean up or removing vessesl in WM
 %
 % FORMAT out = cat_vol_tfce(in, dh, E, H, calc_neg, invert)
 % in        - input image 
 % dh        - step size (e.g. dh = max(abs(in))/100)
-% E         - TFCE parameter for extent
-% H         - TFCE parameter for height 
+%             leave empty or set to Inf or NaN to automatically estimate dh
+% E         - TFCE parameter for extent (default 2)
+% H         - TFCE parameter for height  (default 1)
 % calc_neg  - also calc neg. TFCE values (not by default)
 % invert    - apply TFCE to inverted image to strengthen fine structures
 %
@@ -48,6 +50,14 @@ end
 % use 100 steps from 0..max
 if isempty(dh) || ~isfinite(dh)
   dh = max(abs(in(:)))/100;
+end
+
+% set defaults for E and H
+if nargin < 3
+  E = 2;
+end
+if nargin < 4
+  H = 1;
 end
 
 % also calc neg. TFCE values
