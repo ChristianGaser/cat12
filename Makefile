@@ -26,7 +26,7 @@ STARGET3_FOLDER=/home/gaser/spm12/toolbox/cat12
 STARGET3=${STARGET3_HOST}:${STARGET3_FOLDER}
 
 MATLAB_FILES=Contents.* cat_*.m spm_cat12.m tbx_cfg_cat.m sliderPanel.m slice_overlay.m cat_run* compile.m
-C_FILES=Amap.[ch] ornlm_float.c sanlm_float.c MrfPrior.c Pve.c Kmeans.c cat_*.c* cat_*.mex* vollib.c genus0.[ch] tricases.h spm_diffeo.*
+C_FILES=Amap.[ch] ornlm_float.c sanlm_float.c MrfPrior.c Pve.c Kmeans.c cat_*.c* cat_*.mex* vollib.c genus0.[ch] tricases.h spm_diffeo.* tfceMex_pthread.*
 MISC_FILES=README.md CHANGES.txt INSTALL.txt doc standalone templates_MNI152NLin2009cAsym templates_surfaces templates_surfaces_32k atlases_surfaces atlases_surfaces_32k cat12.* CAT.* distribute_to_server.sh cat_*.sh  cat_long_main*txt glass_brain.mat
 
 FILES=${MATLAB_FILES} ${C_FILES} ${MISC_FILES}
