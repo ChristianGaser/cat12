@@ -1,4 +1,22 @@
 ------------------------------------------------------------------------
+r2199 | gaser | 2023-05-04 13:52:45
+
+Changed paths:
+ M CHANGES.txt
+ M Makefile
+AM cat_vol_tfce.m
+A  tfceMex_pthread.c
+AM tfceMex_pthread.m
+A  tfceMex_pthread.mexa64
+A  tfceMex_pthread.mexmaca64
+A  tfceMex_pthread.mexmaci64
+A  tfceMex_pthread.mexw64
+
+Added:   Added new function ca_vol_tfce.m that allows to apply threshold-free 
+         cluster enhancement (TFCE) and scale the image to have the same 
+         intensity distribution as the input.
+Added:   Added tfceMex_pthread.* from TFCE toolbox.
+------------------------------------------------------------------------
 r2196 | gaser | 2023-05-02 23:37:42
 
 Changed paths:
