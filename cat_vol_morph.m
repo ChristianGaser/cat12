@@ -23,6 +23,7 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
 %  action = {'d'|'e'|'c'|'o'|'l'|'lo'|'lc' ... 
 %            'cd'|'ce'|'cc'|'co'|'clo'|'clc' ...
 %            'dd'|'de'|'dc'|'do'|'dlo'|'dlc' ...
+%            'gd'|'ge'|'gc'|'go'
 %            }
 %  n      = 1x1 double (default = 1), will be rounded for standard 
 %           morphological operations, but not for distance-based 
@@ -46,6 +47,13 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
 %    - ce  | cerode  
 %    - cc  | cclose  
 %    - co  | copen   
+%
+%   Min-Max-based operations for gray-scaled data
+%    - gd  | gdilate 
+%    - ge  | gerode  
+%    - gc  | gclose  
+%    - go  | gopen   
+%    
 %
 %   Morphological operations with distance operation (sphere):
 %    - dd | distdilate
@@ -112,7 +120,13 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
     error('MATLAB:cat_vol_morph:Empty','Only nonempty 3D volumes!\n'); 
   end
   
-  vol = vol>0.5; vol(isnan(vol)) = 0;
+  switch lower(action)
+    case {'gdilate','graydilate','gd','gerode','grayerode','ge' ...
+          'grayopen','gopen','go','grayclose','gclose','gc'}
+    otherwise
+      vol = vol>0.5; 
+  end
+  vol(isnan(vol)) = 0;
   
   if numel(vx_vol) ==  1, vx_vol = repmat(vx_vol,1,3); end
   if any(size(vx_vol)~= [1,3])
@@ -151,7 +165,7 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
   %
   %   nn = nn * 1.41;   
   %
-    
+
     case {'dilate','d'}
       vol = cat_vol_morph(vol,[dtype 'dilate'],nn,vx_vol);
     case {'erode','e'}
@@ -166,6 +180,35 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
       vol = cat_vol_morph(vol,['lab' dtype 'open'],nn,vx_vol);
 
     
+
+  % min-max-based gray-scale filters
+  % =================================================================== 
+  
+    case {'gdilate','graydilate','gd','gerode','grayerode','ge'}
+      % remove the background volume that is outside the dilation region
+      [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,n+1,vol>0); 
+      
+      % use of single input for convn is faster and less memory demanding
+      switch lower(action)
+        case {'graydilate','gd','gdilate'}, minmax = 3; 
+        case {'grayerode' ,'ge','gerode'},  minmax = 2; 
+      end
+
+      vol = cat_vol_localstat(single(vol),true(size(vol)),round(nn/mean(vx_vol)),minmax);
+    
+      % add background
+      vol = cat_vol_resize(vol,'dereduceBrain',BB);  
+
+    case {'grayopen','gopen','go'}
+      vol = cat_vol_morph(vol,'gerode' ,n,vx_vol); 
+      vol = cat_vol_morph(vol,'gdilate',n,vx_vol); 
+   
+    case {'grayclose','gclose','gc'}
+      vol = cat_vol_morph(vol,'gdilate',n,vx_vol); 
+      vol = cat_vol_morph(vol,'gerode' ,n,vx_vol); 
+    
+
+
       
   % chessboard distance operations (like a box)
   % =================================================================== 
@@ -348,7 +391,7 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
       vol = cell(1,numel(voltypes)); 
       for vc = 1:numel(volclass)
         for vt = 1:numel(voltypes)
-          vol{vt}.O = cat_tst_phantoms(volclass{vc},voltypes{vt});
+          vol{vt}.O = cat_vol_smooth3X(rand(size(vol)),2); %cat_tst_phantoms(volclass{vc},voltypes{vt});
 
           for cl = 1:numel(method)
             for mt = 1:size(method{cl},1)
