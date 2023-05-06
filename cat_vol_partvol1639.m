@@ -154,8 +154,26 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
   else
     YslA = max(0,min(1,Yp0A-2)); 
   end
-  clear Yy; 
   
+
+  % Blood vessel probability map (added 202305):
+  % Uses a blood vessel map created using MRA scans of the IXI and ICBM  
+  % databases in combination with CSF and WM probability maps as far as 
+  % larger blood vessels are typically located along the brainstem, corpus 
+  % callosum and within the insula.
+  Pbv   = strrep(PA{1},'cat.nii','cat_bloodvessels.nii');
+  Vbv   = spm_vol(Pbv);
+  YwmA  = single(cat_vol_sample(Vtpm(1),Vtpm(2),Yy,1)); 
+  YcsfA = single(cat_vol_sample(Vtpm(1),Vtpm(3),Yy,1)); 
+  if exist(Pbv,'file') 
+    YbvA = single(cat_vol_sample(Vbv,Vbv,Yy,1));
+    YbvA = 1 - YwmA + max(YcsfA * 0.1 , YbvA); 
+  else
+    YbvA = 1 - YwmA + YcsfA * 0.1;
+  end
+  clear YwmA YcsfA; 
+  clear Yy; 
+
 
   % use addition FLAIR images
   if exist('job','var') && isfield(job,'data_wmh') && ~isempty(job.data_wmh) && isfield(job,'subj') && numel(job.data_wmh)>=job.subj
@@ -202,6 +220,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
   end
   Yp0A     = cat_vol_resize(Yp0A    ,'reduceBrain',vx_vol,2,Yb);
   YslA     = cat_vol_resize(YslA    ,'reduceBrain',vx_vol,2,Yb);
+  YbvA     = cat_vol_resize(YbvA    ,'reduceBrain',vx_vol,2,Yb);
   YwmhA    = cat_vol_resize(YwmhA   ,'reduceBrain',vx_vol,2,Yb);
   if exist('Yflair','var')
     Yflair = cat_vol_resize(Yflair  ,'reduceBrain',vx_vol,2,Yb);
@@ -222,6 +241,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
   end
   Yp0A       = cat_vol_resize(Yp0A  ,'reduceV',vx_vol,vx_res,64);
   YslA       = single(cat_vol_resize(YslA  ,'reduceV',vx_vol,vx_res,64));
+  YbvA       = cat_vol_resize(YbvA  ,'reduceV',vx_vol,vx_res,64);
   YwmhA      = cat_vol_resize(YwmhA ,'reduceV',vx_vol,vx_res,64); 
   if exist('Yflair','var')
     Yflair   = cat_vol_resize(Yflair,'reduceV',vx_vol,vx_res,64); 
@@ -268,24 +288,76 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
   Ybg = cat_vol_laplace3R(Ybg,Ybg==1.5,0.005)<1.5 & Ym<2.9 & Ym>1.8 & Ydiv>-0.02;
   Ya1(Ybg)=LAB.BG;                                                         % basal ganglia
   Ya1(YA==LAB.TH & Ym>1.9 & Ym<2.85 & Ydiv>-0.1)=LAB.TH;                   % thalamus
-  Ya1(YA==LAB.HC & Ym>1.9 & Ym<2.85 & Ydiv>-0.1)=LAB.HC;                   % hippocampus
-  Ya1(((Yp0>2.5 & Ym>2.5 & (YA==LAB.CT | YA==LAB.BG)) | ...
+  Ya1(YA==LAB.HC & Ym>1.9 & Ym<2.85 & Ydiv>-0.1 & Yg<.2)=LAB.HC;                   % hippocampus
+  NBVC = extopts.experimental; % ########## new BV correction ##########
+  if NBVC
+    % define some high intensity BVs and the neocortex
+    Ya1(Ya1==0 & smooth3(Yp0<2.5)>.5 & Ym>max(3.25 - 0.2*BVCstr, 3 -(YbvA.^8*BVCstr - 1) & Ydiv<-0.05) & YA==LAB.CT) = LAB.BV;       
+    Ya1( cat_vol_morph( ((Yp0>2.5 & Ym>2.5 & Ym<3 -(YbvA.^4*BVCstr - 1) & (YA==LAB.CT | YA==LAB.BG)) | ...
+         (Yp0>1.5 & Ym<3.5 & Ybgd>1 & Ybgd<8 & (Ybgd>4 | ...
+         Ydiv<-0.02+Ybgd/200))) & Ya1==0 , 'l',[.1 10 ])) = LAB.CT;        % cerebrum
+    Yhbv = max(0,8*-Ydiv).^4 .* (2*Yg).^4 .* Ym .* 2.*smooth3(Yp0<2.9) .* (YbvA - 1).^2 .* (YA~=LAB.CB); 
+    Ya1(Ya1==0 & Yhbv>.2*(1-BVCstr)) = LAB.BV;
+  else
+    % older version
+    Ya1(((Yp0>2.5 & Ym>2.5 & (YA==LAB.CT | YA==LAB.BG )) | ...
        (Yp0>1.5 & Ym<3.5 & Ybgd>1 & Ybgd<8 & (Ybgd>4 | ...
        Ydiv<-0.02+Ybgd/200))) & Ya1==0)=LAB.CT;                            % cerebrum
+  end
   Ya1((Yp0>2.0 & Ym>2.0) & YA==LAB.CB)=LAB.CB;                             % cerebellum
   Ya1((Yp0>2.0 & Ym>2.0) & YA==LAB.BS)=LAB.BS;                             % brainstem
   Ya1((Yp0>2.0 & Ym>2.0) & YA==LAB.ON)=LAB.ON;                             % optical nerv
-  Ya1((Ya1==0 & Yp0<1.5 & Ym<1.5 & Yp0>1.3 & Ym>1.3) & YA==LAB.BV)=LAB.BV; % low-int VB  (updated due to cerebellar erros RD20190929)
-  Ya1((Ya1==0 & Yp0>3.0 & Ym>3.2) & YA==LAB.BV)=LAB.BV;                    % high-int VB (updated due to cerebellar erros RD20190929)
   Ya1((Yp0>2.0 & Ym>2.0) & YA==LAB.MB)=LAB.MB;                             % midbrain
+  %%
+  if NBVC
+    % extend the neocortical area
+    Ya1(Ya1<1 & Ym<2.2) = nan; 
+    [Ya1,Yd] = cat_vol_downcut(Ya1,Ym,noise); Ya1(isinf(Ya1) | Yd>15 ) = 0; 
+
+    % get blood vessels as intensity-based eikonal-distance map 
+    Ya0 = single(Ya1>0 & Ya1~=LAB.BV); Ya0(Ym<1.7) = nan; 
+    [~,Yd] = cat_vol_downcut(Ya0,Ym,noise / 2); clear Ya0
+    Ya1(Ya1==0 & Ym>2.2 & Yd>70 & ~cat_vol_morph(YA>1 & YA~=LAB.HD,'d') & ...
+      ~cat_vol_morph(YA==LAB.CB,'d',3)) = LAB.BV;
+
+    %% modified old lines
+    Ya1((Ya1==0 & Yp0<1.5 & Ym<1.5 & Yp0>1.3 & Ym>1.3) & YA==LAB.BV)=LAB.BV; % low-int BV  (updated due to cerebellar errors RD20190929)
+    Ya1((cat_vol_morph(Ya1==0 & YA~=LAB.CB,'e') & (Ym>2.5 | Ym<1.7) & YA==LAB.CT & ...
+      Ym>2 - (YbvA-1).^4*BVCstr) & (YA==LAB.BV | YbvA>1))=LAB.BV;       % high-int BV (updated due to cerebellar errors RD20190929)
+    
+    % some light region growing
+    Ya1(Ya1<1 & Ym<2.2) = nan; 
+    [Ya1,Yd] = cat_vol_downcut(Ya1,Ym,2*noise); Ya1(isinf(Ya1) | (Yd>15 & Ya1==LAB.BV) ) = 0; 
+%%
+ %   Yhbvr = cat_vol_morph(cat_vol_morph(Ya1==LAB.HC | Ya1==LAB.VT | Ya1==LAB.PH | ...
+ %     Ya1==LAB.PH | Ya1==LAB.BS | Ya1==LAB.PH | Ya1==LAB.MB, 'dc',3,vx_vol),'d',1); 
+ %   Ya1(Yhbvr & Ym>3.05) = LAB.BV;  
+
+    % 
+    Ya1(Ya1<1 & Ym<1.9) = nan; 
+    [Ya1,Yd] = cat_vol_downcut(Ya1,Ym,2); Ya1(isinf(Ya1) | (Yd>15 & Ya1==LAB.BV) ) = 0; 
+    Ya1(Ya1<1 & Ym<1.7) = nan; 
+    [Ya1,Yd] = cat_vol_downcut(Ya1,Ym,2); Ya1(isinf(Ya1) | (Yd>15 & Ya1==LAB.BV ) ) = 0; 
+  
+  else
+    Ya1((Ya1==0 & Yp0<1.5 & Ym<1.5 & Yp0>1.3 & Ym>1.3) & YA==LAB.BV)=LAB.BV; % low-int VB  (updated due to cerebellar erros RD20190929)
+    Ya1((Ya1==0 & Yp0>3.0 & Ym>3.2) & YA==LAB.BV)=LAB.BV;                    % high-int VB (updated due to cerebellar erros RD20190929)
+    Ya1(Ya1==0 & Ym<1.9)=nan; 
+    Ya1 = cat_vol_downcut(Ya1,Ym,4*noise); Ya1(isinf(Ya1))=0; 
+    Ya1 = cat_vol_median3c(Ya1,Yb);                                          % smoothing
+  end
   clear Ybg Ybgd; 
-  % region-growing
-  Ya1(Ya1==0 & Yp0<1.9)=nan; 
-  Ya1 = cat_vol_downcut(Ya1,Ym,4*noise); Ya1(isinf(Ya1))=0; 
-  Ya1 = cat_vol_median3c(Ya1,Yb);                                          % smoothing
   Ya1((Yp0>1.75 & Ym>1.75 & Yp0<2.5 & Ym<2.5) & Ya1==LAB.MB)=0;            % midbrain correction
   Ya1(Ya1==LAB.CT & ~cat_vol_morph(Ya1==LAB.CT,'do',1.4)) = 0; 
-  
+  if 0
+    %% display for development
+    [YD,YI] = cat_vbdist(single(Ya1)); Yax = Ya1(YI);
+    figure, isosurface(smooth3(Ya1 & Ym>2.1),.5,Yax), axis equal off; colormap cool, caxis([1,8])
+    %%
+    figure, isosurface(smooth3((Yd<50 | Ym<2.1) .* (Ym>2.1)),.5,Yax), axis equal off; colormap cool, caxis([1,8])
+    
+  end
+
   
   %% Mapping of ventricles:
   %  Ventricle estimation with a previous definition of non ventricle CSF
@@ -805,11 +877,6 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
   for ci=1:numel(Ycls), Ycls{ci} = cat_vol_ctype(single(Ycls{ci}) ./ max(eps,Yclss) * 255); end
   
   
-  if debug
-    cat_io_cmd(' ','','',verb,stime); 
-  else
-    cat_io_cmd(' ','','',verb,stime); 
-    %cat_io_cmd('cleanup',dispc,'',verb); 
-  end
+  cat_io_cmd(' ','','',verb,stime); 
   
 end
