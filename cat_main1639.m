@@ -428,7 +428,7 @@ if ~isfield(res,'spmpp')
       NS(Yl1,7) .* (Ymi*3 - (1.5-job.extopts.BVCstr)),0.3).^4,0.1)/3;
 
     % correct src images
-    Ymi   = max(0,Ymi - Ybv*2/3); 
+    Ymi   = max( min(1/3 + 1/3*cat_vol_morph(Ym>2.5/3 & Yl1~=job.extopts.LAB.BV,'dd',1.5,vx_vol) , Ymi) ,Ymi - Ybv*2/3); 
     Ymi   = cat_vol_median3(Ymi,cat_vol_morph(Ybv>0.5,'dilate')); 
     Ymis  = cat_vol_smooth3X(Ymi); Ymi(Ybv>0.5) = Ymis(Ybv>0.5); clear Ymis;
 
@@ -795,13 +795,13 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
       if ~isfield(job.output,'surf_measures'),    job.output.surf_measures    = 1; end % developer
       %%
       if job.extopts.SRP >= 30
-        % Yb0 was modified in cat_main_amap* for some conditions and we can use it as better mask in 
+        %% Yb0 was modified in cat_main_amap* for some conditions and we can use it as better mask in 
         % cat_surf_createCS3 except for inv_weighting or if gcut was not used
         if ~(job.extopts.gcutstr>0 && ~job.inv_weighting)
           Yb0(:) = 1;
         end
 
-        [Yth1, S, Psurf, qa.createCS] = ...
+        [Yth1, S, Psurf, qa.createCS] = ... 
           cat_surf_createCS3(VT,VT0,Ymix,Yl1,YMF,YT,Yb0,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
           'outputpp',job.output.pp,'surf_measures',job.output.surf_measures, ...
           'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,...

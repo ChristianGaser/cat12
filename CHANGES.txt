@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2200 | rdahnke | 2023-05-06 10:59:09
+
+Changed paths:
+ M CHANGES.txt
+ M cat_main1639.m
+ M cat_vol_morph.m
+ M cat_vol_partvol1639.m
+
+New:      Added min-max-based gray-scaled operations in cat_vol_morph.  
+New:      Added new blood-vessel-detection in cat_vol_partvol1639 that 
+          is controlled by the extopts.experimental parameter in the 
+          developer mode.
+Changed:  Optimized blood-vessel-correction in cat_main1639.  ------------------------------------------------------------------------
 r2199 | gaser | 2023-05-04 13:52:45
 
 Changed paths:
