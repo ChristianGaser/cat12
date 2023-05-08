@@ -186,7 +186,11 @@ function cat_io_report(job,qa,subj,createerr)
       qa.software.version_segment    = rev_cat;
     end
     qa.software.revision_cat         = rev_cat;
-    qa.qualitymeasures.res_vx_vol    = sqrt(sum(VT0.mat(1:3,1:3).^2));
+    try
+      qa.qualitymeasures.res_vx_vol  = sqrt(sum(VT0.mat(1:3,1:3).^2));
+    catch
+      qa.qualitymeasures.res_vx_vol  = nan(1,3);
+    end
     try
       qa.qualitymeasures.res_vx_voli = sqrt(sum(VT1.mat(1:3,1:3).^2));
     catch
@@ -283,6 +287,8 @@ function cat_io_report(job,qa,subj,createerr)
 %% Figure
 %  ---------------------------------------------------------------------
   try
+    VT0 = spm_vol(job.data{subj}); % original 
+  
     nprog = ( isfield(job,'printPID') && job.printPID ) || ... PID field
           ( isempty(findobj('type','Figure','Tag','CAT') ) && ... no menus
             isempty(findobj('type','Figure','Tag','Menu') ) );

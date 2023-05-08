@@ -1006,7 +1006,6 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
                 cat_vol_morph(abs(Yp0 - Ym*3)>0.5,'d',2) .* ...
                 (Yp0>0.5))>0.5);
             end
-            %V2.dat(NS(Yl1,LAB.BV))     = 57/30; % BV???
             V2.dat(Ychange & Ym<1.33/3) = 58/30;
             V2.dat(Ychange & Ym>1.33/3) = 59/30;
             V2.dat(Ychange & Ym>1.66/3) = 60/30; 
@@ -1054,6 +1053,9 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
               bv3 = [0.4 0.4 0.4; 0.5 0.5 0.5; 0.6 0.6 0.6];
             end
 
+            % display also the detected blood vessels
+            V2.dat(NS(Yl1,LAB.BV))      = 60/30; 
+            
             % mapping
             try spm_orthviews('addtruecolourimage',hhp0,V2, [BCGWH; g29; wmhc9; vent3; bv3],1,2,0); end 
 

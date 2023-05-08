@@ -201,7 +201,7 @@ function C=readcsv(filename,sheet,pos,opt)
 
   % if a field could be interpreted as a number, then convert it to a float 
   % ??? if there is a comma otherwise to integer???
-  for i=1:numel(C), if ~isnan(str2double(C{i})), id=strfind(C{i},','); C{i}(id)='.'; C{i} = str2double(C{i}); end; end
+  for i=1:numel(C), if ~isnan(str2double(C{i})) || strcmpi(C{i},'nan'), id=strfind(C{i},','); C{i}(id)='.'; C{i} = str2double(C{i}); end; end
 
 end
 function writecsv(filename,C,sheet,pos,opt)
