@@ -3707,6 +3707,12 @@
             <h2 id="faq">FAQ</h2>
             
             <details>            
+              <summary><u>Can we use CAT12 for white matter volume analysis?</u></summary>
+              Of course, CAT12 can examine white matter (WM). However, keep in mind that there are more sensitive methods for WM, such as DTI, and the sensitivity for WM may be lower compared to grey matter. This is because white matter regions are often quite homogeneous in T1-weighted images, making it more difficult to find differences.<br>
+              However, if you do find something, all is fine, but if you do not, it may simply be due to the lower sensitivity.</a>.
+            </details>            
+
+            <details>            
               <summary><u>The old "Check Sample Homogeneity" tool was quite useful for finding duplicate subjects in large samples. The new homogeneity tool, which uses Z-score, no longer supports this. What is the difference between these measures?</u></summary>
               Both homogeneity measures differ in their calculations and it’s difficult to say which is a better and more suitable measure. I prefer the new z-score measure over correlation since it’s quicker to estimate for larger samples and aligns with the idea that outliers are often identified by the sample standard deviation. The z-score is computed as the difference between the sample mean and the voxel value, divided by the standard deviation, and averaged across all voxels.<br>
               Furthermore, newer CAT12 versions use the quatric mean Z-score, which gives outliers a greater weight and make them more obvious in the plot. However, the old tool is still available <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_homogeneity');">here</a>.
