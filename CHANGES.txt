@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2206 | gaser | 2023-05-11 12:08:58
+
+Changed paths:
+ M CHANGES.txt
+ M cat_vol_eidist.m
+AM cat_vol_inpaint.m
+ M doc/index.html
+
+Changed: Updated help text.
+Added:   New function cat_vol_inpaint for inpainting of missing values.
+------------------------------------------------------------------------
 r2205 | rdahnke | 2023-05-08 09:34:57
 
 Changed paths:
@@ -20,7 +31,8 @@ New:      Added min-max-based gray-scaled operations in cat_vol_morph.
 New:      Added new blood-vessel-detection in cat_vol_partvol1639 that 
           is controlled by the extopts.experimental parameter in the 
           developer mode.
-Changed:  Optimized blood-vessel-correction in cat_main1639.  ------------------------------------------------------------------------
+Changed:  Optimized blood-vessel-correction in cat_main1639.  
+------------------------------------------------------------------------
 r2200 | gaser | 2023-05-04 16:48:07
 
 Changed paths:
