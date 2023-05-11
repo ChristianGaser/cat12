@@ -1,4 +1,4 @@
-%cat_vol_eidist Voxel-based eiknoal distance calculation.
+%cat_vol_eidist Voxel-based eikonal distance calculation.
 %  This function estimates the Euclidean distance D to the closest boundary 
 %  voxel I given by the 0.5 isolevel in B that should contain values 
 %  between 0 and 1 to define the boundary using PVE.  To align the closest 
