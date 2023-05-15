@@ -187,6 +187,7 @@ function tools = cat_conf_tools(expert)
   [getCSVXML,getXML,getCSV]   = cat_cfg_getCSVXML(outdir,expert);
   xml2csv                     = conf_io_xml2csv(outdir);
   file_move                   = conf_io_file_move; 
+  mp2rage                     = conf_vol_mp2rage(prefix,verb,expert);
   %urqio                       = conf_vol_urqio; % this cause problems
   iqr                         = conf_stat_IQR(data_xml);
   qa                          = conf_vol_qa(expert,outdir);
@@ -223,6 +224,7 @@ function tools = cat_conf_tools(expert)
     headtrimming, ...                     cat.pre.vtools.
     resize, ...                           cat.pre.vtools. 
     multi_subject_imcalc, ...             cat.pre.vtools. 
+    mp2rage, ...
     ...
     realign, ...                          cat.pre.long.?          % hidden
     shootlong,...                         cat.pre.long.?          % hidden
@@ -253,6 +255,118 @@ function tools = cat_conf_tools(expert)
   %end
 return
 %_______________________________________________________________________
+function mp2rage = conf_vol_mp2rage(prefix,verb,expert)
+%
+%   
+
+% def.files         = {};       % list of MP2Rage images
+  data              = cfg_files;
+  data.tag          = 'files';
+  data.name         = 'Volumes';
+  data.filter       = {'image','.*\.(nii.gz)$'};
+  data.ufilter      = '.*';
+  data.num          = [1 Inf];
+  data.help         = {'Select MP2Rage images. '};
+
+
+% def.bloodvesselscorrection = 0;   % not implemented >> CAT
+  
+
+% def.biascorrection = 0;        % biascorrection (0-*no*,1-yes) - not implemented >> CAT BC parameter
+  bias              = cfg_menu;
+  bias.tag          = 'biascorrection';
+  bias.name         = 'Bias corretion (not implemented yet)';
+  bias.labels       = {'Yo'; 'Light'; 'Strong'};
+  bias.values       = {0 1 2};
+  bias.val          = {0};
+  bias.hidden       = expert<1;
+  bias.help         = {'Additional bias correction.' ''};
+
+
+% def.logscale          = inf;      % use log/exp scaling for more equally distributed
+%                                   % tissues (0-none, 1-log, -1-exp, inf-*auto*);
+  logscale               = cfg_menu;
+  logscale.tag           = 'log';
+  logscale.name          = 'Log/exp-based intensity transformation';
+  if expert>1
+    logscale.labels      = {'No';'Exp';'Log';'Log2';'Log10';'Auto'};
+    logscale.values      = {0,-1,1,2,10,inf};
+  else
+    logscale.labels      = {'No';'Exp';'Log';'Auto'}; 
+    logscale.values      = {0,-1,1,inf};
+  end
+  logscale.val           = {inf};
+  logscale.hidden        = expert<1;
+  logscale.help          = {'Use log/exp scaling for more equally distributed tissues . ' ''};
+ 
+
+%   def.intnorm           = inf;      % contrast normalization using the tan of GM normed
+%                                     % values with values between 1.0 - 2.0 for light to 
+%                                     % strong adaptiong (0-none, inf-*auto*)
+  intnorm               = cfg_menu;
+  intnorm.tag           = 'intnorm';
+  intnorm.name          = 'Contrast transformation';
+  if expert>1
+    intnorm.labels      = {'No';'Yes (auto)'; 'Yes (1.2)';'Yes (1.4)';'Yes (1.6)';'Yes (1.8)';'Yes (2.0)'}; % 'auto', 'exp'
+    intnorm.values      = {0,inf, 1.2,1.4,1.6,1.8,2.0};
+  else
+    intnorm.labels      = {'No';'Yes'}; 
+    intnorm.values      = {0,inf};
+  end
+  intnorm.val           = {inf};
+  intnorm.hidden        = expert<1;
+  intnorm.help          = {'Contrast normalization using the tan of GM normed values. ' ''};
+
+
+
+% def.skullstripping = 2;        % skull-stripping (0-no, 1-SPM, 2-*optimized*)
+  bet               = cfg_menu;
+  bet.tag           = 'skullstripping';
+  bet.name          = 'Skull-stripping';
+  bet.labels        = {'No';'SPM';'Optimized'};
+  bet.values        = {0,1,2};
+  bet.val           = {2};
+  %bet.hidden        = expert<0;
+  bet.help          = {'Apply skull-stripping to image.' ''};
+  
+
+%   def.restoreLCSFnoise  = 1;        % restore values below zero (lower CSF noise)    
+  CSFnoise              = cfg_menu;
+  CSFnoise.tag          = 'restoreLCSFnoise';
+  CSFnoise.name         = 'Restore lower CSF noise';
+  CSFnoise.labels       = {'No'; 'Light'; 'Strong'};
+  CSFnoise.values       = {0 1 2};
+  CSFnoise.val          = {0};
+  CSFnoise.hidden       = expert<1;
+  CSFnoise.help         = {'Restore values below zero (lower CSF noise).' ''};
+
+
+
+%   def.prefix            = 'PARA_';  % filename prefix (strong with PARA for parameter
+%                                     % depending naming, e.g. ... ) 
+%  prefix.val = 'PARA_';
+
+
+
+%   def.verb              = 1;        % be verbose (0-no,1-yes,2-details)
+
+
+%   report
+
+
+  % == main ==
+  mp2rage           = cfg_exbranch;
+  mp2rage.tag       = 'mp2rage';
+  mp2rage.name      = 'MP2RAGE preprocessing for CAT';
+  mp2rage.val       = {data bias logscale intnorm bet CSFnoise prefix verb}; 
+  mp2rage.prog      = @cat_vol_mp2rage;
+  %mp2rage.vout      = @cat_vol_mp2rage_out; % define output files 
+  mp2rage.hidden    = expert<1;
+  mp2rage.help      = {
+    ''
+    };
+
+return
 function report = conf_main_report(data_xml,outdir,expert)
 %conf_main_report. Retrospective creation of CAT report.
 
