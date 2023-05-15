@@ -1,4 +1,12 @@
 ------------------------------------------------------------------------
+r2207 | rdahnke | 2023-05-15 12:22:43
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_tools.m
+
+New:     Added experimental function and batch to optimise MP2Rage data for CAT
+         preprocessing.------------------------------------------------------------------------
 r2206 | gaser | 2023-05-11 12:08:58
 
 Changed paths:
