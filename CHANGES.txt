@@ -1,4 +1,12 @@
 ------------------------------------------------------------------------
+r2208 | gaser | 2023-05-19 11:43:40
+
+Changed paths:
+ M CHANGES.txt
+ M cat_vol_img2mip.m
+
+Fixed: Added check to cat_vol_img2mip.m for empry results/images.
+------------------------------------------------------------------------
 r2207 | rdahnke | 2023-05-15 12:22:43
 
 Changed paths:
