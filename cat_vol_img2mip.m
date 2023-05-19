@@ -183,8 +183,13 @@ if style
   if ~isempty(OV.roi)
     S.roi = ROI{1};
   end
-  cat_vol_glassbrain(Y{1},XYZ{1},S);
-
+  
+  if ~isempty(XYZ{1})
+    cat_vol_glassbrain(Y{1},XYZ{1},S);
+  else
+    fprintf('No results found (i.e. below threshold)\n');
+  end
+  
   set(gca,'units','pixels'); x = get(gca,'position');
   set(gcf,'units','pixels'); y = get(gcf,'position');
   set(gcf,'position',[y(1) y(2) x(3) x(4)])% set the position of the figure to the length and width of the axes
