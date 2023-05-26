@@ -1,4 +1,4 @@
-function out = cat_vol_inpaint(vol,niter,smooth,reduce,init)
+function out = cat_vol_inpaint(vol,niter,smooth,reduce,init,verb)
 % ----------------------------------------------------------------------
 % This function uses the inpaintn function from Damien Garcia to replaces
 % missing values (indicated by NaN or Inf) with interpolated/extrapolated
@@ -7,7 +7,7 @@ function out = cat_vol_inpaint(vol,niter,smooth,reduce,init)
 % as default. Optionally the output can be smoothed with a Gaussian kernel.
 % Missing areas are initialized using Laplace method.
 %
-%   out = cat_vol_inpaint(vol,niter,smooth,reduce,vx_vol)
+%   out = cat_vol_inpaint(vol,niter,smooth,reduce,init,verb)
 %
 %   vol      .. input image
 %   niter    .. number of iteratiosn for inpainting 
@@ -15,6 +15,7 @@ function out = cat_vol_inpaint(vol,niter,smooth,reduce,init)
 %   reduce   .. increase speed by using a reduced image for inpainting
 %   init     .. use either euclidean distance (init=1) or Laplace method
 %               (init = 2, default) for initialization of missing values
+%   verb     .. show progress bar (default=0)
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -41,6 +42,11 @@ if nargin < 5
   init = 2;
 end
 
+if nargin < 6
+  verb = 0;
+end
+
+
 % check whether NaN or Inf exist
 if 0 && sum(~isfinite(vol)) == 0
   error('Your image does not contain any areas for inpainting.')
@@ -50,12 +56,12 @@ if reduce
   [volr,resTr] = cat_vol_resize(vol,'reduceV',[1 1 1],reduce,32,'max');
   % set zero areas to NaN
   volr(volr == 0) = NaN;
-  out = inpaintn(volr,niter,init);
+  out = inpaintn(volr,niter,init,[],verb);
   out = cat_vol_resize(out,'dereduceV',resTr); 
 else
   % set zero areas to NaN
   vol(vol == 0) = NaN;
-  out = inpaintn(vol,niter,init);
+  out = inpaintn(vol,niter,init,[],verb);
 end
 
 % optional smoothing
@@ -65,7 +71,7 @@ end
 
 end
 
-function y = inpaintn(x,n,init,m)
+function y = inpaintn(x,n,init,m,verb)
 
 % INPAINTN Inpaint over missing data in N-D array
 %   Y = INPAINTN(X) replaces the missing data in X by extra/interpolating
@@ -144,13 +150,13 @@ RF = 2; % relaxation factor
 if nargin<4 || isempty(m), m = 2; end
 Lambda = Lambda.^m;
 
-h = waitbar(0,'Inpainting...');
+if verb, h = waitbar(0,'Inpainting...'); end
 for i = 1:n
         Gamma = 1./(1+s(i)*Lambda);
         y = RF*idctn(Gamma.*dctn(W.*(x-y)+y)) + (1-RF)*y;
-        waitbar(i/n,h)
+        if verb, waitbar(i/n,h); end
 end
-close(h)
+if verb, close(h); end
 
 y(W) = x(W);
 y = cast(y,class0);
