@@ -1,4 +1,16 @@
 ------------------------------------------------------------------------
+r2209 | rdahnke | 2023-05-26 15:00:52
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_tools.m
+ M cat_vol_inpaint.m
+
+Changed:   Update MP2Rage function cat_vol_mp2rage and batch in cat_conf_tools.
+           Added help, bias correction, integrated SPM preprocessing, report, 
+           batch file dependencies. 
+Changed:   Added verbose setting (default=0 i.e. no progress bar) to  
+           cat_vol_inpaint function.  ------------------------------------------------------------------------
 r2208 | gaser | 2023-05-19 11:43:40
 
 Changed paths:
