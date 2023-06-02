@@ -426,13 +426,18 @@ if ~isfield(res,'spmpp')
 
     Ybv  = cat_vol_smooth3X(cat_vol_smooth3X( ...
       NS(Yl1,7) .* (Ymi*3 - (1.5-job.extopts.BVCstr)),0.3).^4,0.1)/3;
+   
+    %% correct src images
+    %  - good result but no nice form ... 
+    Ymi = Ym; Ymio = Ymi; 
+    Ymi  = max( min( max(1/3, 1 - Ybv/4), Ymi ),  Ymi - Ybv*2/3 );
+    for mi = 1:2, Ymi = cat_vol_median3(Ymi,Ybv > max(0,1 - mi/2) & Ymi~=Ymio ); end
+    Ymi = cat_vol_median3(Ymi,Ybv > 0); clear Ymio; 
+    
+    %Ymi   = max( min(1/3 + 1/3*cat_vol_morph(Ym>2.5/3 & NS(Yl1,job.extopts.LAB.BV),'dd',1.5,vx_vol) , Ymi) ,Ymi - Ybv*2/3); 
+    % Ymis  = cat_vol_smooth3X(Ymi); Ymi(Ybv>0.5) = Ymis(Ybv>0.5); clear Ymis;
 
-    % correct src images
-    Ymi   = max( min(1/3 + 1/3*cat_vol_morph(Ym>2.5/3 & Yl1~=job.extopts.LAB.BV,'dd',1.5,vx_vol) , Ymi) ,Ymi - Ybv*2/3); 
-    Ymi   = cat_vol_median3(Ymi,cat_vol_morph(Ybv>0.5,'dilate')); 
-    Ymis  = cat_vol_smooth3X(Ymi); Ymi(Ybv>0.5) = Ymis(Ybv>0.5); clear Ymis;
-
-    % update classes
+    %% update classes
     Ycls{1} = min(Ycls{1},cat_vol_ctype(255 - Ybv*127)); 
     Ycls{2} = min(Ycls{2},cat_vol_ctype(255 - Ybv*127)); 
     Ycls{3} = max(Ycls{3},cat_vol_ctype(127*Ybv)); 
