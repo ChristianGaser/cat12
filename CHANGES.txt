@@ -1,4 +1,14 @@
 ------------------------------------------------------------------------
+r2211 | rdahnke | 2023-06-02 22:08:11
+
+Changed paths:
+ M CHANGES.txt
+ M cat_main1639.m
+ M cat_vol_partvol1639.m
+
+Changed:   Update blood vessel correction to reduce cutting of gyri with 
+           extopts.experimental==1 (developer GUI). Tests showed better results
+           for CS2 but still local problems for CS3.------------------------------------------------------------------------
 r2209 | rdahnke | 2023-05-26 15:00:52
 
 Changed paths:
