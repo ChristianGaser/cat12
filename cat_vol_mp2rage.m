@@ -36,7 +36,7 @@ function [out,outs] = cat_vol_mp2rage(job)
   def.files             = {};       % list of MP2Rage images
   %def.bloodvesselscorrection = 0;   % not implemented >> should be done by CAT 
   def.headtrimming      = 0;        % trimming to brain or head (*0-none*,1-brain,2-head)
-  def.biascorrection    = 1;        % biascorrection (0-*no*,1-yes) 
+  def.biascorrection    = 1;        % biascorrection (0-no,1-light(SPM60mm),2-average(SPM60mm+X,3-strong(SPM30+X)) #######
   def.skullstripping    = 2;        % skull-stripping (0-no, 1-SPM, 2-*optimized*)
   def.logscale          = inf;      % use log/exp scaling for more equally distributed
                                     % tissues (0-none, 1-log, -1-exp, inf-*auto*);
@@ -134,7 +134,7 @@ function [out,outs] = cat_vol_mp2rage(job)
 
       matlabbatch{1}.spm.spatial.preproc.channel.vols       = job.files(si);
       matlabbatch{1}.spm.spatial.preproc.channel.biasreg    = 0.001;
-      matlabbatch{1}.spm.spatial.preproc.channel.biasfwhm   = 180;
+      matlabbatch{1}.spm.spatial.preproc.channel.biasfwhm   = 60;
       matlabbatch{1}.spm.spatial.preproc.channel.write      = [0 1]; % write bias corrected image
       ngaus = [1 1 2 4 3 2]; 
       for ti = 1:6
@@ -200,7 +200,7 @@ function [out,outs] = cat_vol_mp2rage(job)
     clear Ymsk Vseg;
     Yseg(:,:,:,6) = 1 - sum( Yseg, 4);  
     Tth(6) = cat_stat_nanmedian(Ym(Yseg(:,:,:,6) & Ym~=0));
-    isMP2R = Tth(6) > Tth(3);                    % MP2Rage
+    isMP2R = Tth(6) > Tth(3)*4;                  % MP2Rage
     isT1   = Tth(3) < Tth(1) & Tth(1) < Tth(2);  % T1 defintion  
 
 
@@ -256,6 +256,37 @@ iCon = @(x) (exp(x) - 1) / (exp(1)-1);
 % ######################## WMHs ?! #############  
 % ### errors with BVs and MAs ... test for local high variance in tissues
 % #############
+if 1
+  %%
+   norm2  = @(Yx,   Ycmm,Ywmm) (Yx - median(Yx(Ycmm(:)))) ./ (median(Yx(Ywmm(:))) - median(Yx(Ycmm(:)))) * 2/3 + 1/3;
+   exp1   = exp(1) - 1; 
+   Ywmm   = cat_vol_morph( Yseg(:,:,:,2)>.9 ,'e'); 
+   Ycmm   = smooth3( (Yseg(:,:,:,3)>.95 | ( (Yseg(:,:,:,6)>.95) .* (Tth(6) < Tth(3))) ) & Ym/spm8.mn(2)<.5)>.5; 
+   Tthm   = norm2(Tth,3,2); 
+   Ymm    = norm2( Ym, Ycmm, Ywmm); log1str = 'Y'; 
+   for i = 1:10
+     TX  = [ norm2(  exp(  norm2(Tthm, 3, 2)*2/3+1/3 - 1) , 3, 2);
+             norm2(        norm2(Tthm, 3, 2)*2/3+1/3 , 3, 2); 
+             norm2( log2(  norm2(Tthm, 3, 2)*2/3+1/3 + 1) , 3, 2); 
+             norm2( log(  (norm2(Tthm, 3, 2)*2/3+1/3) * exp1 + 1), 3, 2);
+             norm2( log10((norm2(Tthm, 3, 2)*2/3+1/3) * 9 + 1), 3, 2) ];
+     [mx,cci] = min( abs(TX(1:5) - 0.7)); 
+     Tthm = TX(cci,:);
+
+     if     cci == 1, Ymm2 = exp  (  norm2(Ymm, Ycmm, Ywmm)*2/3+1/3 - 1) / exp1;    lstr = 'exp';
+     elseif cci == 2, Ymm2 =         norm2(Ymm, Ycmm, Ywmm)*2/3+1/3;                lstr = 'non';
+     elseif cci == 3, Ymm2 = log2 (  norm2(Ymm, Ycmm, Ywmm)*2/3+1/3 + 1);           lstr = 'log2';
+     elseif cci == 4, Ymm2 = log  ( (norm2(Ymm, Ycmm, Ywmm)*2/3+1/3) * exp1 + 1);   lstr = 'log';
+     elseif cci == 5, Ymm2 = log10( (norm2(Ymm, Ycmm, Ywmm)*2/3+1/3) * 9 + 1);      lstr = 'log10';
+     end
+     if cci == 2 || mx < 0.01; break; end
+     log1str = sprintf('%s(%s)',lstr,log1str);
+     Ymm = norm2( real(Ymm2) , Ycmm , Ywmm);
+   end
+   Ym2 = Ymm * spm8.mn(2);
+%Ymmt    = norm2(Ymm2,Ycmm,Ywmm); 
+ %             cc(cci) = median( Ymmt(Ygm(:)) 
+end
 
     if job.biascorrection
     %% bias correction
@@ -263,71 +294,58 @@ iCon = @(x) (exp(x) - 1) / (exp(1)-1);
 
       stime2 = cat_io_cmd('      Bias correction','g5','',job.verb-1,stime2);
 
-
       % define bias correction field for each tissue  
       Ysc = cat_vol_morph( cat_vol_morph( Yseg(:,:,:,1)>.8 & Ym>spm8.mn(1),'do', 3 ), 'dd', 6); 
-      if isT1
-        % use maximum in T1 to reduce PVE effect but use the original
-        % values else to avoid to be biased by noise
-        Ywi = cat_vol_localstat(Ym,cat_vol_morph(Yseg(:,:,:,2)>.5,'lc') ,1,3);
-        Ywi(Yseg(:,:,:,2)>.9) = Ym(Yseg(:,:,:,2)>.9);
-      else
-        Ywi = cat_vol_localstat(Ym,cat_vol_morph(Yseg(:,:,:,2)>.9,'lc') ,1,1);
-      end
+      Ywi = cat_vol_localstat(Ym2,cat_vol_morph(Yseg(:,:,:,2)>.5,'lc') ,1,2+isT1);
       % remove outlier voxels      
       Ywiv  = cat_vol_localstat(Ywi,Ywi~=0,1,4);
       wivth = cat_stat_nanmedian(Ywiv(Ywiv(:)~=0));
       Ywi(Ywiv>(wivth*2)) = 0; Ywi(smooth3(Ywi~=0)<.5) = 0;  
       clear Ywiv wivth; 
-      
-      if job.biascorrection>0 && isT1
-      % Use also the GM area to get the closes WM value by a maximum operation (i.e. T1 only). 
-      % We are not using the CSF as we are not knowing much about it and and cannot trust the segmentation too much.  
-        Ygi   = cat_vol_localstat(Ym,smooth3(sum(Yseg(:,:,:,1:2),4))>.95 & ~Ysc & Ym>Tth(1),4,3); % closer to WM
-        Ygi2  = cat_vol_localstat(Ym,smooth3(sum(Yseg(:,:,:,1:2),4))>.5  & ~Ysc ,6,3); % more distant to WM
-        Ygi   = max(Ygi,Ygi2) .* (Yseg(:,:,:,1)>.2); clear Ygi2
-        % remove outlier voxels
-        Ygiv  = cat_vol_localstat(Ygi,Ygi~=0,4,4);
-        givth = cat_stat_nanmedian(Ygiv(Ygiv(:)~=0));
-        Ygi(Ygiv>(givth*2)) = 0; Ygi(smooth3(Ygi~=0)<.1) = 0; Ygi(Ywi~=0)=0;
+%%
+      if job.biascorrection>0 
+      %% Use also the GM area to get the closes WM value by a maximum operation (i.e. T1 only). 
+      %  We are not using the CSF as we are not knowing much about it and and cannot trust the segmentation too much.  
+        [Ym2r,resV] = cat_vol_resize(Ym2,'reduceV',vx_vol,2,4,'mean'); % mean here to handle noise 
+        [Ygi1,Ygi2] = cat_vol_resize({ ...
+          single(smooth3(sum(Yseg(:,:,:,1:2),4))>.95 & ~Ysc & Ym2>Tth(1)), ...
+          single(smooth3(sum(Yseg(:,:,:,1:2),4))>.5  & ~Ysc)},'reduceV',vx_vol,2,4,'meanm'); 
+        Ygi1  = cat_vol_localstat(Ym2r,Ygi1>.8,2,2 + isT1); % closer to WM
+        Ygi2  = cat_vol_localstat(Ym2r,Ygi2>.8,4,2 + isT1); % more distant to WM
+        Ygi   = cat_vol_approx( max(Ygi1,Ygi2) ); clear Ym2r Ygi1 Ygi2
+        Ygi   = cat_vol_resize(Ygi,'dereduceV',resV) .* (Yseg(:,:,:,1)>.2);
         % adaption for high noise bias in low intensity regions
-        Ygi   = Ygi*.5 + 0.5*(iCon(Ygi / spm8.mn(2))*spm8.mn(2));  
-        Ywi    = max(Ywi,Ygi); 
-        clear Ygi Ygiv givth;
+        Ygi   = Ygi*.5 + 0.5*(iCon(Ygi / spm8.mn(2))*spm8.mn(2)); 
+        Ywi   = max(Ywi,Ygi); 
+        clear Ygi
       end
       
-      % estimate bias in the background in MP2Rage or the head MPRage 
+
+      %% estimate bias in the background in MP2Rage or the head MPRage 
       if isMP2R
         %% MP3RAGE - use simple background 
         Ybi = cat_vol_morph( Yseg(:,:,:,6)>.5, 'e',3) & ...
           Ym~=0 & Ym<spm8.mn(2) & Ym>mean(spm8.mn(1:2:3)); Ybi2=Ybi;
-        [Ybi,Ymsk,resV] = cat_vol_resize({Ym .* Ybi,Ybi},'reduceV',1,4,4,'meanm'); Ybi(Ymsk<.99)=0;  
+        [Ybi,Ymsk,resV] = cat_vol_resize({Ym2 .* Ybi,Ybi},'reduceV',1,4,4,'meanm'); Ybi(Ymsk<.99)=0;  
         Ybi = cat_vol_approx(Ybi,'nh',1,2);
         Ybi = cat_vol_resize(Ybi,'dereduceV',resV) .* Ybi2;
-      else
+      elseif 0
         %% create smooth head based bias correction map
-        Yp0 = Yseg(:,:,:,1) + Yseg(:,:,:,2)*3 + Yseg(:,:,:,3)*2;
+        %Yp0 = Yseg(:,:,:,1) + Yseg(:,:,:,2)*3 + Yseg(:,:,:,3)*2;
+        Yg  = cat_vol_grad(Ym2)./Ym2; 
         Ybi = (cat_vol_morph(Yseg(:,:,:,5)>.5,'l') | ...
-               cat_vol_morph(Yseg(:,:,:,2)>.5,'lc')) & (Ym./spm8.mn(3))>.5;% Ybi2=Ybi;
-        [Ybi,Ymsk,Yp0r,resV] = cat_vol_resize({Ym .* Ybi,Ybi,Yp0},'reduceV',1,4,4,'meanm'); Ybi(Ymsk<.99)=0;
-        clear Yp0; 
-        %Ywi = cat_vol_resize(Ym .* cat_vol_morph(Yseg(:,:,:,2)>.5,'lc') & (Ym./spm8.mn(3))>.5 ,'reduceV',1,4,4,'meanm'); Ybi = max(Ybi,Ywi); 
-       % Ygi = cat_vol_resize(Ym .* (smooth3(Yseg(:,:,:,1))>.8),'reduceV',1,4,4,'meanm'); Ybi = max(Ybi,Ygi / spm8.mn(1)* spm8.mn(2)); 
-        %Yd  = cat_vbdist(single(Yp0r>.5));
+               cat_vol_morph(Yseg(:,:,:,2)>.5,'lc')) & (Ym./spm8.mn(1))>.5 & Yg<0.5;% Ybi2=Ybi;
+        [Ybi,Ymsk,Yp0r,resV] = cat_vol_resize({Ym2 .* Ybi,Ybi,Yp0},'reduceV',1,4,4,'meanm'); Ybi(Ymsk<.99)=0;
+        %clear Yp0; 
         Ybi = cat_vol_morph(Ybi,'gc',9); % higher size to avoid overcorrection 
         Ybi = Ybi ./ median(Ybi(Ybi(:)>0));
-        Ybi = cat_vol_inpaint(Ybi,10,2,1,1);
-        %Ybi = cat_vol_approx(Ybi,'nh',1,4 * (2-isMP2R) );
+        Ybi = cat_vol_inpaint(Ybi,10,10,1,1);
         Ybi = cat_vol_resize(Ybi,'dereduceV',resV); 
-        %Yd  = cat_vol_resize(Yd,'dereduceV',resV); 
-        %Ybi = Ybi ./ cat_stat_nanmedian(Ybi(Yseg(:,:,:,2)>.5)) .* cat_stat_nanmedian(Ym(Yseg(:,:,:,2)>.5)) .* Ybi2;
-       % Ybi = Ybi .* (Yd>4);
-        
-        %% other (normal) T1s
-       % Ywi = Ywi .* cat_vol_morph(Ywi>0,'o'); % stronger bias possbile - need correction
-        %Ybi = zeros(size(Ym));
+      else
+        Ybi = zeros(size(Ym)); 
       end
       
+
       %% mix tissues and approximate bias field
       if isMP2R
         %% simpler faster correction 
@@ -339,20 +357,20 @@ iCon = @(x) (exp(x) - 1) / (exp(1)-1);
         %% for the inpaint method the use of GM information was less optimal 
         % - first estimation for background 
         Yi = max(Ywi,Ybi .* ( cat_vol_morph(Yseg(:,:,:,5)>.5,'l') & (Ym./spm8.mn(3))>.5) * spm8.mn(2) ); 
-        Yw = cat_vol_inpaint(Yi,10,10,2,1); Yw = Yw*0.9 + 0.1 * iCon(Yw./spm8.mn(2)).*spm8.mn(2);
-        Yw = Yw ./ cat_stat_nanmedian(Yw(Yseg(:,:,:,2)>.95)) .* cat_stat_nanmedian(Ym(Yseg(:,:,:,2)>.95));
+        Yw = cat_vol_inpaint(Yi,10,40,2,1); Yw = Yw*0.9 + 0.1 * iCon(Yw./spm8.mn(2)).*spm8.mn(2);
+        Yw = Yw ./ cat_stat_nanmedian(Yw(Yseg(:,:,:,2)>.95)) .* cat_stat_nanmedian(Ym2(Yseg(:,:,:,2)>.95));
         % - second estimation for 
-        Yi = max(Ywi,Yw .* ( sum(Yseg(:,:,:,5:6),4)>.5 )); 
-        Yw = cat_vol_inpaint(Yi,10,8 / job.biascorrection,2,1);  Yw = Yw*0.9 + 0.1 * iCon(Yw./spm8.mn(2)).*spm8.mn(2);
-        Yw = Yw ./ cat_stat_nanmedian(Yw(Yseg(:,:,:,2)>.95)) .* cat_stat_nanmedian(Ym(Yseg(:,:,:,2)>.95));
+        Yi = max(Ywi,Yw .* ( sum(Yseg(:,:,:,6),4)>.5 )); 
+        Yw = cat_vol_inpaint(Yi,10,6 / job.biascorrection,2,1);  Yw = Yw*0.9 + 0.1 * iCon(Yw./spm8.mn(2)).*spm8.mn(2);
+        Yw = Yw ./ cat_stat_nanmedian(Yw(Yseg(:,:,:,2)>.95)); % .* cat_stat_nanmedian(Ym2(Yseg(:,:,:,2)>.95));
         
       end
       
       % apply bias correction
-      Ymm = Ym ./ Yw;
+      Ymm = Ym2 ./ Yw;
     else
       % no bias correction
-      Ymm = Ym; 
+      Ymm = Ym2; 
     end  
   
 
@@ -360,7 +378,7 @@ iCon = @(x) (exp(x) - 1) / (exp(1)-1);
 
 
     %% general exp/log scaling 
-    if 0 % job.logscale>0 || job.intnorm>0
+    if job.logscale>0 || job.intnorm>0
       stime2 = cat_io_cmd('      Scale intensities','g5','',job.verb-1,stime2);
     end
  %Ymm = Ym ./ Yw; % only for debugging
@@ -373,40 +391,35 @@ iCon = @(x) (exp(x) - 1) / (exp(1)-1);
       Ymm = log10( (Ymm/spm8.mn(2)) * 9 + 1) * spm8.mn(2);
     elseif job.logscale == -1
       Ymm = (exp(  Ymm/spm8.mn(2) ) - 1)  * spm8.mn(2) / exp1;
-    elseif isinf(job.logscale) % auto
+    elseif 0 %isinf(job.logscale) % auto
       % we typically expect the GM value at about 60% of the WM peak
-      opt    = 0.6;
+      opt    = 0.7; % BG
       
       % some images/classes that we need later
-      Ygm = cat_vol_morph( Yseg(:,:,:,1)>.9 ,'e'); 
+      Ygm = Yseg(:,:,:,1)>.1 & ~cat_vol_morph( Yseg(:,:,:,1)>.5 ,'o',4); 
       Ywm = cat_vol_morph( Yseg(:,:,:,2)>.9 ,'e'); 
 
-      Ywmm   = Yseg(:,:,:,2)>.95;
-      Ycmm   = smooth3( (Yseg(:,:,:,3)>.95 | Yseg(:,:,:,6)>.95) & Ym/spm8.mn(2)<.5)>.5; 
-      norm2  = @(Yx,   Ycmm,Ywmm) (Yx - min(Yx(Ycmm(:)))) ./ (median(Yx(Ywmm(:))) - min(Yx(Ycmm(:))));
-      norm2i = @(Yx,Yy,Ycmm,Ywmm) Yx .* ( median(Yy(Ywmm(:))) - min(Yy(Ycmm(:))) ) + min(Yy(Ycmm(:)));
+      Ywmm   = Ywm; %Yseg(:,:,:,2)>.95;
+      Ycmm   = smooth3( (Yseg(:,:,:,3)>.95 | ( (Yseg(:,:,:,6)>.95) .* (Tth(6) < Tth(3))) ) & Ym/spm8.mn(2)<.5)>.5; 
+   %   norm2  = @(Yx,   Ycmm,Ywmm) (Yx - min(Yx(Ycmm(:)))) ./ (median(Yx(Ywmm(:))) - min(Yx(Ycmm(:))));
+  %    norm2i = @(Yx,Yy,Ycmm,Ywmm) Yx .* ( median(Yy(Ywmm(:))) - min(Yy(Ycmm(:))) ) + min(Yy(Ycmm(:)));
+      norm2  = @(Yx,   Ycmm,Ywmm) (Yx - median(Yx(Ycmm(:)))) ./ (median(Yx(Ywmm(:))) - median(Yx(Ycmm(:)))) * 2/3 + 1/3;
+      norm2i = @(Yx,Yy,Ycmm,Ywmm) (Yx - 1/3) .* ( median(Yy(Ywmm(:))) - median(Yy(Ycmm(:))) )*2/3 + median(Yy(Ycmm(:)));
 
       %%
+      %Ymm = norm2(Ymm,Ycmm,Ywmm); 
       res.logscaleres = ''; 
+      res.log2str = 'Y';
       for opti = 1:5
-  
+  % ################ local adaption or mixture of values?
         for ii = 1:2
           if ii == 1, cli = 1:5; else, ccm = abs(cc - opt); [ccmin,cci] = min( ccm ); cli = cci; end
           for cci = cli
-            if 1
-              if     cci == 1, Ymm2 = exp  (  norm2(Ymm, Ycmm, Ywmm)*2/3+1/3 - 1) / exp1;
-              elseif cci == 2, Ymm2 =         norm2(Ymm, Ycmm, Ywmm)*2/3+1/3; 
-              elseif cci == 3, Ymm2 = log2 (  norm2(Ymm, Ycmm, Ywmm)*2/3+1/3 + 1); 
-              elseif cci == 4, Ymm2 = log  ( (norm2(Ymm, Ycmm, Ywmm)*2/3+1/3) * exp1 + 1);
-              elseif cci == 5, Ymm2 = log10( (norm2(Ymm, Ycmm, Ywmm)*2/3+1/3) * 9 + 1);
-              end
-            else
-              if     cci == 1, Ymm2 = exp  ( norm2(Ymm, Ycmm, Ywmm) - 1) / exp1;
-              elseif cci == 2, Ymm2 =        norm2(Ymm, Ycmm, Ywmm); 
-              elseif cci == 3, Ymm2 = log2 ( norm2(Ymm, Ycmm, Ywmm) + 1); 
-              elseif cci == 4, Ymm2 = log  ( norm2(Ymm, Ycmm, Ywmm) * exp1 + 1);
-              elseif cci == 5, Ymm2 = log10( norm2(Ymm, Ycmm, Ywmm) * 9 + 1);
-              end
+            if     cci == 1, Ymm2 = exp  (  norm2(Ymm, Ycmm, Ywmm)*2/3+1/3 - 1) / exp1;     lstr = 'exp';
+            elseif cci == 2, Ymm2 =         norm2(Ymm, Ycmm, Ywmm)*2/3+1/3;                 lstr = 'non';
+            elseif cci == 3, Ymm2 = log2 (  norm2(Ymm, Ycmm, Ywmm)*2/3+1/3 + 1);            lstr = 'log2';
+            elseif cci == 4, Ymm2 = log  ( (norm2(Ymm, Ycmm, Ywmm)*2/3+1/3) * exp1 + 1);    lstr = 'log';
+            elseif cci == 5, Ymm2 = log10( (norm2(Ymm, Ycmm, Ywmm)*2/3+1/3) * 9 + 1);       lstr = 'log10';
             end
             if ii == 1 
               Ymm2    = norm2i(Ymm2,Ymm2,Ycmm,Ywmm); 
@@ -416,20 +429,24 @@ iCon = @(x) (exp(x) - 1) / (exp(1)-1);
           end
         end
         %Ymm = norm2i(Ymm2,Ymm,Ycmm,Ywmm); 
-        Ymm = norm2(Ymm2,Ycmm,Ywmm); 
+        Ymm = norm2(real(Ymm2),Ycmm,Ywmm); 
         
         ccistr = {'exponential','orgiginal','log2','log','log10'};
-        scstr  = sprintf('%12s-scaling (exp|org|log2|loglog10|=%s\b)',ccistr{cci},sprintf('%0.2f|',ccm)); 
+        scstr  = sprintf('%12s-scaling (exp|org|log2|log|log10|=%s\b)',ccistr{cci},sprintf('%0.2f|',ccm)); 
         if job.verb > 1 && opti==1, fprintf('\n'); end 
         if job.verb > 1, cat_io_cprintf('g5','        %s\n',scstr); end
-        if cci == 2; break; end
+        if cci == 2 || ccmin < 0.02; break; end
         res.logscaleres = [res.logscaleres '; ' scstr];
       end
+      res.log2str = sprintf('%s(%s)',lstr,res.log2str);
       if job.verb > 1, cat_io_cmd(' ','g5','',job.verb-1); end
       %res.logscale    = {ccistr;ccm};
       res.logscaleres = scstr;
+    else
+      Ygm = Yseg(:,:,:,1)>.1 & ~cat_vol_morph( Yseg(:,:,:,1)>.5 ,'o',4); 
+      Ywm = cat_vol_morph( Yseg(:,:,:,2)>.9 ,'e'); 
     end
-    if job.logscale>0 || job.intnorm>0
+    if 0% job.logscale>0 || job.intnorm>0
       stime2 = cat_io_cmd(sprintf('      Scale intensities (%s)',ccistr{cci}),'g5','',job.verb-1,stime2);
     end
 
@@ -450,7 +467,7 @@ iCon = @(x) (exp(x) - 1) / (exp(1)-1);
         %Ym2 = fx( log( Ym/spm8.mn(2)* 1.71 + 1),1.4,.3); % this was worse
         %Ym2 = fx2(  (Ymm - median(Ymm(Ygm(:))) ) / spm8.mn(2) ,1.8,0.6);  %works ok 
         %Ym2 = fx2(  (Ymm - median(Ymm(Ygm(:))) ) / spm8.mn(2) ,.6,1.4); % stronger
-        Ym2 = fx2(  (Ymm - median(Ymm(Ygm(:))) ) / spm8.mn(2) ,0.1,1 + intnorm .* .3 * std(Ymm(Ygm(:))) / std(Ymm(Ywm(:))) ); % stronger
+        Ym2 = fx2(  (Ymm - median(Ymm(Ygm(:))) ) / spm8.mn(2) ,0.1,1 + intnorm/2 .* .3 * std(Ymm(Ygm(:))) / std(Ymm(Ywm(:))) ); % stronger
       else
         Ym2 = fx2(  (Ymm - median(Ymm(Ygm(:))) ) / spm8.mn(2) ,0.1,job.intnorm); % manual
       end
@@ -459,7 +476,8 @@ iCon = @(x) (exp(x) - 1) / (exp(1)-1);
       Ym2 = Ym2 * 2/3 + 1/3 .* (Ymm>0);
       clear Ywmm Ycmm;
     else
-      Ym2 = (Ymm / spm8.mn(2)) * 2/3 + 1/3 .* (Ym>0); 
+      %Ym2 = (Ymm / spm8.mn(2)) * 2/3 + 1/3 .* (Ym>0); 
+      Ym2 = norm2(Ymm,Ycmm,Ywmm); 
     end
 % evaluate this ... 
 % * compare the difference between Yp0 and Ym2 => RMSE
@@ -606,7 +624,9 @@ iCon = @(x) (exp(x) - 1) / (exp(1)-1);
     jobxml = job; jobxml.files = jobxml.files(si); 
     jobxml.result = {Pcm};
     jobxml.res    = res; 
-    jobxml.scstr  = scstr;
+    if exist('scstr','var')
+      jobxml.scstr  = scstr;
+    end
     cat_io_xml(spm_file(Pcm,'prefix','catmp2r_','ext','.xml'),jobxml);
 
     out.files{si} = Pcm;
@@ -670,7 +690,7 @@ function report_figure(V,V2, Ym,Ym2,Yc, opt,spm8,res)
   str{1} = [];
   trimmingstr = {'no','brain','head'};
   biasstr     = {'no','yes','yes'};
-  ssstr       = {'no','SPM','optimized','optimized (MP2R only)'};
+  ssstr       = {'no','SPM','optimized'};
   % logstr      = {'no','exp','log2','log','log10','auto'};
   csfnoise    = {'no','yes'};
   % parameters

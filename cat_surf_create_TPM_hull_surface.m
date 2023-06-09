@@ -133,13 +133,23 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull,onlytmp)
     try 
       Yb = spm_read_vol( V(1) ) + spm_read_vol( V(2) ); 
     catch 
-      % create brainmask surface
-      if skull==-2
-        Yb = exp(tpm.dat{1}) + exp(tpm.dat{2});
+      if numel(tpm) > 1
+        % create brainmask surface
+        if skull==-2
+          Yb = tpm(1).dat + tpm(2).dat;
+        else
+          Yb = tpm(1).dat + tpm(2).dat + tpm(3).dat;
+          % remove SPM CSF eye
+          Yb = Yb .* smooth3( cat_vol_morph( cat_vol_morph( Yb , 'lo' , 2), 'd') ); 
+        end
       else
-        Yb = exp(tpm.dat{1}) + exp(tpm.dat{2}) + exp(tpm.dat{3});
-        % remove SPM CSF eye
-        Yb = Yb .* smooth3( cat_vol_morph( cat_vol_morph( Yb , 'lo' , 2), 'd') ); 
+        if skull==-2
+          Yb = exp(tpm.dat{1}) + exp(tpm.dat{2});
+        else
+          Yb = exp(tpm.dat{1}) + exp(tpm.dat{2}) + exp(tpm.dat{3});
+          % remove SPM CSF eye
+          Yb = Yb .* smooth3( cat_vol_morph( cat_vol_morph( Yb , 'lo' , 2), 'd') ); 
+        end
       end
     end
   else
@@ -158,9 +168,9 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull,onlytmp)
          Yhd = Yhd + exp(tpm.dat{i});
       end
     elseif istpm == 2
-      Yhd = spm_read_vol( tpm(1) );
+      Yhd = spm_read_vols( tpm(1) );
       for i = 2:numel(tpm)-1
-         Yhd = Yhd + spm_read_vol( tpm(i) );
+         Yhd = Yhd + spm_read_vols( tpm(i) );
       end
     end
     Yhd = cat_vol_morph(Yhd>0.5,'l',[1 0.5]);
@@ -182,12 +192,13 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull,onlytmp)
   % save surface
   if istpm == 1
     vmat  = tpm.V(1).mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1];
+    mati  = spm_imatrix(tpm.V(1).mat); 
   elseif istpm == 2
     vmat  = tpm(1).mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1];
+    mati  = spm_imatrix(tpm(1).mat); 
   end  
   if istpm
     Sh.vertices = (vmat*[Sh.vertices' ; ones(1,size(Sh.vertices,1))])'; 
-    mati = spm_imatrix(tpm.V(1).mat); 
     if mati(7)<0, Sh.faces = [Sh.faces(:,1) Sh.faces(:,3) Sh.faces(:,2)]; end
     try
       save(gifti(struct('faces',Sh.faces,'vertices',Sh.vertices)),Phull,'Base64Binary');   
