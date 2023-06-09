@@ -238,8 +238,8 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     
     %% look for existing files and extract their PID for later control  
     %  --------------------------------------------------------------------
-    test    = 0; lim    = 200; ptime    = 0.5; % exist file?
-    testpid = 0; limpid = 400; ptimepid = 2.0; % get PID
+    test    = 0; lim    = 20; ptime    = 0.5; % exist file?
+    testpid = 0; limpid = 40; ptimepid = 2.0; % get PID
     ptimesid = 1 * 30;                         % update every minute? 
     while test<lim
       if ~exist(log_name{i},'file')

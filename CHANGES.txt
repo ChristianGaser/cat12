@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2212 | rdahnke | 2023-06-09 14:10:08
+
+Changed paths:
+ M CHANGES.txt
+ M cat_run.m
+ M cat_surf_create_TPM_hull_surface.m
+ M cat_vol_mp2rage.m
+
+Changed:   Shortened waiting time for the creation of the log files in cat_run. 
+Changed:   Changed bias-correction parameter setting in MP2Rage script. 
+Fixed:     Corrected bug in cat_surf_create_hull_surface that prevent displaying
+           of the mesh overlay in the CAT report.
+------------------------------------------------------------------------
 r2211 | rdahnke | 2023-06-02 22:08:11
 
 Changed paths:
