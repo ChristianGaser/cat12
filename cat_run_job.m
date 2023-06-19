@@ -300,6 +300,7 @@ function cat_run_job(job,tpm,subj)
         %            to skip the processing (but the number are maybe
         %            intersting in the XML report.
         %  ------------------------------------------------------------
+% ######## RD202306: not adapted for non-zero backgounds - see cat_run_job1639 later     
         VFn   = spm_vol(nfname); 
         YF    = spm_read_vols(VFn);
         [YF,R]= cat_vol_resize(YF,'reduceV',vx_vol,2,32,'meanm');
@@ -309,6 +310,7 @@ function cat_run_job(job,tpm,subj)
         F0vol = cat_stat_nansum(YFm(:)>0.02) * prod(R.vx_volr) / 1000; 
         F0std = cat_stat_nanstd(YF(YFm(:)>0.2)/Oth); 
         % RD202008: improved object detection with gradient
+
         Yg    = cat_vol_grad(YFm,R.vx_volr); 
         gth   = max(0.05,min(0.2,median(Yg(Yg(:)>median(Yg(Yg(:)>0.1)))))); % object edge threshold
         YOB   = abs(YFm)>0.1 & Yg>gth;                                   % high intensity object edges 
@@ -1008,10 +1010,14 @@ end
 
         % tryed 3 peaks per class, but BG detection error require manual 
         % correction (set 0) that is simple with only one class  
+        % RD202306: SPM is not considering things without variation and 
+        %           a zeroed background is simply not existing!
+        %           Moreover it is possible just to ignore classes :D
+        %           Hence, we may not need to redefine the TPM at all.
         if noCSF
-          job.opts.ngaus = ([job.tissue(1:3).ngaus])'; 
+          job.opts.ngaus = [([job.tissue(1:2).ngaus])',1]; % gaussian background
         else
-          job.opts.ngaus = [([job.tissue(1:3).ngaus])';1]; % 3*ones(4,1);1; 
+          job.opts.ngaus = ([job.tissue(1:3).ngaus])'; % no gaussian background
         end
         obj.lkp        = [];
         for k=1:numel(job.opts.ngaus)
@@ -1126,9 +1132,6 @@ end
           clear reduce; 
         end
         
-        % unknown BG detection problems in INDI_NHa > manual setting
-        if ppe.affreg.skullstripped, res.mn(end) = 0; end 
-
       catch
         cat_io_addwarning([mfilename ':ignoreErrors'],'Run backup function (IN DEVELOPMENT).',1,[1 1]); 
         
@@ -1164,6 +1167,16 @@ end
           delete(fullfile(pp,[ff,ee]));
         end
       end
+      if ppe.affreg.skullstripped || job.extopts.gcutstr<0
+       % here we have to add manually our no variance background value of 0 
+        res.mg(end+1)  = 1;
+        res.mn(end+1)  = ppe.affreg.skullstrippedBGth;
+        res.vr(end+1)  = max(eps,numel(res.wp) * eps);
+        res.wp = res.wp - numel(res.wp) * eps;
+        res.wp(end+1)  = numel(res.wp) * eps;
+        res.lkp(end+1) = 4;
+      end
+     
       if job.extopts.expertgui>1
         %% print the tissue peaks 
         mnstr = sprintf('\n  SPM-US:  ll=%0.6f, Tissue-peaks: ',res.ll);

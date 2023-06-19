@@ -1,4 +1,25 @@
 ------------------------------------------------------------------------
+r2215 | rdahnke | 2023-06-19 17:19:44
+
+Changed paths:
+ M CHANGES.txt
+ M cat_main_amap.m
+ M cat_main_amap1639.m
+ M cat_main_cleanup.m
+ M cat_main_updateSPM.m
+ M cat_main_updateSPM1639.m
+ M cat_run_job.m
+ M cat_run_job1639.m
+
+Fixed:     Improved more flexible detection of skull-stripped background in 
+           cat_run_job1639 to support also non-zero values (required for some 
+           simulated T1 images as the atrophy phantom in (Rusak et al., 2021). 
+           cat_run_job is not compatible due to MP2Rage modification that has
+           need further corrections later.  
+           Extended background detections in cat_main_updateSPM1639.
+Changed:   Corrected WMH class definition in cat_main_amap1639. 
+
+------------------------------------------------------------------------
 r2214 | rdahnke | 2023-06-19 15:30:34
 
 Changed paths:
