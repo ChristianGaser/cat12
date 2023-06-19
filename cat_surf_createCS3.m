@@ -101,7 +101,7 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
   end
   
   % for testing only  
-  skip_registration = 0;
+  skip_registration = debug & 1;
   
   % we should test this more detailed!
 %  opt.add_parahipp       = 0;
@@ -112,7 +112,7 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
   th_initial = 0.5;
   
   % too slow currently
-  create_white_pial = 0;
+  create_white_pial = opt.SRP==1;
   
   % Another parameter to control runtime is the accuracy of the surface
   % deformation. As far as we primary adapt the mesh resolution above, it 
@@ -217,10 +217,6 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
   end
   if ~debug, clear Ysroi Ymfs Yctd Ybv Ymfs; end
     
-  
-  % Further blood vessel correction (not tested yet) 
-  Ymf = blood_vessel_correction(Ymf,Ya,0); % last var = doit
-  
   
   % cleanup and smoothing of the hippocampus amygdala to remove high
   % frequency structures that we cannot preprocess yet
@@ -351,8 +347,7 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
       if ~debug, clear tmp; end 
     end
     
-    
-    %% pbt calculation
+
     stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,native2unicode(179, 'latin1'))); stimet = stime;
     if strcmp(opt.pbtmethod,'pbt3') 
       [Yth1i,Yppi] = cat_vol_pbt3(Ymfs,struct('method',opt.pbtmethod,'cb',iscerebellum,'resV',opt.interpV,...
@@ -698,13 +693,15 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
       % evaluate and save results
       if isempty(stime), stime = clock; end
       fprintf('%5.0fs',etime(clock,stime)); stime = []; if debug, fprintf('\n'); end
+      %{
       res.(opt.surf{si}).createCS_init = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),[],Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,debug);
-      if debug 
+      if 0 %debug 
         % save surface for further evaluation 
         cat_surf_fun('saveico',CS,cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm),Pcentral,sprintf('createCS_1_init_pbtres%0.2fmm',opt.interpV),Ymfs,Smat.matlabIBB_mm); 
       else
         fprintf('\n'); 
       end
+      %}
     end
 
     % for use of average prior in long. pipeline we have to deform the average mesh to current pp distance map        
@@ -722,18 +719,19 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
     cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
     
     % Test without surface registration - just a shortcut for manual tests! 
-    if skip_registration
+    if 0 %skip_registration
       cat_io_cmd('  ','g5','',opt.verb,stime);  
-      S.(opt.surf{si}) = struct('faces',CS.faces,'vertices',CS.vertices,'vmat',vmat,'vmati',vmati,'mati',mati,'th1',facevertexcdata); 
+      S.(opt.surf{si}) = struct('faces',CS.faces,'vertices',CS.vertices,'th1',facevertexcdata); clear facevertexcdata; 
       if si==numel(opt.surf) && si == 1
         cat_io_cmd('  ','g5','',opt.verb,cstime);
         sprintf('%5ds\n',round(etime(clock,cstime)));
       end
+      res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',loadSurf(Pcentral),cat_io_FreeSurfer('read_surf_data',Ppbt),facevertexcdata,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,debug,cat_get_defaults('extopts.expertgui')>1);
       continue
     end
     
     % skip that part if a prior image is defined
-    if ~useprior
+    if ~useprior && ~skip_registration
       %% spherical surface mapping of the final corrected surface
       %  with minimal areal smoothing
       stime = cat_io_cmd('  Spherical mapping with areal smoothing','g5','',opt.verb,stime); 
@@ -754,7 +752,32 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
       cat_system(cmd,opt.verb-3);
       cmd = sprintf('CAT_Central2Pial -check_intersect "%s" "%s" "%s" -0.5',Pcentral,Ppbt,Pwhite);
       cat_system(cmd,opt.verb-3);
+    elseif opt.SRP>=2
+      %% call collision correction
+      %  RD202108: Use further iterations if self-intersections are still very high.  
+      %            (test data was an high resolution ex-vivo chimp PD image that had still strong SIs after first correction) 
+      if opt.SRP==2
+        stime = cat_io_cmd('  Reduction of surface collisions:','g5','',opt.verb,stime); 
+      else
+        stime = cat_io_cmd('  Reduction of surface collisions with optimization:','g5','',opt.verb,stime); 
+      end
+      CS = loadSurf(Pcentral); 
+      SIOs = 100; SIs = 80; maxiter = 1; iter = 0; verblc = debug;  % maxiter =2
+      while SIs>5 && SIs<SIOs*0.9 && iter<maxiter
+        SIOs = SIs; iter = iter + 1; 
+        [CS,facevertexcdata,SIs] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,...
+          struct('optimize',iter<2 && opt.SRP>=2,'verb',verblc,'mat',Smat.matlabIBB_mm,'vx_vol',vx_vol)); 
+        if verblc, fprintf('\b\b'); end
+        if strcmpi(spm_check_version,'octave') && iter == 1
+          cat_io_addwarning('cat_surf_createCS3:nofullSRP','Fine correction of surface collisions is not yet available under Octave.',2)
+        else % ############### not working any longer
+         %[CS,facevertexcdata,SIs] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3)); 
+        end
+      end
+      saveSurf(CS,Pcentral);
+      cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);  
     end
+
     
     % write myelination map (Ypp intensity of layer 4)  
     if opt.surf_measures > 1 
@@ -778,11 +801,19 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
       cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);  
       
       % final surface evaluation 
+      %if debug || cat_get_defaults('extopts.expertgui')>1, fprintf('\n'); end
+      if debug
+        cat_surf_fun('saveico',CS,cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm),Pcentral,'',Ymfs,Smat.matlabIBB_mm); 
+      end
       res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',loadSurf(Pcentral),cat_io_FreeSurfer('read_surf_data',Ppbt),facevertexcdata,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,debug,cat_get_defaults('extopts.expertgui')>1);
     else % otherwise simply copy ?h.pbt.* to ?h.thickness.*
       copyfile(Ppbt,Pthick,'f');
   
       % final surface evaluation 
+      % save surface for further evaluation 
+      if debug
+        cat_surf_fun('saveico',CS,cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm),Pcentral,'',Ymfs,Smat.matlabIBB_mm); 
+      end
       res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',loadSurf(Pcentral),cat_io_FreeSurfer('read_surf_data',Ppbt),[],Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,debug,cat_get_defaults('extopts.expertgui')>1);
     
     end
@@ -851,6 +882,7 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
     % number of vertices after CAT_FixTopology!
     if exist(Vpp_side.fname ,'file'), delete(Vpp_side.fname); end
     if debug && exist(Vpp.fname ,'file') && ~opt.outputpp.native, delete(Vpp.fname); end
+    
     clear CS
 
     % processing time per side for manual tests
@@ -890,8 +922,6 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
         res.(opt.surf{si}).createCS_final.RMSE_Ypp_pial ]) ];
     end
   end
-  
-  clear CS
   
   % final res structure
   res.Smat        = Smat; 
@@ -947,14 +977,16 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
     for si=1:numel(Psurf)
       Porthfiles = [ Porthfiles , sprintf('''%s'',''%s'',',Psurf(si).Ppial, Psurf(si).Pwhite )]; 
       Porthcolor = [ Porthcolor , '''-g'',''-r'',' ]; 
-      Porthnames = [ Porthnames , '''white'',''pial'',' ];
+      Porthnames = [ Porthnames , '''pial'',''white'',' ];
     end
     Porthfiles = [ Porthfiles(1:end-1) '}']; 
     Porthcolor = [ Porthcolor(1:end-1) '}']; 
     Porthnames = [ Porthnames(1:end-1) '}']; 
-      
-    fprintf('  Show surfaces in orthview:  %s\n',spm_file(Po ,'link',...
-      sprintf('cat_surf_fun(''show_orthview'',%s,''%s'',%s,%s)',Porthfiles,Po,Porthcolor,Porthnames))) ;
+  
+    if debug 
+      fprintf('  Show surfaces in orthview:  %s\n',spm_file(Po ,'link',...
+        sprintf('cat_surf_fun(''show_orthview'',%s,''%s'',%s,%s)',Porthfiles,Po,Porthcolor,Porthnames))) ;
+    end
 
   end
 end
@@ -1128,32 +1160,6 @@ function Ymf = hippocampus_amygdala_cleanup(Ymf,Ya,vx_vol,close_parahipp,doit)
   end
 end
 
-%==========================================================================
-function Ymf = blood_vessel_correction(Ymf,Ya,doit)
-%% Blood vessel correction 
-%  It would be much faster to do the blood vessel correction on the 
-%  internal rather the interpolated resolution (see below)
-%  (not tested now RD201912)
-
-  if ~exist('doit','var'), doit = 1; end
-
-  if doit
-    NS   = @(Ys,s) Ys==s | Ys==s+1; 
-    LAB  = cat_get_defaults('extopts.LAB');  
-
-    Ylt  = (1 - (Ymf<1.9) + cat_vol_morph(cat_vol_morph(Ymf>2.2,'lo'),'d'))/2; 
-    Ylt  = cat_vol_laplace3R(single(Ylt),Ylt>0 & Ylt<1,0.001);
-
-    % update Ywm distance map
-    Ymsk = (Ylt<0.8 & Ymf>2) | Ymf<=1.5;
-    Ymsk = Ymsk & NS(Ya,LAB.CT);
-    Ymsk = smooth3(Ymsk); 
-
-    % apply correction and filter modified area
-    Ymf  = Ymf.*(1-Ymsk) + Ymsk.*max(1,min(Ymf, 4.2 - cat_vol_smooth3X(Ymf,1))); 
-    Ymf  = min(Ymf,cat_vol_median3(Ymf,Ymsk>0));
-  end
-end
 
 %==========================================================================
 function Ymf = sharpen_cerebellum(Ym,Ymf,Ytemplate,Ya,vx_vol,verb,doit)
@@ -1273,3 +1279,60 @@ function cdata = estimateWMdepthgradient(CS,cdata)
   cdata = cdata_h - cdata_l; 
 end
               
+%=======================================================================
+function varargout = cat_vol_genus0opt(Yo,th,limit,debug)
+% cat_vol_genus0opt: Voxel-based topology optimization and surface creation 
+%   The correction of large defects is often not optimal and this function
+%   uses only small corrections. 
+% 
+%    [Yc,S] = cat_vol_genus0vol(Yo[,limit,debug])
+%  
+%    Yc    .. corrected volume 
+%    Yo    .. original volume 
+%    S     .. surface 
+%    th    .. threshold for creating surface
+%    limit .. maximum number of voxels to correct a defect (default = 30)
+%    debug .. print details.  
+%
+
+  if nargin < 2, th = 0.5; end
+  if nargin < 3, limit = 30; end
+  if nargin < 4, debug = 0; end
+  
+  Yc = Yo; nooptimization = limit==0;  %#ok<NASGU>
+  if limit==0
+    % use all corrections
+    if nargout>1
+      txt = evalc(sprintf('[Yc,S.faces,S.vertices] = cat_vol_genus0(Yo,th,nooptimization);'));
+    else
+      txt = evalc(sprintf('Yc = cat_vol_genus0(Yo,th,nooptimization);'));
+    end
+    
+    if debug, fprintf(txt); end
+  else
+    % use only some corrections
+    txt = evalc(sprintf('Yc = cat_vol_genus0(Yo,th,nooptimization);'));
+    
+    % remove larger corrections
+    Yvxcorr = abs(Yc - (Yo > th))>0; 
+    Yvxdef  = spm_bwlabel( double( Yvxcorr ) ); clear Yppiscrc; 
+    Yvxdef  = cat_vol_morph(Yvxdef,'l',[inf limit]) > 0; % large corrections that we remove 
+    
+    if debug
+      fprintf(txt); 
+      fprintf('  Number of voxels of genus-topocorr: %d\n  Finally used corrections:  %0.2f%%\n', ...
+        sum(Yvxcorr(:)) , 100 * sum(Yvxcorr(:) & ~Yvxdef(:)) / sum(Yvxcorr(:)) );
+    end
+    
+    Yc = Yc & ~Yvxdef; 
+  
+    % final surface creation without correction
+    if nargout>1
+      evalc(sprintf('[Yt,S.faces,S.vertices] = cat_vol_genus0( single(Yc) ,th,1);')); 
+    end
+  
+  end
+  
+  varargout{1} = Yc; 
+  if nargout>1, varargout{2} = S; end
+end
