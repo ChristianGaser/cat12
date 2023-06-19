@@ -1,4 +1,29 @@
 ------------------------------------------------------------------------
+r2214 | rdahnke | 2023-06-19 15:30:34
+
+Changed paths:
+ M CHANGES.txt
+ M cat_main.m
+ M cat_main1639.m
+ M cat_main_reportstr.m
+ M cat_run.m
+ M cat_vol_partvol.m
+ M cat_vol_partvol1639.m
+
+Changed:   Integrated new blood vessel correction into the old BVCstr parameter
+           and updated the CAT report (cat_main_reportstr). The new BVC is only 
+           used if required (cat_main#), i.e. many blood vessels with WM-like
+           intensity were detected. Also included changes in cat_vol_partvol#. 
+Changed:   Preparations for coming adaptions of the CS3 pipeline in cat_main#.          
+Changed:   Deactivated cleanup corrections of the background in cat_main_cleanup
+           that caused problems in the atrophy phantom and probably add also un-
+           necessary variance in general (especially) longitudinal processing.                
+Changed:   Extended waiting time for the creation of the log files in cat_run
+           after observing some PID handling issues.              
+Fixed:     Corrected setting of log-directory of the preprocessing in case of 
+           BIDS in cat_run.        
+Fixed:     Corrected stupid bug with spaces in main-log file name.    
+------------------------------------------------------------------------
 r2213 | gaser | 2023-06-19 10:32:44
 
 Changed paths:

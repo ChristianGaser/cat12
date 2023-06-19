@@ -55,6 +55,9 @@ function str = cat_main_reportstr(job,res,qa)
       seg8 = load(Pseg8);
     end
   end
+  if ~isfield(res,'applyBVC')
+    res.applyBVC = 0; 
+  end
 
   % use red output if a beta version is used
   catv = qa.software.revision_cat; isbeta = strfind(lower(catv),'beta'); 
@@ -286,30 +289,34 @@ function str = cat_main_reportstr(job,res,qa)
     end
 
 
-    % 1 line(s): LASstr / GCUTstr / CLEANUPstr
+    % 1 line(s): LASstr / GCUTstr / CLEANUPstr / BVCsgtr
     if job.extopts.LASstr     == catdef.extopts.LASstr,     cp{1} = npara; else, cp{1} = cpara; end 
     if job.extopts.gcutstr    == catdef.extopts.gcutstr,    cp{2} = npara; else, cp{2} = cpara; end 
     if job.extopts.cleanupstr == catdef.extopts.cleanupstr, cp{3} = npara; else, cp{3} = cpara; end 
-    if isfield(job.extopts,'LASmyostr') && job.extopts.LASmyostr == 0,  cp{4} = npara; else, cp{4} = cpara; end 
+    if job.extopts.BVCstr     == catdef.extopts.BVCstr,     cp{4} = npara; else, cp{4} = cpara; end 
+    if isfield(job.extopts,'LASmyostr') && job.extopts.LASmyostr == 0,  cp{5} = npara; else, cp{5} = cpara; end 
     gcutstr  = {'none-pm','none','SPM','GCUT','APRG','APRG2'};  
+    bvcastr  = {'not applied','applied'};
     if ~job.extopts.expertgui
       str{1}(end).name  = 'LAS strength / Skull-Stripping:';
       str{1}(end).value = sprintf('%s{%s} / %s{%s}',...
         cp{1},defstrm(job.extopts.LASstr),...
         cp{2},gcutstr{ceil(job.extopts.gcutstr+3)}); 
     elseif isfield(job.extopts,'LASmyostr') && job.extopts.LASmyostr == 0
-      str{1}(end).name  = 'LASstr / LASmyostr / GCUTstr / CLEANUPstr:';
-      str{1}(end).value = sprintf('%s{%s(%0.2f)} / %s{%s(%0.2f)} / %s{%s(%0.2f)} / %s{%s(%0.2f)}',...
+      str{1}(end).name  = 'LASstr / LASmyostr / GCUTstr / CLEANUPstr / BVCstr:';
+      str{1}(end).value = sprintf('%s{%s(%0.2f)} / %s{%s(%0.2f)} / %s{%s(%0.2f)} / %s{%s(%0.2f)} / %s{%s(%0.2f)} %s',...
         cp{1},defstrm(job.extopts.LASstr),job.extopts.LASstr,...
-        cp{4},defstrm(job.extopts.LASmyostr),job.extopts.LASmyostr,...
+        cp{5},defstrm(job.extopts.LASmyostr),job.extopts.LASmyostr,...
         cp{2},gcutstr{ceil(job.extopts.gcutstr+3)},job.extopts.gcutstr,...
-        cp{3},defstrm(job.extopts.cleanupstr),job.extopts.cleanupstr); 
+        cp{3},defstrm(job.extopts.cleanupstr),job.extopts.cleanupstr,...
+        cp{4},defstrm(job.extopts.BVCstr),job.extopts.BVCstr,bvcastr{res.applyBVC+1}); 
     else
-      str{1}(end).name  = 'LASstr / GCUTstr / CLEANUPstr:';
-      str{1}(end).value = sprintf('%s{%s(%0.2f)} / %s{%s(%0.2f)} / %s{%s(%0.2f)}',...
+      str{1}(end).name  = 'LASstr / GCUTstr / CLEANUPstr / BVCstr:';
+      str{1}(end).value = sprintf('%s{%s(%0.2f)} / %s{%s(%0.2f)} / %s{%s(%0.2f)} / %s{%s(%0.2f)} %s',...
         cp{1},defstrm(job.extopts.LASstr),job.extopts.LASstr,...
         cp{2},gcutstr{ceil(job.extopts.gcutstr+3)},job.extopts.gcutstr,...
-        cp{3},defstrm(job.extopts.cleanupstr),job.extopts.cleanupstr); 
+        cp{3},defstrm(job.extopts.cleanupstr),job.extopts.cleanupstr,...
+        cp{4},defstrm(job.extopts.BVCstr),job.extopts.BVCstr,bvcastr{res.applyBVC+1}); 
     end
   
     if job.extopts.spm_kamap == catdef.extopts.spm_kamap,  cp{1} = npara; else, cp{1} = cpara; end 
