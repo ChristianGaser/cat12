@@ -10,11 +10,10 @@ function res = cat_io_checkinopt(opt, def, cond)
 % $Id$
 
 
-  if ~exist('def','var'),  def=[]; end
-  if ~exist('cond','var'), cond=[]; end
+  if ~exist('def','var'),  def  = []; end
+  if ~exist('cond','var'), cond = []; end
 
   res = def; 
-  %res.opt = opt; res.def = def; res.cond = cond;
   if ~isfield(res,'do'),   res.do   = 1; end   
   if ~isfield(res,'verb'), res.verb = 0; end
   if numel(opt)>1, error('ERROR:checkinopt:optsize','ERROR: the size of the parameter struct ''opt'' should be 1!'); end
@@ -26,7 +25,7 @@ function res = cat_io_checkinopt(opt, def, cond)
   
   for r=1:numel(cond)
     str=cond{r}; str=strrep(str,'opt.','res.');str=strrep(str,'def.','res.');
-    if ~eval(str),
+    if ~eval(str)
       error('Condition ''%s'' do not fit: %s',str,evalc('res'));
     end
   end
