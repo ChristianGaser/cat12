@@ -73,10 +73,14 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
   if ~debug, clear Ygw Yroi; end
 
   %% update brain masks and class maps
-  Ybb = cat_vol_morph((Yp0>0 & ~Yrw) | Ybd>2,'ldo',2/vxv);          
-  Ybb(cat_vol_smooth3X(Ybb,2)>0.4 & ~Yrw)=1;
-  Ybb = cat_vol_morph(Ybb | Ybd>3,'ldc',1/vxv); 
-  Ybb = single(Ybb); spm_smooth(Ybb,Ybb,0.6./vx_vol); Ybb = Ybb>1/3;
+  if 0 % RD202306: canceled to avoid skull-stripping variance - we just keep the old brainmask
+    Ybb = cat_vol_morph((Yp0>0 & ~Yrw) | Ybd>2,'ldo',2/vxv);          
+    Ybb(cat_vol_smooth3X(Ybb,2)>0.4 & ~Yrw)=1;
+    Ybb = cat_vol_morph(Ybb | Ybd>3,'ldc',1/vxv); 
+    Ybb = single(Ybb); spm_smooth(Ybb,Ybb,0.6./vx_vol); Ybb = Ybb>1/3;
+  else
+    Ybb = Yp0>0;
+  end
 
   %% correct to background
   for i=1:3, prob(:,:,:,i)=min(prob(:,:,:,i),uint8(Ybb*255)); end
@@ -85,7 +89,6 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
   prob(:,:,:,2)=min(prob(:,:,:,2),uint8(~(Ybb & Yrw)*255));
   prob(:,:,:,3)=max(prob(:,:,:,3),uint8( (Ybb & Yrw)*255));    
   if ~debug, clear Yrw; end
-
 
 
   %% cleanup of meninges

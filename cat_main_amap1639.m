@@ -56,14 +56,14 @@ function [prob,indx,indy,indz,th] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res)
   %  prepare data for segmentation
   if 1
     %% classic approach, consider the WMH!
-    Kb2 = 4;
+    Kb2  = numel(Ycls);  
     cls2 = zeros([d(1:2) Kb2]);
     Yp0  = zeros(d,'uint8');
     for i=1:d(3)
         for k1 = 1:Kb2, cls2(:,:,k1) = Ycls{k1}(:,:,i); end
         % find maximum for reordered segmentations
         [maxi,maxind] = max(cls2(:,:,[3,1,2,4:Kb2]),[],3);
-        k1ind = [1 2 3 1 0 0 1 0]; 
+        k1ind = [1 2 3 1 0 0 2 1]; % WMHs will be WM, lesions CSF
         for k1 = 1:Kb2
           Yp0(:,:,i) = Yp0(:,:,i) + cat_vol_ctype((maxind == k1) .* (maxi~=0) * k1ind(k1) .* min(1,Yb(:,:,i))); 
         end

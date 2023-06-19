@@ -286,20 +286,22 @@ function cat_run_job1639(job,tpm,subj)
         VFn   = spm_vol(nfname); 
         YF    = spm_read_vols(VFn); 
         Oth   = cat_stat_nanmean(YF(YF(:)~=0 & YF(:)>cat_stat_nanmean(YF(:)))); 
-        F0vol = cat_stat_nansum(YF(:)~=0) * prod(vx_vol) / 1000; 
-        F0std = cat_stat_nanstd(YF(YF(:)>0.5*Oth & YF(:)>0)/Oth); 
-        YFC = YF~=0; 
-        if sum(YFC(:)>0)<numel(YFC)*0.9 && sum(YFC(:)>0)>numel(YFC)*0.1  % if there is a meanful background
-          YFC = ~cat_vol_morph(YF~=0,'lc',1);                            % close noisy background
-        end
-        [YL,numo] = spm_bwlabel(double(YF~=0),26);  clear YL;            %#ok<ASGLU> % number of objects
-        [YL,numi] = spm_bwlabel(double(YFC==0),26); clear YL;            %#ok<ASGLU> % number of background regions 
-        ppe.affreg.skullstrippedpara = [sum(YF(:)==0)/numel(YF) numo numi F0vol F0std]; 
+        BGth  = median(YF(YF(:) < Oth/2)); 
+        YBG   = ~cat_vol_morph(~cat_vol_morph(YF==BGth,'lc',1),'lc',1); 
+        Oth   = cat_stat_nanmean(YF(~YBG(:) & YF(:)>cat_stat_nanmean(YF(:)))); 
+        F0vol = cat_stat_nansum(~YBG(:)) * prod(vx_vol) / 1000; 
+        F0std = cat_stat_nanstd(YF(YF(:)>0.5*Oth & ~YBG(:))/Oth);
+% ######## RD202306: not adapted for MP2RAGE - check cat_run_job later        
+        %%
+        [YL,numo] = spm_bwlabel(double(~YBG),26); clear YL;            %#ok<ASGLU> % number of objects
+        [YL,numi] = spm_bwlabel(double( YBG),26); clear YL;            %#ok<ASGLU> % number of background regions 
+        ppe.affreg.skullstrippedBGth = BGth; 
+        ppe.affreg.skullstrippedpara = [sum(YBG(:))/numel(YBG(:)) numo numi F0vol F0std]; 
         ppe.affreg.skullstripped = ...
-          ppe.affreg.skullstrippedpara(1)>0.5 && ...                     % many zeros
-          ppe.affreg.skullstrippedpara(2)<15  && ...                     % only a few objects
-          ppe.affreg.skullstrippedpara(3)<10 && ...                      % only a few background regions 
-          F0vol<2500 && F0std<0.5;                                       % many zeros and not too big
+          ppe.affreg.skullstrippedpara(1)>0.5 && ...                    % many zeros
+          ppe.affreg.skullstrippedpara(2)<15 && ...                     % only a few objects
+          ppe.affreg.skullstrippedpara(3)<10 && ...                     % only a few background regions 
+          F0vol<2500 && F0std<0.5;                                      % many zeros and not too big
 % RD20220301: Need further test on trimmed data.        
         ppe.affreg.skullstripped = ppe.affreg.skullstripped || ...
           sum([ppe.affreg.skullstrippedpara(1)>0.8 F0vol<1500 F0std<0.4])>1; % or 2 extreme values
@@ -521,7 +523,7 @@ function cat_run_job1639(job,tpm,subj)
 
           % skull-stripping of the template
           VB = spm_vol(Pb);
-          [VB2,YB] = cat_vol_imcalc([VG,VB],Pbt,'i1 .* i2',struct('interp',3,'verb',0,'mask',-1)); 
+          [VB2,YB]       = cat_vol_imcalc([VG,VB],Pbt,'i1 .* i2',struct('interp',3,'verb',0,'mask',-1)); %#ok<ASGLU> 
           VB2.dat(:,:,:) = eval(sprintf('%s(YB/max(YB(:))*255);',spm_type(VB2.dt))); 
           VB2.pinfo      = repmat([1;0],1,size(YB,3));
           VG             = cat_spm_smoothto8bit(VB2,0.5);
@@ -757,7 +759,11 @@ function cat_run_job1639(job,tpm,subj)
       % use brainmask
       VFa = VF; VFa.mat = Affine * VF.mat; %Fa.mat = res0(2).Affine * VF.mat;
       if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
-      [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0,'mask',-1)); clear Vmsk;  %#ok<ASGLU>
+      if ~ppe.affreg.skullstripped 
+        [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0,'mask',-1)); clear Vmsk;  %#ok<ASGLU>
+      else
+        Yb = smooth3(Ysrc~=ppe.affreg.skullstrippedBGth);
+      end
       Ylesion = Ylesion & ~cat_vol_morph(Yb<0.9,'dd',5); clear Yb; 
       % check settings 
       % RD202105: in primates the data, template and affreg is often inoptimal so we skip this test  
@@ -974,10 +980,14 @@ function cat_run_job1639(job,tpm,subj)
           
           % tryed 3 peaks per class, but BG detection error require manual 
           % correction (set 0) that is simple with only one class  
+          % RD202306: SPM is not considering things without variation and 
+          %           a zeroed background is simply not existing!
+          %           Moreover it is possible just to ignore classes :D
+          %           Hence, we may not need to redefine the TPM at all.
           if noCSF
-            job.opts.ngaus = ([job.tissue(1:3).ngaus])'; 
+            job.opts.ngaus = [([job.tissue(1:2).ngaus])',1]; % gaussian background
           else
-            job.opts.ngaus = [([job.tissue(1:3).ngaus])';1]; % 3*ones(4,1);1; 
+            job.opts.ngaus = ([job.tissue(1:3).ngaus])'; % no gaussian background
           end
           obj.lkp        = [];
           for k=1:numel(job.opts.ngaus)
@@ -1095,10 +1105,7 @@ function cat_run_job1639(job,tpm,subj)
           res.image1 = image1; 
           clear reduce; 
         end
-        
-        % unknown BG detection problems in INDI_NHa > manual setting
-        if ppe.affreg.skullstripped, res.mn(end) = 0; end 
-
+     
       catch
         %%
         cat_io_addwarning([mfilename ':ignoreErrors'],'Run backup function (IN DEVELOPMENT).',1,[1 1]); 
@@ -1172,6 +1179,15 @@ function cat_run_job1639(job,tpm,subj)
         res.image.dat   = eval(sprintf('%s(tmp);',dts)); 
         res.image.pinfo = repmat([1;0],1,size(tmp,3));
         res.image.dt(1) = dt2; 
+      end
+      if ppe.affreg.skullstripped || job.extopts.gcutstr<0
+       % here we have to add manually our no variance background value of 0 
+        res.mg(end+1)  = 1;
+        res.mn(end+1)  = ppe.affreg.skullstrippedBGth;
+        res.vr(end+1)  = max(eps,numel(res.wp) * eps);
+        res.wp = res.wp - numel(res.wp) * eps;
+        res.wp(end+1)  = numel(res.wp) * eps;
+        res.lkp(end+1) = 4;
       end
       warning on 
       
