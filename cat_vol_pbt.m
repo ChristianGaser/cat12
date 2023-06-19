@@ -70,13 +70,11 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
   %  that is not required for the correction map.
   %
   %  RD 201803:
-  %  The speed map weighting "max(0.5,min(1,Ymf/2))" is not strong enough to  
+  %  The speed map weighting "F = max(0.5,min(1,Ymf/2))" is not strong enough to  
   %  support asymmetric structures. The map "max(eps,min(1,((Ymf-1)/1.1).^4))"  
   %  works much better but it leads to much higher thickness results (eg. in 
   %  the Insula).
   
-  newspeedmapF = 1; 
-
 
   if opt.verb, fprintf('\n'); end; stime2=clock;
   YMM = cat_vol_morph(Ymf<1.5,'e',1) | isnan(Ymf);
@@ -84,12 +82,7 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
     case 'eidist' 
       % [D,I] = vbm_vol_eidist(B,L,[vx_vol,euclid,csf,setnan,verb])
       
-      if newspeedmapF
-        F = max(eps,min(1,((Ymf-1)/1.1).^4)); 
-      else 
-        F = max(0.5,min(1,Ymf/2)); % R1218
-      end
-      
+      F = max(eps,min(1,((Ymf-1)/1.1).^4)); 
       
       if opt.pbtlas == 0
       % Simple pure intensity based model that show strong variation in 
@@ -217,12 +210,8 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
       YMwm   = YM;
       Ywmd   = cat_vol_eidist(YM,F,[1 1 1],1,1,0,opt.debug);
       
-      if newspeedmapF
-        F = max(eps,min(1,((Ymf-1)/1.1).^4)); 
-      else 
-        F = max(1.0,min(1,Ymf/2)); % R1218 - no speed difference!
-      end
-      YM  = max(0,min(1,(Ymf-1))); YM(YMM) = nan; Ycsfdc = cat_vol_eidist(YM,F,[1 1 1],1,1,0,opt.debug); 
+      F      = max(eps,min(1,((Ymf-1)/1.1).^4)); 
+      YM     = max(0,min(1,(Ymf-1))); YM(YMM) = nan; Ycsfdc = cat_vol_eidist(YM,F,[1 1 1],1,1,0,opt.debug); 
       
       clear F;
       
@@ -255,22 +244,16 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
   end
   switch opt.dmethod
     case 'eidist'
-      if newspeedmapF
-        F = max(eps,min(1,(4-Ymf)/2).^2);
-      else
-        F = max(0.5,min(1,(4-Ymf)/2)); % R1218
-      end
-      YM  = max(0,min(1,(2-Ymf)));   YM(YMM) = nan; Ycsfd = cat_vol_eidist(YM,F,[1 1 1],1,1,0,opt.debug); 
-      if newspeedmapF
-        F = max(eps,min(1,(4-Ymf)/2).^2);
-      else
-        F = max(1,min(1,(4-Ymf)/2)); % R1218
-      end
+      F   = max(eps,min(1,(4-Ymf)/2).^2);
+      YM  = max(0,min(1,(2-Ymf)));
+YM = max(YM,smooth3(cat_vol_morph(cat_vol_morph(YM,'dc',2/opt.resV),'e'))); % RD202306 remove menginges etc.    
+      YM(YMM) = nan; Ycsfd = cat_vol_eidist(YM,F,[1 1 1],1,1,0,opt.debug); 
+      F = max(eps,min(1,(4-Ymf)/2).^2);
       if exist('YMwm','var')
         YM  = 1 - YMwm; YM(YMM) = nan; Ywmdc = cat_vol_eidist(YM,F,[1 1 1],1,1,0,opt.debug);  Ywmdx = Ywmdc;
       else
-        YM  = max(0,min(1,(3-Ymf)));   YM(YMM) = nan; Ywmdc = cat_vol_eidist(YM,F,[1 1 1],1,1,0,opt.debug);
-        YM  = max(0,min(1,(2.7-Ymf))); YM(YMM) = nan; Ywmdx = cat_vol_eidist(YM,F,[1 1 1],1,1,0,opt.debug)+0.3;
+        YM  = max(0,min(1,(3-Ymf)));   YM(YMM ) = nan; Ywmdc = cat_vol_eidist(YM,F,[1 1 1],1,1,0,opt.debug);
+        YM  = max(0,min(1,(2.7-Ymf))); YM(YMM ) = nan; Ywmdx = cat_vol_eidist(YM,F,[1 1 1],1,1,0,opt.debug)+0.3;
       end
       clear F;
     case 'vbdist'
@@ -309,7 +292,7 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
     %% estimate cortical thickness and map the local volumes
     stime = cat_io_cmd('    PBTV thickness: ','g5','',opt.verb,stime);
     [Ygmt,Yv1,Yv2,Ypp] = cat_vol_pbtv(Ymf,Ywmd,Ycsfd);
-    Ygmts = Ygmt; for i=1:iter, Ygmts = cat_vol_localstat(Ygmts,(Ygmt>1 | Ypp>0.1) & Ygmt>0 & (Ygmt>1 | Ymf>1.8),1,1); end; Ygmt(Ygmts>0) = Ygmts(Ygmts>0); 
+    %Ygmts = Ygmt; for i=1:iter, Ygmts = cat_vol_localstat(Ygmts,(Ygmt>1 | Ypp>0.1) & Ygmt>0 & (Ygmt>1 | Ymf>1.8),1,1); end; Ygmt(Ygmts>0) = Ygmts(Ygmts>0); 
   
     % volume-based PP map
     Ypp = ((Ygmt - Ywmd)./(Ygmt + eps) + (Ymf>2.5))*0.5 + 0.5*min( 1, Yv1./(Yv1 + Yv2 + eps) + (Ymf>2.5)); 
@@ -367,31 +350,55 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
     
     % avoid meninges !
     Ygmt1 = min(Ygmt1,Ycsfd+Ywmd);
-    Ygmt2 = min(Ygmt2,Ycsfd+Ywmd);  
-    
-    % median filter to remove outliers
-    Ygmt1 = cat_vol_median3(Ygmt1,Ygmt1>0,Ygmt1>0);
-    Ygmt2 = cat_vol_median3(Ygmt2,Ygmt2>0,Ygmt2>0); 
-    
-    % estimation of Ypp for further GM filtering without sulcal blurring
-    Ygmt  = min(cat(4,Ygmt1,Ygmt2),[],4);
-    YM    = Ymf>=1.5 & Ymf<2.5; Ypp = zeros(size(Ymf),'single'); Ypp(Ymf>=2.5)=1;
-    Ypp(YM) = min(Ycsfd(YM),Ygmt(YM) - Ywmd(YM)) ./ (Ygmt(YM) + eps); Ypp(Ypp>2) = 0;
-    YM  = (Ygmt<=opt.resV & Ywmd<=opt.resV & Ygmt>0); Ypp(YM) = (Ymf(YM)-1)/2; 
-    Ygmts = Ygmt; for i=1:iter, Ygmts = cat_vol_localstat(Ygmts,Ygmt1>0,1,1); end; Ygmt(Ygmts>0) = Ygmts(Ygmts>0);
-    
-    % filter result
-    if exist('Ymfo','var'); Ymf=Ymfo; end
-    Ygmts = Ygmt1; for i=1:iter, Ygmts = cat_vol_localstat(Ygmts,(Ygmt>1 | Ypp>0.1) & Ygmt>0 & (Ygmt>1 | Ymf>1.8),1,1); end; Ygmt1(Ygmts>0) = Ygmts(Ygmts>0); 
-    Ygmts = Ygmt2; for i=1:iter, Ygmts = cat_vol_localstat(Ygmts,(Ygmt>1 | Ypp>0.1) & Ygmt>0 & (Ygmt>1 | Ymf>1.8),1,1); end; Ygmt2(Ygmts>0) = Ygmts(Ygmts>0);
+    Ygmt2 = min(Ygmt2,Ycsfd+Ywmd); 
 
+
+    if 1
+    % RD202306: Enhanced artefact filtering in regions with diverse thickness: 
+    % New filter block to reduce problems due to blood vessels that causes
+    % severe problems with the simple volumetric topology correction. 
+    % We first select regions with strongly varying thinkness values, i.e.,
+    % where structures with high WM distance (>5 mm, like the blood vessels)
+    % are close to normal cortex with 2-3 mm by using the local standard deviation.  
+    % As the high intensity voxels are here typically incorrect and cause the
+    % defects, we use a mimimum filter for reduction, followed by mean filter
+    % for smoother boundaries and partially inclusion of reminding high values.
+      Ysd2  = cat_vol_localstat(Ygmt1,Ygmt1>0,2,4); % local std
+      Ymsk  = Ysd2 .* Ygmt1/(5/opt.resV); % weight larger thickness stronger 
+      mx    = 0.25; % mixing factor (to allow changes with smaller steps) ... 0.25 was better than .125 and .5 
+      tx    = 0.2;  % 0.2 was good, 0.4 not
+      for i = 1:round(10/opt.resV)
+        % minimum filter to reduce overestimation by artifacts
+        Ygmt1 = Ygmt1*(1-mx) + mx*(Ygmt1.*(Ymsk<tx*i) + cat_vol_localstat(Ygmt1,Ymsk>=tx*i,1,2)); 
+        % mean filter of "high" thickness values
+        Ymsk2 = (Ymsk>tx*i) & Ygmt1>median(Ygmt1(Ygmt1(:)>0)); 
+        Ygmt1 = Ygmt1*(1-mx) + mx*(Ygmt1.*(~Ymsk2) + cat_vol_localstat(Ygmt1,Ymsk2,1,1,2));  % mean filter
+      end
+    end
+
+
+    % median filter to remove outliers:
+    % This result in worse intensity but strongly improved position values.
+    if 1
+      Ygmt1 = cat_vol_median3(Ygmt1,Ygmt1>0 & Ygmt1<inf,Ygmt1>0 & Ygmt1<inf);
+      Ygmt2 = cat_vol_median3(Ygmt2,Ygmt2>0 & Ygmt2<inf,Ygmt2>0 & Ygmt2<inf); 
+    end
+
+ 
     % mix result 
     % only minimum possible, because Ygmt2 is incorrect in blurred sulci 
     Ygmt  = min(cat(4,Ygmt1,Ygmt2),[],4); %clear Ygmt1 Ygmt2; 
-    Ygmts = Ygmt; for i=1:iter, Ygmts = cat_vol_localstat(Ygmts,(Ygmt>1 | Ypp>0.1) & Ygmts>0 & (Ygmt>1 | Ymf>1.8),1,1); end; Ygmt(Ygmts>0) = Ygmts(Ygmts>0);
-    
-    
+    if 1
+      Ysd2  = cat_vol_localstat(Ygmt,Ygmt>0,2,4);
+      Ymsk  = Ysd2 .* Ygmt1/10; 
+      for i = 1:3
+        Ygmt = Ygmt*(1-mx) + mx*(Ygmt.*(Ymsk<.2*i) + cat_vol_localstat(Ygmt,Ymsk>=.2*i,1,1,2)); 
+      end
+    end
 
+
+    if exist('Ymfo','var'); Ymf=Ymfo; end
+ 
   else
     % Estimation of thickness map Ygmt and percentual position map Ypp.
     stime = cat_io_cmd('    PBT2 thickness: ','g5','',opt.verb,stime);
@@ -452,7 +459,7 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
   YM  = (Ygmt<=opt.resV & Ywmd<=opt.resV & Ygmt>0); Ypp(YM) = (Ymf(YM)-1)/2 - 0.2; % correction of voxel with thickness below voxel resolution
   Ypp(isnan(Ypp)) = 0; 
   Ypp = min(2,max(-1,Ypp)); 
-  
+  Ypp = cat_vol_median3(Ypp,Ymf>0 & Ymf<3,true(size(Ymf)),0.2);
   if 1
     % extend Ypp to create values for white and pial surface mapping
     %  extimate distance and thickness beyond the GM boundary
