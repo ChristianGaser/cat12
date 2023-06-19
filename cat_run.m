@@ -79,13 +79,16 @@ if isfield(job.output,'BIDS')
 end
 
 
-% If one of the input directories is a BIDS directory than use create a
-% subfolder derivatives/CAT12.#/log to save the log-files there and not
-% somewhere. A try catch block is used in case of untested input (e.g.,
-% structures). See also for a similar block in cat_parallelize.
-% .. the first BIDSdir block is a bit different ...
-if isfield(job.extopts,'BIDSfolder') 
-  BIDSdir = fullfile(name1,strrep(BIDSfolder,['..' filesep],''));
+% If one of the input directories is a BIDS directory and multipe jobs are 
+% runningthan than create a subfolder logs to save the log-files there and 
+% not in the current directory. See also for a similar block in cat_parallelize.
+% .. the first BIDSdir block is a bit different ... ???
+if isfield(job.extopts,'BIDSfolder')
+  if job.nproc > 0
+    BIDSdir = fullfile(name1,strrep(BIDSfolder,['..' filesep],''));
+  else
+    BIDSdir = fullfile(name1,BIDSfolder); %strrep(BIDSfolder,['..' filesep],''));
+  end
 else
   BIDSdir = [];  
 end
@@ -208,6 +211,18 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
       log_name{i} = fullfile(logdir,['catlog_main_' logdate '_log' sprintf('%02d',i) '.txt']);
     end
     
+    % test writing 
+    try
+      pp = spm_fileparts(log_name{i});
+      if ~exist(pp,'dir'), mkdir(pp); end
+      pid = fopen(log_name{i},'w');
+      fwrite(pid,'');
+      fclose(pid);
+      delete(log_name{i});
+    catch
+      cat_io_cprintf('err',sprintf('Cannot create "%s" file. \n',log_name{i}));
+    end
+
     % call matlab with command in the background
     if ispc
       % check for spaces in filenames that will not work with windows systems and background jobs
@@ -229,7 +244,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
       system_cmd = ['start matlab -nodesktop -nosplash -r ' matlab_cmd ' -logfile ' log_name{i}];
     else
       % -nodisplay .. nodisplay is without figure output > problem with CAT report ... was there a server problem with -nodesktop?
-      system_cmd = [fullfile(matlabroot,'bin') '/matlab -nodesktop -nosplash -r ' matlab_cmd ' -logfile ' log_name{i} ' 2>&1 & '];
+      system_cmd = [fullfile(matlabroot,'bin') '/matlab -nodesktop -nosplash -r ' matlab_cmd ' -logfile "' log_name{i} '" 2>&1 & '];
     end
     [status,result] = system(system_cmd); 
     cat_check_system_output(status,result);
@@ -238,8 +253,9 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     
     %% look for existing files and extract their PID for later control  
     %  --------------------------------------------------------------------
-    test    = 0; lim    = 20; ptime    = 0.5; % exist file?
-    testpid = 0; limpid = 40; ptimepid = 2.0; % get PID
+    %  RD202306 tried lim/limpid = 20/40 rather than 200/400 but got problems 
+    test    = 0; lim    = 60;  ptime    = 0.5; % exist file? 
+    testpid = 0; limpid = 120; ptimepid = 2.0; % get PID     
     ptimesid = 1 * 30;                         % update every minute? 
     while test<lim
       if ~exist(log_name{i},'file')

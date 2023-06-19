@@ -420,23 +420,47 @@ if ~isfield(res,'spmpp')
   %  has to be done before bias correction.
   %  Of course we only want to do this for highres T1 data!
   %  ---------------------------------------------------------------------
+  res.applyBVC = 0; 
   NS = @(Ys,s) Ys==s | Ys==s+1; 
   if job.extopts.BVCstr && ~job.inv_weighting && all(vx_vol<2); 
-    stime = cat_io_cmd(sprintf('Blood vessel correction (BVCstr=%0.2f)',job.extopts.BVCstr));
+    % RD202306: test if the BVC is required 
+    if job.extopts.BVCstr>0 && job.extopts.BVCstr<1
+      res.applyBVC = ...
+        sum(NS(Yl1(:),job.extopts.LAB.BV)) > 1000 && ...
+        median(Ymi(NS(Yl1(:),job.extopts.LAB.BV))) > 0.75; 
+    elseif job.extopts.BVCstr >= 1 % allways or old
+      res.applyBVC = 1; 
+    end
 
-    Ybv  = cat_vol_smooth3X(cat_vol_smooth3X( ...
-      NS(Yl1,7) .* (Ymi*3 - (1.5-job.extopts.BVCstr)),0.3).^4,0.1)/3;
-   
-    %% correct src images
-    %  - good result but no nice form ... 
-    Ymi = Ym; Ymio = Ymi; 
-    Ymi  = max( min( max(1/3, 1 - Ybv/4), Ymi ),  Ymi - Ybv*2/3 );
-    for mi = 1:2, Ymi = cat_vol_median3(Ymi,Ybv > max(0,1 - mi/2) & Ymi~=Ymio ); end
-    Ymi = cat_vol_median3(Ymi,Ybv > 0); clear Ymio; 
+    if job.extopts.expertgui > 1 %
+      BVCs = sprintf(' (BVCstr=%0.2f)',job.extopts.BVCstr); 
+    else
+      BVCs = ''; 
+    end
+
+    if res.applyBVC
+      stime = cat_io_cmd(sprintf('Apply enhanced blood vessel correction%s',BVCs));
+      Ybv   = cat_vol_smooth3X(cat_vol_smooth3X( ...
+        NS(Yl1,7) .* (Ymi*3 - (1.5-(mod(job.extopts.BVCstr,1) + (job.extopts.BVCstr>0)))),0.3).^4,0.1)/3;
+    else 
+      % here we are only correcting the super high intensity strucutres
+      stime = cat_io_cmd(sprintf('No enhanced blood vessel correction is required %s',BVCs));
+      Ybv   = (Ymi>1.1) .* cat_vol_smooth3X(cat_vol_smooth3X( ...
+        NS(Yl1,7) .* (Ymi*3 - (1.5-(mod(job.extopts.BVCstr,1) + (job.extopts.BVCstr>0)))),0.3).^4,0.1)/3;
+    end  
+
+
+      %% correct src images
+      %  - good result but no nice form ... 
+      %Ymi = Ym; 
+      Ymio = Ymi; 
+      Ymi  = max( min( max(1/3, 1 - Ybv/4), Ymi ),  Ymi - Ybv*2/3 );
+      for mi = 1:2, Ymi = cat_vol_median3(Ymi,Ybv > max(0,1 - mi/2) & Ymi~=Ymio ); end
+      Ymi = cat_vol_median3(Ymi,Ybv > 0); clear Ymio; 
+      
+      %Ymi   = max( min(1/3 + 1/3*cat_vol_morph(Ym>2.5/3 & NS(Yl1,job.extopts.LAB.BV),'dd',1.5,vx_vol) , Ymi) ,Ymi - Ybv*2/3); 
+      % Ymis  = cat_vol_smooth3X(Ymi); Ymi(Ybv>0.5) = Ymis(Ybv>0.5); clear Ymis;
     
-    %Ymi   = max( min(1/3 + 1/3*cat_vol_morph(Ym>2.5/3 & NS(Yl1,job.extopts.LAB.BV),'dd',1.5,vx_vol) , Ymi) ,Ymi - Ybv*2/3); 
-    % Ymis  = cat_vol_smooth3X(Ymi); Ymi(Ybv>0.5) = Ymis(Ybv>0.5); clear Ymis;
-
     %% update classes
     Ycls{1} = min(Ycls{1},cat_vol_ctype(255 - Ybv*127)); 
     Ycls{2} = min(Ycls{2},cat_vol_ctype(255 - Ybv*127)); 
@@ -468,10 +492,6 @@ if ~isfield(res,'spmpp')
       cat_io_addwarning([mfilename ':gcuterror'],'Unknown error in cat_main_gcut. Use old brainmask.',1,[1 1]);
       job.extopts.gcutstr = 99;
     end
-  end
-  % correct mask for skull-stripped images (but not ex-vivo brains, where CSF=BG)  
-  if max(res.lkp) == 4 %skullstripped
-    Yb = Yb .* (spm_read_vols(res.image(1)) > 0);
   end
 
   
@@ -809,7 +829,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
         [Yth1, S, Psurf, qa.createCS] = ... 
           cat_surf_createCS3(VT,VT0,Ymix,Yl1,YMF,YT,Yb0,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
           'outputpp',job.output.pp,'surf_measures',job.output.surf_measures, ...
-          'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,...
+          'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,'SRP', mod(job.extopts.SRP,10), ...
           'scale_cortex', job.extopts.scale_cortex, 'add_parahipp', job.extopts.add_parahipp, 'close_parahipp', job.extopts.close_parahipp,  ....
           'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
           'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'useprior',job.useprior),job); 
@@ -936,9 +956,15 @@ if ~debug, clear Ycls; end
 if job.output.surface
   qa.qualitymeasures.SurfaceEulerNumber       = qa.subjectmeasures.EC_abs;
   qa.qualitymeasures.SurfaceDefectArea        = qa.subjectmeasures.defect_size;
-  qa.qualitymeasures.SurfaceDefectNumber      = qa.createCS.defects;
-  qa.qualitymeasures.SurfaceIntensityRMSE     = qa.createCS.RMSE_Ym;
-  qa.qualitymeasures.SurfacePositionRMSE      = qa.createCS.RMSE_Ypp;
+  try % RD202306: these varialbes are not always created
+    qa.qualitymeasures.SurfaceDefectNumber    = qa.createCS.defects;
+    qa.qualitymeasures.SurfaceIntensityRMSE   = qa.createCS.RMSE_Ym;
+    qa.qualitymeasures.SurfacePositionRMSE    = qa.createCS.RMSE_Ypp;
+  catch
+    qa.qualitymeasures.SurfaceDefectNumber    = qa.createCS;
+    qa.qualitymeasures.SurfaceIntensityRMSE   = nan; 
+    qa.qualitymeasures.SurfacePositionRMSE    = nan; 
+  end
   if isfield(qa,'createCS') && isfield(qa.createCS,'self_intersections')
     qa.qualitymeasures.SurfaceSelfIntersections = qa.createCS.self_intersections;
   else
