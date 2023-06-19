@@ -353,8 +353,9 @@ elseif expert == 1
     'CS1 with SIC (12)',... 
     'CS2 with SIC (22)',... 
     'CS3 with SIC (30; IN DEVELOPMENT)',... 
+    'CS3 with fast SIC (33; IN DEVELOPMENT)',... 
   };
-  SRP.values  = {10 20 12 22 30}; 
+  SRP.values  = {10 20 12 22 30 33}; 
 elseif expert > 1
   SRP.labels  = {...
     'CS1 without SIC (10)',...
@@ -364,8 +365,9 @@ elseif expert > 1
     'CS2 with SIC without optimization (21)',... 
     'CS2 with SIC with optimization (22)',... 
     'CS3 with SIC (30; IN DEVELOPMENT)',... 
+    'CS3 with fast SIC with optimization (33; IN DEVELOPMENT)',... 
     };
-  SRP.values  = {10 11 12 20 21 22 30};
+  SRP.values  = {10 11 12 20 21 22 30 33};
 end
 SRP.help    = {
   ['CAT uses the projection-based thickness approach (PBT; Dahnke et al., 2012) to reconstruct the central surface.  ' ...
@@ -535,8 +537,8 @@ ignoreErrors.def    = @(val)cat_get_defaults('extopts.ignoreErrors', val{:});
 verb         = cfg_menu;
 verb.tag     = 'verb';
 verb.name    = 'Verbose processing level';
-verb.labels  = {'none','default','details'};
-verb.values  = {0 1 2};
+verb.labels  = {'none','default','details','debug'};
+verb.values  = {0 1 2 3};
 verb.def     = @(val)cat_get_defaults('extopts.verb', val{:});
 verb.help    = {
   'Verbose processing.'
@@ -785,12 +787,12 @@ NCstr.def    = @(val)cat_get_defaults('extopts.NCstr', val{:});
 BVCstr         = cfg_menu;
 BVCstr.tag     = 'BVCstr';
 BVCstr.name    = 'Strength of Blood Vessel Corrections';
-BVCstr.labels  = {'none (0)','light (eps)','medium (0.50)','strong (1.00)'};
-BVCstr.values  = {0 eps 0.50 1.00};
+BVCstr.labels  = {'never (0)','auto (0.50)','allways (1.00)','classic (1.50)'};
+BVCstr.values  = {0 0.50 1.00 1.50};
 BVCstr.def     = @(val)cat_get_defaults('extopts.BVCstr', val{:});
-BVCstr.hidden  = expert<2;
+BVCstr.hidden  = expert<1;
 BVCstr.help    = {
-  'Strength of the Blood Vessel Correction (BVC).'
+  'Strength of the Blood Vessel Correction (BVC) that was extended 2023 to reduce problems with WM-like blood vessels. '
   ''
 };
 
