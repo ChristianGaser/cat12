@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2213 | gaser | 2023-06-19 10:32:44
+
+Changed paths:
+ M CHANGES.txt
+ M cat_io_checkinopt.m
+ M cat_io_updateStruct.m
+ M cat_plot_scatter.m
+
+Fixed:   Added missing value to "filled" option in cat_plot_scatter.m and check 
+         whether X or Y have to be transposed.
+------------------------------------------------------------------------
 r2212 | rdahnke | 2023-06-09 14:10:08
 
 Changed paths:

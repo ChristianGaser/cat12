@@ -11,7 +11,7 @@ function hAxes = cat_plot_scatter(X,Y, varargin)
 % cat_plot_scatter(...,'MSIZE',MS) allows you to set the marker size for the
 % scatter plot. Default is 10.
 %
-% cat_plot_scatter(...,'FILLED') sets the markers in the scatter plot to be
+% cat_plot_scatter(...,'FILLED',true) sets the markers in the scatter plot to be
 % outline. 
 %
 % cat_plot_scatter(...,'COLOR',COLOR) specifies the marker colors
@@ -216,7 +216,10 @@ for j = 1:n_groups
   lnames{i+j} = ['Fit ' deblank(names(j,:))];
 end
 
-  
+if size(X,1) == size(Y,2)
+  Y = Y';
+end
+
 ind = ~isnan(X) & ~isnan(Y);
 X = X(ind); Y = Y(ind);
 if ~isempty(color) && size(color,1) == numel(ind)
@@ -242,6 +245,16 @@ end
 
 if exist('fig','var')
   figure(fig)
+end
+
+clf
+
+if size(X,1) == 1
+  X = X';
+end
+
+if size(Y,1) == 1
+  Y = Y';
 end
 
 % check whether X has limited number of entries (and is rather categorical)

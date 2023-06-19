@@ -22,14 +22,14 @@ function S=cat_io_updateStruct(S,SN,RepByEmpty,ind)
 % $Id$
 
   % check input
-  if ~exist('RepByEmpty','var'), RepByEmpty=0; end
+  if ~exist('RepByEmpty','var'), RepByEmpty = 0; end
   if ~exist('ind','var') 
-    if numel(SN)<=1, ind=1; else ind=1:numel(SN); end
+    if numel(SN) <= 1, ind = 1; else ind = 1:numel(SN); end
   end
   ind = min(single(intmax),max(1,ind));
   
   
-  if numel(SN)>1
+  if numel(SN) > 1
     % multiple element update 
     for sni=ind
       S = cat_io_updateStruct(S,SN(sni),RepByEmpty,sni);
