@@ -389,33 +389,54 @@ if ~isfield(res,'spmpp')
   %  has to be done before bias correction.
   %  Of course we only want to do this for highres T1 data!
   %  ---------------------------------------------------------------------
+  res.applyBVC = 0; 
   NS = @(Ys,s) Ys==s | Ys==s+1; 
-  if job.extopts.BVCstr && ~job.extopts.inv_weighting
-    if all(vx_vol<2) % ~job.extopts.inv_weighting &&
-      stime = cat_io_cmd(sprintf('Blood vessel correction (BVCstr=%0.2f)',job.extopts.BVCstr));
-      try 
-
-        Ybv  = cat_vol_smooth3X(cat_vol_smooth3X( ...
-          NS(Yl1,7) .* (Ymi*3 - (1.5-job.extopts.BVCstr)),0.3).^4,0.1)/3;
-
-        % correct src images
-        Ymi   = max(0,Ymi - Ybv*2/3); 
-        Ymi   = cat_vol_median3(Ymi,cat_vol_morph(Ybv>0.5,'dilate')); 
-        Ymis  = cat_vol_smooth3X(Ymi); Ymi(Ybv>0.5) = Ymis(Ybv>0.5); clear Ymis;
-
-        % update classes
-        Ycls{1} = min(Ycls{1},cat_vol_ctype(255 - Ybv*127)); 
-        Ycls{2} = min(Ycls{2},cat_vol_ctype(255 - Ybv*127)); 
-        Ycls{3} = max(Ycls{3},cat_vol_ctype(127 * Ybv)); 
-
-        fprintf('%5.0fs\n',etime(clock,stime));
-        clear Ybv p0; 
-      catch
-        cat_io_addwarning('cat_main:noBVCbackup','Error in BVC. No BVC backup function.',1,[0 1]); 
-      end
-    else
-      cat_io_addwarning('cat_main:noBVC4lowres',sprintf('No BVC for low resolution data (%0.2fx%0.2fx%0.2fmm).',vx_vol),1,[0 1]); 
+  if job.extopts.BVCstr && ~job.inv_weighting && all(vx_vol<2); 
+    % RD202306: test if the BVC is required 
+    if job.extopts.BVCstr>0 && job.extopts.BVCstr<1
+      res.applyBVC = ...
+        sum(NS(Yl1(:),job.extopts.LAB.BV)) > 1000 && ...
+        median(Ymi(NS(Yl1(:),job.extopts.LAB.BV))) > 0.75; 
+    elseif job.extopts.BVCstr >= 1 % allways or old
+      res.applyBVC = 1; 
     end
+
+    if job.extopts.expertgui > 1 %
+      BVCs = sprintf(' (BVCstr=%0.2f)',job.extopts.BVCstr); 
+    else
+      BVCs = ''; 
+    end
+
+    if res.applyBVC
+      stime = cat_io_cmd(sprintf('Apply enhanced blood vessel correction%s',BVCs));
+      Ybv   = cat_vol_smooth3X(cat_vol_smooth3X( ...
+        NS(Yl1,7) .* (Ymi*3 - (1.5-(mod(job.extopts.BVCstr,1) + (job.extopts.BVCstr>0)))),0.3).^4,0.1)/3;
+    else 
+      % here we are only correcting the super high intensity strucutres
+      stime = cat_io_cmd(sprintf('No enhanced blood vessel correction is required %s',BVCs));
+      Ybv   = (Ymi>1.1) .* cat_vol_smooth3X(cat_vol_smooth3X( ...
+        NS(Yl1,7) .* (Ymi*3 - (1.5-(mod(job.extopts.BVCstr,1) + (job.extopts.BVCstr>0)))),0.3).^4,0.1)/3;
+    end  
+
+
+      %% correct src images
+      %  - good result but no nice form ... 
+      %Ymi = Ym; 
+      Ymio = Ymi; 
+      Ymi  = max( min( max(1/3, 1 - Ybv/4), Ymi ),  Ymi - Ybv*2/3 );
+      for mi = 1:2, Ymi = cat_vol_median3(Ymi,Ybv > max(0,1 - mi/2) & Ymi~=Ymio ); end
+      Ymi = cat_vol_median3(Ymi,Ybv > 0); clear Ymio; 
+      
+      %Ymi   = max( min(1/3 + 1/3*cat_vol_morph(Ym>2.5/3 & NS(Yl1,job.extopts.LAB.BV),'dd',1.5,vx_vol) , Ymi) ,Ymi - Ybv*2/3); 
+      % Ymis  = cat_vol_smooth3X(Ymi); Ymi(Ybv>0.5) = Ymis(Ybv>0.5); clear Ymis;
+    
+    %% update classes
+    Ycls{1} = min(Ycls{1},cat_vol_ctype(255 - Ybv*127)); 
+    Ycls{2} = min(Ycls{2},cat_vol_ctype(255 - Ybv*127)); 
+    Ycls{3} = max(Ycls{3},cat_vol_ctype(127*Ybv)); 
+
+    fprintf('%5.0fs\n',etime(clock,stime));
+    clear Ybv p0; 
   end
 
   
