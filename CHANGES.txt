@@ -1,4 +1,23 @@
 ------------------------------------------------------------------------
+r2216 | rdahnke | 2023-06-19 22:33:04
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_extopts.m
+ M cat_surf_createCS3.m
+ M cat_vol_pbt.m
+
+Fixed:     Added suggestions from Torben Lund for expert surface outputs in
+           cat_conf_extopts and . 
+Changed:   Updated the cat_surf_createCS3 pipeline to reduce problems with blood
+           Vessels. Removed the not working additional blood vessel correction. 
+           Added SRP options to further improve reconstruction quality and added
+           options in cat_conf_extopts. 
+Changed:   Updated cat_vol_pbt and (i) removed old code (speedmap and filters), 
+           and (ii) introduced a new filtering to reduce overestimations in the  
+           initial thickness maps that caused ugly topology defects in the CS3
+           pipeline.                
+------------------------------------------------------------------------
 r2215 | rdahnke | 2023-06-19 17:19:44
 
 Changed paths:
