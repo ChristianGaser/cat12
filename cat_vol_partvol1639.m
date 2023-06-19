@@ -108,7 +108,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
   extopts = cat_io_checkinopt(extopts,def); 
 
   LAB     = extopts.LAB;
-  BVCstr  = extopts.BVCstr; 
+  BVCstr  = mod(extopts.BVCstr,1) + (extopts.BVCstr==1 || extopts.BVCstr==2); 
   verb    = extopts.verb-1;
   PA      = extopts.cat12atlas;
   vx_res  = max( extopts.uhrlim , max( [ max(vx_vol) min(vx_vol) ] )); 
@@ -289,7 +289,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
   Ya1(Ybg)=LAB.BG;                                                         % basal ganglia
   Ya1(YA==LAB.TH & Ym>1.9 & Ym<2.85 & Ydiv>-0.1)=LAB.TH;                   % thalamus
   Ya1(YA==LAB.HC & Ym>1.9 & Ym<2.85 & Ydiv>-0.1 & Yg<.2)=LAB.HC;                   % hippocampus
-  NBVC = extopts.experimental; % ########## new BV correction ##########
+  NBVC = BVCstr > 0 && BVCstr <= 1; % RD202306: new BV correction by default
   if NBVC
     % define some high intensity BVs and the neocortex
     Ya1(Ya1==0 & smooth3(Yp0<2.5)>.5 & Ym>max(3.25 - 0.2*BVCstr, ...
