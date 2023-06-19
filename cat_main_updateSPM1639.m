@@ -184,6 +184,17 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   %% Some error handling
   %    ds('l2','',vx_vol,Ysrc./WMth,Yp0>0.3,Ysrc./WMth,Yp0,80)
   Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
+  if size(P,4)==4 || size(P,4)==3 || res.ppe.affreg.skullstripped
+    %% skull-stripped
+    Ybg   = cat_vol_smooth3X(sum(P(:,:,:,1:2)>0,4)==0,4)>.95;
+    Ybg   = Ysrc>=(median(Ysrc(Ybg(:))) - 2*std(Ysrc(Ybg(:)))) & ...
+            Ysrc<=(median(Ysrc(Ybg(:))) + 2*std(Ysrc(Ybg(:)))); 
+    Ybx   = ~cat_vol_morph(~cat_vol_morph(~Ybg,'lc'),'lc'); %clear Ybg
+    Yp0  = Yp0  .* Ybx; 
+    Ysrc = Ysrc .* Ybx;
+    for ci = 1:(size(P,4)-1), P(:,:,:,ci) = P(:,:,:,ci) .* uint8(Ybx); end
+    P(:,:,:,end) = uint8(1-Ybx)*255; 
+  end
   if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
     res.Ylesion = cat_vol_ctype( single(res.Ylesion) .* (Yp0>0.2) ); 
     for k=1:size(P,4), Yl = P(:,:,:,k); Yl(res.Ylesion>0.5) = 0; P(:,:,:,k) = Yl; end  
@@ -336,6 +347,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
     
   elseif size(P,4)==4 || size(P,4)==3 % skull-stripped
     [Yb,Ybb,Yg,Ydiv,P] = cat_main_updateSPM_skullstriped(Ysrc,P,res,vx_vol,T3th);
+    Yb = Ybx; Ybb = Ybx; 
   elseif job.extopts.gcutstr==0 
     [Yb,Ybb,Yg,Ydiv] = cat_main_updateSPM_gcut0(Ysrc,P,vx_vol,T3th);
   elseif job.extopts.gcutstr==2
@@ -533,11 +545,13 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
 
     %% remove brain tissues outside the brainmask ...
     %  tissues > skull (within the brainmask)
-    Yhdc = uint8(smooth3( Ysrc/T3th(3).*(Ybb>cat_vol_ctype(0.2*255)) - Yp0 )>0.5); 
-    sumP = sum(P(:,:,:,1:3),4); 
-    P(:,:,:,4)   =  cat_vol_ctype( single(P(:,:,:,4)) + sumP .* ((Ybb<=cat_vol_ctype(0.05*255)) | Yhdc ) .* (Ysrc<T3th(2)));
-    P(:,:,:,5)   =  cat_vol_ctype( single(P(:,:,:,5)) + sumP .* ((Ybb<=cat_vol_ctype(0.05*255)) | Yhdc ) .* (Ysrc>=T3th(2)));
-    P(:,:,:,1:3) =  P(:,:,:,1:3) .* repmat(uint8(~(Ybb<=cat_vol_ctype(0.05*255)) | Yhdc ),[1,1,1,3]);
+    if ~(size(P,4)==4 || size(P,4)==3 || res.ppe.affreg.skullstripped)
+      Yhdc = uint8(smooth3( Ysrc/T3th(3).*(Ybb>cat_vol_ctype(0.2*255)) - Yp0 )>0.5); 
+      sumP = sum(P(:,:,:,1:3),4); 
+      P(:,:,:,4)   =  cat_vol_ctype( single(P(:,:,:,4)) + sumP .* ((Ybb<=cat_vol_ctype(0.05*255)) | Yhdc ) .* (Ysrc<T3th(2)));
+      P(:,:,:,5)   =  cat_vol_ctype( single(P(:,:,:,5)) + sumP .* ((Ybb<=cat_vol_ctype(0.05*255)) | Yhdc ) .* (Ysrc>=T3th(2)));
+      P(:,:,:,1:3) =  P(:,:,:,1:3) .* repmat(uint8(~(Ybb<=cat_vol_ctype(0.05*255)) | Yhdc ),[1,1,1,3]);
+    end
     clear sumP Yp0 Yhdc; 
   end
   clear Ybb;
@@ -585,13 +599,13 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
     % input variables + bias corrected, bias field, class image
     % strong differences in bias fields can be the result of different 
     % registration > check 'res.image.mat' and 'res.Affine'
+    [~, reportfolder] = cat_io_subfolders(res.image(1).fname,job);
     [pth,nam] = spm_fileparts(res.image0(1).fname); 
     tpmci  = 1;
     tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postbias'));
-    save(tmpmat,'res','tpm','job','Ysrc','Ybf','Ycls');
+    save(tmpmat,'res','tpm','job','Ysrc','Ycls');
   end
  
-  clear Ybf
   stime2 = cat_io_cmd(' ','g5','',job.extopts.verb-1,stime2); 
   fprintf('%5.0fs\n',etime(clock,stime));
 
@@ -622,7 +636,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
 end
 function [Yb,Ybb,Yg,Ydiv,P] = cat_main_updateSPM_skullstriped(Ysrc,P,res,vx_vol,T3th)
     Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
-    Yb   = Yp0>=0.5/3 & Ysrc>0; 
+    Yb   = Yp0>=0.5/3;
     Ybb  = cat_vol_ctype(Yb)*255; 
 
     P(:,:,:,6) = P(:,:,:,4); 
