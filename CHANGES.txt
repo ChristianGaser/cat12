@@ -1,4 +1,13 @@
 ------------------------------------------------------------------------
+r2217 | rdahnke | 2023-06-21 17:13:14
+
+Changed paths:
+ M CHANGES.txt
+ M cat_io_xml2csv.m
+
+1) Fixed:    Added filename field and correct export directory bug in the 
+             XML2CSV batch cat_io_xml2csv.
+------------------------------------------------------------------------
 r2216 | rdahnke | 2023-06-19 22:33:04
 
 Changed paths:

@@ -50,6 +50,7 @@ function varargout = cat_io_xml2csv(job)
   def.fieldnames  = {};
   def.avoidfields = {'help'; 'catlog'};
   def.delimiter   = ',';
+  def.outdir      = {''}; 
   def.dimlim      = 256; % extend in case of catROI below
   def.report      = 'default';
   def.verb        = 1; 
@@ -151,10 +152,10 @@ function varargout = cat_io_xml2csv(job)
       relevant_catreport_fields = ....
         {'qualityratings.IQR'; 'qualityratings.NCR'; 'qualityratings.ICR'; 'qualityratings.res_ECR'; 'qualityratings.res_RMS'; ... voxel-based QC measures
          'software.version_cat'; 'software.revision_cat'; 'software.version_spm'; ...
-         'qualityratings.SurfaceEulerNumber'; 'qualitymeasures.SurfaceDefectArea' ; ...
-         'subjectratings.vol_abs_CGW(01)'; 'subjectratings.vol_abs_CGW(02)'; 'subjectratings.vol_abs_CGW(03)'; ...
-         'subjectratings.vol_rel_CGW(01)'; 'subjectratings.vol_rel_CGW(02)'; 'subjectratings.vol_rel_CGW(03)'; ...
-         'subjectmeasures.dist_thickness'; 'subjectmeasures.surf_TSA'; 'subjectmeasures.vol_TIV'}; 
+         ... 'qualitymeasures.SurfaceEulerNumber'; 'qualitymeasures.SurfaceDefectArea' ; ...
+         'subjectmeasures.vol_abs_CGW(01)'; 'subjectmeasures.vol_abs_CGW(02)'; 'subjectmeasures.vol_abs_CGW(03)'; ...
+         'subjectmeasures.vol_rel_CGW(01)'; 'subjectmeasures.vol_rel_CGW(02)'; 'subjectmeasures.vol_rel_CGW(03)'; ...
+         'subjectmeasures.dist_thickness_kmeans'; 'subjectmeasures.surf_TSA'; 'subjectmeasures.vol_TIV'}; 
 
 
       switch job.report
@@ -170,6 +171,7 @@ function varargout = cat_io_xml2csv(job)
     otherwise
       job.avoidfields = [ job.avoidfields; {'help'; 'catlog'} ];
   end
+  job.avoidfields(isempty(job.avoidfields)) = []; 
   job.fieldnames = unique(job.fieldnames); 
 
   % select fields
@@ -207,8 +209,14 @@ function varargout = cat_io_xml2csv(job)
   [hdr,tab] = cat_io_struct2table(xml,fieldnames,0); 
 
 
+  % add index
+  fieldnames = ['filenames'; fieldnames];
+  hdr = [{'filename'} hdr];
+  tab = [job.files    tab];
+
+
   % cleanup some fields
-  for hi = 1:numel(hdr)
+  for hi = 2:numel(hdr)
     if (strcmp(xmltype,'catROI') || strcmp(xmltype,'catROIs')) && contains(fieldnames(hi),'.data.') 
       FNP = strsplit(fieldnames{hi},'.');
       ATL = FNP{1};
@@ -238,7 +246,15 @@ function varargout = cat_io_xml2csv(job)
   %% export table
   if ~isempty(job.fname)
     pp = spm_fileparts(job.fname); 
-    if isempty(pp), fname = fullfile(pwd,job.fname); else, fname = job.fname; end
+    if isempty(pp) 
+      if isempty(job.outdir{1})
+        fname = fullfile(pwd,job.fname);
+      else
+        fname = fullfile(job.outdir{1},job.fname);
+      end
+    else
+      fname = job.fname; 
+    end
     
     % replace critical characters
     for i=1:numel(table)
@@ -254,7 +270,7 @@ function varargout = cat_io_xml2csv(job)
     cat_io_csv(fname,table,'','',struct('delimiter',job.delimiter,'komma','.'))
 
     if job.verb
-      fprintf('  Wrote %dx%d table in "%s".\n',size(table,1)-1,size(table,2),fname);
+      fprintf('  Wrote a %dx%d table in "%s".\n',size(table,1)-1,size(table,2),fname);
     end
   end
 
