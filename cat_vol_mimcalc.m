@@ -12,8 +12,10 @@ function varagout = cat_vol_mimcalc(job)
 
   SVNid = '$Rev: 1901 $';
   
+  def.var     = {};
   def.verb    = 1;
   def.cleanup = 1;
+  def.options = {};
   job = cat_io_checkinopt(job,def);
 
   BIDSdirname = ['derivatives' filesep 'mimcalc'];

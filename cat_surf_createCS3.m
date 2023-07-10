@@ -692,7 +692,7 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
                   
       % evaluate and save results
       if isempty(stime), stime = clock; end
-      fprintf('%5.0fs',etime(clock,stime)); stime = []; if debug, fprintf('\n'); end
+      fprintf('%5.0fs',etime(clock,stime)); stime = []; if 1, fprintf('\n'); end %debug
       %{
       res.(opt.surf{si}).createCS_init = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),[],Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,debug);
       if 0 %debug 
