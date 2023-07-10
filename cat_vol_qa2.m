@@ -109,6 +109,23 @@ function varargout = cat_vol_qa2(action,varargin)
         end
         Pm  = action.images;
         action.data = Pp0;
+      elseif isfield(action.model,'seg')
+        %% error('no implemented yet')
+        fprintf('Prepare CGW-label maps')
+        mjob.images{1,1} = action.images; 
+        mjob.images{2,1} = action.model.seg.cm;
+        mjob.images{3,1} = action.model.seg.gm;
+        mjob.images{4,1} = action.model.seg.wm;
+        mjob.expression  = 'i1*0 + i2*1 + i3*2 + i4*3';  % the first one is just for the name
+        mjob.prefix      = 'p0'; %
+        mjob.verb        = 0; 
+        cat_vol_mimcalc(mjob);
+
+        action2 = rmfield(action,'model'); 
+        action2.model.catp0 = spm_file(action.images,'prefix','p0');  
+        varargout = cat_vol_qa2(action2,varargin); 
+        return 
+
       end
     end
     if isfield(action,'data')

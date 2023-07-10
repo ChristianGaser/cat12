@@ -60,7 +60,7 @@ function varargout = cat_io_cmd(str,style,strlength,verb,stime)
       strlength2 = strlength;
       if cat_io_matlabversion<20110, strlength2 = strlength2+1; end
 
-      if verb
+      if verb > 0
         switch str
           case 'testthisfunction'
             stime1 = cat_io_cmd('Function 0815 (without cleanup)'); fprintf('\n');

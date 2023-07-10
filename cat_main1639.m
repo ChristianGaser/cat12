@@ -233,6 +233,8 @@ if ~isfield(res,'spmpp')
     job2.extopts.bb           = 1; % registration to TPM space
     job2.extopts.verb         = debug;  % do not display process (people would may get confused) 
     job2.extopts.vox          = abs(res.tpm(1).mat(1));  % TPM resolution to replace old Yy  
+    job2.extopts.reg.affreg   = 0; % RD202306: do an addition registration based on the skull (i.e. sum(Ycls{1:3})) 
+                                   %           code is working but better result?
     if job.extopts.regstr>0
       job2.extopts.regstr     = 15;     % low resolution 
       job2.extopts.reg.nits   = 16;     % less iterations
@@ -249,9 +251,9 @@ if ~isfield(res,'spmpp')
       res2.do_dartel           = 1;      % use dartel
     end
     if isfield(res,'Ylesion')
-      [trans1,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy,res.Ylesion);
+      [trans1,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:3),Yy,res.Ylesion);
     else
-      [trans1,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:2),Yy);
+      [trans1,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:3),Yy);
     end  
     Yy2  = trans1.warped.y;
     if ~debug, clear job2 res2; end
@@ -720,6 +722,8 @@ end
     end
   
     % call Dartel/Shooting registration 
+    job.extopts.reg.affreg   = 0; % RD202306: do an addition registration based on the skull (i.e. sum(Ycls{1:3})) 
+                                  %           code is working but better result?
     if numel( job.extopts.vox ) > 1
       Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; %job.export = 1; 
       [trans,res.ppe.reg] = cat_main_registration(job,res,Ycls,Yy,Ylesions,Yp0,Ym,Ymi,Yl1); clear Yp0; 

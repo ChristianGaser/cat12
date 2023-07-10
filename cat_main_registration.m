@@ -118,7 +118,7 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion,Yp0
   def.opt.ll1th = 0.001;          % smaller better/slower
   def.opt.ll3th = 0.002;          % 
   def.fast      = 0;              % no report, no output
-  def.affreg    = 1;              % additional affine registration
+  def.affreg    = 0;              % additional affine registration
   def.iterlim   = inf;            %
   def.regra     = 1;              % use affine registration: 0 - rigid, 1 - affine 
   def.clsn      = 2;              % use only GM and WM ... may extend to CSF ################### DEPENDING ON TEMPLATE #############
@@ -152,11 +152,6 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion,Yp0
   end
 
   
-  % limit number of classes
-  if ~( export && numel( job.extopts.vox ) > 1 )
-    if dreg.clsn>0 && numel(Ycls)>dreg.clsn, Ycls(dreg.clsn + 1:end) = []; end
-  end    
- 
   
 % #################### THIS SHOULD BE EVALUATED IN FUTURE #################  
 % additional affine registration of the GM segment (or the brainmask) ?
@@ -196,9 +191,62 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion,Yp0
     cat_progress_bar('Clear');
   end
 %}
+if dreg.affreg && ( ~isfield(job,'useprior') || isempty(job.useprior) || ~exist(char(job.useprior),'file') )
+% Final affine registration ?
+% * Although the registration here should work, do we have to consider this 
+%   for the Yy deformation map ? 
+
+  if job.extopts.verb
+    stime = cat_io_cmd(sprintf('\nAffine skull registration'));
+  end
+
+  % load registration tempalte with focus of brain mask
+  Vtmpb  = spm_vol( job.extopts.templates{1} );
+  if numel( Vtmpb ) < 4 % if the template has all 3 brain classes
+    Vtmpb = dres.tpm(1:3);
+  end
+  Ybt = zeros(Vtmpb(1).dim,'single');
+  for ci = 1:3
+    Ybt = Ybt + spm_read_vols( Vtmpb(ci) ) * (1 + (ci==2)) ; 
+  end
+  Ybt = Ybt .* cat_vol_morph( cat_vol_morph(Ybt>0.25,'lo',1) , 'd'); % remove eyes and 
+
+  % create individual registration image
+  for ci = 2:numel(Ycls), Ybt = Ybt + 0; end
+  Yb = single(Ycls{1})/255; for ci = 2:numel(Ycls), Yb = Yb + single(Ycls{ci})/255 * (1 + (ci==2)); end  
+
+  % prepare data for affreg
+  VG            = spm_vol( Vtmpb(1) );
+  VG.dt         = [spm_type('UINT8') spm_platform('bigend')];
+  VG.dat(:,:,:) = cat_vol_ctype(Ybt * 208,'uint8'); 
+  VG.pinfo      = repmat([1;0],1,size(Ybt,3));
+  VG            = cat_spm_smoothto8bit(VG,eps);
+  clear Ybt;
+
+  VF            = spm_vol( dres.image.fname );
+  VF.dt         = [spm_type('UINT8') spm_platform('bigend')];
+  VF.dat(:,:,:) = cat_vol_ctype(Yb * 208,'uint8'); 
+  VF.pinfo      = repmat([1;0],1,size(Yb,3));
+  VF            = cat_spm_smoothto8bit(VF,job.opts.samp);
+  clear Yb;
+
+  % affreg
+  aflags = struct('sep',job.opts.samp,'regtype','subj','WG',[],'WF',[],'globnorm',1);
+  warning off; 
+  [Affine, affscale]  = spm_affreg(VG, VF, aflags, dres.Affine); 
+  warning on; 
+  dres.Affine = Affine;
+  clear VG VF ; 
+  fprintf('%5.0fs\n',etime(clock,stime)); 
+end
 % #########################################################################
   
   
+  % limit number of classes
+  if ~( export && numel( job.extopts.vox ) > 1 )
+    Ycls( max( 4 , dreg.clsn + 1):end ) = []; % need CSF for robust skull definition
+  end    
+ 
 
   % Helping function(s):
   % BB2dim estimates the new size of an image given by the old and new
@@ -290,7 +338,12 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion,Yp0
       
       % affine and rigid parameters for registration 
       % if the rigid output is incorrect but affine is good than the Yy caused the problem (and probably another call of this function) 
-      [M3,R]          = spm_get_closest_affine( affind(rgrid( idim ) ,M0) , affind(Yy,dres.Yymat) , single(Ycls{1})/255); clear M3; 
+      %[M3,R]          = spm_get_closest_affine( affind(rgrid( idim ) ,M0) , affind(Yy,dres.Yymat) , single(Ycls{1})/255); clear M3; 
+      if numel(Ycls) > 2
+        [M3,R]        = spm_get_closest_affine( affind(rgrid( idim ) ,M0) , affind(Yy,dres.Yymat) , single(Ycls{1} + Ycls{2} + Ycls{3})/255); clear M3; 
+      else
+        [M3,R]        = spm_get_closest_affine( affind(rgrid( idim ) ,M0) , affind(Yy,dres.Yymat) , single(Ycls{1} + Ycls{2})/255); clear M3; 
+      end
       Mrigid          = M0\inv(R)*M1;                                                          % transformation from subject to registration space (rigid)
       Maffine         = M0\inv(res.Affine)*M1;                                                 % individual to registration space (affine)
       mat0a           = res.Affine\M1;                                                         % mat0 for affine output
@@ -427,7 +480,12 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion,Yp0
         fs              = newres / 2; w(msk) = bg; w = log(w); spm_smooth(w,w,fs); w = exp(w); % spm smoothing boudary problem where values outside are 0 
        
         % affine and rigid parameters
-        [M3,R]          = spm_get_closest_affine( affind(rgrid( idim ) ,M0) , affind(Yy,dres.Yymat), single(Ycls{1})/255); clear M3; 
+        %[M3,R]          = spm_get_closest_affine( affind(rgrid( idim ) ,M0) , affind(Yy,dres.Yymat), single(Ycls{1})/255); clear M3; 
+        if numel(Ycls) > 2
+          [M3,R]        = spm_get_closest_affine( affind(rgrid( idim ) ,M0) , affind(Yy,dres.Yymat) , single(Ycls{1} + Ycls{2} + Ycls{3})/255); clear M3; 
+        else
+          [M3,R]        = spm_get_closest_affine( affind(rgrid( idim ) ,M0) , affind(Yy,dres.Yymat) , single(Ycls{1} + Ycls{2})/255); clear M3; 
+        end
         Mrigid          = M0\inv(R)*M1;                                        % transformation from subject to registration space
         Maffine         = M0\inv(res.Affine)*M1;                               % individual to registration space
         mat0r           = R\M1;                                                % mat0 for rigid ouput
