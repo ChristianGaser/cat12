@@ -216,6 +216,7 @@ function varargout = cat_io_xml2csv(job)
 
 
   % cleanup some fields
+  ROInamelim = 30; 
   for hi = 2:numel(hdr)
     if (strcmp(xmltype,'catROI') || strcmp(xmltype,'catROIs')) && contains(fieldnames(hi),'.data.') 
       FNP = strsplit(fieldnames{hi},'.');
@@ -223,8 +224,8 @@ function varargout = cat_io_xml2csv(job)
       RNR = strsplit(cat_io_strrep(FNP{end},{'(',')','{','}'},' '));
       RNR = round(str2double(RNR{2})); %RNR{2};
       if isfield(xml(1).(ATL),'names') && ... % if there is a name ... 
-          size(char(xml(1).(ATL).names),2)<16 % ... and if it is not too long
-        ROI = ['_' strrep(xml(1).(ATL).names{RNR},' ','_')]; 
+          size(char(xml(1).(ATL).names),2)<ROInamelim % ... and if it is not too long
+        ROI = ['_' strrep(xml(1).(ATL).names{RNR}(1:min(numel(xml(1).(ATL).names{RNR}),ROInamelim)),' ','_')]; 
       elseif isfield(xml(1).(ATL),'ids') && hi~=RNR
         ROI = ['_RID' num2str(xml(1).(ATL).ids(RNR))]; 
       else

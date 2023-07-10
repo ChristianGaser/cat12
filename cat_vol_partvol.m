@@ -1,4 +1,4 @@
-function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,Vtpm,noise,job,Ylesionmsk,Ydt,Ydti)
+function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb0,Yy,vx_vol,extopts,Vtpm,noise,job,Ylesionmsk,Ydt,Ydti)
 % ______________________________________________________________________
 % Use a segment map Ycls, the global intensity normalized T1 map Ym and 
 % the atlas label map YA to create a individual label map Ya1. 
@@ -225,8 +225,9 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
 
 
     %% resize data
-    if ~debug; clear Yy; end
+    %if ~debug; clear Yy; end % need this in case of errors
 
+    Yb   = Yb0; 
     Yp0  = (single(Ycls{1})*2/255 + single(Ycls{2})*3/255 + single(Ycls{3})/255) .* Yb; 
     if isfield(job.extopts,'inv_weighting') && job.extopts.inv_weighting
       Ym = Yp0/3;
@@ -246,6 +247,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
     end
     Yp0A     = cat_vol_resize(Yp0A    ,'reduceBrain',vx_vol,2,Yb);
     YslA     = cat_vol_resize(YslA    ,'reduceBrain',vx_vol,2,Yb);
+    YbvA     = cat_vol_resize(YbvA    ,'reduceBrain',vx_vol,2,Yb);
     YwmhA    = cat_vol_resize(YwmhA   ,'reduceBrain',vx_vol,2,Yb);
     if exist('Yflair','var')
       Yflair = cat_vol_resize(Yflair  ,'reduceBrain',vx_vol,2,Yb);
@@ -253,7 +255,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
     if exist('Ylesionmsk','var')
       Ylesionmsk = cat_vol_resize(Ylesionmsk  ,'reduceBrain',vx_vol,2,Yb);
     end
-    Yb       = cat_vol_resize(Yb      ,'reduceBrain',vx_vol,2,Yb);
+    Yb         = cat_vol_resize(Yb      ,'reduceBrain',vx_vol,2,Yb);
     % use lower resolution 
     [Ym,resTr] = cat_vol_resize(Ym    ,'reduceV',vx_vol,vx_res,64);
     YA         = cat_vol_resize(YA    ,'reduceV',vx_vol,vx_res,64,'nearest'); 
@@ -266,6 +268,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
     end
     Yp0A       = cat_vol_resize(Yp0A  ,'reduceV',vx_vol,vx_res,64);
     YslA       = single(cat_vol_resize(YslA  ,'reduceV',vx_vol,vx_res,64));
+    YbvA       = cat_vol_resize(YbvA  ,'reduceV',vx_vol,vx_res,64);
     YwmhA      = cat_vol_resize(YwmhA ,'reduceV',vx_vol,vx_res,64); 
     if exist('Yflair','var')
       Yflair   = cat_vol_resize(Yflair,'reduceV',vx_vol,vx_res,64); 
@@ -915,13 +918,8 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
     for ci=1:numel(Ycls), Yclss = Yclss + single(Ycls{ci}); end
     for ci=1:numel(Ycls), Ycls{ci} = cat_vol_ctype(single(Ycls{ci}) ./ max(eps,Yclss) * 255); end
 
-
-    if debug
-      cat_io_cmd(' ','','',verb,stime); 
-    else
-      cat_io_cmd(' ','','',verb,stime); 
-      %cat_io_cmd('cleanup',dispc,'',verb); 
-    end
+    cat_io_cmd(' ','','',verb,stime); 
+    
   catch e
     if extopts.ignoreErrors < 1
       rethrow(e); 
@@ -931,14 +929,14 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol(Ym,Ycls,Yb,Yy,vx_vol,extopts,V
         % atlas map
         PA  = extopts.cat12atlas;
         Ya1 = cat_vol_sample(Vtpm(1),PA{1},Yy,0);
-        Ya1 = cat_vol_ctype(cat_vol_median3(Ya1,Yb,Yb)); 
+        Ya1 = cat_vol_ctype(cat_vol_median3(Ya1,Yb0,Yb0)); 
       end
       
       if ~exist('YMF','var') || any( size(YMF) ~= size(Ym) )
         LAB  = extopts.LAB;
         NS   = @(s) Ya1==s | Ya1==s+1;
         YMF  = NS(LAB.VT) | NS(LAB.BG) | NS(LAB.TH) | NS(LAB.HI) | NS(LAB.TH); 
-        Yp0  = (single(Ycls{1})*2/255 + single(Ycls{2})*3/255 + single(Ycls{3})/255) .* Yb; 
+        Yp0  = (single(Ycls{1})*2/255 + single(Ycls{2})*3/255 + single(Ycls{3})/255) .* Yb0; 
         YMF  = Yp0<=3 & cat_vol_morph(YMF | Yp0>2.5,'c',1) & cat_vol_morph(YMF,'d',1,vx_vol);
         YMF(smooth3(YMF)<0.5) = 0; 
       end

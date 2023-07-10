@@ -1,4 +1,31 @@
 ------------------------------------------------------------------------
+r2218 | rdahnke | 2023-07-10 17:49:53
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_tools.m
+ M cat_io_cmd.m
+ M cat_io_xml2csv.m
+ M cat_main1639.m
+ M cat_main_registration.m
+ M cat_main_updateSPM1639.m
+ M cat_parallelize.m
+ M cat_surf_createCS3.m
+ M cat_vol_mimcalc.m
+ M cat_vol_partvol.m
+ M cat_vol_qa2.m
+ M cat_vol_set_com.m
+
+1) Fixed:      Corrected setup of QC batch in cat_conf_tools and cat_vol_qa2.    
+2) Fixed:      Tiny corrections/modifications in cat_io_cmd, cat_io_colormaps, 
+               cat_main_updateSPM1639, cat_surf_createCS3, cat_vol_mimcalc.
+3) Changed:    Modified ROI name limitation in cat_io_xml2csv.   
+4) Changed:    Prepared new final affine registration after initial/final 
+               segmentation in cat_main1639 and cat_main_registration.                 
+5) Changed:    Shortened waiting times for PID in cat_parallelize.
+4) Fixed:      Corrected matrix size bug of the brain mask in cat_vol_partvol. 
+5) Changed:    Replaced mean by median threshold in cat_vol_set_com. 
+------------------------------------------------------------------------
 r2217 | rdahnke | 2023-06-21 17:13:14
 
 Changed paths:
