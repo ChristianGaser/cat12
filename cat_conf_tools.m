@@ -1709,6 +1709,7 @@ function qa = conf_vol_qa(expert,outdir)
   seg.tag         = 'seg';
   seg.name        = 'Brain tissue segmentation';
   seg.help        = {'Select tissue segments of other segmentations' ''}; 
+  seg.val         = {gm,wm,cm};
 
 % other posible cases
 % - FSL segment maps  
@@ -1717,7 +1718,11 @@ function qa = conf_vol_qa(expert,outdir)
   model           = cfg_choice; 
   model.tag       = 'model';
   model.name      = 'Segmentation';
-  model.values    = {catlab,catsegp,spmsegc,seg}; 
+  if expert > 1
+    model.values  = {catlab,catsegp,spmsegc,seg}; 
+  else
+    model.values  = {catlab,catsegp,spmsegc}; 
+  end
   model.val       = {catlab}; 
   model.help      = {[ ...
     'Select input segmentations in the same image space as the original images for estimation of quality measures/ratings. ' ...
@@ -1799,7 +1804,7 @@ function qa = conf_vol_qa(expert,outdir)
   qa.val          = {data, model, opts};
   qa.prog         = @cat_vol_qa2; 
   qa.vfiles       = @vout_qa; % XML files + values
-  qa.hidden       = expert<2;
+  %qa.hidden       = expert<2;
   qa.help         = {'Image quality estimation based on a set of images and a given set of input segmentation defined by different models. '};
 return
   
