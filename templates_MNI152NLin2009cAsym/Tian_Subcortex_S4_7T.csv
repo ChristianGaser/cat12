@@ -1,3 +1,63 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:24235596f0897f0eb1e4bbba511d4be3a049e8a1f66019c127cd58ab95a8aaba
-size 2700
+ROIid;ROIabbr;ROIname
+1;rHIP-head-m1;hippocampus head subdivision1 RH
+2;rHIP-head-m2;hippocampus head subdivision2 RH
+3;rHIP-head-l1;hippocampus head lateral division1 RH
+4;rHIP-head-l2;hippocampus head lateral division2 RH
+5;rTHA-VAip;thalamus posterior division RH
+6;rTHA-VAia;thalamus anterior division RH
+7;rCAU-DAi;caudate nucleus inferior dorsoanterior RH
+8;rCAU-DAs;caudate nucleus superior dorsoanterior RH
+9;rHIP-body-m;hippocampus body medial RH
+10;rHIP-body-l;hippocampus body lateral RH
+11;rAMY-SM;amygdala SM RH
+12;rAMY-CL;amygdala CL RH
+13;rTHA-DPl;thalamus lateral dorsoposterior RH
+14;rTHA-DPm;thalamus medial dorsoposterior RH
+15;rTHA-VPm;thalamus medial ventroposterior RH
+16;rTHA-VPl;thalamus lateral ventroposterior RH
+17;rTHA-VAs;thalamus superior ventroanterior RH
+18;rTHA-DAm;thalamus medial dorsoanterior RH
+19;rTHA-DAl;thalamus lateral dorsoanterior RH
+20;rPUT-VA;putamen ventroanterior RH
+21;rPUT-DA;putamen dorsoanterior RH
+22;rPUT-VP;putamen ventroposterior RH
+23;rPUT-DP;putamen dorsoposterior RH
+24;rCAU-VA;caudate nucleus ventroanterior RH
+25;rHIP-tail;hippocampus tail RH
+26;rlAMY;lateral amygdalala RH
+27;rpGP;posterior globus pallidum RH
+28;raGP;anterior globus pallidum RH
+29;rNAc-shell;nucleus accumbens shell RH
+30;rNAc-core;nucleus accumbens core RH
+31;rpCAU;posterior caudate nucleus RH
+32;lHIP-head-m1;hippocampus head subdivision1 LH
+33;lHIP-head-m2;hippocampus head subdivision2 LH
+34;lHIP-head-l1;hippocampus head lateral division1 LH
+35;lHIP-head-l2;hippocampus head lateral division2 LH
+36;lTHA-VAip;thalamus posterior division LH
+37;lTHA-VAia;thalamus anterior division LH
+38;lCAU-DAi;caudate nucleus inferior dorsoanterior LH
+39;lCAU-DAs;caudate nucleus superior dorsoanterior LH
+40;lHIP-body-m;hippocampus body medial LH
+41;lHIP-body-l;hippocampus body lateral LH
+42;lAMY-SM;amygdala SM LH
+43;lAMY-CL;amygdala CL LH
+44;lTHA-DPl;thalamus lateral dorsoposterior LH
+45;lTHA-DPm;thalamus medial dorsoposterior LH
+46;lTHA-VPm;thalamus medial ventroposterior LH
+47;lTHA-VPl;thalamus lateral ventroposterior LH
+48;lTHA-VAs;thalamus superior ventroanterior LH
+49;lTHA-DAm;thalamus medial dorsoanterior LH
+50;lTHA-DAl;thalamus lateral dorsoanterior LH
+51;lPUT-VA;putamen ventroanterior LH
+52;lPUT-DA;putamen dorsoanterior LH
+53;lPUT-VP;putamen ventroposterior LH
+54;lPUT-DP;putamen dorsoposterior LH
+55;lCAU-VA;caudate nucleus ventroanterior LH
+56;lHIP-tail;hippocampus tail LH
+57;llAMY;lateral amygdalala LH
+58;lpGP;posterior globus pallidum LH
+59;laGP;anterior globus pallidum LH
+60;lNAc-shell;nucleus accumbens shell LH
+61;lNAc-core;nucleus accumbens core LH
+62;lpCAU;posterior caudate nucleus LH

@@ -1,3 +1,36 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:62d115b170c58d5e7c8a768c69bc5b784f0dcce445ee05fe4f2be283e70bc003
-size 1386
+Thalamic nuclei atlas:
+--------------------------------------------------------------------------------
+This atlas is based on the atlas of human thalamic nuclei of Version 4.3 (Nov 2021)
+based on manual segmentation of 9 healthy subjects using the Morel atlas as a guide.
+
+The original atlas maps (in MNI152NLin2009cAsym space) were merged, cropped, and 
+converted to uint8. 
+
+If you use this atlas, please cite the references below.
+
+Websites:
+A) https://https://zenodo.org/record/5499504
+B) https://github.com/thalamicseg/thomas_new
+
+References:
+
+1) Su JH, Thomas FT, Kasoff WS, Tourdias T, Choi EY, Rutt BK, Saranathan M.
+Thalamus Optimized Multi Atlas Segmentation (THOMAS): fast, fully automated
+segmentation of thalamic nuclei from structural MRI. Neuroimage. 2019 Jul
+1;194:272-282.
+
+2) Saranathan M, Iglehart C, Monti M, Tourdias T, Rutt B. In vivo high-
+resolution structural MRI-based atlas of human thalamic nuclei. Sci Data. 2021
+Oct 28;8(1):275.
+
+--------------------------------------------------------------------------------
+
+Copyright (c) Manojkumar Saranathan, University of Arizona, Tucson 2021
+
+Note that this atlas has not been tested or validated for clinical use.
+
+License: Creative Commons Attribution 4.0 International
+https://creativecommons.org/licenses/by/4.0/legalcode
+
+--------------------------------------------------------------------------------
+$Id$
