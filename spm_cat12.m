@@ -35,6 +35,10 @@ if ~strcmp(nam,'cat12')
   spm('alert!',sprintf('Please check that you do not have multiple CAT12 installations in your path!\nYour current CAT12 version is installed in %s but should be installed in %s',pth,fullfile(catdir)),'WARNING');
 end
 
+% start cat with different default file
+catdir = fileparts(mfilename('fullpath')); 
+catdef = fullfile(catdir,'cat_defaults.m');
+
 % check that mex-files on MAC are not blocked
 try
   feval(@cat_sanlm,single(rand(6,6,6)),1,3);
@@ -68,10 +72,6 @@ end
 
 % get expert level except for standalone installation
 expert   = cat_get_defaults('extopts.expertgui'); 
-
-% start cat with different default file
-catdir = fileparts(mfilename('fullpath')); 
-catdef = fullfile(catdir,'cat_defaults.m');
 
 if nargin==0 && (isempty(deffile) || strcmp(deffile,catdef))
   deffile = catdef; 
