@@ -1,4 +1,88 @@
 ------------------------------------------------------------------------
+r2443 | gaser | 2023-07-17 15:39:01
+
+Changed paths:
+D  ..bfg-report/2023-07-17/13-58-11/cache-stats.txt
+D  ..bfg-report/2023-07-17/13-58-11/deleted-files.txt
+D  ..bfg-report/2023-07-17/13-58-11/object-id-map.old-new.txt
+D  ..bfg-report/2023-07-17/13-58-11/protected-dirt/c15198e6-HEAD.csv
+ M .gitattributes
+ M CHANGES.txt
+D  templates_external/MNI152NLin2009cAsym.nii
+D  templates_external/MNI152NLin2009cSym.nii
+D  templates_external/MNI152NLin6Asym.nii
+D  templates_external/MNIColin27.nii
+D  templates_external/y_IXI555Dartel_to_MNI152NLin2009cAsym.nii
+D  templates_external/y_MNI152NLin2009cSym_to_MNI152NLin2009cAsym.nii
+D  templates_external/y_MNI152NLin6Asym_to_MNI152NLin2009cAsym.nii
+D  templates_external/y_MNIColin27_to_MNI152NLin2009cAsym.nii
+D  templates_external/y_fMNI152NLin2009cAsym_to_MNI152NLin2009cAsym.nii
+D  templates_volumes_not_distributed/aal.csv
+D  templates_volumes_not_distributed/aal.nii
+D  templates_volumes_not_distributed/aal.txt
+D  templates_volumes_not_distributed/anatomy.csv
+D  templates_volumes_not_distributed/anatomy.nii
+D  templates_volumes_not_distributed/anatomy.txt
+D  templates_volumes_not_distributed/aparc_DKT40.nii
+D  templates_volumes_not_distributed/aparc_a2009s.nii
+D  templates_volumes_old/Schaefer2018_100Parcels_17Networks_order.csv
+D  templates_volumes_old/Schaefer2018_100Parcels_17Networks_order.nii
+D  templates_volumes_old/Schaefer2018_200Parcels_17Networks_order.csv
+D  templates_volumes_old/Schaefer2018_200Parcels_17Networks_order.nii
+D  templates_volumes_old/Schaefer2018_400Parcels_17Networks_order.csv
+D  templates_volumes_old/Schaefer2018_400Parcels_17Networks_order.nii
+D  templates_volumes_old/Schaefer2018_600Parcels_17Networks_order.csv
+D  templates_volumes_old/Schaefer2018_600Parcels_17Networks_order.nii
+D  templates_volumes_old/TPM_Age11.5.nii
+D  templates_volumes_old/Template_0_IXI555_MNI152_GS.nii
+D  templates_volumes_old/Template_1_IXI555_MNI152.nii
+D  templates_volumes_old/Template_1_IXI555_MNI152_GS.nii
+D  templates_volumes_old/Template_2_IXI555_MNI152.nii
+D  templates_volumes_old/Template_2_IXI555_MNI152_GS.nii
+D  templates_volumes_old/Template_3_IXI555_MNI152.nii
+D  templates_volumes_old/Template_3_IXI555_MNI152_GS.nii
+D  templates_volumes_old/Template_4_IXI555_MNI152.nii
+D  templates_volumes_old/Template_4_IXI555_MNI152_GS.nii
+D  templates_volumes_old/Template_5_IXI555_MNI152.nii
+D  templates_volumes_old/Template_6_IXI555_MNI152.nii
+D  templates_volumes_old/Template_T1_IXI555_MNI152_GS.nii
+D  templates_volumes_old/aal3.csv
+D  templates_volumes_old/aal3.nii
+D  templates_volumes_old/aal3.txt
+D  templates_volumes_old/anatomy3.csv
+D  templates_volumes_old/anatomy3.nii
+D  templates_volumes_old/anatomy3.txt
+D  templates_volumes_old/brainmask.nii
+D  templates_volumes_old/cat.nii
+D  templates_volumes_old/cat_strokelesions_ATLAS303.nii
+D  templates_volumes_old/cat_wmh.nii
+D  templates_volumes_old/cat_wmh_miccai2017.nii
+D  templates_volumes_old/cobra.csv
+D  templates_volumes_old/cobra.nii
+D  templates_volumes_old/cobra.txt
+D  templates_volumes_old/hammers.csv
+D  templates_volumes_old/hammers.nii
+D  templates_volumes_old/hammers.txt
+D  templates_volumes_old/ibsr.csv
+D  templates_volumes_old/ibsr.nii
+D  templates_volumes_old/ibsr.txt
+D  templates_volumes_old/julichbrain.csv
+D  templates_volumes_old/julichbrain.nii
+D  templates_volumes_old/julichbrain.txt
+D  templates_volumes_old/lpba40.csv
+D  templates_volumes_old/lpba40.nii
+D  templates_volumes_old/lpba40.txt
+D  templates_volumes_old/mori.csv
+D  templates_volumes_old/mori.nii
+D  templates_volumes_old/mori.txt
+D  templates_volumes_old/neuromorphometrics.csv
+D  templates_volumes_old/neuromorphometrics.nii
+D  templates_volumes_old/neuromorphometrics.txt
+D  templates_volumes_old/schaefer.txt
+D  templates_volumes_old/templates.man
+
+Deleted: Moved more files to new repository cat12-templates-atlases.
+------------------------------------------------------------------------
 r2442 | gaser | 2023-07-17 15:28:21
 
 Changed paths:
