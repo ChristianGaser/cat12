@@ -323,7 +323,7 @@ function out = cat_surf_vol2surf(varargin)
               case {2,'WM'},   addstr = sprintf(' -offset_value  0.5 -offset "%s" ',P.thickness{vi,si}); % + half thickness
               case {3,'Pial'}, addstr = sprintf(' -offset_value -0.5 -offset "%s" ',P.thickness{vi,si}); % - half thickness 
             end
-          case 'rel_mapping'
+          case {'rel_mapping','rel_equivol_mapping'}
             switch job.mapping.(mapping).class
               case {1,'GM'},  addstr = sprintf(' -thickness "%s" ',P.thickness{vi,si});
               case {2,'WM'},  error('Not yet supported');
