@@ -27,7 +27,7 @@ function [out,s] = cat_plot_boxplot(data,opt)
 %  opt.ygrid       = 1;              activate y-grid-lines
 %  opt.gridline    = '-';            grid line-style
 %  opt.box         = 1;              plot box
-%  opt.usescatter  = 0;              use scatter plot (with transparency)
+%  opt.usescatter  = 0;              use scatter plot (with transparency) for showdata=2
 %  opt.outliers    = 1;              plot outliers
 %  opt.violin      = 0;              violin-plot: 0 - box plot; 1 - violin plot; 2 - violin + thin box plot
 %  opt.boxwidth    = 0.8;            width of box
