@@ -12,6 +12,13 @@ It is developed by Christian Gaser and Robert Dahnke (Jena University Hospital, 
 
 Older version can be obtained [here](http://141.35.69.218/cat12/).
 
+If you intend to install CAT12 from Github:
+- Large files are stored with Git Large Storage, which you need to install first:
+https://docs.github.com/de/repositories/working-with-files/managing-large-files/installing-git-large-file-storage
+- Download ZIP CAT12:
+https://github.com/ChristianGaser/cat12/archive/refs/heads/main.zip
+- Remove any old CAT12 installation from spm12/toolbox
+- Unzip cat12-main.zip to spm12/toolbox/ and rename it to spm12/toolbox/cat12
 
 ## Requirements
 CAT12 is designed to work with SPM12 and Matlab versions 7.4 (R2007a) or newer. No additional toolboxes are required.
