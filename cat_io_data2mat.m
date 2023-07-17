@@ -20,7 +20,7 @@ function out = cat_io_data2mat(opt,par,scaling)
 % additional parameters to be saved with mat file:
 % par            - structure with parameter as name and the values
 %
-% scaling        - optionally either a vector for user-specified scaling data or a 
+% scaling        - optionally define either a vector for user-specified scaling data or a 
 %                  constant (2 for global scaling)
 %
 % saved parameters:
