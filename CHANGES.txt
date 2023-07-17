@@ -1,4 +1,46 @@
 ------------------------------------------------------------------------
+r2442 | gaser | 2023-07-17 15:28:21
+
+Changed paths:
+ M .gitattributes
+ M CHANGES.txt
+ M templates_MNI152NLin2009cAsym/Schaefer2018_100Parcels_17Networks_order.csv
+ M templates_MNI152NLin2009cAsym/Schaefer2018_200Parcels_17Networks_order.csv
+ M templates_MNI152NLin2009cAsym/Schaefer2018_400Parcels_17Networks_order.csv
+ M templates_MNI152NLin2009cAsym/Schaefer2018_600Parcels_17Networks_order.csv
+ M templates_MNI152NLin2009cAsym/Tian_Subcortex_S4_7T.csv
+ M templates_MNI152NLin2009cAsym/Tian_Subcortex_S4_7T.nii
+ M templates_MNI152NLin2009cAsym/Tian_Subcortex_S4_7T.txt
+ M templates_MNI152NLin2009cAsym/aal3.csv
+ M templates_MNI152NLin2009cAsym/aal3.txt
+ M templates_MNI152NLin2009cAsym/anatomy3.csv
+ M templates_MNI152NLin2009cAsym/anatomy3.txt
+ M templates_MNI152NLin2009cAsym/cat_bloodvessels.nii
+ M templates_MNI152NLin2009cAsym/cobra.csv
+ M templates_MNI152NLin2009cAsym/cobra.txt
+ M templates_MNI152NLin2009cAsym/hammers.csv
+ M templates_MNI152NLin2009cAsym/hammers.txt
+ M templates_MNI152NLin2009cAsym/ibsr.csv
+ M templates_MNI152NLin2009cAsym/ibsr.txt
+ M templates_MNI152NLin2009cAsym/julichbrain.csv
+ M templates_MNI152NLin2009cAsym/julichbrain.txt
+ M templates_MNI152NLin2009cAsym/lpba40.csv
+ M templates_MNI152NLin2009cAsym/lpba40.txt
+ M templates_MNI152NLin2009cAsym/mori.csv
+ M templates_MNI152NLin2009cAsym/mori.txt
+ M templates_MNI152NLin2009cAsym/neuromorphometrics.csv
+ M templates_MNI152NLin2009cAsym/neuromorphometrics.txt
+ M templates_MNI152NLin2009cAsym/schaefer.txt
+ M templates_MNI152NLin2009cAsym/suit.csv
+ M templates_MNI152NLin2009cAsym/suit.txt
+ M templates_MNI152NLin2009cAsym/templates.man
+ M templates_MNI152NLin2009cAsym/thalamic_nuclei.csv
+ M templates_MNI152NLin2009cAsym/thalamic_nuclei.txt
+ M templates_MNI152NLin2009cAsym/thalamus.csv
+ M templates_MNI152NLin2009cAsym/thalamus.txt
+
+Changed: Reorganized LFS.
+------------------------------------------------------------------------
 r2441 | gaser | 2023-07-17 15:23:54
 
 Changed paths:
