@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2222 | gaser | 2023-07-17 13:49:56
+
+Changed paths:
+ M .gitattributes
+ M CHANGES.txt
+ M README.md
+ M spm_cat12.m
+
+Changed: Updated installation hints for Github version in README.md.
+Fixed:   Corrected bug again in spm_cat12.m with missing definition of catdir.
+------------------------------------------------------------------------
 r2221 | gaser | 2023-07-17 12:49:02
 
 Changed paths:
