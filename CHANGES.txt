@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2220 | gaser | 2023-07-17 12:39:51
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M doc/cat.html
+ M spm_cat12.m
+
+Fixed: Corrected bug in spm_cat12.m with missing definition of catdir.
+
+ ------------------------------------------------------------------------
 r2219 | gaser | 2023-07-17 11:13:51
 
 Changed paths:
