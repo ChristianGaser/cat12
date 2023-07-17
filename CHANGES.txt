@@ -1,4 +1,12 @@
 ------------------------------------------------------------------------
+r2221 | gaser | 2023-07-17 12:49:02
+
+Changed paths:
+ M CHANGES.txt
+ M README.md
+
+Changed: Updated installation hints for Github version in README.md.
+------------------------------------------------------------------------
 r2220 | gaser | 2023-07-17 12:39:51
 
 Changed paths:
