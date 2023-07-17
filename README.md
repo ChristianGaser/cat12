@@ -13,8 +13,6 @@ It is developed by Christian Gaser and Robert Dahnke (Jena University Hospital, 
 Older version can be obtained [here](http://141.35.69.218/cat12/).
 
 If you intend to install CAT12 from Github:
-- Large files are stored with Git Large Storage, which you need to install first:
-https://docs.github.com/de/repositories/working-with-files/managing-large-files/installing-git-large-file-storage
 - Download ZIP CAT12:
 https://github.com/ChristianGaser/cat12/archive/refs/heads/main.zip
 - Remove any old CAT12 installation from spm12/toolbox
