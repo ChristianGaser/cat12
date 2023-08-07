@@ -251,13 +251,16 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
       fafi = find(cellfun('isempty',strfind(FAF(:,1),[AN{ai} '.']))==0);
       if ~isempty(fafi) && job.output.atlases.(AN{ai}), FA(fai,:) = FAF(fafi,:); fai = fai+1; end %#ok<AGROW>
     end
-  
+
     for ai=1:size(FA,1)
-      [px,atlas] = fileparts(FA{ai,1});  %#ok<ASGLU>
+      [px,atlas] = fileparts(FA{ai,1});  
+      Vtmp = spm_vol([job.extopts.templates{1} ',1']); 
+      Vtmp.mat  = trans.warped.M1; 
+      Vtmp.dims = trans.warped.odim(1:3);
       Vlai = spm_vol(FA{ai,1});
-      Ylai = cat_vol_sample(spm_vol([job.extopts.templates{1} ',1']),Vlai,trans.warped.y,0);
+      Ylai = cat_vol_sample(Vtmp,Vlai,trans.warped.y,0);
       
-      % check data range
+      %% check data range
       mx = max(Ylai(:));
       if mx > intmax('uint32')
         type = 'uint64';
