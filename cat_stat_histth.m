@@ -74,14 +74,14 @@ function varargout = cat_stat_histth(src,percent,opt)
   if nargin==0, help cat_stat_histth; return; end
   if ~exist('percent','var') || isempty(percent)
     tol = [ 0.002 0.002 ]; 
-  elseif percent == 0
+  elseif percent(1) == 0
     tol = [ 0 0 ];
   else
     if numel(percent)==1, percent(2) = percent(1); end
     for pi = 1:2
       if percent(pi)<=1
         tol(pi) = 1 - percent(pi);
-      elseif percent<=100
+      elseif percent(pi)<=100
         tol(pi) = 1 - percent(pi)/100; 
       else 
         error('cat_stat_histth:percent','Percent has to be in the range of 1 to 100');  

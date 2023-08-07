@@ -1023,7 +1023,7 @@ function job = update_job(job)
   end
   
   
-  if strcmpi(spm_check_version,'octave') && job.extopts.regstr > 0
+  if strcmpi(spm_check_version,'octave') && job.extopts.regstr > 0 && 0
     warning('cat_run:noShooting','No Shooting registration possible under Octave yet. Switch to Dartel registration.')
     job.extopts.regstr = 0; 
     if isfield(job.extopts,'regmethod')
