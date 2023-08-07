@@ -1,4 +1,28 @@
 ------------------------------------------------------------------------
+r2446 | gaser | 2023-08-07 11:23:26
+
+Changed paths:
+ M CHANGES.txt
+A  mexmaca/cat_amap.mex
+A  mexmaca/cat_ornlm.mex
+A  mexmaca/cat_sanlm.mex
+A  mexmaca/cat_vbdist.mex
+A  mexmaca/cat_vol_downcut.mex
+A  mexmaca/cat_vol_eidist.mex
+A  mexmaca/cat_vol_genus0.mex
+A  mexmaca/cat_vol_gradient3.mex
+A  mexmaca/cat_vol_interp3f.mex
+A  mexmaca/cat_vol_laplace3.mex
+A  mexmaca/cat_vol_laplace3R.mex
+A  mexmaca/cat_vol_localstat.mex
+A  mexmaca/cat_vol_median3.mex
+A  mexmaca/cat_vol_median3c.mex
+A  mexmaca/cat_vol_pbtp.mex
+A  mexmaca/cat_vol_pbtp2.mex
+A  mexmaca/cat_vol_simgrow.mex
+
+Added:   Created new mex-folder for octave for Apple Silicon.
+------------------------------------------------------------------------
 r2445 | gaser | 2023-08-07 11:22:24
 
 Changed paths:
