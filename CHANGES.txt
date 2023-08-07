@@ -1,4 +1,161 @@
 ------------------------------------------------------------------------
+r2445 | gaser | 2023-08-07 11:22:24
+
+Changed paths:
+ M CHANGES.txt
+ M cat_io_xml.m
+ M cat_long_report.m
+ M cat_run.m
+ M cat_run_job1639.m
+ M cat_stat_histth.m
+ M cat_vol_imcalc.m
+A  mexmaci/@file_array/Contents.m
+A  mexmaci/@file_array/cat.m
+A  mexmaci/@file_array/ctranspose.m
+A  mexmaci/@file_array/disp.m
+A  mexmaci/@file_array/display.m
+A  mexmaci/@file_array/double.m
+A  mexmaci/@file_array/end.m
+A  mexmaci/@file_array/fieldnames.m
+A  mexmaci/@file_array/file_array.m
+A  mexmaci/@file_array/full.m
+A  mexmaci/@file_array/horzcat.m
+A  mexmaci/@file_array/initialise.m
+A  mexmaci/@file_array/isnan.m
+A  mexmaci/@file_array/length.m
+A  mexmaci/@file_array/loadobj.m
+A  mexmaci/@file_array/ndims.m
+A  mexmaci/@file_array/numel.m
+A  mexmaci/@file_array/numeric.m
+A  mexmaci/@file_array/permute.m
+A  mexmaci/@file_array/private/Makefile
+A  mexmaci/@file_array/private/datatypes.m
+A  mexmaci/@file_array/private/dim.m
+A  mexmaci/@file_array/private/dtype.m
+A  mexmaci/@file_array/private/file2mat.c
+A  mexmaci/@file_array/private/file2mat.m
+A  mexmaci/@file_array/private/file2mat.mex
+A  mexmaci/@file_array/private/file2mat.mexa64
+A  mexmaci/@file_array/private/file2mat.mexmaci64
+A  mexmaci/@file_array/private/file2mat.mexw32
+A  mexmaci/@file_array/private/file2mat.mexw64
+A  mexmaci/@file_array/private/fname.m
+A  mexmaci/@file_array/private/init.c
+A  mexmaci/@file_array/private/init.m
+A  mexmaci/@file_array/private/init.mex
+A  mexmaci/@file_array/private/init.mexa64
+A  mexmaci/@file_array/private/init.mexmaci64
+A  mexmaci/@file_array/private/init.mexw32
+A  mexmaci/@file_array/private/init.mexw64
+A  mexmaci/@file_array/private/mat2file.c
+A  mexmaci/@file_array/private/mat2file.m
+A  mexmaci/@file_array/private/mat2file.mex
+A  mexmaci/@file_array/private/mat2file.mexa64
+A  mexmaci/@file_array/private/mat2file.mexmaci64
+A  mexmaci/@file_array/private/mat2file.mexw32
+A  mexmaci/@file_array/private/mat2file.mexw64
+A  mexmaci/@file_array/private/mystruct.m
+A  mexmaci/@file_array/private/offset.m
+A  mexmaci/@file_array/private/permission.m
+A  mexmaci/@file_array/private/resize_scales.m
+A  mexmaci/@file_array/private/scl_inter.m
+A  mexmaci/@file_array/private/scl_slope.m
+A  mexmaci/@file_array/reshape.m
+A  mexmaci/@file_array/size.m
+A  mexmaci/@file_array/subsasgn.m
+A  mexmaci/@file_array/subsref.m
+A  mexmaci/@file_array/transpose.m
+A  mexmaci/@file_array/vertcat.m
+A  mexmaci/@gifti/Contents.m
+A  mexmaci/@gifti/display.m
+A  mexmaci/@gifti/export.m
+A  mexmaci/@gifti/fieldnames.m
+A  mexmaci/@gifti/gifti.m
+A  mexmaci/@gifti/isfield.m
+A  mexmaci/@gifti/plot.m
+A  mexmaci/@gifti/private/Makefile
+A  mexmaci/@gifti/private/base64decode.m
+A  mexmaci/@gifti/private/base64encode.m
+A  mexmaci/@gifti/private/dunzip.m
+A  mexmaci/@gifti/private/dzip.m
+A  mexmaci/@gifti/private/getdict.m
+A  mexmaci/@gifti/private/isintent.m
+A  mexmaci/@gifti/private/miniz.c
+A  mexmaci/@gifti/private/mvtk_read.m
+A  mexmaci/@gifti/private/mvtk_write.m
+A  mexmaci/@gifti/private/mz3_read.m
+A  mexmaci/@gifti/private/mz3_write.m
+A  mexmaci/@gifti/private/obj_read.m
+A  mexmaci/@gifti/private/off_read.m
+A  mexmaci/@gifti/private/ply_read.m
+A  mexmaci/@gifti/private/read_freesurfer_file.m
+A  mexmaci/@gifti/private/read_gifti_file.m
+A  mexmaci/@gifti/private/stl_read.m
+A  mexmaci/@gifti/private/zstream.c
+A  mexmaci/@gifti/private/zstream.m
+A  mexmaci/@gifti/private/zstream.mex
+A  mexmaci/@gifti/private/zstream.mexa64
+A  mexmaci/@gifti/private/zstream.mexmaci64
+A  mexmaci/@gifti/private/zstream.mexw32
+A  mexmaci/@gifti/private/zstream.mexw64
+A  mexmaci/@gifti/save.m
+A  mexmaci/@gifti/saveas.m
+A  mexmaci/@gifti/struct.m
+A  mexmaci/@gifti/subsasgn.m
+A  mexmaci/@gifti/subsref.m
+A  mexmaci/cat_amap.mex
+A  mexmaci/cat_ornlm.mex
+A  mexmaci/cat_sanlm.mex
+A  mexmaci/cat_vbdist.mex
+A  mexmaci/cat_vol_downcut.mex
+A  mexmaci/cat_vol_eidist.mex
+A  mexmaci/cat_vol_genus0.mex
+A  mexmaci/cat_vol_gradient3.mex
+A  mexmaci/cat_vol_interp3f.mex
+A  mexmaci/cat_vol_laplace3.mex
+A  mexmaci/cat_vol_laplace3R.mex
+A  mexmaci/cat_vol_localstat.mex
+A  mexmaci/cat_vol_median3.mex
+A  mexmaci/cat_vol_median3c.mex
+A  mexmaci/cat_vol_pbtp.mex
+A  mexmaci/cat_vol_pbtp2.mex
+A  mexmaci/cat_vol_simgrow.mex
+A  mexmaci/spm_add.mex
+A  mexmaci/spm_bsplinc.mex
+A  mexmaci/spm_bsplins.mex
+A  mexmaci/spm_bwlabel.mex
+A  mexmaci/spm_cat.mex
+A  mexmaci/spm_conv_vol.mex
+A  mexmaci/spm_diffeo.mex
+A  mexmaci/spm_dilate_erode.mex
+A  mexmaci/spm_existfile.mex
+A  mexmaci/spm_field.mex
+A  mexmaci/spm_gamrnd.mex
+A  mexmaci/spm_get_lm.mex
+A  mexmaci/spm_global.mex
+A  mexmaci/spm_hist.mex
+A  mexmaci/spm_hist2.mex
+A  mexmaci/spm_jsonread.mex
+A  mexmaci/spm_krutil.mex
+A  mexmaci/spm_mesh_reduce.mex
+A  mexmaci/spm_mesh_utils.mex
+A  mexmaci/spm_mrf.mex
+A  mexmaci/spm_project.mex
+A  mexmaci/spm_render_vol.mex
+A  mexmaci/spm_resels_vol.mex
+A  mexmaci/spm_sample_vol.mex
+A  mexmaci/spm_slice_vol.mex
+A  mexmaci/spm_unlink.mex
+A  mexmaci/spm_voronoi.mex
+ M spm_cat12.m
+
+Added:   Created new mex-folders for octave for different systems.
+Fixed:   Corrected small indexing error in cat_stat_histh.m.
+Changed: Replaced strlength by lenght in cat_run_job1639.m because it's not 
+         defined for older Matlab versions.
+Changed: Added check for data_xml field in cat_long_report.m.
+Changed: Removed java dependency in cat_io_xml.m.
+------------------------------------------------------------------------
 r2443 | gaser | 2023-07-17 15:39:01
 
 Changed paths:

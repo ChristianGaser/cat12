@@ -205,7 +205,7 @@ Y = zeros(Vo.dim(1:3));
 if verb
   spm_progress_bar('Init',Vo.dim(3),f,'planes completed');
 end
-
+ 
 %-Loop over planes computing result Y
 %--------------------------------------------------------------------------
 for p = 1:Vo.dim(3)
@@ -223,7 +223,7 @@ for p = 1:Vo.dim(3)
           d(isnan(d)) = 0; 
         end
         if (mask > 0) && ~spm_type(Vi(i).dt(1),'nanrep'), d(d==0)=NaN; end
-        if dmtx, X(i,:) = d(:)'; else eval(['i',num2str(i),'=d;']); end
+        if dmtx, X(i,:) = d(:)'; else eval(sprintf('i%d=d;',i)); end
     end
     
     try

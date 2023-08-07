@@ -504,7 +504,7 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
   
   
   % load XML data 
-  if ~isempty(job.data_xml) && ~isempty(job.data_xml{1}) 
+  if isfield(job,'data_xml') && ~isempty(job.data_xml) && ~isempty(job.data_xml{1}) 
     xml = cat_io_xml(job.data_xml);
     
     for fi = 1:numel(job.data_xml)

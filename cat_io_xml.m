@@ -55,12 +55,6 @@ function varargout = cat_io_xml(file,varargin)
 
 
   verbose = 0;
-  if usejava('jvm')==0
-    warning('MATLAB:SPM:CAT:cat_io_xml:javaerror', ...
-      'CAT-ERROR: CAT XML-im/export requires JVM! Read/Write only MAT file.\n');
-    %varargout = {};
-    %return;
-  end
   if ~exist('file','var')
     file = spm_select(Inf,'xml','Select *.xml files',{},pwd,'^cat.*.xml');
     if isempty(file)

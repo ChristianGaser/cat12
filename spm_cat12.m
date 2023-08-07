@@ -32,9 +32,25 @@ global cprintferror;  % temporary, because of JAVA errors in cat_io_cprintf ... 
 catdir = fileparts(mfilename('fullpath')); 
 catdef = fullfile(catdir,'cat_defaults.m');
 
+% add path for octave mex-files
+if strcmpi(spm_check_version,'octave')
+  if ismac
+    uts = uname;
+    if srcmp(uts.machine,'x86_64')
+      addpath(fullfile(catdir,'mexmaci'));
+    else
+      addpath(fullfile(catdir,'mexmaca'));
+    end
+  elseif isunix
+    addpath(fullfile(catdir,'mexa64'));
+  elseif ispc
+    addpath(fullfile(catdir,'mexw64'));
+  end
+end
+
 % check that CAT12 is installed in the correct folder
 pth = fileparts(mfilename('fullpath'));
-[pth2, nam]=fileparts(pth);
+[pth2, nam] = fileparts(pth);
 if ~strcmp(nam,'cat12')
   spm('alert!',sprintf('Please check that you do not have multiple CAT12 installations in your path!\nYour current CAT12 version is installed in %s but should be installed in %s',pth,fullfile(catdir)),'WARNING');
 end
