@@ -1503,7 +1503,10 @@ if voxel_covariate
 
   % save new voxel-wise vSPM.mat and remove SPM.mat because it should not
   % be used anymore
-  save(fullfile(SPM.swd,'vSPM.mat'),'SPM','-v7.3');
+  fmt = spm_get_defaults('mat.format');
+  s = whos('SPM');
+  if s.bytes > 2147483647, fmt = '-v7.3'; end
+  save(fullfile(SPM.swd,'vSPM.mat'),'SPM',fmt);
   delete(fullfile(SPM.swd,'SPM.mat'))
   
   % update output field with new name

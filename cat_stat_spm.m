@@ -34,11 +34,15 @@ if exist('P','var')
 end
 
 if ~isfield(SPM,'xY')
-  error(sprintf('SPM.mat was not correctly saved. Please check that you have set the following flag in spm_defaults:\ndefaults.mat.format = ''-v7.3'''));
+  error(sprintf('SPM.mat was not correctly saved. Please check that you have set the following flag in spm_defaults if your files are > 2GB:\ndefaults.mat.format = ''-v7.3'''));
 end
 
+fmt = spm_get_defaults('mat.format');
+s = whos('SPM');
+if s.bytes > 2147483647, fmt = '-v7.3'; end
+
 % older formats don't support large files
-spm_get_defaults('mat.format','-v7.3');
+spm_get_defaults('mat.format',fmt);
 
 % check for 32k meshes
 if SPM.xY.VY(1).dim(1) == 32492 || SPM.xY.VY(1).dim(1) == 64984

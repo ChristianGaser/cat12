@@ -670,7 +670,6 @@ function cat_io_report(job,qa,subj,createerr)
     fg = spm_figure('FindWin','Graphics');
     set(0,'CurrentFigure',fg)
     fprintf(1,'\n'); 
-    %spm_print;
 
     % print subject report file as standard PDF/PNG/... file
     job.imgprint.type  = 'pdf';
@@ -688,13 +687,18 @@ function cat_io_report(job,qa,subj,createerr)
     if createerr==6, error(sprintf('error:cat_io_report:createerr_%d',createerr),'Test'); end
     set(fg,'PaperPositionMode','auto','resize','on','PaperPosition',[0 0 1 1]);
     for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize*0.8); end; end
-    print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
-    print(fg, job.imgprint.ftype('jpeg')           , job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fnamej); 
-    for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize); end; end
-    set(fg,'PaperPositionMode',fgold.PaperPositionMode,'resize',fgold.resize,'PaperPosition',fgold.PaperPosition);
+    
+    % pdf is not working yet with Octave
+    if strcmpi(spm_check_version,'octave')
+      print(fg, job.imgprint.ftype('jpeg'), job.imgprint.fnamej); 
+    else
+      print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
+      print(fg, job.imgprint.ftype('jpeg')           , job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fnamej); 
+      for hti = 1:numel(htext), if htext(hti)>0, set(htext(hti),'Fontsize',fontsize); end; end
+      set(fg,'PaperPositionMode',fgold.PaperPositionMode,'resize',fgold.resize,'PaperPosition',fgold.PaperPosition);
+    end
     fprintf('Print ''Graphics'' figure to: \n  %s\n',job.imgprint.fname);
 
-    %spm_figure('Clear','Graphics');   
   catch
     createerrtxt = [createerrtxt; {'Error:cat_io_report:print','Error printing CAT error report.'}]; 
     cat_io_cprintf('err','%30s: %s\n',createerrtxt{end,1},createerrtxt{end,2});

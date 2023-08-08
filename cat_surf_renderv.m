@@ -255,24 +255,27 @@ function varargout = cat_surf_renderv(S,facevertexcdata,opt)
   imgnRGB = ind2rgb( imgnn , gray(256) ); clear imgnn; 
 
   % set background
-  bgc  = get(opt.h,'color'); 
-  bg   = cat(3,bgc(1) * ones( size(imgz)), bgc(2) * ones( size(imgz)), bgc(3) * ones( size(imgz)) ); 
   img  = min(255,max(0,imgRGB .* (0.2 + max(0,imgnRGB*1.05 - 0.05).^0.5 * 1.0) - (imgzRGB/8))) ; 
-  img  = img.*(1-bgm) + bg.*bgm; 
-  
+  if ~isempty( opt.h ) && opt.h > 1
+    bgc  = get(opt.h,'color'); 
+    bg   = cat(3,bgc(1) * ones( size(imgz)), bgc(2) * ones( size(imgz)), bgc(3) * ones( size(imgz)) ); 
+    img  = img.*(1-bgm) + bg.*bgm; 
+  end
+    
   if debug 
-    %figure(4534); imagesc( img ); axis equal off; % subplot(2,1,1); image( imgRGB ); subplot(2,1,2); 
     toc
   end
 
   % set output
-  if ~isempty( opt.h )
+  if ~isempty( opt.h ) && opt.h > 1
     image( opt.h , img ); 
     axis(opt.h,'equal','off'); 
      
     varargout{1}.h     = opt.h; 
     varargout{1}.cdata = facevertexcdata; 
   else
+    image( img ); 
+    axis('equal','off'); 
     varargout{1} = img; 
   end
 end

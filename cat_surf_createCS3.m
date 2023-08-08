@@ -998,7 +998,15 @@ end
 
 %=======================================================================
 function CS1 = loadSurf(P)
-  if ~exist(P,'file'), error('Surface file %s could not be found due to previous processing errors.',P); end 
+
+  % add 1s because sometimes surface is not yet ready to read...
+  if ~exist(P,'file')
+    pause(3)
+    if ~exist(P,'file')
+      pause(1)
+      error('Surface file %s could not be found due to previous processing errors.',P);
+    end 
+  end 
   
   try
     CS = gifti(P);
