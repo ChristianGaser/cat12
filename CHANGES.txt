@@ -1,25 +1,47 @@
 ------------------------------------------------------------------------
-r2448 | gaser | 2023-08-08 11:01:41
+r2452 | gaser | 2023-08-08 11:05:49
 
 Changed paths:
-UU CHANGES.txt
-M  cat_main1639.m
-M  cat_main_registration.m
-M  cat_main_write.m
-M  cat_run.m
-M  cat_run_job1639.m
-A  html/images/CAT_Poster.jpg
-M  spm_cat12.m
+ M CHANGES.txt
+A  mexmaca/@file_array/private/file2mat.mex
+A  mexmaca/@file_array/private/init.mex
+A  mexmaca/@file_array/private/mat2file.mex
+A  mexmaca/@gifti/private/zstream.mex
+A  mexmaca/@xmltree/private/xml_findstr.mex
+A  mexmaca/spm_add.mex
+A  mexmaca/spm_brainwarp.mex
+A  mexmaca/spm_bsplinc.mex
+A  mexmaca/spm_bsplins.mex
+A  mexmaca/spm_bwlabel.mex
+A  mexmaca/spm_cat.mex
+A  mexmaca/spm_conv_vol.mex
+A  mexmaca/spm_diffeo.mex
+A  mexmaca/spm_dilate_erode.mex
+A  mexmaca/spm_existfile.mex
+A  mexmaca/spm_field.mex
+A  mexmaca/spm_gamrnd.mex
+A  mexmaca/spm_get_lm.mex
+A  mexmaca/spm_global.mex
+A  mexmaca/spm_gmmlib.mex
+A  mexmaca/spm_hist.mex
+A  mexmaca/spm_hist2.mex
+A  mexmaca/spm_jsonread.mex
+A  mexmaca/spm_krutil.mex
+A  mexmaca/spm_mesh_geodesic.mex
+A  mexmaca/spm_mesh_reduce.mex
+A  mexmaca/spm_mesh_utils.mex
+A  mexmaca/spm_mrf.mex
+A  mexmaca/spm_project.mex
+A  mexmaca/spm_render_vol.mex
+A  mexmaca/spm_resels_vol.mex
+A  mexmaca/spm_sample_vol.mex
+A  mexmaca/spm_slice_vol.mex
+A  mexmaca/spm_unlink.mex
+A  mexmaca/spm_voronoi.mex
 
-(1) Added:   Added some missing mex-files for Octave for Apple Silicon.
-(2) Deleted: Removed unnecessary files from mex* folders.
-(3) Changed: Changed fileformat for saving SPM.mat depending on file size.
-(4) Changed: Updated print of report file for Octave.
-(5) Changed: Added waiting time to loadSurf subfunction in cat_surf_createCS3.m
-             to consider potential delay in file writing.
-(6) Fixed:   Corrected typo in spm_cat12.m.
+Added: Added some missing mex-files for Octave for Apple Silicon.
 ------------------------------------------------------------------------
-r2449 | gaser | 2023-08-08 10:58:44
+r2448 | gaser | 2023-08-08 10:58:44
 
 Changed paths:
  M CHANGES.txt
@@ -174,7 +196,6 @@ Changed paths:
 11) Changed:   Added final affine registration based on the final brain mask in 
                cat_main_registration and cat_main.
                
->>>>>>> 05d3d9bb3f7df3729754f9fa131083b1e5e40271
 ------------------------------------------------------------------------
 r2446 | gaser | 2023-08-07 11:23:26
 
