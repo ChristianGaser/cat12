@@ -225,35 +225,35 @@ if ~isfield(res,'spmpp')
   %  #### move fast shooting to the cat_main_updateSPM function ####
   % 
   %  RD20210307: Update of the Yy to the TMP but with the BB of the TPM.
-  if 1 % job.extopts.WMHC || job.extopts.SLC
+  finaffreg = 2; % final affine registration (1-GWM,2-BM,3-GM,4-WM)
+  if job.extopts.WMHC || job.extopts.SLC
     if ~debug, stime = cat_io_cmd(sprintf('Fast Optimized Shooting registration'),'','',job.extopts.verb); end
-
+%%
     res2 = res; 
     job2 = job;
     job2.extopts.bb           = 1; % registration to TPM space
     job2.extopts.verb         = debug;  % do not display process (people would may get confused) 
     job2.extopts.vox          = abs(res.tpm(1).mat(1));  % TPM resolution to replace old Yy  
-    job2.extopts.reg.affreg   = 0; % RD202306: do an addition registration based on the skull (i.e. sum(Ycls{1:3})) 
+    job2.extopts.reg.affreg   = finaffreg; % RD202306: do an addition registration based on the skull (i.e. sum(Ycls{1:3})) 
                                    %           code is working but better result?
     if job.extopts.regstr>0
-      job2.extopts.regstr     = 15;     % low resolution 
-      job2.extopts.reg.nits   = 16;     % less iterations
-      job2.extopts.reg.affreg = 0;      % new affine registration
-      job2.extopts.shootingtpms(3:end) = [];             % remove high templates, we only need low frequency corrections
+      job2.extopts.regstr     = 13;    % lower resolution (2mm)
+      job2.extopts.reg.nits   = 8;     % less iterations
+      %job2.extopts.shootingtpms(3:end) = [];             % remove high templates, we only need low frequency corrections .. NO! This would cause problems with the interpolation 
       res2 = res; 
       res2.do_dartel          = 2;      % use shooting
     else
+      %%
       fprintf('\n');
       job2.extopts.verb        = 0; 
       job2.extopts.vox         = abs(res.tpm(1).mat(1));  % TPM resolution to replace old Yy 
       job2.extopts.reg.iterlim = 1;      % only 1-2 inner iterations
-      job2.extopts.reg.affreg  = 0;      % new affine registration
       res2.do_dartel           = 1;      % use dartel
     end
     if isfield(res,'Ylesion')
-      [trans1,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:3),Yy,res.Ylesion);
+      [trans1,res.ppe.reginitp,res.ppe.Affine_SPMfinal] = cat_main_registration(job2,res2,Ycls(1:3),Yy,res.Ylesion);
     else
-      [trans1,res.ppe.reginitp] = cat_main_registration(job2,res2,Ycls(1:3),Yy);
+      [trans1,res.ppe.reginitp,res.ppe.Affine_SPMfinal] = cat_main_registration(job2,res2,Ycls(1:3),Yy);
     end  
     Yy2  = trans1.warped.y;
     if ~debug, clear job2 res2; end
@@ -722,13 +722,15 @@ end
     end
   
     % call Dartel/Shooting registration 
-    job.extopts.reg.affreg   = 0; % RD202306: do an addition registration based on the skull (i.e. sum(Ycls{1:3})) 
-                                  %           code is working but better result?
+    job2 = job;
+    job2.extopts.verb         = debug;  % do not display process (people would may get confused) 
+    job2.extopts.reg.affreg   = 4; % RD202306: do an addition registration based on the skull (i.e. sum(Ycls{1:3})) 
+                                   %           code is working but better result? {'brain','skull','GM','WM'};  
     if numel( job.extopts.vox ) > 1
       Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; %job.export = 1; 
-      [trans,res.ppe.reg] = cat_main_registration(job,res,Ycls,Yy,Ylesions,Yp0,Ym,Ymi,Yl1); clear Yp0; 
+      [trans,res.ppe.reg,res.ppe.affreg.Affine_catfinal] = cat_main_registration(job2,res,Ycls,Yy,Ylesions,Yp0,Ym,Ymi,Yl1); clear Yp0; 
     else
-      [trans,res.ppe.reg] = cat_main_registration(job,res,Yclsd,Yy,Ylesions);
+      [trans,res.ppe.reg,res.ppe.affreg.Affine_catfinal] = cat_main_registration(job2,res,Yclsd,Yy,Ylesions);
     end
     clear Yclsd Ylesions;
   else
@@ -742,8 +744,9 @@ end
     end
     
     job2 = job;
-    job2.extopts.verb   = debug;  % do not display process (people would may get confused) 
-    [trans,res.ppe.reg] = cat_main_registration(job2,res,Ycls,Yy);
+    job2.extopts.verb       = debug;      % do not display process (people would may get confused) 
+    job2.extopts.reg.affreg = finaffreg;  % final affine registration to {'brain','skull','GM','WM'}
+    [trans,res.ppe.reg,res.ppe.affreg.Affine_catfinal] = cat_main_registration(job2,res,Ycls,Yy);
   end
  
   
@@ -1013,12 +1016,11 @@ if job.output.surface
   qa.subjectmeasures.dist_thickness_kmeans_inner3 = [thma' thsa' thha']; 
   qa.subjectmeasures.dist_thickness_kmeans_outer2 = [thme' thse' thhe']; 
   if ~debug, clear th;  end
-  
-  %% qam = cat_stat_marks('eval',job.cati,qa,'cat12'); % ... not ready
-  cat_io_xml(fullfile(pth,res.reportfolder,['cat_' namspm nam '.xml']),struct(...
-    ... 'subjectratings',qam.subjectmeasures, ... not ready
-    'subjectmeasures',qa.subjectmeasures,'ppe',res.ppe),'write+'); % here we have to use the write+!
-end  
+end 
+%% qam = cat_stat_marks('eval',job.cati,qa,'cat12'); % ... not ready
+cat_io_xml(fullfile(pth,res.reportfolder,['cat_' namspm nam '.xml']),struct(...
+  ... 'subjectratings',qam.subjectmeasures, ... not ready
+  'subjectmeasures',qa.subjectmeasures,'ppe',res.ppe),'write+'); % here we have to use the write+!
 fprintf('%5.0fs\n',etime(clock,stime));
 clear Yth1;
 

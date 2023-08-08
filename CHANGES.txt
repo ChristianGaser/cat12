@@ -1,5 +1,25 @@
 ------------------------------------------------------------------------
-r2447 | gaser | 2023-08-08 10:58:44
+r2448 | gaser | 2023-08-08 11:01:41
+
+Changed paths:
+UU CHANGES.txt
+M  cat_main1639.m
+M  cat_main_registration.m
+M  cat_main_write.m
+M  cat_run.m
+M  cat_run_job1639.m
+A  html/images/CAT_Poster.jpg
+M  spm_cat12.m
+
+(1) Added:   Added some missing mex-files for Octave for Apple Silicon.
+(2) Deleted: Removed unnecessary files from mex* folders.
+(3) Changed: Changed fileformat for saving SPM.mat depending on file size.
+(4) Changed: Updated print of report file for Octave.
+(5) Changed: Added waiting time to loadSurf subfunction in cat_surf_createCS3.m
+             to consider potential delay in file writing.
+(6) Fixed:   Corrected typo in spm_cat12.m.
+------------------------------------------------------------------------
+r2449 | gaser | 2023-08-08 10:58:44
 
 Changed paths:
  M CHANGES.txt
@@ -111,6 +131,50 @@ Changed: Updated print of report file for Octave.
 Changed: Added waiting time to loadSurf subfunction in cat_surf_createCS3.m
          to consider potential delay in file writing.
 Fixed:   Corrected typo in spm_cat12.m.
+
+------------------------------------------------------------------------
+r2448 | rdahnke | 2023-08-07 16:47:25
+
+Changed paths:
+ M CHANGES.txt
+ M spm_cat12.m
+
+1)  Changed:   Added poster background.
+
+------------------------------------------------------------------------
+r2447 | rdahnke | 2023-08-07 16:22:47
+
+Changed paths:
+ M CHANGES.txt
+ M cat_main1639.m
+ M cat_main_registration.m
+ M cat_main_write.m
+ M cat_run.m
+ M cat_run_job1639.m
+
+1)  Changed:   Enhanced skull-stripping background detection to support non-
+               zero background intensities. Test for high intensity backgrounds
+               only in case of no skull-stripping. Update skull-stripping expert 
+               message (line 285-525).
+2)  Changed:   Replaced slice-wise spm_smoothto8bit function and small filter 
+               size modification (line 537-628). 
+3)  Changed:   Improved skull-stripped affine input case (line 594-601).               
+4)  Changed:   Modified input of COM estimation by using the initial skull-
+               stripping (WM-like tissue) that is error-prone but still better 
+               than using the full head (line 674-689).
+5)  Changed:   Save affine parameters (line 694-. 
+6)  Changed:   Use fine affine registration (maff8) not in case of skull-
+               stripped data (line 904-908).
+7)  Changed:   Try to use simplified brain model without tissue separation for 
+               maff8 to avoid side effects by tissue atrophy (line 918-933).
+8)  Changed:   Try to use skull-stripping mask maffreg                
+9)  Fixed:     Corrected bug in lazy processing setup in cat_run.  
+10) Fixed:     Corrected bug in writing atlas results into the right space in 
+               cat_main_write and cat_main_registration. 
+11) Changed:   Added final affine registration based on the final brain mask in 
+               cat_main_registration and cat_main.
+               
+>>>>>>> 05d3d9bb3f7df3729754f9fa131083b1e5e40271
 ------------------------------------------------------------------------
 r2446 | gaser | 2023-08-07 11:23:26
 

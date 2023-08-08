@@ -1741,9 +1741,11 @@ function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
       if isempty(job.vout.(FNO{fnoi}))
         continue
       elseif iscell(job.vout.(FNO{fnoi}))
-         if ~isempty(job.vout.(FNO{fnoi}){subj}) && ~exist(job.vout.(FNO{fnoi}){subj},'file')
-           FNok = 14; break
-         end
+        try
+           if ~isempty(job.vout.(FNO{fnoi}){subj}) && ~exist(job.vout.(FNO{fnoi}){subj},'file')
+             FNok = 14; break
+           end
+        end
       elseif isstruct(job.vout.(FNO{fnoi}))
         for si = numel(job.vout.(FNO{fnoi}))
           FNOS = fieldnames(job.vout.(FNO{fnoi})); 
