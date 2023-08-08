@@ -192,31 +192,41 @@ function [trans,reg,Affine] = cat_main_registration(job,dres,Ycls,Yy,Ylesion,Yp0
   end
 %}
 if dreg.affreg && ( ~isfield(job,'useprior') || isempty(job.useprior) || ~exist(char(job.useprior),'file') )
-% Final affine registration ?
+% Final affine registration in the cross sectional case
 % * Although the registration here should work, do we have to consider this 
 %   for the Yy deformation map ? 
 
-  if job.extopts.verb
-    stime = cat_io_cmd(sprintf('\nAffine skull registration'));
-  end
+  regname = {'brain','skull','GM','WM'};
 
-  % load registration tempalte with focus of brain mask
+  stime = cat_io_cmd(sprintf('\n  Affine %s registration',regname{dreg.affreg}),'g5','',job.extopts.verb);
+  
+  % load registration template with focus of brain mask
   Vtmpb  = spm_vol( job.extopts.templates{1} );
   if numel( Vtmpb ) < 4 % if the template has all 3 brain classes
     Vtmpb = dres.tpm(1:3);
   end
+  switch dreg.affreg
+    case 1, cw = [1 2 0]; % brain tissue without CSF
+    case 2, cw = [1 2 1]; % brain mask with lightly underlined WM 
+    case 3, cw = [1 0 0]; % GM only
+    case 4, cw = [0 1 0]; % WM only
+  end
+  
+  % create individual and template registration image
+  Yb  = zeros(size(Ycls{1})); 
   Ybt = zeros(Vtmpb(1).dim,'single');
   for ci = 1:3
-    Ybt = Ybt + spm_read_vols( Vtmpb(ci) ) * (1 + (ci==2)) ; 
+    Ybt = Ybt + spm_read_vols( Vtmpb(ci) ) * cw(ci); 
+    Yb  = Yb  + single(Ycls{ci})/255 * cw(ci);  
   end
-  Ybt = Ybt .* cat_vol_morph( cat_vol_morph(Ybt>0.25,'lo',1) , 'd'); % remove eyes and 
-
-  % create individual registration image
-  for ci = 2:numel(Ycls), Ybt = Ybt + 0; end
-  Yb = single(Ycls{1})/255; for ci = 2:numel(Ycls), Yb = Yb + single(Ycls{ci})/255 * (1 + (ci==2)); end  
-
+  if cw(3) 
+    Ybt = Ybt .* cat_vol_morph( cat_vol_morph(Ybt>0.25,'lo',1) , 'd'); % remove eyes  
+  end
+ 
   % prepare data for affreg
   VG            = spm_vol( Vtmpb(1) );
+  %VG = Vtmpb(1) ; 
+  %if isfield(VG,'dat'), VG = rmfield(spm_vol( Vtmpb(1) ),'dat'); end
   VG.dt         = [spm_type('UINT8') spm_platform('bigend')];
   VG.dat(:,:,:) = cat_vol_ctype(Ybt * 208,'uint8'); 
   VG.pinfo      = repmat([1;0],1,size(Ybt,3));
@@ -240,7 +250,7 @@ if dreg.affreg && ( ~isfield(job,'useprior') || isempty(job.useprior) || ~exist(
   fprintf('%5.0fs\n',etime(clock,stime)); 
 end
 % #########################################################################
-  
+   
   
   % limit number of classes
   if ~( export && numel( job.extopts.vox ) > 1 )
@@ -1628,8 +1638,8 @@ function write_nii(Ycls,job,trans,testfolder,reg)
     Ndef      = nifti;
     Ndef.dat  = file_array(fullfile(pth,mrifolder,testfolder,['iy_', nam, '.nii']),[trans.native.Vo.dim,1,3],...
                 [spm_type('float32') spm_platform('bigend')],0,1,0);
-    Ndef.mat  = res.image0(1).mat;
-    Ndef.mat0 = res.image0(1).mat;
+    Ndef.mat  = trans.native.Vo.mat; 
+    Ndef.mat0 = trans.native.Vo.mat; 
     Ndef.descrip = 'Inverse Deformation';
     create(Ndef);
     Ndef.dat(:,:,:,:,:) = Yy2;
