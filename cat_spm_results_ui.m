@@ -319,7 +319,10 @@ switch lower(Action), case 'setup'                         %-Set up results
               end
             end
             % modified SPM.mat hast to be saved
-            save(fullfile(swd,'SPM.mat'),'SPM','-v7.3');
+            fmt = spm_get_defaults('mat.format');
+            s = whos('SPM');
+            if s.bytes > 2147483647, fmt = '-v7.3'; end
+            save(fullfile(swd,'SPM.mat'),'SPM',fmt);
           end
         end
 

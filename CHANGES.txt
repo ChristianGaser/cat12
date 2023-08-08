@@ -1,4 +1,117 @@
 ------------------------------------------------------------------------
+r2447 | gaser | 2023-08-08 10:58:44
+
+Changed paths:
+ M CHANGES.txt
+ M Makefile
+ M cat_conf_factorial.m
+ M cat_io_report.m
+ M cat_main_reportfig.m
+ M cat_run.m
+ M cat_spm_results_ui.m
+ M cat_stat_spm.m
+ M cat_surf_createCS3.m
+ M cat_surf_renderv.m
+ D mexmaci/@file_array/Contents.m
+ D mexmaci/@file_array/cat.m
+ D mexmaci/@file_array/ctranspose.m
+ D mexmaci/@file_array/disp.m
+ D mexmaci/@file_array/display.m
+ D mexmaci/@file_array/double.m
+ D mexmaci/@file_array/end.m
+ D mexmaci/@file_array/fieldnames.m
+ D mexmaci/@file_array/file_array.m
+ D mexmaci/@file_array/full.m
+ D mexmaci/@file_array/horzcat.m
+ D mexmaci/@file_array/initialise.m
+ D mexmaci/@file_array/isnan.m
+ D mexmaci/@file_array/length.m
+ D mexmaci/@file_array/loadobj.m
+ D mexmaci/@file_array/ndims.m
+ D mexmaci/@file_array/numel.m
+ D mexmaci/@file_array/numeric.m
+ D mexmaci/@file_array/permute.m
+ D mexmaci/@file_array/private/Makefile
+ D mexmaci/@file_array/private/datatypes.m
+ D mexmaci/@file_array/private/dim.m
+ D mexmaci/@file_array/private/dtype.m
+ D mexmaci/@file_array/private/file2mat.c
+ D mexmaci/@file_array/private/file2mat.m
+ D mexmaci/@file_array/private/file2mat.mexa64
+ D mexmaci/@file_array/private/file2mat.mexmaci64
+ D mexmaci/@file_array/private/file2mat.mexw32
+ D mexmaci/@file_array/private/file2mat.mexw64
+ D mexmaci/@file_array/private/fname.m
+ D mexmaci/@file_array/private/init.c
+ D mexmaci/@file_array/private/init.m
+ D mexmaci/@file_array/private/init.mexa64
+ D mexmaci/@file_array/private/init.mexmaci64
+ D mexmaci/@file_array/private/init.mexw32
+ D mexmaci/@file_array/private/init.mexw64
+ D mexmaci/@file_array/private/mat2file.c
+ D mexmaci/@file_array/private/mat2file.m
+ D mexmaci/@file_array/private/mat2file.mexa64
+ D mexmaci/@file_array/private/mat2file.mexmaci64
+ D mexmaci/@file_array/private/mat2file.mexw32
+ D mexmaci/@file_array/private/mat2file.mexw64
+ D mexmaci/@file_array/private/mystruct.m
+ D mexmaci/@file_array/private/offset.m
+ D mexmaci/@file_array/private/permission.m
+ D mexmaci/@file_array/private/resize_scales.m
+ D mexmaci/@file_array/private/scl_inter.m
+ D mexmaci/@file_array/private/scl_slope.m
+ D mexmaci/@file_array/reshape.m
+ D mexmaci/@file_array/size.m
+ D mexmaci/@file_array/subsasgn.m
+ D mexmaci/@file_array/subsref.m
+ D mexmaci/@file_array/transpose.m
+ D mexmaci/@file_array/vertcat.m
+ D mexmaci/@gifti/Contents.m
+ D mexmaci/@gifti/display.m
+ D mexmaci/@gifti/export.m
+ D mexmaci/@gifti/fieldnames.m
+ D mexmaci/@gifti/gifti.m
+ D mexmaci/@gifti/isfield.m
+ D mexmaci/@gifti/plot.m
+ D mexmaci/@gifti/private/Makefile
+ D mexmaci/@gifti/private/base64decode.m
+ D mexmaci/@gifti/private/base64encode.m
+ D mexmaci/@gifti/private/dunzip.m
+ D mexmaci/@gifti/private/dzip.m
+ D mexmaci/@gifti/private/getdict.m
+ D mexmaci/@gifti/private/isintent.m
+ D mexmaci/@gifti/private/miniz.c
+ D mexmaci/@gifti/private/mvtk_read.m
+ D mexmaci/@gifti/private/mvtk_write.m
+ D mexmaci/@gifti/private/mz3_read.m
+ D mexmaci/@gifti/private/mz3_write.m
+ D mexmaci/@gifti/private/obj_read.m
+ D mexmaci/@gifti/private/off_read.m
+ D mexmaci/@gifti/private/ply_read.m
+ D mexmaci/@gifti/private/read_freesurfer_file.m
+ D mexmaci/@gifti/private/read_gifti_file.m
+ D mexmaci/@gifti/private/stl_read.m
+ D mexmaci/@gifti/private/zstream.c
+ D mexmaci/@gifti/private/zstream.m
+ D mexmaci/@gifti/private/zstream.mexa64
+ D mexmaci/@gifti/private/zstream.mexmaci64
+ D mexmaci/@gifti/private/zstream.mexw32
+ D mexmaci/@gifti/private/zstream.mexw64
+ D mexmaci/@gifti/save.m
+ D mexmaci/@gifti/saveas.m
+ D mexmaci/@gifti/struct.m
+ D mexmaci/@gifti/subsasgn.m
+ D mexmaci/@gifti/subsref.m
+ M spm_cat12.m
+
+Added:   Added some missing mex-files for Octave for Apple Silicon.
+Deleted: Removed unnecessary files from mex* folders.
+Changed: Changed fileformat for saving SPM.mat depending on file size.
+Changed: Updated print of report file for Octave.
+Changed: Added waiting time to loadSurf subfunction in cat_surf_createCS3.m
+         to consider potential delay in file writing.
+Fixed:   Corrected typo in spm_cat12.m.
+------------------------------------------------------------------------
 r2446 | gaser | 2023-08-07 11:23:26
 
 Changed paths:

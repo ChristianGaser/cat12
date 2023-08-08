@@ -1023,7 +1023,7 @@ function job = update_job(job)
   end
   
   
-  if strcmpi(spm_check_version,'octave') && job.extopts.regstr > 0 && 0
+  if strcmpi(spm_check_version,'octave') && job.extopts.regstr > 0
     warning('cat_run:noShooting','No Shooting registration possible under Octave yet. Switch to Dartel registration.')
     job.extopts.regstr = 0; 
     if isfield(job.extopts,'regmethod')
@@ -1039,18 +1039,18 @@ function job = update_job(job)
   if isfield(job.extopts,'regmethod') 
     if isfield(job.extopts.regmethod,'dartel')
       job.extopts.darteltpm   = job.extopts.regmethod.dartel.darteltpm;
-      job.extopts.regstr      = 0; 
+      job.extopts.regstr      = 0;
     elseif isfield(job.extopts.regmethod,'shooting')
       job.extopts.shootingtpm = job.extopts.regmethod.shooting.shootingtpm;
-      job.extopts.regstr      = job.extopts.regmethod.shooting.regstr; 
+      job.extopts.regstr      = job.extopts.regmethod.shooting.regstr;
     end
   else
     if isfield(job.extopts,'dartel')
       job.extopts.darteltpm   = job.extopts.dartel.darteltpm;
-      job.extopts.regstr      = 0; 
+      job.extopts.regstr      = 0;
     elseif isfield(job.extopts,'shooting')
       job.extopts.shootingtpm = job.extopts.shooting.shootingtpm;
-      job.extopts.regstr      = job.extopts.shooting.regstr; 
+      job.extopts.regstr      = job.extopts.shooting.regstr;
     end
   end
   
@@ -1122,7 +1122,7 @@ function job = update_job(job)
   
   % deselect ROI output and print warning if ROI output is true and dartel template was changed
   [pth,nam] = spm_fileparts(job.extopts.darteltpm{1});
-  if isempty(strfind(nam,'_GS')) && isempty(strfind(nam,'_Dartel')) && isempty(strfind(nam,'IXI555')) && strcmp(job.extopts.species,'human') && cat_get_defaults('output.ROI') 
+  if isempty(strfind(nam,'_GS')) && isempty(strfind(nam,'_Dartel')) && isempty(strfind(nam,'IXI555')) && strcmp(job.extopts.species,'human') && cat_get_defaults('output.ROI');
     warning('DARTEL:template:change',...
       ['Dartel template was changed: Please be aware that ROI analysis \n' ...
        'and other template-specific options cannot be used and ROI \n ' ...

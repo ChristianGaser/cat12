@@ -1387,7 +1387,9 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
               end
 
               % remove old colormap and add own 
-              colormap(fg,cmap);  set(hSD{1}.colourbar,'visible','off');
+              if strcmpi(spm_check_version,'octave'), colormap(cmap);
+              else, colormap(fg,cmap); end
+              set(hSD{1}.colourbar,'visible','off');
             else
               %%
               for i = 1:numel(Psurf)
@@ -1518,7 +1520,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
             for i = 1:numel(hSD), colormap(fg,cmap);  set(hSD{i}{1}.colourbar,'visible','off'); end
 
           else
-            try 
+            try
               if 1
                 % just the first draft
                 for i = 1:numel(Psurf)
@@ -1573,7 +1575,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
               V = (Rigid * ([CSl.vertices, ones(size(CSl.vertices,1),1)])' )'; V(:,4) = []; CSl.vertices = V;
               V = (Rigid * ([CSr.vertices, ones(size(CSr.vertices,1),1)])' )'; V(:,4) = []; CSr.vertices = V;
 
-              colormap(fg,cmap); 
+              if strcmpi(spm_check_version,'octave'), colormap(cmap); 
+              else, colormap(fg,cmap); end
               
               % The interpolation value controls quality and speed, the normal report + 
               % surface-rendering takes about 70s, whereas this renderer takes 60 to 160s.  
@@ -1600,6 +1603,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
           
           % sometimes hSD is not defined here because of mysterious errors on windows systems
           if ~exist('hSD','var'), return; end
+
+          if ~isfield(hSD{1}{1},'cdata'), return; end
 
           % colormap
           side  = hSD{1}{1}.cdata; 

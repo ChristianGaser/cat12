@@ -36,7 +36,7 @@ catdef = fullfile(catdir,'cat_defaults.m');
 if strcmpi(spm_check_version,'octave')
   if ismac
     uts = uname;
-    if srcmp(uts.machine,'x86_64')
+    if strcmp(uts.machine,'x86_64')
       addpath(fullfile(catdir,'mexmaci'));
     else
       addpath(fullfile(catdir,'mexmaca'));
