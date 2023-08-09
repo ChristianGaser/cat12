@@ -384,7 +384,11 @@ switch lower(action)
                 T = [];
             end
             try
+              warning off;
               updateTexture(H,T,1);
+              warning on;
+            catch 
+              warning on; 
             end
             labelmapclim = [min(T) max(T)];
             H.filename{1} = ''; 

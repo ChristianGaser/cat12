@@ -8,6 +8,8 @@ INSTALL.txt
 .gitignore
 
 # ignore zip, pdf, doc*, and nifti
+# *.mex from Octave compiling
+*.mex 
 *.asv
 *.zip
 *.pdf

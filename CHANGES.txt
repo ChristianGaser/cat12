@@ -1,4 +1,13 @@
 ------------------------------------------------------------------------
+r2454 | rdahnke | 2023-08-09 12:14:31
+
+Changed paths:
+ M .gitignore
+ M CHANGES.txt
+ M cat_surf_render2.m
+ M spm_cat12.m
+
+1) Fixed:    Corrected poster background bugs in Octave. ------------------------------------------------------------------------
 r2452 | gaser | 2023-08-08 11:05:49
 
 Changed paths:
