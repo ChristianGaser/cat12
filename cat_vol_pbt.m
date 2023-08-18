@@ -222,7 +222,7 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
   end
   clear YMM; 
   if ~bin
-    % limit the distance values outside the GM/CSF boudary to the distance possible in the GM
+    % limit the distance values outside the GM/CSF boundary to the distance possible in the GM
     YM  = Ywmd>minfdist & Ymf<=1.5; Ywmd(YM) = Ywmd(YM) - Ycsfdc(YM); Ywmd(isinf(Ywmd)) = 0; clear Ycsfdc;
     % smoothing of distance values inside the GM
     %YM  = Ywmd>minfdist & Ymf> 1.5; YwmdM = Ywmd; YwmdM = cat_vol_localstat(YwmdM,YM,1,1); Ywmd(YM) = YwmdM(YM);
