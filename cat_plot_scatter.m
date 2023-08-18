@@ -305,6 +305,7 @@ end
 % check whether X has limited number of entries (and is rather categorical)
 % and add jitter if defined
 if n_categories_X < 30 && jitter
+  if exist('rng'), rng(1); end
   X = X + add_range*randn(size(X));
 end
 

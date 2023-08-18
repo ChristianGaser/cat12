@@ -171,7 +171,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
   
   
-/* thickness calcuation
+/* thickness calculation
  ======================================================================= */
   for (int i=0;i<nL;i++) {
     if (SEG[i]>opt.LLB && SEG[i]<opt.HHB) {

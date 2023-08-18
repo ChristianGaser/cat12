@@ -1,4 +1,16 @@
 ------------------------------------------------------------------------
+r2455 | gaser | 2023-08-18 18:37:17
+
+Changed paths:
+ M CHANGES.txt
+ M cat_main1639.m
+ M cat_plot_scatter.m
+ M cat_vol_pbt.m
+ M cat_vol_pbtp.c
+
+Changed: Updated help text.
+Changed: Added rng-init for jittered scatter plot to cat_plot_scatter.m.
+------------------------------------------------------------------------
 r2454 | rdahnke | 2023-08-09 12:14:31
 
 Changed paths:
