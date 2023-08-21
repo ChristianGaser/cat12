@@ -247,7 +247,7 @@ check_files ()
 
 get_no_of_cpus () {
 
-  if [ ! -n "$NUMBER_OF_JOBS" ]; then
+  if [ ! -n "$NUMBER_OF_JOBS" ] | [ $NUMBER_OF_JOBS -le -1 ]; then
     if [ "$ARCH" == "Linux" ]; then
       NUMBER_OF_PROC=`grep ^processor $CPUINFO | wc -l`
     elif [ "$ARCH" == "Darwin" ]; then
@@ -384,7 +384,7 @@ run_cat12 ()
   while [ "$i" -lt "$SIZE_OF_ARRAY" ]; do
 
     # check whether absolute or relative names were given
-    if [ ! -f ${ARRAY[$i]} ]; then
+    if [ ! -f "${ARRAY[$i]}" ]; then
       if [ -f "${pwd}/${ARRAY[$i]}" ]; then
         FILE="${pwd}/${ARRAY[$i]}"
       fi
@@ -425,9 +425,9 @@ run_cat12 ()
   while [ "$i" -lt "$SIZE_OF_ARRAY" ]; do
     count=$((10000* $i / $BLOCK ))
 
-    FILE=${ARRAY2[$i]}
+    FILE="${ARRAY2[$i]}"
     
-    ARG_LIST[$count]="${ARG_LIST[$count]} $FILE"
+    ARG_LIST[$count]="${ARG_LIST[$count]} '$FILE'"
     
     if [ "$TEST" -eq 0  ]; then
       echo ${FILE} >> ${TMP}${count}
