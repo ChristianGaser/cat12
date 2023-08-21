@@ -1,4 +1,13 @@
 ------------------------------------------------------------------------
+r2456 | gaser | 2023-08-21 09:28:54
+
+Changed paths:
+ M CHANGES.txt
+ M cat_batch_cat.sh
+
+Fixed: Corrected handling of processors and files wirh empty spaces in name in 
+       cat_batch_cat.sh.
+------------------------------------------------------------------------
 r2455 | gaser | 2023-08-18 18:37:17
 
 Changed paths:
