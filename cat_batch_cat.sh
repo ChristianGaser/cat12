@@ -429,8 +429,9 @@ run_cat12 ()
     
     ARG_LIST[$count]="${ARG_LIST[$count]} '$FILE'"
     
+    # filenames have zo be quoted in case of any whitespaces
     if [ "$TEST" -eq 0  ]; then
-      echo ${FILE} >> ${TMP}${count}
+      echo '"'${FILE}'"' >> ${TMP}${count}
     else
       echo ${FILE}
     fi
