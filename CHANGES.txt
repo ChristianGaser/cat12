@@ -1,11 +1,21 @@
 ------------------------------------------------------------------------
+r2457 | gaser | 2023-08-22 09:18:09
+
+Changed paths:
+ M CHANGES.txt
+ M cat_batch_cat.m
+ M cat_batch_cat.sh
+
+Fixed: Use quoted filenames in temporary files to consider whitespaces in names
+       in cat_batch_cat.*.
+------------------------------------------------------------------------
 r2456 | gaser | 2023-08-21 09:28:54
 
 Changed paths:
  M CHANGES.txt
  M cat_batch_cat.sh
 
-Fixed: Corrected handling of processors and files wirh empty spaces in name in 
+Fixed: Corrected handling of processors and files with whitespaces in names in 
        cat_batch_cat.sh.
 ------------------------------------------------------------------------
 r2455 | gaser | 2023-08-18 18:37:17

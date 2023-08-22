@@ -59,7 +59,7 @@ elseif strcmp(ext,'.nii') | strcmp(ext,'.img')
   is_filelist = 1;
 else % or use list of names in text file
   fid = fopen(namefile,'r');
-  names0 = textscan(fid,'%s');
+  names0 = textscan(fid,'%q');
   names0 = names0{:};
   fclose(fid);
   is_filelist = 0;
