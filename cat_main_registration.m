@@ -229,6 +229,8 @@ if dreg.affreg && ( ~isfield(job,'useprior') || isempty(job.useprior) || ~exist(
   %if isfield(VG,'dat'), VG = rmfield(spm_vol( Vtmpb(1) ),'dat'); end
   VG.dt         = [spm_type('UINT8') spm_platform('bigend')];
   VG.dat(:,:,:) = cat_vol_ctype(Ybt * 208,'uint8'); 
+  % sometimes data are not uint8
+  if ~isa(VG.dat,'uint8'), VG.dat = uint8(VG.dat); end
   VG.pinfo      = repmat([1;0],1,size(Ybt,3));
   VG            = cat_spm_smoothto8bit(VG,eps);
   clear Ybt;
