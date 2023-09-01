@@ -1,4 +1,18 @@
 ------------------------------------------------------------------------
+r2459 | gaser | 2023-09-01 18:09:47
+
+Changed paths:
+ M CHANGES.txt
+ M cat_io_xml.m
+ M cat_main_registration.m
+ M cat_vol_img2mip.m
+
+Changed: Added some range correction to cat_vol_img2mip.m.
+Fixed:   Skipped some matlab-checking in cat_io_xml.m that was not working for 
+         newer Matlab versions.
+Fixed:   Changed data type in cat_main_registration, because type was not always
+         set correctly.
+------------------------------------------------------------------------
 r2458 | gaser | 2023-08-22 17:31:07
 
 Changed paths:

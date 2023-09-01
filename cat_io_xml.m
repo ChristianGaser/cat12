@@ -365,13 +365,6 @@ function [tree, RootName, DOMnode] = xml_read(xmlfile, Pref)
   tree            = [];
   RootName        = [];
 
-  % Check Matlab Version
-  v = ver('MATLAB');
-  version = str2double(regexp(v.Version, '\d.\d','match','once'));
-  if (version<7.1)
-    error('Your MATLAB version is too old. You need version 7.1 or newer.');
-  end
-
   % read user preferences
   if (nargin>1)
     if (isfield(Pref, 'TableName')), DPref.TableName = Pref.TableName; end
@@ -987,13 +980,6 @@ function DOMnode = xml_write(filename, tree, RootName, Pref)
 %   xml_read, xmlread, xmlwrite
 %
 % Written by Jarek Tuszynski, SAIC, jaroslaw.w.tuszynski_at_saic.com
-
-  % Check Matlab Version
-  v = ver('MATLAB');
-  v = str2double(regexp(v.Version, '\d.\d','match','once'));
-  if (v<7)
-    error('Your MATLAB version is too old. You need version 7.0 or newer.');
-  end
 
   % default preferences
   DPref.TableName  = {'tr','td'}; % name of a special tags used to itemize 2D cell arrays

@@ -133,7 +133,15 @@ for j = 1:dim(3)
 
     % apply defined function
     eval(OV.func)
-        
+    
+    if isfinite(OV.range(1))
+      i1(i1<OV.range(1)) = OV.range(1);
+    end
+  
+    if isfinite(OV.range(2))
+      i1(i1>OV.range(2)) = OV.range(2);
+    end
+
     % find indices
     if ~isempty(OV.roi)
       roi = flipud(OV.roi(:,:,j));
@@ -163,6 +171,7 @@ for j = 1:dim(3)
 end
 cat_progress_bar('Clear');
 
+
 [pt,nm,xt] = fileparts(fname);
 
 if style
@@ -182,6 +191,10 @@ if style
     'order',style);
   if ~isempty(OV.roi)
     S.roi = ROI{1};
+  end
+  
+  if all(isinf(OV.range)) || ~diff(abs(OV.range))
+    S.sym_range = 1;
   end
   
   if ~isempty(XYZ{1})
