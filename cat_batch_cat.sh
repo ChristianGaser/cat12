@@ -33,6 +33,7 @@ fg=0
 bids=0
 bids_folder=
 nojvm=""
+NUMBER_OF_JOBS=-1
 
 ########################################################
 # run main

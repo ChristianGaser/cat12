@@ -1,4 +1,128 @@
 ------------------------------------------------------------------------
+r2460 | gaser | 2023-09-07 11:54:38
+
+Changed paths:
+ M CAT.glnx86/CAT_3dVol2Surf
+ M CAT.glnx86/CAT_AddValuesToSurf
+ M CAT.glnx86/CAT_AverageSurfaces
+ M CAT.glnx86/CAT_BlurSurfHK
+ M CAT.glnx86/CAT_Central2Pial
+ M CAT.glnx86/CAT_DeformSurf
+ M CAT.glnx86/CAT_DumpCurv
+ M CAT.glnx86/CAT_DumpSurfArea
+ M CAT.glnx86/CAT_DumpSurfaceRatio
+ M CAT.glnx86/CAT_FixTopology
+ M CAT.glnx86/CAT_FractalDimension
+ M CAT.glnx86/CAT_Hausdorff
+ M CAT.glnx86/CAT_Isometize
+ M CAT.glnx86/CAT_MarchingCubesGenus0
+ M CAT.glnx86/CAT_MarkDefects
+ M CAT.glnx86/CAT_RefineMesh
+ M CAT.glnx86/CAT_ResampleSphericalSurf
+ M CAT.glnx86/CAT_ResampleSphericalSurfSPH
+ M CAT.glnx86/CAT_ResampleSurf
+ M CAT.glnx86/CAT_SelfIntersect
+ M CAT.glnx86/CAT_SeparatePolygon
+ M CAT.glnx86/CAT_SmoothConvexity
+ M CAT.glnx86/CAT_SulcusDepth
+ M CAT.glnx86/CAT_Surf2Sphere
+ M CAT.glnx86/CAT_Surf2Vol
+ M CAT.glnx86/CAT_SurfDistance
+ M CAT.glnx86/CAT_WarpSurf
+ M CAT.maca64/CAT_3dVol2Surf
+ M CAT.maca64/CAT_AddValuesToSurf
+ M CAT.maca64/CAT_AverageSurfaces
+ M CAT.maca64/CAT_BlurSurfHK
+ M CAT.maca64/CAT_Central2Pial
+ M CAT.maca64/CAT_DeformSurf
+ M CAT.maca64/CAT_DumpCurv
+ M CAT.maca64/CAT_DumpSurfArea
+ M CAT.maca64/CAT_DumpSurfaceRatio
+ M CAT.maca64/CAT_FixTopology
+ M CAT.maca64/CAT_FractalDimension
+ M CAT.maca64/CAT_Hausdorff
+ M CAT.maca64/CAT_Isometize
+ M CAT.maca64/CAT_MarchingCubesGenus0
+ M CAT.maca64/CAT_MarkDefects
+ M CAT.maca64/CAT_RefineMesh
+ M CAT.maca64/CAT_ResampleSphericalSurf
+ M CAT.maca64/CAT_ResampleSphericalSurfSPH
+ M CAT.maca64/CAT_ResampleSurf
+ M CAT.maca64/CAT_SelfIntersect
+ M CAT.maca64/CAT_SeparatePolygon
+ M CAT.maca64/CAT_SmoothConvexity
+ M CAT.maca64/CAT_SulcusDepth
+ M CAT.maca64/CAT_Surf2Sphere
+ M CAT.maca64/CAT_Surf2Vol
+ M CAT.maca64/CAT_SurfDistance
+ M CAT.maca64/CAT_WarpSurf
+ M CAT.maci64/CAT_3dVol2Surf
+ M CAT.maci64/CAT_AddValuesToSurf
+ M CAT.maci64/CAT_AverageSurfaces
+ M CAT.maci64/CAT_BlurSurfHK
+ M CAT.maci64/CAT_Central2Pial
+ M CAT.maci64/CAT_DeformSurf
+ M CAT.maci64/CAT_DumpCurv
+ M CAT.maci64/CAT_DumpSurfArea
+ M CAT.maci64/CAT_DumpSurfaceRatio
+ M CAT.maci64/CAT_FixTopology
+ M CAT.maci64/CAT_FractalDimension
+ M CAT.maci64/CAT_Hausdorff
+ M CAT.maci64/CAT_Isometize
+ M CAT.maci64/CAT_MarchingCubesGenus0
+ M CAT.maci64/CAT_MarkDefects
+ M CAT.maci64/CAT_RefineMesh
+ M CAT.maci64/CAT_ResampleSphericalSurf
+ M CAT.maci64/CAT_ResampleSphericalSurfSPH
+ M CAT.maci64/CAT_ResampleSurf
+ M CAT.maci64/CAT_SelfIntersect
+ M CAT.maci64/CAT_SeparatePolygon
+ M CAT.maci64/CAT_SmoothConvexity
+ M CAT.maci64/CAT_SulcusDepth
+ M CAT.maci64/CAT_Surf2Sphere
+ M CAT.maci64/CAT_Surf2Vol
+ M CAT.maci64/CAT_SurfDistance
+ M CAT.maci64/CAT_WarpSurf
+ M CAT.w32/CAT_3dVol2Surf.exe
+ M CAT.w32/CAT_AddValuesToSurf.exe
+ M CAT.w32/CAT_AverageSurfaces.exe
+ M CAT.w32/CAT_BlurSurfHK.exe
+ M CAT.w32/CAT_Central2Pial.exe
+ M CAT.w32/CAT_DeformSurf.exe
+ M CAT.w32/CAT_DumpCurv.exe
+ M CAT.w32/CAT_DumpSurfArea.exe
+ M CAT.w32/CAT_DumpSurfaceRatio.exe
+ M CAT.w32/CAT_FixTopology.exe
+ M CAT.w32/CAT_FractalDimension.exe
+ M CAT.w32/CAT_Hausdorff.exe
+ M CAT.w32/CAT_Isometize.exe
+ M CAT.w32/CAT_MarchingCubesGenus0.exe
+ M CAT.w32/CAT_MarkDefects.exe
+ M CAT.w32/CAT_RefineMesh.exe
+ M CAT.w32/CAT_ResampleSphericalSurf.exe
+ M CAT.w32/CAT_ResampleSphericalSurfSPH.exe
+ M CAT.w32/CAT_ResampleSurf.exe
+ M CAT.w32/CAT_SelfIntersect.exe
+ M CAT.w32/CAT_SeparatePolygon.exe
+ M CAT.w32/CAT_SmoothConvexity.exe
+ M CAT.w32/CAT_SulcusDepth.exe
+ M CAT.w32/CAT_Surf2Sphere.exe
+ M CAT.w32/CAT_Surf2Vol.exe
+ M CAT.w32/CAT_SurfDistance.exe
+ M CAT.w32/CAT_WarpSurf.exe
+ M CHANGES.txt
+ M cat_batch_cat.sh
+ M cat_main_amap1639.m
+ M cat_stat_analyze_ROIs.m
+ M cat_surf_results.m
+ M cat_vol_slice_overlay.m
+
+Changed: c CAT binaries.
+Changed: Also consider unmodulated ^wp-images for ROI analysis.
+Changed: Slight modifications to cat_vol_slice_overlay_ui.m and 
+         cat_surf_results.m
+Fixed:   Added missing default for number of processors to cat_batch_cat.sh.
+------------------------------------------------------------------------
 r2459 | gaser | 2023-09-01 18:09:47
 
 Changed paths:

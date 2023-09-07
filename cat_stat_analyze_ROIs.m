@@ -91,7 +91,7 @@ end
 if ~mesh_detected
   prepend = fname{1};
   % check whether prepending pattern is not based on GM/WM
-  if isempty(strfind(prepend,'mwp')) & isempty(strfind(prepend,'m0wp'))
+  if isempty(strfind(prepend,'mwp')) & isempty(strfind(prepend,'m0wp')) & isempty(strfind(prepend,'wp'))
     fprintf('\nWARNING: ROI analysis is only supported for VBM of GM/WM/CSF. No ROI values for DBM will be estimated.\n');
     return
   end

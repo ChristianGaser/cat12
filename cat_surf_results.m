@@ -889,7 +889,11 @@ switch lower(action)
     if ~H.disable_cbar
       H = show_colorbar(H);
     end
-    
+
+    if isfield(H,'Pvol_sel')
+      H = update_slice_overlay(H);
+    end
+
 %-CLip
   %======================================================================
   case 'clip'
@@ -917,7 +921,11 @@ switch lower(action)
     if ~H.disable_cbar
       H = show_colorbar(H);
     end
-    
+
+    if isfield(H,'Pvol_sel')
+      H = update_slice_overlay(H);
+    end
+
   %-CLims
   %======================================================================
   case 'clims'
@@ -1916,6 +1924,7 @@ end
 % show MIP and keep position if window exists
 OV.fig = 22;
 
+OV.func = [];
 if ishandle(OV.fig)
   cat_vol_slice_overlay(OV);
 else
@@ -2471,7 +2480,7 @@ else
 end
 
 if ~isfield(M, 'vertices') || ~isfield(M, 'faces')
-  error('cat_surf_results:nomesh', 'ERROR:cat_surf_render: No input mesh.');
+  error('cat_surf_results:nomesh', 'ERROR:cat_surf_results: No input mesh.');
 end
 
 %% -Patch
