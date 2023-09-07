@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2461 | gaser | 2023-09-07 11:56:37
+
+Changed paths:
+ M CHANGES.txt
+
+Changed: c CAT binaries.
+Changed: Also consider unmodulated ^wp-images for ROI analysis.
+Changed: Slight modifications to cat_vol_slice_overlay_ui.m and 
+         cat_surf_results.m
+Fixed:   Added missing default for number of processors to cat_batch_cat.sh.
+------------------------------------------------------------------------
 r2460 | gaser | 2023-09-07 11:54:38
 
 Changed paths:
