@@ -83,9 +83,6 @@ if isfield(OV,'clip') && all(isfinite(OV.clip)) && OV.clip(2) ~= OV.clip(1)
   cmin = max([1, ceil((OV.clip(1) - OV.range(1)) / col_step)]);
   cmax = min([ncol, floor((OV.clip(2) - OV.range(1)) / col_step)]);
   OV.cmap(cmin:cmax, :) = repmat([0.5 0.5 0.5], (cmax - cmin + 1), 1);
-  if isfield(OV,'func')
-    fprintf('Do not use OV.func and OV.clip together\n');
-  end
   OV.func = sprintf('i1(i1>%f & i1<%f)=NaN;',OV.clip(1),OV.clip(2));
 else
   OV.clip = [Inf -Inf];

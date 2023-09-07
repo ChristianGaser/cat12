@@ -8,7 +8,7 @@ function [prob,indx,indy,indz,th] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res)
 %
 % [prob,indx,indy,indz] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res)
 %
-% prob .. new AMAP segmenation (4D)
+% prob .. new AMAP segmentation (4D)
 % ind* .. index elements to asign a subvolume
 % Ymi  .. local intensity normalized source image
 % Yb   .. brain mask (SPM12)
