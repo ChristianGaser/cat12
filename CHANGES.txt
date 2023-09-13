@@ -1,4 +1,18 @@
 ------------------------------------------------------------------------
+r2463 | gaser | 2023-09-13 02:25:48
+
+Changed paths:
+ M .gitattributes
+ M CHANGES.txt
+ M cat_io_data2mat.m
+ M cat_system.m
+
+Changed: c CAT binaries.
+Changed: Also consider unmodulated ^wp-images for ROI analysis.
+Changed: Slight modifications to cat_vol_slice_overlay_ui.m and 
+         cat_surf_results.m
+Fixed:   Added missing default for number of processors to cat_batch_cat.sh.
+------------------------------------------------------------------------
 r2462 | gaser | 2023-09-07 11:58:41
 
 Changed paths:

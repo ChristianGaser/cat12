@@ -2,7 +2,7 @@ function out = cat_io_data2mat(opt,par,scaling)
 % Save spatially registered volume or resampled surface data as Matlab data matrix for further 
 % use with machine learning tools such as relevance/support vector approaches or Gaussian Process
 % models. Spatial structure of the data is not considered. 
-% Volume data will be optionally masked to remove non-brain areas
+% Volume data will be optionally masked to remove non-brain areas.
 % 
 % FORMAT cat_io_data2mat(opt,scaling)
 %
@@ -29,6 +29,7 @@ function out = cat_io_data2mat(opt,par,scaling)
 % ind        - index for volume or surface data inside mask
 % dim        - dimension of original data
 % V          - structure array containing data information of surface or resampled volume
+% sample     - structure array containing sample information
 %
 % Examples:
 % Select recursively all gray matter segments from folder1
@@ -315,7 +316,7 @@ else
   V = Vres;
 end
 
-save(outname,'Y','label','dim','V','ind');
+save(outname,'Y','label','dim','V','ind','sample');
 fprintf('Save data (Y,label,V,dim,ind) in %s.\n',outname);
 
 % add additional parameters if defined
