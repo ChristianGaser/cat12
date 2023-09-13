@@ -84,9 +84,8 @@ else
 end
 
 % for mac we need to enable execution because of Apple Gatekeeper
-if ismac && ST == 137
+if ismac && (ST == 137 || ST == 127)
   web('https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)#Troubleshooting');
-  CATDir = fullfile(fileparts(mfilename('fullpath')),'CAT');
   cat_io_cmd(sprintf('\nThe following commands will be executed as administrator to allow execution of CAT12 binaries and mex-files.\n Please now type admin password to call sudo\n'),'warning');
   cat_io_cmd(sprintf('You can also break that command here and run the commands that are listed on the open website under Troubleshooting manually.\n'),'warning');
   cmd = ['sudo xattr -r -d com.apple.quarantine ' CATDir];
