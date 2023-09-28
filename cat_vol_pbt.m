@@ -85,7 +85,7 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
       F = max(eps,min(1,((Ymf-1)/1.1).^4)); 
       
       if opt.pbtlas == 0
-      % Simple pure intensity based model that show strong variation in 
+      % Simple pure intensity based model that shows strong variation in 
       % myelinated regions.
         YM  = max(0,min(1,(Ymf-2))); YM(YMM) = nan; 
         stime = cat_io_cmd('    WM distance: ','g5','',opt.verb); 
@@ -445,7 +445,7 @@ YM = max(YM,smooth3(cat_vol_morph(cat_vol_morph(YM,'dc',2/opt.resV),'e'))); % RD
   
   
   
-  %% Estimation of a mixed percentual possion map Ypp.
+  %% Estimation of a mixed percentual position map Ypp.
   if nargout>3 || ~strcmp(opt.method,'pbtv')  
     YM  = Ymf>=1.5 & Ymf<2.5 & Ygmt>eps;
     Ycsfdc = Ycsfd; Ycsfdc(YM) = min(Ycsfd(YM),Ygmt(YM) - Ywmd(YM)); 

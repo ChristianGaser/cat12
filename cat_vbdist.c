@@ -1,4 +1,4 @@
-/* voxelbased euclidean distance calculation
+/* voxel-based euclidean distance calculation
  * ________________________________________________________________________
  * Calculates the euclidean distance without PVE to an object in P with a 
  * boundary of 0.5 for all voxels within a given mask M that should define
@@ -167,7 +167,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if (debug) {
     printf(" Debug:  debug = %d\n",debug); 
     printf(" Size: nL=%d, sN=%d\n",nL,sN); 
-    printf(" Neighbor distances: x=%1.2f,y=%1.2f,z=%1.2f - xy=%1.2f,yz=%1.2f,xz=%1.2f - xyz=%1.2f\n",s1,s2,s3,s12,s23,s13,s123); 
+    printf(" Neighbour distances: x=%1.2f,y=%1.2f,z=%1.2f - xy=%1.2f,yz=%1.2f,xz=%1.2f - xyz=%1.2f\n",s1,s2,s3,s12,s23,s13,s123); 
   }
   
   int u,v,w,nu,nv,nw; 

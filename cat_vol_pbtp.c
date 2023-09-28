@@ -177,7 +177,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (SEG[i]>opt.LLB && SEG[i]<opt.HHB) {
       ind2sub(i,&u,&v,&w,nL,xy,x);
       
-      /* read neighbor values */
+      /* read neighbour values */
       for (int n=0;n<sN;n++) {
         ni = i + NI[n];
         ind2sub(ni,&nu,&nv,&nw,nL,xy,x);
@@ -195,7 +195,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (SEG[i]>opt.LLB && SEG[i]<opt.HHB) {
       ind2sub(i,&u,&v,&w,nL,xy,x);
       
-      /* read neighbor values */
+      /* read neighbour values */
       for (int n=0;n<sN;n++) {
         ni = i - NI[n];
         ind2sub(ni,&nu,&nv,&nw,nL,xy,x);
@@ -215,7 +215,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   
 
 
-/* final setings...
+/* final settings...
  ======================================================================= */
   float CSFDc = 0, GMTi, CSFDi; /* 0.125 */
   for (int i=0;i<nL;i++) { 

@@ -12,7 +12,6 @@
 ########################################################
 # global parameters
 ########################################################
-version='check_pipeline.sh $Id$'
 
 matlab=matlab # you can use other matlab versions by changing the matlab parameter
 spm12_tmp=/tmp/spm12_$$
@@ -516,7 +515,6 @@ USED FUNCTIONS:
    image_matrix.sh
 
 This script was written by Christian Gaser (christian.gaser@uni-jena.de).
-This is ${version}.
 
 __EOM__
 }

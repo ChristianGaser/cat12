@@ -1,4 +1,20 @@
 ------------------------------------------------------------------------
+r2464 | gaser | 2023-09-28 21:56:29
+
+Changed paths:
+ M CHANGES.txt
+ M cat12.sh
+ M cat_batch_cat.sh
+ M cat_vbdist.c
+ M cat_vol_eidist.c
+ M cat_vol_laplace3.c
+ M cat_vol_pbt.m
+ M cat_vol_pbtp.c
+ M check_pipeline.sh
+ M distribute_to_server.sh
+
+Changed: Removed old SVN version information.
+------------------------------------------------------------------------
 r2463 | gaser | 2023-09-13 02:25:48
 
 Changed paths:
@@ -7,7 +23,7 @@ Changed paths:
  M cat_io_data2mat.m
  M cat_system.m
 
-Changed: c CAT binaries.
+Changed: Compiled CAT binaries.
 Changed: Also consider unmodulated ^wp-images for ROI analysis.
 Changed: Slight modifications to cat_vol_slice_overlay_ui.m and 
          cat_surf_results.m
@@ -19,7 +35,7 @@ Changed paths:
  M .gitattributes
  M CHANGES.txt
 
-Changed: c CAT binaries.
+Changed: Compiled CAT binaries.
 Changed: Also consider unmodulated ^wp-images for ROI analysis.
 Changed: Slight modifications to cat_vol_slice_overlay_ui.m and 
          cat_surf_results.m
@@ -30,7 +46,7 @@ r2461 | gaser | 2023-09-07 11:56:37
 Changed paths:
  M CHANGES.txt
 
-Changed: c CAT binaries.
+Changed: Compiled CAT binaries.
 Changed: Also consider unmodulated ^wp-images for ROI analysis.
 Changed: Slight modifications to cat_vol_slice_overlay_ui.m and 
          cat_surf_results.m
@@ -154,7 +170,7 @@ Changed paths:
  M cat_surf_results.m
  M cat_vol_slice_overlay.m
 
-Changed: c CAT binaries.
+Changed: Compiled CAT binaries.
 Changed: Also consider unmodulated ^wp-images for ROI analysis.
 Changed: Slight modifications to cat_vol_slice_overlay_ui.m and 
          cat_surf_results.m
