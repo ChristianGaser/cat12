@@ -35,7 +35,7 @@
  * 
  *
  * Small test examples:
- * 1) "Face" with disance from the eyes and a odd nose
+ * 1) "Face" with distance from the eyes and an odd nose
  *   A=zeros(50,50,3,'single'); A(20:30,5:15,2)=10; A=smooth3(A); 
  *   A(20:30,35:45,2)=1; A(1:5,1:25,:)=nan; A(1:5,26:50,:)=-inf; 
  *   F=ones(size(A),'single'); F(10:40,20,:)=0.5; F(40,10:40,:)=0;
@@ -70,7 +70,6 @@
 
 #include "mex.h"   
 #include "math.h"
-/* #include "matrix.h" */
 #include "float.h"
 #include "limits.h"
 #include <stdio.h>

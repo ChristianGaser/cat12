@@ -12,7 +12,6 @@
 ########################################################
 # global parameters
 ########################################################
-version='distribute_to_server.sh $Id$'
 
 SERVER=localhost
 USER=`whoami`
@@ -259,7 +258,6 @@ EXAMPLE
      sh distribute_to_server.sh -s "141.35.68.96 141.35.68.95 141.35.68.75 141.35.68.74" -c "/Volumes/vbmDB/MRData/batches/spm12/toolbox/cat12/cat_batch_cat.sh -m /Volumes/Ultramax/MATLAB_R2010b.app/bin/matlab -v /Volumes/vbmDB/MRData/batches/spm12/toolbox/cat12 -l /Volumes/vbmDB/MRData/log -p 4 -c \"cat_tst_qa2\(\'p0\',CFILES,struct\(\'prefix\',\'vbm8_\',\'write_csv\',0\)\)\"" -u local /Volumes/vbmDB/MRData/release20140211/pre/vbm8/IXI/HC/*/*/p0*.nii
     
 This script was written by Christian Gaser (christian.gaser@uni-jena.de).
-This is ${version}.
 
 __EOM__
 }

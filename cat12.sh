@@ -7,7 +7,6 @@
 # Jena University Hospital
 # ______________________________________________________________________
 # $Id$
-version='cat12.sh $Id$'
 
 echo "##############################################################"
 echo "   cat12.sh is deprecated. Please now use cat_batch_cat.sh.   "

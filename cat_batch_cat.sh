@@ -12,7 +12,6 @@
 ########################################################
 # global parameters
 ########################################################
-version='cat_batch_cat.sh $Id$'
 
 matlab=matlab # you can use other matlab versions by changing the matlab parameter
 cwd=$(dirname "$0")
@@ -201,7 +200,7 @@ exit_if_empty ()
 
   if [ ! -n "$val" ]; then
     echo 'ERROR: No argument given with \"$desc\" command line argument!' >&2
-  exit 1
+    exit 1
   fi
 }
 
@@ -271,9 +270,9 @@ get_no_of_cpus () {
 
     if [ $NUMBER_OF_JOBS -le -1 ]; then
       NUMBER_OF_JOBS=$(echo "$NUMBER_OF_PROC + $NUMBER_OF_JOBS" | bc)
-    if [ "$NUMBER_OF_JOBS" -lt 1 ]; then
-      NUMBER_OF_JOBS=1
-    fi
+      if [ "$NUMBER_OF_JOBS" -lt 1 ]; then
+        NUMBER_OF_JOBS=1
+      fi
     fi
     if [ "$NUMBER_OF_JOBS" -gt "$NUMBER_OF_PROC" ]; then
       NUMBER_OF_JOBS=$NUMBER_OF_PROC
@@ -430,7 +429,7 @@ run_cat12 ()
     
     ARG_LIST[$count]="${ARG_LIST[$count]} '$FILE'"
     
-    # filenames have zo be quoted in case of any whitespaces
+    # filenames have to be quoted in case of any whitespaces
     if [ "$TEST" -eq 0  ]; then
       echo '"'${FILE}'"' >> ${TMP}${count}
     else
@@ -618,7 +617,6 @@ SETTINGS
  matlab command: $matlab
   
 This script was written by Christian Gaser (christian.gaser@uni-jena.de).
-This is ${version}.
 
 __EOM__
 }

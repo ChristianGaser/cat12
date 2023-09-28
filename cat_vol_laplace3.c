@@ -112,7 +112,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       {
         ind2sub(i,&u,&v,&w,xy,x);
 
-        /* read neighbor values */
+        /* read neighbour values */
         L2[i]=0.0; Nn=0.0;
         for (int n=0;n<sN;n++) {
           ni = i + NI[n];
@@ -127,7 +127,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             ni = i + NI[n];
             ind2sub(ni,&nu,&nv,&nw,xy,x);
             if ( ( (ni<0) || (ni>=nL) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) )==false && SEG[ni]>LB && SEG[ni]<HB) 
-              LN[ni] = true; /* if i change his neigbors has to be recalculated */
+              LN[ni] = true; /* if i change his neigbours it has to be recalculated */
           }
         }
         LN[i] = false;
