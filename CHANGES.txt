@@ -1,4 +1,23 @@
 ------------------------------------------------------------------------
+r2465 | rdahnke | 2023-09-30 13:29:22
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_extopts.m
+ M cat_main.m
+ M cat_run_job1639.m
+ M cat_surf_createCS3.m
+ M cat_surf_renderv.m
+ M cat_system.m
+ M cat_vol_mimcalc.m
+
+1) New:     Added cat_vol_pbtsimple in cat_surf_createCS3 as simplified of the 
+            regular PBT function that can be accessed in the developer GUI 
+            (cat_conf_extopts). Updated call of CAT_MarchingCubesGenus0.
+2) Fixed:   Added missing parameter in cat_main.
+3) Changed: Added suggestion to error message in cat_run_job1639.
+4) Fixed:   Corrected bug in cat_surf_renderv and cat_vol_mimcalc.
+5) Fixed:   Corrected bugs in cat_system in MAC ------------------------------------------------------------------------
 r2464 | gaser | 2023-09-28 21:56:29
 
 Changed paths:

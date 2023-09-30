@@ -54,10 +54,17 @@ function varargout = cat_surf_renderv(S,facevertexcdata,opt)
     Ps = S; 
     S  = gifti(char(Ps));
   end
-  if ischar(facevertexcdata) || iscell(facevertexcdata)
+  if ~exist('facevertexcdata','var') 
+    if isfield(S,'facevertexcdata')
+      facevertexcdata = S.facevertexcdata; 
+    elseif isfield(S,'cdata')
+      facevertexcdata = S.cdata; 
+    end
+  end
+  %if ischar(facevertexcdata) || iscell(facevertexcdata)
     %[pp,ff,ee] = cat_
     %facevertexcdata = gifti
-  end
+  %end
   
   if ~isempty(facevertexcdata)
     S.facevertexcdata = facevertexcdata;

@@ -348,8 +348,13 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
     end
     
 
+
     stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,native2unicode(179, 'latin1'))); stimet = stime;
-    if strcmp(opt.pbtmethod,'pbt3') 
+    if strcmp(opt.pbtmethod,'pbtsimple0') || strcmp(opt.pbtmethod,'pbtsimple1') 
+      [Yth1i,Yppi] = cat_vol_pbtsimple(Ymfs,opt.interpV,str2double(opt.pbtmethod(10))); 
+      %ds('d2sm','',1,Yth1i/5,Yppi,round(size(Yppi,3)*2/3));
+      %return
+    elseif strcmp(opt.pbtmethod,'pbt3') 
       [Yth1i,Yppi] = cat_vol_pbt3(Ymfs,struct('method',opt.pbtmethod,'cb',iscerebellum,'resV',opt.interpV,...
         'vmat',V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1])); % avoid underestimated thickness in gyri
     else 
@@ -666,9 +671,11 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
         Ycbm = cat_vol_resize(Ycbm,'dereduceBrain',BB);                    % adding of background
         
         spm_write_vol(Vpp_side,Ycbm);
-        cmd = sprintf('CAT_MarchingCubesGenus0 -fwhm 3 -thresh "%g" -dist 0.6 "%s" "%s"',th_initial,Vpp_side.fname,Pcentral);
+         
+        cmd = sprintf('CAT_MarchingCubesGenus0 -fwhm "3" -thresh "%g" "%s" "%s"',th_initial,Vpp_side.fname,Pcentral);
+        fprintf('\n%s\n\n',cmd);
         cat_system(cmd,opt.verb-3);      
-        
+      
       else
         % Main initial surface creation using cat_vol_genus0
         % cat_vol_genus0 uses a "simple" marching cube without use of isovalues
@@ -677,7 +684,7 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
         % that the meshes of cat_vol_genus0 are more regular and also allow 
         % voxel-based topology optimization.  
 
-        cmd = sprintf('CAT_MarchingCubesGenus0 -fwhm 3 -thresh "%g" -dist 0.6 "%s" "%s"',th_initial,Vpp_side.fname,Pcentral);
+        cmd = sprintf('CAT_MarchingCubesGenus0 -fwhm "3" -thresh "%g" "%s" "%s"',th_initial,Vpp_side.fname,Pcentral);
         cat_system(cmd,opt.verb-3);      
         
       end
@@ -686,7 +693,11 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
       CS = loadSurf(Pcentral);
       EC0 = size(CS.vertices,1) + size(CS.faces,1) - size(spm_mesh_edges(CS),1);
       
-      if EC0 ~= 2, error('Surface creation failed.\n'); end      
+      if EC0 ~= 2
+        error('cat_surf_createCS3:CAT_MarchingCubesGenus0', ...
+          ['Surface creation with topology issue with CAT_MarchingCubesGenus0 failed. \n' ...
+           'Although a surface was created it did not have the expected topology (Euler count = %d).\n'],EC0); 
+      end      
 
       if ~debug, clear mask_parahipp_smoothed; end
                   
