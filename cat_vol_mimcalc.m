@@ -15,7 +15,6 @@ function varagout = cat_vol_mimcalc(job)
   def.var     = {};
   def.verb    = 1;
   def.cleanup = 1;
-  def.options = {};
   job = cat_io_checkinopt(job,def);
 
   BIDSdirname = ['derivatives' filesep 'mimcalc'];
@@ -108,6 +107,10 @@ function out = my_spm_imcalc(job)
   if numel(job.var)
       extra_vars = { job.var };
   end
+  options = {};
+  if isfield(job,'options')
+    options = job.options; 
+  end
 
   switch lower(job.expression)
     case 'approx'
@@ -146,7 +149,7 @@ function out = my_spm_imcalc(job)
       
     otherwise
       try
-          cat_vol_imcalc(char(job.input), out.files{1}, job.expression, job.options, extra_vars{:});
+          cat_vol_imcalc(char(job.input), out.files{1}, job.expression, options, extra_vars{:});
 
           cmd = 'spm_image(''display'',''%s'')';
           fprintf('ImCalc Image: %s\n',spm_file(out.files{1},'link',cmd));
