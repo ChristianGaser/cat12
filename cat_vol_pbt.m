@@ -129,12 +129,12 @@ function [Ygmt,Ypp,Ymf,Ywmd,Ycsfdc] = cat_vol_pbt(Ymf,opt)
         % (currently 2.1, possible range 1.5 to 2.2) to avoid corrections 
         %% in thicker areas (mostly gyris). 
         Ygd   = cat_vbdist(2.1 - Ymfr); % estimate distance map to central/WM surface, lower thresholds are also possible (range 1.5 to 2.2, default 2.1) 
-        Ygdt  = cat_vol_pbtp(max(2,min(3,4-Ymfr)),Ygd,inf(size(Ygd),'single')) * mean(resT2.vx_volr);
+        Ygdt  = cat_vol_pbtp( round(max(2,min(3,4-Ymfr))) ,Ygd,inf(size(Ygd),'single')) * mean(resT2.vx_volr); % RD20230930: add round
         Ygdt  = cat_vol_median3(Ygdt,Ygdt>0.01,Ygdt>0.01);                    
         Ygdt  = cat_vol_localstat(Ygdt,Ygdt>0.1,1/mean(resT2.vx_volr),1);    
 
         Ywd   = cat_vbdist(2.5 - Ymfr);  
-        Ywdt  = cat_vol_pbtp(max(2,min(3,4-Ymfr)),Ywd,inf(size(Ywd),'single')) * mean(resT2.vx_volr);
+        Ywdt  = cat_vol_pbtp( round(max(2,min(3,4-Ymfr))) ,Ywd,inf(size(Ywd),'single')) * mean(resT2.vx_volr); % RD20230930: add round
         Ywdt  = cat_vol_median3(Ywdt,Ywdt>0.01,Ywdt>0.01);                    
         Ywdt  = cat_vol_localstat(Ywdt,Ywdt>0.1,1/mean(resT2.vx_volr),1);    
 
@@ -408,7 +408,7 @@ YM = max(YM,smooth3(cat_vol_morph(cat_vol_morph(YM,'dc',2/opt.resV),'e'))); % RD
     
     % estimate thickness with PBT approach
     if opt.pbtlas, Ymfo=Ymf; Ymf = single(1 + 2*((Ywmd>0 & Ycsfd>0) | Ymfo>2)) - (Ywmd>0 & Ycsfd>0);  end
-    Ygmt  = cat_vol_pbtp(Ymf,Ywmd,Ycsfd);   
+    Ygmt  = cat_vol_pbtp(round(Ymf),Ywmd,Ycsfd);   % RD20230930: add round
     
     % Error handling 
     % For some unkown reasons the sulcus reconstruction of cat_vol_pbtp failed in some cases (not directly reproducable).      
