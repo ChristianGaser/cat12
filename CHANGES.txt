@@ -1,4 +1,21 @@
 ------------------------------------------------------------------------
+r2467 | rdahnke | 2023-10-04 22:50:35
+
+Changed paths:
+ M CAT.maci64/CAT_MarchingCubesGenus0
+ M CHANGES.txt
+ M cat_vol_eidist.c
+ M cat_vol_eidist.mexmaci64
+ M cat_vol_pbt.m
+ M cat_vol_pbtsimple.m
+
+1) Changed:    Restructured cat_vol_pbtsimple function with additional smoothing
+               and additional interpolation to support partial volume effects 
+               also for the simple grid-based distance estimation.  
+2) Changed:    Small corrections in special (unused) cases in cat_vol_pbt.
+3) Fixed:      Corrections in cat_vol_eidist.c to handle partial volume effects
+               in the initial preparation! 
+4) Changed:    Uploaded CAT.maci64/CAT_MarchingCubesGenus0 function.                ------------------------------------------------------------------------
 r2465 | rdahnke | 2023-09-30 13:29:22
 
 Changed paths:
