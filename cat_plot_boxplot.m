@@ -805,9 +805,11 @@ for i=1:qn
       y = (ii-offset)*ones(length(data{ii}),1)+jitter_kde; x = data{ii}(:);
     end
     if opt.usescatter
-      sc = scatter(x,y,opt.datasymbol,'MarkerEdgeColor',scl*0.3*opt.groupcolor(ii,:),...
+      sc = scatter(x,y,opt.datasymbol, ...
+        'MarkerEdgeColor',scl*0.3*opt.groupcolor(ii,:),...
         'MarkerFaceColor',scl*0.3*opt.groupcolor(ii,:),...
-        'MarkerEdgeAlpha',0.1 + 0.9/numel(x).^.3,'MarkerFaceAlpha',0.1 + 0.9/numel(x).^.3);
+        'MarkerEdgeAlpha',0.05 + 0.25/numel(x).^.3, ...
+        'MarkerFaceAlpha',0.05 + 0.25/numel(x).^.3);
       if opt.datasymbol, sc.SizeData = 12; end % dotlike but with transparency 
     else
       plot(x,y,opt.datasymbol,'Color',[scl*0.3*opt.groupcolor(ii,:)]);
@@ -1169,6 +1171,7 @@ if nargin<4 %define the default  interval [MIN,MAX]
     Range=maximum-minimum;
     MIN=minimum-Range/2; MAX=maximum+Range/2;
 end
+if MIN==MAX, MIN=MIN-1; MAX=MAX+1; end
 % set up the grid over which the density estimate is computed;
 R=MAX-MIN; dx=R/(n-1); xmesh=MIN+[0:dx:R]; N=length(unique(data));
 %bin the data uniformly using the grid defined above;
