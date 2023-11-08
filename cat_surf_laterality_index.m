@@ -35,13 +35,13 @@ for i=1:n
   end  
     
   % flip values
-  left_cdata = M.cdata(1:32492);
-  right_data = M.cdata(32493:64984);
+  left_cdata  = M.cdata(1:32492);
+  right_cdata = M.cdata(32493:64984);
   cdata = M.cdata;
-  flipped_cdata = [right_data;left_cdata];
+  flipped_cdata = [right_cdata;left_cdata];
   
 	LI = (cdata-flipped_cdata)./(cdata+flipped_cdata+eps);
-	LI = (left_cdata-right_data)./(left_cdata+right_data+eps);
+	LI = (left_cdata-right_cdata)./(left_cdata+right_cdata+eps);
   M.cdata = [LI; zeros(size(LI))];
   
   % rename dataname

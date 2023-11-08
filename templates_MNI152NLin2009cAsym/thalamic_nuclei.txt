@@ -9,8 +9,7 @@ converted to uint8.
 If you use this atlas, please cite the references below.
 
 Websites:
-A) https://https://zenodo.org/record/5499504
-B) https://github.com/thalamicseg/thomas_new
+A) https://github.com/thalamicseg/thomas_new
 
 References:
 
