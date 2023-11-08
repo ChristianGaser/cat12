@@ -1,4 +1,14 @@
 ------------------------------------------------------------------------
+r2471 | gaser | 2023-11-08 21:46:48
+
+Changed paths:
+ M CHANGES.txt
+
+Changed: Set default surface processing back to 22 (CS2).
+Added:   New function to calculate laterality index for volumes.
+Fixed:   Corrected error in cat_batch_bids.sh wehre cat12 folder was not correctly
+         defined.
+------------------------------------------------------------------------
 r2470 | gaser | 2023-11-08 21:43:04
 
 Changed paths:
