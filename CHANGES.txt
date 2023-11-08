@@ -1,4 +1,18 @@
 ------------------------------------------------------------------------
+r2470 | gaser | 2023-11-08 21:43:04
+
+Changed paths:
+ M CHANGES.txt
+ M cat_batch_bids.sh
+ M cat_defaults.m
+ M cat_surf_laterality_index.m
+ M templates_MNI152NLin2009cAsym/thalamic_nuclei.txt
+
+Changed: Set default surface processing back to 22 (CS2).
+Added:   New function to calculate laterality index for volumes.
+Fixed:   Corrected error in cat_batch_bids.sh wehre cat12 folder was not correctly
+         defined.
+------------------------------------------------------------------------
 r2467 | rdahnke | 2023-10-04 22:50:35
 
 Changed paths:
@@ -34,7 +48,8 @@ Changed paths:
 2) Fixed:   Added missing parameter in cat_main.
 3) Changed: Added suggestion to error message in cat_run_job1639.
 4) Fixed:   Corrected bug in cat_surf_renderv and cat_vol_mimcalc.
-5) Fixed:   Corrected bugs in cat_system in MAC ------------------------------------------------------------------------
+5) Fixed:   Corrected bugs in cat_system in MAC 
+------------------------------------------------------------------------
 r2464 | gaser | 2023-09-28 21:56:29
 
 Changed paths:
@@ -275,7 +290,8 @@ Changed paths:
  M cat_surf_render2.m
  M spm_cat12.m
 
-1) Fixed:    Corrected poster background bugs in Octave. ------------------------------------------------------------------------
+1) Fixed:    Corrected poster background bugs in Octave. 
+------------------------------------------------------------------------
 r2452 | gaser | 2023-08-08 11:05:49
 
 Changed paths:
@@ -1086,7 +1102,8 @@ Changed paths:
 
 Changed:   Update blood vessel correction to reduce cutting of gyri with 
            extopts.experimental==1 (developer GUI). Tests showed better results
-           for CS2 but still local problems for CS3.------------------------------------------------------------------------
+           for CS2 but still local problems for CS3.
+------------------------------------------------------------------------
 r2209 | rdahnke | 2023-05-26 15:00:52
 
 Changed paths:
@@ -1098,7 +1115,8 @@ Changed:   Update MP2Rage function cat_vol_mp2rage and batch in cat_conf_tools.
            Added help, bias correction, integrated SPM preprocessing, report, 
            batch file dependencies. 
 Changed:   Added verbose setting (default=0 i.e. no progress bar) to  
-           cat_vol_inpaint function.  ------------------------------------------------------------------------
+           cat_vol_inpaint function.  
+------------------------------------------------------------------------
 r2208 | gaser | 2023-05-19 11:43:40
 
 Changed paths:
@@ -1114,7 +1132,8 @@ Changed paths:
  M cat_conf_tools.m
 
 New:     Added experimental function and batch to optimise MP2Rage data for CAT
-         preprocessing.------------------------------------------------------------------------
+         preprocessing.
+------------------------------------------------------------------------
 r2206 | gaser | 2023-05-11 12:08:58
 
 Changed paths:

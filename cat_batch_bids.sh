@@ -21,9 +21,9 @@ fi
 
 subjid=$( basename $1 ) # note that only one subject id should be inputted at the time.
 dirname=$(dirname $1 ) 
-cat12_dir=$cwd
+cat12_dir=$(dirname "$0")
 matlab=matlab # you can use other matlab versions by changing the matlab parameter
-default="cat_defaults_bids.m" # define own defaults file here
+default=${cat12_dir}/"cat_defaults.m" # define own defaults file here
 model=2     # 0 - detect large changes with brain/head growth (i.e. developmental effects)
             # 1 - detect small changes (i.e. due to plasticity)
             # 2 - detect large changes (i.e. ageing or development)
@@ -32,10 +32,10 @@ model=2     # 0 - detect large changes with brain/head growth (i.e. developmenta
 #no_surf=" --no-surf " # remove comment if you don't want to estimate surface
 export_dartel=" --export-dartel " # export affine registered segmentations for Dartel (longitudinal data)
 rp=" --rp " # additionally estimate affine registered segmentations (cross-sectional data)
-bids_folder_cross="../derivatives/CAT12.8.1"     # define BIDS path for cross-sectional data
-bids_folder_long="../derivatives/CAT12.8.1_long" # define BIDS path for longitudinal data
+bids_folder_cross="../derivatives/CAT12.8.2"     # define BIDS path for cross-sectional data
+bids_folder_long="../derivatives/CAT12.8.2_long" # define BIDS path for longitudinal data
 fg=" --fg " # keep process in foreground which might be neccessary for batch/queue systems
-log_folder="${dirname}/derivatives/logs_CAT12.8.1/${subjid}" # the directory for the log files. 
+log_folder="${dirname}/derivatives/logs_CAT12.8.2/${subjid}" # the directory for the log files. 
                                                              # Must contain the subject id 
 
 for i in ${@}/; do
