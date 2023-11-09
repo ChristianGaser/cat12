@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2472 | rdahnke | 2023-11-09 10:53:16
+
+Changed paths:
+ M CHANGES.txt
+ M cat_io_rerun.m
+ M cat_vol_pbtsimple.m
+ M cat_vol_resize.m
+
+1) Changed:  Added new thickness-based correction in cat_vol_pbtsimple to better
+             interpretative WM boundary within the GM/WM partial volume range.
+2) Fixed:    Corrected bug in cat_vol_resize. 
+3) Changed:  Optimised command-line output of cat_io_rerun. 
+------------------------------------------------------------------------
 r2471 | gaser | 2023-11-08 21:46:48
 
 Changed paths:

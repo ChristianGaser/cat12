@@ -68,12 +68,12 @@ function run = cat_io_rerun(files,filedates,verb,force)
       if numel(files)>1
         run{fi} = 1; 
         if verb
-          fprintf(' Input file 2-%02d does not exist: %40s\n',fi,spm_str_manip( files{fi}, 'a40'));
+          fprintf(' Input file 2-%02d does not exist: %70s\n',fi,spm_str_manip( files{fi}, 'a70'));
         end
       else
         run(fi) = 1; 
         if verb
-          fprintf(' Input file 2 does not exist: %43s\n',spm_str_manip( files{fi}, 'a43'));
+          fprintf(' Input file 2 does not exist: %73s\n',spm_str_manip( files{fi}, 'a73'));
         end
       end
       exf = 0; 
@@ -87,29 +87,39 @@ function run = cat_io_rerun(files,filedates,verb,force)
         [pp,ff,ee] = spm_fileparts(filedates{fi}); filedates{fi} = fullfile(pp,[ff ee]); % remove additional dimensions ",1" 
         if exist(filedates{fi},'file')
           fdata2 = dir(filedates{fi});
-          % be verbose only if verb>=1 or if no reprocessing is required  
-          if verb >= 1 || (verb && ~( (iscell(run) && any(cell2mat(run))) || ( ismatrix(run) && any(run) ) ))
-            fprintf('\n'); 
-            if numel(files)==1
-              fprintf(' Input file 1: %50s: %s\n',spm_str_manip( fdata.name , 'a50'),datestr(fdata.datenum) ); 
-              fprintf(' Input file 2: %50s: %s\n',spm_str_manip( fdata2.name, 'a50'),datestr(fdata2.datenum));
-            else
-              if fi == 1
-                fprintf(' Input file 1:     %50s: %s\n',   spm_str_manip( fdata.name ,'a50'),datestr(fdata.datenum) ); 
-              end
-              fprintf(' Input file 2-%02d: %50s: %s\n',fi,spm_str_manip( fdata2.name,'a50'),datestr(fdata2.datenum));
-            end
-          end
           if numel(fdata)>1
             run{fi} = [fdata(:).datenum] >= fdata2.datenum;
           else
             run(fi) = fdata.datenum >= fdata2.datenum;
           end
+
+          % be verbose only if verb>=1 or if no reprocessing is required  
+          if verb >= 1 || (verb && ~( (iscell(run) && any(cell2mat(run))) || ( ismatrix(run) && any(run) ) ))
+            if fi==1, fprintf('\n'); end
+            if numel(files)==1 && numel(filedates)==1
+              fprintf(' Input file 1: %80s: %s\n',spm_str_manip( fdata.name , 'a80'),datestr(fdata.datenum) ); 
+              fprintf(' Input file 2: %80s: %s -',spm_str_manip( fdata2.name, 'a80'),datestr(fdata2.datenum));
+            elseif numel(files) == numel(filedates)
+              fprintf(' Input file %02d-1: %80s: %s\n',fi,spm_str_manip( fdata.name ,'a80'),datestr(fdata.datenum) ); 
+              fprintf(' Input file %02d-2: %80s: %s -',fi,spm_str_manip( fdata2.name,'a80'),datestr(fdata2.datenum));
+            elseif numel(files) == 1
+              if fi == 1
+                fprintf(' Input file 1-%02d: %80s: %s\n',fi,spm_str_manip( fdata.name ,'a80'),datestr(fdata.datenum) ); 
+              end
+              fprintf(' Input file 1-%02d: %80s: %s -',fi,spm_str_manip( fdata2.name,'a80'),datestr(fdata2.datenum));
+            else 
+              error('Error:cat_io_rerun:inputerror','Size input1 does not match size of input2 ([n1,n2]: [1,1], [1,n], or [n,n]).')
+            end
+            if run(fi), cat_io_cprintf([0.5 0.0 0.0],' reprocess\n'); else, cat_io_cprintf([0.0 0.5 0.0],' do not process\n'); end
+          end
         elseif verb > 1
-          if numel(files)==1
-            cat_io_cprintf([0.5 0.0 0.0],' Input file 2: %50s: %s\n',spm_str_manip( filedates{fi}, 'a50'),'missing');          
+          if numel(files)==1 && numel(filedates)==1
+            cat_io_cprintf([0.5 0.0 0.0],' Input file 2: %80s: %s\n',spm_str_manip( filedates{fi}, 'a80'),'missing');          
+          elseif numel(files) == numel(filedates)
+            cat_io_cprintf([0.5 0.0 0.0],' Input file %02d-1: %80s: %s\n',fi,spm_str_manip( files{fi}    ,'a80'),datestr(fdata.datenum) ); 
+            cat_io_cprintf([0.5 0.0 0.0],' Input file %02d-2: %80s: %s\n',fi,spm_str_manip( filedates{fi},'a80'),'missing');
           else
-            cat_io_cprintf([0.5 0.0 0.0],' Input file 2-%02d: %50s: %s\n',fi,spm_str_manip( filedates{fi},'a50'),'missing');
+            cat_io_cprintf([0.5 0.0 0.0],' Input file 2-%02d: %80s: %s\n',fi,spm_str_manip( filedates{fi},'a80'),'missing');
           end
         end
       elseif ~isempty(filedates) && isdatetime( filedates(fi,:) )
