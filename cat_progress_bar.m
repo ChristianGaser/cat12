@@ -39,6 +39,9 @@ switch lower(action)
         catch
           Fwaitbar = waitbar(0,arg2);
         end
+        
+        % don't know whether this works, but I have used the parameters from spm_progress_bar
+        set(Fwaitbar,'IntegerHandle','off','InvertHardcopy','on','PaperPositionMode','auto','Tag','Interactive');
 
     % Set
     %-------------------------------------------------------------------

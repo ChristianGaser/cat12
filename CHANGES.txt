@@ -1,4 +1,18 @@
 ------------------------------------------------------------------------
+r2476 | gaser | 2023-11-10 16:02:32
+
+Changed paths:
+MM CHANGES.txt
+MM cat_batch_bids.sh
+MM cat_batch_cat.sh
+MM cat_batch_long.sh
+ M cat_progress_bar.m
+A  cat_vol_laterality_index.m
+
+Changed: Added some flags to waitbar window in cat_progressbar to prevent 
+         unwished popping up of the window.
+Added:   New function to calculate laterality index for VBM data.
+------------------------------------------------------------------------
 r2475 | gaser | 2023-11-10 12:08:18
 
 Changed paths:
@@ -39,7 +53,7 @@ Changed paths:
 
 Changed: Set default surface processing back to 22 (CS2).
 Added:   New function to calculate laterality index for volumes.
-Fixed:   Corrected error in cat_batch_bids.sh wehre cat12 folder was not correctly
+Fixed:   Corrected error in cat_batch_bids.sh where cat12 folder was not correctly
          defined.
 ------------------------------------------------------------------------
 r2470 | gaser | 2023-11-08 21:43:04
