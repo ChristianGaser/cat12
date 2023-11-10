@@ -31,7 +31,7 @@ if sel == 1
   for i = 1:size(dirs,1)
     ind_r = strfind(dirs(i,:),'check_r');
     release = str2num(dirs(i,ind_r+7:ind_r+10));
-    if release < min_release || release > max_release
+    if ~isempty(release) && (release < min_release || release > max_release)
       ind = [ind i];
     end
   end

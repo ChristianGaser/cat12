@@ -1,4 +1,14 @@
 ------------------------------------------------------------------------
+r2473 | gaser | 2023-11-10 09:41:11
+
+Changed paths:
+ M CHANGES.txt
+ M check_pipeline.sh
+ M check_pipeline_homogeneity.m
+
+Changed: Updated check_pipeline.sh and added checks for xml-files.
+Changed: Added check whether reöease string is empty in check_pipeline_homogeneity.m
+------------------------------------------------------------------------
 r2472 | rdahnke | 2023-11-09 10:53:16
 
 Changed paths:
@@ -52,7 +62,8 @@ Changed paths:
 2) Changed:    Small corrections in special (unused) cases in cat_vol_pbt.
 3) Fixed:      Corrections in cat_vol_eidist.c to handle partial volume effects
                in the initial preparation! 
-4) Changed:    Uploaded CAT.maci64/CAT_MarchingCubesGenus0 function.                ------------------------------------------------------------------------
+4) Changed:    Uploaded CAT.maci64/CAT_MarchingCubesGenus0 function.                
+------------------------------------------------------------------------
 r2465 | rdahnke | 2023-09-30 13:29:22
 
 Changed paths:
@@ -977,7 +988,7 @@ Changed paths:
 
 Fixed: Corrected bug in spm_cat12.m with missing definition of catdir.
 
- ------------------------------------------------------------------------
+------------------------------------------------------------------------
 r2219 | gaser | 2023-07-17 11:13:51
 
 Changed paths:
@@ -990,7 +1001,7 @@ Changed paths:
 
 Changed: Some smaller edits in help text.
 Fixed:   Corrected missing switch/case field in cat_surf_vol2surf.m.
- ------------------------------------------------------------------------
+------------------------------------------------------------------------
 r2218 | rdahnke | 2023-07-10 17:49:53
 
 Changed paths:
@@ -3819,7 +3830,7 @@ Fixed:  Changed parameters in cat_main_reportfig according to new homogeneity
 Fixed:  Corrected wrong indication og group factor in cat_stat_check_SPM.m
         for long. designs.
 Fixed:  Solved some smaller issues in cat_stat_homogeneity.m.
- ------------------------------------------------------------------------
+------------------------------------------------------------------------
 r2059 | gaser | 2022-07-29 23:01:03
 
 Changed paths:
@@ -3855,7 +3866,7 @@ Changed paths:
 
 
 Changed: Prepared cat_stat_check_cov.m to handle longitudinal data.
-         ------------------------------------------------------------------------
+------------------------------------------------------------------------
 r2057 | gaser | 2022-07-29 18:44:18
 
 Changed paths:

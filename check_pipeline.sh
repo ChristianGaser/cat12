@@ -340,15 +340,15 @@ postprocess ()
     calc_tmp=${proc_dir}/check_r${release}
   fi
   
-
   # check whether xml files are found
   for folder in "" "/long"; do
     calc_tmp2=${calc_tmp}/${folder}
     
     # remove all average files from long mode
     rm ${calc_tmp}/long/*/*avg* 2>/dev/null
-    
+
     tmp=`ls ${calc_tmp2}/report/cat_*xml 2>/dev/null`
+
     if [ -n "$tmp" ]; then
       for i in ${calc_tmp2}/report/cat_*xml; do
         revision_cat=`grep revision_cat ${i}| cut -f2 -d">"|cut -f1 -d"<"`
@@ -413,43 +413,47 @@ postprocess ()
       done
     fi
   done
-     
+  
+  # sometimes xml-files were not saved
+  if [ ! -n "$revision_cat" ]; then
+    echo Could not find xml-files. Give 4-digit release number:
+    read revision_cat
+  fi
+
   # rename tmp-folder and zip and scp them
-  if [ -n "$revision_cat" ]; then
-    if [ ! $postprocess_only -lt 0 ]; then
-      if [ -d ${proc_dir}/check_r${revision_cat} ]; then
-        mv ${calc_tmp}/*/ ${proc_dir}/check_r${revision_cat}/
-      else
-        mv ${calc_tmp} ${proc_dir}/check_r${revision_cat}
-      fi
+  if [ ! $postprocess_only -lt 0 ]; then
+    if [ -d ${proc_dir}/check_r${revision_cat} ]; then
+      mv ${calc_tmp}/*/ ${proc_dir}/check_r${revision_cat}/
+    else
+      mv ${calc_tmp} ${proc_dir}/check_r${revision_cat}
+    fi
+  fi
+  
+  # prepare renderview if tool is found and surface processing is enabled
+  if ([ ! -z `which render_surf.sh` ] && [ ! -z `which CAT_View` ]) && [ $volumes_only -eq 0 ]; then
+    mkdir -p ${proc_dir}/check_r${revision_cat}/surf
+    ln -s ${proc_dir}/check_r${revision_cat}/long/surf/* ${proc_dir}/check_r${revision_cat}/surf/ >/dev/null 2>&1
+    render_surf.sh -range 0 6 ${proc_dir}/check_r${revision_cat}/surf
+    mv check_r${revision_cat}*.png ${proc_dir}/ >/dev/null 2>&1
+    scp -q -P $PORT ${proc_dir}/check_r${revision_cat}*.png $scp_target
+  else
+    echo "You need render_surf.sh and image_matrix.sh for preparing render view."
+  fi
+
+  # delete original files, WM and normalized T1 images
+  if [ ! $postprocess_only -lt 0 ]; then
+    rm ${proc_dir}/check_r${revision_cat}/*.[in][mi][gi] 2>/dev/null
+    rm ${proc_dir}/check_r${revision_cat}/mri/*mwp2* 2>/dev/null
+    rm ${proc_dir}/check_r${revision_cat}/mri/wm* 2>/dev/null
+
+    if [ -d ${proc_dir}/check_r${revision_cat}/long ]; then
+      rm ${proc_dir}/check_r${revision_cat}/long/*.[in][mi][gi] 2>/dev/null
+      rm ${proc_dir}/check_r${revision_cat}/long/mri/mwp2* 2>/dev/null
+      rm ${proc_dir}/check_r${revision_cat}/long/mri/wm* 2>/dev/null
     fi
     
-    # prepare renderview if tool is found and surface processing is enabled
-    if ([ ! -z `which render_surf.sh` ] && [ ! -z `which CAT_View` ]) && [ $volumes_only -eq 0 ]; then
-      mkdir -p ${proc_dir}/check_r${revision_cat}/surf
-      ln -s ${proc_dir}/check_r${revision_cat}/long/surf/* ${proc_dir}/check_r${revision_cat}/surf/ >/dev/null 2>&1
-      render_surf.sh -range 0 6 ${proc_dir}/check_r${revision_cat}/surf
-      mv check_r${revision_cat}*.png ${proc_dir}/ >/dev/null 2>&1
-      scp -q -P $PORT ${proc_dir}/check_r${revision_cat}*.png $scp_target
-    else
-      echo "You need render_surf.sh and image_matrix.sh for preparing render view."
-    fi
-
-    # delete original files, WM and normalized T1 images
-    if [ ! $postprocess_only -lt 0 ]; then
-      rm ${proc_dir}/check_r${revision_cat}/*.[in][mi][gi] 2>/dev/null
-      rm ${proc_dir}/check_r${revision_cat}/mri/*mwp2* 2>/dev/null
-      rm ${proc_dir}/check_r${revision_cat}/mri/wm* 2>/dev/null
-
-      if [ -d ${proc_dir}/check_r${revision_cat}/long ]; then
-        rm ${proc_dir}/check_r${revision_cat}/long/*.[in][mi][gi] 2>/dev/null
-        rm ${proc_dir}/check_r${revision_cat}/long/mri/mwp2* 2>/dev/null
-        rm ${proc_dir}/check_r${revision_cat}/long/mri/wm* 2>/dev/null
-      fi
-      
-      zip -q ${proc_dir}/check_r${revision_cat}.zip -r ${proc_dir}/check_r${revision_cat}
-      scp -q -P $PORT ${proc_dir}/check_r${revision_cat}.zip $scp_target
-    fi
+    zip -q ${proc_dir}/check_r${revision_cat}.zip -r ${proc_dir}/check_r${revision_cat}
+    scp -q -P $PORT ${proc_dir}/check_r${revision_cat}.zip $scp_target
   fi
   
 }
