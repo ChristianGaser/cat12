@@ -15,12 +15,18 @@
 # sub-*/ses-*/anat/sub-*T1w.nii*
 
 if [ "$1" = "" ]; then
-  echo usage:  $0 bids_directoriy
+  echo usage:  $0 bids_subj_directories
   exit
 fi
 
 subjid=$( basename $1 ) # note that only one subject id should be inputted at the time.
-dirname=$(dirname $1 ) 
+dirname=$(dirname $1 )
+
+# if a relative path was given add current folder to name
+if [ "${dirname}" == "." ]; then
+  dirname=$PWD
+fi 
+
 cat12_dir=$(dirname "$0")
 matlab=matlab # you can use other matlab versions by changing the matlab parameter
 default=${cat12_dir}/"cat_defaults.m" # define own defaults file here

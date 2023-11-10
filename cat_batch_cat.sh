@@ -439,6 +439,11 @@ run_cat12 ()
   done
   vbmlog="${LOGDIR}/cat_${HOSTNAME}_${time}"
 
+  # if relative foldername were given we have to add the data folder because we change into cat12 folder
+  if [ ! -d ${LOGDIR} ]; then
+    vbmlog=${pwd}/${vbmlog}
+  fi
+
   i=0
   while [ "$i" -lt "$NUMBER_OF_JOBS" ]; do
     if [ -n "${ARG_LIST[$i]}" ] && [ "$TEST" -eq 0 ]; then
@@ -460,6 +465,7 @@ run_cat12 ()
       echo Calculate
       for F in ${ARG_LIST[$i]}; do echo $F; done
       # File Output
+      echo > "${vbmlog}_${j}.log"
       echo ---------------------------------- >> "${vbmlog}_${j}.log"
       date                  >> "${vbmlog}_${j}.log"
       echo ---------------------------------- >> "${vbmlog}_${j}.log"
