@@ -15,10 +15,12 @@
 
 matlab=matlab   # you can use other matlab versions by changing the matlab parameter
 cwd=$(dirname "$0")
-if [ "$cwd" == "." ] # if someone call the batch within the cat12 directory
-then 
+
+# if a relative path was given add current folder to name
+if [ "$cwd" == "." ]; then 
    cwd=$(pwd); 
 fi
+
 cat12_dir=$cwd
 spm12=$(dirname "$cwd")
 spm12=$(dirname "$spm12")
@@ -280,6 +282,12 @@ run_cat12 ()
 
   time=`date "+%Y%b%d_%H%M"`
   vbmlog=${LOGDIR}/cat_${HOSTNAME}_${time}.log
+
+  # if relative foldername were given we have to add the data folder because we change into cat12 folder
+  if [ ! -d ${LOGDIR} ]; then
+    vbmlog=${pwd}/${vbmlog}
+  fi
+  
   echo Check $vbmlog for logging information
   echo
 

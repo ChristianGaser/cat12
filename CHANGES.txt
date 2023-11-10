@@ -1,4 +1,14 @@
 ------------------------------------------------------------------------
+r2475 | gaser | 2023-11-10 12:08:18
+
+Changed paths:
+ M CHANGES.txt
+ M cat_batch_bids.sh
+ M cat_batch_cat.sh
+ M cat_batch_long.sh
+
+Changed: Small corrections for shell scripts cat_batch*.sh
+------------------------------------------------------------------------
 r2473 | gaser | 2023-11-10 09:41:11
 
 Changed paths:
