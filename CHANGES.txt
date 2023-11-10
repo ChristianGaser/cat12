@@ -493,6 +493,9 @@ Changed paths:
 ------------------------------------------------------------------------
 r2447 | rdahnke | 2023-08-07 16:22:47
 
+########################################################################
+Please note that this commit was removed!
+########################################################################
 Changed paths:
  M CHANGES.txt
  M cat_main1639.m
@@ -522,7 +525,6 @@ Changed paths:
                cat_main_write and cat_main_registration. 
 11) Changed:   Added final affine registration based on the final brain mask in 
                cat_main_registration and cat_main.
-               
 ------------------------------------------------------------------------
 r2446 | gaser | 2023-08-07 11:23:26
 
