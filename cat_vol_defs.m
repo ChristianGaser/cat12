@@ -49,7 +49,7 @@ for i=1:numel(PU)
     [pth,nam,ext] = spm_fileparts(PU{i});
     PU{i} = fullfile(pth,[nam ext]);
   
-    if isfield(job,'vox') & isfield(job,'bb')
+    if isfield(job,'vox') && isfield(job,'bb')
       [Def,mat] = get_comp(PU{i},job);
     else
       [Def,mat] = get_comp(PU{i});

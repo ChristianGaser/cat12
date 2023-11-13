@@ -1,4 +1,14 @@
 ------------------------------------------------------------------------
+r2477 | gaser | 2023-11-13 11:35:53
+
+Changed paths:
+ M CHANGES.txt
+ M cat_vol_defs.m
+ M cat_vol_laterality_index.m
+
+Changed: Updated function cat_vol_laterality_index. to calculate laterality
+         index for VBM data.
+------------------------------------------------------------------------
 r2476 | gaser | 2023-11-10 16:02:32
 
 Changed paths:
