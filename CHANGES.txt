@@ -1,4 +1,16 @@
 ------------------------------------------------------------------------
+r2478 | gaser | 2023-11-13 15:41:36
+
+Changed paths:
+ M CHANGES.txt
+ M cat_run_job1639.m
+ M cat_vol_laterality_index.m
+A  templates_MNI152NLin2009cAsym/y_MNI152NLin2009cAsym_to_MNI152NLin2009cSym.nii
+
+Added:   Added new deformation field for getting symmetrical spatially registered 
+         images for estimating laterality index.
+Changed: Updated path of symmetrical deformation field.
+------------------------------------------------------------------------
 r2477 | gaser | 2023-11-13 11:35:53
 
 Changed paths:
