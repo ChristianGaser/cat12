@@ -94,7 +94,7 @@ else
 end
 if ~isempty(BIDSdir)
   logdir  = fullfile(BIDSdir,'log');
-  if ~exist(logdir,'dir'), mkdir(logdir); end
+  if ~exist(logdir,'dir'), try, mkdir(logdir); end; end
 else
   logdir  = [];  
 end

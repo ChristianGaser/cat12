@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2479 | gaser | 2023-11-14 19:40:19
+
+Changed paths:
+ M CHANGES.txt
+ M cat_io_data2mat.m
+ M cat_run.m
+ M cat_vol_img2mip.m
+ M cat_vol_laterality_index.m
+
+Changed: Suppress progress bar for smaller sample in  cat_vol_data2mat.m.
+Changed: Added correction of origin for laterality images in cat_vol_img2mip.m.
+Changed: Updated cat_vol_laterality_index.m.
+------------------------------------------------------------------------
 r2478 | gaser | 2023-11-13 15:41:36
 
 Changed paths:
