@@ -24,7 +24,7 @@ function cat_vol_laterality_index(P)
 fprintf('Warning: This only works with spatially registered images in MNI152NLin2009cAsym space (CAT12.8 or newer)\n');
 
 if ~nargin
-  P = spm_select(Inf,'image','Select images for LI estimation',{},pwd,'^w.*');
+  P = spm_select(Inf,'image','Select images for LI estimation',{},pwd);
 end
 
 Def_sym = fullfile(cat_get_defaults('extopts.pth_templates'),'y_MNI152NLin2009cAsym_to_MNI152NLin2009cSym.nii');
@@ -54,8 +54,8 @@ for i = 1:n
   end
   
   % flip values
-  left_data  = flipud(vol(left_xdim:xdim,:,:)); % image should be flipped
-  right_data = vol(1:right_xdim,:,:);
+  left_data  = vol(left_xdim:xdim,:,:); % image should be flipped
+  right_data = flipud(vol(1:right_xdim,:,:));
   mx = max(vol(:));
 
   % estimate laterality index
@@ -74,12 +74,13 @@ for i = 1:n
   Vout.dim = size(LI);
   Vout.dt(1) = 16;
   Vout.pinfo(1) = 1;
-  
-  % flipping is necessary
-  Vout.mat(1,:) = -Vout.mat(1,:);
-
   Vout.descrip = 'Laterality index (L-R)/(R+L)';
-  
+
+  % we have to correct origin
+  vx_vol  = sqrt(sum(Vout.mat(1:3,1:3).^2));
+  Vout.mat(1,4) = Vout.mat(1,4) - vx_vol(1)*left_xdim;
+  Vout.private.mat(1,4) = Vout.private.mat(1,4) - vx_vol(1)*left_xdim;
+
   spm_write_vol(Vout,LI);
   fprintf('Save LI in %s\n',flipped_name);
   cat_progress_bar('Set',i);

@@ -96,6 +96,10 @@ else
   Affine = spm_matrix([0.5 2.5 3.5 0 0 0 0.95 0.95 0.95 0.1 0.1 0.1]);     
 end
 for i=1:n
+  % we have to correct origin for laterality images
+  if (V(i).mat(1,4) == -1.5) && (all(dim == [56 137 113]))
+    V(i).mat(1,4) = 85.5;
+  end
   V(i).mat = Affine * V(i).mat;
 end
 
@@ -220,8 +224,8 @@ if style
 else
   load MIP
   mip96 = double(mip96);
-  mip  = repmat(full(rot90(mip96/max(mip96(:)))),[1 1 3]);
-  c0   = [0 0 0 ; 0 0 1 ; 0 1 0 ; 0 1 1
+  mip = repmat(full(rot90(mip96/max(mip96(:)))),[1 1 3]);
+  c0  = [0 0 0 ; 0 0 1 ; 0 1 0 ; 0 1 1
           1 0 0 ; 1 0 1 ; 1 1 0 ; 1 1 1] -0.5;
   c   = (M(1:3,1:3)*c0')';
   dim = [(max(c)-min(c)) size(mip96)];

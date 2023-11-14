@@ -235,7 +235,7 @@ if ~spm_mesh_detect(V{1}(1))
   
     
   for j=1:n_samples
-    cat_progress_bar('Init',n_subjects(j),'reading...','subjects completed');
+    if n_subjects(j) > 500, cat_progress_bar('Init',n_subjects(j),'reading...','subjects completed'); end
     yi = zeros(n_subjects(j), sum(mask_ind(:)), 'single');
     for i = 1:n_subjects(j)
 
@@ -268,9 +268,9 @@ if ~spm_mesh_detect(V{1}(1))
       end
       yi(i,:) = single(ysl);
       
-      cat_progress_bar('Set',i)
+      if n_subjects(j) > 500, cat_progress_bar('Set',i); end
     end
-    cat_progress_bar('Clear')
+    if n_subjects(j) > 500, cat_progress_bar('Clear'); end
     
     Y = [Y; yi];
   end
