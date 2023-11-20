@@ -14,7 +14,7 @@ function varagout = cat_vol_mimcalc(job)
   
   def.var     = {};
   def.verb    = 1;
-  def.cleanup = 1;
+  def.cleanup = 0;
   job = cat_io_checkinopt(job,def);
 
   BIDSdirname = ['derivatives' filesep 'mimcalc'];

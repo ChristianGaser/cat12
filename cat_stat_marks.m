@@ -77,8 +77,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
   % - resolution - 
    'qualitymeasures'  'res_vx_vol'            'linear'    [  0.50   3.00]  'voxel dimensions'
    'qualitymeasures'  'res_RMS'               'linear'    [  0.50   3.00]  'RMS error of voxel size'
-   'qualitymeasures'  'res_ECR'               'normal'    [  0.125  1.00]  'normalized gradient slope of the white matter boundary' % [0.3222 0.5413]
-   'qualitymeasures'  'res_ECRmm'             'normal'    [  0.125  1.00]  'normalized gradient slope of the white matter boundary' % [0.3222 0.5413]
+   'qualitymeasures'  'res_ECR'               'linear'    [  0.125  1.00]  'normalized gradient slope of the white matter boundary' % [0.3222 0.5413]
   %'qualitymeasures'  'res_MVR'               'linear'    [  0.50   3.00]  'mean voxel resolution'
   %'qualitymeasures'  'res_vol'               'linear'    [  0.125    27]  'voxel volume'
   %'qualitymeasures'  'res_isotropy'          'linear'    [  1.00   8.00]  'voxel isotropy'
@@ -167,7 +166,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
   evalnormalx = @(bst,wstd,bstm,wstm,bstl,wstl,x) setnan(isnan(x)+1) .* ...
                 (min(wstl,max(bstl,(1 - nv(x,bst,wstd)) .* abs(diff([bstm,wstm])) + bstm)));
   evallinear = @(x,bst,wst)  setnan(isnan(x)+1) .* ... max(0,
-    (min(def.wstl,max(def.bstl,(sign(wst-bst)*x - sign(wst-bst)*bst) ./ abs(diff([wst ,bst])) .* abs(diff([def.bstm,def.wstm])) + def.bstm)));
+    (min(def.wstl,max(-inf,(sign(wst-bst)*x - sign(wst-bst)*bst) ./ abs(diff([wst ,bst])) .* abs(diff([def.bstm,def.wstm])) + def.bstm)));
   evalnormal = @(x,bst,wstd) setnan(isnan(x)+1) .* ...
     (min(def.wstl,max(def.bstl,(1 - nv(x,bst,wstd)) .* abs(diff([def.bstm,def.wstmn])) + def.bstm)));  
  
@@ -199,6 +198,9 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
     case 'eval'    % evalutate input structure
       if nargin<1 || isempty(varargin{1}) 
         error('MATLAB:cat_stat_marks:input','Need input structure with measurements!\n');
+      end
+      if numel(varargin{1}) > 1
+        def = varargin{2}; 
       end
       if ~isstruct(varargin{1})
         error('MATLAB:cat_stat_marks:input','Second input has to be a structure!\n');
@@ -268,9 +270,18 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
       
       % SIQR is the successor of IQR and also uses the new edge-based resoltion rating 
       try
-        QAM.qualityratings.SIQR = rms([QAM.qualityratings.NCR  QAM.qualityratings.res_RMS QAM.qualityratings.res_ECR],8);   
+        QAM.qualityratings.SIQR      = rms([QAM.qualityratings.NCR  QAM.qualityratings.res_RMS QAM.qualityratings.res_ECR],8);   
+        % further test cases
+        QAM.qualityratings.SIQR3rms2 = rms([QAM.qualityratings.NCR  QAM.qualityratings.res_RMS QAM.qualityratings.res_ECR],2);   
+        QAM.qualityratings.SIQR3rms2 = rms([QAM.qualityratings.NCR  QAM.qualityratings.res_RMS QAM.qualityratings.res_ECR],8);   
+        QAM.qualityratings.SIQR4rms2 = rms([QAM.qualityratings.NCR  QAM.qualityratings.ICR  QAM.qualityratings.res_RMS  QAM.qualityratings.res_ECR],2);   
+        QAM.qualityratings.SIQR4rms8 = rms([QAM.qualityratings.NCR  QAM.qualityratings.ICR  QAM.qualityratings.res_RMS  QAM.qualityratings.res_ECR],8);   
       catch
-        QAM.qualityratings.SIQR = nan; 
+        QAM.qualityratings.SIQR      = nan; 
+        QAM.qualityratings.SIQR3rms2 = nan;
+        QAM.qualityratings.SIQR3rms8 = nan;
+        QAM.qualityratings.SIQR4rms2 = nan;
+        QAM.qualityratings.SIQR4rms8 = nan; 
       end
       QAM.qualityratings.IQR  = rms([QAM.qualityratings.NCR  QAM.qualityratings.res_RMS ],8);
       QAM.subjectratings.SQR  = rms([QAM.subjectratings.vol_rel_CGW],8);
@@ -284,7 +295,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
         case {'cat_vol_qa202110','cat_vol_qa201901'} % older version 
           varargout{2} = {'NCR','ICR','res_RMS','contrastr'}; % ,'res_BB' is not working now 
         otherwise
-          varargout{2} = {'NCR','ICR','res_RMS','res_ECRmm','res_ECR','contrastr'}; % ,'res_BB' is not working now 
+          varargout{2} = {'NCR','ICR','res_RMS','res_ECR','contrastr'}; % ,'res_BB' is not working now 
       end
       
     case 'marks'    % ausgabe einer leeren struktur

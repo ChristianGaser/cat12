@@ -1,4 +1,42 @@
 ------------------------------------------------------------------------
+r2480 | dahnke | 2023-11-20 16:52:28
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_tools.m
+ M cat_run_job1639.m
+ M cat_stat_marks.m
+ D cat_tst_qa201602.m
+M  cat_vol_mimcalc.m
+ M cat_vol_qa.m
+ D cat_vol_qa2.m
+ M cat_vol_qa201901.m
+
+Large update of the quality control tools:  
+Added new Version of image quality estimation cat_vol_qa that works now as hub 
+to call different versions of the QC cat_vol_qa#(x) added here, with # as the 
+year and month and an additional x that reference the updated versions corrected
+for general problems observed in the new test framework. The test framework 
+includes the (i) standard BWP, (ii) the BWP with simulated preprocessing error, 
+(iii) IXI (aging), (iv) atlas (lesions), (iv) MR-ART (motion artifacts), and 
+(v) a private library of real datasets of public/private projects/studies.  
+Function was tested in cross-section, longitudinal, and batch.
+            
+1) Renamed:  Renamed cat_vol_qa to cat_vol_qa202205 (=deleted). 
+             Renamed cat_vol_qa2 to cat_vol_qa (=replaced). 
+             cat_vol_qa now only serves as hub to run specific qa versions
+             cat_vol_qa# with # as data with year and month. 
+2) Renamed:  Renamed cat_tst_qa201602 (=deleted) to cat_vol_qa20602 (=new) to 
+             have all QC version together. 
+3) Changed:  Added setting to choose QC version in QC batch and extended the 
+             help in cat_conf_tools.   
+4) Changed:  Updated cat_stat_marks settings and added temporary SIQR variants. 
+5) New:      Added different processing version of cat_vol_qa#(x) available 
+             via batch, where the x marks updated/debugged versions. 
+6) New:      Added cat_vol_normer to normalize quality ratings within protocols 
+             for outlier detection. 
+
+------------------------------------------------------------------------
 r2479 | gaser | 2023-11-14 19:40:19
 
 Changed paths:
