@@ -599,7 +599,9 @@ function cat_run_job1639(job,tpm,subj)
           VG1   = VG; 
           [Ym,Yt,Ybg,WMth] = APPmini(obj,VF);
         else
-          stime = cat_io_cmd('Skip initial affine registration due to high-intensity background','','',1);  
+          if ~( isfield(job,'useprior') && ~isempty(job.useprior) ) 
+            stime = cat_io_cmd('Skip initial affine registration due to high-intensity background','','',1);  
+          end
           VF = spm_vol(obj.image(1));
           [Ym,Yt,Ybg,WMth] = APPmini(obj,VF); %#ok<ASGLU>
         end

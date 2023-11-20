@@ -460,7 +460,7 @@ function varargout = cat_vol_qa201901(action,varargin)
                 qamatm(fi,:), max(1,min(9.5,mqamatm(fi,:))), rerun));
             end
           end
-        catch  
+        catch e
           switch e.identifier
             case {'cat_vol_qa201901:noYo','cat_vol_qa201901:noYm','cat_vol_qa201901:badSegmentation'}
               em = e.identifier;

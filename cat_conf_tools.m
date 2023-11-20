@@ -1693,6 +1693,7 @@ function qa = conf_vol_qa(expert,outdir)
   spmsegc.name    = 'Default with SPM segment maps';
   spmsegc.help    = {'Select corresponing individual SPM GM tissue segments of the selected images above (c1*.nii).  The WM and CSF maps were selected automatically. ' ''};
 
+  % segmentation in general 
   gm              = data; 
   gm.tag          = 'gm'; 
   gm.name         = 'GM segment';
@@ -1713,15 +1714,15 @@ function qa = conf_vol_qa(expert,outdir)
 
 % other posible cases
 % - FSL segment maps  
-% - FS label map
+% - FS label map, DL maps
 
   model           = cfg_choice; 
   model.tag       = 'model';
-  model.name      = 'Segmentation';
-  if expert > 1
+  model.name      = 'Segmentation input';
+  if expert > 0
     model.values  = {catlab,catsegp,spmsegc,seg}; 
   else
-    model.values  = {catlab,catsegp,spmsegc}; 
+    model.values  = {catlab,spmsegc}; 
   end
   model.val       = {catlab}; 
   model.help      = {[ ...
@@ -1748,12 +1749,29 @@ function qa = conf_vol_qa(expert,outdir)
   version         = cfg_menu;
   version.tag     = 'version';
   version.name    = 'Version';
+  version.help    = {
+   ['Select different versions of QC processing. ' ...
+    'The first version 201602 was quite stable with small bugfixes until the version 201901. ' ...
+    'Light corrections result then in version 202110 and later version 202205. ' ...
+    'Extensive tests result in a stronger modified version 202310 that was finally stable for ' ...
+    '(i) the brain web phantom, (ii) preprocessing error simulation, (iii) IXI (aging), ' ...
+    '(iv) ATLAS (lesions), (v) MR-ART (motion artificats), (vi) private motion data. ']
+    ''
+  };
   if expert > 1
-    version.labels  = {'current','update2023','update2022','201901_202301','202110','201901','201602'};
-    version.values  = {'cat_vol_qa','cat_vol_qa202301','cat_vol_qa202207b','cat_vol_qa201901_202301','cat_vol_qa202110','cat_vol_qa201901','cat_vol_qa201602'};
+    version.labels  = {'202310 (current)', '202110x (reworked 202310)','201901x (reworked 202310)', ...
+                       '202205', '202110', '201901','201602'};
+    version.values  = {'cat_vol_qa202310', 'cat_vol_qa202110x', 'cat_vol_qa201901x', ...
+                       'cat_vol_qa202205', 'cat_vol_qa202110', 'cat_vol_qa201901',  'cat_vol_qa201602'};
+    version.help    = [ version.help , { 
+     ['The developer GUI further supports updated versions (cat_vol_qa#x) of 201901 and 202110 ' ...
+      'that included corrections for the differnet test cases and result finally in the cat_vol_qa202310. ' ...
+      'All functions uses the cat_vol_qa for basic loading of variables that may inlcude further differences to the fully orginal version. ']
+      ''
+    }];
   else
-    version.labels  = {'current','202110','201901','201602'};
-    version.values  = {'cat_vol_qa','cat_vol_qa202110','cat_vol_qa201901','cat_vol_qa201602'};
+    version.labels  = {'202310 (current)', '202205', '202110', '201901', '201602'};
+    version.values  = {'cat_vol_qa202310', 'cat_vol_qa202205', 'cat_vol_qa202110', 'cat_vol_qa201901', 'cat_vol_qa201602'};
   end
   % remove undefined cases
   for vi = numel(version.values):-1:1
@@ -1762,11 +1780,8 @@ function qa = conf_vol_qa(expert,outdir)
       version.labels(vi) = []; 
     end
   end
-  version.val     = {'cat_vol_qa'};
+  version.val     = {'cat_vol_qa202310'};
   version.hidden  = expert<1;
-  version.help    = {
-    'Select different version of QC processing. '
-  };
   
   rerun         = cfg_menu;
   rerun.tag     = 'rerun';
@@ -1787,6 +1802,15 @@ function qa = conf_vol_qa(expert,outdir)
   verb.val        = {2}; 
   verb.help       = {'Print progress and results. ';''};
 
+  writecsv        = cfg_menu;
+  verb.tag        = 'verb';
+  verb.name       = 'Print results';
+  verb.labels     = {'no' 'yes'};
+  verb.values     = {0 2 };
+  verb.val        = {2}; 
+  verb.help       = {'Print progress and results. ';''};
+
+
   outdir.val{1}   = {'report'}; 
   outdir.help     = {'Create sub-directory within the main directory.'};
 % could be confusing ... writes into the current report directory (defined by mri from the preprocessing) 
@@ -1802,10 +1826,9 @@ function qa = conf_vol_qa(expert,outdir)
   qa.tag          = 'iqe';
   qa.name         = 'Image quality estimation';
   qa.val          = {data, model, opts};
-  qa.prog         = @cat_vol_qa2; 
+  qa.prog         = @cat_vol_qa; 
   qa.vfiles       = @vout_qa; % XML files + values
-  %qa.hidden       = expert<2;
-  qa.help         = {'Image quality estimation based on a set of images and a given set of input segmentation defined by different models. '};
+  qa.help         = {'Image quality estimation based on a set of images and their segmentation maps. '};
 return
   
 %_______________________________________________________________________
@@ -4561,24 +4584,31 @@ function dep = vout_resize(varargin)
   dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 return;
 %_______________________________________________________________________
-function vf = vout_qa(job)
-  if isfield(job,'data')
-    s  = cellstr(char(job.data)); vf = s; 
-  elseif isfield(job,'images')
-    s  = cellstr(char(job.images)); vf = s; 
-  else  
-    s  = {}; 
-    vf = {}; 
-  end
-  for i=1:numel(s)
-      [pth,nam,ext,num] = spm_fileparts(s{i});
-      if isfield(job,'prefix') % old 
-        vf{i} = fullfile(pth,[job.prefix,nam,ext,num]);
-      elseif isfield(job,'opts') && isfield(job.opts,'prefix') 
-        vf{i} = fullfile(pth,[job.opts.prefix,nam,ext,num]);
-      else
-        vf{i} = fullfile(pth,[nam,ext,num]);
-      end  
+function dep = vout_qa(job)
+  if 0 % old 
+    if isfield(job,'data')
+      s  = cellstr(char(job.data)); dep = s; 
+    elseif isfield(job,'images')
+      s  = cellstr(char(job.images)); dep = s; 
+    else  
+      s  = {}; 
+      dep = {}; 
+    end
+    for i=1:numel(s)
+        [pth,nam,ext,num] = spm_fileparts(s{i});
+        if isfield(job,'prefix') % old 
+          dep{i} = fullfile(pth,[job.prefix,nam,ext,num]);
+        elseif isfield(job,'opts') && isfield(job.opts,'prefix') 
+          dep{i} = fullfile(pth,[job.opts.prefix,nam,ext,num]);
+        else
+          dep{i} = fullfile(pth,[nam,ext,num]);
+        end  
+    end
+  else
+    dep            = cfg_dep;
+    dep.sname      = 'CATQC';
+    dep.src_output = substruct('.','xmls','()',{':'});
+    dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
   end
 return;
 
