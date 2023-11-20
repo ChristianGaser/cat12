@@ -427,16 +427,16 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       leg    = [leg {'dIQR/100'}]; 
     end
     % plot lines
-    pt = plot( IQR/100 ); set(pt,'Color',tcmap(1,:),'Marker',marker{2}, ...
+    pt = plot( axi(1), IQR/100 ); set(pt,'Color',tcmap(1,:),'Marker',marker{2}, ...
       'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
     if ~any(isnan(ZSCORE)) && numel(res.long.files) > 2
-      pt = plot( ZSCORE ); set(pt,'Color',tcmap(2,:),'Marker',marker{1}, ...
+      pt = plot( axi(1), ZSCORE ); set(pt,'Color',tcmap(2,:),'Marker',marker{1}, ...
         'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
-      pt = plot( RMSE); set(pt,'Color',tcmap(3,:),'Marker',marker{3}, ...
+      pt = plot( axi(1), RMSE); set(pt,'Color',tcmap(3,:),'Marker',marker{3}, ...
         'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
     end
     % final settings
-    ylim([mlim 0]); xlim([0.9 numel(res.long.files)+0.1]); 
+    ylim( [mlim 0]); xlim([0.9 numel(res.long.files)+0.1]); 
     set(cp(1),'Fontsize',fontsize*0.8,'xtick',max(1,0:round(numel(res.long.files)/100)*10:numel(res.long.files)), ...
       'ytick',mlim:max(0.01,round((abs(mlim)/5)*200)/200):0,...
       'XAxisLocation','origin');
@@ -537,29 +537,29 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       set(axi(2),'Color',job.extopts.report.color,'YAxisLocation','right','XAxisLocation','bottom','box','on'); 
       % plot tissue values
       for ti = [2 3 1]
-        pt = plot( ( res.long.vol_abs_CGW(:,ti) - repmat( res.long.vol_abs_CGW(1,ti) , size(res.long.vol_abs_CGW,1) , 1) )');
+        pt = plot( axi(2), ( res.long.vol_abs_CGW(:,ti) - repmat( res.long.vol_abs_CGW(1,ti) , size(res.long.vol_abs_CGW,1) , 1) )');
         set(pt,'Color',tcmap(ti,:),'Marker',marker{ti},...
           'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
       end
       % plot WMH
       if any( res.long.vol_abs_WMH )
-        pt = plot(res.long.vol_abs_WMH - res.long.vol_abs_WMH(1));
+        pt = plot( axi(2), res.long.vol_abs_WMH - res.long.vol_abs_WMH(1));
         set(pt,'Color',tcmap(6,:),'LineStyle','-','Marker',marker{4}, ...
           'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
       end
       % plot TIV 
-      pt = plot(res.long.vol_TIV - res.long.vol_TIV(1));
+      pt = plot( axi(2), res.long.vol_TIV - res.long.vol_TIV(1));
       set(pt,'Color',tcmap(4,:),'LineStyle','-','Marker',marker{4}, ...
         'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
       % plot TSA
       if isfield(res.long,'surf_TSA')
-        pt = plot(res.long.surf_TSA - res.long.surf_TSA(1));
+        pt = plot( axi(2), res.long.surf_TSA - res.long.surf_TSA(1));
         set(pt,'Color',tcmap(5,:),'LineStyle','-','Marker',marker{5}, ...
           'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
       end
       % plot thickness
       if isfield(res.long,'change_dist_thickness')
-        pt = plot(res.long.change_dist_thickness(:,1) * 1000);
+        pt = plot( axi(2), res.long.change_dist_thickness(:,1) * 1000);
         set(pt,'Color',tcmap(6,:),'LineStyle','-','Marker',marker{6}, ...
           'MarkerFaceColor',job.extopts.report.color,'MarkerSize',max(3,6 - numel(res.long.files)/10));
       end

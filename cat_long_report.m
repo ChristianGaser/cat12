@@ -219,6 +219,7 @@ function [cres,Vmn,Vidiff,Vrdiff,Vadiff] = cat_vol_longdiff(Pdata_vol,Pavg,s,wri
   cjob.verb      = 0; 
   cjob.c         = {}; 
   cjob.data_xml  = {};
+  cjob.new_fig   = 0; 
   cres           = cat_stat_homogeneity(cjob);
 
   % the average is created by a more complex function and not only the
@@ -343,6 +344,7 @@ function [cres,Psurf] = cat_surf_longdiff(Pdata_surf,s)
     cjob.verb      = 0; 
     cjob.data_xml  = {};
     cjob.gap       = 3;
+    cjob.new_fig   = 0; 
     try 
       % try to estimate covariance ... if it fails then asume that the
       % meshes are not equal and resmaple them 
