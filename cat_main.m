@@ -50,22 +50,8 @@ if ~isfield(res,'spmpp')
   if isfield(res,'redspmres')
     [Ysrc,Ycls,Yy,res] = cat_main_resspmres(Ysrc,Ycls,Yy,res);
   end
-  
-  
-  
-  %% Replace SPM brain segmentation by AMAP segmentation
-  %  -------------------------------------------------------------------
-  %  This is an alternative pipeline in case of failed SPM brain tissue
-  %  classification in datasets with abnormal anatomy, i.e. superlarge 
-  %  ventricle. However, SPM is used for head tissue classification and
-  %  bias correction. 
-  %  -------------------------------------------------------------------
-  if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap 
-    [P,res,stime2] = cat_main_kamap(Ysrc,Ycls,Yy,tpm,job,res,vx_vol,stime2);
-  else
-    P = zeros([size(Ycls{1}) numel(Ycls)],'uint8');
-    for i=1:numel(Ycls), P(:,:,:,i) = Ycls{i}; end
-  end
+  P = zeros([size(Ycls{1}) numel(Ycls)],'uint8');
+  for i=1:numel(Ycls), P(:,:,:,i) = Ycls{i}; end
   clear Ycls;
   
   
@@ -526,8 +512,8 @@ if ~isfield(res,'spmpp')
   if job.extopts.cleanupstr>0
     % classical cleanup with extended version close to the skull in case of
     % the AMAP segmentation (not so good for BUSS_2002)
-    res.xCleanup = (isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap ) | (job.extopts.cleanupstr > 2);
-    res.xCleanup = max(res.xCleanup, 3 * ( isfield(job.extopts,'inv_weighting') && job.extopts.inv_weighting )); 
+    res.xCleanup = max(job.extopts.cleanupstr > 2, 3 * ...
+      ( isfield(job.extopts,'inv_weighting') && job.extopts.inv_weighting )); 
     prob = cat_main_clean_gwc(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol)),res.xCleanup);
     
     % newer additional cleanup (cleanupstr == 4 to use only the cat_main_clean_gwc for tests)

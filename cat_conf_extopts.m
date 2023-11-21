@@ -1084,52 +1084,6 @@ new_release.hidden = expert<2;
 
 %------------------------------------------------------------------------
   
-
-% AMAP rather than SPM segmentation 
-spm_kamap        = cfg_menu;
-spm_kamap.tag    = 'spm_kamap';
-spm_kamap.name   = 'Initial Segmentation';
-spm_kamap.help   = { ...
-    'In rare cases the Unified Segmentation can fail in highly abnormal brains, where e.g. the cerebrospinal fluid of superlarge ventricles (hydrocephalus) were classified as white matter. However, if the affine registration is correct, the AMAP segmentation with an prior-independent k-means initialization can be used to replace the SPM brain tissue classification. ' 
-    'Moreover, if the default Dartel and Shooting registrations will fail then the "Optimized Shooting - superlarge ventricles" option for "Spatial registration" is required! '
-    ''
-    ' SPM Unified Segmentation - use SPM Unified Segmentation segmentation (default) ' 
-    ' k-means AMAP - k-means AMAP approach ' 
-    ''
-  };
-spm_kamap.def    = @(val)cat_get_defaults('extopts.spm_kamap', val{:});  
-spm_kamap.labels = {'SPM Unified Segmentation','k-means AMAP'};
-spm_kamap.values = {0 2};
-
-if 0 %expert
-  spm_kamap        = cfg_menu;
-  spm_kamap.tag    = 'pipeline';
-  spm_kamap.name   = 'Segmentation Pipeline';
-  spm_kamap.help   = { ...
-    'In rare cases the Unified Segmentation can fail in highly abnormal brains, where e.g. the cerebrospinal fluid of superlarge ventricles (hydrocephalus) were classified as white matter. However, if the affine registration is correct, the AMAP segmentation with an prior-independent k-means initialization can be used to replace the SPM brain tissue classification. ' 
-    'Moreover, if the default Dartel and Shooting registrations will fail then the "Optimized Shooting - superlarge ventricles" option for "Spatial registration" is required! '
-    ''
-    ' SPM Unified Segmentation - use SPM Unified Segmentation segmentation (default) ' 
-    ' k-means AMAP - k-means AMAP approach ' 
-    ''
-  };
-  spm_kamap.def    = @(val)cat_get_defaults('extopts.spm_kamap', val{:});  
-  spm_kamap.labels = {
-    'auto',              ... automatic selection 
-    'SPM + AMAP',        ... classical approach
-    'SPM + SPM&AMAP',    ... init: SPM + kmeans&AMAP    final: SPM/AMAP 
-    'k-means + AMAP',     ... init: SPM + kmeans&AMAP    final: AMAP 
-    };
-  spm_kamap.values = {0 2};
-  if expert
-    spm_kamap.labels = [{'auto'} spm_kamap.labels {''}];
-    spm_kamap.values = [{-1}     spm_kamap.values {}];
-  end
-end
-spm_kamap.hidden = expert<1; 
-
-%------------------------------------------------------------------------
-
 scale_cortex         = cfg_entry;
 scale_cortex.tag     = 'scale_cortex';
 scale_cortex.name    = 'Modify cortical surface creation';
@@ -1170,7 +1124,7 @@ close_parahipp.help    = {
 segmentation        = cfg_branch;
 segmentation.tag    = 'segmentation';
 segmentation.name   = 'Segmentation Options';
-segmentation.val    = {restype,setCOM,app,affmod,NCstr,spm_kamap,LASstr,LASmyostr,gcutstr,cleanupstr,BVCstr,wmhc,slc,mrf}; % WMHCstr,
+segmentation.val    = {restype,setCOM,app,affmod,NCstr,LASstr,LASmyostr,gcutstr,cleanupstr,BVCstr,wmhc,slc,mrf}; % WMHCstr,
 segmentation.hidden = expert<1; 
 segmentation.help   = {'CAT12 parameter to control the tissue classification.';''};
 
@@ -1203,7 +1157,7 @@ if ~spm
   if expert  % expert/developer options
     extopts.val   = {segmentation,registration,surface,admin}; 
   else
-    extopts.val   = {restype,setCOM,app,affmod,spm_kamap,LASstr,LASmyostr,gcutstr,wmhc,registration,vox,bb,SRP,ignoreErrors}; 
+    extopts.val   = {restype,setCOM,app,affmod,LASstr,LASmyostr,gcutstr,wmhc,registration,vox,bb,SRP,ignoreErrors}; 
   end
 else
   % SPM based surface processing and thickness estimation
