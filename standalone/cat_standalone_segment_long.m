@@ -55,7 +55,6 @@ matlabbatch{1}.spm.tools.cat.long.opts.affreg = 'mni';
 matlabbatch{1}.spm.tools.cat.long.opts.biasstr = 0.5;
 
 matlabbatch{1}.spm.tools.cat.long.opts.accstr = 0.5;
-matlabbatch{1}.spm.tools.cat.long.extopts.segmentation.spm_kamap = 0;
 
 % surface options
 matlabbatch{1}.spm.tools.cat.long.extopts.surface.pbtres = 0.5;
