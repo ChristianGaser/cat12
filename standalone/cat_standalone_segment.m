@@ -61,9 +61,6 @@ matlabbatch{1}.spm.tools.cat.estwrite.extopts.segmentation.setCOM = 1;
 % modify affine scaling
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.segmentation.affmod = 0;
 
-% use k-means AMAP approach or SPM segmentation for initial segmentation
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.segmentation.spm_kamap = 0;
-
 % Correction of WM hyperintensities: 0 - no correction, 1 - only for Dartel/Shooting
 % 2 - also correct segmentation (to WM), 3 - handle as separate class; default 1
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.segmentation.WMHC = 2;

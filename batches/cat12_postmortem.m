@@ -613,7 +613,6 @@ matlabbatch{mi}.spm.tools.cat.estwrite.extopts.segmentation.setCOM          = 1;
 matlabbatch{mi}.spm.tools.cat.estwrite.extopts.segmentation.APP             = 1070;
 matlabbatch{mi}.spm.tools.cat.estwrite.extopts.segmentation.affmod          = 0;
 matlabbatch{mi}.spm.tools.cat.estwrite.extopts.segmentation.NCstr           = -Inf;
-matlabbatch{mi}.spm.tools.cat.estwrite.extopts.segmentation.spm_kamap       = 0;
 matlabbatch{mi}.spm.tools.cat.estwrite.extopts.segmentation.LASstr          = 0.5;
 matlabbatch{mi}.spm.tools.cat.estwrite.extopts.segmentation.LASmyostr       = 0;           % not working in PD ?
 matlabbatch{mi}.spm.tools.cat.estwrite.extopts.segmentation.gcutstr         = -2;          % post-mortem skull-stripping model

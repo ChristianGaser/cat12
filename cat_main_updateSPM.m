@@ -829,17 +829,10 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
   
   % display  some values for developers
   if job.extopts.expertgui > 1
-    if isfield(job.extopts,'spm_kamap') && job.extopts.spm_kamap 
-       cat_io_cprintf('blue',sprintf('    SPM  volumes (CGW = TIV in mm%s):%7.2f +%7.2f +%7.2f = %4.0f\n',...
-        native2unicode(179, 'latin1'),res.ppe.SPMvols0([3 1 2]),sum(res.ppe.SPMvols0(1:3))));    
-       cat_io_cprintf('blue',sprintf('    AMAP volumes (CGW = TIV in mm%s):%7.2f +%7.2f +%7.2f = %4.0f\n',...
-        native2unicode(179, 'latin1'),res.ppe.SPMvols1([3 1 2]),sum(res.ppe.SPMvols1(1:3))));    
-    else
-      cat_io_cprintf('blue',sprintf('    SPM volumes pre  (CGW = TIV in mm%s): %7.2f +%7.2f +%7.2f = %4.0f\n',...
-        native2unicode(179, 'latin1'),res.ppe.SPMvols0([3 1 2]),sum(res.ppe.SPMvols0(1:3)))); 
-      cat_io_cprintf('blue',sprintf('    SPM volumes post (CGW = TIV in mm%s): %7.2f +%7.2f +%7.2f = %4.0f\n',...
-        native2unicode(179, 'latin1'),res.ppe.SPMvols1([3 1 2]),sum(res.ppe.SPMvols1(1:3)))); 
-    end
+    cat_io_cprintf('blue',sprintf('    SPM volumes pre  (CGW = TIV in mm%s): %7.2f +%7.2f +%7.2f = %4.0f\n',...
+      native2unicode(179, 'latin1'),res.ppe.SPMvols0([3 1 2]),sum(res.ppe.SPMvols0(1:3)))); 
+    cat_io_cprintf('blue',sprintf('    SPM volumes post (CGW = TIV in mm%s): %7.2f +%7.2f +%7.2f = %4.0f\n',...
+      native2unicode(179, 'latin1'),res.ppe.SPMvols1([3 1 2]),sum(res.ppe.SPMvols1(1:3)))); 
   end
   
   
