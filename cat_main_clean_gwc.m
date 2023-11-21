@@ -5,10 +5,12 @@ function P = cat_main_clean_gwc(P,level,new)
 % Successor of the cg_cleanup_gwc function of VBM8. 
 % Include a new brain limitation that remove/add empty space around the
 % brain for speedup (no functional difference). 
+%
 % Moreover, a new morpholocial cleanup close to the skull was added to
 % remove larger unwanted parts of head tissue that is used for the kamap
-% preprocessing pipeline (see cat_main_kamap, 201812).
+% preprocessing pipeline (see cat_main_kamap, 201812 - 202311).
 % RD202108: Added file input and new cleanup method for PD/T2 data.
+% RD202311: Remove kamap but keep new cleanup.
 %
 %  function P = cat_main_clean_gwc(P[,level,new])
 % 
@@ -63,7 +65,7 @@ P = P2; clear sP P2;
 % New additional harder cleanup close to the skull to remove meninges.
 % Added due to problems with the alternative cat_main_kamap segmentation. 
 % However, this should also help in other cases and should not create to 
-% large problems. >> TEST IT! (RD: 201812)
+% large problems. >> TEST IT! (RD201812, RD202311 also kamap was removed)
 %--------------------------------------------------------------------------
 if new == 1 || new == 3
   %%

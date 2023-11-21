@@ -319,26 +319,22 @@ function str = cat_main_reportstr(job,res,qa)
         cp{4},defstrm(job.extopts.BVCstr),job.extopts.BVCstr,bvcastr{res.applyBVC+1}); 
     end
   
-    if job.extopts.spm_kamap == catdef.extopts.spm_kamap,  cp{1} = npara; else, cp{1} = cpara; end 
-    if job.extopts.WMHC      == catdef.extopts.WMHC,       cp{2} = npara; else, cp{2} = cpara; end 
-    if job.extopts.SLC       == catdef.extopts.SLC,        cp{3} = npara; else, cp{3} = cpara; end 
-    if isfield(job.extopts,'SRP') && job.extopts.SRP == catdef.extopts.SRP, cp{4} = npara; else, cp{4} = cpara; end 
+    if job.extopts.WMHC      == catdef.extopts.WMHC,       cp{1} = npara; else, cp{1} = cpara; end 
+    if job.extopts.SLC       == catdef.extopts.SLC,        cp{2} = npara; else, cp{2} = cpara; end 
+    if isfield(job.extopts,'SRP') && job.extopts.SRP == catdef.extopts.SRP, cp{3} = npara; else, cp{3} = cpara; end 
     restype = char(fieldnames(job.extopts.restypes));
-    if strcmp(restype, catdef.extopts.restype), cp{5} = npara; else, cp{5} = cpara; end 
+    if strcmp(restype, catdef.extopts.restype), cp{4} = npara; else, cp{4} = cpara; end 
   % ############
   % WMHC in case of SPM segmentation is SPM
   % ############
-    if isfield(job.extopts,'spm_kamap')
-      if job.extopts.expertgui && isfield(job.extopts,'SRP')
-        str{1} = [str{1} struct('name', 'KAMAP / WMHC / SLC / SRP / restype:','value',...
-             sprintf('%s{%d} / %s{%d} / %s{%d} / %s{%d} / %s{%s}',...
-            cp{1},job.extopts.spm_kamap, cp{2},job.extopts.WMHC, cp{3},job.extopts.SLC, cp{4},job.extopts.SRP, cp{5},restype))];
-      else
-        kamapstr  = {'SPM US','','KAMAP'};  
-        wmhcstr   = {'none (WMH=GM)','temporary (WMH=GM)','(WMH=WM)','own class'};
-        str{1} = [str{1} struct('name', 'Initial Segmentation / WMH Correction / Int. Res.:',...
-          'value',sprintf('%s{%s} / %s{%s} / %s{%s}',cp{1},kamapstr{job.extopts.spm_kamap+1}, cp{2},wmhcstr{job.extopts.WMHC+1}, cp{5},restype))];
-      end
+    if job.extopts.expertgui && isfield(job.extopts,'SRP')
+      str{1} = [str{1} struct('name', 'WMHC / SLC / SRP / restype:','value',...
+           sprintf('%s{%d} / %s{%d} / %s{%d} / %s{%s}',...
+          cp{1},job.extopts.WMHC, cp{2},job.extopts.SLC, cp{3},job.extopts.SRP, cp{4},restype))];
+    else
+      wmhcstr   = {'none (WMH=GM)','temporary (WMH=GM)','(WMH=WM)','own class'};
+      str{1} = [str{1} struct('name', 'WMH Correction / Int. Res.:',...
+        'value',sprintf('%s{%s} / %s{%s}',cp{1},wmhcstr{job.extopts.WMHC+1}, cp{4},restype))];
     end
     if ~strcmp(restype, 'native')
       str{1}(end).value = [str{1}(end).value sprintf('(%s{%0.2f %0.2f})',npara, job.extopts.restypes.(restype))];
