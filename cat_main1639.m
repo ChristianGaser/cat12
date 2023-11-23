@@ -534,7 +534,7 @@ if ~isfield(res,'spmpp')
     end
     if job.extopts.cleanupstr < 2 % use cleanupstr==2 to use only the old cleanup
       [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1(indx,indy,indz),... 
-        Ymo(indx,indy,indz),job.extopts,job.inv_weighting,vx_vol,indx,indy,indz); % new cleanup
+        Ymo(indx,indy,indz),job.extopts,job.inv_weighting,vx_vol,indx,indy,indz,res.ppe.affreg.skullstripped); % new cleanup
     else
       for i=1:3, Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i); end
       Yp0b = Yb(indx,indy,indz); 

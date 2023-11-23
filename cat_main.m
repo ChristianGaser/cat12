@@ -519,7 +519,7 @@ if ~isfield(res,'spmpp')
     % newer additional cleanup (cleanupstr == 4 to use only the cat_main_clean_gwc for tests)
     if job.extopts.cleanupstr < 3 && ~job.extopts.inv_weighting
       [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1(indx,indy,indz),... 
-        Ym(indx,indy,indz),job.extopts,job.extopts.inv_weighting,vx_vol,indx,indy,indz); % new cleanup
+        Ym(indx,indy,indz),job.extopts,job.extopts.inv_weighting,vx_vol,indx,indy,indz,res.ppe.affreg.skullstripped); % new cleanup
     else
       for i=1:3, Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i); end
       Yp0b = Yb(indx,indy,indz); 

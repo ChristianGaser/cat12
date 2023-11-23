@@ -1,4 +1,4 @@
-function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting,vx_vol,indx,indy,indz)
+function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting,vx_vol,indx,indy,indz,skullstripped)
 %  -----------------------------------------------------------------
 %  final cleanup 2.0
 %  
@@ -16,7 +16,7 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
 
   dbs   = dbstatus; debug = 0; 
   for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,'cat_main_cleanup'); debug = 1; break; end; end
-
+  if ~exist('skullstripped','var'), skullstripped = 0; end
   
   LAB  = extopts.LAB;
   vxv  = 1/max(vx_vol);           % use original voxel size!!!
@@ -73,7 +73,9 @@ function [Ycls,Yp0b] = cat_main_cleanup(Ycls,prob,Yl1b,Ymb,extopts,inv_weighting
   if ~debug, clear Ygw Yroi; end
 
   %% update brain masks and class maps
-  if 0 % RD202306: canceled to avoid skull-stripping variance - we just keep the old brainmask
+  if ~skullstripped 
+  % RD202306: canceled to avoid skull-stripping variance - we just keep the old brainmask
+  % RD202311: reactivated as the brain mask was less good in ADNI tests
     Ybb = cat_vol_morph((Yp0>0 & ~Yrw) | Ybd>2,'ldo',2/vxv);          
     Ybb(cat_vol_smooth3X(Ybb,2)>0.4 & ~Yrw)=1;
     Ybb = cat_vol_morph(Ybb | Ybd>3,'ldc',1/vxv); 
