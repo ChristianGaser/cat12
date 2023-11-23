@@ -238,7 +238,7 @@ optimal:
 % Subject species: - 'human';'ape_greater';'ape_lesser';'monkey_oldworld';'monkey_newwold' (in development)
 cat.extopts.species       = 'human';  
 % Affine PreProcessing (APP) with rough bias correction and brain extraction for special anatomies (nonhuman/neonates) 
-cat.extopts.APP           = 1070;  % 0 - none; 1070 - default; [1 - light; 2 - full; 1144 - update of 1070, 5 - animal (no affreg)]
+cat.extopts.APP           = 1070;  % 0 - none; 1070 - default; [1 - SPM; 5 - animal (no affreg)]
 cat.extopts.setCOM        = 1;     % 0 - none; 1 - use center-of-mass to estimate origin as starting value for affine registration
 cat.extopts.vox           = 1.5;   % voxel size for normalized data (EXPERIMENTAL:  inf - use Tempate values)
 cat.extopts.bb            = 12;    % boundary box: 12 - [-84 -120 -72;84 84 96]; 16 - [-90 -126 -72;90 90 108]

@@ -165,7 +165,7 @@ function [mainbatch,perror] = cat_tst_cattest(job)
     ... SPM acc
     ... == parameter in default GUI ==
     'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.vox'                        'vox'        {2 1};            % def=1.5;
-    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.segmentation.APP'           'APP'        {0 1 2 1144};     % def=1070;
+    'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.segmentation.APP'           'APP'        {0 1};     % def=1070;
     'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.segmentation.LASstr'        'LASstr'     {0 0.01 1.0};     % def=0.5;
     'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.segmentation.gcutstr'       'gcutstr'    {0 0.5 -1};       % def=2;
     ...'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.extopts.registration.darteltpm'  'template'   { ... 
