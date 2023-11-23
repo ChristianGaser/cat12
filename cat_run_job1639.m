@@ -830,9 +830,8 @@ function cat_run_job1639(job,tpm,subj)
             if (length(ff)>4 && strcmp(ff(1:5),'navg_')) || ...
                (isfield(job,'useprior') && ~isempty(job.useprior)) || ...
                (isfield(job.extopts,'new_release') && job.extopts.new_release)
-              fprintf('\n');
-              cat_io_cprintf('g8','  Use new longitudinal background setting. ');
               % new minimal masking approach in longitudinal processing to avoid backgound peak erros and for future releases 
+              fprintf('\n'); cat_io_cprintf('g8','  Use new longitudinal background setting. ');
               Ymsk        = cat_vol_morph( ~Ybg ,'dd',10,vx_vol) & ...          % remove voxels far from head
                               ~( Ybg & rand(size(Ybg))>0.5) & ...               % have a noisy corona
                               ~( cat_vol_grad( Ysrc , vx_vol)==0  &  Ysrc==0 ); % remove voxel that are 0 and have no gradient
@@ -1108,7 +1107,10 @@ function cat_run_job1639(job,tpm,subj)
           res.image1 = image1; 
           clear reduce; 
         end
-     
+        
+        % unknown BG detection problems in INDI_NHa > manual setting
+        if ppe.affreg.skullstripped, res.mn(end) = 0; end 
+
       catch
         %%
         cat_io_addwarning([mfilename ':ignoreErrors'],'Run backup function (IN DEVELOPMENT).',1,[1 1]); 

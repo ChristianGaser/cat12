@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2485 | rdahnke | 2023-11-23 19:50:51
+
+Changed paths:
+ M CHANGES.txt
+ M cat_main.m
+ M cat_main1639.m
+ M cat_main_cleanup.m
+ M cat_run_job1639.m
+
+Fixed:   Reset skull-stripping update in cat_main_cleanup (called from 
+         cat_main[1639] to setting from r1981 and r2183 that includes update 
+         of the brain mask but only in cases without skull-stripping. 
+Fixed:   Tiny changes in cat_run_job1939.------------------------------------------------------------------------
 r2480 | dahnke | 2023-11-20 16:52:28
 
 Changed paths:
