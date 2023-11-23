@@ -37,7 +37,7 @@ matlabbatch{1}.spm.tools.cat.estwrite.opts.affreg = 'mni';
 matlabbatch{1}.spm.tools.cat.estwrite.opts.biasstr = 0.5;     
 
 % Affine PreProcessing (APP) with rough bias correction and brain extraction for special anatomies (nonhuman/neonates) 
-% 0 - none; 1070 - default; [1 - light; 2 - full; 1144 - update of 1070, 5 - animal (no affreg)]
+% 0 - none; 1070 - default; [1 - SPM; 5 - animal (no affreg)]
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.segmentation.APP = 1070;
 
 % Strength of the local adaptation: 0 to 1; default 0.5
