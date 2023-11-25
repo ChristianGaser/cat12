@@ -165,7 +165,7 @@ function str = cat_main_reportstr(job,res,qa)
 
     % 1 line 2: APP
     if job.extopts.APP == catdef.extopts.APP, cp{1} = npara; else, cp{1} = cpara; end
-    APPstr = {'none','light','full','','','animal'}; APPstr{1071} = 'default'; APPstr{1145} = 'default2'; 
+    APPstr = {'none','SPM'}; APPstr{1071} = 'default'; APPstr{6} = 'default2'; 
     str{1}(end).name  = [str{1}(end).name(1:end-1) ' / APP ']; 
     str{1}(end).value = [str{1}(end).value sprintf(' / %s{%s}',cp{1},APPstr{job.extopts.APP+1})];
 

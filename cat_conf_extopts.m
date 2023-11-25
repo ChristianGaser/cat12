@@ -294,8 +294,8 @@ registration.help   = {
 pbtver         = cfg_menu;
 pbtver.tag     = 'pbtmethod';
 pbtver.name    = 'Projection-based thickness';
-pbtver.labels  = {'PBT','PBTx','PBT2','PBT simple (voxel-grid distance)', 'PBT simple (Eikonal distance)'};
-pbtver.values  = {'pbt2','pbt2x','pbt3','pbtsimple0','pbtsimple1'};
+pbtver.labels  = {'PBT','PBTx','PBT simple (voxel-grid distance)', 'PBT simple (Eikonal distance)'};
+pbtver.values  = {'pbt2','pbt2x','pbtsimple0','pbtsimple1'};
 pbtver.def     = @(val) 'pbt2x';
 pbtver.hidden  = expert<2;
 pbtver.help    = {
@@ -305,7 +305,7 @@ pbtver.help    = {
   'The estimated thickness values of each part were projected over the whole GM and summed up to obtain the full thickness.  ' ...
   'Similar to PBT, the project-based thickness and the direct thickness (of the distance maps without sulcus/gyrus reconstruction) are combined by using the minimum. '] 
   ''
-  'PBT simple function do not refine the given map and just estimate the grid or Eikonal distance function on the given map (running only in the CS3 pipeline).'
+  'PBT simple function do not refine the given map and just estimate the voxel-grid or Eikonal distance function on the given map (running only in the CS3 pipeline).'
   ''
   'Experimental development parameter - do not change! '
   ''
@@ -960,36 +960,16 @@ app.tag    = 'APP';
 app.name   = 'Affine Preprocessing (APP)';
 % short help text
 app.help   = { ...
-    'Affine registration and SPM preprocessing can fail in some subjects with deviating anatomy (e.g. other species/neonates) or in images with strong signal inhomogeneities, or untypical intensities (e.g. synthetic images). An initial bias correction can help to reduce such problems (see details below). Recommended are the "default" and "full" option.' 
+    'Affine registration and SPM preprocessing can fail or be biased in some subjects with deviating anatomy (e.g. other species/neonates) or in images with strong signal inhomogeneities (e.g. incorrected inhomogeneities as locally underestimated thickness vissible as "blue spots" in the CAT report), or untypical intensities (e.g. synthetic images).  An initial bias correction can help to reduce such problems (similar to ADNI N3 bias correction).  Recommended are the "default" and "SPM" option.' 
     ''
-    ' none    - no additional bias correction' 
-    ' light   - iterative SPM bias correction on different resolutions' 
-    ' full    - iterative SPM bias correction on different resolutions and final high resolution bias correction' 
-    ' default - default APP bias correction (r1070)' 
+    ' none    - no additional bias correction (0)' 
+    ' default - default APP bias correction (1070)' 
+    ' SPM     - iterative SPM bias correction (effective but slow, 1)' 
+    ''
   };
 app.def    = @(val)cat_get_defaults('extopts.APP', val{:});
-app.labels = {'none','light','full','default'};
-app.values = {0 1 2 1070};
-if expert
-  app.labels = [app.labels, {'rough (new)'}];
-  app.values = [app.values {1144}];
-  app.help   = [app.help;{ 
-    ' rough (new) - rough APP bias correction (r1144) - in development' 
-  }];
-end  
-% long help text
-app.help   = [app.help; { ...
-    ''
-    'light: This approach focuses on an iterative application of the standard SPM preprocessing with different bias-correction options from low (samp=6 mm, biasfwhm=120 mm) to high frequency corrections  (samp=4.5 mm, biasfwhm=45 mm). However, the iterative calls require a lot of additional processing time (~500s) and is normally not required in data with low intensity inhomogeneity. '
-    'full:  In addition to the "light" approach a final maximum-based filter (similar to the ''default'' method that needs about additional 60s) is used to remove remaining local inhomogeneities. '
-    'default: Fast correction (~60s) that identifies large homogeneous areas to estimate the intensity inhomogeneity. A maximum-filter is used to reduce the partial volume effects in T1-weighted data. Moreover, gradient and divergence maps were used to avoid side effects by high intensity tissues (e.g. blood vessels or head tissue). '
-}];
-if expert
-    app.help   = [app.help; { ...
-    'rough (new): New version of the ''rough'' approach with improved handling of T2/PD data that is still in development. '
-     }];
-end
-app.help   = [app.help;{''}];
+app.labels = {'none','default','SPM'};
+app.values = {0 1070 1};
 app.hidden = expert<1;
 
 %------------------------------------------------------------------------

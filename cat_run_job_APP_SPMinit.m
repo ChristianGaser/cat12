@@ -19,7 +19,7 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
 
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
   
-  if exist('rng','file') == 2, rng('default'); rng(0); else, rand('state',0); randn('state',0); end
+  if exist('rng','file') == 2, rng('default'); rng(0); else, rand('state',0); randn('state',0); end %#ok<RAND> 
   
   V = spm_vol(job.channel(n).vols{job.subj});
   vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
@@ -47,11 +47,9 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
   preproc.warp.mrf            = 1;                               % 
   preproc.warp.cleanup        = 1;                               % this is faster and give better results!
   preproc.warp.reg            = [0 0.001 0.5 0.05 0.2];
-  preproc.warp.affreg         = job.opts.affreg; 
+  preproc.warp.affreg         = strrep(job.opts.affreg,'prior',cat_get_defaults('opts.affreg')); % have to replace the prior setting from the CAT long pipeline
   preproc.warp.write          = [0 0];
-  %preproc.warp.fwhm           = 0;
-  %preproc.warp.samp           = min(9,max(2,job.opts.samp*2));
-
+ 
   if skullstripped 
     %% update number of SPM gaussian classes 
     preproc.tpm = tpm; 
@@ -134,24 +132,17 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
   %    >> further optimization is possible by avoiding
   %       temporary disk output 
   %  ----------------------------------------------------------
-  if job.opts.biasfwhm<45                                   % strong (9 iterations)
-    fwhmx  = 3:-1/4:1; 
-    sampx  = 2:-1/(numel(fwhmx)-1):1.0; 
-  elseif job.opts.biasfwhm>=45 && job.opts.biasfwhm<75      % medium (6 iterations) 
-%    fwhmx  = 3:-1/2:1/2; 
-%    sampx  = 2:-1/(numel(fwhmx)-1):1.0; 
-    fwhmx  = [2,1]; %,1/2]; 
-    sampx  = 2:-1/(numel(fwhmx)-1):1.0; 
-  elseif job.opts.biasfwhm>=75                              % light (3 iteration)
-    fwhmx  = 2:-3/4:1/2; 
-    sampx  = 2:-1/(numel(fwhmx)-1):1.0; 
-  end
-  
+  %  RD2023: We can only support once general case with strong correction. 
+  %          The final setting depend also on the user defined bias filter
+  %          size and is therefore adapted anyway. 
+  fwhmx  = [8, 2, 3/4]; %
+  sampx  = 2:-1/(numel(fwhmx)-1):1.0; 
+
 
   spmp0    = debug;  % job.extopts.verb>1; % for debugging: 0 - remove all APP data, 1 - save Ym, 2 - save Ym and Yp0
   optimize = 0;      % use low resolution (in mm) input image to increase speed >> limited speed advantage :/
                      % deformation requires a lot of time ... maybe its enough to use it only in case of ultra highres data
-  if any(vx_vol<1.5), optimize = 1.5; end            
+  if any(vx_vol<0.6), optimize = 1.2; end  % RD202311: only for extrem high resolutions!          
 
   preproc.Yclsout = false(1,6); 
   preproc.tol     = min(1e-2,job.opts.tol * 10); % 2 times less accurant than the final operation
@@ -166,7 +157,7 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
     imat(7:9) = repmat(optimize,1,3) .* sign(imat(7:9));
     Vi.mat    = spm_matrix(imat);
 
-    spm_smooth(nfname,nfname,repmat(0.75,1,3)); % denoising
+    spm_smooth(nfname,nfname,repmat(optimize/2,1,3)); % light denoising before downsampling
     [Vi,Yi] = cat_vol_imcalc(Vn,Vi,'i1',struct('interp',5,'verb',0,'mask',-1));
     delete(nfname); spm_write_vol(Vi,Yi); 
     %if ~isinf(job.opts.biasstr), clear Yi; end
@@ -176,8 +167,8 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
   bias = zeros(size(sampx)); 
   for ix=1:numel(sampx)
     %% parameter update
-    preproc.warp.samp         = min(9  ,max(1 ,job.opts.samp     * sampx(ix))); 
-    preproc.channel.biasfwhm  = min(180,max(30,job.opts.biasfwhm * fwhmx(ix)));
+    preproc.warp.samp         = min(9   ,max(1 ,job.opts.samp     * sampx(ix))); 
+    preproc.channel.biasfwhm  = min(1000,max(30,job.opts.biasfwhm * fwhmx(ix)));
     % preproc.warp.reg          = [0 0 0 0 0];ex
 
     stime2 = cat_io_cmd(sprintf('  SPM bias correction (samp: %0.2f mm, fwhm: %3.0f mm)',preproc.warp.samp,...
@@ -185,14 +176,14 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
 
     %try
       % SPM bias correction
-      warning off;  %#ok<WNOFF>
+      warning off;  
       if ix==numel(sampx) || bias(1) >= preproc.channel.biasfwhm 
         if job.extopts.APP==2 || spmp0>1, preproc.Yclsout = true(1,max(preproc.lkp)); end % 
-        vout = cat_spm_preproc_run(preproc,'run'); res(ix) = vout.res;
+        vout = cat_spm_preproc_run(preproc,'run'); res(ix) = vout.res; %#ok<AGROW> 
       else
-        vout = cat_spm_preproc_run(preproc,'run'); res(ix) = vout.res;
+        vout = cat_spm_preproc_run(preproc,'run'); res(ix) = vout.res; %#ok<AGROW> 
       end
-      warning on;  %#ok<WNON>
+      warning on;  
 %%
       Pmn    = fullfile(pp,mrifolder,['mn' ff '.nii']); 
       Pmn_ri = fullfile(pp,mrifolder,['mn' ff '_r' num2str(ix) '.nii']);
@@ -285,7 +276,7 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
           Ym0   = min(Ym0,Ym0(I)); clear I;
           %}
         end
-        if debug, stime2 = cat_io_cmd(' ','g5','',job.extopts.verb-1,stime2); end
+        cat_io_cmd(' ','g5','',job.extopts.verb-1,stime2); 
 
         if ~debug && exist(Pmn_r0,'file'), delete(Pmn_r0); end
         if ~debug && exist(Pmn_r0,'file'), delete(Pmn_r0); end
@@ -376,38 +367,8 @@ Yoc(isnan(Yo)) = nan; % not sure if this is good
   if exist(Pmn,'file'), delete(Pmn); end
 
   
-  
-  %% try APPs preprocessing
-  %  ---------------------------------------------------------
-  %  SPM may failed in correction of high intensive gyri that 
-  %  should be fixed by the APPs correction that is similar to
-  %  the APPinit and APPfinal routines but used SPM as input 
-  %  segmentation.
-  %  However this can work very well in general, problems can 
-  %  occure in subcortical structures and the cerebellum, 
-  %  especially in special protocols. 
-  %  It is also possible to skip this function if the estimated
-  %  bias field is very small, but I am not sure if the is useful.
-  %  ----------------------------------------------------------
-  if exist('vout','var') && job.extopts.APP==2 && isfield(vout,'Ycls')
-    stime2 = cat_io_cmd('  APP bias correction','g5','',job.extopts.verb-1,stime2);  %#ok<NASGU>
-
-    try
-      if isinf(job.opts.biasstr), catbias = 1 - (bias(1)-30)/60; else catbias = job.opts.biasstr; end
-      [Yo,Ym] = cat_run_job_APP_SPMfinal(onfname,vout,vx_vol * (2 - strcmp(job.extopts.species,'human')),...
-        job.extopts.verb-1,catbias); 
-      spm_write_vol(spm_vol(nfname),Yo);  
-     if ~debug, clear vout Yo Ym0 YM2; end  
-      if spmp0
-        copyfile(nfname,fullfile(pp,mrifolder,['mn' ff '_r' num2str(ix)+2 '.nii'])); 
-      end
-    catch
-      fprintf('failed\n');
-    end
-  end
-  
   if exist(onfname,'file'), delete(onfname); end
-  fprintf('%5.0fs\n',etime(clock,stime));  
+  %fprintf('%5.0fs\n',etime(clock,stime));  
 
 
 
