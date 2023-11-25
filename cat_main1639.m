@@ -762,89 +762,72 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
   % prepare some parameters
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*5/255; 
   [Ymix,job,surf,WMT] = cat_main_surf_preppara(Ymi,Yp0,job,vx_vol);
-  
-  if job.extopts.pbtres==99 
-  % development block with manual settings
-    smeth = [3 1]; 
-    sres  = [1 0.5]; % internal pbtres
-    surf = {'lhfst'}; %,'lcfst','rhfst','rcfst'};  
-    for smi = 1:numel(smeth)
-      for sresi = 1:numel(sres)
-        %% new pipelines and test
-        if smeth(smi)==1, pbtmethod = 'pbt2xf'; elseif smeth(smi)==3, pbtmethod = 'pbt3'; end
-        cat_io_cprintf('blue',sprintf('\nPBT Test99 - surf_%s_%0.2f\n',pbtmethod,sres(sresi)));
-        [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size] = ...
-          cat_surf_createCS(VT,VT0,Ymix,Yl1,Yp0/3,YMF,struct('pbtmethod',pbtmethod,...
-          'interpV',sres(sresi),'Affine',res.Affine,'surf',{surf},...
-          'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,...
-          'useprior',job.useprior),job); 
+ 
+  %% default surface reconstruction 
+%  sum(Yth1(Yth1(:)>median(Yth1(Yth1(:)>0))*2 ))./sum(Yth1(Yth1(:)>0)) > 0.1 > error
+  if debug, tic; end
+  if job.extopts.SRP >= 20
+    try
+      surf = unique(surf,'stable'); 
+    catch
+      surf = unique(surf); 
+    end
+    %% RD202107: Load Shooting template to correct severe defects in the
+    %           parahippocampla gyrus. Previously also used to stabilize 
+    %           the cerebellum but it introduce some Shooting problems.
+    if job.extopts.close_parahipp  %any( ~cellfun('isempty', strfind(surf,'cb') ))  % ... I want to avoid this if possible - it also seem to be worse to use it 
+      VT1 = spm_vol(cat_get_defaults('extopts.shootingT1')); VT1 = VT1{1}; 
+      fac = abs(tpm.V(1).mat(1)) / abs(VT1.mat(1));
+      YT  = single(spm_sample_vol(VT1,double(smooth3(Yy(:,:,:,1))*fac),double(smooth3(Yy(:,:,:,2))*fac),double(smooth3(Yy(:,:,:,3))*fac),2));
+      YT  = reshape(YT,size(Yy(:,:,:,1))); clear Yyi; 
+    else
+      YT  = [];
+    end
+    % further GUI fields ...
+    if ~isfield(job.extopts,'vdist'),           job.extopts.vdist           = 0;  end
+    if ~isfield(job.extopts,'scale_cortex'),    job.extopts.scale_cortex    = cat_get_defaults('extopts.scale_cortex'); end
+    if ~isfield(job.extopts,'add_parahipp'),    job.extopts.add_parahipp    = cat_get_defaults('extopts.add_parahipp'); end
+    if ~isfield(job.extopts,'close_parahipp'),  job.extopts.close_parahipp  = cat_get_defaults('extopts.close_parahipp'); end
+    if ~isfield(job.extopts,'pbtmethod'),       job.extopts.pbtmethod       = cat_get_defaults('extopts.pbtmethod'); end
+    if ~isfield(job.extopts,'reduce_mesh'),     job.extopts.reduce_mesh     = 1; end % cat_get_defaults('extopts.reduce_mesh'); end
+    if ~isfield(job.output,'surf_measures'),    job.output.surf_measures    = 1; end % developer
+    %%
+    if job.extopts.SRP >= 30
+      %% Yb0 was modified in cat_main_amap* for some conditions and we can use it as better mask in 
+      % cat_surf_createCS3 except for inv_weighting or if gcut was not used
+      if ~(job.extopts.gcutstr>0 && ~job.inv_weighting)
+        Yb0(:) = 1;
       end
+
+      [Yth1, S, Psurf, qa.createCS] = ... 
+        cat_surf_createCS3(VT,VT0,Ymix,Yl1,YMF,YT,Yb0,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
+        'outputpp',job.output.pp,'surf_measures',job.output.surf_measures, ...
+        'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,'SRP', mod(job.extopts.SRP,10), ...
+        'scale_cortex', job.extopts.scale_cortex, 'add_parahipp', job.extopts.add_parahipp, 'close_parahipp', job.extopts.close_parahipp,  ....
+        'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
+        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'useprior',job.useprior),job); 
+      qa.subjectmeasures.EC_abs = NaN;
+      qa.subjectmeasures.defect_size = NaN;
+    else
+      [Yth1, S, Psurf, qa.subjectmeasures.EC_abs, qa.subjectmeasures.defect_size, qa.createCS] = ...
+        cat_surf_createCS2(VT,VT0,Ymix,Yl1,YMF,YT,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
+        'vdist',job.extopts.vdist,'outputpp',job.output.pp,'surf_measures',job.output.surf_measures, ...
+        'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,'SRP',mod(job.extopts.SRP,10),...
+        'scale_cortex', job.extopts.scale_cortex, 'add_parahipp', job.extopts.add_parahipp, 'close_parahipp', job.extopts.close_parahipp,  ....
+        'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
+        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior),job); 
     end
   else
-  %% default surface reconstruction 
-  %  sum(Yth1(Yth1(:)>median(Yth1(Yth1(:)>0))*2 ))./sum(Yth1(Yth1(:)>0)) > 0.1 > error
-    if debug, tic; end
-    if job.extopts.SRP >= 20
-      try
-        surf = unique(surf,'stable'); 
-      catch
-        surf = unique(surf); 
-      end
-      %% RD202107: Load Shooting template to correct severe defects in the
-      %           parahippocampla gyrus. Previously also used to stabilize 
-      %           the cerebellum but it introduce some Shooting problems.
-      if job.extopts.close_parahipp  %any( ~cellfun('isempty', strfind(surf,'cb') ))  % ... I want to avoid this if possible - it also seem to be worse to use it 
-        VT1 = spm_vol(cat_get_defaults('extopts.shootingT1')); VT1 = VT1{1}; 
-        fac = abs(tpm.V(1).mat(1)) / abs(VT1.mat(1));
-        YT  = single(spm_sample_vol(VT1,double(smooth3(Yy(:,:,:,1))*fac),double(smooth3(Yy(:,:,:,2))*fac),double(smooth3(Yy(:,:,:,3))*fac),2));
-        YT  = reshape(YT,size(Yy(:,:,:,1))); clear Yyi; 
-      else
-        YT  = [];
-      end
-      % further GUI fields ...
-      if ~isfield(job.extopts,'vdist'),           job.extopts.vdist           = 0;  end
-      if ~isfield(job.extopts,'scale_cortex'),    job.extopts.scale_cortex    = cat_get_defaults('extopts.scale_cortex'); end
-      if ~isfield(job.extopts,'add_parahipp'),    job.extopts.add_parahipp    = cat_get_defaults('extopts.add_parahipp'); end
-      if ~isfield(job.extopts,'close_parahipp'),  job.extopts.close_parahipp  = cat_get_defaults('extopts.close_parahipp'); end
-      if ~isfield(job.extopts,'pbtmethod'),       job.extopts.pbtmethod       = cat_get_defaults('extopts.pbtmethod'); end
-      if ~isfield(job.extopts,'reduce_mesh'),     job.extopts.reduce_mesh     = 1; end % cat_get_defaults('extopts.reduce_mesh'); end
-      if ~isfield(job.output,'surf_measures'),    job.output.surf_measures    = 1; end % developer
-      %%
-      if job.extopts.SRP >= 30
-        %% Yb0 was modified in cat_main_amap* for some conditions and we can use it as better mask in 
-        % cat_surf_createCS3 except for inv_weighting or if gcut was not used
-        if ~(job.extopts.gcutstr>0 && ~job.inv_weighting)
-          Yb0(:) = 1;
-        end
-
-        [Yth1, S, Psurf, qa.createCS] = ... 
-          cat_surf_createCS3(VT,VT0,Ymix,Yl1,YMF,YT,Yb0,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
-          'outputpp',job.output.pp,'surf_measures',job.output.surf_measures, ...
-          'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,'SRP', mod(job.extopts.SRP,10), ...
-          'scale_cortex', job.extopts.scale_cortex, 'add_parahipp', job.extopts.add_parahipp, 'close_parahipp', job.extopts.close_parahipp,  ....
-          'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
-          'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'useprior',job.useprior),job); 
-        qa.subjectmeasures.EC_abs = NaN;
-        qa.subjectmeasures.defect_size = NaN;
-      else
-        [Yth1, S, Psurf, qa.subjectmeasures.EC_abs, qa.subjectmeasures.defect_size, qa.createCS] = ...
-          cat_surf_createCS2(VT,VT0,Ymix,Yl1,YMF,YT,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
-          'vdist',job.extopts.vdist,'outputpp',job.output.pp,'surf_measures',job.output.surf_measures, ...
-          'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,'SRP',mod(job.extopts.SRP,10),...
-          'scale_cortex', job.extopts.scale_cortex, 'add_parahipp', job.extopts.add_parahipp, 'close_parahipp', job.extopts.close_parahipp,  ....
-          'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
-          'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior),job); 
-      end
-    else
-      %%
-      [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size, qa.createCS] = ...
-        cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,struct('pbtmethod','pbt2x',...
-        'interpV',job.extopts.pbtres,'SRP',mod(job.extopts.SRP,10), ...
-        'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
-        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior),job);
-    end
-    if debug, toc; end
+    %% createCS1 pipeline 
+    [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size, qa.createCS] = ...
+      cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,struct('pbtmethod','pbt2x',...
+      'interpV',job.extopts.pbtres,'SRP',mod(job.extopts.SRP,10), ...
+      'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
+      'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior),job);
   end
+  if debug, toc; end
+
+
   
   %% thickness map
   if numel(fieldnames(S))==0 && isempty(Psurf), clear S Psurf; end

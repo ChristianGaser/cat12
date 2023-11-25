@@ -294,8 +294,8 @@ registration.help   = {
 pbtver         = cfg_menu;
 pbtver.tag     = 'pbtmethod';
 pbtver.name    = 'Projection-based thickness';
-pbtver.labels  = {'PBT','PBTx','PBT2','PBT simple (voxel-grid distance)', 'PBT simple (Eikonal distance)'};
-pbtver.values  = {'pbt2','pbt2x','pbt3','pbtsimple0','pbtsimple1'};
+pbtver.labels  = {'PBT','PBTx','PBT simple (voxel-grid distance)', 'PBT simple (Eikonal distance)'};
+pbtver.values  = {'pbt2','pbt2x','pbtsimple0','pbtsimple1'};
 pbtver.def     = @(val) 'pbt2x';
 pbtver.hidden  = expert<2;
 pbtver.help    = {
@@ -305,7 +305,7 @@ pbtver.help    = {
   'The estimated thickness values of each part were projected over the whole GM and summed up to obtain the full thickness.  ' ...
   'Similar to PBT, the project-based thickness and the direct thickness (of the distance maps without sulcus/gyrus reconstruction) are combined by using the minimum. '] 
   ''
-  'PBT simple function do not refine the given map and just estimate the grid or Eikonal distance function on the given map (running only in the CS3 pipeline).'
+  'PBT simple function do not refine the given map and just estimate the voxel-grid or Eikonal distance function on the given map (running only in the CS3 pipeline).'
   ''
   'Experimental development parameter - do not change! '
   ''

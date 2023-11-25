@@ -352,11 +352,6 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
     stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,native2unicode(179, 'latin1'))); stimet = stime;
     if strcmp(opt.pbtmethod,'pbtsimple0') || strcmp(opt.pbtmethod,'pbtsimple1') 
       [Yth1i,Yppi] = cat_vol_pbtsimple(Ymfs,opt.interpV,str2double(opt.pbtmethod(10))); 
-      %ds('d2sm','',1,Yth1i/5,Yppi,round(size(Yppi,3)*2/3));
-      %return
-    elseif strcmp(opt.pbtmethod,'pbt3') 
-      [Yth1i,Yppi] = cat_vol_pbt3(Ymfs,struct('method',opt.pbtmethod,'cb',iscerebellum,'resV',opt.interpV,...
-        'vmat',V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1])); % avoid underestimated thickness in gyri
     else 
       [Yth1i,Yppi,Ymfs] = cat_vol_pbt(Ymfs,struct('method',opt.pbtmethod,'resV',opt.interpV,'vmat',...
         V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1],'pbtlas',opt.pbtlas)); % avoid underestimated thickness in gyri
