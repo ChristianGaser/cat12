@@ -449,7 +449,7 @@ function cat_run_job(job,tpm,subj)
         %  why not use it for a improved maximum based correction?!
         %  ------------------------------------------------------------
  % 20181222       if ~strcmp(job.extopts.species,'human'), job.extopts.APP = 5; end
-        if (job.extopts.APP==1 || job.extopts.APP==2) 
+        if job.extopts.APP==1  
            job.subj = subj;
            [Ym,Ybg,WMth] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,...
              ofname,nfname,mrifolder,ppe.affreg.skullstripped);
@@ -543,16 +543,11 @@ function cat_run_job(job,tpm,subj)
         % large head intensities can disturb the whole process.
         % --------------------------------------------------------------
         % ds('l2','',vx_vol,Ym, Yt + 2*Ybg,obj.image.private.dat(:,:,:)/WMth,Ym,60)
-        if (job.extopts.APP == 1070 || job.extopts.APP == 1144) && ~ppe.affreg.highBG
+        if job.extopts.APP == 1070 && ~ppe.affreg.highBG
           stime = cat_io_cmd('APP: Rough bias correction'); 
           try
             Ysrc  = single(obj.image.private.dat(:,:,:)); 
-            if job.extopts.APP == 1070 
-              [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init1070(Ysrc,vx_vol,job.extopts.verb); %#ok<ASGLU>
-            else % new version R1144
-              [Ym,Yt,Ybg,WMth,bias,Tth,ppe.APPi] = cat_run_job_APP_init(...
-                Ysrc,vx_vol,struct('verb',job.extopts.verb,'APPstr',job.opts.biasstr));  %#ok<ASGLU>
-            end
+            [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init1070(Ysrc,vx_vol,job.extopts.verb); %#ok<ASGLU>
           catch apperr
             %% very simple affine preprocessing ... only simple warning
             cat_io_addwarning([mfilename ':APPerror'],'APP failed. Use simple scaling.',1,[0 0],apperr);
@@ -595,6 +590,17 @@ end
           resa  = obj.samp*2; % definine smoothing by sample size
           VF1   = spm_smoothto8bit(VF,resa); 
           VG1   = spm_smoothto8bit(VG,resa); %#ok<NASGU>
+
+        elseif APP == 1
+          % APP by SPM 
+          VF.dt         = [spm_type('float32') spm_platform('bigend')];
+          VF.dat(:,:,:) = single(Ym); 
+          VF.pinfo      = repmat([1;0],1,size(Ym,3));
+         
+          % smoothing
+          resa  = obj.samp*2; % definine smoothing by sample size
+          VF1   = spm_smoothto8bit(VF,resa);
+          VG1   = spm_smoothto8bit(VG,resa);
 
         elseif job.extopts.setCOM && ~( isfield(job,'useprior') && ~isempty(job.useprior) ) && ...
             ~ppe.affreg.highBG && strcmp(job.opts.affreg,'prior')
@@ -703,7 +709,7 @@ end
           aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
           
           stime = cat_io_cmd('Affine registration','','',1,stime); 
-          if job.extopts.APP>0
+          if job.extopts.APP > 0
             VF.dt         = [spm_type('UINT8') spm_platform('bigend')];
             VF.pinfo(1:2,:) = VF.pinfo(1:2,:)/spm_global(VF);
             VF.pinfo      = repmat([1;0],1,size(Ym,3));
@@ -773,12 +779,12 @@ end
       %% APP for spm_maff8
       %  optimize intensity range
       %  we have to rewrite the image, because SPM reads it again 
-      if job.extopts.APP>0
+      if job.extopts.APP > 0
           % WM threshold
           Ysrc = single(obj.image.private.dat(:,:,:)); 
           Ysrc(isnan(Ysrc) | isinf(Ysrc)) = min(Ysrc(:));
 
-          if job.extopts.APP==1070 || job.extopts.APP==1144 
+          if job.extopts.APP == 1070 
             % APPinit is just a simple bias correction for affreg and should
             % not be used further although it maybe helps in some cases!
             Ymc = Ysrc; 

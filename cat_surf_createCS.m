@@ -124,9 +124,7 @@ cstime = clock;
   % change surffolder name if subfolders are forced and surffolder has
   % default name "surf" (i.e. for non-BIDS structure)
   if cat_get_defaults('extopts.subfolders') && strcmp(surffolder,'surf')
-    if strcmp(opt.pbtmethod,'pbt3')
-      surffolder = sprintf('%s_%s_%0.2f',surffolder,opt.pbtmethod,opt.interpV);
-    elseif strcmp(opt.pbtmethod,'pbt2xf')
+    if strcmp(opt.pbtmethod,'pbt2x')
       opt.pbtmethod = 'pbt2x';
       surffolder = sprintf('%s_%s_%0.2f',surffolder,opt.pbtmethod,opt.interpV);
     elseif opt.fast == 1
@@ -428,10 +426,11 @@ cstime = clock;
     Ymfs = min(3,max(1,Ymfs));
 
     %% pbt calculation
-    if strcmp(opt.pbtmethod,'pbt3')
-      [Yth1i,Yppi] = cat_vol_pbt3(Ymfs,struct('method',opt.pbtmethod,'cb',iscerebellum,'resV',opt.interpV,'vmat',V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1])); % avoid underestimated thickness in gyri
-    else
-      [Yth1i,Yppi] = cat_vol_pbt(Ymfs,struct('method',opt.pbtmethod,'resV',opt.interpV,'vmat',V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1],'pbtlas',opt.pbtlas)); % avoid underestimated thickness in gyri
+    if strcmp(opt.pbtmethod,'pbtsimple0') || strcmp(opt.pbtmethod,'pbtsimple1') 
+      [Yth1i,Yppi] = cat_vol_pbtsimple(Ymfs,opt.interpV,str2double(opt.pbtmethod(10))); 
+    else 
+      [Yth1i,Yppi] = cat_vol_pbt(Ymfs,struct('method',opt.pbtmethod,'resV',opt.interpV,'vmat',...
+        V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1],'pbtlas',opt.pbtlas)); % avoid underestimated thickness in gyri
     end  
     
 
