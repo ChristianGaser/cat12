@@ -253,7 +253,10 @@ for i=1:size(filenames,1)
                 else
                     % Warp labels
                     U  = unique(f0(:));
-                    if numel(U)>1000
+                    if numel(U)>500
+                        fprintf('Categorical interpolation of so many labels will be quite slow...\n');
+                    end
+                    if numel(U)>1100
                         error('Too many label values.');
                     end
                     f1   = zeros(dim(1:3),class(f0));
