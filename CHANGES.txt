@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2489 | gaser | 2023-12-05 09:13:23
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M cat_vol_defs.m
+ M doc/cat.html
+ M doc/index.html
+
+(1) Changed: Increased limit for maximum number of labels for categorical
+             interpolation in cat_vol_def.m.
+(2) Changed: Some corrections for authorships in references.
+------------------------------------------------------------------------
 r2485 | rdahnke | 2023-11-23 19:50:51
 
 Changed paths:
@@ -11,7 +24,8 @@ Changed paths:
 Fixed:   Reset skull-stripping update in cat_main_cleanup (called from 
          cat_main[1639] to setting from r1981 and r2183 that includes update 
          of the brain mask but only in cases without skull-stripping. 
-Fixed:   Tiny changes in cat_run_job1939.------------------------------------------------------------------------
+Fixed:   Tiny changes in cat_run_job1939.
+------------------------------------------------------------------------
 r2480 | dahnke | 2023-11-20 16:52:28
 
 Changed paths:
