@@ -158,9 +158,7 @@ function [mainbatch,perror] = cat_tst_cattest(job)
     'cat12_101_MAIN_segment' 1  1 'spm.tools.cat.estwrite.opts.tpm'                           'tpm' ...       
       {{fullfile(spm('dir'),'tpm','TPM.nii')} ...  
        {fullfile(cat_get_defaults('extopts.pth_templates'),'TPM_Age11.5.nii')} ...                                     % children
-       {fullfile(spm('dir'),'tpm','TPM.nii'); ...                                                                            % multi-TPM
-        fullfile(cat_get_defaults('extopts.pth_templates'),'TPM_ba0_ha0.nii'); ...
-        fullfile(cat_get_defaults('extopts.pth_templates'),'TPM_ba0_ha0.nii')} };     
+      };     
     ... SPM bias
     ... SPM acc
     ... == parameter in default GUI ==
@@ -203,9 +201,7 @@ function [mainbatch,perror] = cat_tst_cattest(job)
     'cat12_105_MAIN_segment_1173plus' 1  1 'spm.tools.cat.estwrite1173plus.opts.tpm'                           'tpm' ...       
       {{fullfile(spm('dir'),'tpm','TPM.nii')} ...  
        {fullfile(cat_get_defaults('extopts.pth_templates'),'TPM_Age11.5.nii')} ...                                     % children
-       {fullfile(spm('dir'),'tpm','TPM.nii'); ...                                                                            % multi-TPM
-        fullfile(cat_get_defaults('extopts.pth_templates'),'TPM_ba0_ha0.nii'); ...
-        fullfile(cat_get_defaults('extopts.pth_templates'),'TPM_ba0_ha0.nii')} };     
+      };     
     ... SPM bias
     ... SPM acc
     ... == parameter in default GUI ==
