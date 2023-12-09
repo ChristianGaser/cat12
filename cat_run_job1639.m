@@ -873,132 +873,124 @@ function cat_run_job1639(job,tpm,subj)
         stime = cat_io_cmd('SPM preprocessing 1 (estimate 1 - TPM registration):','','',1,stime); 
       end
       if ~isempty(job.opts.affreg) && useprior~=1 && job.extopts.setCOM ~= 10 % setcom == 10 - never use ... && strcmp('human',job.extopts.species)
-        if numel(job.opts.tpm)>1
-          %% merging of multiple TPMs
-          obj2 = obj; obj2.image.dat(:,:,:) = max(0.0,Ym);
-          [Affine,obj.tpm,res0] = cat_run_job_multiTPM(job,obj2,Affine,ppe.affreg.skullstripped,1); %#ok<ASGLU>
-          Affine3 = Affine; 
-        elseif 1 %if strcmp(job.extopts.species,'human')
-          %% only one TPM (old approach); 
-          spm_plot_convergence('Init','Fine affine registration','Mean squared difference','Iteration');
-          warning off 
-          
-          try
-            Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg,80);
-          catch
-            Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg);
-          end
-          scl1 = abs(det(Affine1(1:3,1:3)));
-          scl2 = abs(det(Affine2(1:3,1:3)));
+        spm_plot_convergence('Init','Fine affine registration','Mean squared difference','Iteration');
+        warning off 
+        
+        try
+          Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg,80);
+        catch
+          Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg);
+        end
+        scl1 = abs(det(Affine1(1:3,1:3)));
+        scl2 = abs(det(Affine2(1:3,1:3)));
 
-          if any(any(isnan(Affine2(1:3,:))))
-            try
-              Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*4,obj.tpm,Affine ,job.opts.affreg,80);
-            catch
-              Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*4,obj.tpm,Affine ,job.opts.affreg);
-            end
-            if any(any(isnan(Affine2(1:3,:)))) 
-              Affine2 = Affine; 
-            end
-          else
-            % check for > 10% larger scaling 
-            if ~strcmp(job.opts.affreg,'prior')  &&  scl1 > 1.1*scl2 && job.extopts.setCOM ~= 11 % setcom == 11 - use always 
-              stime = cat_io_cmd('  Use initial fine affine registration.','warn','',1,stime);
-              %fprintf('\n  First fine affine registration failed.\n  Use affine registration from previous step.                ');
-              Affine2 = Affine1;
-              scl2 = scl1;
-            end
-          end
+        if any(any(isnan(Affine2(1:3,:))))
           try
-            Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,obj.tpm,Affine2,job.opts.affreg,80);
+            Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*4,obj.tpm,Affine ,job.opts.affreg,80);
           catch
-            Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,obj.tpm,Affine2,job.opts.affreg);
+            Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*4,obj.tpm,Affine ,job.opts.affreg);
           end
-
-          if ~any(any(isnan(Affine3(1:3,:))))
-            scl3 = abs(det(Affine3(1:3,1:3)));
-            % check for > 5% larger scaling 
-            if ~strcmp(job.opts.affreg,'prior')  &&  scl2 > 1.05*scl3 && job.extopts.setCOM ~= 11 % setcom == 11 - use always
-              stime = cat_io_cmd('  Use previous fine affine registration.','warn','',1,stime);
-              %fprintf('\n  Final fine affine registration failed.\n  Use fine affine registration from previous step.                ');
-              Affine = Affine2;
-            else
-              Affine = Affine3;
-            end
-          else % Affine3 failed, use Affine2
-            Affine = Affine2;
+          if any(any(isnan(Affine2(1:3,:)))) 
+            Affine2 = Affine; 
           end
-          warning on  
         else
-          Affine2 = Affine1; 
-          Affine3 = Affine1; 
-        end
-        
-        %% test for flipping 
-        %fliptest = 2; 
-        %[ppe.affreg.flipped, ppe.affreg.flippedval,stime] = cat_vol_testflipping(obj,Affine,fliptest,stime);
-        
-        if 0
-          %% visual control for development and debugging
-          VFa = VF; VFa.mat = AffineMod * VF.mat; %Fa.mat = res0(2).Affine * VF.mat;
-          if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
-          [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0,'mask',-1));  
-          %[Vmsk,Yb] = cat_vol_imcalc([VFa;obj.tpm.V(1:3)],Pbt,'i2 + i3 + i4',struct('interp',3,'verb',0));  
-          %[Vmsk,Yb] = cat_vol_imcalc([VFa;obj.tpm.V(5)],Pbt,'i2',struct('interp',3,'verb',0));  
-          ds('d2sm','',1,Ym,Ym*0.5 + 0.5*Ym.*(Yb>0.5),round(size(Yb,3)*0.6))
-        end
-        
-       
-        if isfield(ppe.affreg,'skullstripped') && ~ppe.affreg.skullstripped 
-          %% affreg with brainmask
-          if debug 
-            [Affine,Ybi,Ymi,Ym0] = cat_run_job_APRGs(Ym,Ybg,VF,Pb,Pbt,Affine,vx_vol,obj,job); %#ok<ASGLU>
-          else
-            [Affine,Ybi] = cat_run_job_APRGs(Ym,Ybg,VF,Pb,Pbt,Affine,vx_vol,obj,job);
+          % check for > 10% larger scaling 
+          if ~strcmp(job.opts.affreg,'prior')  &&  scl1 > 1.1*scl2 && job.extopts.setCOM ~= 11 % setcom == 11 - use always 
+            stime = cat_io_cmd('  Use initial fine affine registration.','warn','',1,stime);
+            %fprintf('\n  First fine affine registration failed.\n  Use affine registration from previous step.                ');
+            Affine2 = Affine1;
+            scl2 = scl1;
           end
         end
-    
-        if ppe.affreg.skullstripped || job.extopts.gcutstr<0
-          %% update number of SPM gaussian classes 
-          Ybg = 1 - spm_read_vols(obj.tpm.V(1)) - spm_read_vols(obj.tpm.V(2)) - spm_read_vols(obj.tpm.V(3));
-          noCSF = job.extopts.gcutstr == -2; 
-          if 1
-            for k=1:3 - noCSF
-              obj.tpm.dat{k}     = spm_read_vols(obj.tpm.V(k));
-              obj.tpm.V(k).dt(1) = 64;
-              obj.tpm.V(k).dat   = double(obj.tpm.dat{k});
-              obj.tpm.V(k).pinfo = repmat([1;0],1,size(Ybg,3));
-            end
-          end
+        try
+          Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,obj.tpm,Affine2,job.opts.affreg,80);
+        catch
+          Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,obj.tpm,Affine2,job.opts.affreg);
+        end
 
-          obj.tpm.V(4 - noCSF).dat = Ybg;
-          obj.tpm.dat{4 - noCSF}   = Ybg; 
-          obj.tpm.V(4 - noCSF).pinfo = repmat([1;0],1,size(Ybg,3));
-          obj.tpm.V(4 - noCSF).dt(1) = 64;
-          obj.tpm.dat(5 - noCSF:6) = []; 
-          obj.tpm.V(5 - noCSF:6)   = []; 
-          obj.tpm.bg1(4 - noCSF)   = obj.tpm.bg1(6);
-          obj.tpm.bg2(4 - noCSF)   = obj.tpm.bg1(6);
-          obj.tpm.bg1(5 - noCSF:6) = [];
-          obj.tpm.bg2(5 - noCSF:6) = [];
-          %obj.tpm.V = rmfield(obj.tpm.V,'private');
-          
-          % tryed 3 peaks per class, but BG detection error require manual 
-          % correction (set 0) that is simple with only one class  
-          % RD202306: SPM is not considering things without variation and 
-          %           a zeroed background is simply not existing!
-          %           Moreover it is possible just to ignore classes :D
-          %           Hence, we may not need to redefine the TPM at all.
-          if noCSF
-            job.opts.ngaus = [([job.tissue(1:2).ngaus])',1]; % gaussian background
+        if ~any(any(isnan(Affine3(1:3,:))))
+          scl3 = abs(det(Affine3(1:3,1:3)));
+          % check for > 5% larger scaling 
+          if ~strcmp(job.opts.affreg,'prior')  &&  scl2 > 1.05*scl3 && job.extopts.setCOM ~= 11 % setcom == 11 - use always
+            stime = cat_io_cmd('  Use previous fine affine registration.','warn','',1,stime);
+            %fprintf('\n  Final fine affine registration failed.\n  Use fine affine registration from previous step.                ');
+            Affine = Affine2;
           else
-            job.opts.ngaus = ([job.tissue(1:3).ngaus])'; % no gaussian background
+            Affine = Affine3;
           end
-          obj.lkp        = [];
-          for k=1:numel(job.opts.ngaus)
-            job.tissue(k).ngaus = job.opts.ngaus(k);
-            obj.lkp = [obj.lkp ones(1,job.tissue(k).ngaus)*k];
+        else % Affine3 failed, use Affine2
+          Affine = Affine2;
+        end
+        warning on  
+      else
+        Affine2 = Affine1; 
+        Affine3 = Affine1; 
+      end
+      
+      %% test for flipping 
+      %fliptest = 2; 
+      %[ppe.affreg.flipped, ppe.affreg.flippedval,stime] = cat_vol_testflipping(obj,Affine,fliptest,stime);
+      
+      if 0
+        %% visual control for development and debugging
+        VFa = VF; VFa.mat = AffineMod * VF.mat; %Fa.mat = res0(2).Affine * VF.mat;
+        if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
+        [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0,'mask',-1));  
+        %[Vmsk,Yb] = cat_vol_imcalc([VFa;obj.tpm.V(1:3)],Pbt,'i2 + i3 + i4',struct('interp',3,'verb',0));  
+        %[Vmsk,Yb] = cat_vol_imcalc([VFa;obj.tpm.V(5)],Pbt,'i2',struct('interp',3,'verb',0));  
+        ds('d2sm','',1,Ym,Ym*0.5 + 0.5*Ym.*(Yb>0.5),round(size(Yb,3)*0.6))
+      end
+      
+     
+      if isfield(ppe.affreg,'skullstripped') && ~ppe.affreg.skullstripped 
+        %% affreg with brainmask
+        if debug 
+          [Affine,Ybi,Ymi,Ym0] = cat_run_job_APRGs(Ym,Ybg,VF,Pb,Pbt,Affine,vx_vol,obj,job); %#ok<ASGLU>
+        else
+          [Affine,Ybi] = cat_run_job_APRGs(Ym,Ybg,VF,Pb,Pbt,Affine,vx_vol,obj,job);
+        end
+      end
+  
+      if ppe.affreg.skullstripped || job.extopts.gcutstr<0
+        %% update number of SPM gaussian classes 
+        Ybg = 1 - spm_read_vols(obj.tpm.V(1)) - spm_read_vols(obj.tpm.V(2)) - spm_read_vols(obj.tpm.V(3));
+        noCSF = job.extopts.gcutstr == -2; 
+        if 1
+          for k=1:3 - noCSF
+            obj.tpm.dat{k}     = spm_read_vols(obj.tpm.V(k));
+            obj.tpm.V(k).dt(1) = 64;
+            obj.tpm.V(k).dat   = double(obj.tpm.dat{k});
+            obj.tpm.V(k).pinfo = repmat([1;0],1,size(Ybg,3));
           end
+        end
+
+        obj.tpm.V(4 - noCSF).dat = Ybg;
+        obj.tpm.dat{4 - noCSF}   = Ybg; 
+        obj.tpm.V(4 - noCSF).pinfo = repmat([1;0],1,size(Ybg,3));
+        obj.tpm.V(4 - noCSF).dt(1) = 64;
+        obj.tpm.dat(5 - noCSF:6) = []; 
+        obj.tpm.V(5 - noCSF:6)   = []; 
+        obj.tpm.bg1(4 - noCSF)   = obj.tpm.bg1(6);
+        obj.tpm.bg2(4 - noCSF)   = obj.tpm.bg1(6);
+        obj.tpm.bg1(5 - noCSF:6) = [];
+        obj.tpm.bg2(5 - noCSF:6) = [];
+        %obj.tpm.V = rmfield(obj.tpm.V,'private');
+        
+        % tryed 3 peaks per class, but BG detection error require manual 
+        % correction (set 0) that is simple with only one class  
+        % RD202306: SPM is not considering things without variation and 
+        %           a zeroed background is simply not existing!
+        %           Moreover it is possible just to ignore classes :D
+        %           Hence, we may not need to redefine the TPM at all.
+        if noCSF
+          job.opts.ngaus = [([job.tissue(1:2).ngaus])',1]; % gaussian background
+        else
+          job.opts.ngaus = ([job.tissue(1:3).ngaus])'; % no gaussian background
+        end
+        obj.lkp        = [];
+        for k=1:numel(job.opts.ngaus)
+          job.tissue(k).ngaus = job.opts.ngaus(k);
+          obj.lkp = [obj.lkp ones(1,job.tissue(k).ngaus)*k];
         end
       end
       

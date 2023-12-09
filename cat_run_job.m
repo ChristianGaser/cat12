@@ -913,11 +913,7 @@ end
         wo = warning('QUERY','MATLAB:RandStream:ActivatingLegacyGenerators'); wo = strfind( wo.state , 'on');
         if wo, warning('OFF','MATLAB:RandStream:ActivatingLegacyGenerators'); end
 
-        if numel(job.opts.tpm)>1
-          %% merging of multiple TPMs
-          obj2 = obj; obj2.image.dat(:,:,:) = max(0.0,Ym);
-          [Affine,obj.tpm,res0] = cat_run_job_multiTPM(job,obj2,Affine,ppe.affreg.skullstripped,1); %#ok<ASGLU>
-        elseif strcmp(job.extopts.species,'human')
+        if strcmp(job.extopts.species,'human')
           %% only one TPM (old approach); 
           spm_plot_convergence('Init','affine registration to TPM','Mean squared difference','Iteration');
 
