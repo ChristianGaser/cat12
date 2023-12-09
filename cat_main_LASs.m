@@ -279,6 +279,7 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
     else                                       wmtht = 1; 
     end
     
+
     %% tissue thresholds
     % you need to know which are the extrem classes to define there PVE
     [gmm,gms,gmn] = cat_stat_kmeans(Ysrc(cat_vol_morph(Ygm & Ycls{1}>128,'e')),3); % we need 3 GM types to include GM/WM and GM/CSF PVE voxels 
@@ -288,56 +289,35 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
     TSmx = (TSth == max(TSth)) - (TSth == min(TSth)); 
     TSth = TSth + TSmx .* [mean(gms(wmn>0.5)) mean(wms(wmn>0.5)) mean(cms(cmn>0.5))]; 
 
-    %%
-    if 1
-      Ysrcm  = cat_vol_localstat(Ysrc .* Ywm,Ywm,1,wmtht); 
-      Ysrcs  = cat_vol_localstat(Ysrcm,Ysrcm>0,2,4);
-      Ysrcm(Ysrcs>mean(Ysrcs(Ysrcs(:)>0) + std(Ysrcs(Ysrcs(:)>0) ))) = 0;
-      Ysrcm  = cat_vol_noPVE(Ysrcm,res.isMP2RAGE,vx_vol,2); 
-      Ysrca  = Ysrcm; 
-      Ysrcmw = cat_vol_approx(Ysrcm,'nh',vx_vol,4); Ysrcmw = cat_vol_smooth3X(Ysrcmw,2); 
 
-      Ysrcm  = cat_vol_localstat(Ysrc ./ TSth(1) .* TSth(2) .* (Ycls{1}>4),(Ygm & Ycls{1}>4),1,1);%Ygm & 
-      Ysrcm  = cat_vol_noPVE(Ysrcm,res.isMP2RAGE,vx_vol,2); 
-      Ysrcs  = cat_vol_localstat(Ysrcm,Ysrcm>0,4,4);
-      Ysrcm(Ysrcs>mean(Ysrcs(Ysrcs(:)>0)+std(Ysrcs(Ysrcs(:)>0) ))) = 0;
-      Ysrca  = Ysrca + Ysrcm; 
-      Ysrcmg = cat_vol_approx(Ysrcm,'nh',vx_vol,4); Ysrcmg = cat_vol_smooth3X(Ysrcmg,LASfs); 
+    %% WM
+    Ysrcm  = cat_vol_localstat(Ysrc .* Ywm,Ywm,1,wmtht); 
+    Ysrcs  = cat_vol_localstat(Ysrcm,Ysrcm>0,2,4);
+    Ysrcm(Ysrcs>mean(Ysrcs(Ysrcs(:)>0) + std(Ysrcs(Ysrcs(:)>0) ))) = 0;
+    Ysrcm  = cat_vol_noPVE(Ysrcm,res.isMP2RAGE,vx_vol,2); 
+    Ysrca  = Ysrcm; 
+    Ysrcmw = cat_vol_approx(Ysrcm,'nh',vx_vol,4); Ysrcmw = cat_vol_smooth3X(Ysrcmw,2); 
 
-      Ysrcm  = cat_vol_localstat(Ysrc ./ TSth(3) .* TSth(2) .* (Ycm & Ycls{3}>4),(Ycm & Ycls{3}>4),1,1); 
-      Ysrcm  = cat_vol_noPVE(Ysrcm,res.isMP2RAGE,vx_vol,2); 
-      Ysrcs  = cat_vol_localstat(Ysrcm,Ysrcm>0,2,4);
-      Ysrcm(Ysrcs>mean(Ysrcs(Ysrcs(:)>0)+std(Ysrcs(Ysrcs(:)>0) ))) = 0;
-      Ysrca  = Ysrca + Ysrcm; 
-      Ysrcmc = cat_vol_approx(Ysrcm,'nh',vx_vol,4); Ysrcmc = cat_vol_smooth3X(Ysrcmc,LASfs); 
-   
-      Ysrcma = cat_vol_approx(Ysrca,'nh',vx_vol,2); Ysrcma = cat_vol_smooth3X(Ysrcma,LASfs); 
-      Ysrcs  = cat_vol_localstat(Ysrcma,Ysrcma>0,2,4);
-      Ysrcma(Ysrcs>mean(Ysrcs(Ysrcs(:)>0)+std(Ysrcs(Ysrcs(:)>0) ))) = 0;
-      
-      Yi = cat_vol_approx(Ysrcma,'nh',vx_vol,2); Yi = cat_vol_smooth3X(Yi,2); 
-      Ylab{2} = Yi; 
-    else
-     
-       Ysrcm  = cat_vol_localstat(Ysrc .* Ywm,Ywm,1,wmtht) + ...
-              cat_vol_localstat(Ysrc ./ TSth(1) .* TSth(2) .* (Ygm & Ycls{1}>128),(Ygm & Ycls{1}>128),1,1) + ...
-              cat_vol_localstat(Ysrc ./ TSth(3) .* TSth(2) .* (Ycm & Ycls{3}>240),(Ycm & Ycls{3}>240),1,1); 
-      Ysrcs = cat_vol_localstat(Ysrcm,Ysrcm>0,2,4);
-      Ysrcm(Ysrcs>mean(Ysrcs(Ysrcs(:)>0)+std(Ysrcs(Ysrcs(:)>0) ))) = 0;
-      Ysrcm2 = Ysrcm; 
-      YM = cat_vol_morph(Ysrcm>0,'d') & Yp0>1 & Ysrcm==0; Ysrcm2(YM) = Ysrc(YM);
-      Ysrcm2 = cat_vol_localstat(Ysrcm2,Ysrcm2>0,2,wmtht); Ysrcm(YM) = Ysrcm2(YM);
-      Ysrcm  = cat_vol_noPVE(Ysrcm,res.isMP2RAGE,vx_vol,2); 
+    Ysrcm  = cat_vol_localstat(Ysrc ./ TSth(1) .* TSth(2) .* (Ycls{1}>4),(Ygm & Ycls{1}>4),1,1);%Ygm & 
+    Ysrcm  = cat_vol_noPVE(Ysrcm,res.isMP2RAGE,vx_vol,2); 
+    Ysrcs  = cat_vol_localstat(Ysrcm,Ysrcm>0,4,4);
+    Ysrcm(Ysrcs>mean(Ysrcs(Ysrcs(:)>0)+std(Ysrcs(Ysrcs(:)>0) ))) = 0;
+    Ysrca  = Ysrca + Ysrcm; 
+    Ysrcmg = cat_vol_approx(Ysrcm,'nh',vx_vol,4); Ysrcmg = cat_vol_smooth3X(Ysrcmg,LASfs); 
 
-      % major correction outside the brain 
-      [Yi ,resT2] = cat_vol_resize(Ysrcm,'reduceV',vx_vol,mres,32,'meanm'); % maximum reduction for the WM
-      if ~debug, clear Ysrcm Ydiv; end
-      Yi(smooth3(Yi>0)<0.5)=0; Yi(smooth3(Yi>0)<0.5)=0;
-
-      % Yi(Yi==0 & Ygi>0)=Ygi(Yi==0 & Ygi>0); if ~debug, clear Ygi; end
-      Yi = cat_vol_approx(Yi,'nh',resT2.vx_volr,4); Yi = cat_vol_smooth3X(Yi,LASfs); 
-      Ylab{2} = max(eps,cat_vol_resize(Yi,'dereduceV',resT2)); 
-    end
+    Ysrcm  = cat_vol_localstat(Ysrc ./ TSth(3) .* TSth(2) .* (Ycm & Ycls{3}>4),(Ycm & Ycls{3}>4),1,1); 
+    Ysrcm  = cat_vol_noPVE(Ysrcm,res.isMP2RAGE,vx_vol,2); 
+    Ysrcs  = cat_vol_localstat(Ysrcm,Ysrcm>0,2,4);
+    Ysrcm(Ysrcs>mean(Ysrcs(Ysrcs(:)>0)+std(Ysrcs(Ysrcs(:)>0) ))) = 0;
+    Ysrca  = Ysrca + Ysrcm; 
+    Ysrcmc = cat_vol_approx(Ysrcm,'nh',vx_vol,4); Ysrcmc = cat_vol_smooth3X(Ysrcmc,LASfs); 
+ 
+    Ysrcma = cat_vol_approx(Ysrca,'nh',vx_vol,2); Ysrcma = cat_vol_smooth3X(Ysrcma,LASfs); 
+    Ysrcs  = cat_vol_localstat(Ysrcma,Ysrcma>0,2,4);
+    Ysrcma(Ysrcs>mean(Ysrcs(Ysrcs(:)>0)+std(Ysrcs(Ysrcs(:)>0) ))) = 0;
+    
+    Yi = cat_vol_approx(Ysrcma,'nh',vx_vol,2); Yi = cat_vol_smooth3X(Yi,2); 
+    Ylab{2} = Yi; 
     if ~debug, clear Yi; end
 
 
@@ -403,6 +383,7 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
     end
     clear Ynba Yca; 
     
+
     %% back to original resolution
     if any(resTb.vx_vol ~= resTb.vx_volr) 
       Ysrc = Ysrco; clear Ysrco; 
@@ -411,7 +392,8 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
       Yp0 = cat_vol_resize(Yp0,'dereduceV',resTb); %#ok<NASGU>
       Ywm = cat_vol_resize(Ywm,'dereduceV',resTb); %#ok<NASGU>
     end 
-    %%
+
+
     labmn = zeros(1,6); for i=[1 2 3 6], if ndims(Ylab{i})==3, labmn(i) = mean(Ylab{i}(Ycls{i}(:)>128)); else,  labmn(i) = mean(Ylab{i}); end; end
     [labmn,lo] = sort(labmn,'descend'); %clear labmn;  %#ok<ASGLU>
     
@@ -430,8 +412,6 @@ function [Yml,Ymg,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extopt
     %% update of the global intensity normalized map
     % ######## RD202105: this is not optimal #########
     Ymg = Ysrc ./ max(eps,Ylab{2}) * Tth.T3th(5);
-    %Ymg = Ysrc ./ max(eps,Ylab{2}); 
-    %Ymg = Ymg * max( Tthc.T3th(Tthc.T3thx>0 & Tthc.T3thx<4) ) / max( max(Tthc.T3thx(Tthc.T3thx>0 & Tthc.T3thx<4))/3); % RD202004: corrected srcmin-correction
     Ymg = cat_main_gintnorm(Ymg,Tth); 
     if ~debug, clear Ylab Ysrc; end
    
