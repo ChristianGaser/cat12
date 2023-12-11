@@ -1,4 +1,396 @@
-function TA=cat_vol_approx(T,method,vx_vol,res,opt)
+function [Ya,times] = cat_vol_approx(Y,method, varargin)
+% Approximation of missing values
+% ______________________________________________________________________
+% Approximation of missing values (nan's / zeros) by different methods. 
+%
+% Method one (rec) is iterativelely downsampling the image as long as it
+% is larger than n voxels.  On the low resolution undefined voxels were
+% labeled by the value of the closest neighbor and Laplace filted with 
+% Dirichlet boundary condition (i.e. the orinal values are fixed). The 
+% result is resampled to the original double resolution and replace un-
+% defined voxels. 
+%
+%  Ya = cat_vol_approx(Y, 'rec' [, s ] )
+%
+%  Y      .. input image with missing elemnts (NaN's / zeros)
+%  Ya     .. filled output image (single)
+%  s      .. final smoothness (default=1) 
+%
+% Method two (nn or nh) first reduces the image to a lower resolution 
+% and approximate all values by aligning the value of the nearest neighbor.
+% Values outside the convex hull are strongly Gaussian filtered, followed 
+% by Laplace filtering to avoid edges. 
+% 
+%  Ya = cat_vol_approx(Y, 'nn' [, vx_vol, res ] )
+% 
+%  Y      .. input image with missing elemnts (NaN's / zeros)
+%  Ya     .. filled output image (single)
+%  vx_vol .. voxel resolution of Y (default: 1)
+%  res    .. resolution for approximation (default = 4)
+%
+%
+% Test function:
+%   As most of our images have no values in the outer regions, the mask
+%   S is used to define the standard test case, wheras a second mask B is
+%   used to remove some random pattern in general. 
+%  
+%   You can run a specific test case tc by calling 
+%
+%     cat_vol_approx(tc, 'test')
+%     cat_vol_approx(tc, 'test'[, masking, bias])
+%
+%     tc      .. test case (1-high freq., 2-mid freq., 3-low freq.)
+%     masking .. use center object mask (0-no, 1-yes, default=1)
+%     bias    .. add bias (0-no, 1..10-pos, -1..-10-neg, default=1)
+%
+%
+% Examples:
+%   1) high frequency pattern of positive values with smaller missing parts
+%     A = randn(100,100,100); spm_smooth(A,A,8); A = A / std(A(:)*5) + .5; 
+%     S = A+0; spm_smooth(S,S,60); S = S + A/10 ; S = S > 0.7*max(S(:));  
+%     B = A .* S .* (cat_vol_smooth3X(rand(size(A)),4)>.5);
+%
+%   2) low frequency pattern of pos./neg. values with larger missing parts
+%     A = randn(100,100,100); spm_smooth(A,A,32); A = A / std(A(:)*5) * 100; 
+%     S = A+0; spm_smooth(S,S,60); S = S + A/10 ; S = S > 0.7*max(S(:));  
+%     B = A .* S .* (cat_vol_smooth3X(rand(size(A)),4)>.5);
+%
+%   Display:
+%     C1 = cat_vol_approx(B,'rec');
+%     C2 = cat_vol_approx(B,'nn');
+%
+%     figure(393); 
+%     subplot(2,2,1); imagesc(A(:,:,round(size(A,3)/2)));  title('full')
+%     subplot(2,2,2); imagesc(B(:,:,round(size(A,3)/2)));  title('masked')
+%     subplot(2,2,3); imagesc(C1(:,:,round(size(A,3)/2))); title('rec') 
+%     subplot(2,2,4); imagesc(C2(:,:,round(size(A,3)/2))); title('nn')
+%
+% ______________________________________________________________________
+%
+% Christian Gaser, Robert Dahnke
+% Structural Brain Mapping Group (https://neuro-jena.github.io)
+% Departments of Neurology and Psychiatry
+% Jena University Hospital
+% ______________________________________________________________________
+% $Id$
+
+  if nargin==0, help cat_vol_approx; return; end
+  if ~exist('method','var'); method = 'nn'; end
+
+  stime = clock; %#ok<CLOCK>
+  if ~contains(method,'test') && 1
+    % ###################
+    % temporary manual overwrite to test replacement 
+    % RD20231211: Although the new rec version performs better in the unit
+    % test. The updated nn version is closer on the old results and looked
+    % better on HR075. The recursive rec method shows some strange offset 
+    % in real data that I a not understand so far. 
+    % However, there are also some calls of the old nh version that seems
+    % to be worse than the old nn version and should replaced anyway.
+    % ###################
+    methodold = method;
+    if 1
+      method = 'nn'; 
+    else
+      method = 'rec';
+      if nargin<3; vx_vol = ones(1,3); else, vx_vol = varargin{1}; end
+      if nargin<4; res    = 4;         else, res    = varargin{2}; end
+      varargin{1} = 0; %res / mean(vx_vol); 
+    end
+
+    fprintf(' cat_vol_approx: Use "%s" insteat of (old) "%s"!\n',method,methodold)
+ 
+  end
+  method = strrep(method,'-test','');
+
+
+  switch method
+    case {'recursive','rec','r','simple','s'}
+      % call new approximation method
+      if nargin<3; s = 1; else, s = varargin{1}; end
+      Ya = rec_approx( Y , s ); 
+
+    case {'nn','nh','linear'} % link old calls to the newer version 
+      % updated classic approach
+      Ya = cat_vol_approx_classic(Y,varargin{:});
+
+    case 'oldnn'
+      % classic approach 
+      Ya = cat_vol_approx2479(Y,'nn',varargin{:});
+    
+    case 'oldnh'
+      % classic approach
+      Ya = cat_vol_approx2479(Y,'nh',varargin{:});
+
+    case 'test'
+      % call unit test function 
+      if Y == 0
+        xi = 0; 
+        for ii = 1:3 % freq
+          for mi = 0:1 % skull
+            for bi = [-1 0 3] % bias
+              xi = xi + 1; 
+              [rmses(xi,:),times(xi,:)] = cat_vol_approx(ii,'test',mi,bi); %#ok<AGROW>
+            end
+          end
+        end
+
+        fprintf('RMSEs\n')
+        fprintf('%10s%8s%8s%8s%8s%8s%8s\n','method:','res2','res','nn4','nn1','nno4','nno1')
+        fprintf('%10s%8.4f%8.4f%8.4f%8.4f%8.4f%8.4f\n','mean:',mean(rmses,1))
+        fprintf('%10s%8.4f%8.4f%8.4f%8.4f%8.4f%8.4f\n','std:' ,std(rmses,1))
+        fprintf('%10s%8.4f%8.4f%8.4f%8.4f%8.4f%8.4f\n','time:',mean(times,1))
+        
+      else
+        [Ya,times] = cat_tst_approx(Y,varargin{:});
+      end
+  end
+  if ~exist('times','var'), times = etime(clock,stime); end %#ok<CLOCK,DETIM>
+end
+% ======================================================================
+function Ya = cat_vol_approx_classic(Y,varargin)
+% call classic approximation method
+
+  if nargin<2; vx_vol = ones(1,3); else, vx_vol = varargin{1}; end
+  if nargin<3; res    = 4;         else, res    = varargin{2}; end
+  
+  % The function approximates only values larger than zeros due to step-wise development. 
+  % The most easy update was to shift the value and use a mask to redefine the filter volume.
+  Y(isnan(Y) | isinf(Y)) = 0; 
+  if min(Y(:)) < 0 
+    mask    = Y==0;
+    cf      = min(Y(Y(:)~=0)) - 1; 
+    Y       = Y - cf;
+    Y(mask) = 0; 
+  end
+  % prepare image
+  maxT = max([ eps; abs(Y(Y(:)~=0)) ]);
+  Y = single(Y / maxT);
+  Y = cat_vol_median3(Y,Y~=0,Y~=0,.1);
+
+  % remove tiny things
+  Y(smooth3(Y~=0)<.5) = 0;
+  Ym = cat_vol_morph(Y~=0,'l',[100 100]); Y(Ym==0) = 0;
+
+  % use lower resolution for processing
+  [Yr,resTr]    = cat_vol_resize(Y, 'reduceV', vx_vol, res, 16, 'meanm');
+
+  % create hull on lower resolution
+  [Yrr,resTrr] = cat_vol_resize(Yr>0, 'reduceV', resTr.vx_volr, 16, 16, 'max'); 
+  Ybrr = cat_vol_morph(Yrr>0, 'distclose', 20) > 0;
+  YBr  = cat_vol_resize(single(Ybrr), 'dereduceV', resTrr)>.5; 
+  
+  % align value of closest voxel
+  [~,Yi]  = cat_vbdist(single(Yr > 0), Yr==0 | isnan(Yr), double(resTr.vx_volr)); 
+  Yar = Yr(Yi); 
+
+  % filtering
+  Yars = cat_vol_smooth3X(Yar, 8 / mean(resTr.vx_volr)); 
+  YGr  = cat_vol_smooth3X(YBr, 8 / mean(resTr.vx_volr)); 
+  Yar  = Yars .* (1-YGr) + Yar .* YGr; clear Yars; 
+  Yar  = cat_vol_laplace3R(Yar, Yr==0 & YBr, 0.02 / prod(resTr.vx_volr) ); 
+  Yar  = cat_vol_laplace3R(Yar, Yr>-inf, 0.2 );
+
+  % back to original resolution
+  Ya   = cat_vol_resize(Yar,'dereduceV',resTr,'cubic');
+
+  Ya  = Ya * maxT;
+  if exist('cf','var')
+    Ya = Ya + cf;
+  end
+end
+% ======================================================================
+function Ya = rec_approx(Y,s,rec,dep)
+%simple_approx. Simple recursive approximation of missing values. 
+% In a given image all "abnormal" values, i.e. nans, infs and zeros, are 
+% replace by "normal" values. Zeros are defined as abnormal to a allow  
+% simple use of masks. 
+% For each abnormal value the closest normal value is used. The result is
+% strongly filtered (controlled by the s parameter with default = 30). For
+% performance the opperation is carried out interatively on half resolutions 
+% controled by the rec parameter (default = 3). 
+%
+%  Ya = simple_approx(Y[,s,rec,dep])
+%  Y    .. input  image those zeros will be approximated by closes values
+%  Ya   .. output image with appoximated values
+%  s    .. smoothing filter size (default = 30)
+%  rec  .. number of recursive calls with half resolution (default = 3) 
+%          i.e an image with 256 voxel will be reduced to 128, 64, and 
+%          finally 32 voxels (minimum matrix size is 8 voxels) (private)
+%  dep  .. number of calls (private)
+
+  if ~exist('s',  'var'), s    = 0;  else, s   = double(s);  end
+  if ~exist('rec','var'), rec  = 4;  else, rec = round(rec); end
+  if ~exist('dep','var'), dep  = 0;  end
+  
+
+  % initial setup
+  % intensity normalization of the input and set special values
+  if dep == 0 % better to set it only once
+    Yc   = single(Y ./ cat_stat_nanmedian( abs(Y(Y(:)~=0)) ) * 2); 
+    Yc(isnan(Yc) | isinf(Yc)) = 0; 
+ 
+    % remove tiny things
+    Y(smooth3(Y~=0)<.5) = 0;
+    Ym = cat_vol_morph(Yc~=0,'l',[100 100]); Yc(Ym==0) = 0;
+
+    Yc = cat_vol_median3(Yc,Yc~=0,Yc~=0,.1);
+  else
+    Yc = Y; 
+  end 
+
+  
+  % iteratively lower/half resolution 
+  if (rec > 0 || all(size(Yc)>128) ) && all(size(Yc)>16)
+    % use lower resolution for faster processing 
+    [Yr,res] =  cat_vol_resize( Yc, 'reduceV', 1, 2, 8, 'meanm'); 
+    
+    % solve approximation on half resolution
+    Ya = rec_approx(Yr, s / mean(res.vx_red), rec - 1, dep + 1); 
+
+    % back to original resolution
+    Ya = cat_vol_resize( Ya , 'dereduceV', res,'cubic');  
+  
+    % integrate high resolution information if required
+    if dep > 0
+      Ya(Yc~=0) = Yc(Yc~=0);
+      Ya = cat_vol_laplace3R(Ya, Yc==0, .4 / rec);
+    end
+  else 
+  % approximation routine on the lowest resolution  + level
+    
+    % estimate and align closest object point 
+    [~,I] = cat_vbdist(single(Yc~=0)); Ya = Yc(I);
+    Ya = cat_vol_smooth3X(Ya,2); 
+    Ya(Yc~=0) = Yc(Yc~=0);
+    
+    % main filter
+    Ya = cat_vol_laplace3R(Ya, Yc==0, .0001); % keep original 
+  end
+  
+  % final smoothing on full resolution
+  if dep == 0 
+    Ya = cat_vol_smooth3X(Ya, s.^(1/3) );
+  end
+
+  % intensity scaling
+  Ya = Ya / cat_stat_nanmedian(abs(Ya(Y(:)~=0))) * cat_stat_nanmedian(abs(Y(Y(:)~=0)));
+end
+% ======================================================================
+function [rmses,times] = cat_tst_approx(testcase, varargin)
+%cat_tst_approx. Unit test function.
+% cat_tst_approx(testcase, masking, bias)
+
+  if exist('rng','file') == 2, rng('default'); rng(0); else, rand('state',0); randn('state',0); end %#ok<RAND>
+  
+  if numel(varargin)<1, masking = 1; else, masking = varargin{1}; end
+  if numel(varargin)<2, bias    = 4; else, bias    = varargin{2}; end
+
+  %fprintf('Run test %d (masking=%d, bias=%d)', testcase, masking, bias);
+
+  if ~exist('testcase','var'), testcase = 1; end
+  switch testcase
+    case 1 
+    % high frequency pattern of positive values with smaller missing parts
+      A = randn(100,100,100); 
+      spm_smooth(A,A,8); 
+      A = A / std(A(:)*5) + .5; 
+    case 2
+    % mid frequency pattern of pos./neg. values with larger missing parts
+      A = randn(100,100,100); 
+      spm_smooth(A,A,16); 
+      A = A / std(A(:)*5) * 20; 
+    case 3 
+    % low frequency pattern of pos./neg. values with larger missing parts
+      A = randn(100,100,100); 
+      spm_smooth(A,A,32); 
+      A = A / std(A(:)*5) * 100; 
+    otherwise
+      error( sprintf('%s:unknownTestcase',mfilename), 'Unkown testcase %d', testcase); 
+  end
+  A(50,50,50) = nan; 
+  A(51,51,50) = inf; 
+  A(50,51,50) = -inf; 
+
+  % structure for bias and masking
+  if bias~=0 || masking 
+    S = ones(size(A));
+    spm_smooth(S,S,60); 
+    S = S / mean( abs(S(:)) ); % * 2  +  0.01 * A / mean( abs(A(:)) ) ; 
+  else
+    S = ones(size(A));
+  end
+  
+  % create brain mask
+  if masking > 0
+    SS = S > masking;
+  else
+    SS = ones(size(A));
+  end
+
+  % create (biased) (masked) image
+  if bias>0
+    A  = A .* S.^(abs(bias)); 
+  else
+    A  = A ./ S.^(abs(bias)); 
+  end
+  % add noise and mask
+  B  = (A + 0.3 * cat_stat_nanmedian(A(A(:)>0)) .* randn(size(A))) .*  ...
+       SS .* (cat_vol_smooth3X(rand(size(A)),4)>.5);
+ 
+
+  rmse = @(x) cat_stat_nanmean(x(~isinf(x(:))).^2)^.5;
+
+  % Processing
+  tic, C11 = cat_vol_approx(B,'rec-test',2);      C11time = toc;  C11rms = rmse(A - C11);
+  tic, C12 = cat_vol_approx(B,'rec-test',0);      C12time = toc;  C12rms = rmse(A - C12);
+
+  tic, C21 = cat_vol_approx(B,'nn-test');         C21time = toc;  C21rms = rmse(A - C21);
+  tic, C22 = cat_vol_approx(B,'nn-test',1,1);     C22time = toc;  C22rms = rmse(A - C22);
+  
+  tic, C31 = cat_vol_approx(B,'oldnn-test');      C31time = toc;  C31rms = rmse(A - C31);
+  tic, C32 = cat_vol_approx(B,'oldnn-test',1,1);  C32time = toc;  C32rms = rmse(A - C32);
+  
+  rmses = [C11rms ,C12rms , C21rms ,C22rms , C31rms ,C32rms ];
+  times = [C11time,C12time, C21time,C22time, C31time,C32time];
+
+  % Display
+  fh = figure(393); di = 3; dj = 3; 
+  fh.Position(3) = 600; 
+  fh.Position(4) = 600; 
+
+  % original objects
+  Alim = 2 * [min(0,-median(abs(B(B(:)<0)))) max(0,median(abs(B(B(:)>0))))];
+  subplot(di,dj,1);  imagesc(A(:,:,round(size(A,3)/2)));  
+  axis off;  caxis(Alim);  title('full') %#ok<*CAXIS>
+  subplot(di,dj,2);  imagesc(B(:,:,round(size(A,3)/2)));  
+  axis off; caxis(Alim);  title('masked')
+
+  %
+  fontweighting = {'normal','bold'};
+  Cmin1 = ([C11rms,C21rms,C31rms] == min( [C11rms,C21rms,C31rms] ) ) + 1;
+  Cmin2 = ([C12rms,C22rms,C32rms] == min( [C12rms,C22rms,C32rms] ) ) + 1;
+  
+  % print data 
+  subplot(di,dj,3+1);  imagesc(C11(:,:,round(size(A,3)/2))); axis off; caxis(Alim);  
+  title(sprintf('{\\color[rgb]{0 0.5 0}rec s2} (RMSE=%0.3f, %0.2fs)',C11rms,C11time),'fontweight',fontweighting{Cmin1(1)}) 
+  subplot(di,dj,5+2);  imagesc(C12(:,:,round(size(A,3)/2))); axis off; caxis(Alim);  
+  title(sprintf('{\\color[rgb]{0 0.5 0}rec} (RMSE=%0.3f, %0.2fs)',C12rms,C12time),'fontweight',fontweighting{Cmin2(1)}) 
+  
+  subplot(di,dj,4+1);  imagesc(C21(:,:,round(size(A,3)/2))); axis off; caxis(Alim);  
+  title(sprintf('{\\color[rgb]{0 0 0.7}nn(..,1,4)} (RMSE=%0.3f, %0.2fs)',C21rms,C21time),'fontweight',fontweighting{Cmin1(2)}) 
+  subplot(di,dj,6+2);  imagesc(C22(:,:,round(size(A,3)/2))); axis off; caxis(Alim);  
+  title(sprintf('{\\color[rgb]{0 0 0.7}nn(..,1,1)} (RMSE=%0.3f, %0.2fs)',C22rms,C22time),'fontweight',fontweighting{Cmin2(2)}) 
+ 
+  subplot(di,dj,5+1);  imagesc(C31(:,:,round(size(A,3)/2))); axis off; caxis(Alim);  
+  title(sprintf('{\\color[rgb]{0.7 0 0}old nn(..,1,4)} (RMSE=%0.3f, %0.2fs)',C31rms,C31time),'fontweight',fontweighting{Cmin1(3)}) 
+  subplot(di,dj,7+2);  imagesc(C32(:,:,round(size(A,3)/2))); axis off; caxis(Alim);  
+  title(sprintf('{\\color[rgb]{0.7 0 0}old nn(..,1,1)} (RMSE=%0.3f, %0.2fs)',C32rms,C32time),'fontweight',fontweighting{Cmin2(3)}) 
+  
+  %fprintf(' done.\n')
+end
+% ======================================================================
+function TA = cat_vol_approx2479(T,method,vx_vol,res,opt)
 % Approximation of missing values
 % ______________________________________________________________________
 % Approximation of missing values (nan's). First, a nearest neigbhor 
@@ -61,19 +453,10 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
   opt = cat_io_checkinopt(opt,def);
   opt.lfO = min(10,max(0.0001,opt.lfO));
 
-  if exist('rng','file') == 2, rng('default'); rng(0); else, rand('state',0); randn('state',0); end
-  
   T(isnan(T) | isinf(T))=0; 
   maxT = max([ eps; T(T(:)~=0 & T(:)<inf & ~isnan(T(:))) ]);
   T = single(T/maxT);
-  
-  if 0 % T(isnan(T))=0;
-    % outlier removal ... not yet
-    meanT = mean(T(T(:)>0));
-    stdT  = std(T(T(:)>0));
-    T(T>meanT + 2*stdT | T<meanT - 2*stdT)=0; 
-  end
-
+ 
   [Tr,resTr]    = cat_vol_resize(T,'reduceV',vx_vol,res,16,'meanm');
   %strcmp(method,'linear') || 0 %
   if (opt.hull || strcmp(method,'linear')) && ~strcmp(method,'spm')
@@ -82,7 +465,7 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
     BMr  = cat_vol_resize(BMrr,'dereduceV',resTrr); 
   
     % inside hull approximation ...
-    [MDr,MIr]  = cat_vbdist(single(Tr>0),Tr==0 | isnan(Tr),double(resTr.vx_volr)); 
+    [~,MIr]  = cat_vbdist(single(Tr>0),Tr==0 | isnan(Tr),double(resTr.vx_volr)); 
     TAr=Tr(MIr); TAr(Tr>0) = Tr(Tr>0); 
     if opt.lfO >= 0.5
       meanTAr = cat_stat_nanmedian(TAr(Tr(:)>0));
@@ -107,7 +490,7 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
     case 'nh'
     case 'nn'
       TAr  = TAr .* (BMr | Tr);
-      [MDr,MIr]  = cat_vbdist(single(TAr>0),TAr==0,double(resTr.vx_volr)); 
+      [~,MIr]  = cat_vbdist(single(TAr>0),TAr==0,double(resTr.vx_volr)); 
       TAr=TAr(MIr); TASr=cat_vol_smooth3X(TAr,4); TAr(~BMr)=TASr(~BMr);  clear TASr; 
       TAr = cat_vol_laplace3R(TAr,~BMr,double(opt.lfO)); TAr = cat_vol_median3(TAr,~BMr);
       TAr = cat_vol_laplace3R(TAr,~Tr,double(opt.lfO)); 
@@ -124,48 +507,8 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
       TAr = cat_vol_median3(TAr,~BMr); TAr=TAr(MIr); TASr=cat_vol_smooth3X(TAr,1); 
       TAr(~BMr)=TASr(~BMr); clear TASr; 
       TAr = cat_vol_laplace3R(TAr,~BMr,opt.lfO); TAr = cat_vol_median3(TAr,~BMr); 
-      TAr = cat_vol_laplace3R(TAr,~BMr,opt.lfO); 
-    case 'spm'
-      filename  = fullfile(tempdir,'approxtst.nii');
-      N         = nifti;
-      N.dat     = file_array(filename,size(Tr),[spm_type('float32') spm_platform('bigend')],0,1,0);
-      N.mat     = [eye(4,3), [size(Tr)'/2;1]]; N.mat([1,6,11])=resTr.vx_volr;
-      N.mat0    = N.mat;
-      N.descrip = 'approx test';
-      create(N);
-      N.dat(:,:,:) = double(Tr);
-
-      filenameB = fullfile(tempdir,'approxtstB.nii');
-      B         = nifti;
-      B.dat     = file_array(filenameB,size(Tr),[spm_type('float32') spm_platform('bigend')],0,1,0);
-      B.mat     = [eye(4,3), [size(Tr)'/2;1]]; N.mat([1,6,11])=resTr.vx_volr;
-      B.mat0    = B.mat;
-      B.descrip = 'approx test B';
-      create(B);
-      B.dat(:,:,:) = ones(size(Tr));
-
-      V  = spm_vol(filename); 
-      VB = spm_vol(filenameB); 
-    
-    
-      % SPM bias correction
-      bT  = spm_bias_estimate(V,struct('nbins',256,'reg',0.001,'cutoff',30));
-      VA  = spm_bias_apply(V ,bT); TA = spm_read_vols(VA); 
-      VAr = spm_bias_apply(VB,bT); TAr = 1/max(eps,single(spm_read_vols(VAr)) * mean(TA(Tr(:)>0)));
-%      ds('d2','',[1 1 1],PT{1},PT{2}/max(PT{2}(:)),TA,TAr,20)
-      
-      delete(filename,filenameB);
-      
+      TAr = cat_vol_laplace3R(TAr,~BMr,opt.lfO);       
   end
-  %{
-  [TArr,BMrr,resTrr2] = cat_vol_resize({TAr,BMr},'reduceV',vx_vol,8,8,'linear');
-  TArr = cat_vol_median3(TArr,~BMrr,~BMrr); 
-  for i=1:round(8/bias),
-    if mod(i,4)==0, TASrr=cat_vol_smooth3X(TArr,8/mean(resTr.vx_volr)); TArr(~BMrr)=TASrr(~BMrr); end;
-  end
-  TAr  = cat_vol_resize(TArr,'dereduceV',resTrr2); 
-  %}
-  %TAr = cat_vol_smooth3X(TAr,8/mean(resTr.vx_volr)*0.1/bias).^1.05; 
   
   TA  = cat_vol_resize(TAr,'dereduceV',resTr);
   TA  = TA*maxT;
@@ -174,86 +517,7 @@ function TA=cat_vol_approx(T,method,vx_vol,res,opt)
     TA = TA + cf;
   end
 end
-function cat_tst_pre_approx
-  %%
-  PTsize  = repmat(64,1,3);
-  PTrange = [0.1,2.4];
-  vx_vol  = round(256./PTsize);
-  
-  % Bias type:
-  % --------------------------------------------------------------------
-  % linear bias
-  PT{1} = zeros(PTsize,'single');
-  for i=1:PTsize(2)
-    PT{1}(:,i,:) = PTrange(1) + (i*diff(PTrange)/(size(PT{1},2))) * ones(PTsize(1),1,PTsize(3)); 
-  end
-  % circle bias
-  PT{2} = zeros(PTsize,'single'); PT{2}(round(PTsize(1)*3/7),round(PTsize(2)*3/7),round(PTsize(3)*3/7)) = 1; 
-  PT{2} = cat_vbdist(PT{2}); PT{2} = max(0,PTrange(2) - (diff(PTrange)*(PT{2}/max(PT{2}(PT{2}<inf)))));
-  
-  
-  
-  % Mask type:
-  % --------------------------------------------------------------------
-  PM{1} = zeros(PTsize,'single'); PM{1}(round(PTsize(1)/2),round(PTsize(2)/2),round(PTsize(3)/2)) = 1; 
-  PM{1} = (cat_vbdist(PM{1},true(size(PM{1})),[1.5 1 1]) + ...
-          cat_vol_smooth3X(rand(PTsize)*20,2) + cat_vol_smooth3X(randn(PTsize)*20)) <PTsize(1)/2; 
-  
-  ds('d2','',[1 1 1],PT{1},PT{2},PT{1}.*PM{1},PT{2}.*PM{1},32);
 
-  
-  %%
-  % --------------------------------------------------------------------
-  %method = {'val','nn','linear'} 
-  
-  for i=1:numel(PT)
-    PN{i} = PT{i} + cat_vol_smooth3X(randn(PTsize)*0.4,2) + cat_vol_smooth3X(randn(PTsize)*0.2); 
-  end
-  
-  
-  %for 
-  %=cat_vol_approx(T,method,vx_vol,res,bias)
 
-  %%
-    T = PT{1}.*PM{1}; %T(T==0)=nan;
-  
-    filename  = fullfile(tempdir,'approxtst.nii');
-    N         = nifti;
-    N.dat     = file_array(filename,PTsize,[spm_type('float32') spm_platform('bigend')],0,1,0);
-    N.mat     = [eye(4,3)*vx_vol(1), [PTsize'/2;1]];
-    N.mat0    = N.mat;
-    N.descrip = 'approx test';
-    create(N);
-    N.dat(:,:,:) = double(T);
-
-    filenameB = fullfile(tempdir,'approxtstB.nii');
-    B         = nifti;
-    B.dat     = file_array(filenameB,PTsize,[spm_type('float32') spm_platform('bigend')],0,1,0);
-    B.mat     = [eye(4,3)*vx_vol(1), [PTsize'/2;1]];
-    B.mat0    = B.mat;
-    B.descrip = 'approx test B';
-    create(B);
-    B.dat(:,:,:) = ones(PTsize);
-
-    
-    V  = spm_vol(filename); 
-    VB = spm_vol(filenameB); 
-    
- %% SPM spline interpolation  
-    intp = 1; warp = 0;
-    i = find(isnan(T)); [x,y,z]=ind2sub(PTsize,i);
-    c = spm_bsplinc(V,repmat(intp,3,1));
-    v = spm_bsplins(c,x,y,z,[repmat(intp,3,1) repmat(warp,3,1)]);
-    TA=T; TA(i)=v;
-    fprintf('done\n');
-    
- %% SPM bias correction
-    
-    bT  = spm_bias_estimate(V,struct('nbins',256,'reg',0.001,'cutoff',30));
-    VA  = spm_bias_apply(V ,bT); TA = spm_read_vols(VA); 
-    VAB = spm_bias_apply(VB,bT); TAB = spm_read_vols(VAB);
-    ds('d2','',[1 1 1],PT{1},PT{2}/max(PT{2}(:)),TA,TAB,20)
-    
-end
 
 
