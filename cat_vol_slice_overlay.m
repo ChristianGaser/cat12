@@ -27,6 +27,8 @@ function OV = cat_vol_slice_overlay(OV)
 % OV.pos        - define first two numbers of image position
 % OV.bkg_col    - color of background ([0 0 0] as default)
 % OV.fig        - figure number (default 22)
+% OV.cbar       - show colorbar (leave empty for no colorbar)
+% OV.labels     - show slice label text (leave empty for no label text)
 %
 % see cat_vol_slice_overlay_ui.m for an example
 % ______________________________________________________________________
@@ -57,7 +59,6 @@ if ~nargin
   OV.cmap = OV.img(2).cmap;
   OV.range = OV.img(2).range;
   OV.slices_str = '';
-  
 end
 
 % get fontsize
@@ -870,8 +871,10 @@ for i = 1:nimgs
   SO.img(i).vol = spm_vol(imgs{i});
   if i == 1
     SO.img(i).cmap = gray;
-    [mx, mn] = volmaxmin(SO.img(i).vol);
-    SO.img(i).range = [0.15 * mx 0.9 * mx];
+    %[mx, mn] = volmaxmin(SO.img(i).vol);
+    [tmp, th]=cat_stat_histth(spm_read_vols(SO.img(i).vol),0.95,0);
+
+    SO.img(i).range = th;
   else
     [mx, mn, XYZ, img] = volmaxmin(SO.img(i).vol);
     if ~isempty(strfind(SO.img(i).vol.fname, 'logP')) || ~isempty(strfind(SO.img(i).vol.fname, 'log_'))
