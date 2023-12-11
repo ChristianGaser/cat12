@@ -85,7 +85,6 @@ function varargout = compile(comp,test,verb)
       'cat_vol_simgrow.c'
       'cat_vol_localstat.c'
       'cat_vol_pbtp.c'
-      'cat_vol_pbtp2.c'
       'cat_vol_interp3f.cpp'
       'cat_vol_eidist.c'
       'cat_vol_genus0.c genus0.c'
@@ -389,12 +388,7 @@ function varargout = compile(comp,test,verb)
     [d{ni},dpp] = cat_vol_pbtp(d1+1,dw,dc);  
     r(ni)       = rms(d{ni}(d1==1)) - 5.5; 
     s(ni)       = r(ni)<0.05;
-    % pbt2
-    n{ni}       = 'cat_vol_pbtp2';   
-    [d{ni},dpp] = cat_vol_pbtp2(d1+1,dw,dc);  
-    r(ni)       = rms(d{ni}(d1==1)) - 5.5; 
-    s(ni)       = r(ni)<0.05;
-    
+ 
     
     %% test interpolation invariance 
     %  - less difference in simple structures
