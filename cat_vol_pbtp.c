@@ -209,7 +209,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     }
   }
   
-  for (int i=0;i<nL;i++) if (SEG[i]<opt.LB || SEG[i]>opt.HB) GMT[i]=0; 
+  for (int i=0;i<nL;i++) if (SEG[i]<opt.LB || SEG[i]>opt.HB) GMT[i] = 0.0; 
 
  
   
@@ -217,7 +217,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
 /* final settings...
  ======================================================================= */
-  float CSFDc = 0, GMTi, CSFDi; /* 0.125 */
+  float CSFDc = 0.0, GMTi, CSFDi; /* 0.125 */
   for (int i=0;i<nL;i++) { 
     /* GMT[i] = min(CSFD[i] + WMD[i],GMT[i]); */
     if (SEG[i]>=opt.LB && SEG[i]<=opt.LB) {
