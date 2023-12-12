@@ -8,7 +8,8 @@ Changed:     Updated cat_vol_approx by revising the main function nn and adding
              also a new recursive approach. Added also a unit tested and extend
              the documentation. Although the new rec function performs best in 
              the unit test, real data test showed some strange side effects that
-             need further investigation.     ------------------------------------------------------------------------
+             need further investigation.     
+------------------------------------------------------------------------
 r2490 | rdahnke | 2023-12-11 10:46:35
 
 Changed paths:
@@ -19,7 +20,8 @@ Changed:     Updated cat_vol_approx by revising the main function nn and adding
              also a new recursive approach. Added also a unit tested and extend
              the documentation. Although the new rec function performs best in 
              the unit test, real data test showed some strange side effects that
-             need further investigation.     ------------------------------------------------------------------------
+             need further investigation.     
+------------------------------------------------------------------------
 r2489 | gaser | 2023-12-05 09:13:23
 
 Changed paths:

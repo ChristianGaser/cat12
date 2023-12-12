@@ -5,9 +5,9 @@ function [Ya,times] = cat_vol_approx(Y,method, varargin)
 %
 % Method one (rec) is iterativelely downsampling the image as long as it
 % is larger than n voxels.  On the low resolution undefined voxels were
-% labeled by the value of the closest neighbor and Laplace filted with 
-% Dirichlet boundary condition (i.e. the orinal values are fixed). The 
-% result is resampled to the original double resolution and replace un-
+% labeled by the value of the closest neighbor and Laplace filtered with 
+% Dirichlet boundary condition (i.e. the original values are fixed). The 
+% result is resampled to the original double resolution and replaces un-
 % defined voxels. 
 %
 %  Ya = cat_vol_approx(Y, 'rec' [, s ] )
@@ -147,6 +147,7 @@ function [Ya,times] = cat_vol_approx(Y,method, varargin)
   end
   if ~exist('times','var'), times = etime(clock,stime); end %#ok<CLOCK,DETIM>
 end
+
 % ======================================================================
 function Ya = cat_vol_approx_classic(Y,varargin)
 % call classic approximation method
@@ -199,6 +200,7 @@ function Ya = cat_vol_approx_classic(Y,varargin)
     Ya = Ya + cf;
   end
 end
+
 % ======================================================================
 function Ya = rec_approx(Y,s,rec,dep)
 %simple_approx. Simple recursive approximation of missing values. 
@@ -276,6 +278,7 @@ function Ya = rec_approx(Y,s,rec,dep)
   % intensity scaling
   Ya = Ya / cat_stat_nanmedian(abs(Ya(Y(:)~=0))) * cat_stat_nanmedian(abs(Y(Y(:)~=0)));
 end
+
 % ======================================================================
 function [rmses,times] = cat_tst_approx(testcase, varargin)
 %cat_tst_approx. Unit test function.
@@ -389,6 +392,7 @@ function [rmses,times] = cat_tst_approx(testcase, varargin)
   
   %fprintf(' done.\n')
 end
+
 % ======================================================================
 function TA = cat_vol_approx2479(T,method,vx_vol,res,opt)
 % Approximation of missing values
