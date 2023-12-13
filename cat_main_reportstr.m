@@ -395,7 +395,7 @@ function str = cat_main_reportstr(job,res,qa)
     end
   end
   
-  if isfield(qa.qualitymeasures,'SurfaceDefectArea') && ~isempty(qa.qualitymeasures.SurfaceDefectArea) && ~any(job.output.surface == [5 6])  && isfinite(qa.qualitymeasures.SurfaceDefectArea)
+  if isfield(qa.qualitymeasures,'SurfaceDefectArea') && ~isempty(qa.qualitymeasures.SurfaceDefectArea)  && isfinite(qa.qualitymeasures.SurfaceDefectArea)
     if job.extopts.expertgui
       str{2} = [str{2} struct('name',' Defect area:','value',marks2str(qa.qualityratings.SurfaceDefectArea,...
                 sprintf('%0.2f%%', qa.qualitymeasures.SurfaceDefectArea)))];
