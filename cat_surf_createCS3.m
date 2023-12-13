@@ -58,10 +58,7 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
   if ~exist('opt','var'), opt = struct(); end                 % create variable if not exist
   vx_vol        = sqrt(sum(V.mat(1:3,1:3).^2));               % further interpolation based on internal resolution 
   def.verb      = cat_get_defaults('extopts.expertgui');      % 0-none, 1-minimal, 2-default, 3-details, 4-debug
-  def.surf      = {'lh','rh'};                                % surface reconstruction setting with {'lh','rh','rc','lc'} and
-                                                              % additional fast option 'fst' (e.g., 'lhfst') without topo.-corr. and sphere-reg. 
-  
-  % reducepatch has some issues with self intersections and should only be used for "fast" option
+  def.surf      = {'lh','rh'};                                % surface reconstruction setting with {'lh','rh','cb'} 
   % There is a new SPM approach spm_mesh_reduce that is maybe more robust. 
   % Higher resolution is at least required for animal preprocessing that is given by cat_main.
   def.LAB                 = cat_get_defaults('extopts.LAB');  % brain regions 
@@ -84,21 +81,9 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
     
   % options that rely on other options
   opt                     = cat_io_updateStruct(def,opt); clear def; 
-  opt.fast                = any(~cellfun('isempty',strfind(opt.surf,'sfst'))) + ...
-                            any(~cellfun('isempty',strfind(opt.surf,'fst'))); % fast registration without topo.-corr. and sphere-reg.
   opt.vol                 = any(~cellfun('isempty',strfind(opt.surf,'v')));   % only volume-based thickness estimation  
-  opt.surf                = cat_io_strrep(opt.surf,{'sfst','fst','v'},'');    % after definition of the 'fast' and 'vol' varialbe we simplify 'surf'
+  opt.surf                = cat_io_strrep(opt.surf,'v','');                   % after definition of the 'vol' varialbe we simplify 'surf'
   opt.interpV             = max(0.1,min([opt.interpV,1.5]));                  % general limitation of the PBT resolution
- 
-  % call old CS2 pipeline for fast option
-  if opt.fast
-    [Yth,S,Psurf,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytemplate,opt,job);
-    return
-  end
-  
-  if any(~cellfun('isempty',strfind(opt.surf,'sfst')))
-    opt.pbtres   = 0.8;
-  end
   
   % for testing only  
   skip_registration = debug & 1;
