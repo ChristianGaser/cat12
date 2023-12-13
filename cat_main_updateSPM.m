@@ -789,7 +789,8 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
     job2.extopts.regstr       = 15;     % low resolution 
     job2.extopts.reg.nits     = 16;     % less iterations
     job2.extopts.reg.affreg   = 0;      % new affine registration
-    job2.extopts.shootingtpms(3:end) = [];             % remove high templates, we only need low frequency corrections
+    %job2.extopts.shootingtpms(3:end) = [];      % remove high templates, we only need low frequency corrections 
+                                                 % NO! This would cause problems with the interpolation
     res2 = res; 
     res2.do_dartel            = 2;      % use shooting
   else
