@@ -1412,7 +1412,6 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
               hSD{i} = cat_surf_renderv(CS,[],struct('rot','t','interp',1,'h',hCS));
             end
             
-            if any( job.output.surface == [5 6] ); fst = ' \color[rgb]{1 0 0}preview!'; else, fst = ''; end
             if ~sidehist
               if strcmpi(spm_check_version,'octave')
                 axes('Position',[0.58 0.022 0.3 0.007],'Parent',fg); image((121:1:120+surfcolors),'Parent',cc{4});
@@ -1421,7 +1420,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
                 cc{4} = axes('Position',[0.58 0.022 0.3 0.007],'Parent',fg); image((121:1:120+surfcolors),'Parent',cc{4});
               end
               set(cc{4},'XTick',1:(surfcolors-1)/6:surfcolors,'xcolor',fontcolor,'ycolor',fontcolor,'XTickLabel',...
-                 {'0','1','2','3','4','5',['               6 mm' fst]},...
+                 {'0','1','2','3','4','5','               6 mm'},...
                 'YTickLabel','','YTick',[],'TickLength',[0 0],'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal');
             else
               %% histogram
@@ -1608,7 +1607,6 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 
           % colormap
           side  = hSD{1}{1}.cdata; 
-          if any( job.output.surface == [5 6] ); fst = ' \color[rgb]{1 0 0}preview!'; else, fst = ''; end
           
           % histogram 
           if strcmpi(spm_check_version,'octave')
@@ -1687,7 +1685,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
                   'YTickLabel','','YTick',[],'TickLength',[0.01 0],'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal'); 
             else
               set(cc{4},'XTick',1:(surfcolors-1)/6:surfcolors,'xcolor',fontcolor,'ycolor',fontcolor,'XTickLabel',...
-                  {'0','1','2','3','4','5',[repmat(' ',1,10 + 10*(1-isempty(fst))) '6 mm' fst]},...
+                  {'0','1','2','3','4','5',[repmat(' ',1,10) '6 mm']},...
                   'YTickLabel','','YTick',[],'TickLength',[0.01 0],'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal'); 
             end
           
