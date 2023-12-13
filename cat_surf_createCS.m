@@ -426,8 +426,8 @@ cstime = clock;
     Ymfs = min(3,max(1,Ymfs));
 
     %% pbt calculation
-    if strcmp(opt.pbtmethod,'pbtsimple0') || strcmp(opt.pbtmethod,'pbtsimple1') 
-      [Yth1i,Yppi] = cat_vol_pbtsimple(Ymfs,opt.interpV,str2double(opt.pbtmethod(10))); 
+    if strcmp(opt.pbtmethod,'pbtsimple') 
+      [Yth1i,Yppi] = cat_vol_pbtsimple(Ymfs,opt.interpV); 
     else 
       [Yth1i,Yppi] = cat_vol_pbt(Ymfs,struct('method',opt.pbtmethod,'resV',opt.interpV,'vmat',...
         V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1],'pbtlas',opt.pbtlas)); % avoid underestimated thickness in gyri

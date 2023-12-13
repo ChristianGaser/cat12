@@ -1,22 +1,17 @@
-function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,method,interp,enhance)
+function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
 %cat_vol_pbtsimple. Simple cortical thickness/position estimation.  
 % Voxel-based distance estimation and projection-based thickness (PBT) 
 % and distance-based surface position estimation. Uses a label map as 
 % input. Required a isotropic input map. 
 %
-%   [Ygmt, Ypp] = cat_vol_pbtsimple(Yp0[, vx_vol, method, interp, enhance])
+%   [Ygmt, Ypp] = cat_vol_pbtsimple( Yp0 , vx_vol, opt )
 %
 %   Ygmt    .. GM thickness map 
 %   Ypp     .. percentage position map 
 %   Yp0     .. tissue label map (1-CSF, 2-GM, 3-WM)
 %   vx_vol  .. voxel-size (in mm, default = 1)
-%   method  .. use voxel- or eikonal distance (0-voxel,1-eikonal)
-%              voxel is more robust and faster but less accurate
-%   interp  .. aditional interpolation resolution (1-no, 0.5-half res)
-%   enhance .. Use a fast thickness estimation (method0 witout further
-%              interpolation) to optimzate the PVE between GM and WM by
-%              aligning PVE voxels to WM if the GMT is lower and to WM if 
-%              the GMT is higher than the average thickness. 
+%   opt     .. parameter structure
+%    .levels    .. 
 %
 %   See also cat_vol_pbt, cat_vol_createCS3.
 % ______________________________________________________________________
@@ -35,163 +30,36 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,method,interp,enhance)
   
 %#ok<*UNRCH> 
 
-  if ~exist('method', 'var'), method  = 0;   end 
-  if ~exist('interp', 'var'), interp  = nan; end % default defintion below
-  if ~exist('enhance','var'), enhance = 1;   end
+  if ~exist('opt','var'), opt = struct(); end
 
-
-  %% closing for subjects with less/thin WM or with severe SVD/WMHs
-    %  - correction by morphops
-    % - NISALS
-  if 1  
-    Yp0o = Yp0; 
-    %% laplacian-based closing
-    % get smoother lower GM/WM boundary
-    Yp0s  = smooth3(Yp0);
-    Yp0   = Yp0o;
-    Ymsk  = ~cat_vol_morph( Yp0s<2.25 ,'ldo',1.5); 
-    Yp0   = max(2.255*Ymsk,Yp0); 
-    YmskD = cat_vbdist( single(~Ymsk) , Yp0s<2.75 , repmat(vx_vol(1),1,3)); 
-    Yp0   = max(Yp0,min(3, YmskD / vx_vol)); 
-    Yp0   = min(Yp0,2.24 + (~cat_vol_morph(Yp0<2.25,'lc'))); 
-    % part 2
-    Ylp  = single(0.5 - ...
-      0.5 * cat_vol_morph( Yp0s<2.25, 'ldo', 0.75, vx_vol) + ...
-      0.5 * cat_vol_morph( Yp0s>2.75, 'ldc', 1.50, vx_vol)); 
-    Ylp = cat_vol_laplace3R(Ylp,Ylp==0.5,0.01); 
-    Yp0(Yp0>2.75) = max( Yp0(Yp0>2.75), 2.5 + Ylp(Yp0>2.75)/2 ); 
-    Yp0 = max( Yp0, 2.76 * cat_vol_morph( Yp0>2.25 & ...
-      cat_vol_morph(Ylp>0.5 , 'ldc', 3) ,'l') ); 
-    
-  end
-
-
-
-  % (X) GM/WM boundary enhancement: 
-  % Use a fast thickness estimation (method0 witout further interpolation) 
-  % to optimzate the PVE between GM and WM by aligning PVE voxels to WM  
-  % if the GMT is lower and to WM if the GMT is higher than the average 
-  % thickness. The effects are larger if intensity normalized rather  
-  % than label images are used. 
-  % --------------------------------------------------------------------
-  if enhance 
-    % use fast thickness approximation without enhancement/correction
-    Ygmt = cat_vol_pbtsimple(Yp0,vx_vol,method,1,enhance - 1);
-   
-    % limit and normalize thickness
-    % To keep things simple we start with the global median thickness but 
-    % it would be also possible to use a very smoothe map here to support
-    % more local adjustments and just filter local outliers. 
-    Ygmt  = max(1, min(5, Ygmt));
-    Ygmt  = cat_vol_approx(Ygmt,1); 
-    if 1;; % ##### MANUAL SETTING #####
-      % global correction (I would prefere this one as it is simple and stronger)
-      gmtmn = max(1.5, min(3.0, median(Ygmt(round(Yp0(:))==2))));
-      Ygmtn = ( Ygmt - gmtmn ) / gmtmn;
-    else
-      % regional corrrection - not optimal as we smooth within the volume
-      % but otherwise it would be to slow (+ 10 seconds in Collins) 
-      %   gmtmn = max(1.5, min(3.0, median(Ygmt(round(Yp0(:))==2))));
-      %   Ygmts = Ygmt - gmtmn; spm_smooth(Ygmts,Ygmts,32 * 4); Ygmts = Ygmts + gmtmn; 
-      Ygmts = cat_vol_smooth3X(Ygmt,8); % values smaller <8 have issues (suclal closing) 
-      Ygmtn = ( Ygmt - Ygmts ) ./ Ygmts;
-    end
-    spm_smooth(Ygmtn,Ygmtn,4); % avoid to local results (between 1 and 4)
-
-    % create a corrected T1/segmenation map that will be partialy applied later
-    % .4 is already close to equal thickness
-    % .2 is quite natural and mostly avoid the underestimations
-    Yp0e = ( (Yp0 - 2.5) + (0.3 * Ygmtn) ... 2.5 is our expected boundary threshold
-      .* cat_vol_morph( Ygmtn<0 | cat_vol_morph(Yp0>2.5,'lc',1)<0.5 ,'d',2)  ...
-      .* smooth3( cat_vol_morph(cat_vol_morph(Yp0>2.25,'do',1),'dd',2) ) ...
-      ) + 2.5;
-    spm_smooth(Yp0e,Yp0e,1); % keep this map smooth
- 
-    Ymsk = Yp0>2.1 & Yp0<2.9;    % general GM/WM area 
-    Ymsk(smooth3(Ymsk)<0.8) = 0; % remove small real PVE areas that should not be changed!
-    Yp0(Ymsk) = Yp0e(Ymsk);      % applay corrected map in GM/WM PVE area
-
-    % post corrections of the GM/WM area 
-    if sum(Yp0(:) > 2.5) / sum(Yp0(:) > 0.5) > .3 % critical in case of thin WM! 
-      Yp0 = min(2.49 + cat_vol_morph(Yp0>2.5,'ldo',1.5),Yp0); % open WM 
-    end
-    Yp0 = max(2.51 .* cat_vol_morph(Yp0>2.5,'ldc',1.5),Yp0); % close WM
-  end
-
-
-  % pre-correction of the CSF/GM partial volume area 
-  % - Tested in ADHD200NYC with quite similar intensity and position values
-  %   but reduction of WM self intersections (9.37% > 8.86%).
-  if 1;; % ##### MANUAL SETTING #####
-    Ytissue = cat_vol_morph( Yp0>1.75 , 'ldc', .75, vx_vol); 
-    Ytissue = cat_vol_morph( Ytissue  , 'dd' , .75, vx_vol);
-    Yp0(~Ytissue) = min(Yp0(~Ytissue) , 1.49);
-  end
-
-
-
-  % (X) Interpolation:
-  % --------------------------------------------------------------------
-  % Extra interpolation especially for the simple grid-based interpolation 
-  % (that does not support partial volume effects) allow improvements if 
-  % the deinterpolation includes enough smoothing.
-  % However, it is not clear if the increase in processing time is worth it.
-  % For the simple vbdist (method=0) it seems to support better thickness,  
-  % intensity, and especially position values. Without interpolation small
-  % thickness values are otherwise a bit underestimated althought this is 
-  % partially helpful for sulcus reconstruction. 
-  % For the Eiknonal distance the improvement are less obvious. 
-  %
-  % This parameter is only for manual tests (especially vbdist)
-  %   interp .. 1.0 - no interpolation, 0.5 - half resolution,
-  %             0.8 - a bit interpolation (doulbed voxel size) 
-  if isnan(interp)
-    if method == 0, interp = 1.0; else; interp = 1; end % ########
-  end
-  if interp ~= 1 
-    V = struct('mat', eye(4), 'dim', size(Yp0));
-    [Yp0,resI] = cat_vol_resize(max(1,min(3,Yp0)),'interp',V,interp,'cubic'); 
-    vx_vol = vx_vol * interp;
-  end
-
-
+  def.levels          = 4; % 0 .. 4 
+  def.refine          = 1; % refined WM distance based on CSF distance (myelination correction)
+  def.gyrusrecon      = 1; % additional PBT gyri reconstruction 
+  def.correctoffeset  = 2;
+  def.extendedrange   = 1; 
+  opt = cat_io_checkinopt(opt,def);
 
 
   % (1) Distance estimation:
   % --------------------------------------------------------------------
-  if method == 0;; % ##### MANUAL SETTING #####
-  % Simple voxel-based function without considering partial volume effect 
-  % (PVE) or asymetries but also without projection issues!
-  % Due to it simpicity this is more robust.
-    
-    % CSF and WM distance maps (based on a binary boundary without PVE)
-    Ycd = cat_vbdist(single(Yp0 < 1.51), Yp0 < 3); 
-    Ywd = cat_vbdist(single(Yp0 > 2.51), Yp0 > 1); 
+  if opt.levels == 0   
+  % Classic CSF and WM distance maps based on a binary boundary without 
+  % partial volume effect (only for tests).
+    Ycd = cat_vbdist(single(Yp0 < 1.5), Yp0 < 3); 
+    Ywd = cat_vbdist(single(Yp0 > 2.5), Yp0 > 1);
 
-  else
-  % More accurate Eikonal-based Euclidean distance estimation. 
-  % But I am not really happy with the result, the projection seems to
-  % include a lot of problems. 
-  % Advantages should be vissible in the motorcortex or the insula.
+  elseif opt.levels > 0  &&  opt.refine == 0
+  % Simple CSF and WM distance maps with partial volume effect by multiple  
+  % distance estimations but without further corrections.
+    Ycd = cat_vol_eudist( max(0,min(1,2.0 - Yp0)), Yp0 <= 2.50, opt.levels, opt.correctoffeset); 
+    Ywd = cat_vol_eudist( max(0,min(1,Yp0 - 2.0)), Yp0 >= 1.50, opt.levels, opt.correctoffeset);
+    opt.extendedrange = 0;
 
-    % CSF and WM speed maps to handle asymetries 
-    Ycf  = max(eps, min(1, ((Yp0 - 1) / 1.1) .^4 )); 
-    Ywf  = max(eps, min(1, ((4 - Yp0) / 2.0) .^2 )); 
+  elseif opt.levels > 0  &&  opt.refine > 0
+  % Enhanced CSF and WM distance maps with partial volume effect by   
+  % multiple distance estimations but without further corrections.
+    [Ycd, Ywd] = cat_vol_cwdist(Yp0,opt);
 
-    % CSF and WM boundary maps with PVE 
-    Ycb  = max(0 , min(1,  2.01 - Yp0 )); Ycb(Yp0>2.51) = nan; 
-    Ywb  = max(0 , min(1,  Yp0 - 2.01 )); Ywb(Yp0<1.51) = nan; 
-
-    % CSF and WM distance maps with PVE
-    Ywd  = cat_vol_eidist(Ywb, Ywf); 
-    Ycd  = cat_vol_eidist(Ycb, Ycf);
-
-    if 1
-      Ywd = Ywd*.5 + .5*cat_vbdist(single(Yp0 > 2.51), Yp0 > 1); 
-      Ycd = Ycd*.5 + .5*cat_vbdist(single(Yp0 < 1.51), Yp0 < 3); 
-    end
-
-    clear Ycf Ywf Ywb Ycb;
   end
 
 
@@ -208,13 +76,17 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,method,interp,enhance)
   % RMSE) and surface look (i.e. less errors in topology correction) that
   % this still support some small benefits.  
   % - Basic tests in ADHD200NYC and Collins. 
-  if 0;; % ##### MANUAL SETTING ##### 
+  if  ~opt.gyrusrecon
   % Using the PBT apporach only to reconstruct the sulci.  
   % As this is the more simple apprach we should keep and test it in 
   % case of pipeline changes.
 
     % projection-based thickness mapping
     Ygmt = cat_vol_pbtp( round(Yp0) , Ywd, Ycd);
+    
+    if opt.levels >= 0
+      Ycd = max(0,Ycd - 0.5); Ywd = max(0,Ywd - 0.5); % now correct also this values
+    end
 
     % minimum to reduce issues with meninges
     Ygmt = min(Ygmt, Ycd + Ywd); 
@@ -225,6 +97,11 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,method,interp,enhance)
     % reconstruct sulci as well as gyri 
     Ygmt1 = cat_vol_pbtp(round(Yp0)  , Ywd, Ycd);  
     Ygmt2 = cat_vol_pbtp(round(4-Yp0), Ycd, Ywd);
+    Ygmt2 = max(Ygmt2 , 1.5 .* (Ygmt2>0)); %only in thick regions
+
+    if opt.levels >= 0
+      Ycd = max(0,Ycd - 0.5); Ywd = max(0,Ywd - 0.5); % now correct also this values
+    end
 
     % avoid meninges !
     Ygmt1 = min(Ygmt1, Ycd + Ywd);
@@ -239,19 +116,9 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,method,interp,enhance)
 
 
 
-  % (3) Smoothing of thickness:
+  % (3) Approximation of non GM voxels for resampling:
   % --------------------------------------------------------------------
-  % To use a simple gaussian smoothing in an extend thickness map. 
-  % A smoothing of 2 (1 mm) was some good compromise between details and 
-  % less topology-correction artifacts. 
-  % - cat_vol_approx: this function should fit a bit better but the other 
-  %                   one is simpler and more direct 
-  %                   Ygmt = cat_vol_approx(Ygmt,1);
-  %
-  % - need mask smoothing due to interpolation artifacts and to get 
-  %   enlarge the filter area (saver but slower is to use the hole 
-  %   volume by removing the last msk parameter)  
-  Ygmt = simple_approx(Ygmt, 2, smooth3( Yp0>1.05 & Yp0<2.95 )>0 );  % adapt for interpolation?                     
+  Ygmt = cat_vol_approx(Ygmt,'rec-test');                   
    
 
 
@@ -262,77 +129,140 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,method,interp,enhance)
   % If gyri were reconstructed too than also the WMD would have to be
   % corrected to avoid underestimation of the position map with surfaces 
   % running to close to the WM.
-  YM      = Yp0>=1.51 & Yp0<2.51 & Ygmt>eps;
+  YM      = Yp0 > 1.5-0.45*opt.extendedrange & Yp0 < 2.5+0.45*opt.extendedrange & Ygmt>eps;
   Ycdc    = Ycd; Ycdc(YM) = min(Ycd(YM), Ygmt(YM) - Ywd(YM)); 
-  Ypp     = zeros(size(Yp0),'single'); Ypp(Yp0>=2.51) = 1;
+  Ypp     = zeros(size(Yp0),'single'); Ypp(Yp0 >= 2.5+0.45*opt.extendedrange) = 1;
   Ypp(YM) = Ycdc(YM) ./ (Ygmt(YM) + eps); 
   Ypp(Ypp>1) = 0;
   clear Ycdc YM;
 
 
-  % pp cleanup (this may comes also later)
-  % - Tested on ADHD200NYC with light improvements of intensity and 
-  %   position but also less self-intersections (12%>8%)
-  if 1;; % ##### MANUAL SETTING #####
-    Ypp = max( Ypp , 0.75 * cat_vol_morph( Ypp > .75  , 'ldc' , 1.5)); % avoid holes
-    Ypp = min( Ypp , 0.49 * (1 + cat_vol_morph( Ypp > .49  , 'ldo', 2.5 , vx_vol ) )); % avoid islands
-  end
-
-
-
-  % Voxel-size resolution correction:
+  % (5) Voxel-size resolution correction:
   % --------------------------------------------------------------------
-  % Because Ycd and Ywd measure a grid-based distance (defined as the 
-  % center of a voxel), we have to correct 1 voxel (2x.5 voxel, and finally 
-  % correct for the _isotropic_ size of our voxel-grid. This is not
-  % required for the Eikonal-based distance estimation! 
-  Ygmt = (Ygmt - (method == 0) ) * mean(vx_vol); 
+  Ygmt = Ygmt * mean(vx_vol); 
 
-
-
-
-  if interp ~= 1 
-    % back to original resolution
-    Ygmt = cat_vol_resize(Ygmt, 'deinterp', resI);                         
-    Ypp  = cat_vol_resize(Ypp , 'deinterp', resI);                          
-  end
-
- 
-  % Final smoothing to reduce (topology) artifacts what support lower 
-  % intensity and position RMSE (ADHD200NYC, method=0, interp=1):
-  %     1.2:  0.1244 / 0.1583
-  %     1.0:  0.1237 / 0.1549
-  %     0.9:  0.1229 / 0.1517 ***
-  %     0.8:  0.1239 / 0.1543
-  %     0.6:  0.1259 / 0.1611
-  %     0.4:  0.1262 / 0.1614
-  % This also expect that the original volume resolution is worse as
-  % the PBT resolution. 
-  % --------------------------------------------------------------------
-  if 1;; % ##### MANUAL SETTING #####
-    spm_smooth(Ygmt , Ygmt , 0.9 ); 
-    spm_smooth(Ypp  , Ypp  , 0.9 ); 
-  end
 end
-function Yo = simple_approx(Y,s,Ymsk)
-%simple_approx. Simple approximation by the closest Euclidean value.
-%
-%  Y = simple_approx(Y[,s,Ymsk])
-%  Y .. in/output image
-%  s .. smoothing filter size
-%
+function [Ycd, Ywd] = cat_vol_cwdist(Yp0,opt)
 
-  if ~exist('s', 'var'), s = 1; end
-  if ~exist('Ymsk', 'var'), Ymsk = true(size(Y)); end
+    % CSF and WM distance 
+    Ycd = zeros(size(Yp0),'single'); 
+    Ywd = zeros(size(Yp0),'single'); 
 
-  % estimate closest object point
-  [~,I] = cat_vbdist(single(Y~=0),Ymsk > 0); 
+    % multi-level distance estimation
+    hss = opt.levels; % number of opt.levels (as pairs)
+    for si = 1:hss
+      offset = max(0,min(.5,si * .5/hss)) / 2; 
+
+      Ycdl  = cat_vbdist(single(Yp0 < ( 1.5 - offset)), Yp0 < 2.5 + 0.45*opt.extendedrange );  
+      Ycdh  = cat_vbdist(single(Yp0 < ( 1.5 + offset)), Yp0 < 2.5 + 0.45*opt.extendedrange );  
+      
+      if opt.extendedrange
+        Ycdlc  = max(0,cat_vbdist(single(Yp0 < ( 2.5 - offset)), Yp0 < 2.95 ) - (opt.levels<8));  
+        Ycdhc  = max(0,cat_vbdist(single(Yp0 < ( 2.5 + offset)), Yp0 < 2.95 ) - (opt.levels<8));  
+        Ycdl   = Ycdl - Ycdlc; 
+        Ycdh   = Ycdh - Ycdhc; 
+      end
+
+      if opt.correctoffeset
+        if opt.correctoffeset==2
+          offsetc = cat_stat_nanmedian(Ycdl(Ycdl>0) - Ycdh(Ycdl>0))/2; 
+        else
+          offsetc = offset; 
+        end
+        Ycdl(Ycdl>0) = max(eps, Ycdl(Ycdl>0) - (.5 - offsetc )); 
+        Ycdh(Ycdh>0) = max(eps, Ycdh(Ycdh>0) + (.5 - offsetc )); 
+      end
+      Ycd = Ycd + .5/hss  .* Ycdl  +  .5/hss .* Ycdh;
+      Ycw = max(0.1,.5/hss - opt.refine * Ycd/10 );
+      clear Ycdl Ycdh; 
+
+      % WM distances
+      Ywdl  = cat_vbdist(single(Yp0 > ( 2.5 - offset)), Yp0 > 1.5 - 0.45*opt.extendedrange );  
+      Ywdh  = cat_vbdist(single(Yp0 > ( 2.5 + offset)), Yp0 > 1.5 - 0.45*opt.extendedrange); 
+
+      if opt.extendedrange
+        Ywdlc  = max(0,cat_vbdist(single(Yp0 > ( 1.5 - offset)), Yp0 > 1.05 ) - (opt.levels<8));  
+        Ywdhc  = max(0,cat_vbdist(single(Yp0 > ( 1.5 + offset)), Yp0 > 1.05 ) - (opt.levels<8));  
+        Ywdl   = Ywdl - Ywdlc; 
+        Ywdh   = Ywdh - Ywdhc; 
+      end
+
+      if opt.correctoffeset
+        if opt.correctoffeset==2
+          offsetc = median(Ywdl(Ywdl>0) - Ywdh(Ywdl>0))/2; 
+        else
+          offsetc = offset; 
+        end
+        Ywdl(Ywdl>0) = max(eps, Ywdl(Ywdl>0) + (.5 - offsetc )); 
+        Ywdh(Ywdh>0) = max(eps, Ywdh(Ywdh>0) - (.5 - offsetc )); 
+      end
+      Ywd = Ywd + Ycw .* Ywdl  +  (.5/hss*2 - Ycw) .* Ywdh;
+    end
+
+    Ycd(Ycd>100) = 0; 
+    Ywd(Ywd>100) = 0; 
   
-  % align (masked) non-object voxels with closest object value
-  Yo = Y(I);
+end
+function Yd = cat_vol_eudist(Yb,Ymsk,levels,correctoffeset)
+%cat_vol_eudist. Euclidean distance estimation to mixed boundaries.
+% ...
+%
+%  Yd = cat_vol_eudist(Yb,Ymsk,levels,correctoffeset)
 
-  % smooth the result - correct for average to avoid smoothing boundary issues
-  mnYo = median(Yo(Yo(:)~=0)); Yo = Yo - mnYo; Yo(~Ymsk) = 0; 
-  spm_smooth(Yo , Yo , repmat(s,1,3)); 
-  Yo = Yo + mnYo; Yo(~Ymsk) = 0; 
+
+% add voxel size?
+
+
+  if ~exist('Ymsk','var'), Ymsk = ~Yb; else, Ymsk = Ymsk>.5; end
+  if ~exist('hss','var')
+    levels = 4; 
+  elseif levels < 0 
+    error('cat_vol_eudist:BadLevelValue','Levels must be larger equal 0.') 
+  end
+  if ~exist('correctoffeset','var'), correctoffeset = 2; end
+
+  % do not estimate the distance for NAN
+  Ymsk( isnan(Yb) | (isinf(Yb) & Yb<0) ) = 0; 
+
+  if levels == 0
+    % simple single distance estimation 
+    Yd  = cat_vbdist(single(Yb > .5), Ymsk );  
+  else
+
+    Yd = zeros(size(Yb),'single'); 
+    for si = 1:levels
+      % estimate the offset of the boundary 
+      offset = max(0,min(.5,si * .5/levels)) / 2; 
+  
+      % estimate the distance to paired sublevels
+      Ydl  = cat_vbdist(single(Yb > ( 0.5 - offset)), Ymsk );  
+      Ydh  = cat_vbdist(single(Yb > ( 0.5 + offset)), Ymsk );  
+  
+      % correct for possible outliers
+      Ydl(Ydl>max(size(Yb))) = 0; 
+      Ydh(Ydh>max(size(Yb))) = 0; 
+
+      % it is possible to correct for the theoretical offset by the
+      % voxel-wise partial volume effect if two pure tissues are mixed
+      % (typical tissue boundary vs. the myelinated regions)
+      if correctoffeset
+        if correctoffeset==2
+          offsetc = cat_stat_nanmedian(Ydl(Ydl > 0) - Ydh(Ydl > 0))/2; 
+        else
+          offsetc = offset; 
+        end
+        Ydl(Ydl>0) = max(eps, Ydl(Ydl>0) - (.5 - offsetc )); 
+        Ydh(Ydh>0) = max(eps, Ydh(Ydh>0) + (.5 - offsetc )); 
+      end
+  
+      % add the distance from this level
+      Yd = Yd + .5/levels  .* Ydl  +  .5/levels .* Ydh;
+  
+    end
+
+  end
+
+  % correct for possible outliers
+  Yd(Yd > max(size(Yb))) = 0; 
+    
 end
