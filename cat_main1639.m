@@ -750,7 +750,7 @@ if debug, clear Yp0; end
 
 %% surface creation and thickness estimation
 %  ---------------------------------------------------------------------
-if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9 && ...
+if all( [job.output.surface>0  job.output.surface<9 ] ) || (job.output.surface==9 && ...
    any( [job.output.ct.native job.output.ct.warped job.output.ct.dartel job.output.ROI] ))
  
   stime = clock; 
@@ -764,7 +764,6 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
   [Ymix,job,surf,WMT] = cat_main_surf_preppara(Ymi,Yp0,job,vx_vol);
  
   %% default surface reconstruction 
-%  sum(Yth1(Yth1(:)>median(Yth1(Yth1(:)>0))*2 ))./sum(Yth1(Yth1(:)>0)) > 0.1 > error
   if debug, tic; end
   if job.extopts.SRP >= 20
     try
