@@ -1,4 +1,12 @@
 ------------------------------------------------------------------------
+r2509 | rdahnke | 2023-12-13 11:23:05
+
+Changed paths:
+ M CHANGES.txt
+
+Changed:  Update new PBT simple pipeline with focus on the paired estimation of  
+          multiple distance estimations to support partial volume effects also 
+          with the simple voxel-based distance estimation cat_vbdist.  ------------------------------------------------------------------------
 r2499 | rdahnke | 2023-12-11 10:47:49
 
 Changed paths:
