@@ -225,7 +225,7 @@ if ~isfield(res,'spmpp')
     if job.extopts.regstr>0
       job2.extopts.regstr     = 13;    % lower resolution (2mm)
       job2.extopts.reg.nits   = 8;     % less iterations
-      %job2.extopts.shootingtpms(3:end) = [];             % remove high templates, we only need low frequency corrections .. NO! This would cause problems with the interpolation 
+      %job2.extopts.shootingtpms(3:end) = [];  % remove high templates, we only need low frequency corrections .. NO! This would cause problems with the interpolation 
       res2 = res; 
       res2.do_dartel          = 2;      % use shooting
     else
@@ -750,18 +750,14 @@ if debug, clear Yp0; end
 
 %% surface creation and thickness estimation
 %  ---------------------------------------------------------------------
-if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9 && ...
+if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
+   all( [job.output.surface>10 job.output.surface<19 ] ) ||  (job.output.surface==9 && ...
    any( [job.output.ct.native job.output.ct.warped job.output.ct.dartel job.output.ROI] ))
  
-  stime = clock; 
- 
-  if ~isfield(job,'useprior')
-    job.useprior = '';
-  end
-  
   % prepare some parameters
+  if ~isfield(job,'useprior'), job.useprior = ''; end
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*5/255; 
-  [Ymix,job,surf,WMT] = cat_main_surf_preppara(Ymi,Yp0,job,vx_vol);
+  [Ymix,job,surf,stime] = cat_main_surf_preppara(Ymi,Yp0,job);
  
   %% default surface reconstruction 
 %  sum(Yth1(Yth1(:)>median(Yth1(Yth1(:)>0))*2 ))./sum(Yth1(Yth1(:)>0)) > 0.1 > error
@@ -815,7 +811,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
         'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,'SRP',mod(job.extopts.SRP,10),...
         'scale_cortex', job.extopts.scale_cortex, 'add_parahipp', job.extopts.add_parahipp, 'close_parahipp', job.extopts.close_parahipp,  ....
         'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
-        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior),job); 
+        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'useprior',job.useprior),job); 
     end
   else
     %% createCS1 pipeline 
@@ -823,7 +819,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
       cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,struct('pbtmethod','pbt2x',...
       'interpV',job.extopts.pbtres,'SRP',mod(job.extopts.SRP,10), ...
       'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
-      'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'WMT',WMT,'useprior',job.useprior),job);
+      'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'useprior',job.useprior),job);
   end
   if debug, toc; end
 
@@ -836,7 +832,7 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
       [0,0.0001],job.output.ct,trans,single(Ycls{1})/255,0.1);
   end
   
-  if job.output.sROI && all(job.output.surface~=[5 6]) % no fast without registration
+  if job.output.sROI 
     stime2 = cat_io_cmd('  Surface ROI estimation');  
     
     %% estimate surface ROI estimates for thickness
@@ -1021,50 +1017,6 @@ end
 % final command line report
 cat_main_reportcmd(job,res,qa);
 
-%% cleanup preview surfaces
-try
-  delete_surf_preview(Psurf,job);
-end
-return
-
-function delete_surf_preview(Psurf,job)
-  % cleanup preview surfaces and directory (but only for non-experts)
-  if any( job.output.surface == [ 5 6 ] ) && job.extopts.expertgui<1
-    % delete files that where possibly created in cat_surf_createCS(2)
- 
-% RD202101: not all files are listed ... further lh.*.preview.* files: 
-%           - intlayer4, intpial, intwhite
-%           - layer4, pial, white
-
-    ffields = fieldnames(Psurf); 
-    for si = 1:numel( Psurf )
-      for fi = 1:numel( ffields )
-        [pp1,pp2] = spm_fileparts( spm_fileparts( Psurf(si).(ffields{fi}) ) );  
-        if exist( Psurf(si).(ffields{fi}) , 'file' ) && strcmp(pp2,'surf_preview') 
-          delete( Psurf(si).(ffields{fi}) ); 
-        end
-      end
-    end
-    
-    % remove the directory 
-    % (but only if it is empty (maybe used by parallel processes)
-    pp        = spm_fileparts( Psurf(1).Pcentral ); 
-    [pp1,pp2] = spm_fileparts( pp );  
-    dcontent  = dir( pp ); 
-    if exist( pp , 'dir' ) && strcmp(pp2,'surf_preview') && ...
-      numel( dcontent( [dcontent.isdir] == 0) ) == 0
-      try
-        rmdir( pp , 's');
-      end
-    end
-    % check also for an empty surf directory
-    if exist( pp , 'dir' ) &&  strcmp(pp2,'surf') && ...
-      numel( dcontent( [dcontent.isdir] == 0) ) == 0
-      try
-        rmdir( fullfile(pp,'surf') , 's');
-      end
-    end
-  end
 return
 function [Ysrc,Ycls,Yy,res] = cat_main_resspmres(Ysrc,Ycls,Yy,res)
 %% cat_main_resspmres
@@ -1271,66 +1223,31 @@ function [Ycls,Ym,Ymi,Yp0b,Yb,Yl1,Yy,YMF,indx,indy,indz,qa,job] = cat_main_SPMpp
   YMF = NS(Yl1,job.extopts.LAB.VT) | NS(Yl1,job.extopts.LAB.BG) | NS(Yl1,job.extopts.LAB.BG);  
 return
 
-function [Ymix,job,surf,WMT,stime] = cat_main_surf_preppara(Ymi,Yp0,job,vx_vol)
+function [Ymix,job,surf,stime] = cat_main_surf_preppara(Ymi,Yp0,job)
 %  ------------------------------------------------------------------------
 %  Prepare some variables for the surface processing.
 %  ------------------------------------------------------------------------
 
   stime = cat_io_cmd('Surface and thickness estimation'); 
   
-  % specify WM/CSF width/depth/thickness estimation
-  if job.output.surface>10
-    job.output.surface = job.output.surface - 10;
-    WMT = 1; 
-  elseif job.extopts.experimental || job.extopts.expertgui==2
-    WMT = 1; 
-  else
-    WMT = 0; 
-  end
-  
   % specify surface
   switch job.output.surface
-    case 1, surf = {'lh','rh'};
-    case 2, surf = {'lh','rh','cb'};
-    case 3, surf = {'lh'};
-    case 4, surf = {'rh'};
-    % fast surface reconstruction without simple spherical mapping     
-    case 5, surf = {'lhfst','rhfst'};                   
-    case 6, surf = {'lhfst','rhfst','cbfst'}; 
-    % fast surface reconstruction with simple spherical mapping     
-    case 7, surf = {'lhsfst','rhsfst'};                    
-    case 8, surf = {'lhsfst','rhsfst','cbsfst'};
-    % estimate only volumebased thickness
-    case 9, surf = {'lhv','rhv'}; 
-    otherwise, surf = {};
+    case {1,11}, surf = {'lh','rh'};
+    case {2,12}, surf = {'lh','rh','cb'};
+    case {9,19}, surf = {'lhv','rhv'}; % estimate only volumebased thickness
+    otherwise,   surf = {};
   end
   if ~job.output.surface && any( [job.output.ct.native job.output.ct.warped job.output.ct.dartel] )
     surf = {'lhv','rhv'}; 
   end
   
-  % lower resolution for fast surface estimation
-  if job.output.surface>4 && job.output.surface~=9 
-    try
-      if strcmp(job.extopts.species,'human')
-        job.extopts.pbtres = 0.8; %max(0.8,min([((min(vx_vol)^3)/2)^(1/3) 1.0]));
-      else
-        job.extopts.pbtres = max(0.4,min([((min(vx_vol)^3)/2)^(1/3) 1.0]));
-      end
-    catch
-      job.extopts.pbtres = max(0.8,min([((min(vx_vol)^3)/2)^(1/3) 1.0]));
-    end
-  end
-  
-  % surface creation and thickness estimation (only for test >> manual setting)
-  if 1
-    Ymix = Ymi .* (Yp0>0.5); % | (cat_vol_morph(Yp0>0.5,'d') & Ymi<2/3)); %% using the Ymi map
+  % surface creation and thickness estimation input map
+  Yp0toC = @(c) 1-min(1,abs(Yp0-c));
+  Yp0th  = @(c) cat_stat_nanmedian( Ymi(Yp0toC(c) > 0.5) ); 
+  if job.output.surface < 10  &&  ...
+    ( Yp0th(1) < Yp0th(2) ) && ( Yp0th(2) < Yp0th(3) ) && ( Yp0th(3) > 0.9 ) 
+    Ymix = Ymi .* (Yp0>0.5); % using the locally intensity normalized T1 map Ymi 
   else
-    %mix  = [1/3 1/3 1/3]; % net so 
-    mix  = [1/2 1/2 0]; 
-    %mix  = [1/4 3/4 0];  
-    Ymix = mix(1) * (Ymi .* (Yp0>0.5)) + ...
-           mix(2) * (Yp0spm/3 .* (Yp0>0.5)) + ...
-           mix(3) * Yp0/3; 
-         % use only the segmentation map (only for tests!)
+    Ymix = Yp0 / 3; % use the AMAP segmentation  
   end
 return

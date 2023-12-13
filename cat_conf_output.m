@@ -66,25 +66,21 @@ function [output,output_spm] = cat_conf_output(expert)
   surface        = cfg_menu;
   surface.tag    = 'surface';
   surface.name   = 'Surface and thickness estimation';
-  surface.labels = {'No','Yes','For visual preview only'};
-  surface.values = {0 1 5};
+  surface.labels = {'No','Yes'};
+  surface.values = {0 1};
   surface.def    = @(val)cat_get_defaults('output.surface', val{:});
   surface.help   = {
   'Use projection-based thickness (PBT) (Dahnke et al. 2012) to estimate cortical thickness and to create the central cortical surface for left and right hemisphere. Surface reconstruction includes topology correction (Yotter et al. 2011), spherical inflation (Yotter et al.) and spherical registration. Additionally you can also estimate surface parameters such as gyrification, cortical complexity or sulcal depth that can be subsequently analyzed at each vertex of the surface. '
   ''
   'Please note, that surface reconstruction and spherical registration additionally requires about 20-60 min of computation time.'
   ''
-  'A fast (1-3 min) surface pipeline is available for visual preview (e.g., to check preprocessing quality) in the cross-sectional, but not in the longitudinal pipeline.  Only the initial surfaces are created with a lower resolution and without topology correction, spherical mapping and surface registration.  Please note that the files with the estimated surface thickness can therefore not be used for further analysis!  For distinction, these files contain "preview" in their filename and they are not available as batch dependencies objects. '
-  ''
   };
 
   if expert == 2
-    surface.labels = {'No','lh + rh','lh + rh + cb',...
-      'lh + rh (preview)','lh + rh + cb (preview)', ...
-      ...'lh + rh (fast registration)', ... 7
-      'lh + rh + cb (fast registration)',... 8 
-      'Thickness estimation (for ROI analysis only)', 'Full'};
-    surface.values = {0 1 2 , 5 6 , 8 , 9 12}; % 7 8 
+    surface.labels = {'No', 'lh + rh (T1w-based)',  'lh + rh + cb (T1w-based)',...
+                            'lh + rh (AMAP-based)', 'lh + rh + cb (AMAP-based)',...
+                            'Thickness estimation (for ROI analysis only)', 'Full'};
+    surface.values = {0 1 2 , 11 12, 9 22}; 
     surface.help   = [surface.help; {
       'Cerebellar reconstruction is still in development and is strongly limited due to the high frequency of folding and image properties! '
       ''
