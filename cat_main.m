@@ -265,7 +265,7 @@ if ~isfield(res,'spmpp')
     if job.extopts.LASstr>1 || job.extopts.inv_weighting
       [Ymi,Ymt,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extoptsLAS2); % use Yclsi after cat_vol_partvol
     else
-      [Ymi,Ymt,Ycls] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth);
+      [Ymi,Ymt,Ycls] = cat_main_LAS2(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth);
     end
     clear Ymt; % use original global scaled ... 
     stime2 = clock; % not really correct but better than before
@@ -748,7 +748,7 @@ if ~debug, clear Yp0; end
 
 %% surface creation and thickness estimation
 %  ---------------------------------------------------------------------
-if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9 && ...
+if all( [job.output.surface>0  job.output.surface<9 ] ) || (job.output.surface==9 && ...
    any( [job.output.ct.native job.output.ct.warped job.output.ct.dartel job.output.ROI] ))
   
   % prepare some parameter
@@ -756,10 +756,9 @@ if all( [job.output.surface>0 job.output.surface<9 ] ) || (job.output.surface==9
   [Ymix,job,surf,WMT] = cat_main_surf_preppara(Ymi,Yp0,job,vx_vol);
   
   %% default surface reconstruction 
-  %  sum(Yth1(Yth1(:)>median(Yth1(Yth1(:)>0))*2 ))./sum(Yth1(Yth1(:)>0)) > 0.1 > error
   if job.extopts.SRP >= 20
     surf = unique(surf,'stable'); 
-    if 0 %any( ~cellfun('isempty', strfind(surf,'cb') ))  % ... I want to avoid this if possible - it also seem to be worse to use it 
+    if job.extopts.close_parahipp %any( ~cellfun('isempty', strfind(surf,'cb') ))  % ... I want to avoid this if possible - it also seem to be worse to use it 
       VT1 = spm_vol(cat_get_defaults('extopts.shootingT1')); 
       fac = abs(tpm.V(1).mat(1)) / abs(VT1.mat(1));
       YT  = single(spm_sample_vol(VT1,double(smooth3(Yy(:,:,:,1))*fac),double(smooth3(Yy(:,:,:,2))*fac),double(smooth3(Yy(:,:,:,3))*fac),2));
