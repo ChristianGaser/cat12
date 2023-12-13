@@ -25,9 +25,8 @@
 % * Start SPM/CAT with: 
 %   spm 'fmri'; cat12('developer')
 % * Specify your own directories below 
-% * Update some variables such as "resolution", "spm_res_factor" and
-%   "preview_surfaces" that are defined for a fast test run
-%   (currently it is only reducing resolution with preview surface estimation)
+% * Update some variables such as "resolution" and "spm_res_factor" that 
+%   are defined for a fast test run
 % * Open the SPM batch mode via SPM GUI
 % * Open this batch in the SPM batch mode 
 % * Start the batch (if it is not ready or create errors then start 
@@ -126,8 +125,7 @@ tol                = 1e-32;  % super accurate to correct even strong inhomogenei
 %spm_res_factor     = 1.5/resolution;    % use x-times lower sampling resolution (depending on the resolution variable) for SPM for faster tests 
                            % for a resolution of 0.8 and spm_res_factor of 2 SPM will use 1.6 mm (default is 3 mm for human data and)                            
 nproc              = 0;    % number of parallel processes of the CAT preprocessing
-preview_surfaces   = 5;    % (0 - none, 1 - yes, 5 - fast preview surfaces for visual checks but not for statistical analyses
-                           % use 5 for fast reviews to optimize the pipeline 
+surfaces           = 1;    % (0 - none, 1 - yes)
 reduce_mesh        = 5;    % more accurate but maybe with fatal Matlab crash (just try to rerun) otherwise use 1 (optimal by volume reduction)
 %ngaus              = [1 1 2 3];  % [GM WM CSF[/BG | BG]] ... [2 1 3 4] seems also to work
 ngaus              = [2 1 3 4];  % [GM WM CSF[/BG | BG]] ... [2 1 3 4] seems also to work
@@ -555,7 +553,7 @@ matlabbatch{mi}.spm.tools.cat.estwrite_spm.extopts.admin.verb               = 2;
 matlabbatch{mi}.spm.tools.cat.estwrite_spm.extopts.admin.print              = 2;
 % ############ Use this part to define the output of both CAT preprocessings ############## 
 matlabbatch{mi}.spm.tools.cat.estwrite_spm.output.BIDS.BIDSno               = 1;
-matlabbatch{mi}.spm.tools.cat.estwrite_spm.output.surface                   = preview_surfaces;
+matlabbatch{mi}.spm.tools.cat.estwrite_spm.output.surface                   = surfaces;
 matlabbatch{mi}.spm.tools.cat.estwrite_spm.output.ROImenu.atlases.neuromorphometrics = 1;
 matlabbatch{mi}.spm.tools.cat.estwrite_spm.output.ROImenu.atlases.lpba40             = 0;
 matlabbatch{mi}.spm.tools.cat.estwrite_spm.output.ROImenu.atlases.cobra              = 1;
