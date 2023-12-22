@@ -1648,12 +1648,12 @@ function cat_surf_saveICO(S,Tpbt,Pcs,subdir,Pm,mat,writeTfs,writeSI,writeL4,writ
   
   if ~isnumeric( Pm ) && exist(Pm,'file')
     % use the file data ... slow????
-    cmd = sprintf('CAT_3dVol2Surf -linear -steps 1 -start 0 -end 1 "%s" "%s" "%s"',Pwhite , Pm, PintIS);
+    cmd = sprintf('CAT_3dVol2Surf -steps 1 -start 0 -end 1 "%s" "%s" "%s"',Pwhite , Pm, PintIS);
     cat_system(cmd,0);
-    cmd = sprintf('CAT_3dVol2Surf -linear -steps 1 -start 0 -end 0 "%s" "%s" "%s"',Ppial  , Pm, PintOS);
+    cmd = sprintf('CAT_3dVol2Surf -steps 1 -start 0 -end 0 "%s" "%s" "%s"',Ppial  , Pm, PintOS);
     cat_system(cmd,0);
     if writeL4
-      cmd = sprintf('CAT_3dVol2Surf -linear -steps 1 -start 0 -end 0 "%s" "%s" "%s"',Player4, Pm, PintL4);
+      cmd = sprintf('CAT_3dVol2Surf -steps 1 -start 0 -end 0 "%s" "%s" "%s"',Player4, Pm, PintL4);
       cat_system(cmd,0);
     end
   elseif ndims(Pm)==3
