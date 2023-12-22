@@ -64,7 +64,7 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
   def.LAB                 = cat_get_defaults('extopts.LAB');  % brain regions 
   def.SPM                 = 0;                                % surface-reconstration based on SPM segmentation input (see cat_main)
   def.pbtlas              = 0;                                % myelination correction option (in development - not working correctly in all data, RD201907)  
-  def.pbtmethod           = 'pbt2x';                          % projection-based thickness (PBT) estimation ('pbt2x' (with minimum setting) or 'pbt2')
+  def.pbtmethod           = 'pbtsimple';                      % projection-based thickness (PBT) estimation ('pbt2x' (with minimum setting), 'pbt2', or 'pbtsimple')
   def.sharpenCB           = 1;                                % sharpening function for the cerebellum (in development, RD2017-2019)
   def.thick_measure       = 1;                                % 0-PBT; 1-Tfs (Freesurfer method using mean(TnearIS,TnearOS))
   def.thick_limit         = 5;                                % 5mm upper limit for thickness (same limit as used in Freesurfer)
@@ -463,6 +463,16 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
       Vpp  = Vpp(1); 
     end
     
+    % keep largest structure
+    Yppt1 = Yppt >= th_initial;
+    Yppt1 = Yppt1 - cat_vol_morph(Yppt1, 'lab', 1, vx_vol);
+    Yppt(Yppt1 > 0) = -1;
+
+    % fill remaining holes
+    Yppt1 = Yppt < th_initial;
+    Yppt1 = Yppt1 - cat_vol_morph(Yppt1, 'lab', 1, vx_vol);
+    Yppt(Yppt1 > 0) = 1;
+
     % Map with only one hemisphere that is internally used for surface
     % processing
     Vpp_side = cat_io_writenii(V,Yppt,'',sprintf('%s.ppt',opt.surf{si}) ,...
@@ -649,7 +659,16 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
 
         Ycbm = cat_vol_resize(Ycbm,'deinterp',resI);                       % back to original resolution
         Ycbm = cat_vol_resize(Ycbm,'dereduceBrain',BB);                    % adding of background
-        
+
+        Ycbm1 = Ycbm >= th_initial;
+        Ycbm1 = Ycbm1 - cat_vol_morph(Ycbm1, 'lab', 1, vx_vol);
+        Ycbm(Ycbm1 > 0) = -1;
+    
+        % fill remaining holes
+        Ycbm1 = Ycbm < th_initial;
+        Ycbm1 = Ycbm1 - cat_vol_morph(Ycbm1, 'lab', 1, vx_vol);
+        Ycbm(Ycbm1 > 0) = 1;
+
         spm_write_vol(Vpp_side,Ycbm);
          
         cmd = sprintf('CAT_MarchingCubesGenus0 -fwhm "3" -thresh "%g" "%s" "%s"',th_initial,Vpp_side.fname,Pcentral);
@@ -663,6 +682,8 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
         % the surface deformation allows the same or better accuracy and also
         % that the meshes of cat_vol_genus0 are more regular and also allow 
         % voxel-based topology optimization.  
+        % We can set dist to 0.9 for the cortex because using adaptive
+        % thresholds this was found to be the optimal dist threshold
 
         cmd = sprintf('CAT_MarchingCubesGenus0 -fwhm "3" -thresh "%g" "%s" "%s"',th_initial,Vpp_side.fname,Pcentral);
         cat_system(cmd,opt.verb-3);      
@@ -674,9 +695,8 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
       EC0 = size(CS.vertices,1) + size(CS.faces,1) - size(spm_mesh_edges(CS),1);
       
       if EC0 ~= 2
-        error('cat_surf_createCS3:CAT_MarchingCubesGenus0', ...
-          ['Surface creation with topology issue with CAT_MarchingCubesGenus0 failed. \n' ...
-           'Although a surface was created it did not have the expected topology (Euler count = %d).\n'],EC0); 
+        warning('cat_surf_createCS3:CAT_MarchingCubesGenus0', ...
+           'Extracted surface might have small topology issues (Euler count = %d).\n',EC0); 
       end      
 
       if ~debug, clear mask_parahipp_smoothed; end

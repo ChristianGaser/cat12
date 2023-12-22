@@ -2800,9 +2800,9 @@ for i = 1:n
     Pout      = fullfile(pp,['mesh.',ff '.resampled_32k.gii']);
         
     % map 3D volume to template surface inside cortical band with maxabs mapping function
-    cmd = sprintf('CAT_3dVol2Surf -linear -maxabs -steps 7 -start -0.6 -end 0.6 -thickness "%s" "%s" "%s" "%s"',Pthick_lh, Pmesh_lh, Pvol, Pout_lh);
+    cmd = sprintf('CAT_3dVol2Surf -maxabs -steps 7 -start -0.6 -end 0.6 -thickness "%s" "%s" "%s" "%s"',Pthick_lh, Pmesh_lh, Pvol, Pout_lh);
     cat_system(cmd,0);
-    cmd = sprintf('CAT_3dVol2Surf -linear -maxabs -steps 7 -start -0.6 -end 0.6 -thickness "%s" "%s" "%s" "%s"',Pthick_rh, Pmesh_rh, Pvol, Pout_rh);
+    cmd = sprintf('CAT_3dVol2Surf -maxabs -steps 7 -start -0.6 -end 0.6 -thickness "%s" "%s" "%s" "%s"',Pthick_rh, Pmesh_rh, Pvol, Pout_rh);
     cat_system(cmd,0);
 
     % combine left and right hemipshere data

@@ -296,7 +296,7 @@ pbtver.tag     = 'pbtmethod';
 pbtver.name    = 'Projection-based thickness';
 pbtver.labels  = {'PBT','PBTx','PBT simple'};
 pbtver.values  = {'pbt2','pbt2x','pbtsimple'};
-pbtver.def     = @(val) 'pbt2x';
+pbtver.def     = @(val) 'pbtsimple';
 pbtver.hidden  = expert<2;
 pbtver.help    = {
  ['Version of the projection-based thickness (PBT) thickness and surface reconstruction approach (Dahnke et al., 2013).  ' ...

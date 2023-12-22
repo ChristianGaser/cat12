@@ -98,21 +98,22 @@ function [Ya,times] = cat_vol_approx(Y,method, varargin)
       varargin{1} = 0; %res / mean(vx_vol); 
     end
 
-    fprintf(' cat_vol_approx: Use "%s" insteat of (old) "%s"!\n',method,methodold)
+    %fprintf(' cat_vol_approx: Use "%s" instead of (old) "%s"!\n',method,methodold)
  
   end
   method = strrep(method,'-test','');
-
-
+  
   switch method
     case {'recursive','rec','r','simple','s'}
       % call new approximation method
       if nargin<3; s = 1; else, s = varargin{1}; end
-      Ya = rec_approx( Y , s ); 
+      Ya = rec_approx(Y, s); 
 
     case {'nn','nh','linear'} % link old calls to the newer version 
+      fprintf('\n cat_vol_approx: Use new recusive approach instead of (old) "%s"!\n',method)
       % updated classic approach
-      Ya = cat_vol_approx_classic(Y,varargin{:});
+      %Ya = cat_vol_approx_classic(Y,varargin{:});
+      Ya = rec_approx(Y, 1); 
 
     case 'oldnn'
       % classic approach 

@@ -12,6 +12,7 @@ function S=cat_vol_smooth3X(S,s,filter)
   if ~exist('s','var'), s=1; end
   if ~exist('filter','var'); filter='s'; end
 
+  s = mean(s);
   S(isnan(S(:)) | isinf(-S(:)) | isinf(S(:)))=0;                                          % correct bad cases
   
   SO=S;
