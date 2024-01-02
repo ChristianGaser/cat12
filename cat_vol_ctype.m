@@ -103,7 +103,9 @@ function testctype
 
 
   %% plot results
-  fh = figure(38478); fh.Name = 'cat_vol_ctype unit test'; clf
+  fh = figure(38478); clf
+  fh.Name  = 'cat_vol_ctype unit test';
+  fh.Color = [1 1 1];
   
   % plot C
   for ci = 1:numel(ncases) 

@@ -957,7 +957,10 @@ function cat_vol_resize_unittest
   
   % create figure, estimate and display images
   subplots = [4 + exist('cat_vol_resizeo','file'),5];
-  fg = figure(1847); fg.Position(3:4) = subplots*150; clf(fg);
+  fg = figure(1847); 
+  fg.Position(3:4) = subplots*150; clf(fg);
+  fg.Name          = 'cat_vol_resize unit test';
+  fg.Color         = [1 1 1];  
   
   % === resize ===
   % operations
@@ -1006,9 +1009,10 @@ function cat_vol_resize_unittest
   imagesc(abs( A(:,:,round(.5 * size(A,3))) - ARnr(:,:,round(.5 * size(A,3)))));  
   caxis(ca/2); axis equal off;  title('diff (org-res-nearest)')
 
-  subplot(subplots(2),subplots(1),sub2ind(subplots,5,1))
+  xp = 3 + exist('cat_vol_resizeo','file'); 
+  subplot(subplots(2),subplots(1),sub2ind(subplots,xp,1))
   imagesc(ARme(:,:,round(.5 * size(ARme,3)))); caxis(ca); axis equal off; title('res-mean.*(org~=0)')
-  subplot(subplots(2),subplots(1),sub2ind(subplots,6,1))
+  subplot(subplots(2),subplots(1),sub2ind(subplots,xp+1,1))
   imagesc(abs( A(:,:,round(.5 * size(A,3))) - ARme(:,:,round(.5 * size(A,3)))));  
   caxis(ca/2); axis equal off;  title('diff (org-res-mean)')
 
