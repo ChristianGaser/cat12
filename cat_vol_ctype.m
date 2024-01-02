@@ -1,13 +1,13 @@
-function Y=cat_vol_ctype(Y,type)
+function Y = cat_vol_ctype(Y,type)
 % ______________________________________________________________________
-% Y=cat_vol_ctype(Y[,type])
+% Y = cat_vol_ctype(Y[,type])
 %
 % Convert datatype with checking of min/max, nan, and rounding for 
 % [u]int[8|16], single, double, and char. Default round type is 'uint8'. 
 % Y has to be a matrix or cell. 
 %
 % This function is only written for our private use, mostly to convert 
-% single to uint8. I did not check for special behavior, for extremly 
+% single to uint8. We did not check for special behavior, for extremly 
 % high values or special rounding issues, or converting to larger 
 % classes etc.!
 % ______________________________________________________________________
@@ -21,11 +21,12 @@ function Y=cat_vol_ctype(Y,type)
 % ______________________________________________________________________
  
   if nargin==0, help cat_vol_ctype; return; end
+  if nargin==1 && ischar(Y) && strcmp(Y,'test'), testctype; return; end
 
   types = {'int8','int16','int32','int64','single','float32','float64'...
-           'uint8','uint16','uint32','uint64','double'};
+           'uint8','uint16','uint32','uint64','double','logical'};
 
-  if ~exist('type','var');
+  if ~exist('type','var')
     type = 'uint8';
   else
     type  = lower(type);
@@ -34,48 +35,105 @@ function Y=cat_vol_ctype(Y,type)
     if ~isempty(ind)
       type = type(1:ind-1);
     end
-    if all(cellfun('isempty',strfind(types,type)))
+    if ~any(contains(types,type))  
       error('MATLAB:SPM:CAT:cat_vol_ctype:UnknownType', ...
             ['ERROR: cat_vol_ctype: unknown data type ''%s'' ' ...
              '(only [u]int[8|16], single, and double).'],type);
     end
   end
-  type = cat_io_strrep(type,{'float32','float64'},{'single','dobule'});
+  % use single for logical arrays to be compatible 
+  type = cat_io_strrep(type, ...
+    {'logical', 'float32', 'float64'}, ...
+    {'single',  'single',  'double'});
 
   
   if iscell(Y)
     % recall function 
-    for yi=1:numel(Y)
-      Y{yi}=cat_vol_ctype(Y{yi},type);
+    for yi = 1:numel(Y)
+      Y{yi} = cat_vol_ctype(Y{yi}, type);
     end
   else
-    type = types{find(~cellfun('isempty',strfind(types,type)),1,'first')};
+    type  = types{contains(types, type)};
  
     % prepare conversion
-    if ~isempty(strfind(type,'int')) || ~isempty(strfind(type,'char'))
+    if contains({'int','char'}, type) 
       switch class(Y)
         case {'single','double'}
+          % replace nan
           Y = single(Y);
-          Y(isnan(Y)) = 0;
-          Y = round(min(single(intmax(type)),max(single(intmin(type)),Y)));
+          Y(isnan(Y)) = 0; 
+          Y = round( min( single(intmax(type)), max(single(intmin(type)), Y )));
         otherwise
           % this is not working for very old matlab versions
-          try
-            Y = int64(Y);
-            Y = round(min(int64(intmax(type)),max(int64(intmin(type)),Y)));
-          catch
-            Y = eval([type '(Y)']);
-            Y = int64(round(min(intmax(type),max(intmin(type),Y))));
-          end
+          Y = int64(Y); 
+          Y = round( min( int64(intmax(type)), max( int64(intmin(type)), Y )));
       end
-    elseif ~isempty(strfind(type,'single'))
-      Y = min(single(realmax(type)),max(single(realmin(type)),Y));
-    elseif ~isempty(strfind(type,'double'))
-      Y = min(double(realmax(type)),max(double(realmin(type)),Y));
+    elseif contains(type,'single')
+      Y = eval([type '(Y)']);
+      Y = min( single(realmax(type)), max(single(realmin(type)), single(Y) ));
+    elseif contains(type,'double')
+      Y = min( double(realmax(type)), max(double(realmin(type)), double(Y) ));
     end
     
     % convert
-    eval(sprintf('Y = %s(Y);',type));
+    eval(sprintf('Y = %s(Y);', type));
   end
   
+end
+function testctype
+%% unit test with two major cases: 
+%   cell B: double to single/double/(u)int(8,16,32,64) 
+%   cell c: uint16 to single/double/(u)int(8,16,32,64)
+
+  ncases = {'(uint8)', 'single', 'double', ...
+            'uint8', 'uint16', 'uint32', 'uint64', ...
+            'int8' , 'int16',  'int32',  'int64'};
+  tval   = 512; 
+  A      = randn(10,10,10) * tval; 
+  C      = cell(1,numel(ncases)); B = C; 
+
+  % default uint8
+  C{1}   = cat_vol_ctype( A );
+  B{1}   = cat_vol_ctype( int16( round(A) ) );
+  % other cases
+  for ci = 2:numel(ncases) 
+    C{ci} = cat_vol_ctype( A                 , ncases{ci});
+    B{ci} = cat_vol_ctype( int16( round(A) ) , ncases{ci});
+  end     
+
+
+  %% plot results
+  fh = figure(38478); clf
+  fh.Name  = 'cat_vol_ctype unit test';
+  fh.Color = [1 1 1];
+  
+  % plot C
+  for ci = 1:numel(ncases) 
+    subplot(4,6,ci); 
+    imagesc( C{ci}(:,:,round(size(A,3)/2)) );
+    title(ncases{ci}); caxis([-tval,tval]); 
+    axis equal off; 
+  end
+  
+  % plot B
+  for ci = 1:numel(ncases) 
+    subplot(4,6,ci + 1 +numel(ncases)); 
+    imagesc( B{ci}(:,:,round(size(A,3)/2)) );
+    title(ncases{ci}); caxis([-tval,tval])
+    axis equal off; 
+  end
+
+  fprintf('Test cases single: uint8, char, single, double, uint[8,16,32,64], uint[8,16,32,64]:\n'); 
+  disp(C)
+
+  fprintf('Test cases int16:  uint8, char, single, double, uint[8,16,32,64], uint[8,16,32,64]:\n'); 
+  disp(B)
+
+  fprintf('Convert Cell:\n')
+  cat_vol_ctype( { A, int16( round(A) ) } )
+  
+  fprintf('Test error:\n')
+  cat_vol_ctype( A ,'char');
+  
+
 end
