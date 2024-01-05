@@ -234,8 +234,8 @@ function varargout = cat_surf_fun(action,S,varargin)
       if nargin<2, help cat_surf_fun>show_orthview; return; end
       [varargout{1},varargout{2},varargout{3}] = cat_surf_vdist(S,varargin);
     
-    case 'vol2surf'  
-      [varargout{1}] = cat_surf_vol2surf(S,varargin{:});
+    case {'vol2surf','isocolor'}
+      [varargout{1}] = cat_surf_isocolors2(S,varargin{:});
       
       
     case 'surf2vol'
@@ -2197,7 +2197,7 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
           abs( YO - CGth ) > abs( YOC - CGth ) & ...
           cat_surf_edgeangle( Vg , VOg ) < opt.alphaYpp & ...
           YppOC < YppO & YppOC>CGth & YOC>1.50); % 0.01 & 1.5 
-      elseif 0
+      elseif false
         YO  = YO .* (0.5 + 0.5*YppOC) .* ( Tpc==0 & ...
           cat_surf_edgeangle( Vg , VOg ) < opt.alphaYpp & ...
           YppOC>CGth );
