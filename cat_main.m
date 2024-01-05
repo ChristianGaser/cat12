@@ -711,7 +711,7 @@ end
 %% update WMHs 
 %  ---------------------------------------------------------------------
   Ycls = cat_main_updateWMHs(Ym,Ycls,Yy,tpm,job,res,trans);
-  if ~debug, clear Yy tpm; end
+  if ~debug, clear Yy; end
 
 
 %% write results
@@ -760,9 +760,9 @@ if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
   %% default surface reconstruction 
   if job.extopts.SRP >= 20
     surf = unique(surf,'stable'); 
-    if job.extopts.close_parahipp %any( ~cellfun('isempty', strfind(surf,'cb') ))  % ... I want to avoid this if possible - it also seem to be worse to use it 
+    if 0 %job.extopts.close_parahipp %any( ~cellfun('isempty', strfind(surf,'cb') ))  % ... I want to avoid this if possible - it also seem to be worse to use it 
       VT1 = spm_vol(cat_get_defaults('extopts.shootingT1')); 
-      fac = abs(tpm.V(1).mat(1)) / abs(VT1.mat(1));
+      fac = abs(tpm.V(1).mat(1)) / abs(VT1.mat(1)); % RD202401: ERROR with tpm variable "Dot indexing is not supported for variables of this type."
       YT  = single(spm_sample_vol(VT1,double(smooth3(Yy(:,:,:,1))*fac),double(smooth3(Yy(:,:,:,2))*fac),double(smooth3(Yy(:,:,:,3))*fac),2));
       YT  = reshape(YT,size(Yy(:,:,:,1))); clear Yyi; 
     else
