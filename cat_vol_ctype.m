@@ -24,7 +24,7 @@ function Y = cat_vol_ctype(Y,type)
   if nargin==1 && ischar(Y) && strcmp(Y,'test'), testctype; return; end
 
   types = {'int8','int16','int32','int64','single','float32','float64'...
-           'uint8','uint16','uint32','uint64','double','logical'};
+           'uint8','uint16','uint32','uint64','double'};
 
   if ~exist('type','var')
     type = 'uint8';
@@ -43,8 +43,8 @@ function Y = cat_vol_ctype(Y,type)
   end
   % use single for logical arrays to be compatible 
   type = cat_io_strrep(type, ...
-    {'logical', 'float32', 'float64'}, ...
-    {'single',  'single',  'double'});
+    {'float32', 'float64'}, ...
+    {'single',  'double'});
 
   
   if iscell(Y)
@@ -56,23 +56,29 @@ function Y = cat_vol_ctype(Y,type)
     type  = types{contains(types, type)};
  
     % prepare conversion
-    if contains({'int','char'}, type) 
+    if contains('int', type) 
       switch class(Y)
         case {'single','double'}
           % replace nan
           Y = single(Y);
           Y(isnan(Y)) = 0; 
           Y = round( min( single(intmax(type)), max(single(intmin(type)), Y )));
+        case {'uint8','uint16'}
+          Y = min( uint16(intmax(type)), max(uint16(intmin(type)), uint16(Y) ));
+        case {'uint32','uint64'}
+          Y = min( uint32(intmax(type)), max(uint32(intmin(type)), uint32(Y) ));
+        case {'int8','int16'}
+          Y = min(  int16(intmax(type)), max( int16(intmin(type)), uint16(Y) ));
+        case {'int32','int64'}
+          Y = min(  int64(intmax(type)), max( int64(intmin(type)), uint64(Y) ));
         otherwise
           % this is not working for very old matlab versions
-          Y = int64(Y); 
-          Y = round( min( int64(intmax(type)), max( int64(intmin(type)), Y )));
+          eval(sprintf('Y = min( double(intmax(''%s'')), max( double(intmin(''%s'')), double(Y) ))',type,type));
       end
     elseif contains(type,'single')
-      Y = eval([type '(Y)']);
-      Y = min( single(realmax(type)), max(single(realmin(type)), single(Y) ));
+      Y = min( single(realmax(type)), max(-single(realmax(type)), single(Y) ));
     elseif contains(type,'double')
-      Y = min( double(realmax(type)), max(double(realmin(type)), double(Y) ));
+      Y = min( double(realmax(type)), max(-double(realmax(type)), double(Y) ));
     end
     
     % convert
