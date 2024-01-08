@@ -78,7 +78,7 @@ function [Ya,times] = cat_vol_approx(Y,method, varargin)
   if ~exist('method','var'); method = 'nn'; end
 
   stime = clock; %#ok<CLOCK>
-  if ~contains(method,'test') && 1
+  if ~cat_io_contains(method,'test') && 1
     % ###################
     % temporary manual overwrite to test replacement 
     % RD20231211: Although the new rec version performs better in the unit

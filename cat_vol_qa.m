@@ -159,7 +159,7 @@ function varargout = cat_vol_qa(action,varargin)
     nopt = 0;
     if isfield(opt,'recalc') && opt.recalc, opt.rerun = opt.recalc; end
   end
-  if contains(opt.prefix,'VERSION')
+  if cat_io_contains(opt.prefix,'VERSION')
     opt.prefix = strrep( opt.prefix , 'VERSION', strrep( opt.version ,'_','')); 
   end
 
@@ -234,7 +234,7 @@ function varargout = cat_vol_qa(action,varargin)
   [QA,QMAfn]  = cat_stat_marks('init'); 
   % remove res_ECR in case of given older versions 
   if any( strcmp(opt.version, opt.versions0) )
-    QMAfn( contains(QMAfn,'res_ECR'))   = [];
+    QMAfn( cat_io_contains(QMAfn,'res_ECR'))   = [];
   end
   stime       = clock;
   
@@ -260,7 +260,7 @@ function varargout = cat_vol_qa(action,varargin)
   end
   Cheader = [Cheader 'IQR']; 
   Theader = sprintf(sprintf('%%s%%%ds',opt.snspace(2)),Theader,'IQR');
-  if ~any( strcmp(opt.version,opt.versions0) ) % ~any( contains(opt.version,opt.versions0) )
+  if ~any( strcmp(opt.version,opt.versions0) ) % ~any( cat_io_contains(opt.version,opt.versions0) )
     Tline   = sprintf('%s%%%d.%df',Tline,opt.snspace(2),opt.snspace(3));
     Tline2  = sprintf('%s%%%d.%df',Tline2,opt.snspace(2),opt.snspace(3));
     Cheader = [Cheader 'SIQR']; 

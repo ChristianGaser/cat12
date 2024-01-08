@@ -370,7 +370,7 @@ function [cres,Psurf] = cat_surf_longdiff(Pdata_surf,s)
     %% load data
     sides = {'lh','rh','cb'}; 
     [pp1,ff1,ee1] = spm_fileparts(Pdata_surf{1} );
-    if any( contains( ff1 , sides )) 
+    if any( cat_io_contains( ff1 , sides )) 
       sdata = cell(size(sides)); Psurf = struct(); 
       for si = 1:numel(sides)
         % load surfaces mesh (only first)
@@ -469,9 +469,9 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
 %% ######### separation is not realy working 
 % I need an long-xml/mat file to store all parameters in a useful way 
       [pp,ff,ee] = spm_fileparts(job.data_vol{1});
-      if contains(ff,'mwmwp') % ~isempty(strfind(ff,'mwmwp'))
+      if cat_io_contains(ff,'mwmwp') % ~isempty(strfind(ff,'mwmwp'))
         model = 'aging';
-      elseif  contains(ff,'mwp') % ~isempty(strfind(ff,'mwp'))
+      elseif  cat_io_contains(ff,'mwp') % ~isempty(strfind(ff,'mwp'))
         model = 'plasticity'; 
       else                                 
         model = '';

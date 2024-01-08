@@ -59,7 +59,7 @@ function [out,outs] = cat_vol_mp2rage(job)
   % update prefix
   if isinf(job.logscale), lg = 'A'; else, lg = sprintf('%d',job.logscale); end
   if isinf(job.intnorm),  in = 'A'; else, in = sprintf('%d',job.intnorm);  end
-  if contains(job.prefix,'PARA')
+  if cat_io_contains(job.prefix,'PARA')
     job.prefix = strrep(job.prefix,'PARA',sprintf('MP2R_hd%d_bc%d_lg%s_in%s_rn%d_ss%d',...
        job.headtrimming, job.biascorrection, lg, in, job.restoreLCSFnoise, job.skullstripping));
   end

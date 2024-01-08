@@ -35,7 +35,7 @@ function Y = cat_vol_ctype(Y,type)
     if ~isempty(ind)
       type = type(1:ind-1);
     end
-    if ~any(contains(types,type))  
+    if ~any(cat_io_contains(types,type))  
       error('MATLAB:SPM:CAT:cat_vol_ctype:UnknownType', ...
             ['ERROR: cat_vol_ctype: unknown data type ''%s'' ' ...
              '(only [u]int[8|16], single, and double).'],type);
@@ -53,10 +53,10 @@ function Y = cat_vol_ctype(Y,type)
       Y{yi} = cat_vol_ctype(Y{yi}, type);
     end
   else
-    type  = types{contains(types, type)};
+    type  = types{cat_io_contains(types, type)};
  
     % prepare conversion
-    if contains('int', type) 
+    if cat_io_contains('int', type) 
       switch class(Y)
         case {'single','double'}
           % replace nan
@@ -75,9 +75,9 @@ function Y = cat_vol_ctype(Y,type)
           % this is not working for very old matlab versions
           eval(sprintf('Y = min( double(intmax(''%s'')), max( double(intmin(''%s'')), double(Y) ))',type,type));
       end
-    elseif contains(type,'single')
+    elseif cat_io_contains(type,'single')
       Y = min( single(realmax(type)), max(-single(realmax(type)), single(Y) ));
-    elseif contains(type,'double')
+    elseif cat_io_contains(type,'double')
       Y = min( double(realmax(type)), max(-double(realmax(type)), double(Y) ));
     end
     
