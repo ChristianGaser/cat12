@@ -291,7 +291,7 @@ for i=1:n_subjects
   % detect if BIDS file structure is used
   % (hope this is unique enough - would be possible to add CAT12 as subdirectory) 
   BIDSdir   = [filesep 'derivatives' filesep]; 
-  isBIDS    = contains( pth , BIDSdir );
+  isBIDS    = cat_io_contains( pth , BIDSdir );
 
   if isBIDS 
     % in case of BIDS CAT wrote all files into this directory 

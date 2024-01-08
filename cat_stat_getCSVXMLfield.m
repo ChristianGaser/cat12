@@ -149,8 +149,8 @@ function out = cat_stat_getCSVXMLfield(job)
   end
 
   Pxmlff = spm_str_manip(Pxml,'tr');
-  if any( contains(Pxmlff,'cat_') ) && any( contains(Pxmlff,'catlong_') ) || ...
-     any( contains(Pxmlff,'cat_') ) && any( contains(Pxmlff,'catROI') )   
+  if any( cat_io_contains(Pxmlff,'cat_') ) && any( cat_io_contains(Pxmlff,'catlong_') ) || ...
+     any( cat_io_contains(Pxmlff,'cat_') ) && any( cat_io_contains(Pxmlff,'catROI') )   
     error(sprintf('%s:mixedCATxmls',mfilename),'Mixxed CAT XML files are not supported.'); 
   end
 
@@ -274,7 +274,7 @@ function out = cat_stat_getCSVXMLfield(job)
 
     % match/select fields
     if ~isempty( job.fields ) && isempty( job.fields{1} )
-      xmlfull = xmlfull( contains( xmlfull, fields ) );
+      xmlfull = xmlfull( cat_io_contains( xmlfull, fields ) );
     end
 
     % define xmlfields depending on the sets 
@@ -309,7 +309,7 @@ function out = cat_stat_getCSVXMLfield(job)
 
   % match/select
   if ~isempty( job.fields ) && ~isempty( job.fields{1} )
-    xmlfields = xmlfields( contains( lower(xmlfields), lower(fields) ) );
+    xmlfields = xmlfields( cat_io_contains( lower(xmlfields), lower(fields) ) );
   end
 
   if ~isempty( job.xmlfields )
@@ -371,7 +371,7 @@ function out = cat_stat_getCSVXMLfield(job)
       if isnumeric( csv(2:end,job.csvselcol) )
         csvrm = isnan(cell2mat(csv(2:end,job.csvselcol)));
       else
-        csvrm = contains(lower(csv(2:end,job.csvselcol)),'n/a');
+        csvrm = cat_io_contains(lower(csv(2:end,job.csvselcol)),'n/a');
       end
       csv([false;csvrm],:)  = [];
       csvids(csvrm)         = [];
@@ -400,7 +400,7 @@ function out = cat_stat_getCSVXMLfield(job)
           end
         end
       end
-      csvsvari = [csvsvari find( contains( lower(csvvars), lower(fields) ) )];
+      csvsvari = [csvsvari find( cat_io_contains( lower(csvvars), lower(fields) ) )];
       for si = 1:numel( job.fields )
         if  ~isnan( str2double(job.fields{si}))  && str2double(job.fields{si}) < 0
           csvsvari = setdiff( csvsvari , si );
@@ -736,7 +736,7 @@ function out = cat_stat_getCSVXMLfield(job)
 
   % create table and write TXT output
   for fni = 1:numel(FN)
-    if contains('txt',job.write)
+    if cat_io_contains('txt',job.write)
       Ptxt{fni} = fullfile(job.outdir,sprintf('%s_%s.txt',job.fname,FN{fni})); 
       h = fopen(Ptxt{fni},'w');
     else
@@ -795,7 +795,7 @@ function out = cat_stat_getCSVXMLfield(job)
   end
 
   % write CSV file
-  if contains('csv',job.write)
+  if cat_io_contains('csv',job.write)
     cat_io_csv(Pcsv,scsv,struct('delimiter',job.seg(1),'komma',job.seg(2)));  
     if job.verb
       fprintf('  %s\n',spm_file( Pcsv ,'link',sprintf('open(''%s'')',Pcsv)));    
@@ -803,7 +803,7 @@ function out = cat_stat_getCSVXMLfield(job)
   end
 
   % write TSV file
-  if contains('tsv',job.write)
+  if cat_io_contains('tsv',job.write)
     cat_io_csv(Ptsv,scsv);  
     if job.verb
       fprintf('  %s\n',spm_file( Ptsv ,'link',sprintf('open(''%s'')',Ptsv)));    
@@ -811,7 +811,7 @@ function out = cat_stat_getCSVXMLfield(job)
   end
 
   % write MAT file
-  if contains('mat',job.write)
+  if cat_io_contains('mat',job.write)
     cat_io_csv(Pmat,'scsv');  
     if job.verb
       fprintf('  %s\n',spm_file( Pmat ,'link',sprintf('open(''%s'')',Pmat)));    
