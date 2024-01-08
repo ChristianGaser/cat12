@@ -383,7 +383,7 @@ function varargout = reducev( Y , varargin )
       if mod(size(Y{i},2),2) == 1  &&  vx_red(2) <= 0.75,  Y{i}(:,end+1,:) = Y{i}(:,end,:); end
       if mod(size(Y{i},3),2) == 1  &&  vx_red(3) <= 0.75,  Y{i}(:,:,end+1) = Y{i}(:,:,end); end
  
-      if contains(interp,'near')
+      if cat_io_contains(interp,'near')
          nsize        = floor(size(Y{i}) ./ ss) .* ss;
          varargout{i} = Y{i}(round(ss(1)/2):ss(1):nsize(1), ...
                              round(ss(2)/2):ss(2):nsize(2), ...
@@ -451,7 +451,7 @@ function varargout = reducev( Y , varargin )
         end
       end
       %% divide for number of used input / estimate median
-      if contains(interp,{'mean'})
+      if cat_io_contains(interp,{'mean'})
         varargout{i}(counter(:)>0) = varargout{i}(counter(:)>0) ./ counter(counter(:)>0);   
       elseif strcmp(interp,'stdm') 
         varargout{i}(counter(:)>0) = varargout{i}(counter(:)>0) ./ counter(counter(:)>0); 
@@ -905,7 +905,7 @@ function varargout = interhdr(Y,varargin)
     % update datatype
     dt = spm_type(Vt.dt(1)); 
     dt = cat_io_strrep(dt,{'float32','float64'},{'single','double'}); 
-    if contains({'single','double'},dt)
+    if cat_io_contains({'single','double'},dt)
       eval(sprintf('T = %s(T);', dt ));
     else
       Vt.dt(1) = spm_type('float32'); 

@@ -179,7 +179,7 @@ function varargout = cat_io_xml2csv(job)
     selfieldnames = false(size(fieldnames));
     for fni = 1:numel(job.fieldnames)
       if ~isempty(job.fieldnames{fni})
-        selfieldnames = selfieldnames | contains(fieldnames,job.fieldnames{fni});
+        selfieldnames = selfieldnames | cat_io_contains(fieldnames,job.fieldnames{fni});
       end
     end
     fieldnames = fieldnames(selfieldnames);
@@ -188,7 +188,7 @@ function varargout = cat_io_xml2csv(job)
   % remove critical fieldnames
   for fni = 1:numel(job.avoidfields)
     if ~isempty(job.avoidfields{fni})
-      rmfieldnames = contains(fieldnames,job.avoidfields{fni}); 
+      rmfieldnames = cat_io_contains(fieldnames,job.avoidfields{fni}); 
       fieldnames(rmfieldnames) = [];  
     end
   end
@@ -218,7 +218,7 @@ function varargout = cat_io_xml2csv(job)
   % cleanup some fields
   ROInamelim = 30; 
   for hi = 2:numel(hdr)
-    if (strcmp(xmltype,'catROI') || strcmp(xmltype,'catROIs')) && contains(fieldnames(hi),'.data.') 
+    if (strcmp(xmltype,'catROI') || strcmp(xmltype,'catROIs')) && cat_io_contains(fieldnames(hi),'.data.') 
       FNP = strsplit(fieldnames{hi},'.');
       ATL = FNP{1};
       RNR = strsplit(cat_io_strrep(FNP{end},{'(',')','{','}'},' '));
