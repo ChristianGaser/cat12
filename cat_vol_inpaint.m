@@ -10,7 +10,7 @@ function out = cat_vol_inpaint(vol,niter,smooth,reduce,init,verb)
 %   out = cat_vol_inpaint(vol,niter,smooth,reduce,init,verb)
 %
 %   vol      .. input image
-%   niter    .. number of iteratiosn for inpainting 
+%   niter    .. number of iterations for inpainting 
 %   smooth   .. size for Gaussian smoothing
 %   reduce   .. increase speed by using a reduced image for inpainting
 %   init     .. use either euclidean distance (init=1) or Laplace method

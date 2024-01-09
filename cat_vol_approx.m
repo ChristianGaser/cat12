@@ -1,4 +1,4 @@
-function [Ya,times] = cat_vol_approx(Y,method, varargin)
+function [Ya,times] = cat_vol_approx(Y,method,varargin)
 % Approximation of missing values
 % ______________________________________________________________________
 % Approximation of missing values (nan's / zeros) by different methods. 
@@ -75,7 +75,7 @@ function [Ya,times] = cat_vol_approx(Y,method, varargin)
 % $Id$
 
   if nargin==0, help cat_vol_approx; return; end
-  if ~exist('method','var'); method = 'nn'; end
+  if ~exist('method','var'); method = 'oldnn'; end
 
   stime = clock; %#ok<CLOCK>
   if ~cat_io_contains(method,'test') && 1
@@ -90,7 +90,7 @@ function [Ya,times] = cat_vol_approx(Y,method, varargin)
     % ###################
     methodold = method;
     if 1
-      method = 'nn'; 
+      method = 'oldnn'; 
     else
       method = 'rec';
       if nargin<3; vx_vol = ones(1,3); else, vx_vol = varargin{1}; end
@@ -110,10 +110,8 @@ function [Ya,times] = cat_vol_approx(Y,method, varargin)
       Ya = rec_approx(Y, s); 
 
     case {'nn','nh','linear'} % link old calls to the newer version 
-      fprintf('\n cat_vol_approx: Use new recusive approach instead of (old) "%s"!\n',method)
       % updated classic approach
-      %Ya = cat_vol_approx_classic(Y,varargin{:});
-      Ya = rec_approx(Y, 1); 
+      Ya = cat_vol_approx_classic(Y,varargin{:});
 
     case 'oldnn'
       % classic approach 
@@ -522,7 +520,3 @@ function TA = cat_vol_approx2479(T,method,vx_vol,res,opt)
     TA = TA + cf;
   end
 end
-
-
-
-
