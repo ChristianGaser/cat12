@@ -623,9 +623,10 @@ function cat_run_job1639(job,tpm,subj)
           priorname = job.useprior{1};
           [pp,ff,ee,ex] = spm_fileparts(priorname);  %#ok<ASGLU>
           catxml = fullfile(pp,reportfolder,['cat_' ff '.xml']);
+          catmat = fullfile(pp,reportfolder,['cat_' ff '.mat']);
           
           % check that file exists and get affine transformation
-          if exist(catxml,'file')
+          if exist(catxml,'file') || exist(catmat,'file')
             if strcmp(job.opts.affreg,'prior')
               fprintf('\nUse affine transformation from:\n%s\n',priorname);
             else

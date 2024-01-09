@@ -118,7 +118,7 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
 
   % (3) Approximation of non GM voxels for resampling:
   % --------------------------------------------------------------------
-  Ygmt = cat_vol_approx(Ygmt,'rec-test');                   
+  Ygmt = cat_vol_approx(Ygmt,'nh');                   
    
 
 
