@@ -164,6 +164,9 @@ function varargout = cat_io_xml(file,varargin)
           warning off all
           savexml(file,'S');
         end
+        if ~exist(file,'file')
+          fprint('MATLAB:cat_io_xml:writeErr','Can''t write XML-file ''%s''!\n',file);
+        end
       catch %#ok<*NASGU> % can write xml file??
         % This can be a warning as far as we have the mat.
         warning('MATLAB:cat_io_xml:writeErr','Can''t write XML-file ''%s''!\n',file);
