@@ -1,4 +1,27 @@
 ------------------------------------------------------------------------
+r2517 | gaser | 2024-01-09 16:15:15
+
+Changed paths:
+ D CAT.glnx86/CAT_Surf2Vol
+ D CAT.maca64/CAT_Surf2Vol
+ D CAT.maci64/CAT_Surf2Vol
+ D CAT.w32/CAT_Surf2Vol.exe
+ M CHANGES.txt
+ M Contents.m
+ D cat_amap_new.mexmaci64
+ M cat_io_xml.m
+ M cat_main_gintnorm.m
+ M cat_run_job1639.m
+ M cat_vol_approx.m
+ M cat_vol_inpaint.m
+ M cat_vol_pbtsimple.m
+ M cat_vol_set_com.m
+ M doc/cat.html
+
+(1) Changed: Added warning that xml-file could not be written in cat_io_xml.m.
+(2) Changed: Set default approx-function to 'nn' in cat_vol_approx.
+(3) Changed: Added additional check. for xml-mat file in cat_run_job1639.m.
+------------------------------------------------------------------------
 r2510 | gaser | 2023-12-22 12:35:54
 
 Changed paths:

@@ -684,9 +684,9 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
         %{ 
         % RD202401: incorrect setup > try to simplify
         if isfield(res,'ppe') && isfield(res.ppe,'affreg') && isfield(res.ppe.affreg,'highBG') && res.ppe.affreg.highBG
-          Yiw   = cat_vol_approx(Yi,4 * (res.ppe.affreg.highBG * 3 + 1)); 
+          Yiw   = cat_vol_approx(Yi,'nn',4 * (res.ppe.affreg.highBG * 3 + 1)); 
         else
-          Yiw   = cat_vol_approx(Yi,4); 
+          Yiw   = cat_vol_approx(Yi,'nn',4); 
         end
         %}
         Yiw   = cat_vol_approx(Yi,'rec'); 

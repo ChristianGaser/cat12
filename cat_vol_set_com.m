@@ -36,7 +36,7 @@ n = numel(V);
 % pre-estimated COM of MNI template
 com_reference = [0 -20 -15];
 
-fprintf('Correct center-of-mass                                            ');
+fprintf('Correct center-of-mass                                            \n');
 for i=1:n
   Affine = eye(4);
   if isfield(V(i),'dat')
@@ -45,17 +45,9 @@ for i=1:n
     vol = spm_read_vols(V(i));
   end
   
-  % RD202307: use median rather than mean to be more robust 
-  %           use also larger-equal to support binary/mask images
-  if 0
-    % original
-    avg = mean(vol(:));
-    avg = mean(vol(vol>=avg)); % = to support binary/mask data
-  else
-    % median should be more robust
-    avg = cat_stat_nanmedian(vol(:));
-    avg = cat_stat_nanmedian(vol(vol(:)>=avg)); % = to support binary/mask data
-  end
+  % median should be more robust
+  avg = cat_stat_nanmedian(vol(:));
+  avg = cat_stat_nanmedian(vol(vol(:)>=avg)); % = to support binary/mask data
   
   % don't use background values
   [x,y,z] = ind2sub(size(vol),find(vol>avg));
