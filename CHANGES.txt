@@ -1,4 +1,12 @@
 ------------------------------------------------------------------------
+r2518 | dahnke | 2024-01-11 16:47:58
+
+Changed paths:
+ M CHANGES.txt
+ M cat_main_reportfig.m
+ M cat_vol_pbtsimple.m
+
+Changed:   Updated PBTsimple (see issue #19).------------------------------------------------------------------------
 r2517 | gaser | 2024-01-09 16:15:15
 
 Changed paths:
