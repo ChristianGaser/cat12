@@ -1358,7 +1358,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   if job.extopts.print>1 
     if exist('Psurf','var') && ~isempty(Psurf)
       if 1 %~strcmpi(spm_check_version,'octave') && opengl('info')
-        boxwidth = 0.2; 
+        boxwidth = 0.1; 
         if job.extopts.report.type <= 1
           %% classic top view
           %  --------------------------------------------------------------
@@ -1483,10 +1483,10 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
             end
             maxdiff     = 4 * ceil(std(cdata(:))*8)/8; 
             srange      = [-maxdiff maxdiff]; 
-            boxwidth    = diff(srange)/40; % 0.1; 
+            boxwidth    = diff(srange)/40 / 2; % 0.05; 
           else
             srange      = [0 6]; 
-            boxwidth    = diff(srange)/30; % 0.2; 
+            boxwidth    = diff(srange)/30 / 2; % 0.1; 
           end
           %% hrange      = srange(1) + boxwidth/2:boxwidth:srange(2);
           if strcmpi(renderer,'opengl')
