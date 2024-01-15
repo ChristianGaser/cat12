@@ -1,5 +1,5 @@
 % Computational Anatomy Toolbox
-% Version 2516 (CAT12.9) 2024-01-08
+% Version 2518 (CAT12.9) 2024-01-11
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke

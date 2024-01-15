@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2519 | gaser | 2024-01-15 07:50:17
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M cat_batch_spm.m
+ M cat_run.m
+ M cat_stat_check_SPM.m
+ M doc/cat.html
+
+(1) Changed: Check for empty dir before creating in cat_run.m.
+(2) Changed: Added try/catch to check_orthogonality in cat_stat_check_SPM.m.
+------------------------------------------------------------------------
 r2518 | dahnke | 2024-01-11 16:47:58
 
 Changed paths:

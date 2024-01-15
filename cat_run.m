@@ -214,7 +214,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     % test writing 
     try
       pp = spm_fileparts(log_name{i});
-      if ~exist(pp,'dir'), mkdir(pp); end
+      if ~exist(pp,'dir') && ~isempty(dir), mkdir(pp); end
       pid = fopen(log_name{i},'w');
       fwrite(pid,'');
       fclose(pid);
