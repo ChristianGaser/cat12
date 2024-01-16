@@ -314,8 +314,12 @@ else
   hDesMtxIm = imagesc((spm_DesMtx('sca',X,     Xnames) + 1));
 end
 
-STick = spm_DesRep('ScanTick',nScan,32);
-PTick = spm_DesRep('ScanTick',nPar,32);
+try
+  STick = spm_DesRep('ScanTick',nScan,32);
+  PTick = spm_DesRep('ScanTick',nPar,32);
+catch
+  return
+end
 
 set(hDesMtx,'TickDir','out',...
   'XTick',PTick,'XTickLabel','',...
