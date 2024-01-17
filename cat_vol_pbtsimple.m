@@ -45,7 +45,7 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
                            % the outer surface position in gyral regions (running to much inside)  
   def.correctoffeset  = 2; % not really required if no refinement is used
   def.extendedrange   = 1; % may causes closed gyri
-  def.sharpening      = 1; % sharpening the Ypp map to support more better resampling to lower resolution for the 0.5 layer - worse
+  def.sharpening      = 0; % sharpening the Ypp map to support more better resampling to lower resolution for the 0.5 layer - worse
   opt = cat_io_checkinopt(opt,def);
 
 
