@@ -32,7 +32,7 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
 
   if ~exist('opt','var'), opt = struct(); end
 
-  def.WMTC            = 1; % Partial voxel-based topology correction of small 
+  def.WMTC            = 0; % Partial voxel-based topology correction of small 
                            % WM-defects based on the volume output of cat_vol_genus0 
   def.levels          = 4; % Number of dual distance estimate (requires refinement) with 0 
                            % for the classic approach with 1.5 and 2.5 as CSF and WM boudnary.
@@ -45,7 +45,7 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
                            % the outer surface position in gyral regions (running to much inside)  
   def.correctoffeset  = 2; % not really required if no refinement is used
   def.extendedrange   = 1; % may causes closed gyri
-  def.sharpening      = 1; % sharpening the Ypp map to support more better resampling to lower resolution for the 0.5 layer - worse
+  def.sharpening      = 0; % sharpening the Ypp map to support more better resampling to lower resolution for the 0.5 layer - worse
   opt = cat_io_checkinopt(opt,def);
 
 
@@ -70,7 +70,7 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
   end
 
 
-  if 1 % opt.WMTC
+  if opt.WMTC
   % RD20231224: for WM topology smoothing
   % the idea is to apply the voxel-based correction and _close_ small WM holes 
   % (<10 voxel) for the 2.75 and 2.25 boundaries for values above 2.

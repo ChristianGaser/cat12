@@ -202,7 +202,11 @@ if check_ortho
   fprintf('\n-------------------------------------------\n');
   fprintf('    Check design orthogonality\n');
   fprintf('-------------------------------------------\n');
-  h = check_orthogonality(SPM.xX);
+  try
+    h = check_orthogonality(SPM.xX);
+  catch
+    fprintf('ERROR: spm_DesRep cannot be called\n');
+  end
   
   if nargin > 0 && isfield(job.check_SPM_zscore,'do_check_zscore') && isfield(job.check_SPM_zscore.do_check_zscore,'save')
     %%
@@ -310,8 +314,12 @@ else
   hDesMtxIm = imagesc((spm_DesMtx('sca',X,     Xnames) + 1));
 end
 
-STick = spm_DesRep('ScanTick',nScan,32);
-PTick = spm_DesRep('ScanTick',nPar,32);
+try
+  STick = spm_DesRep('ScanTick',nScan,32);
+  PTick = spm_DesRep('ScanTick',nPar,32);
+catch
+  return
+end
 
 set(hDesMtx,'TickDir','out',...
   'XTick',PTick,'XTickLabel','',...
