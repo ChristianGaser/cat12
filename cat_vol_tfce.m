@@ -1,7 +1,7 @@
 function out = cat_vol_tfce(in, dh, E, H, calc_neg, invert)
 % Apply threshold-free cluster enhancement (TFCE) and scale the image to
 % have the same intensity distribution as the input to strengthen large 
-% connected regions for clean up or removing vessesl in WM
+% connected regions for clean up or removing vessels in WM
 %
 % FORMAT out = cat_vol_tfce(in, dh, E, H, calc_neg, invert)
 % in        - input image 
