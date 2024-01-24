@@ -1,4 +1,12 @@
 ------------------------------------------------------------------------
+r2529 | dahnke | 2024-01-24 20:26:33
+
+Changed paths:
+ M CHANGES.txt
+ M cat_vol_pbtsimple.m
+
+Changed:   Updated PBTsimple to replace the sharpening effect by another concept. 
+------------------------------------------------------------------------
 r2528 | rdahnke | 2024-01-24 17:01:43
 
 Changed paths:
