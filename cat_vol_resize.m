@@ -463,7 +463,7 @@ function varargout = reducev( Y , varargin )
       % irgnore values with too small input
       switch interp
         case {'meanm','min','max','stdm','median'}
-          varargout{i}( counter(:) <= minvoxcount | isinf( varargout{i}(:) ) | isnan(varargout{i}(:)) ) = 0;   
+          varargout{i}( counter(:) < minvoxcount | isinf( varargout{i}(:) ) | isnan(varargout{i}(:)) ) = 0;   
       end
 
       %% set upt resT variable for dereducev case
