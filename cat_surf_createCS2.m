@@ -685,7 +685,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
         %% thickness depending cortical scaling - this seems to work but need further tests (RD201911)
         %  RD202103 ... this changes a lot !
         Yth1i  = cat_vol_localstat(Yth1i,Yth1i>0,2,2);
-        Yts    = cat_vol_approx(Yth1i,2);  
+        Yts    = cat_vol_approx(Yth1i);  
         Yts    = 1 + max(-0.5,min(0.5,(Yts - mean(Yth1i(:))) / (2 * mean(Yth1i(:)))  )); 
         if exist('mask_parahipp_smoothed','var')
           Yts    = Yts .* (1-mask_parahipp_smoothed) + mask_parahipp_smoothed;  % no thickness adaptation in the hippocampus! 
@@ -2108,7 +2108,7 @@ function Ymf = sharpen_cerebellum(Ym,Ymf,Ytemplate,Ya,vx_vol,verb,doit)
     %% bias-correction based
     % WM 
     Ycsfd = cat_vbdist(single(Ymf<1.8),Ymf>1,vx_vol);
-    Ymsk = ((cat_vol_morph(NS(Ya,LAB.CB),'e',3) | Ymf) & ( (Ym-Ydiv).*(Ytemplate/3-Ydivt) )>2/3 ) |  ...
+    Ymsk = ((cat_vol_morph(NS(Ya,LAB.CB),'e',3) | Ymf) & ( (Ym-Ydiv).*min(1,Ytemplate/3-Ydivt) )>2/3 ) |  ...
            (NS(Ya,LAB.PH) & ( Ymf>2.2 | (Ymf>2 & Ydiv<-0.01) ) ) | ...                  % hippocampal gyri
            (NS(Ya,LAB.CT) & ( Ymf>2.2 | (Ymf>2 & Ydiv<-0.01 & ...
               Ycsfd>cat_stat_nanmean(Ycsfd(Ycsfd(:)>0 & Ycsfd(:)<100)) )*1.0) );            % distant gyri and sulci in the cerebrum

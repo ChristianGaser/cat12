@@ -1,4 +1,29 @@
 ------------------------------------------------------------------------
+r2528 | rdahnke | 2024-01-24 17:01:43
+
+Changed paths:
+ M CHANGES.txt
+ M cat_main1639.m
+ M cat_main_reportfig.m
+ M cat_surf_createCS2.m
+ M cat_surf_display.m
+ M cat_vol_resize.m
+ M cat_vol_sample.m
+
+1) Fixed:     Corrections for T2/PD contrasts in cat_main and cat_main_gintnorm.
+2) Fixed:     Corrected internal call of vol2surf.
+3) Fixed:     Corrected bug in cat_vol_resize in case of minimal reduction by 
+              averaging on only 2 values.
+4) Fixed:     Corrected bug in cat_surf_display and cat_main_reportfig to 
+              show cerebellar surfaces. 
+5) Fixed:     Deactivated T1 template mapping for (cerebellar) surface 
+              reconstruction due to incorrect application of the deformation
+              in cat_main1639 (was already done in cat_main).
+6) Changed:   Introduced cat_io_contains in cat_main_reportfig.               
+7) Comment:   Extended documentation in cat_vol_sample and cat_main1639.         
+8) Fixed:     Corrected bug in cerebellar reconstruction in cat_surf_createCS2.
+
+------------------------------------------------------------------------
 r2520 | gaser | 2024-01-16 10:36:41
 
 Changed paths:

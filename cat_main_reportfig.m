@@ -1366,7 +1366,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
           %  - missing information of interesting lower and median regions
           sidehist = 1; %job.extopts.expertgui>1; 
           try
-            id1  = find( ~cellfun('isempty',strfind({Psurf(:).Pcentral},'lh.')) ,1, 'first'); 
+            id1  = find( cat_io_contains({Psurf(:).Pcentral},'lh.') ,1, 'first'); 
             spm_figure('Focus','Graphics'); 
             % this is strange but a 3:4 box property results in a larger brain scaling 
             hCS = subplot('Position',[0.52 0.037*(~sidehist) 0.42 0.31+0.02*sidehist],'visible','off'); 
@@ -1394,12 +1394,12 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
               %%
               for i = 1:numel(Psurf)
                 if i == 1 
-                  id1 = find( ~cellfun('isempty',strfind({Psurf(:).Pcentral},'lh.')) ,1, 'first'); 
+                  id1 = find( cat_io_contains({Psurf(:).Pcentral},'lh.') ,1, 'first'); 
                   CS = gifti( Psurf(id1).Pcentral ); 
                   T  = cat_io_FreeSurfer('read_surf_data',Psurf(id1).Pthick ); 
                   CS.cdata = T;
                 else 
-                  id1 = find( ~cellfun('isempty',strfind({Psurf(:).Pcentral},'rh.')) ,1, 'first'); 
+                  id1 = find( cat_io_contains({Psurf(:).Pcentral},'rh.') ,1, 'first'); 
                   S  = gifti( Psurf(id1).Pcentral ); 
                   T  = cat_io_FreeSurfer('read_surf_data',Psurf(id1).Pthick ); 
                   CS.faces    = [ CS.faces; S.faces + size(CS.vertices,1) ]; 
@@ -1462,8 +1462,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
           end
         elseif job.extopts.report.type >= 2
           spm_figure('Focus','Graphics'); 
-          id1    = find( ~cellfun('isempty',strfind({Psurf(:).Pcentral},'lh.')) ,1, 'first'); 
-          id2    = find( ~cellfun('isempty',strfind({Psurf(:).Pcentral},'rh.')) ,1, 'first'); 
+          id1    = find( cat_io_contains({Psurf(:).Pcentral},'lh.') ,1, 'first'); 
+          id2    = find( cat_io_contains({Psurf(:).Pcentral},'rh.') ,1, 'first'); 
           % this is strange but a 3:4 box property result in a larger brain scaling 
           hCS{1} = subplot('Position',[0.34 0.07 0.32 0.27],'Parent',fg,'visible','off'); PCS{1} = Psurf(id1).Pthick; sview{1} = 't';
           hCS{2} = subplot('Position',[0.02 0.18 0.30 0.17],'Parent',fg,'visible','off'); PCS{2} = Psurf(id1).Pthick; sview{2} = 'l';
@@ -1489,16 +1489,17 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
             boxwidth    = diff(srange)/30 / 2; % 0.1; 
           end
           %% hrange      = srange(1) + boxwidth/2:boxwidth:srange(2);
+          if job.output.surface > 10, addcb = 1; else, addcb = 0; end
           if strcmpi(renderer,'opengl')
             try
               i=1; hSD{i} = cat_surf_display(struct('data',PCS{i},'readsurf',0,'expert',2,...
-                'multisurf',1,'view',sview{i},'menu',0,'parent',hCS{i},'verb',0,'caxis',srange,'imgprint',struct('do',0))); 
+                'multisurf',1 + 2*addcb,'view',sview{i},'menu',0,'parent',hCS{i},'verb',0,'caxis',srange,'imgprint',struct('do',0))); 
             end
 
             for i = 2:numel(hCS)
               try
                 hSD{i} = cat_surf_display(struct('data',PCS{i},'readsurf',0,'expert',2,...
-                  'multisurf',0,'view',sview{i},'menu',0,'parent',hCS{i},'verb',0,'caxis',srange,'imgprint',struct('do',0))); 
+                  'multisurf',0 + 3*addcb,'view',sview{i},'menu',0,'parent',hCS{i},'verb',0,'caxis',srange,'imgprint',struct('do',0))); 
               end
             end
             
@@ -1524,13 +1525,13 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
                 % just the first draft
                 for i = 1:numel(Psurf)
                   if i == 1 
-                    id1 = find( ~cellfun('isempty',strfind({Psurf(:).Pcentral},'lh.')) ,1, 'first'); 
+                    id1 = find( cat_io_contains({Psurf(:).Pcentral},'lh.') ,1, 'first'); 
                     CS = gifti( Psurf(id1).Pcentral ); 
                     T  = cat_io_FreeSurfer('read_surf_data',Psurf(id1).Pthick ); 
                     CS.cdata = T;
                     CSl = CS; 
                   else 
-                    id1 = find( ~cellfun('isempty',strfind({Psurf(:).Pcentral},'rh.')) ,1, 'first'); 
+                    id1 = find( cat_io_contains({Psurf(:).Pcentral},'rh.') ,1, 'first'); 
                     S  = gifti( Psurf(id1).Pcentral ); 
                     T  = cat_io_FreeSurfer('read_surf_data',Psurf(id1).Pthick ); 
                     CS.faces    = [ CS.faces; S.faces + size(CS.vertices,1) ]; 
@@ -1549,8 +1550,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
                 % resolution but the thickness data mapping is not working
                 % yet ...
                 side = {'lh.','rh.'}; 
-                for si=1:2
-                  id1 = find( ~cellfun('isempty',strfind({Psurf(:).Pcentral},side{si})) ,1, 'first'); 
+                for si = 1:numel(side)
+                  id1 = find( cat_io_contains({Psurf(:).Pcentral},side{si}) ,1, 'first'); 
                   % quaranty 1 mm mesh resolution
                   Pcentral = sprintf('%s.gii',tempname);    
                   CSo = gifti(Psurf(id1).Pcentral);
@@ -1570,7 +1571,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
               
               %%
               imat = spm_imatrix(res.Affine); Rigid = spm_matrix([imat(1:6) ones(1,3)*mean(imat(7:9)) 0 0 0]); clear imat;
-              V = (Rigid * ([CS.vertices, ones(size(CS.vertices,1),1)])' )'; V(:,4) = []; CS.vertices = V;
+              V = (Rigid * ([CS.vertices,  ones(size(CS.vertices ,1),1)])' )'; V(:,4) = []; CS.vertices  = V;
               V = (Rigid * ([CSl.vertices, ones(size(CSl.vertices,1),1)])' )'; V(:,4) = []; CSl.vertices = V;
               V = (Rigid * ([CSr.vertices, ones(size(CSr.vertices,1),1)])' )'; V(:,4) = []; CSr.vertices = V;
 

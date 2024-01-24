@@ -22,6 +22,11 @@ function YA = cat_vol_sample(PT,PA,Yy,hold)
 % ______________________________________________________________________
 % $Id$
 
+% RD202401: The definition could be improved to resample images with
+%           stronger variing properties correctly, e.g. the T1 template 
+%           before the surface reconstruction in the cat_main[1639] 
+%           pipelines. 
+
   if ~exist('hold','var'), hold = 1; end
 
   if isstruct(PT), VT = PT; elseif ~isempty(PT), VT = spm_vol(PT); else, VT = []; end

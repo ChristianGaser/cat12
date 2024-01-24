@@ -768,9 +768,12 @@ if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
       surf = unique(surf); 
     end
     %% RD202107: Load Shooting template to correct severe defects in the
-    %           parahippocampla gyrus. Previously also used to stabilize 
-    %           the cerebellum but it introduce some Shooting problems.
-    if job.extopts.close_parahipp  %any( ~cellfun('isempty', strfind(surf,'cb') ))  % ... I want to avoid this if possible - it also seem to be worse to use it 
+    %            parahippocampla gyrus. Previously also used to stabilize 
+    %            the cerebellum but it introduce some Shooting problems.
+    % RD202401:  There is a bug and the T1-template is not in the same space
+    %            (eg. HR075). Maybe because the Yy is defined for the 
+    %            TPM but not the T1-template properties. 
+    if 0 % job.extopts.close_parahipp  %any( ~cellfun('isempty', strfind(surf,'cb') ))  % ... I want to avoid this if possible - it also seem to be worse to use it 
       VT1 = spm_vol(cat_get_defaults('extopts.shootingT1')); VT1 = VT1{1}; 
       fac = abs(tpm.V(1).mat(1)) / abs(VT1.mat(1));
       YT  = single(spm_sample_vol(VT1,double(smooth3(Yy(:,:,:,1))*fac),double(smooth3(Yy(:,:,:,2))*fac),double(smooth3(Yy(:,:,:,3))*fac),2));
@@ -804,6 +807,7 @@ if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
       qa.subjectmeasures.EC_abs = NaN;
       qa.subjectmeasures.defect_size = NaN;
     else
+      %%
       [Yth1, S, Psurf, qa.subjectmeasures.EC_abs, qa.subjectmeasures.defect_size, qa.createCS] = ...
         cat_surf_createCS2(VT,VT0,Ymix,Yl1,YMF,YT,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
         'vdist',job.extopts.vdist,'outputpp',job.output.pp,'surf_measures',job.output.surf_measures, ...
