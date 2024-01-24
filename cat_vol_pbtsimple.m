@@ -32,7 +32,7 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
 
   if ~exist('opt','var'), opt = struct(); end
 
-  def.WMTC            = 0; % Partial voxel-based topology correction of small 
+  def.WMTC            = 1; % Partial voxel-based topology correction of small 
                            % WM-defects based on the volume output of cat_vol_genus0 
   def.levels          = 4; % Number of dual distance estimate (requires refinement) with 0 
                            % for the classic approach with 1.5 and 2.5 as CSF and WM boudnary.
@@ -46,29 +46,12 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
   def.correctoffeset  = 2; % not really required if no refinement is used
   def.extendedrange   = 1; % may causes closed gyri
   def.sharpening      = 0; % sharpening the Ypp map to support more better resampling to lower resolution for the 0.5 layer - worse
+  def.keepdetails     = 1; % enhance thin sulci to avoid blurring (0-off, 1-sulci, 2-sulci+gyri)
   opt = cat_io_checkinopt(opt,def);
 
 
 % == preparations ==
 % should maybe be better part of create CS
-
-  if 0
-    % INITIAL SHARPENING?
-    % RD202401: remove this part when the rest is finished
-    % not so powerfull as you use already the multple distance estimates
-    % should also not work in a label map!
-
-    % sharpen WM
-    Yp0x = min(3,max(2,Yp0));
-    Yp0x = min(3,max(2,Yp0x + .5*(Yp0x - cat_vol_smooth3X(Yp0x,1)) + .5*(Yp0x - cat_vol_smooth3X(Yp0x,2)) ));
-    Yp0(Yp0(:)>2) = Yp0x(Yp0(:)>2);
-
-    % sharpen CSF
-    Yp0x = min(2,max(1,Yp0));
-    Yp0x = min(2,max(1,Yp0x + .5*(Yp0x - cat_vol_smooth3X(Yp0x,1)) + .5*(Yp0x - cat_vol_smooth3X(Yp0x,2)) ));
-    Yp0(Yp0(:)<2 & Yp0(:)>1) = Yp0x(Yp0(:)<2 & Yp0(:)>1);
-  end
-
 
   if opt.WMTC
   % RD20231224: for WM topology smoothing
@@ -203,10 +186,58 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
 
   % (3) Approximation of non GM voxels for resampling:
   % --------------------------------------------------------------------
-  Ygmt = cat_vol_approx(Ygmt,'nh');                   
-   
+  Ygmt = cat_vol_approx(Ygmt,'nh');   
 
+  % code for test and backup
+  Ygmto=Ygmt+0; Ywdo=Ywd+0; Ycdo=Ycd+0; 
+  %%
+  Ygmt=Ygmto+0; Ywd=Ywdo+0; Ycd=Ycdo+0; 
+  
+  % Although distances and thickness are quite good, PBT slightly trend to  
+  % over-estimate the thickness in sulcal regions without CSF as the middle 
+  % voxel is counted for both sides (simplified). Moreover, initial surface 
+  % are partially created just on the original internal resolution (~1 mm), 
+  % what result in blurring of small sucli. To keep these structures, we 
+  % optimize regions where blurring/closing is happening by making them a 
+  % bit thinner and correcting the CSF distance (keepdetails>0). The dual
+  % operation (of avoiding of blurring small gyri) can also be applied but
+  % is expected to have less effects as these structures are already quite
+  % save by the WM (keepdetails>1). 
+  if opt.keepdetails
+    % estimate current percentage map (same as bellow) to identify
+    % and correct problematic areas
+    YM      = Yp0 > 1.5 - 0.45 * opt.extendedrange & ...
+              Yp0 < 2.5 + 0.45 * opt.extendedrange & ...
+              Ygmt > eps;
+    Ycdc    = Ycd; Ycdc(YM) = min(Ycd(YM), Ygmt(YM) - Ywd(YM)); 
+    Ypp     = zeros(size(Yp0),'single'); Ypp(Yp0 >= 2.5 + 0.45 * opt.extendedrange) = 1;
+    Ypp(YM) = Ycdc(YM) ./ (Ygmt(YM) + eps); 
 
+    % reduce thickness and CSF distance if this results in smoothing
+    % do this only in thin regions
+    for ppth = 1:-.1:0.1
+      Yblurredsulci = Ypp<ppth & cat_vol_morph(Ypp>=ppth,'c',1) & Ygmt<median(Ygmt(:));  
+      Yblurredsulci = cat_vol_smooth3X(Yblurredsulci,2);
+      Ygmt = max( ...
+        max(0,Ygmto - 1/mean(vx_vol)), ...
+        Ygmt .* max(0.5,1 - 1.0 .* ppth*Yblurredsulci) );   
+      Ycd(Yblurredsulci>0) = max(0,min(Ycd(Yblurredsulci>0), Ygmt(Yblurredsulci>0) - Ywd(Yblurredsulci>0)));
+    end   
+
+    % reduce thickness and WM distance if this results in smoothing
+    % ... slow, worse values, 
+    if opt.keepdetails == 2 
+      for ppth = 0.1:.1:0.9
+        Yblurredgyri = Ypp>=ppth & cat_vol_morph(Ypp<ppth,'c',2) & Ygmt>median(Ygmt(:))/2; 
+        Yblurredgyri = cat_vol_smooth3X(Yblurredgyri,2);
+        Ygmt = max(min(0,Ygmto + 1/mean(vx_vol)), Ygmt .* min(1.5,1 + .1 .* ppth*Yblurredgyri));   
+        Ywd(Yblurredgyri>0)  = max(0,min(Ywd(Yblurredgyri>0), Ygmt(Yblurredgyri>0) + Ycd(Yblurredgyri>0)));
+      end 
+    end
+
+    % final smoothing
+    spm_smooth(Ygmt,Ygmt,.25/mean(vx_vol));
+  end      
 
   % (4) Estimate percentage position map:
   % --------------------------------------------------------------------
@@ -216,15 +247,19 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
   % running to close to the WM.
   overrange = .0;  % range extention of the Ypp was resulting in worse
                    % T1 and position values and more topology defects
-  YM      = Yp0 > 1.5-0.45*opt.extendedrange & Yp0 < 2.5+0.45*opt.extendedrange & Ygmt>eps;
+  YM      = Yp0 > 1.5 - 0.45 * opt.extendedrange & ...
+            Yp0 < 2.5 + 0.45 * opt.extendedrange & ...
+            Ygmt > eps;
   Ycdc    = Ycd; Ycdc(YM) = min(Ycd(YM), Ygmt(YM) - Ywd(YM)); 
   Ypp     = zeros(size(Yp0),'single'); Ypp(Yp0 >= 2.5+0.45*opt.extendedrange) = 1;
   Ypp(YM) = Ycdc(YM) ./ (Ygmt(YM) + eps); 
-  Yppl    = -2 + 2*smooth3(Ypp>0); Yppl(Ypp>0) = 0;
-  Ypph    = 2*smooth3(Ypp>=1);     Ypph(Ypp<1) = 0;
-  Ypp     = min(1 + overrange,max(0 - overrange, Ypp + Yppl + Ypph ));
+  if overrange>0
+    Yppl    = -2 + 2*smooth3(Ypp>0); Yppl(Ypp>0) = 0;
+    Ypph    = 2*smooth3(Ypp>=1);     Ypph(Ypp<1) = 0;
+    Ypp     = min(1 + overrange,max(0 - overrange, Ypp + Yppl + Ypph ));
+  end
   clear Ycdc YM;
-
+%%
 
   % (5) Voxel-size resolution correction:
   % --------------------------------------------------------------------
@@ -233,6 +268,7 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
 
   if 0 
     % FINAL TOPOLOGY CORRECTION
+    % RD202312: experimental idea - remove in future
     % final voxel-based topology correction of some levels 
     % however, the topology correction in the surface create should be more powerfull
     tclevels = 1:-0.25:0;
@@ -247,14 +283,29 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
   end
 
 
-  % sharpening - important to compensate the downsampling
+  % sharpening
+  % RD202312: experimental idea - remove in future
+  % - helpful to compensate the downsampling
+  % - looks nice in sulci and gyri but the values (intensity and position) 
+  %   but also the results in ADNI are worse 
+  % - as the position slighly changes, also the thickness is effected later
+  %   by correcting the
   if opt.sharpening
-    Ypp = Ypp + 1*(Ypp - cat_vol_smooth3X(Ypp,1/mean(vx_vol))) + 2*(Ypp - cat_vol_smooth3X(Ypp,2/mean(vx_vol))) + 4*(Ypp - cat_vol_smooth3X(Ypp,4/mean(vx_vol)));
+    Ypps = Ypp + 1*(Ypp - cat_vol_smooth3X(Ypp,1/mean(vx_vol))) + ...
+                 2*(Ypp - cat_vol_smooth3X(Ypp,2/mean(vx_vol))) + ...
+                 4*(Ypp - cat_vol_smooth3X(Ypp,4/mean(vx_vol)));
    
     % final smoothing to prepare surface reconstruction that also correct for WM topology issues 
-    spm_smooth(Ypp,Ypp,.5/mean(vx_vol));
-    Ypp = min(1 + overrange,max(0 - overrange,Ypp)); 
-  
+    spm_smooth(Ypps,Ypps,.5/mean(vx_vol));
+    %Ypp = min(1 + overrange,max(0 - overrange,Ypps)); % old version 
+    % New version that only change mid-position values relevant for surface
+    % creation. Although this avoid the old bineary-like better thickness 
+    % cannot be expected
+    Ypp = min(Ypp,max(0.49,Ypps));
+    Ypp = max(Ypp,min(0.51,Ypps)); 
+    
+    % adaption only for very thin areas 
+    Ypp(Ygmt<1.2) = Ypps(Ygmt<1.2);
   end
 end
 % ======================================================================
