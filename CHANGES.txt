@@ -1,4 +1,18 @@
 ------------------------------------------------------------------------
+r2530 | gaser | 2024-01-29 18:30:36
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M cat_stat_homogeneity.m
+ M doc/cat.html
+ M doc/index.html
+
+(1) Changed: Updated documentation for new release.
+(2) Changed: Added try/catch to call of spm_run_factorial_design in
+             cat_stat_homogeneity.m because sometimes window is not
+             accessible.
+------------------------------------------------------------------------
 r2529 | dahnke | 2024-01-24 20:26:33
 
 Changed paths:
@@ -65,7 +79,8 @@ Changed paths:
  M cat_main_reportfig.m
  M cat_vol_pbtsimple.m
 
-Changed:   Updated PBTsimple (see issue #19).------------------------------------------------------------------------
+Changed:   Updated PBTsimple (see issue #19).
+------------------------------------------------------------------------
 r2517 | gaser | 2024-01-09 16:15:15
 
 Changed paths:
@@ -232,7 +247,8 @@ Changed paths:
 
 Changed:  Update new PBT simple pipeline with focus on the paired estimation of  
           multiple distance estimations to support partial volume effects also 
-          with the simple voxel-based distance estimation cat_vbdist.  ------------------------------------------------------------------------
+          with the simple voxel-based distance estimation cat_vbdist.
+------------------------------------------------------------------------
 r2499 | rdahnke | 2023-12-11 10:47:49
 
 Changed paths:
@@ -1619,7 +1635,7 @@ Changed paths:
  M cat_run_job1639.m
  M doc/index.html
 
-Changed: Updated FAQ in CAt12 manual.
+Changed: Updated FAQ in CAT12 manual.
 Fixed:   Corrected bug in cat_main_reportfig.m where the order of the temporary
          surfaces was wrong.
 Fixed:   Corrected bug in cat_main_reportfig.m where the surface overlay was not

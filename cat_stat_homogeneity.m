@@ -2240,7 +2240,12 @@ else
   return
 end
 
-out = spm_run_factorial_design(job);
+% Sometimes window for DesRep is not accessable
+try
+  out = spm_run_factorial_design(job);
+catch
+  out = spm_run_factorial_design(job);
+end
 spm('alert!', sprintf('Create new analysis without removed data in %s\n',job.dir{1}), 0);
 
 return

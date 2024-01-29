@@ -136,6 +136,20 @@
             </p>
             
             <!-- ###################################### -->
+            <h3>Changes in version CAT12.9 (2520)</h3>
+
+            <details>
+              <summary><u>Changes in preprocessing pipeline (which affects your results compared to CAT12.8.2)</u></summary>
+              <ul>
+                <li>A new cortical thickness measure has been implemented which can better handle partial volume effects.</li>
+                <li>Several changes have been made to support Octave compatibility.</li>
+                <li>Various smaller changes have been made for blood vessel detection and background detection for skull-stripping.</li>
+                <li>The quartic mean Z-score is now used for sample homogeneity because outliers are given greater weight and are more easily identified in the plot.</li>
+                <li>The old cat_vol_sanlm from r1980 was rescued and renamed to cat_vol_sanlm2180.m, which works much better.</li>
+              </ul>
+            </details>            
+
+            <!-- ###################################### -->
             <h3>Changes in version CAT12.8.2 (2130)</h3>
 
             <details>
