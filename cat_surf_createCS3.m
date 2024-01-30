@@ -94,7 +94,7 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
 %  fprintf('Set add_parahipp to %d and scale_cortex to %g. Not yet fully tested!\n',opt.add_parahipp,opt.scale_cortex)
 
   % isosurface threshold
-  th_initial = 0.5;
+  th_initial = 0.49; % we have to slightly lower the threshold if we use post-smoothing of 2mm with CAT_VolMarchingCubes
   
   % too slow currently
   create_white_pial = opt.SRP==1;
@@ -671,7 +671,10 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
 
         spm_write_vol(Vpp_side,Ycbm);
          
-        cmd = sprintf('CAT_MarchingCubesGenus0 -fwhm "3" -thresh "%g" "%s" "%s"',th_initial,Vpp_side.fname,Pcentral);
+        %cmd = sprintf('CAT_MarchingCubesGenus0 -fwhm "3" -thresh "%g" "%s" "%s"',th_initial,Vpp_side.fname,Pcentral);
+        % -pre-fwhm = -1: masked smoothing with 1mm
+        % -post-fwhm = 2: psot smoothing with 2mm (use lower threshold of 0.49)
+        cmd = sprintf('CAT_VolMarchingCubes -pre-fwhm "-1" -post-fwhm "2" -thresh "%g" "%s" "%s"',th_initial,Vpp_side.fname,Pcentral);
         fprintf('\n%s\n\n',cmd);
         cat_system(cmd,opt.verb-3);      
       
@@ -685,7 +688,10 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
         % We can set dist to 0.9 for the cortex because using adaptive
         % thresholds this was found to be the optimal dist threshold
 
-        cmd = sprintf('CAT_MarchingCubesGenus0 -fwhm "3" -thresh "%g" "%s" "%s"',th_initial,Vpp_side.fname,Pcentral);
+        %cmd = sprintf('CAT_MarchingCubesGenus0 -fwhm "3" -thresh "%g" "%s" "%s"',th_initial,Vpp_side.fname,Pcentral);
+        % -pre-fwhm = -1: masked smoothing with 1mm
+        % -post-fwhm = 2: psot smoothing with 2mm (use lower threshold of 0.49)
+        cmd = sprintf('CAT_VolMarchingCubes -pre-fwhm "-1" -post-fwhm "2" -thresh "%g" "%s" "%s"',th_initial,Vpp_side.fname,Pcentral);
         cat_system(cmd,opt.verb-3);      
         
       end

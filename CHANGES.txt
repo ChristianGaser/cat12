@@ -1,4 +1,12 @@
 ------------------------------------------------------------------------
+r2532 | gaser | 2024-01-30 16:35:45
+
+Changed paths:
+ M CHANGES.txt
+ M cat_surf_createCS3.m
+
+Changed: Added new CAT_VolMarchingCubes to CS3 surface pipeline.
+------------------------------------------------------------------------
 r2530 | gaser | 2024-01-29 18:30:36
 
 Changed paths:
