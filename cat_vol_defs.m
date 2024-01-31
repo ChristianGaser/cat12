@@ -114,7 +114,7 @@ function [Def,mat] = get_comp(field,job)
 % only estimate composite if job field is given
 if nargin > 1
   % only move on if any vox or bb field is not NaN
-  if any(isfinite(job.vox)) | any(isfinite(job.bb))
+  if any(isfinite(job.vox)) || any(isfinite(job.bb))
     Def1         = Def;
     mat1         = mat;
     job.vox(~isfinite(job.vox)) = vx(~isfinite(job.vox));
@@ -150,7 +150,7 @@ for i=1:size(filenames,1)
 
     % Generate headers etc for output images
     %----------------------------------------------------------------------
-    [pth,nam,ext] = spm_fileparts(deblank(filenames(i,:)));  %#ok<ASGLU>
+    [pth,nam,ext] = spm_fileparts(deblank(filenames(i,:)));
     NI = nifti(fullfile(pth,[nam ext]));
     j_range = 1:size(NI.dat,4);
     k_range = 1:size(NI.dat,5);
@@ -282,7 +282,7 @@ for i=1:size(filenames,1)
         end
     end
 
-end;
+end
 return;
 
 %==========================================================================
