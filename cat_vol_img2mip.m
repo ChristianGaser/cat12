@@ -368,7 +368,7 @@ if isempty(OV.save_image)
   m2 = uimenu(cmenu, 'Label','Save png image','Callback',@(src,event)save_png(OV.save_image));
   try, p.ContextMenu = cmenu; end
 else
-  save_png(mip,OV.save_image);
+  save_png(OV.save_image);
 end
            
 function save_png(png_name)

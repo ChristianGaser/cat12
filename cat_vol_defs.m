@@ -114,7 +114,7 @@ function [Def,mat] = get_comp(field,job)
 % only estimate composite if job field is given
 if nargin > 1
   % only move on if any vox or bb field is not NaN
-  if any(isfinite(job.vox)) || any(isfinite(job.bb))
+  if any(isfinite(job.vox)) | any(isfinite(job.bb))
     Def1         = Def;
     mat1         = mat;
     job.vox(~isfinite(job.vox)) = vx(~isfinite(job.vox));
