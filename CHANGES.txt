@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2534 | gaser | 2024-02-04 18:02:09
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M cat_vol_defs.m
+ M cat_vol_img2mip.m
+ M doc/cat.html
+ M doc/index.html
+
+Fixed: Remove error in cat_vol_img2mip.m for saving function.
+Fixed: Removed error in cat_vol_defs wit OR condition.
+------------------------------------------------------------------------
 r2532 | gaser | 2024-01-30 16:35:45
 
 Changed paths:
