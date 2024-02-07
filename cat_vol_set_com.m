@@ -36,7 +36,12 @@ n = numel(V);
 % pre-estimated COM of MNI template
 com_reference = [0 -20 -15];
 
-fprintf('Correct center-of-mass                                            \n');
+if nargin == 1
+  % call from cat_run_job that will add the time and then the line break
+  fprintf('Correct center-of-mass                                            '); 
+else
+  fprintf('Correct center-of-mass                                            \n');
+end
 for i=1:n
   Affine = eye(4);
   if isfield(V(i),'dat')

@@ -331,6 +331,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
   GMC       = GMC ./ repmat( max(1,sum(GMC,2)) , 1 , 3);  % make bright values darker 
   color     = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
   colorgmt  = @(GMC,m) GMC(max(1,min(size(GMC,1),round(((m-0.5)*10)+1))),:);
+  colorsurf = @(SI,m)  SI(max(1,min(size(SI,1),round(((m-0.06)*4000)+1))),:);
   rps2mark  = @(rps) min(10.5,max(0.5,10.5 - rps / 10)) + isnan(rps).*rps;
   % not used
   %mark2rps  = @(mark) min(100,max(0,105 - mark*10)) + isnan(mark).*mark;
@@ -455,11 +456,23 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
             else 
               catgmt  = {'unknown'};
             end
+            %% surface intensity / position RMSE
+            cati = find(cellfun('isempty',strfind(txt,'Surface intensity / position RMSE: '))==0,1,'last');
+            if ~isempty(cati) 
+              cathd   = textscan( txt{cati}  ,'%s','Delimiter',':'); 
+              cathd   = textscan( cathd{1}{2},'%s','Delimiter',' ');
+              catSRMSE   = [cathd{1}(1) cathd{1}(3)]; 
+            else 
+              catSRMSE  = {'unknown'};
+            end
+
+
+
           
             %% search WARNINGs and ERRORs
-            cati = find(cellfun('isempty',strfind(txt(catis:end),'ALERT '))==0);
+            cati = find(cellfun('isempty',strfind(txt(catis(end):end),'ALERT '))==0);
             catalerts   = numel(cati); 
-            cati = find(cellfun('isempty',strfind(txt(catis:end),'WARNING '))==0);
+            cati = find(cellfun('isempty',strfind(txt(catis(end):end),'WARNING '))==0);
             catwarnings = numel(cati); 
             
             
@@ -598,7 +611,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
               cat_io_cprintf([0 0 0],idx); 
               cat_io_cprintf([0 0 0],catlogt);
               if isempty(caterr)
-                cat_io_cprintf([0 0 0],sprintf(' % 3d.%02d minutes, ',cattime'));
+                cat_io_cprintf([0 0 0],sprintf('% 5d.%02d minutes, ',cattime'));
 
                 % add IQR
                 col = color(QMC,rps2mark( str2double( catiqr{1}(1:end-1) )));
@@ -636,6 +649,17 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
                 if job.extopts.expertgui > 0 && ~strcmp(catgmt{1},'unknown')
                   cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('GMT=%s',strrep(catgmt{1},'%','%%')));  
                 end
+
+                % surf vals 
+                if job.extopts.expertgui > 0 && ~strcmp(catgmt{1},'unknown')
+                  colorsurf = @(SI,m)  SI(max(1,min(size(SI,1),round((max(0,m-0.06)*1000)+1))),:);
+                  cat_io_cprintf(kcol,', '); 
+                  cat_io_cprintf(colorsurf(GMC,str2double( catSRMSE{1} )),sprintf('surf=%s',catSRMSE{1}));  
+                  cat_io_cprintf(kcol,', '); 
+                  cat_io_cprintf(colorsurf(GMC,str2double( catSRMSE{2} )),sprintf('%s'     ,catSRMSE{2}));  
+                end
+                
+                
                 
                 % warnings
                 allcatwarnings = allcatwarnings + catwarnings; 
@@ -659,11 +683,11 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
                   cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('%d alerts',catalerts));  
                 end
 
-                cat_io_cprintf('n',' '); % to avoid color bug?
-                fprintf(' \n');
               else
-                cat_io_cprintf(err.color,sprintf('%s\n',err.txt));  
+                cat_io_cprintf(err.color,sprintf('%s',err.txt));  
               end
+              cat_io_cprintf(kcol,'. '); % to avoid color bug?
+              fprintf(' \n');
             end
           end
           cat_progress_bar('Set', cid );
@@ -672,6 +696,16 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     end
     err.missed = max(0,sum( numel(job_data) ) - (err.warn0 + err.warn1 + err.warn2 + err.aff + err.vbm + err.sbm));
     
+
+    % RD202401: create CSV report for all processed files
+    %           besides this a nice para report could be useful that include 
+    %           all fields and not just the most relevant on listed in the
+    %           report.
+    try
+      cat_run_createCSVreport(job,BIDSfolder);
+    end
+
+
     %% final report
     fprintf('_______________________________________________________________\n');
     fprintf('Conclusion of %d cases: \n',numel(job_data)); 
@@ -727,12 +761,45 @@ if ( isfield(job.extopts,'lazy') && job.extopts.lazy  && ~isfield(job,'process_i
   varargout{1} = jobl.vout; 
 end
 
+
 % clear useprior option to ensure that option is set back to default
 % for next processings
 cat_get_defaults('useprior',''); 
 
 % remove files that do not exist
 varargout{1} = cat_io_checkdepfiles( varargout{1} );
+return
+%_______________________________________________________________________
+function cat_run_createCSVreport(job,BIDSfolder)
+%% create a final csv with values from the XML reports
+
+  % define input XMLs
+  matlabbatch{1}.spm.tools.cat.tools.xml2csv.files = job.data; 
+  for fi = 1:numel(job.data)
+    [~, reportfolderfi] = cat_io_subfolders(job.data{fi}, job);
+    matlabbatch{1}.spm.tools.cat.tools.xml2csv.files{fi} = spm_file(job.data{fi}, ...
+      'path', fullfile( spm_fileparts(job.data{fi}), reportfolderfi ), ...
+      'prefix', 'cat_', 'ext', '.xml');
+  end
+
+  % RD20240129: HOW TO HANDLE MISSED FILES ? >> handle in cat_io_xml2csv
+
+  % filename with date 
+  [~,pp1,pp2] = spm_fileparts(BIDSfolder); 
+  date = ''; %['_' datetime('now','Format','yyyyMMddHHmm')]; 
+  if ~isempty(pp1), pp1 = ['_' pp1 strrep(pp2,'_','-')]; end
+  matlabbatch{1}.spm.tools.cat.tools.xml2csv.fname = ...
+    sprintf('CATxml%s%s.csv', pp1, date); 
+  matlabbatch{1}.spm.tools.cat.tools.xml2csv.outdir       = ...
+    {fullfile( spm_fileparts(job.data{fi}), spm_str_manip(reportfolderfi,'h'))};
+  matlabbatch{1}.spm.tools.cat.tools.xml2csv.fieldnames   = {' '};
+  matlabbatch{1}.spm.tools.cat.tools.xml2csv.avoidfields  = {''};
+  matlabbatch{1}.spm.tools.cat.tools.xml2csv.report       = 'default';
+  
+  % run SPM batch
+  warning off; 
+  spm_jobman('run',matlabbatch);
+  warning on; 
 return
 %_______________________________________________________________________
 function job = update_job(job)

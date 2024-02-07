@@ -1,4 +1,30 @@
 ------------------------------------------------------------------------
+r2535 | robertdahnke | 2024-02-08 00:06:27
+
+Changed paths:
+ M CHANGES.txt
+MM cat_io_xml2csv.m
+ M cat_main1639.m
+M  cat_main_updateSPM1639.m
+MM cat_run.m
+ M cat_run_job.m
+ M cat_run_job1639.m
+M  cat_surf_createCS2.m
+ M cat_surf_createCS3.m
+MM cat_vol_pbtsimple.m
+AD cat_vol_pbtsimple_fine.m
+M  cat_vol_set_com.m
+
+1) New:        Added final CSV report to cat_run with changes in cat_io_xml2csv.
+			   Corrected bugs in cat_run and added surface values. 
+1) Changed:    Optimized command line output of cat_vol_set_com.
+3) Changed:    Slight modification of the call of the surface collision correction
+               in cat_surf_createCS2/3. Slight changes in cat_surf_createCS2/3 for  
+               tests of the reconstructed surfaces.               
+4) Changed:    Various modifications in PBTsimple (see issue #19).
+5) Changed:    Small visual modification in cat_vol_set_com. 
+6) Changed:    Updated alert thresholds in cat_main_updateSPM1639.
+7) Changed:    Tiny correction in the APP try-catch block in cat_run_job[1639].------------------------------------------------------------------------
 r2534 | gaser | 2024-02-04 18:02:09
 
 Changed paths:

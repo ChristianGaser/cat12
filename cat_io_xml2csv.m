@@ -51,6 +51,7 @@ function varargout = cat_io_xml2csv(job)
   def.avoidfields = {'help'; 'catlog'};
   def.delimiter   = ',';
   def.outdir      = {''}; 
+  def.conclusion  = 1; 
   def.dimlim      = 256; % extend in case of catROI below
   def.report      = 'default';
   def.verb        = 1; 
@@ -62,6 +63,8 @@ function varargout = cat_io_xml2csv(job)
   % - setup for CSV / TSV export?
   % - write error in case of too large matrices
   % - dependencies
+  % - RD20240129: handling of missing files "$FILENAME  MISSED XML - FAILED PROCESSING"?
+
 
 
 
@@ -152,11 +155,14 @@ function varargout = cat_io_xml2csv(job)
       relevant_catreport_fields = ....
         {'qualityratings.IQR'; 'qualityratings.NCR'; 'qualityratings.ICR'; 'qualityratings.res_ECR'; 'qualityratings.res_RMS'; ... voxel-based QC measures
          'software.version_cat'; 'software.revision_cat'; 'software.version_spm'; ...
-         ... 'qualitymeasures.SurfaceEulerNumber'; 'qualitymeasures.SurfaceDefectArea' ; ...
          'subjectmeasures.vol_abs_CGW(01)'; 'subjectmeasures.vol_abs_CGW(02)'; 'subjectmeasures.vol_abs_CGW(03)'; ...
          'subjectmeasures.vol_rel_CGW(01)'; 'subjectmeasures.vol_rel_CGW(02)'; 'subjectmeasures.vol_rel_CGW(03)'; ...
-         'subjectmeasures.dist_thickness_kmeans'; 'subjectmeasures.surf_TSA'; 'subjectmeasures.vol_TIV'}; 
-
+         'subjectmeasures.dist_thickness{01}(01)'; 'subjectmeasures.dist_thickness{01}(02)';
+         'subjectmeasures.surf_TSA'; 'subjectmeasures.vol_TIV'; ...
+         'qualitymeasures.SurfaceEulerNumber'; 'qualitymeasures.SurfaceDefectArea'; ...
+         'qualitymeasures.SurfaceIntensityRMSE'; 'qualitymeasures.SurfacePositionRMSE'; ... 
+         'qualitymeasures.SurfaceSelfIntersections'; ...
+         }; 
 
       switch job.report
         case 'paraonly'
@@ -208,12 +214,26 @@ function varargout = cat_io_xml2csv(job)
   %% extract fieldnames from structure to build a table 
   [hdr,tab] = cat_io_struct2table(xml,fieldnames,0); 
 
+  % create average
+  existxml = cellfun(@exist,job.files); % only for existing files
+  if job.conclusion
+    avg = cell(1,size(tab,2)); 
+    for ci = 1:size(tab,2) % for each column
+      if isnumeric(cell2mat(tab(existxml>0,ci))) % for all numberic fields
+        avg{1,ci} = mean( cell2mat(tab(existxml>0,ci)) ); % average existing 
+      else
+        avg{1,ci} = ''; 
+      end
+    end
+  end
 
   % add index
   fieldnames = ['filenames'; fieldnames];
   hdr = [{'filename'} hdr];
-  tab = [job.files    tab];
-
+  tab = [job.files(existxml>0) tab];
+  if job.conclusion
+    avg = [{sprintf('average (%d of %d)',sum(existxml>0),numel(existxml))} avg]; 
+  end
 
   % cleanup some fields
   ROInamelim = 30; 
@@ -235,12 +255,17 @@ function varargout = cat_io_xml2csv(job)
       ROI = '';
     end
 
+    % header
     hdr{hi} = cat_io_strrep(hdr{hi},{'(','{','['},''); 
     hdr{hi} = cat_io_strrep(hdr{hi},{')','}',']'},'_'); 
     if hdr{hi}(end)=='_', hdr{hi}(end) = []; hdr{hi} = [hdr{hi} ROI]; end
-  end
-  table = [hdr;tab];
 
+  end
+  if job.conclusion 
+    table = [hdr;tab;avg];
+  else
+    table = [hdr;tab];
+  end
  
 
 
@@ -266,6 +291,7 @@ function varargout = cat_io_xml2csv(job)
         table{i} = strrep(table{i},job.delimiter,setdiff(',;',job.delimiter)); 
       end
     end
+
 
     % write file
     cat_io_csv(fname,table,'','',struct('delimiter',job.delimiter,'komma','.'))
