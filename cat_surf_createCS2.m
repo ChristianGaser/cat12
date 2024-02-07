@@ -1333,14 +1333,15 @@ end
       %% call collision correction
       %  RD202108: Use further iterations if self-intersections are still very high.  
       %            (test data was an high resolution ex-vivo chimp PD image that had still strong SIs after first correction) 
-      SIOs = 100; SIs = 80; maxiter = 2; iter = 0; 
-      while SIs>5 && SIs<SIOs*0.9 && iter<maxiter
+      SIOs = 100; SIs = 80; maxiter = 1; iter = 0; 
+      while SIs>5 && SIs<SIOs*0.9 && iter<=maxiter
         SIOs = SIs; iter = iter + 1; 
-        [CS,facevertexcdata,SIs] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,struct('optimize',iter<2 && opt.SRP>=2,'verb',verblc,'mat',Smat.matlabIBB_mm,'vx_vol',vx_vol)); 
+        [CS,facevertexcdata,SIs] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,...
+            struct('optimize',iter<2 && opt.SRP>=2,'verb',verblc,'mat',Smat.matlabIBB_mm,'vx_vol',vx_vol)); 
         if verblc, fprintf('\b\b'); end
         if strcmpi(spm_check_version,'octave') && iter == 1
           cat_io_addwarning('cat_surf_createCS2:nofullSRP','Fine correction of surface collisions is not yet available under Octave.',2)
-        else
+        elseif iter == 1 % to keep it fast we just do this once
           [CS,facevertexcdata,SIs] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3)); 
         end
       end
@@ -1512,7 +1513,8 @@ end
       cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);  
       
       % final surface evaluation 
-      res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',loadSurf(Pcentral),cat_io_FreeSurfer('read_surf_data',Ppbt),facevertexcdata,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,debug,cat_get_defaults('extopts.expertgui')>1);
+cat_surf_fun('saveico',CS,facevertexcdata,Pcentral,sprintf('createCS_3_collcorr_%0.2fmm_vdist%0.2fmm',opt.interpV,opt.vdist),Ymfs,Smat.matlabIBB_mm); 
+      res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',loadSurf(Pcentral),cat_io_FreeSurfer('read_surf_data',Ppbt),facevertexcdata,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,debug + (cat_get_defaults('extopts.expertgui')>1),cat_get_defaults('extopts.expertgui')>1);
     else % otherwise simply copy ?h.pbt.* to ?h.thickness.*
       copyfile(Ppbt,Pthick,'f');
   

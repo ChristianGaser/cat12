@@ -566,8 +566,8 @@ function cat_run_job(job,tpm,subj)
         if job.extopts.APP == 1070 && ~ppe.affreg.highBG && ...
           ( ~isfield(job,'useprior') || isempty(job.useprior) )
           stime = cat_io_cmd('Affine preprocessing (APP)');
+          Ysrc  = single(obj.image.private.dat(:,:,:)); 
           try
-            Ysrc  = single(obj.image.private.dat(:,:,:)); 
             [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init1070(Ysrc,vx_vol,job.extopts.verb); %#ok<ASGLU>
           catch apperr
             %% very simple affine preprocessing ... only simple warning

@@ -63,11 +63,33 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   clear Pti;
   % RD20221102: Add warnings 
   % These threshold are arbitrary choosen and updates are maybe required!
+  % RD202401: updated (worst cases with *)
+  %  BUSS		 Median: GM=0.75, WM=0.31, CSF=0.02** 
+  %  4397    Median: GM=0.31, WM=0.63, CSF=0.09*
+  %  NISALS  Median: GM=0.22, WM=0.25, CSF=0.01*
+  %  ADHD	 	 Median: GM=0.84, WM=0.97, CSF=0.00* 
+  %  OASIS   Median: GM=0.22, WM=0.31, CSF=0.02*
+  %  Colins  Median: GM=0.80, WM=0.97, CSF=0.06 
+  %  BWPT    Median: GM=0.96, WM=1.00, CSF=0.05 
+  %  HR075   Median: GM=0.75, WM=0.98, CSF=0.03 
+  %      		       	   <0.50    <0.50     <0.02
+  %
+  %  BUSS    Mean:   GM=0.54, WM=0.48, CSF=0.13
+  %  4397    Mean:   GM=0.44, WM=0.53, CSF=0.27
+  %  NISALS  Mean:   GM=0.43, WM=0.46, CSF=0.12        
+  %  ADHD	   Mean:   GM=0.59, WM=0.66, CSF=0.06        
+  %  OASIS   Mean:   GM=0.37, WM=0.45, CSF=0.15
+  %  Colins  Mean:   GM=0.56, WM=0.72, CSF=0.29   
+  %  BWPT    Mean:   GM=0.72, WM=0.83, CSF=0.37            
+  %  HR075   Mean:   GM=0.54, WM=0.79, CSF=0.20  
+  % 		         		   <0.5     <0.6      <0.13
+
   if job.extopts.expertgui>1 && ...
-    ( any( res.spmP0.md(1:3) < [.5 .9 .3],2) || any( res.spmP0.mn(1:3) < [.4 .7 .2],2) || ...
+    ( any( res.spmP0.md(1:3) < [.4 .4 .02],2) || ...
+      any( res.spmP0.mn(1:3) < [.4 .5 .10],2) || ...
       any( any( res.spmP0.hstsumi(1:3,round(hbuckets*[.25,.50,.75])) < [0.6 0.5 0.4; 0.8 0.7 0.6; 0.5 0.2 0.05 ] )) )
       cat_io_addwarning('cat_main_updateSPM1639:lowSPMseg',...
-        sprintf(['Low SPM segmentation quality with larger areas of mixed tissues. \\\\n' ...
+        sprintf(['Low SPM segmentation quality with larger areas of mixed tissues (smaller=worse). \\\\n' ...
                  '  Median: GM=%0.2f, WM=%0.2f, CSF=%0.2f \\\\n' ...
                  '  Mean:   GM=%0.2f, WM=%0.2f, CSF=%0.2f'], ...
                  res.spmP0.md(1:3),res.spmP0.mn(1:3)),2,[1 2]);
@@ -77,6 +99,15 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   %  Besides the probabilty we may check also the intensities. If two
   %  classes show a high overlap of intensities the segmentation is mabe 
   %  inaccurate.
+  %   BUZZ	  CG=0.81,GW=0.38,CW=0.82,CGW=0.25        
+  %   4397 	  CG=0.72,GW=0.43,CW=0.84,CGW=0.29
+  %   NISALS  CG=0.41,GW=0.44,CW=0.62,CGW=0.18 
+  %   ADHD 	  CG=0.27,GW=0.31,CW=0.41,CGW=0.17
+  %   OASIS 	CG=0.39,GW=0.37,CW=0.58,CGW=0.14
+  %   Colins  CG=0.45,GW=0.34,CW=0.48,CGW=0.24
+  %   BWPT 	  CG=0.39,GW=0.23,CW=0.42,CGW=0.16
+  %   HR075   CG=0.67,GW=0.50,CW=0.72,CGW=0.32
+  % 		        <0.3    <0.3    <0.3     <0.15
   minprob = 32; hbuckets = 30;
   trange = [min(res.mn(res.lkp<6)) max(res.mn(res.lkp<6))]; 
   trange = trange + [ -diff(trange) +diff(trange) ] / 4; 
@@ -98,7 +129,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   res.spmP0.help = [res.spmP0.help; {
     sprintf('The hsti is the histogram of the T1 image for each class (prob>%0.2f,%d buckets) ',minprob/255,hbuckets)};
     'that are combined into the average intensity difference between classes histidiff with 1 for the ideal case without overlap and 0 for high overlap. '];
-  if job.extopts.expertgui>1 && res.spmP0.hstidiff<0.5
+  if job.extopts.expertgui>1 && res.spmP0.hstidiff<0.15
       cat_io_addwarning('cat_main_updateSPM1639:highIntOverlapBetweenClasses',...
         sprintf('High overlap of image intensies in different classes\\\\n  CG=%0.2f,GW=%0.2f,CW=%0.2f,CGW=%0.2f',res.spmP0.hstidiffCGW,res.spmP0.hstidiff),2,[1 2]);
   end

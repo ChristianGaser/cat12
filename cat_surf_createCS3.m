@@ -78,7 +78,8 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
   def.outputpp.native     = 0;  % output of Ypp map for cortical orientation in EEG/MEG 
   def.outputpp.warped     = 0;
   def.outputpp.dartel     = 0;
-    
+  def.skip_registration   = 0; 
+
   % options that rely on other options
   opt                     = cat_io_updateStruct(def,opt); clear def; 
   opt.vol                 = any(~cellfun('isempty',strfind(opt.surf,'v')));   % only volume-based thickness estimation  
@@ -86,7 +87,7 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
   opt.interpV             = max(0.1,min([opt.interpV,1.5]));                  % general limitation of the PBT resolution
   
   % for testing only  
-  skip_registration = debug & 1;
+  skip_registration = debug | opt.skip_registration;
   
   % we should test this more detailed!
 %  opt.add_parahipp       = 0;
@@ -691,9 +692,16 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
         %cmd = sprintf('CAT_MarchingCubesGenus0 -fwhm "3" -thresh "%g" "%s" "%s"',th_initial,Vpp_side.fname,Pcentral);
         % -pre-fwhm = -1: masked smoothing with 1mm
         % -post-fwhm = 2: psot smoothing with 2mm (use lower threshold of 0.49)
-        cmd = sprintf('CAT_VolMarchingCubes -pre-fwhm "-1" -post-fwhm "2" -thresh "%g" "%s" "%s"',th_initial,Vpp_side.fname,Pcentral);
-        cat_system(cmd,opt.verb-3);      
-        
+        cmd = sprintf('CAT_VolMarchingCubes -pre-fwhm "-1" -post-fwhm "1" -thresh "%g" "%s" "%s"',th_initial,Vpp_side.fname,Pcentral);
+        cat_system(cmd,opt.verb-3);
+
+        % Collins-without: 2.5996 ± 0.6292 mm, 0.0798 / 0.1096, 10.29% (121.38 cm²) 24.19% (285.46 cm²)
+        % Collins-with:    2.5713 ± 0.6525 mm, 0.0723 / 0.0934,  8.51% (98.93 cm²)  23.79% (276.42 cm²)
+        cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none  0  1  -1  .1 ' ...           
+                    'avg  -0.1  0.1 .2  .1  5  0 "0.5"  "0.5"  n 0  0  0 %d  %g  0.0 0'], ...    
+                    Vpp_side.fname,Pcentral,Pcentral,50,0.001);
+        cat_system(cmd,opt.verb-3);
+
       end
       %
             
@@ -710,15 +718,6 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
       % evaluate and save results
       if isempty(stime), stime = clock; end
       fprintf('%5.0fs',etime(clock,stime)); stime = []; if 1, fprintf('\n'); end %debug
-      %{
-      res.(opt.surf{si}).createCS_init = cat_surf_fun('evalCS',CS,cat_surf_fun('isocolors',CS,Yth1i,Smat.matlabIBB_mm),[],Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,debug);
-      if 0 %debug 
-        % save surface for further evaluation 
-        cat_surf_fun('saveico',CS,cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm),Pcentral,sprintf('createCS_1_init_pbtres%0.2fmm',opt.interpV),Ymfs,Smat.matlabIBB_mm); 
-      else
-        fprintf('\n'); 
-      end
-      %}
     end
 
     % for use of average prior in long. pipeline we have to deform the average mesh to current pp distance map        
@@ -779,7 +778,7 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
         stime = cat_io_cmd('  Reduction of surface collisions with optimization:','g5','',opt.verb,stime); 
       end
       CS = loadSurf(Pcentral); 
-      SIOs = 100; SIs = 80; maxiter = 1; iter = 0; verblc = debug;  % maxiter =2
+      SIOs = 100; SIs = 80; maxiter = 2; iter = 0; verblc = debug;  
       while SIs>5 && SIs<SIOs*0.9 && iter<maxiter
         SIOs = SIs; iter = iter + 1; 
         [CS,facevertexcdata,SIs] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,...
@@ -787,12 +786,12 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
         if verblc, fprintf('\b\b'); end
         if strcmpi(spm_check_version,'octave') && iter == 1
           cat_io_addwarning('cat_surf_createCS3:nofullSRP','Fine correction of surface collisions is not yet available under Octave.',2)
-        else % ############### not working any longer
-         %[CS,facevertexcdata,SIs] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3)); 
+        elseif iter == 1 
+          % RD202401: not fully working - don't know why - also much slower as in CS2 so we still keep it off 
+          %[CS,facevertexcdata,SIs] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3)); 
         end
       end
-      saveSurf(CS,Pcentral);
-      cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);  
+      saveSurf(CS,Pcentral); cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
     end
 
     
@@ -819,10 +818,10 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
       
       % final surface evaluation 
       %if debug || cat_get_defaults('extopts.expertgui')>1, fprintf('\n'); end
-      if debug
+      if debug || cat_get_defaults('extopts.expertgui')>1
         cat_surf_fun('saveico',CS,cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm),Pcentral,'',Ymfs,Smat.matlabIBB_mm); 
       end
-      res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',loadSurf(Pcentral),cat_io_FreeSurfer('read_surf_data',Ppbt),facevertexcdata,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,debug,cat_get_defaults('extopts.expertgui')>1);
+      res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',loadSurf(Pcentral),cat_io_FreeSurfer('read_surf_data',Ppbt),facevertexcdata,Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,debug + (cat_get_defaults('extopts.expertgui')>1),cat_get_defaults('extopts.expertgui')>1);
     else % otherwise simply copy ?h.pbt.* to ?h.thickness.*
       copyfile(Ppbt,Pthick,'f');
   
@@ -1000,7 +999,7 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
     Porthcolor = [ Porthcolor(1:end-1) '}']; 
     Porthnames = [ Porthnames(1:end-1) '}']; 
   
-    if debug 
+    if 1 %debug 
       fprintf('  Show surfaces in orthview:  %s\n',spm_file(Po ,'link',...
         sprintf('cat_surf_fun(''show_orthview'',%s,''%s'',%s,%s)',Porthfiles,Po,Porthcolor,Porthnames))) ;
     end
