@@ -63,6 +63,10 @@ if ~isfield(job,'verb')
   job.verb = true;
 end
 
+if ~isfield(job,'data_vol') && isfield(job,'data')
+  job.data_vol = job.data;
+end
+
 if isfield(job,'show_violin')
   H.show_violin = job.show_violin;
 else

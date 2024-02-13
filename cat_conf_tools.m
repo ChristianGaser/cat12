@@ -3131,7 +3131,7 @@ function [check_homogeneity, check_cov] = conf_check_cov(data_xml,outdir,fname,s
 
   check_cov       = cfg_exbranch;
   check_cov.tag   = 'check_cov';
-  check_cov.name  = 'Check Sample Homogeneity (old version)';
+  check_cov.name  = 'Check Sample Homogeneity for long. Data (old method)';
   if expert>1
     check_cov.val = {sample,data_xml,gap,nuisance,outdir,fname,save};
   else
@@ -3175,7 +3175,7 @@ function [check_homogeneity, check_cov] = conf_check_cov(data_xml,outdir,fname,s
   check_homogeneity        = cfg_exbranch;
   check_homogeneity.val    = {sample,sel_xml,globals,nuisance};
   check_homogeneity.tag    = 'check_homogeneity';
-  check_homogeneity.name   = 'Check sample homogeneity';
+  check_homogeneity.name   = 'Check Sample Homogeneity';
   check_homogeneity.prog   = @cat_stat_homogeneity;
   check_homogeneity.help   = {
     'In order to identify data with poor data quality or even artefacts you can use this function. 3D images have to be in the same orientation with same voxel size and dimension (e.g. normalized images without smoothing) while surfaces have to be resampled and smoothed using the same parameters. The idea of this tool is to check the Z-score of all data across the sample.'
