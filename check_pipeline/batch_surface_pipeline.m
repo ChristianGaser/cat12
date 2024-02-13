@@ -23,7 +23,7 @@ matlabbatch{2}.spm.tools.cat.stools.surfresamp.fwhm_surf = 12;
 matlabbatch{2}.spm.tools.cat.stools.surfresamp.nproc = 0;
 %__________________________________________________________________________
 matlabbatch{3}.spm.tools.cat.tools.check_homogeneity.data{1}(1) = cfg_dep('Resample and Smooth Surface Data: Merged resampled MNIgyrification', substruct('.','val', '{}',{2}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','sample', '()',{1}, '.','Psdata'));
-matlabbatch{3}.spm.tools.cat.tools.check_homogeneity.data_xml = {
+matlabbatch{3}.spm.tools.cat.tools.check_homogeneity.sel_xml.data_xml = {
                                                                fullfile(pth,'report/cat_IXI002-Guys-0828-T1.xml')
                                                                fullfile(pth,'report/cat_IXI016-Guys-0697-T1.xml')
                                                                fullfile(pth,'report/cat_IXI017-Guys-0698-T1.xml')
@@ -55,15 +55,17 @@ matlabbatch{7}.spm.tools.cat.tools.calcvol.data_xml = {
 matlabbatch{7}.spm.tools.cat.tools.calcvol.calcvol_TIV = 1;
 matlabbatch{7}.spm.tools.cat.tools.calcvol.calcvol_name = 'TIV.txt';
 %__________________________________________________________________________
+
 matlabbatch{8}.spm.tools.cat.stools.vol2surf.data_vol = {fullfile(pth,'IXI002-Guys-0828-T1.nii,1')};
 matlabbatch{8}.spm.tools.cat.stools.vol2surf.data_mesh_lh = {fullfile(pth,'surf/lh.central.IXI002-Guys-0828-T1.gii')};
 matlabbatch{8}.spm.tools.cat.stools.vol2surf.sample = {'maxabs'};
+matlabbatch{8}.spm.tools.cat.stools.vol2surf.interp = {'linear'};
 matlabbatch{8}.spm.tools.cat.stools.vol2surf.datafieldname = 'intensity';
-matlabbatch{8}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.class = 'GM';
-matlabbatch{8}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.startpoint = -0.5;
-matlabbatch{8}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.steps = 7;
-matlabbatch{8}.spm.tools.cat.stools.vol2surf.mapping.rel_mapping.endpoint = 0.5;
-%__________________________________________________________________________
+matlabbatch{8}.spm.tools.cat.stools.vol2surf.mapping.rel_equivol_mapping.class = 'GM';
+matlabbatch{8}.spm.tools.cat.stools.vol2surf.mapping.rel_equivol_mapping.startpoint = -0.6;
+matlabbatch{8}.spm.tools.cat.stools.vol2surf.mapping.rel_equivol_mapping.steps = 7;
+matlabbatch{8}.spm.tools.cat.stools.vol2surf.mapping.rel_equivol_mapping.endpoint = 0.6;
+%_____________________________________________________________
 matlabbatch{9}.spm.tools.cat.stools.renderresults.cdata(1) = cfg_dep('Threshold and transform spmT surfaces: Transform & Threshold spm surfaces', substruct('.','val', '{}',{5}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','Pname'));
 matlabbatch{9}.spm.tools.cat.stools.renderresults.render.surface = 1;
 matlabbatch{9}.spm.tools.cat.stools.renderresults.render.view = 1;

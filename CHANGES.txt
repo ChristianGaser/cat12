@@ -1,4 +1,103 @@
 ------------------------------------------------------------------------
+r2537 | gaser | 2024-02-13 13:38:25
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M cat_amap.mexa64
+ M cat_ornlm.mexa64
+ M cat_sanlm.mexa64
+ M cat_stat_analyze_ROIs.m
+ M cat_vbdist.mexa64
+ M cat_vol_downcut.mexa64
+ M cat_vol_eidist.mexa64
+ M cat_vol_genus0.mexa64
+ M cat_vol_gradient3.mexa64
+ M cat_vol_interp3f.mexa64
+ M cat_vol_laplace3.mexa64
+ M cat_vol_laplace3R.mexa64
+ M cat_vol_localstat.mexa64
+ M cat_vol_median3.mexa64
+ M cat_vol_median3c.mexa64
+ M cat_vol_pbtp.mexa64
+ M cat_vol_simgrow.mexa64
+ M check_pipeline/analysis/surface/RPV.dat
+ M check_pipeline/analysis/surface/SPM.mat
+ M check_pipeline/analysis/surface/spmF_0001.dat
+ M check_pipeline/analysis/surface/spmT_0002.dat
+ M check_pipeline/analysis/volume/SPM.mat
+ M check_pipeline/batch_surface_pipeline.m
+ M check_pipeline/batch_volume_pipeline.m
+ D check_pipeline/label_orig/catROI_IXI020-Guys-0700-T1.mat
+ D check_pipeline/label_orig/catROI_IXI020-Guys-0700-T1.xml
+ D check_pipeline/label_orig/catROI_IXI021-Guys-0703-T1.mat
+ D check_pipeline/label_orig/catROI_IXI021-Guys-0703-T1.xml
+ D check_pipeline/label_orig/catROI_IXI022-Guys-0701-T1.mat
+ D check_pipeline/label_orig/catROI_IXI022-Guys-0701-T1.xml
+ D check_pipeline/label_orig/catROI_IXI023-Guys-0699-T1.mat
+ D check_pipeline/label_orig/catROI_IXI023-Guys-0699-T1.xml
+ D check_pipeline/label_orig/catROI_IXI024-Guys-0705-T1.mat
+ D check_pipeline/label_orig/catROI_IXI024-Guys-0705-T1.xml
+ D check_pipeline/label_orig/catROI_IXI025-Guys-0852-T1.mat
+ D check_pipeline/label_orig/catROI_IXI025-Guys-0852-T1.xml
+ D check_pipeline/label_orig/catROI_IXI026-Guys-0696-T1.mat
+ D check_pipeline/label_orig/catROI_IXI026-Guys-0696-T1.xml
+ D check_pipeline/label_orig/catROI_IXI027-Guys-0710-T1.mat
+ D check_pipeline/label_orig/catROI_IXI027-Guys-0710-T1.xml
+ D check_pipeline/label_orig/catROI_IXI028-Guys-1038-T1.mat
+ D check_pipeline/label_orig/catROI_IXI028-Guys-1038-T1.xml
+ D check_pipeline/label_orig/catROI_IXI029-Guys-0829-T1.mat
+ D check_pipeline/label_orig/catROI_IXI029-Guys-0829-T1.xml
+ D check_pipeline/label_orig/catROI_IXI030-Guys-0708-T1.mat
+ D check_pipeline/label_orig/catROI_IXI030-Guys-0708-T1.xml
+ D check_pipeline/label_orig/catROI_IXI031-Guys-0797-T1.mat
+ D check_pipeline/label_orig/catROI_IXI031-Guys-0797-T1.xml
+ D check_pipeline/label_orig/catROI_IXI036-Guys-0736-T1.mat
+ D check_pipeline/label_orig/catROI_IXI036-Guys-0736-T1.xml
+ D check_pipeline/label_orig/catROI_IXI037-Guys-0704-T1.mat
+ D check_pipeline/label_orig/catROI_IXI037-Guys-0704-T1.xml
+ D check_pipeline/label_orig/catROI_IXI038-Guys-0729-T1.mat
+ D check_pipeline/label_orig/catROI_IXI038-Guys-0729-T1.xml
+ D check_pipeline/label_orig/catROI_IXI040-Guys-0724-T1.mat
+ D check_pipeline/label_orig/catROI_IXI040-Guys-0724-T1.xml
+ D check_pipeline/label_orig/catROIs_IXI020-Guys-0700-T1.mat
+ D check_pipeline/label_orig/catROIs_IXI020-Guys-0700-T1.xml
+ D check_pipeline/label_orig/catROIs_IXI021-Guys-0703-T1.mat
+ D check_pipeline/label_orig/catROIs_IXI021-Guys-0703-T1.xml
+ D check_pipeline/label_orig/catROIs_IXI022-Guys-0701-T1.mat
+ D check_pipeline/label_orig/catROIs_IXI022-Guys-0701-T1.xml
+ D check_pipeline/label_orig/catROIs_IXI023-Guys-0699-T1.mat
+ D check_pipeline/label_orig/catROIs_IXI023-Guys-0699-T1.xml
+ D check_pipeline/label_orig/catROIs_IXI024-Guys-0705-T1.mat
+ D check_pipeline/label_orig/catROIs_IXI024-Guys-0705-T1.xml
+ D check_pipeline/label_orig/catROIs_IXI025-Guys-0852-T1.mat
+ D check_pipeline/label_orig/catROIs_IXI025-Guys-0852-T1.xml
+ D check_pipeline/label_orig/catROIs_IXI026-Guys-0696-T1.mat
+ D check_pipeline/label_orig/catROIs_IXI026-Guys-0696-T1.xml
+ D check_pipeline/label_orig/catROIs_IXI027-Guys-0710-T1.mat
+ D check_pipeline/label_orig/catROIs_IXI027-Guys-0710-T1.xml
+ D check_pipeline/label_orig/catROIs_IXI028-Guys-1038-T1.mat
+ D check_pipeline/label_orig/catROIs_IXI028-Guys-1038-T1.xml
+ D check_pipeline/label_orig/catROIs_IXI029-Guys-0829-T1.mat
+ D check_pipeline/label_orig/catROIs_IXI029-Guys-0829-T1.xml
+ D check_pipeline/label_orig/catROIs_IXI030-Guys-0708-T1.mat
+ D check_pipeline/label_orig/catROIs_IXI030-Guys-0708-T1.xml
+ D check_pipeline/label_orig/catROIs_IXI031-Guys-0797-T1.mat
+ D check_pipeline/label_orig/catROIs_IXI031-Guys-0797-T1.xml
+ D check_pipeline/label_orig/catROIs_IXI036-Guys-0736-T1.mat
+ D check_pipeline/label_orig/catROIs_IXI036-Guys-0736-T1.xml
+ D check_pipeline/label_orig/catROIs_IXI037-Guys-0704-T1.mat
+ D check_pipeline/label_orig/catROIs_IXI037-Guys-0704-T1.xml
+ D check_pipeline/label_orig/catROIs_IXI038-Guys-0729-T1.mat
+ D check_pipeline/label_orig/catROIs_IXI038-Guys-0729-T1.xml
+ D check_pipeline/label_orig/catROIs_IXI040-Guys-0724-T1.mat
+ D check_pipeline/label_orig/catROIs_IXI040-Guys-0724-T1.xml
+ M doc/cat.html
+
+Fixed:   Changed format of gifti saving in cat_stat_analyze_ROIs.m.
+Changed: Recompiled all mex-files.
+
+------------------------------------------------------------------------
 r2536 | gaser | 2024-02-13 09:22:07
 
 Changed paths:

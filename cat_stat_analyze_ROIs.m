@@ -620,7 +620,7 @@ for i=sort(unique(hemi_code))'
     if mesh_detected
       % save P-alues as float32
       filename1 = fullfile(cwd,[hemiabbr{i} '.logP' corr_short{c} output_name '.gii']);
-      save(gifti(struct('cdata',data{c})),filename1);
+      save(gifti(struct('cdata',data{c})),filename1, 'Base64Binary');
 
       if write_beta
         for k=1:length(ind_con)
