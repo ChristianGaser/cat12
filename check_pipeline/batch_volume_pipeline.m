@@ -22,7 +22,7 @@ matlabbatch{2}.spm.tools.cat.tools.check_homogeneity.data = {
   fullfile(pth,'mri/mwp1IXI019-Guys-0702-T1.nii,1')
                                                          }
                                                          }';
-matlabbatch{2}.spm.tools.cat.tools.check.data_xml = {
+matlabbatch{2}.spm.tools.cat.tools.check_homogeneity.sel_xml.data_xml = {
   fullfile(pth,'report/cat_IXI002-Guys-0828-T1.xml')
   fullfile(pth,'report/cat_IXI016-Guys-0697-T1.xml')
   fullfile(pth,'report/cat_IXI017-Guys-0698-T1.xml')
@@ -55,7 +55,7 @@ OV.reference_image = char(cat_get_defaults('extopts.shootingT1'));
 OV.reference_range = [0.2 1.0];                         % intensity range for reference image
 OV.opacity = Inf;                                      % transparence value for overlay (<1)
 OV.cmap    = jet;                                      % colormap for overlay
-OV.name = char(fullfile(pth,'analysis/volume/logP_neg_p0.1_pkFWE5_k590_bi.nii'));
+OV.name = char(fullfile(pth,'analysis/volume/logP_neg_p0.1_En_k29_bi.nii'));
 OV.range   =[[3 6]];
 OV.slices_str = char('-20:5:45');
 OV.transform = char('coronal');
