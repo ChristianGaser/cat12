@@ -1,4 +1,18 @@
 ------------------------------------------------------------------------
+r2538 | gaser | 2024-02-13 17:37:40
+
+Changed paths:
+ M CHANGES.txt
+ M cat12.m
+ M cat_conf_tools.m
+ M cat_stat_check_SPM.m
+ M cat_stat_check_cov_old.m
+D  resources/settings/MBeautyConfigurationRules.m
+D  resources/settings/MBeautyConfigurationRules.xml
+
+Changed: Added old sample homogeneity check to GUI for use with long. data.
+Changed: Call old homogeneity check in cat_stat_check_SPM if long. design is found.
+------------------------------------------------------------------------
 r2537 | gaser | 2024-02-13 13:38:25
 
 Changed paths:

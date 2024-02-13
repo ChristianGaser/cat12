@@ -195,7 +195,13 @@ if check_zscore
     job_check_zscore.xM = SPM.xM;
   end
   
-  cat_stat_homogeneity(job_check_zscore);
+  % call old homogeneity check for long. data if long. design was found
+  repeated_anova = ~isempty(SPM.xX.iB);
+  if repeated_anova
+    cat_stat_check_cov_old(job_check_zscore);
+  else
+    cat_stat_homogeneity(job_check_zscore);
+  end
 end
 
 if check_ortho
