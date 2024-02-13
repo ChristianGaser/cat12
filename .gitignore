@@ -36,3 +36,4 @@ check_pipeline/
 /cattest
 /templates_animals_internal
 
+debug_*.mat

@@ -464,12 +464,14 @@ function imcalc = conf_vol_imcalc(prefix,expert)
   images.help       = {'Specify input images class, e.g., the T1 image of a subject. '};
   
   % remove old image field
-  imcalc.val{1}     = images; 
-  imcalc.val{2}     = prefix;
-  imcalc.val{3}.help = {[...
-    'Files produced by this function will be written into this output directory. ' ...
-    'If no directory is given, images will be written to the home of the first input image i1. ' ...
-    'A relative path (e.g., "../output") can be used. ']};
+  try
+    imcalc.val{1}     = images; 
+    imcalc.val{2}     = prefix;
+    imcalc.val{3}.help = {[...
+      'Files produced by this function will be written into this output directory. ' ...
+      'If no directory is given, images will be written to the home of the first input image i1. ' ...
+      'A relative path (e.g., "../output") can be used. ']};
+  end
   imcalc.tag        = 'mimcalc';
   imcalc.vout       = @vout_mimcalc;
   imcalc.prog       = @cat_vol_mimcalc;
