@@ -28,7 +28,7 @@ spm12dir=spm12
 LOGDIR=$PWD
 export_dartel=0
 output_surface=1
-long_model=1
+long_model=3
 printlong=2 
 time=`date "+%Y%b%d_%H%M"`
 defaults_tmp=/tmp/defaults$$.m
@@ -119,6 +119,9 @@ parse_args ()
            mkdir -p $LOGDIR
         fi
         shift
+        ;;
+      --small* | -l*)
+        long_model=1
         ;;
       --large* | -l*)
         long_model=2
@@ -341,14 +344,16 @@ USAGE:
   -fg         | --fg                    do not run matlab process in background
   -ns         | --no-surf               disable surface and thickness estimation
   -e          | --export-dartel         export affine registered segmentations for Dartel
-  -large      | --large                 use longitudinal model for detecting large changes (i.e. ageing or development)
+  -large      | --large                 use longitudinal model for detecting large changes (i.e. ageing)
+                                        This option is only thought for compatibility with older scripts. Do not use that option together with the model flag. 
+  -small      | --small                 use longitudinal model for detecting smaller changes (i.e. plasticity)
                                         This option is only thought for compatibility with older scripts. Do not use that option together with the model flag. 
   -nj         | --nojvm                 supress call of jvm using the -nojvm flag
   -model      | --model                 longitudinal model:
                                           0 - detect large changes with brain/head growth (i.e. developmental effects)
                                           1 - detect small changes (i.e. due to plasticity)
-                                          2 - detect large changes (i.e. ageing or development)
-                                          3 - save results for both models 1 and 2
+                                          2 - detect large changes (i.e. ageing)
+                                          3 - save results for both models 1 and 2 (default)
   -printlong  | --printlong             print longitudinal report
                                           0 - no printing
                                           1 - print report but only volume results
