@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2540 | gaser | 2024-02-14 11:18:19
+
+Changed paths:
+ M CHANGES.txt
+ M cat_batch_long.sh
+ M cat_conf_long.m
+ M doc/index.html
+
+Changed: Save both plasticity and aging model for long. data as default.
+Changed: CUpdated html doc.
+------------------------------------------------------------------------
 r2538 | gaser | 2024-02-13 17:37:40
 
 Changed paths:

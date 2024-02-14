@@ -1757,7 +1757,7 @@
             </ul>
 
             <p>&rarr; For all other options you can follow the instructions for preprocessing of cross-sectional data as described before. Please note that not all writing options are available for longitudinal data.</p>
-            <p>For the naming conventions of all written files see <a href="#naming">Naming Convention of Output Files</a>. The GM segments are mwp1r* (or mwmwp1r* for the model with larger changes) , the WM segments are named mwp2r* (mwmwp2r*) if you have selected the option to modulate the data. Without modulation the leading &quot;m&quot; is omitted.</p>
+            <p>For the naming conventions of all written files see <a href="#naming">Naming Convention of Output Files</a>. The GM segments are mwp1r* for the plasticity model or mwmwp1r* for the aging model with larger changes, the WM segments are named mwp2r* (mwmwp2r*). Without modulation the leading &quot;m&quot; is omitted.</p>
             
             <!-- ############################# -->
             <h4>Statistical analysis of longitudinal data - overview</h4>
@@ -3055,8 +3055,8 @@
             <p>Furthermore, if you select the longitudinal model for detecting larger changes (e.g. ageing or developmental effects) the segmented images are additionally indicated by a leading &quot;mw&quot; due to the additional warping and modulation steps.</p>
             
             <u>Example:</u><br>
-            mwp1r * - gray matter<br>
-            mwmwp1r* - gray matter (longitudinal model for detecting larger changes)<br>
+            mwp1r * - gray matter (plasticity model)<br>
+            mwmwp1r* - gray matter (aging model for detecting larger changes)<br>
 
             <!-- ############################# -->
             <h4>Reports (saved in subfolder &quot;report&quot;)</h4>
