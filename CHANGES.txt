@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2542 | robertdahnke | 2024-02-15 19:42:10
+
+Changed paths:
+ M CHANGES.txt
+ M cat_run.m
+ M cat_surf_createCS2.m
+ M cat_surf_createCS3.m
+ M cat_vol_pbtsimple.m
+
+1) Fixed:    Corrected cat_surf_createCS[2|3] debugging output. 
+2) Fixed:    Corrected ROI output behaviour in cat_run.
+3) Changed:  Updated gyrusreconstion in cat_vol_pbtsimple. 
+------------------------------------------------------------------------
 r2540 | gaser | 2024-02-14 11:18:19
 
 Changed paths:

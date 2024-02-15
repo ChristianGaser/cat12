@@ -270,46 +270,59 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
 
   elseif opt.gyrusrecon == 2 % EXTRA
     % Using PBT to reconstruct the sulci and then the gyri.
-   
+    
+    % correct general voxel offset (vbdist quantifies the distance to the 
+    % object grid points rather than the boundary between object and background. 
+    Ycd = max(0,Ycd - 0.5); Ywd = max(0,Ywd - 0.5); 
+
     % remove highly distant outliers
     [Yp0c, Ywdc, Ycdc] = cleanupVessels(Yp0, Ywd, Ycd, opt.distcleanup); 
-  
+
+    % Optimized correction factor to avoid defects that is caused by the PBT 
+    % mapping that maps the maximum distance so without any distnace between
+    % sulcal banks. The correction should be between 0.0 and 0.25 being as 
+    % small as possible (for a correction of 0.5 the voxel would be already
+    % outside of the GM). Arbitrary correction by the half of 0.25.
+    pbtsulcorval = .05;                  % default correction in sulcal areas
+    pbtsulcormax = .3;                   % bust to avoid sulcal blurring
+    pbtsulcorth  = 1.5 / mean( vx_vol ); % bust limit in mm
+    % Correct for the voxel-grid offset of .5 after cleanup because it is
+    % important to use uncorrected values in the first PBT estimation to  
+    % get the full thickness 
+    pbtsulccor = @(Ygmtx, Ycdx, Ywdx) ...
+      max(0, Ygmtx - min(pbtsulcormax,  ... pbtsulcormax as upper limit
+        pbtsulcorval + (Ygmtx < pbtsulcorth)) .* ... %pbtsulcorval
+        ( Ygmtx < (Ycdx + Ywdx)  |  Ygmtx < pbtsulcorth));
 
     % 1. sulcus-reconstruction: 
     %    first, we just use the classic estimation to get a corrected CSF distance
     Ygmt1 = cat_vol_pbtp( round(Yp0c)  , Ywdc, Ycdc);
-    Ygmt1 = cat_vol_approx(Ygmt1,'nh');   
-    YM    = Yp0 > 1.5 - opt.range * opt.extendedrange & ...
-            Yp0 < 2.5 + opt.range * opt.extendedrange & ...
-            Ygmt1 > eps;
-    Ycdc  = Ycd; Ycdc(YM) = min(Ycd(YM), Ygmt1(YM) - Ywd(YM)); 
-    [~,I] = cat_vbdist(single(Yp0<2.5),Yp0<2.5 + opt.range * opt.extendedrange); 
-    Ycdc  = Ycdc(I); clear I; 
-    Ycdc  = min(Ycd, max(eps*(Ycd>0), cat_vol_median3(Ycdc, YM, true(size(Yp0)), 0.2)) ); % remove outliers
+    Ygmt1 = pbtsulccor(Ygmt1, Ycdc, Ywdc);  % correct values only in regions with PBT mapping
+    Ygmt1 = cat_vol_approx(Ygmt1,'nh');     % aproximation and smoothing    
+    Ycdc = min(Ygmt1,Ycdc); Ywdc = min(Ygmt1,Ywdc); 
+    YM    = Ywdc>0 & Ycdc>0; Ycdc(YM) = min(Ycd(YM), Ygmt1(YM) - Ywdc(YM)); % update
     
-
     % 2. gyrus reconstruction: 
     %    now, we can process the inverse/dual case go get
-    Ygmt2 = cat_vol_pbtp(round(4 - Yp0), Ycdc, Ywd);
+    Ygmt2 = cat_vol_pbtp(round(4 - Yp0), Ycdc, Ywdc);
+    Ygmt2 = pbtsulccor(Ygmt2, Ycdc, Ywdc);
     Ygmt2 = cat_vol_approx(Ygmt2,'nh');
-    YM2   = YM & Ycdc > median(Ygmt2(:));
-    Ywdc  = Ywd; Ywdc(YM2) = min(Ywd(YM2), Ygmt2(YM2) - Ycdc(YM2)); clear Ygmt2;
-    [~,I] = cat_vbdist(single(Yp0>1.5),Yp0>1.5 - opt.range * opt.extendedrange); 
-    Ywdc  = Ywdc(I); clear I; 
-    Ywdc  = min(Ywd, max(eps*(Ywd>0), cat_vol_median3(Ywdc, YM, true(size(Yp0)), 0.2) ) ); % remove outliers
+    YM    = YM & Ycdc > median(Ygmt2(:));
+    Ywdc  = Ywd; Ywdc(YM) = min(Ywdc(YM), Ygmt2(YM) - Ycdc(YM)); clear Ygmt2 YM;
     
     % 3. final estimation: 
     %    having now the correct distance values the finale thickness estimations are applied
     Ygmt  = cat_vol_pbtp( round(Yp0) , Ywdc, Ycdc);
+    Ygmt  = pbtsulccor(Ygmt, Ycdc, Ywdc); 
     Ymsk  = cat_vol_smooth3X( cat_vol_morph( Yp0==1 |  Ywdc > median(Ygmt(:)) + 4*std(Ygmt(:)) + 1 ,'c'),1);
-    Ywdc2 = Ywdc; Ywdc2(Ymsk>0.5) = 0; 
-    Ycdc2 = Ycdc; Ycdc2(Ymsk>0.5) = 0; 
+    Ywdc(Ymsk>0.5) = 0; Ycdc(Ymsk>0.5) = 0; 
     Yp0c  = min( max(1,3 - 2*Ymsk), Yp0); 
-    Ygmt  = cat_vol_pbtp(round(Yp0c)  , Ywdc2, Ycdc2);
-
+    Ygmt  = cat_vol_pbtp(round(Yp0c)  , Ywdc, Ycdc);
+    Ygmt  = pbtsulccor(Ygmt, Ycdc, Ywdc); 
     % remove outliers
     Ygmt( Ygmt > Ygmt1 .* (median(Ygmt1(Ygmt1(:)>0)) / median(Ygmt(Ygmt(:)>0))) ) = 0; clear Ygmt1;
-
+    
+    % final update of distance functions
     Ycd = Ycdc; Ywd = Ywdc;
   end
 
