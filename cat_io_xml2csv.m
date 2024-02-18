@@ -157,7 +157,7 @@ function varargout = cat_io_xml2csv(job)
          'software.version_cat'; 'software.revision_cat'; 'software.version_spm'; ...
          'subjectmeasures.vol_abs_CGW(01)'; 'subjectmeasures.vol_abs_CGW(02)'; 'subjectmeasures.vol_abs_CGW(03)'; ...
          'subjectmeasures.vol_rel_CGW(01)'; 'subjectmeasures.vol_rel_CGW(02)'; 'subjectmeasures.vol_rel_CGW(03)'; ...
-         'subjectmeasures.dist_thickness{01}(01)'; 'subjectmeasures.dist_thickness{01}(02)';
+         'subjectmeasures.dist_thickness{1}(1)'; 'subjectmeasures.dist_thickness{1}(2)';
          'subjectmeasures.surf_TSA'; 'subjectmeasures.vol_TIV'; ...
          'qualitymeasures.SurfaceEulerNumber'; 'qualitymeasures.SurfaceDefectArea'; ...
          'qualitymeasures.SurfaceIntensityRMSE'; 'qualitymeasures.SurfacePositionRMSE'; ... 
@@ -346,6 +346,20 @@ function FNS = getFN(SS,dimlim)
         FNI = {};
         for fnii = 1:min(dimlim,numel( S.(FN{fni}) ))
           FNI = [FNI; sprintf(['%s{%0' acc 'd}'],FN{fni},fnii) ]; %#ok<AGROW> 
+        end
+      elseif iscell( S.(FN{fni}) )
+        % recursive call in case of structures
+        FNI = {};
+        for fnii = 1:numel( S.(FN{fni}) )
+          if numel( S.(FN{fni}){fnii} ) == 1
+            FNI = [FNI; sprintf(['%s{%0' acc 'd}'],FN{fni},fnii) ];
+          else
+            acc = num2str( 1 + round( log10( numel( S.(FN{fni}){fnii} ))) );
+            % just extract a limited number of elements
+            for fniii = 1:min(dimlim,numel( S.(FN{fni}){fnii} ))
+              FNI = [FNI; sprintf(['%s{%0' acc 'd}(%0' acc 'd)'],FN{fni},fnii,fniii) ]; %#ok<AGROW> 
+            end
+          end
         end
       else
         if numel( S.(FN{fni}) ) == 1

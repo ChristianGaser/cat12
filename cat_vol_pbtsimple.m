@@ -232,6 +232,7 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
   % - Basic tests in ADHD200NYC and Collins. 
   if  opt.gyrusrecon == 0
   % Using the PBT apporach only to reconstruct the sulci.
+    distcorval = 0.5; % in theory 0.5 
 
     % remove highly distant outliers
     [Yp0, Ywd, Ycd] = cleanupVessels(Yp0, Ywd, Ycd, opt.distcleanup);
@@ -240,15 +241,16 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
     Ygmt = cat_vol_pbtp( round(Yp0) , Ywd, Ycd);
   
     % now correct also this values (it is a bit better this way)
-    Ycd = max(0,Ycd - 0.5); Ywd = max(0,Ywd - 0.5); 
+    Ycd = max(0,Ycd - distcorval); Ywd = max(0,Ywd - distcorval); 
     
     % minimum to reduce issues with meninges
-    Ygmt = min( max(0,Ygmt - 0.5) , Ycd + Ywd); % this should avoid sulcal overestimations a bit
-    %Ygmt = min(Ygmt, Ycd + Ywd); 
+    Ygmt = min( Ycd + Ywd , max(0,Ygmt - distcorval - distcorval * (Ygmt < (Ycd+Ywd)) ) ); 
+    Ygmt = min( Ygmt , cat_vol_median3(Ygmt,Ygmt>0,Ygmt>0) );
 
   elseif opt.gyrusrecon == 1 % EXTRA 
   % Using PBT to reconstruct the sulci and the gyri to get the minimal 
   % thickness. Classic quite simple approach. 
+    distcorval = 0.5; % in theory 0.5 
 
     % remove highly distant outliers
     [Yp0, Ywd, Ycd] = cleanupVessels(Yp0, Ywd, Ycd, opt.distcleanup);
@@ -256,24 +258,26 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
     % reconstruct sulci as well as gyri 
     Ygmt1 = cat_vol_pbtp(round(Yp0)  , Ywd, Ycd);  
     Ygmt2 = cat_vol_pbtp(round(4-Yp0), Ycd, Ywd);
-    Ygmt2 = max(Ygmt2 , 1.5 .* (Ygmt2>0)); %only in thick regions
+    Ygmt2 = max(Ygmt2 , 1.75 / mean(vx_vol) .* (Ygmt2>0)); %only in thick regions
 
     % now correct also this values
-    Ycd = max(0,Ycd - 0.5); Ywd = max(0,Ywd - 0.5); 
+    Ycd = max(0,Ycd - distcorval); Ywd = max(0,Ywd - distcorval); 
   
     % avoid meninges !
-    Ygmt1 = min(Ygmt1, Ycd + Ywd);
-    Ygmt2 = min(Ygmt2, Ycd + Ywd); 
+    Ygmt1 = min( max(0,Ygmt1 - distcorval - distcorval * (Ygmt1 < (Ycd+Ywd)) ) , Ycd + Ywd); 
+    Ygmt2 = min( max(0,Ygmt2 - distcorval - distcorval * (Ygmt2 < (Ycd+Ywd)) ) , Ycd + Ywd); 
 
     % average GM thickness maps
     Ygmt  = min(cat(4, Ygmt1, Ygmt2),[],4); clear Ygmt1 Ygmt2
+    Ygmt  = cat_vol_median3(Ygmt,Ygmt>0,Ygmt>0);
 
   elseif opt.gyrusrecon == 2 % EXTRA
     % Using PBT to reconstruct the sulci and then the gyri.
-    
+    distcorval = 0.5; % in theory 0.5 
+
     % correct general voxel offset (vbdist quantifies the distance to the 
     % object grid points rather than the boundary between object and background. 
-    Ycd = max(0,Ycd - 0.5); Ywd = max(0,Ywd - 0.5); 
+    Ycd = max(0,Ycd - distcorval); Ywd = max(0,Ywd - distcorval); 
 
     % remove highly distant outliers
     [Yp0c, Ywdc, Ycdc] = cleanupVessels(Yp0, Ywd, Ycd, opt.distcleanup); 
@@ -282,57 +286,37 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
     % mapping that maps the maximum distance so without any distnace between
     % sulcal banks. The correction should be between 0.0 and 0.25 being as 
     % small as possible (for a correction of 0.5 the voxel would be already
-    % outside of the GM). Arbitrary correction by the half of 0.25.
-    pbtsulcorval = .05;                  % default correction in sulcal areas
-    pbtsulcormax = .3;                   % bust to avoid sulcal blurring
-    pbtsulcorth  = 1.5 / mean( vx_vol ); % bust limit in mm
-    % Correct for the voxel-grid offset of .5 after cleanup because it is
-    % important to use uncorrected values in the first PBT estimation to  
-    % get the full thickness 
-    pbtsulccor = @(Ygmtx, Ycdx, Ywdx) ...
-      max(0, Ygmtx - min(pbtsulcormax,  ... pbtsulcormax as upper limit
-        pbtsulcorval + (Ygmtx < pbtsulcorth)) .* ... %pbtsulcorval
-        ( Ygmtx < (Ycdx + Ywdx)  |  Ygmtx < pbtsulcorth));
+    % outside of the GM). Arbitrary correction by the half of "-0.01 - 0.15" 
+    pbtsulccor = @(Ygmtx, Ycdx, Ywdx) max(0,Ygmtx -0.01 - 0.15 .* (Ygmtx < (Ycdx + Ywdx))); 
 
     % 1. sulcus-reconstruction: 
     %    first, we just use the classic estimation to get a corrected CSF distance
-    Ygmt1 = cat_vol_pbtp( round(Yp0c)  , Ywdc, Ycdc);
-    Ygmt1 = pbtsulccor(Ygmt1, Ycdc, Ywdc);  % correct values only in regions with PBT mapping
-    Ygmt1 = cat_vol_approx(Ygmt1,'nh');     % aproximation and smoothing    
-    Ycdc = min(Ygmt1,Ycdc); Ywdc = min(Ygmt1,Ywdc); 
-    YM    = Ywdc>0 & Ycdc>0; Ycdc(YM) = min(Ycd(YM), Ygmt1(YM) - Ywdc(YM)); % update
+    Ygmt1 = cat_vol_pbtp( round(Yp0c) , Ywdc, Ycdc);
+    Ygmt1 = pbtsulccor(Ygmt1, Ycdc, Ywdc);
+    Ygmt1 = cat_vol_approx(Ygmt1, 'rec');            
+    Ycdc  = min(Ygmt1,Ycdc); Ywdc = min(Ygmt1,Ywdc); 
+    YM    = Ywdc>0 & Ycdc>0; Ycdc(YM) = min(Ycdc(YM), Ygmt1(YM) - Ywdc(YM)); % update
     
     % 2. gyrus reconstruction: 
     %    now, we can process the inverse/dual case go get
     Ygmt2 = cat_vol_pbtp(round(4 - Yp0), Ycdc, Ywdc);
     Ygmt2 = pbtsulccor(Ygmt2, Ycdc, Ywdc);
-    Ygmt2 = cat_vol_approx(Ygmt2,'nh');
+    Ygmt2 = cat_vol_approx(Ygmt2, 'rec');
     YM    = YM & Ycdc > median(Ygmt2(:));
-    Ywdc  = Ywd; Ywdc(YM) = min(Ywdc(YM), Ygmt2(YM) - Ycdc(YM)); clear Ygmt2 YM;
+    Ywdc  = Ywd; Ywdc(YM) = min(Ywdc(YM), Ygmt2(YM) - Ycdc(YM)); clear Ygmt2 YM; % Ywdc=Ywd  is required to avoid meninges !
     
     % 3. final estimation: 
     %    having now the correct distance values the finale thickness estimations are applied
     Ygmt  = cat_vol_pbtp( round(Yp0) , Ywdc, Ycdc);
     Ygmt  = pbtsulccor(Ygmt, Ycdc, Ywdc); 
-    Ymsk  = cat_vol_smooth3X( cat_vol_morph( Yp0==1 |  Ywdc > median(Ygmt(:)) + 4*std(Ygmt(:)) + 1 ,'c'),1);
-    Ywdc(Ymsk>0.5) = 0; Ycdc(Ymsk>0.5) = 0; 
-    Yp0c  = min( max(1,3 - 2*Ymsk), Yp0); 
-    Ygmt  = cat_vol_pbtp(round(Yp0c)  , Ywdc, Ycdc);
-    Ygmt  = pbtsulccor(Ygmt, Ycdc, Ywdc); 
-    % remove outliers
+
+    % remove thick outliers to avoid meninges  
     Ygmt( Ygmt > Ygmt1 .* (median(Ygmt1(Ygmt1(:)>0)) / median(Ygmt(Ygmt(:)>0))) ) = 0; clear Ygmt1;
-    
+   
     % final update of distance functions
     Ycd = Ycdc; Ywd = Ywdc;
   end
 
-  % addition correction based on the thickness phantom (more required in the CS3 pipeline but why)
-  % this could come from the interpolation
-  if 0 %opt.levels == 0  &&  vx_vol < 1
-    Ycd   = max(0,Ycd  - 0.25);
-    Ywd   = max(0,Ywd  - 0.25);
-    Ygmt  = max(0,Ygmt - 0.50);
-  end
 
 
   % (3) Approximation of non GM voxels for resampling:
@@ -736,3 +720,4 @@ function [Ycd, Ywd] = cat_vol_cwdist(Yp0,vx_vol,opt)
   
 end
 % ======================================================================
+% 20240217

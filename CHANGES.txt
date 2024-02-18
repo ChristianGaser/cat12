@@ -1,4 +1,22 @@
 ------------------------------------------------------------------------
+r2543 | robertdahnke | 2024-02-18 19:13:09
+
+Changed paths:
+ M CHANGES.txt
+ M cat_io_xml2csv.m
+ M cat_run.m
+ M cat_surf_createCS2.m
+ M cat_surf_createCS3.m
+ M cat_vol_pbtsimple.m
+
+1) Fixed:    Corrected output in cat_surf_createCS[2|3].
+2) Fixed:    Setup gyrusrecons cases in cat_vol_pbtsimple using  
+             the thickness phantoms. 
+3) Fixed:    Corrected cell export in cat_io_xml2csv.    
+4) Changed:  Optimized CSV export in cat_run.
+5) New:      Internal display function cat_tst_histBWPT.        
+             
+------------------------------------------------------------------------
 r2542 | robertdahnke | 2024-02-15 19:42:10
 
 Changed paths:

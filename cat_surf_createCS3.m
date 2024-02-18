@@ -817,7 +817,7 @@ function [Yth,S,Psurf,res] = cat_surf_createCS3(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
       cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);  
       
       % final surface evaluation 
-      %if debug || cat_get_defaults('extopts.expertgui')>1, fprintf('\n'); end
+      if debug || cat_get_defaults('extopts.expertgui')>1, fprintf('\n'); end
       if debug 
         cat_surf_fun('saveico',CS,cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm),Pcentral,'',Ymfs,Smat.matlabIBB_mm); 
       end

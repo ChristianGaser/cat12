@@ -798,8 +798,13 @@ function cat_run_createCSVreport(job,BIDSfolder)
   
   % run SPM batch
   warning off; 
-  spm_jobman('run',matlabbatch);
+  evalc('spm_jobman(''run'',matlabbatch);'); 
   warning on; 
+
+  csvfile = fullfile( ...
+    matlabbatch{1}.spm.tools.cat.tools.xml2csv.outdir{1}, ...
+    matlabbatch{1}.spm.tools.cat.tools.xml2csv.fname ); 
+  fprintf('\nPrint CSV-file %s',spm_file(csvfile,'link','edit(''%s'')')); 
 return
 %_______________________________________________________________________
 function job = update_job(job)

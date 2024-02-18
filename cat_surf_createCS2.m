@@ -1513,6 +1513,7 @@ end
       cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);  
       
       % final surface evaluation 
+      if debug || cat_get_defaults('extopts.expertgui')>1, fprintf('\n'); end
       if debug
         cat_surf_fun('saveico',CS,facevertexcdata,Pcentral,sprintf('createCS_3_collcorr_%0.2fmm_vdist%0.2fmm',opt.interpV,opt.vdist),Ymfs,Smat.matlabIBB_mm); 
       end
