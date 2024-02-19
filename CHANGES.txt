@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2546 | gaser | 2024-02-19 11:15:38
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M cat_surf_results.m
+ M doc/cat.html
+ M slice_overlay.m
+
+Changed: Added option to go to next or previous file in cat_surf_results.m.
+------------------------------------------------------------------------
 r2543 | robertdahnke | 2024-02-18 19:13:09
 
 Changed paths:
