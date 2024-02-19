@@ -1,4 +1,12 @@
 ------------------------------------------------------------------------
+r2548 | gaser | 2024-02-19 11:56:16
+
+Changed paths:
+ M CHANGES.txt
+ M cat_vol_slice_overlay.m
+
+Changed: Updated option to go to next or previous file in cat_surf_results.m.
+------------------------------------------------------------------------
 r2547 | gaser | 2024-02-19 11:52:37
 
 Changed paths:
