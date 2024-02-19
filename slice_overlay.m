@@ -396,12 +396,12 @@ for i = 1:nslices
   for j = 1:nimgs
     thisimg = SO.img(j);
     % to voxel space of image
-    vixyz = inv(SO.transform*thisimg.vol.mat)*ixyzmm;
+    vixyz = inv(SO.transform*thisimg.vol(1).mat)*ixyzmm;
     % raw data 
-    if is_there(thisimg.vol, 'imgdata')
-      V = thisimg.vol.imgdata;
+    if is_there(thisimg.vol(1), 'imgdata')
+      V = thisimg.vol(1).imgdata;
     else
-      V = thisimg.vol;
+      V = thisimg.vol(1);
     end
     i1 = spm_sample_vol(V,vixyz(X,:),vixyz(Y,:),vixyz(Z,:), ...
        [thisimg.hold thisimg.background]);
@@ -455,11 +455,14 @@ for i = 1:cbars
   axno = axisd(end-cbars+i);
   cbari = SO.img(SO.cbar(i));
   cml = size(cbari.cmap,1);
-  p = get(axno, 'Position');; % position of last axis
+  p = get(axno, 'Position'); % position of last axis
   cw = p(3)*0.2;
   ch = p(4)*0.75;
   pc = p(3:4)/2;
   [axlims idxs] = sort(cbari.range);
+  if ~diff(axlims)
+    break
+  end
   a=axes(...
       'Parent',figno,...
       'XTick',[],...

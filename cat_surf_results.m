@@ -69,6 +69,14 @@ function varargout = cat_surf_results(action, varargin)
 %  Define statistical threshold. 
 %  0 - none, -log10(0.05) - 0.05, 2 - 0.01, 3 - 0.001
 %
+%  * cat_surf_results('forward');
+%  * cat_surf_results('next');
+%  Select next file
+%
+%  * cat_surf_results('backward');
+%  * cat_surf_results('prev');
+%  Select previous file
+%
 %  * cat_surf_results('transparency');
 %  Disable transparency. 
 %
@@ -190,7 +198,9 @@ switch lower(action)
     
     % figure 2 with GUI
     H.pos{2} = struct(...
-      'sel',    [0.050 0.935 0.900 0.050],...[0.290 0.930 0.425 0.050],...
+      'prev',   [0.050 0.965 0.050 0.025],...
+      'sel',    [0.100 0.935 0.800 0.050],...
+      'next',   [0.900 0.965 0.050 0.025],...
       'nam',    [0.050 0.875 0.900 0.050],...
       'surf',   [0.050 0.800 0.425 0.050],'mview',   [0.525 0.800 0.425 0.050],... 
       'text',   [0.050 0.750 0.425 0.050],'thresh',  [0.525 0.750 0.425 0.050],... 
@@ -240,6 +250,24 @@ switch lower(action)
         'Interruptible', 'on', 'Enable', 'off');
     end
       
+    H.prev = uicontrol(H.panel(2), ...
+      'String', '<', 'Units', 'normalized', ...
+      'Position', H.pos{2}.prev, ...
+      'Style', 'Pushbutton', 'HorizontalAlignment', 'center', ...
+      'Callback', @prev_file, ...
+      'FontSize',H.FS,'ForegroundColor','black',...
+      'ToolTipString', 'Next file', ...
+      'Interruptible', 'on', 'Visible', 'off');
+    
+    H.next = uicontrol(H.panel(2), ...
+      'String', '>', 'Units', 'normalized', ...
+      'Position', H.pos{2}.next, ...
+      'Style', 'Pushbutton', 'HorizontalAlignment', 'center', ...
+      'Callback', @next_file, ...
+      'FontSize',H.FS,'ForegroundColor','black',...
+      'ToolTipString', 'Next file', ...
+      'Interruptible', 'on', 'Visible', 'off');
+
     % closing all windows
     H.close = uicontrol(H.panel(2), ...
       'String', 'Close', 'Units', 'normalized', ...
@@ -732,7 +760,7 @@ switch lower(action)
       set(H.dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on',...
         'DisplayStyle', 'datatip', 'Updatefcn', {@myDataCursorAtlas, H});
       % sometimes interpreter cannot be set for some Matlab versions
-      try, set(dcm_obj, 'Interpreter', 'none'); end
+      try set(dcm_obj, 'Interpreter', 'none'); end
       
     end
     
@@ -870,6 +898,18 @@ switch lower(action)
     end
     
     
+  %-FileSelection forward
+  %======================================================================
+  case {'forward','next'}
+
+    next_file([],[]);
+
+  %-FileSelection backward
+  %======================================================================
+  case {'backward','previous'}
+
+    prev_file([],[]);
+
   %-CLim
   %======================================================================
   case 'clim'      
@@ -1390,8 +1430,8 @@ end
 
 if isfield(H,'Pvol_sel')
   if (mn < 0 && mn > -thresh) && (mx >= 0 && mx < thresh)
-    try, close(OV.fig); end
-    try, close(OV.fig_mip); end
+    try close(OV.fig); end
+    try close(OV.fig_mip); end
   else
     H = update_slice_overlay(H);
   end
@@ -1436,7 +1476,7 @@ switch cmap
         tmp{1} = cust_cmap;
       end
       % if a variable is given set is as global
-      try, eval(['global ' char(tmp{1})]); end
+      try eval(['global ' char(tmp{1})]); end
       
       try
         % is it a variable?
@@ -1810,6 +1850,18 @@ end
 
 set(H.cursor,'String', str, 'UserData', tmp);
 
+if H.results_sel < numel(H.Pvol)
+  set(H.next,'Visible','on')
+else
+  set(H.next,'Visible','off')
+end
+
+if H.results_sel > 1
+  set(H.prev,'Visible','on')
+else
+  set(H.prev,'Visible','off')
+end
+
 % print selected filename
 cla(H.nam);
 axis(H.nam, 'off')
@@ -1833,8 +1885,8 @@ end
 
 % check whether values are above threshold and close windows and return if not
 if (mn < 0 && mn > -H.thresh_value) && (mx >= 0 && mx < H.thresh_value)
-  try, close(OV.fig); end
-  try, close(OV.fig_mip); end
+  try close(OV.fig); end
+  try close(OV.fig_mip); end
   return
 end
 
@@ -1878,15 +1930,7 @@ else
 end
 OV.overview = []; % don't show slice overviev
 
-if ~isempty(H.clip)
-  if isnan(H.clip(2))
-    OV.range = H.clim(2:3);
-  else
-    OV.range = H.clim(2:3);
-  end
-else
-  OV.range = H.clim(2:3);
-end
+OV.range = H.clim(2:3);
 
 OV.name = char(H.Pvol{H.results_sel});
 if nargin < 2
@@ -2389,7 +2433,7 @@ if H.n_surf == 1
   
   set(H.colourbar, 'XColor', 1-H.bkg_col, 'YColor', 1-H.bkg_col);
 
-  try, set(H.colourbar, 'TickDirection','out'); end
+  try set(H.colourbar, 'TickDirection','out'); end
   try
     set(H.colourbar, 'TickLength', 0.01);
   catch
@@ -2762,11 +2806,41 @@ if 0 %isfield(H,'histax')
 end
   
 %==========================================================================
+function next_file(obj, event_obj)
+global H
+
+if  H.results_sel + 1 <= numel(H.Pvol)
+  H.results_sel = H.results_sel + 1;
+else
+  fprintf('Last file already selected.\n');
+  return
+end
+
+H.Pvol_sel = deblank(H.Pvol{H.results_sel});
+fprintf('New selected file: %s\n',H.Pvol_sel);
+select_results(H.results_sel);
+
+%==========================================================================
+function prev_file(obj, event_obj)
+global H
+
+if  H.results_sel - 1 >= 1
+  H.results_sel = H.results_sel - 1;
+else
+  fprintf('First file already selected.\n');
+  return
+end
+
+H.Pvol_sel = deblank(H.Pvol{H.results_sel});
+fprintf('New selected file: %s\n',H.Pvol_sel);
+select_results(H.results_sel);
+    
+%==========================================================================
 function select_data(obj, event_obj, P)
 global H
 
 if ~exist('P','var')
-  P = spm_select([1 24], {'mesh','image'}, 'Select up to 24 volume or surface maps');
+  P = spm_select([1 50], {'mesh','image'}, 'Select up to 50 volume or surface maps');
 end
 
 n = size(P, 1);
@@ -2856,6 +2930,10 @@ H.S{1}.name = P0;
 H.S{2}.name = P0;
 
 cat_surf_results('disp', P0);
+
+if numel(H.Pvol) > 1
+  set(H.next,'Visible','on')
+end
 
 %==========================================================================
 function save_image(obj, event_obj, filename)
@@ -3175,7 +3253,7 @@ if ~H.disable_cbar
 end
 
 if isfield(H, 'dataplot')
-  try, set(H.dataplot, 'XColor', 1 - H.bkg_col, 'YColor', 1 - H.bkg_col, 'Color', H.bkg_col); end
+  try set(H.dataplot, 'XColor', 1 - H.bkg_col, 'YColor', 1 - H.bkg_col, 'Color', H.bkg_col); end
 end
 
 if isfield(H,'Pvol_sel')
@@ -3335,7 +3413,7 @@ switch H.cursor_mode
     set(dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on', ...
       'DisplayStyle', 'datatip', 'Updatefcn', {@myDataCursorAtlas, H});
     % sometimes interpreter cannot be set for some Matlab versions
-    try, set(dcm_obj, 'Interpreter', 'none'); end
+    try set(dcm_obj, 'Interpreter', 'none'); end
   case {5, 6}
     
     try
@@ -3380,7 +3458,7 @@ switch H.cursor_mode
       set(dcm_obj, 'Enable', 'on', 'SnapToDataVertex', 'on', ...
         'DisplayStyle', 'datatip', 'Updatefcn', {@myDataCursorCluster});
       % sometimes interpreter cannot be set for some Matlab versions
-      try, set(dcm_obj, 'Interpreter', 'none'); end
+      try set(dcm_obj, 'Interpreter', 'none'); end
       if H.predicted > -2
         fprintf('The values are available at the MATLAB command line as variable ''y''\n');
       else
