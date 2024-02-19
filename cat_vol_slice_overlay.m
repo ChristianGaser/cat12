@@ -183,6 +183,10 @@ else
   else
     SO.img(2).vol = spm_vol(OV.name);
     [mx, mn, XYZ, img2] = volmaxmin(SO.img(2).vol);
+
+    % apply function to img2
+    i1 = img2; eval(OV.func) img2 = i1;
+    
     % threshold map and restrict coordinates
     Q = find(compare_to_threshold(img2,range(1)) & le(img2,range(2)));
     XYZ = XYZ(:, Q);
