@@ -3012,15 +3012,16 @@ end
 set(H.figure, 'InvertHardcopy', 'off', 'PaperPositionMode', 'auto');
 
 % posc to correct margin of the figure [r t l b] if no dataplot is present
-if isfield(H, 'dataplot') && strcmpi(get(H.dataplot,'Visible'),'on')
-  pos = round(getpixelposition(H.panel(1))); 
-else
-  pos = round(getpixelposition(H.panel(1))); 
-  posc = [70 70 70 0]; pos = [pos(1) + posc(1), pos(2) + posc(4), pos(3) - posc(1) - posc(3), pos(4) - posc(2) - posc(4)];
-end
-hh = getframe(H.figure,pos);
+hh0 = getframe(H.figure);
+sz0 = [0 0 size(hh0.cdata,[2 1])];
+pos = round(sz0.*H.panel(1).Position);
 
-img = frame2im(hh);
+if ~(isfield(H, 'dataplot') && strcmpi(get(H.dataplot,'Visible'),'on'))
+  posc = [70 70 70 70]; pos = [pos(1) + posc(1), pos(2) + posc(2) + posc(4), pos(3) - posc(1) - posc(3), pos(4) - posc(2) - posc(4)];
+end
+
+img = frame2im(hh0);
+img = img(pos(2)+1:pos(2)+pos(4),pos(1)+1:pos(1)+pos(3),:);
 if H.results_sel ~= 4 && ~isfield(H, 'dataplot')
   % crop image if it's not a flatmap
   sz = size(img);
