@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2550 | gaser | 2024-02-21 11:16:06
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M doc/cat.html
+ M doc/index.html
+
+Changed: Updated documentation and version information.
+
+------------------------------------------------------------------------
 r2548 | gaser | 2024-02-19 11:56:16
 
 Changed paths:
