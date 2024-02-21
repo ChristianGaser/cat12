@@ -48,6 +48,12 @@ elseif isunix
   CATDir = [CATDir '.glnx86'];
 end  
 
+% test if the file is existing
+cmdparts = strsplit(cmd); 
+if isempty( cat_vol_findfiles(CATDir,cmdparts{1}) )
+  error('cat_system:missCmd','Cannot find "%s"',fullfile(CATDir,cmdparts{1}))
+end
+
 if ispc
   olddir = pwd;
   cd(CATDir);

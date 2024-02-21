@@ -326,6 +326,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
   %njobs = cellfun(@numel,{jobs.data}); % not used
   
   % command window output
+  kcol      = [0.5 0.5 0.5]; % color for comma
   QMC       = cat_io_colormaps('marks+',17);
   GMC       = cat_io_colormaps('turbo',45);
   GMC       = GMC ./ repmat( max(1,sum(GMC,2)) , 1 , 3);  % make bright values darker 
@@ -623,7 +624,6 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
                 else
                   col = [0 0 0];
                 end
-                kcol = [0.5 0.5 0.5]; % color for comma
                 if job.extopts.expertgui > 0 
                   try 
                     cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('TIV=%4.0fcm%s',...
