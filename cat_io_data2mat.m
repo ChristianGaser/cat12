@@ -96,7 +96,7 @@ label = [];
 
 V = cell(n_samples,1);
 label = [];
-for i = 1:n_samples;
+for i = 1:n_samples
   V{i} = spm_data_hdr_read(char(sample.data{i}));
   n_subjects(i) = size(V{i},1);
   label = [label; i*ones(n_subjects(i),1)];

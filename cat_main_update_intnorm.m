@@ -156,9 +156,9 @@ function [Ym2,Ymi2,Tthm,Tthmi] = cat_main_update_intnorm(Ym,Ymi,Yb,Ycls,job,verb
   
   % display a result histogram figure
   if verb
-    cg_hist2d(Ym2(Yb(:))); set(gcf,'Menubar','figure'); 
+    cat_plot_histogram(Ym2(Yb(:))); set(gcf,'Menubar','figure'); 
     hold on; for i=1:0.5:3, plot([i/3 i/3;],get(gca,'ylim'),'r'); end
-    cg_hist2d(Ymi2(Yb(:))); set(gcf,'Menubar','figure'); 
+    cat_plot_histogram(Ymi2(Yb(:))); set(gcf,'Menubar','figure'); 
     hold on; for i=1:0.5:3, plot([i/3 i/3;],get(gca,'ylim'),'r'); end
   end
 return
