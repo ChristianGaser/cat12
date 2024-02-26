@@ -1,4 +1,21 @@
 ------------------------------------------------------------------------
+r2557 | gaser | 2024-02-26 09:20:06
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M Makefile
+ M cat_io_data2mat.m
+ M cat_main_update_intnorm.m
+ M cat_run_newcatch.m
+ M cat_surf_render2.m
+ M doc/cat.html
+
+Changed: Added piwik field about Matlab version for errors.
+Changed: Replaced old cg_hist2d calls by cat_plot_histogram.m.
+Changed: Added ARM64 standalone to Makefile.
+
+------------------------------------------------------------------------
 r2550 | gaser | 2024-02-21 11:16:06
 
 Changed paths:

@@ -172,7 +172,7 @@ function cat_run_newcatch(job,tpm,subj)
       for si=1:numel(caterr.stack)
         str_err = [str_err '|' caterr.stack(si).name ':' num2str(caterr.stack(si).line)];
       end      
-      urlinfo = sprintf('%s/%s/%s/%s/%s/%s/%s',CATrel,computer,'errors',['r' CATver],caterr_id,caterr_message_str,str_err);
+      urlinfo = sprintf('%s/%s/%s/%s\%s/%s/%s/%s',CATrel,computer,'errors',['r' CATver],caterr_id,version('-release'),caterr_message_str,str_err);
       cat_io_send_to_server(urlinfo);
     end
 

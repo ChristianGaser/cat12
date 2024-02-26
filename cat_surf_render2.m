@@ -949,9 +949,7 @@ switch lower(action)
             char(177),mean(H.cdata(ind_finite)),char(177),std(H.cdata(ind_finite)))); 
           uimenu(c1, 'Tag','SurfDataMenu4','Interruptible','off','Label',sprintf('  min / max:       %0.4f / %0.4f',min(H.cdata(ind_finite)),max(H.cdata(ind_finite)))); 
         end
-        if exist('cg_hist2d','file')
-          uimenu(c1, 'Label', 'Histogram',    'Interruptible','off','Separator','on','Callback',{@myHist, H});
-        end
+        uimenu(c1, 'Label', 'Histogram',    'Interruptible','off','Separator','on','Callback',{@myHist, H});
         uimenu(c1, 'Label', sprintf('Dir:    %s'              ,spm_str_manip(sinfo1(1).pp,  'a40'))); 
         %%
         % Inflation off ... to slow and unimportant
@@ -2277,9 +2275,9 @@ function myHist(obj,evt,H)
 objTextures = findobj(get(findobj(get(get(obj,'parent'),'parent'),'Label','Textures'),'Children'),'Checked','on');
 if isfield( H , 'textures')
   currentTexture = cellfun('isempty',strfind( H.textures(:,1) , objTextures.Label ))==0  &  cellfun('length',H.textures(:,1)) ==  length(objTextures.Label); 
-  cg_hist2d( struct( 'P' , H.textures{currentTexture,2}.fname ))
+  cat_plot_histogram( struct( 'P' , H.textures{currentTexture,2}.fname ))
 else
-  cg_hist2d(  H.cdata );
+  cat_plot_histogram(  H.cdata );
 end
 %==========================================================================
 function mySynchroniseCaxis(obj,evt,H)
