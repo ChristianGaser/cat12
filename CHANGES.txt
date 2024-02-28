@@ -1,4 +1,32 @@
 ------------------------------------------------------------------------
+r2558 | gaser | 2024-02-28 15:30:40
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M Makefile
+ M cat_amap.mexa64
+ M cat_ornlm.mexa64
+ M cat_sanlm.mexa64
+ M cat_surf_results.m
+ M cat_vbdist.mexa64
+ M cat_vol_downcut.mexa64
+ M cat_vol_eidist.mexa64
+ M cat_vol_genus0.mexa64
+ M cat_vol_gradient3.mexa64
+ M cat_vol_interp3f.mexa64
+ M cat_vol_laplace3.mexa64
+ M cat_vol_laplace3R.mexa64
+ M cat_vol_localstat.mexa64
+ M cat_vol_median3.mexa64
+ M cat_vol_median3c.mexa64
+ M cat_vol_pbtp.mexa64
+ M cat_vol_simgrow.mexa64
+ M doc/cat.html
+
+Changed: Updated mex-files for Linux (thanks to James C. Ford)
+Changed: Added Mac Intel standalone version to Makefile.
+------------------------------------------------------------------------
 r2557 | gaser | 2024-02-26 09:20:06
 
 Changed paths:
