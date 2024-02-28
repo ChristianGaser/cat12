@@ -14,7 +14,7 @@ TARGET=/Users/gaser/spm/spm12/toolbox/cat12
 TARGET2=/Volumes/UltraMax/spm12/toolbox/cat12
 TARGET4=/Users/gaser/spm/spm-octave/toolbox/cat12
 
-PRECOMPILED=/Users/gaser/matlab/Matlab_R2017b
+PRECOMPILED=/Users/gaser/matlab/Matlab_standalone
 
 STARGET_HOST=141.35.69.218
 STARGET_HTDOCS=${STARGET_HOST}:/volume1/web/
@@ -127,7 +127,7 @@ scp_precompile:
 	   scp -O -P ${PORT} ${ZIPFOLDER}/${NEWVERSION}_R2017b_MCR_$${i}.zip  ${STARGET}; \
 	   bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${NEWVERSION}_R2017b_MCR_$${i}.zip ${STARGET_FOLDER}/cat12_latest_R2017b_MCR_$${i}.zip"; \
 	done
-	-@for i in Mac_arm64; do \
+	-@for i in Mac Mac_arm64; do \
 	   mkdir -p ${NEWVERSION}_R2023b_MCR_$${i} ;\
 	   ln -s ${PRECOMPILED}/MCR_$${i}/*spm12* ${PRECOMPILED}/MCR_$${i}/readme.txt ${PRECOMPILED}/MCR_$${i}/MCR_v232.webloc ${NEWVERSION}_R2023b_MCR_$${i}/ ;\
 	   cp -r standalone ${NEWVERSION}_R2023b_MCR_$${i}/ ;\
@@ -211,7 +211,7 @@ precompile:
 #	-@echo    "Ubuntu 19.10 (run spm12_R2017b on paris to compile) : mv /Users/gaser/spm/standalone/spm12.ctf ${PRECOMPILED}/MCR_Linux/"
 	-@echo    "Ubuntu 17.10 (run spm12_R2017b with desktop on MacBook to compile) : mv /Users/gaser/spm/standalone/spm12.ctf ${PRECOMPILED}/MCR_Linux/"
 	-@echo    "Windows 10: mv /Users/gaser/spm/standalone/spm12.[ce][tx][fe] ${PRECOMPILED}/MCR_Win/"
-	-@echo    "MacOS (run spm12_R2017b): rm -rf ${PRECOMPILED}/MCR_Mac/spm12.app; mv /Users/gaser/spm/standalone/spm12.app ${PRECOMPILED}/MCR_Mac/"
+	-@echo    "MacOS (run spm12_R2023b_intel): rm -rf ${PRECOMPILED}/MCR_Mac/spm12.app; mv /Users/gaser/spm/standalone/spm12.app ${PRECOMPILED}/MCR_Mac/"
 	-@echo    "MacOS ARM64 (run spm12_R2023b): rm -rf ${PRECOMPILED}/MCR_Mac_arm64/spm12.app; mv /Users/gaser/spm/standalone/spm12.app ${PRECOMPILED}/MCR_Mac_arm64/"
 	-@echo    
 

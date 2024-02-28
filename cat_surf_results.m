@@ -30,6 +30,10 @@ function varargout = cat_surf_results(action, varargin)
 %  Select border overlay. 
 %  0 - no border, 1 - Desikan-Killiany DK40, 2- Destrieux 2009, 3 - HCP Multi-Modal Parcellation
 %
+%  * cat_surf_results('atlas',1..3)
+%  Select atlas labeling. 
+%  1 - Desikan-Killiany DK40, 2- Destrieux 2009, 3 - HCP Multi-Modal Parcellation
+%
 %  * cat_surf_results('view',1..3)
 %  Select render view.
 %  1 - topview, 2 - bottomview, 3 - sideview
@@ -1154,7 +1158,7 @@ switch lower(action)
     end
   
     
-  %- set texture 
+  %- set border 
   %======================================================================
   case 'border'
     border_mode = varargin{1};
@@ -1162,7 +1166,14 @@ switch lower(action)
       select_border(border_mode);
     end
   
-    
+  %- set atlas 
+  %======================================================================
+  case 'atlas'
+    atlas_mode = varargin{1};
+    if any(atlas_mode == 1:3)
+      select_atlas(atlas_mode);
+    end
+
   %- set view
   %======================================================================
   case 'view'
@@ -1578,7 +1589,7 @@ for ind = [1 3]
         dmax = d(indp); dmax = max(dmax(N));
         
         if H.logP(H.results_sel), fprintf('\n%1.5f\t%16d', 10^(-dmax), k);
-        else, fprintf('\n%6.1f\t%16d', dmax, k); end
+        else, fprintf('\n%.5f\t%16d', dmax, k); end
         
         Nrdata = rdata2(N);
         roi_size = zeros(size(rcsv, 1) - 1, 1);
@@ -1624,7 +1635,7 @@ for ind = [1 3]
         
         dmin = d(indn); dmin = min(dmin(N));
         if H.logP(H.results_sel), fprintf('\n%1.5f\t%16d', 10^(dmin), k);
-        else, fprintf('\n%6.1f\t%16d', -dmin, k); end
+        else, fprintf('\n%.5f\t%16d', -dmin, k); end
         
         Nrdata = rdata2(N);
         roi_size = zeros(size(rcsv, 1) - 1, 1);
@@ -2817,7 +2828,7 @@ else
 end
 
 H.Pvol_sel = deblank(H.Pvol{H.results_sel});
-fprintf('New selected file: %s\n',H.Pvol_sel);
+fprintf('New selected file: %s\n',H.S1.name(H.results_sel,:));
 select_results(H.results_sel);
 
 %==========================================================================
@@ -2832,7 +2843,7 @@ else
 end
 
 H.Pvol_sel = deblank(H.Pvol{H.results_sel});
-fprintf('New selected file: %s\n',H.Pvol_sel);
+fprintf('New selected file: %s\n',H.S1.name(H.results_sel,:));
 select_results(H.results_sel);
     
 %==========================================================================
