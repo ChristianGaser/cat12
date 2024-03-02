@@ -1,0 +1,58 @@
+Hammers atlas:
+--------------------------------------------------------------------------------
+CAT12 was used to segment the T1 data and to estimate the registration parameters to transform the probability maps to MNI152NLin2009cAsym space. 
+
+The resulting maximum probability map was slightly modified: (1) remaining holes were filled with median value, (2) an additionally mask with brainmask_T1.nii was applied to remove non-brain areas.
+
+This atlas, based on Alexander Hammers' brain atlas, made available for the Euripides project, Nov 2009 (A). 
+
+By using this atlas you agree to the terms of the licence (free academic end user license agreement) and has to fill out the license agreement:
+http://brain-development.org/brain-atlases/adult-brain-atlases/individual-adult-brain-atlases-new/
+
+CAT12 was used to segment the T1 data and estimate Dartel normalization to the VBM IXI550 template for each subject. Dartel mapping was then applied for label map. A 3D median filter was used to remove outliers in the label map. ROI-IDs were reset to guaranty that left side ROIs were described by odd numbers, whereas right-hand side ROIs only have even numbers. ROIs without side-alignment in the original atlas like the brainstem were broken into a right and left part. Therefore, a Laplace filter was used to estimate the potential field of unaligned regions between the left an right potential. If most or no side alignment in the original map was available, a side label map from the anatomy toolbox of SPM was used.
+
+If you use this atlas, please cite the references below and fill out the license agreement.
+
+Websites:    
+A) http://brain-development.org/brain-atlases/adult-brain-atlases/individual-adult-brain-atlases-new/
+
+References:
+1) Hammers A, Allom R, Koepp MJ, Free SL, Myers R, Lemieux L, Mitchell TN, 
+Brooks DJ, Duncan JS. Three-dimensional maximum probability atlas of the human 
+brain, with particular reference to the temporal lobe. Hum Brain Mapp 2003, 19: 
+224-247. 
+(for the region definitions #01-49 including protocols)
+
+2) Gousias IS, Rueckert D, Heckemann RA, Dyet LE, Boardman JP, Edwards AD, 
+Hammers A. Automatic segmentation of brain MRIs of 2-year-olds into 83 regions 
+of interest. Neuroimage 2008 Apr 1;40(2):672-684. 
+(for region names #50-67 and access to protocols: www.brain-development.org)
+
+LICENSE AGREEMENT
+Copyright Imperial College of Science Technology & Medicine (“Imperial”), Alexander Hammers, and University College London (“UCL”), together the “Copyright Holders”, 2004-2017.
+
+Thirty individual manually drawn brain atlases (the “Atlases”) based on MRI brain scans of 30 healthy adults (with 95 regions each), with those (anonymized) MRI brain scans, atlases, and a list of regions (together the “Materials”)
+
+All Rights Reserved
+
+Developed jointly by Alexander Hammers (1,3, Ioannis S. Gousias (1), Laila Ahsan (1), Spyridon Vossos (1), Chi-Hua Chen(1), Rolf Heckemann (1,3), Louis Lemieux (2), David J Brooks (1), John S Duncan (2) and Matthias J Koepp (2) (the “Authors”)
+
+(1) Department of Clinical Neuroscience and MRC Clinical Sciences Centre, Division of Neuroscience and Mental Health, Faculty of Medicine Imperial College London, London, UK (2) Department of Clinical and Experimental Epilepsy, Institute of Neurology, University College London, London, UK (3) Functional Neuroimaging, Fondation Neurodis, CERMEP, Hôpital Neurologique Pierre Wertheimer, Lyon, France
+
+In accessing the materials, documents and content, you agree to the following terms and conditions:
+
+The materials, documents and content (“Materials”) on this site are protected by copyright, moral rights and/or database right throughout the world and are owned by Imperial and/or the Authors. The Authors assert their moral rights to be identified as the authors of the Materials.
+You may read, print and download the Materials for academic, non-commercial research including teaching.
+You may use the Materials (in whole or in part) for the purposes of academic, non-commercial research and teaching (“Permitted Purpose”). For the avoidance of doubt, the Permitted Purpose does not include using Materials for (i) commercially-sponsored research or (ii) the diagnosis, treatment or medical care of patients.
+You shall not (i) sub-licence or distribute the Materials to third parties or (ii) use the Materials (in whole or in part) as the basis of any commercial product. If you require a commercial licence for the Materials please contact Imperial’s technology commercialisation company, Imperial Innovations Limited (http://www.imperialinnovations.co.uk).
+You must not alter, modify, add to or delete anything from the Materials you download or use, except as is permitted in paragraphs 2 and 3 above. Subject both to the previous sentence and paragraph 6, any alterations, modifications, additions or deletions from the Materials must be clearly described in any publications or presentations.
+You shall, in any use of the Materials, include an acknowledgement in the form of “(c) Copyright Imperial College of Science, Technology and Medicine 2007. All rights reserved.” In addition, in all publications or presentations, you shall cite (i) the source of the Materials as “www.brain-development.org” and (ii) appropriate papers documenting the creation of the Atlases (currently Hammers A, Allom R et al., Hum Brain Mapp 2003 for regions 01-49, Gousias IS et al. Neuroimage 2008 for regions 50-83, Faillenot I et al. 2017 for regions 86-95).
+The Materials are being provided as a service to the academic community and on a non-commercial basis, without charge. Accordingly, to the fullest extent permitted under applicable law, Imperial accepts no liability and offers no warranties in relation to the Materials.
+Without prejudice to the generality of the foregoing paragraph, the Materials provided under this free, academic end-user licence are a research tool undergoing further development and are not intended to be a clinical diagnostic aid. They are provided “as is”; and without any express or implied warranties, representations or undertakings. As examples, but without limiting the foregoing, Imperial does not give any warranty that the Materials do not infringe third party rights, are of merchantable or satisfactory quality, are fit for any particular purpose or for use under any specific conditions, or comply with any statement, demonstration or model provided or supplied by Imperial.
+In no event, unless required by law or agreed to in writing, will Imperial be liable to you for damages, including any general, special, incidental or consequential damages arising out of the use or inability to use the Materials (including but not limited to loss of data, data being rendered inaccurate, losses being sustained by you or third parties), or a failure of the Materials to operate with any materials or software used by you.
+You agree to indemnify Imperial and its officers, employees, students, other researchers and agents (together, the “Indemnitees”) and hold the Indemnitees harmless from and against any and all claims, damages and liabilities asserted by third parties (including claims for negligence) which arise directly or indirectly from the use of the Materials or the sale of any products based on the Materials.
+To maintain the protection of human subjects you undertake not to use the Materials so as to attempt in any way to discover the identity of or make contact with any individual from whom the information originated.
+
+
+--------------------------------------------------------------------------------
+$Id$

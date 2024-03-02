@@ -1,0 +1,18 @@
+SUIT cerebellar atlas:
+--------------------------------------------------------------------------------
+The anatomical definitions are based on the fMRI atlas of an individual cerebellum by Schmahmann et al. (2000). To obtain a representative anatomical atlas, the lobules on T1-weighted MRI scans (1mm isotropic resolution) of 20 individual healthy young participants (10 male, 10 female, average age 23.7 yrs) were annotated. The individual cerebella were then aligned using different commonly used normalization algorithms.
+
+The SUIT toolbox distributed under the Creative Commons Attribution-NonCommercial 3.0 Unported License, meaning that it can be freely used for non-commercial purposes, as long as proper attribution in form of acknowledgments and links (for online use) or citations (in publications) are given. The relevant references are:
+
+Websites:    
+A) https://github.com/DiedrichsenLab/cerebellar_atlases
+B) http://www.diedrichsenlab.org/imaging/propatlas.htm
+
+References:
+1) Diedrichsen J., Balster J.H., Flavell J., Cussans E., Ramnani N. (2009). A probabilistic MR atlas of the human cerebellum. Neuroimage; 46(1), 39-46.
+
+License:
+Creative Commons Attribution-NonCommercial 3.0 Unported License
+
+--------------------------------------------------------------------------------
+$Id$

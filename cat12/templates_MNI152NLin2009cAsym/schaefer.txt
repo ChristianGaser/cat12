@@ -1,0 +1,20 @@
+Local-Global Intrinsic Functional Connectivity Parcellation by Schaefer et al.
+--------------------------------------------------------------------------------
+
+CAT12 was used to segment MNI152NLin6Asym_T1w.nii and to estimate the normalization 
+parameters to transform the maximum probability maps to MNI152NLin2009cAsym space. 
+
+These atlases are available for different numbers of parcellations (100, 200, 400, 600) and are based on resting state data from 1489 subjects.
+
+If you use these atlases, please cite the references below.
+
+Website:    
+A) https://github.com/ThomasYeoLab/CBIG/tree/master/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal
+
+References:
+Schaefer A, Kong R, Gordon EM, Zuo XN, Holmes AJ, Eickhoff SB, Yeo BT, (accepted), 
+Local-Global Parcellation of the Human Cerebral Cortex From Intrinsic Functional 
+Connectivity MRI, Cerebral Cortex
+
+--------------------------------------------------------------------------------
+$Id$
