@@ -1,0 +1,53 @@
+AAL (AUTOMATED ANATOMICAL LABELING) atlas:
+--------------------------------------------------------------------------------
+
+CAT12 was used to segment T1 data (Collins brain) and to estimate the normalization parameters to transform the maximum probability maps to MNI152NLin2009cAsym space. 
+
+If you use these atlases, please cite the references below.
+
+Websites:    
+A) http://www.gin.cnrs.fr/en/tools/aal/
+B) https://www.oxcns.org/aal3.html
+
+References:
+1) Tzourio-Mazoyer N, Landeau B, Papathanassiou D, Crivello F, Etard O, Delcroix N, 
+et al. Automated anatomical labelling of activations in spm using a macroscopic 
+anatomical parcellation of the MNI MRI single subject brain. Neuroimage 2002; 
+15: 273-289.
+
+2) Rolls ET, Huang C, Lin C, Feng J, Joliot M. Automated anatomical labelling 
+atlas 3. Neuroimage 2020; 206:116189.
+
+
+--------------------------------------------------------------------------------
+
+AAL3 User Guide
+
+The automated anatomical parcellation AAL3 of the spatially normalized single-
+subject high-resolution T1 volume provided by the Montreal Neurological Institute 
+(MNI). This includes the original parcellation provided in AAL (Tzourio-Mazoyer 
+et al 2002), the new parcellation of the orbitofrontal cortex provided in AAL2 
+(Rolls, Joliot, and Tzourio-Mazoyer, 2015) , but also new areas, as described in 
+this User Guide and by (Rolls et al., 2019).
+
+Download
+
+AAL3, released on the 27 August 2019:
+SPM12 version of AAL3 software: AAL3_for_SPM12.tar.gz
+
+User guide
+
+Following a first version AAL of the automated anatomical labeling atlas 
+(Tzourio-Mazoyer et al 2002), a second version (AAL2) (Rolls, Joliot, and 
+Tzourio-Mazoyer, 2015) was developed that provided an alternative parcellation 
+of the orbitofrontal cortex following the description provided by Chiavaras, 
+Petrides, and colleagues.  We now provide a third version, AAL3, which adds a 
+number of brain areas not previously defined, but of interest in many neuroimaging 
+investigations. The new areas in the third version are subdivision of the anterior 
+cingulate cortex into subgenual, pregenual and supracallosal parts; the thalamus; 
+the nucleus accumbens, substantia nigra, ventral tegmental area, red nucleus, 
+locus coeruleus, and raphe nuclei. The new atlas is available as a toolbox for 
+SPM, and can be used with MRIcron.
+
+--------------------------------------------------------------------------------
+$Id$

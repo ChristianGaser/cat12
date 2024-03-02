@@ -1,0 +1,137 @@
+Anatomy atlas v3:
+--------------------------------------------------------------------------------
+Combining probabilistic cytoarchitectonic maps and functional imaging data.
+
+The atlas was slightly modified and remaining holes were filled with the median value.
+Furthermore, the left and right hemisphere coding was changed.
+
+Please have also a look for the anatomy toolbox of Simon Eickhoff (Version 3.0, 
+2014-07-23) that provides the data.
+If you use these atlases, please cite the references below.
+
+
+Websites:    
+A) https://www.fz-juelich.de/SharedDocs/Downloads/INM/INM-7/EN/SPM_Toolbox/Toolbox_3.html
+
+References for the SPM Anatomy toolbox:
+1) Eickhoff SB, Stephan KE, Mohlberg H, Grefkes C, Fink GR, Amunts K, Zilles K. A 
+new SPM toolbox for combining probabilistic cytoarchitectonic maps and functional 
+imaging data. NeuroImage 25(4), 1325-1335, 2005
+
+2) Eickhoff SB, Heim S, Zilles K, Amunts K. Testing anatomically specified hypotheses 
+in functional imaging using cytoarchitectonic maps. NeuroImage 32(2), 570-582, 2006
+
+3) Eickhoff SB, Paus T, Caspers S, Grosbras MH, Evans A, Zilles K, Amunts K Assignment 
+of functional activations to probabilistic cytoarchitectonic areas revisited. 
+NeuroImage 36(3), 511-521, 2007
+
+References for probabilistic cytoarchitectonic mapping:
+1) Zilles K, Amunts K. Centenary of Brodmann’s map – conception and fate. Nature Reviews 
+Neuroscience 11(2): 139-145, 2010.
+
+2) Amunts K, Schleicher A, Zilles K. Cytoarchitecture of the cerebral cortex – more than 
+localization. Neuroimage 37: 1061-1065, 2007.
+
+3) Zilles K, Schleicher A, Palomero-Gallagher N, Amunts K (2002). Quantitative analysis of 
+cyto- and receptor architecture of the human brain. Brain Mapping: The Methods, 
+J. C. Mazziotta and A. Toga (eds.), USA: Elsevier, 2002, p. 573-602, 2002.
+
+
+References for the individual areal distributed with the current release
+Amygdala (superficial, latero-basal and centro-medial complex)
+
+Amunts,K. et al., (2005). Anat. Embryol. (Berl) 210, 343-352.
+Hippocampus
+
+Amunts,K. et al., (2005). Anat. Embryol. (Berl) 210, 343-352.
+Superior Parietal Cortex (Areas 5L, 5M, 5Ci, 7A, 7PC, 7M, 7P)
+
+Scheperjans et al. (2008a), Cereb. Cortex 18: 846-867
+Scheperjans et al. (2008b), Cereb. Cortex 18: 2141-2157
+Inferior Parietal Cortex (Areas PFop, PFt, PF, PFm, PFcm, PGa, PGp)
+
+Caspers et al. (2006), NeuroImage 33, 430-448
+Caspers et al. (2008), Brain Struct. Funct. 212, 481-495
+Intraparietal Sulcus (Areas hIP1, hIP2, hIP3)
+
+Choi et al. (2006), J. Comp. Neurol. 495, 53-69
+Scheperjans et al. (2008a), Cereb. Cortex 18: 846-867
+Scheperjans et al. (2008b), Cereb. Cortex 18: 2141-2157
+BA 17 and BA 18 (V1 / V2)
+
+Amunts,K et al., (2000). Neuroimage. 11, 66-84.
+Broca’s region (Area 44 / Area 45)
+
+Amunts,K. et al., (1999). J. Comp Neurol. 412, 319-341.
+Amunts,K. et al., (2004). NeuroImage 22, 42-56.
+Frontal pole (Areas Fp1 and Fp2)
+
+Bludau et al., (2013). Neuroimage. 2, 260-275.
+Medial orbitofrontal cortex (Areas Fo1 – Fo5)
+
+Henssen et al., (2015). Cortex. 75, 87-112.
+Anterior cingulate cortex (Areas 25, 33, P24a, P24b, P24c, P32, S24 and S32)
+
+Palomero-Gallagher et al., (2008). J Comp Neurol. 508(6), 906-926.
+Fiber tracts
+
+Burgel,U. et al., (2006). Neuroimage 29, 1092-1105.
+Burgel,U. et al., (1999) Neuroimage. 10(5), 489-99.
+Parietal operculum / SII (Areas OP 1 – OP 4)
+
+Eickhoff,S.B et al., (2006). Cereb. Cortex 16, 254-267.
+Eickhoff,S.B et al., (2006). Cereb. Cortex 16, 268-279.
+Premotor cortex (Area 6)
+
+Geyer,S. (2003). The Microstructural Border Between the Motor and the Cognitive Domain in the Human Cerebral Cortex (Wien: Springer).
+Motor cortex (Areas 4a and 4p)
+
+Geyer,S. et al., (1996). Nature 382, 805-807.
+Primary somatosensory cortex (Areas 3a, 3b, 1)
+
+Geyer,S. et al., (1999). Neuroimage. 10, 63-83.
+Geyer,S. et al., (2000). Neuroimage. 11, 684-696.
+Primary somatosensory cortex (Areas 2)
+
+Grefkes,C. et al., (2001). Neuroimage. 14, 617-631.
+hOC5 (V5 / MT+)
+
+Malikovic,A., et al., (2007). Cereb. Cortex 17, 562-574.
+Primary auditory cortex (Areas TE 1.0, TE 1.1 and TE 1.2)
+
+Morosan,P. et al., (2001) Neuroimage 13, 684-701.
+Posterior insula (Areas Ig1, Ig2, Id1)
+
+Kurth,F. et al., (2010) Cerebral Cortex 20(6): 1448-1461.
+Ventral extrastriate cortex (V3v / V4)
+
+Rottschy,C., et al., (2007). Hum Brain Mapp. 28(10):1045-1059.
+Dorsal extrastriate cortex (hOC3d / hOC4d)
+
+Kujovic et al., Brain Struct. Funct. 10.1007/s00429-012-0390-9, 2012.
+Gyrus fusiformis (FG1, FG2)
+
+J. Caspers et al., Brain Struct. Funct., 10.1007/s00429-012-0411-8, 2012.
+Mid-Fusiform Gyrus (Areas FG3 and FG4)
+
+Lorenz et al., (2015). Cereb Cortex. pii: bhv225
+Lateral occipital cortex (extrastriate areas hOc4la and hOc4lp)
+
+Malikovic et al., (2016). Brain Struct Funct. 221(4), 1877-1897.
+Frontal pole (Fp1, Fp2)
+
+S. Bludau et al., (2014) Neuroimage, 93(2), 260–275
+Basal Forebrain (Ch1-3, Ch4)
+
+L. Zaborszky et al., (2008) Neuroimage, 42(3), 1127–1141
+Cerebellar nuclei (DDN, VDN, EN, GN, FN)
+
+Tellmann et al., (2015). Front Neuroanat. 13, 9-54.
+The JuBrain Anatomy Toolbox also include the Cerebellar atlas by Diedrichsen
+Cerebellar atlas Diedrichsen,J. et al., (2009) Neuroimage. 46(1), 39-46. http://www.icn.ucl.ac.uk/motorcontrol/imaging/propatlas.htm
+
+The JuBrain Anatomy Toolbox also include the Thalamic Connectivity atlas by Behrens
+Behrens TE et al., (2003) Nat Neurosci. 6(7):750-7. http://www.fmrib.ox.ac.uk/connect/
+
+--------------------------------------------------------------------------------
+$Id$

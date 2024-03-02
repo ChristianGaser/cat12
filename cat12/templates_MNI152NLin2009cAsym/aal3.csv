@@ -1,0 +1,171 @@
+ROIid;ROIabbr;ROIname;ROIcolor
+1;lPreCG;Left Precentral gyrus;203 142 203
+2;rPreCG;Right Precentral gyrus;203 142 203
+3;lSFG;Left Superior frontal gyrus-dorsolateral;0 117 115
+4;rSFG;Right Superior frontal gyrus-dorsolateral;0 117 115
+5;lMFG;Left Middle frontal gyrus;191 23 23
+6;rMFG;Right Middle frontal gyrus;191 23 23
+7;lIFGoperc;Left Inferior frontal gyrus-opercular part;198 198 2
+8;rIFGoperc;Right Inferior frontal gyrus-opercular part;198 198 2
+9;lIFGtriang;Left Inferior frontal gyrus-triangular part;149 203 203
+10;rIFGtriang;Right Inferior frontal gyrus-triangular part;149 203 203
+11;lIFGorb;Left IFG pars orbitalis;102 102 102
+12;rIFGorb;Right IFG pars orbitalis;102 102 102
+13;lROL;Left Rolandic operculum;203 203 108
+14;rROL;Right Rolandic operculum;203 203 108
+15;lSMA;Left Supplementary motor area;152 69 47
+16;rSMA;Right Supplementary motor area;152 69 47
+17;lOLF;Left Olfactory cortex;162 81 203
+18;rOLF;Right Olfactory cortex;162 81 203
+19;lSFGmedial;Left Superior frontal gyrus-medial;0 254 0
+20;rSFGmedial;Right Superior frontal gyrus-medial;0 254 0
+21;lPFCventmed;Left Superior frontal gyrus-medial orbital;203 203 3
+22;rPFCventmed;Right Superior frontal gyrus-medial orbital;203 203 3
+23;lREC;Left Gyrus rectus;76 47 127
+24;rREC;Right Gyrus rectus;76 47 127
+25;lOFCmed;Left Medial orbital gyrus;54 54 203
+26;rOFCmed;Right Medial orbital gyrus;54 54 203
+27;lOFCant;Left Anterior orbital gyrus;0 203 0
+28;rOFCant;Right Anterior orbital gyrus;0 203 0
+29;lOFCpost;Left Posterior orbital gyrus;162 0 54
+30;rOFCpost;Right Posterior orbital gyrus;162 0 54
+31;lOFClat;Left Lateral orbital gyrus;254 254 4
+32;rOFClat;Right Lateral orbital gyrus;254 254 4
+33;lINS;Left Insula;184 148 39
+34;rINS;Right Insula;184 148 39
+35;lACC;Left Anterior cingulate & paracingulate gyri;0 203 203
+36;rACC;Right Anterior cingulate & paracingulate gyri;0 203 203
+37;lMCC;Left Middle cingulate & paracingulate gyri;128 102 0
+38;rMCC;Right Middle cingulate & paracingulate gyri;128 102 0
+39;lPCC;Left Posterior cingulate gyrus;0 203 0
+40;rPCC;Right Posterior cingulate gyrus;0 203 0
+41;lHIP;Left Hippocampus;203 142 203
+42;rHIP;Right Hippocampus;203 142 203
+43;lPHG;Left Parahippocampal gyrus;162 54 13
+44;rPHG;Right Parahippocampal gyrus;162 54 13
+45;lAMYG;Left Amygdala;203 203 3
+46;rAMYG;Right Amygdala;203 203 3
+47;lCAL;Left Calcarine fissure and surrounding cortex;162 0 56
+48;rCAL;Right Calcarine fissure and surrounding cortex;162 0 56
+49;lCUN;Left Cuneus;203 102 0
+50;rCUN;Right Cuneus;203 102 0
+51;lLING;Left Lingual gyrus;0 200 203
+52;rLING;Right Lingual gyrus;0 200 203
+53;lSOG;Left Superior occipital gyrus;94 0 26
+54;rSOG;Right Superior occipital gyrus;94 0 26
+55;lMOG;Left Middle occipital gyrus;204 204 204
+56;rMOG;Right Middle occipital gyrus;204 204 204
+57;lIOG;Left Inferior occipital gyrus;72 72 200
+58;rIOG;Right Inferior occipital gyrus;72 72 200
+59;lFFG;Left Fusiform gyrus;81 0 176
+60;rFFG;Right Fusiform gyrus;81 0 176
+61;lPoCG;Left Postcentral gyrus;162 0 54
+62;rPoCG;Right Postcentral gyrus;162 0 54
+63;lSPG;Left Superior parietal gyrus;134 53 0
+64;rSPG;Right Superior parietal gyrus;134 53 0
+65;lIPG;Left Inferior parietal gyrus-excluding supramarginal and angular gyri;122 203 67
+66;rIPG;Right Inferior parietal gyrus-excluding supramarginal and angular gyri;122 203 67
+67;lSMG;Left SupraMarginal gyrus;94 69 54
+68;rSMG;Right SupraMarginal gyrus;94 69 54
+69;lANG;Left Angular gyrus;0 135 203
+70;rANG;Right Angular gyrus;0 135 203
+71;lPCUN;Left Precuneus;13 176 67
+72;rPCUN;Right Precuneus;13 176 67
+73;lPCL;Left Paracentral lobule;0 200 0
+74;rPCL;Right Paracentral lobule;0 200 0
+75;lCAU;Left Caudate nucleus;108 0 162
+76;rCAU;Right Caudate nucleus;108 0 162
+77;lPUT;Left Lenticular nucleus-Putamen;61 61 203
+78;rPUT;Right Lenticular nucleus-Putamen;61 61 203
+79;lPAL;Left Lenticular nucleus-Pallidum;203 203 0
+80;rPAL;Right Lenticular nucleus-Pallidum;203 203 0
+81;lTHA;Left Thalamus;162 54 13
+82;rTHA;Right Thalamus;162 54 13
+83;lHES;Left Heschls gyrus;94 13 13
+84;rHES;Right Heschls gyrus;94 13 13
+85;lSTG;Left Superior temporal gyrus;203 53 0
+86;rSTG;Right Superior temporal gyrus;203 53 0
+87;lTPOsup;Left Temporal pole: superior temporal gyrus;38 0 83
+88;rTPOsup;Right Temporal pole: superior temporal gyrus;38 0 83
+89;lMTG;Left Middle temporal gyrus;162 0 56
+90;rMTG;Right Middle temporal gyrus;162 0 56
+91;lTPOmid;Left Temporal pole: middle temporal gyrus;0 94 92
+92;rTPOmid;Right Temporal pole: middle temporal gyrus;0 94 92
+93;lITG;Left Inferior temporal gyrus;128 102 0
+94;rITG;Right Inferior temporal gyrus;128 102 0
+95;lCERCRU1;Left Crus I of cerebellar hemisphere;140 36 42
+96;rCERCRU1;Right Crus I of cerebellar hemisphere;140 36 42
+97;lCERCRU2;Left Crus II of cerebellar hemisphere;61 61 203
+98;rCERCRU2;Right Crus II of cerebellar hemisphere;61 61 203
+99;lCER3;Left Lobule III of cerebellar hemisphere;0 152 64
+100;rCER3;Right Lobule III of cerebellar hemisphere;0 152 64
+101;lCER4_5;Left Lobule IV-V of cerebellar hemisphere;203 149 149
+102;rCER4_5;Right Lobule IV-V of cerebellar hemisphere;203 149 149
+103;lCER6;Left Lobule VI of cerebellar hemisphere;0 94 92
+104;rCER6;Right Lobule VI of cerebellar hemisphere;0 94 92
+105;lCER7b;Left Lobule VIIB of cerebellar hemisphere;203 0 67
+106;rCER7b;Right Lobule VIIB of cerebellar hemisphere;203 0 67
+107;lCER8;Left Lobule VIII of cerebellar hemisphere;203 149 149
+108;rCER8;Right Lobule VIII of cerebellar hemisphere;203 149 149
+109;lCER9;Left Lobule IX of cerebellar hemisphere;94 17 76
+110;rCER9;Right Lobule IX of cerebellar hemisphere;94 17 76
+111;lCER10;Left Lobule X of cerebellar hemisphere;203 67 16
+112;rCER10;Right Lobule X of cerebellar hemisphere;203 67 16
+113;VER1_2;Lobule I-II of vermis;254 177 254
+114;VER3;Lobule III of vermis;239 29 29
+115;VER4_5;Lobule IV-V of vermis;254 254 0
+116;VER6;Lobule VI of vermis;101 0 220
+117;VER7;Lobule VII of vermis;203 203 3
+118;VER8;Lobule VIII of vermis;0 250 0
+119;VER9;Lobule IX of vermis;160 127 0
+120;VER10;Lobule X of vermis;0 203 0
+121;ltAV;Left Thalamus-Anteroventral Nucleus;254 66 0
+122;rtAV;Right Thalamus-Anteroventral Nucleus;191 23 23
+123;ltLP;Left Lateral posterior;254 254 4
+124;rtLP;Right Lateral posterior;128 128 128
+125;ltVA;Left Ventral anterior;217 217 217
+126;rtVA;Right Ventral anterior;0 117 115
+127;ltVL;Left Ventral lateral;90 90 250
+128;rtVL;Right Ventral lateral;230 185 49
+129;ltVPL;Left Ventral posterolateral;230 185 49
+130;rtVPL;Right Ventral posterolateral;202 0 70
+131;ltIL;Left Intralaminar;162 0 56
+132;rtIL;Right Intralaminar;76 76 254
+133;ltRe;Left Reuniens;76 76 254
+134;rtRe;Right Reuniens;0 117 115
+135;ltMDm;Left Mediodorsal medial magnocellular;203 203 3
+136;rtMDm;Right Mediodorsal medial magnocellular;0 203 0
+137;ltMDl;Left Mediodorsal lateral parvocellular;0 250 0
+138;rtMDl;Right Mediodorsal lateral parvocellular;254 254 0
+139;ltLGN;Left Lateral geniculate;202 0 70
+140;rtLGN;Right Lateral geniculate;254 186 186
+141;ltMGN;Left Medial Geniculate;0 117 115
+142;rtMGN;Right Medial Geniculate;203 67 16
+143;ltPuA;Left Pulvinar anterior;203 67 16
+144;rtPuA;Right Pulvinar anterior;118 0 33
+145;ltPuM;Left Pulvinar medial;0 190 80
+146;rtPuM;Right Pulvinar medial;118 86 68
+147;ltPuL;Left Pulvinar lateral;0 169 254
+148;rtPuL;Right Pulvinar lateral;162 81 203
+149;ltPuI;Left Pulvinar inferior;203 0 67
+150;rtPuI;Right Pulvinar inferior;0 254 0
+151;lACCsub;Left Anterior cingulate cortex-subgenual;254 254 4
+152;rACCsub;Right Anterior cingulate cortex-subgenual;149 203 203
+153;lACCpre;Left Anterior cingulate cortex-pregenual;186 254 254
+154;rACCpre;Right Anterior cingulate cortex-pregenual;67 67 254
+155;lACCsup;Left Anterior cingulate cortex-supracallosal;254 254 135
+156;rACCsup;Right Anterior cingulate cortex-supracallosal;203 67 16
+157;lNacc;Left Nucleus accumbens;168 66 0
+158;rNacc;Right Nucleus accumbens;254 186 186
+159;lVTA;Left Ventral tegmental area;254 66 0
+160;rVTA;Right Ventral tegmental area;191 23 23
+161;lSNpc;Left Substantia nigra-pars compacta;162 0 56
+162;rSNpc;Right Substantia nigra-pars compacta;198 198 2
+163;lSNpr;Left Substantia nigra-pars reticulata;101 0 220
+164;rSNpr;Right Substantia nigra-pars reticulata;135 0 203
+165;lRedN;Left Red nucleus;190 86 59
+166;rRedN;Right Red nucleus;118 86 68
+167;lLC;Left Locus coeruleus;135 0 203
+168;rLC;Right Locus coeruleus;76 76 254
+169;RapheD;Raphe nucleus-dorsal;118 16 16
+170;RapheM;Raphe nucleus-median;162 54 13
