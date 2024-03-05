@@ -472,7 +472,7 @@ run_cat12 ()
         echo " $SHCOMMAND"           >> "${vbmlog}_${j}.log"
         echo                  >> "${vbmlog}_${j}.log"
       fi
-      
+     
       if [ ! -n "$shellcommand" ]; then
         # do nohup in background or not
         if [ "$fg" -eq 0 ]; then
