@@ -1,0 +1,28 @@
+JulichBrain atlas (v2.6):
+--------------------------------------------------------------------------------
+Whole-brain parcellation of the Julich-Brain Cytoarchitectonic Atlas (v2.6)
+
+The atlas was slightly modified and remaining holes were filled with the median value.
+Furthermore, the left and right hemisphere coding was changed.
+
+If you use these atlases, please cite the references below.
+
+
+Websites:    
+A) https://search.kg.ebrains.eu/instances/Dataset/2eaa3dc6-a21b-41c1-b703-bf06f82adf25
+
+References:
+1) Amunts K, Mohlberg H, Bludau S, Zilles K (2020). Julich-Brain – A 3D probabilistic 
+atlas of human brain’s cytoarchitecture. Science 369, 988-99
+
+2) Eickhoff SB, Stephan KE, Mohlberg H, Grefkes C, Fink GR, Amunts K, Zilles K. A 
+new SPM toolbox for combining probabilistic cytoarchitectonic maps and functional 
+imaging data. NeuroImage 25(4), 1325-1335, 2005
+
+3) Evans AC, Janke AL, Collins DL, Baillet S (2012). Brain templates and atlases. 
+Neuroimage, 62(2):911-22.
+
+
+
+--------------------------------------------------------------------------------
+$Id julichbrain.txt $
