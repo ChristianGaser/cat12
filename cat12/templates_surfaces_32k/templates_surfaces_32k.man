@@ -1,0 +1,52 @@
+% ?h.central.freesurfer.gii 
+% ?h.sphere.freesurfer.gii
+% ?h.inflated.freesurfer.gii
+% ?h.patch.freesurfer.gii
+% ---------------------------------
+% Surfaces based on 32k meshes from Human Connectome Project (HCP):
+% https://github.com/Washington-University/Pipelines/tree/master/global/templates/standard_mesh_atlases
+% These surfaces are internally used for spherical registration, resampling
+% and can be used to overlay maps and results in template space (e.g. after
+% spherical registration and resampling).
+% Please note that these meshes have correspondence between the vertices of the L and R hemispheres.
+% The central surface is estimated by averaging the white and pial surface.
+% The sphere surface contains the transformation needed to get from the 32k HCP meshes
+% to Freesurfer 164k fsaverage and is based on fs_LR-deformed_to-fsaverage.?.sphere.32k_fs_LR.surf.gii
+% The cortex patch is based on colin.cerebral.?.flat.32k_fs_LR.surf.gii and 
+% rotated to fit to the hemisphere views using:
+% lh: spm_mesh_transform(g,spm_matrix([0 0 0 -pi/2 -pi/2 0]));
+% rh: spm_mesh_transform(g,spm_matrix([0 0 0 -pi/2 -pi/2 0 -1 1 1]));
+%
+% ?h.mc.freesurfer.gii
+% ?h.sqrtsulc.freesurfer.gii
+% ---------------------------------
+% Mean curvature and (sqrt) sulcal depth for display purposes (e.g. underlying 
+% texture)
+%
+% ?h.mask
+% ---------------------------------
+% Mask based on the DK40 Atlas of Freesurfer
+% The mask file was created by masking out region 0 (Unkown). This mask file is 
+% internally used to set values to NaN in these regions. These NaN values are 
+% ignored if data during smoothing (masked smoothing) and in the statistical
+% analysis.
+%
+% ?h.central.Template_T1.gii
+% ?h.thickness.Template_T1
+% ---------------------------------
+% Surfaces and thickness values based on average of MNI152NLin2009cAsym 
+% template (processed with collcorr=24).
+% These data should be only used to map results from 3D space (e.g. VBM or
+% fMRI results of the statistical analysis) to the template space after 
+% spherical registration.
+%
+% mesh.central.freesurfer.gii 
+% ---------------------------------
+% Merged left and right hemisphere based on Freesurfer fsaverage
+%
+% fsavg.index2D_256x128.txt
+% ---------------------------------
+% Index file that contains the transformation from surface maps to 2D maps for 
+% visualization purposes in cat_stat_check_cov.m
+
+
