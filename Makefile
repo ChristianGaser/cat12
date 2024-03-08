@@ -111,6 +111,7 @@ scp: docs zip
 	-@echo scp to http://${STARGET_HOST}/cat12/${ZIPFILE}
 	-@scp -O -P ${PORT} CHANGES.txt ${ZIPFOLDER}/${ZIPFILE} ${STARGET}
 	-@bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${ZIPFILE} ${STARGET_FOLDER}/cat12_latest.zip"
+	-@open http://${STARGET_HOST}/cat12/
 
 # scp deployed versions
 scp_precompile:
