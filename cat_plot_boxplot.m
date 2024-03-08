@@ -52,7 +52,7 @@ function [out,s] = cat_plot_boxplot(data,opt)
 %  opt.subsets     = false(1,numel(data)); 
 %  opt.hflip       = 0;              flip x-axis in case of horizontal bars
 %  opt.darkmode    = 0;              dark color mode with black background
-%  opt.I          = [];              optional definition of repetitions, subjects, groups and time points to
+%  opt.I          = [];              optional definition of repetitions, subjects, time points and groups to
 %                                    support plot of connected data 
 %                                    This matrix can be used from SPM.xX.I
 %

@@ -1,4 +1,22 @@
 ------------------------------------------------------------------------
+r2560 | gaser | 2024-03-08 08:55:25
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M Makefile
+ M cat_plot_boxplot.m
+ M cat_system.m
+ M cat_vol_groupwise_ls.m
+ M doc/cat.html
+ M doc/index.html
+
+Fixed:   Removed search for missing binaries in cat_system because this does
+         not work on Windows.
+Changed: If Hessian is negativ in cat_vol_groupwise_ls.m , this issue can be
+         solved by recalculating the bsplins coefficients with different border
+         condition.
+------------------------------------------------------------------------
 r2558 | gaser | 2024-02-28 15:30:40
 
 Changed paths:

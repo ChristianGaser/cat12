@@ -454,6 +454,13 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
 
                     f     = spm_diffeo('bsplins',img(i).f,y,ord);
 
+                    % repeat spm_diffeo if NaNs occur but indicate wrapping along the dimensions 
+                    if any(isnan(f(:)))
+                      ord2 = ord;
+                      ord2(4:6) = 1;
+                      f     = spm_diffeo('bsplins',img(i).f,y,ord2);
+                    end
+
                     if all(isfinite(b_settings(i,:)))
                         ebias = exp(spm_diffeo('pullc',param(i).bias,y));
                     else
