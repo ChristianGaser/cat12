@@ -93,7 +93,15 @@ else
   isores = job.isores;
 end
 
-out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask, reduce, setCOM, isores);
+% sometimes for quite anisotropic data long. registration fails and will be
+% called again with more isotropic spatial resolution using isores = 3
+% (optimal)
+try
+  out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask, reduce, setCOM, isores);
+catch
+  fprintf('Recall cat_vol_groupwise_ls again with mmore isotropic spatial resolution.\n')
+  out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask, reduce, setCOM, 3);
+end
 
 return
 

@@ -1,4 +1,18 @@
 ------------------------------------------------------------------------
+r2564 | gaser | 2024-03-10 19:24:34
+
+Changed paths:
+ M CHANGES.txt
+ M cat_vol_groupwise_ls.m
+ M cat_vol_series_align.m
+ M compile.m
+
+Changed: Added try/catch to cat_vol_series_align.m because for data with strong
+         anisotropy, we have to change the internal resolution for longitudinal 
+         registration to "optimal".
+Changed: Updated compile.m.
+
+   ------------------------------------------------------------------------
 r2560 | gaser | 2024-03-08 08:55:25
 
 Changed paths:

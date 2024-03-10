@@ -94,7 +94,7 @@ function varargout = compile(comp,test,verb)
     };
     % internal c-functions
     % does not yet work for octave
-    if  ~strcmpi(spm_check_version,'octave')
+    if ~strcmpi(spm_check_version,'octave') && exist(fullfile(catdir,'internal'),'dir')
         nc{2} = {
         'cat_vol_cMRegularizarNLM3D.c'
       };
@@ -377,7 +377,7 @@ function varargout = compile(comp,test,verb)
     n{ni} = 'cat_vol_eidist';   
     d{ni} = cat_vol_eidist(single(d1==0),ones(size(d1),'single'));
     r(ni) = max(d{ni}(d1(:)==1)) - 5.5; % distance to boundary 
-    s(ni) = r(ni)>=0 & r(ni)<0.5;  
+    s(ni) = abs(r(ni))<0.5;  
     %  projection-based thickness c-function ... 
     %  The result of this function is generally 0.5 smaller than expected
     %  because the PVE handling is done in the cat_vol_pbt 
