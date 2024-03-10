@@ -88,6 +88,7 @@ if setCOM
     M  = spm_imatrix(cat_vol_set_com(spm_vol(Nii(i).dat.fname))); 
     M0(1:3) = M0(1:3) - M(1:3);
     Nii(i).mat = spm_matrix(M0);
+    fprintf('\n');
   end
   clear M0 M; 
 end
@@ -454,13 +455,6 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
 
                     f     = spm_diffeo('bsplins',img(i).f,y,ord);
 
-                    % repeat spm_diffeo if NaNs occur but indicate wrapping along the dimensions 
-                    if any(isnan(f(:)))
-                      ord2 = ord;
-                      ord2(4:6) = 1;
-                      f     = spm_diffeo('bsplins',img(i).f,y,ord2);
-                    end
-
                     if all(isfinite(b_settings(i,:)))
                         ebias = exp(spm_diffeo('pullc',param(i).bias,y));
                     else
@@ -576,12 +570,13 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
 
                 Hess       = dA'*Hess*dA*prec(i);
                 gra        = dA'*gra*prec(i);
-                
+
                 % only use Hessian and gra if finite
-                if all(isfinite(Hess(:))) & all(isfinite(gra(:)))
+                if all(isfinite(Hess(:))) && all(isfinite(gra(:)))
                   param(i).r = param(i).r - Hess\gra;
                 else
                   fprintf('Warning: Hessian matrix could not be estimated for %s\n',Nii(i).dat.fname);
+                  return
                 end
 
                 clear R dR M x1a x2a dA tmp Hess gra
