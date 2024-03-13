@@ -197,7 +197,7 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
       for clsi=1:6
         Pbg{clsi}  = fullfile(pp,mrifolder,sprintf('rp%d%s_%s.nii',clsi,ff,reg{ri}));
         Pbgexist(clsi) = exist(Pbg{clsi},'file')>0; 
-        if Pbgexist
+        if Pbgexist(clsi)
           Vclsa(clsi)       = spm_vol(Pbg{clsi}); 
           Yclsa(:,:,:,clsi) = single(spm_read_vols(Vclsa(clsi))); 
         end
@@ -207,7 +207,18 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
         % typically used for TPM creation
         Ysum = sum(Yclsa,4); 
         Ybg = Yclsa(:,:,:,6) + (1 - cat_vol_morph(Ysum>=1,'c')); 
-        spm_write_vol(Vclsa(6),Ybg); 
+       
+        % spm_write_vol(Vclsa(6),Ybg); % this does not allow to write the mat0 field 
+        % ... and we need the long way
+        N  = nifti(Pbg{clsi});  
+        warning off
+        N.mat   = trans.affine.mat; 
+        N.mat0  = trans.affine.mat0;
+        N.descrip = Vclsa(clsi).descrip;
+        warning on
+        N.dat(:,:,:) = Ybg; 
+        create(N);
+
       elseif sum(Pbgexist)>0
         cat_io_cprintf('warn','\nBackground correction of the %s output cannot be done because not all TPM classes have been written.\n',reg{ri}); 
       end

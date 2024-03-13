@@ -42,6 +42,23 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   fg  = spm_figure('FindWin','Graphics'); 
   set(0,'CurrentFigure',fg)
   
+  % remove CAT12 figure background image from start
+  try
+    fgc = get(fg,'Children');
+    if ~isempty(fgc)
+      fgcc = get(fgc,'Children');
+      if ~isempty(fgcc)
+        % remove figure elements to prevent further interations
+        delete(fgcc);
+        spm_figure('Clear',fg)
+        
+        % run the reportfig function the first time to fully clear the 
+        % changes by the cat start figure
+        cat_main_reportfig(Ym,Yp0,Yl1,[],job,qa,res,str)
+      end
+    end
+  end
+
   def.extopts.report.useoverlay   = 2;  % different p0 overlays, described below in the Yp0 print settings
                                         % (0 - no, 1 - red mask, 2 - blue BG, red BVs, WMHs [default] ... )
   def.extopts.report.type         = 2;  % (1 - Yo,Ym,Yp0,CS-top, 2 - Yo,Yp0,CS-left-right-top) 
@@ -593,8 +610,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   end
   
   %% position values of the orthview/surface subfigures
-  pos = {[0.008 0.375 0.486 0.35]; [0.506 0.375 0.486 0.35]; ...
-         [0.008 0.010 0.486 0.35]; [0.506 0.010 0.486 0.35]};
+  pos = {[0.008 0.375 0.486 0.345]; [0.506 0.375 0.486 0.345]; ...
+         [0.008 0.010 0.486 0.345]; [0.506 0.010 0.486 0.345]};
   try spm_orthviews('Reset'); end
 
   % BB box is not optimal for all images

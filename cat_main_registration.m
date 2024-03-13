@@ -327,7 +327,7 @@ end
   
       % resolutions:
       tmpres = abs(tmpM(1));                                                                   % template resolution 
-     %tpmres = abs(tpmM(1));                                                                   % TPM resolution 
+      tpmres = abs(tpmM(1));                                                                   % TPM resolution 
      %regres = reg(regstri).opt.rres; if isinf(regres), regres = tmpres; end                   % registration resolution
       newres = job.extopts.vox(voxi); if isinf(newres), newres = tmpres; end                   % output resolution
          
@@ -340,12 +340,14 @@ end
       % M0 for the individual volume
       % M1* for the different normalized spaces
       % Mad for the Dartel template with different BB as the TPM
-      M0   = res.image.mat;          
-      if isfield( job.extopts , 'bb' )  &&  numel( job.extopts.bb ) == 1  && job.extopts.bb == 1
-        M1 = tpmM;
-      else
-        imat = spm_imatrix(tmpM); imat(1:3) = imat(1:3) + imat(7:9).*(tdim - (newres/tmpres*odim))/2; imat(7:9) = imat(7:9) * newres/tmpres; M1   = spm_matrix(imat);
-      end
+      M0   = res.image.mat; 
+      % RD202403: modified to support output of the given voxel size vox - see also below.
+      %if isfield( job.extopts , 'bb' )  &&  numel( job.extopts.bb ) == 1  && job.extopts.bb == 1 %&& job.extopts.vox == abs(tmpM(1))
+      %  M1   = tpmM;  
+      %  imat = spm_imatrix(tmpM); imat(1:3) = imat(1:3) + imat(7:9).*(tdim - (newres/tmpres*odim))/2; imat(7:9) = imat(7:9) * newres/tmpres; M1   = spm_matrix(imat);
+      %else
+      imat = spm_imatrix(tmpM); imat(1:3) = imat(1:3) + imat(7:9).*(tdim - (newres/tmpres*odim))/2; imat(7:9) = imat(7:9) * newres/tmpres; M1   = spm_matrix(imat);
+      %end
       imat = spm_imatrix(eye(4)); imat(1:3) = imat(1:3) + imat(7:9).*(tdim - (newres/tmpres*odim))/2; imat(7:9) = imat(7:9) * newres/tmpres; Mad  = spm_matrix(imat);
       
       % affine and rigid parameters for registration 
@@ -468,12 +470,12 @@ end
         % mat matrices for different spaces
         % - here M1 == M1t
         M0     = res.image.mat;                                                       % for (interpolated) individual volume
-        if isfield( job.extopts , 'bb' )  &&  numel( job.extopts.bb ) == 1  && job.extopts.bb == 1
-          M1   = tpmM;
-        else
-          imat = spm_imatrix(tmpM); imat(1:3) = imat(1:3) + imat(7:9).*(tdim - (newres/tmpres*odim))/2; imat(7:9) = imat(7:9) * newres/tmpres; 
-          M1   = spm_matrix(imat);
-        end
+        % RD202403: modified to support output of the given voxel size vox - see also above.
+        %if isfield( job.extopts , 'bb' )  &&  numel( job.extopts.bb ) == 1  && job.extopts.bb == 1
+        %  M1   = tpmM;
+        %else
+        imat = spm_imatrix(tmpM); imat(1:3) = imat(1:3) + imat(7:9).*(tdim - (newres/tmpres*odim))/2; imat(7:9) = imat(7:9) * newres/tmpres; M1   = spm_matrix(imat);
+        %end
         
         % estimate the inverse transformation 
         yid             = spm_diffeo('invdef', Yy , sdim, inv(tpmM\M1), M1\res.Affine*M0); 
