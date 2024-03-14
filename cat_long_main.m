@@ -529,13 +529,20 @@ if longmodel || longTPM
       end
     end
   end
-
+  
   % RD202102: differentiation between user levels not tested yet !
   if exist('extopts','var') && isfield(extopts,'bb')
     matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.bb              = 1; % use TPM output BB 
   elseif exist('extopts','var') &&  isfield(extopts,'registration') && isfield(extopts.registration,'bb')
     matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.registration.bb = 1; % use TPM output BB 
   end
+  % RD202403: run average for 1.5 mm to combine it with the TPM 
+  if exist('extopts','var') && isfield(extopts,'vox')
+    matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.vox = 1.5; 
+  elseif exist('extopts','var') &&  isfield(extopts,'registration') && isfield(extopts.registration,'vox')
+    matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.registration.vox = 1.5; 
+  end
+
 
   if exist('output','var') && ~isempty(output)
     matlabbatch{mbi}.spm.tools.cat.estwrite.output            = output;

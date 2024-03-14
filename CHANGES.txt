@@ -1,4 +1,24 @@
 ------------------------------------------------------------------------
+r2565 | robertdahnke | 2024-03-14 15:38:20
+
+Changed paths:
+ M CHANGES.txt
+ M cat_long_main.m
+ M cat_long_multi_run.m
+ M cat_main_LAS.m
+ M cat_main_registration.m
+ M cat_main_reportfig.m
+
+(1) Fixed:   Corrected issue in using other Templates and output resolutions
+             in the longitudinal pipeline. Use default 1.5 mm in average processing
+             that has to fit to the TPM in cat_long_main. Removed the warning
+             for different output resolutions in cat_long_multi_run. Corrected
+             definitions in cat_main_registration.   
+(2) Fixed:   Corrected problem with missing text in the cat_report. 
+(3) Fixed:   Corrected an bug in writing the affine/rigid background image in 
+             cat_main_write.
+(4) Fixed:   Corrected bug in LAS in case of some image with negative background. 
+------------------------------------------------------------------------
 r2564 | gaser | 2024-03-10 19:24:34
 
 Changed paths:

@@ -802,7 +802,9 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
   end
  else
    % simple 
-   Ynb   = smooth3( Ycls{6})>128 & Yg<0.3; 
+   % RD202403: avoid skull-stripped voxels and neighbors
+   Ynb   = smooth3( Ycls{6})>128 & Yg<0.3 & ...
+     ~cat_vol_morph(Yg==0,'d'); % avoid arificial regions
    %Ynb   = cat_vol_morph(Ynb,'e',4*vxv); 
   
    Ylab{3} = ones(size(Ygm),'single') .* min( [ T3th(1)                   , cat_stat_nanmean(Ysrc(Ycm(:))) ] ); 
@@ -813,12 +815,13 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
   Ylab{1} = Ylab{1} .* T3th(2) / cat_stat_kmeans( Ylab{1}(Ygm(:)>0.5), 1); 
   Ylab{3} = Ylab{3} .* T3th(1) / cat_stat_kmeans( Ylab{3}(Ycm(:)>0.5), 1); 
   
-  % RD202110: corrected cases with incorrect background region Ynb
+  %% RD202110: corrected cases with incorrect background region Ynb
+  %  RD202403: there are allways some voxels .. somegthing is wrong here 
+  %if sum(Ynb(:)>0.5)>0
+  %  Ynb   = smooth3( Ycls{6})>128 & Yg<0.3; 
+  %end
   if sum(Ynb(:)>0.5)>0
-    Ynb   = smooth3( Ycls{6})>128 & Yg<0.3; 
-  end
-  if sum(Ynb(:)>0.5)>0
-    Ylab{6} = Ylab{6} .* cat_stat_kmeans( Ysrc(Ynb(:)>0.5) , 1) / max(eps,cat_stat_kmeans( Ylab{6}(Ynb(:)>0.5) , 1)); 
+    Ylab{6} = Ylab{6} .* abs(cat_stat_kmeans( Ysrc(Ynb(:)>0.5) , 1)) / max(eps,abs(cat_stat_kmeans( Ylab{6}(Ynb(:)>0.5) , 1))); 
   else
     Ylab{6} = min(Ysrc(:)); 
   end
