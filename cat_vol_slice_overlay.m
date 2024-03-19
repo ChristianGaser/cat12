@@ -30,6 +30,9 @@ function OV = cat_vol_slice_overlay(OV)
 % OV.cbar       - show colorbar (leave empty for no colorbar)
 % OV.labels     - show slice label text (leave empty for no label text)
 %
+% OV.clip       - clip (limit) image for thresholding. This can be used to set 
+%                 the image to defined values (e.g. NaN) for the given range
+%
 % see cat_vol_slice_overlay_ui.m for an example
 % ______________________________________________________________________
 %
@@ -493,10 +496,10 @@ if ~isempty(SO.cbar) && SO.cbar == 2 && logP
   
 end
 
-set(H, 'FontSize', FS, 'YColor', 1 - SO.bkg_col)
+set(H, 'FontSize', FS, 'YColor', SO.bkg_col)
 set(get(H, 'YLabel'), 'FontUnits', 'normalized', 'FontSize', 1.5*FS, 'Color', 1 - SO.bkg_col)
 
-% we have to get rid off that annoying axis and simply draw a black box
+% we have to get rid off that annoying axis and simply draw a box
 % with 1 pixel width
 posc = get(H,'Position');
 posc(3) = 1;
@@ -507,8 +510,8 @@ a=axes(...
       'YTick',[],...
       'YTickLabel',[],...
       'Units', 'pixels',...
-      'YColor',[0 0 0],...
-      'Color',[0 0 0],...
+      'YColor',SO.bkg_col,...
+      'Color',SO.bkg_col,...
       'Box', 'off',...
       'Position',posc);
 

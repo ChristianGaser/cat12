@@ -299,7 +299,7 @@ if H.isxml
 end
 
 % remove last two columns if EC_abs and defect_size are not defined
-if H.mesh_detected && all(isnan(QM(:,4))) && all(isnan(QM(:,5)))
+if H.mesh_detected && all(~isfinite(QM(:,4))) && all(~isfinite(QM(:,5)))
   QM = QM(:,1:3);
   QM_names = QM_names(1:3,:);
 end
@@ -318,7 +318,7 @@ if H.mesh_detected
     end
   end
   
-  Y(isnan(Y)) = 0;
+  Y(~isfinite(Y)) = 0;
   
 else
   % voxelsize and origin
@@ -414,7 +414,7 @@ else
 
     for i = 1:n_subjects
       H.img(:,:) = H.V(i).dat(1:sep:H.V(1).dat.dim(1),1:sep:H.V(1).dat.dim(2),j);
-      H.img(isnan(H.img)) = 0;
+      H.img(~isfinite(H.img)) = 0;
       Y(i,:) = H.img(:);
       if is_gSF
         Y(i,:) = Y(i,:)*gSF(i);
@@ -426,7 +426,7 @@ else
 
     % remove nuisance and add mean again (otherwise correlations are quite small and misleading)
     if ~isempty(G) 
-      [ind_inf,tmp] = find(isinf(G) | isnan(G));
+      [ind_inf,tmp] = find(isinf(G) | ~isfinite(G));
       if ~isempty(ind_inf)
         fprintf('Nuisance parameter for %s is Inf or NaN.\n',H.fname{ind_inf});
         return
@@ -1162,7 +1162,7 @@ H.data_diff = H.data;
 
 for i = 1:length(H.V)
   img(:,:) = single(P(i).dat(:,:,sl));
-  img(isnan(img)) = 0;
+  img(~isfinite(img)) = 0;
   
   % rescue unscaled data
   H.data_diff(:,:,i) = img;
