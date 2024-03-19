@@ -444,7 +444,7 @@ if ~H.isxml
 end
 
 % remove last two columns if EC_abs and defect_size are not defined
-if H.isxml && H.mesh_detected && all(isnan(H.xml.QM(:,4))) && all(isnan(H.xml.QM(:,5)))
+if H.isxml && H.mesh_detected && all(~isfinite(H.xml.QM(:,4))) && all(~isfinite(H.xml.QM(:,5)))
   H.xml.QM = H.xml.QM(:,1:3);
   H.xml.QM_order = H.xml.QM_order(1:3);
   H.xml.QM_names = H.xml.QM_names(1:3,:);
@@ -536,7 +536,7 @@ for i = 1:n_subjects
     mask(mask) = Ytmp(mask) > job.xM.TH(i);      %-Threshold (& NaN) mask
   end
   
-  Ytmp(isnan(Ytmp)) = 0;
+  Ytmp(~isfinite(Ytmp)) = 0;
   
   % either global scaling was externally defined using job or values were
   % used from xml-file
@@ -589,7 +589,7 @@ for i = 1:n_subjects
   else
     Ytmp(:,:,:) = H.files.V(i).dat(:,:,:);
   end
-  Ytmp(isnan(Ytmp)) = 0;
+  Ytmp(~isfinite(Ytmp)) = 0;
     
   if is_gSF
     Ytmp = Ytmp*gSF(i)/mean(gSF);
@@ -1946,7 +1946,7 @@ scl = max(Ymean(:));
 if length(H.files.V) > 500, cat_progress_bar('Init',length(H.files.V),'Load slices'); end
 for i = 1:length(H.files.V)
   img(:,:) = single(P(i).dat(:,:,sl));
-  img(isnan(img)) = 0;
+  img(~isfinite(img)) = 0;
   
   H.data.vol(:,:,i) = img;
   if length(H.files.V) > 500, cat_progress_bar('Set',i); end
@@ -2008,7 +2008,7 @@ scl = max(Ymean(:));
 if length(H.files.V) > 500, cat_progress_bar('Init',length(H.files.V),'Load slices'); end
 for i = 1:length(H.files.V)
   img(:,:) = single(P(i).dat(:,:,sl));
-  img(isnan(img)) = 0;
+  img(~isfinite(img)) = 0;
   
   H.data.vol(:,:,i) = img;
   if length(H.files.V) > 500, cat_progress_bar('Set',i); end

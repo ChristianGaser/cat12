@@ -1,4 +1,19 @@
 ------------------------------------------------------------------------
+r2566 | gaser | 2024-03-19 20:23:32
+
+Changed paths:
+ M CHANGES.txt
+ M cat_stat_check_cov_old.m
+ M cat_stat_homogeneity.m
+ M cat_surf_results.m
+ M cat_vol_addtruecolourimage.m
+ M cat_vol_slice_overlay.m
+
+Changed: Replaced isnan by ~isfinite which also considers Inf values in 
+         cat_stat_check_cov_old.m and cat_stat_homogeneity.m.
+Changed: Updated calls to cat_vol_slice_overlay.m.
+Fixed:   Corrected handling of white background in cat_vol_slice_overlay.m.
+------------------------------------------------------------------------
 r2565 | robertdahnke | 2024-03-14 15:38:20
 
 Changed paths:

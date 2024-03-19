@@ -1335,7 +1335,9 @@ switch lower(action)
     end
     [tmp, pathname, ext] = spm_fileparts(pp);
     filename = fullfile(fparts.outdir,[pathname ext '_' fparts.prefix ff fparts.suffix '.png']); %#ok<AGROW>
-
+    if ~exist(fparts.outdir,'dir')
+      mkdir(fparts.outdir)
+    end
     save_image(1,1,filename);
     
     varargout{1} = filename; 
@@ -1970,7 +1972,7 @@ end
 
 % don't update these fields if already existing because an interactive change is planned
 if ~isfield(OV,'atlas')
-  OV.atlas = 'none';
+  OV.atlas = 'cat12_neuromorphometrics';
   OV.slices_str = '-55:5:60';
   OV.xy = [5 5];
   OV.transform = char('axial');
@@ -1981,10 +1983,10 @@ OV.fig = 22;
 
 OV.func = [];
 if ishandle(OV.fig)
-  cat_vol_slice_overlay(OV);
+  try, cat_vol_slice_overlay(OV); end
 else
   OV.pos(1:2) = [10 1200];
-  cat_vol_slice_overlay(OV);
+  try, cat_vol_slice_overlay(OV); end
 end
 
 
