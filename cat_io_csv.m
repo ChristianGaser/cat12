@@ -270,7 +270,13 @@ function writecsv(filename,C,sheet,pos,opt)
 
   if ~exist(fileparts(filename),'dir'), mkdir(fileparts(filename)); end
   
-  f=fopen(filename,'w'); if f~=-1, fprintf(f,M); fclose(f); end
+  f=fopen(filename,'w'); 
+  if f~=-1
+    fprintf(f,M); 
+    fclose(f);
+  else
+    error('cat_io_csv:writeError','Cannot write "%s" - Check writing rights!',filename); 
+  end
 
 end
 function [Cpos,ijpos]=readC(C,pos)
