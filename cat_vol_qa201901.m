@@ -823,7 +823,7 @@ function varargout = cat_vol_qa201901(action,varargin)
       
       %% bias correction for original map, based on the 
       WI  = Yw./max(eps,Ywc); WI(isnan(WI) | isinf(WI)) = 0; 
-      WI  = cat_vol_approx(WI,2);
+      WI  = cat_vol_approx(WI,'rec',2);
       WI  = cat_vol_smooth3X(WI,1);
       Ywn = Ywn./WI; Ywn = round(Ywn*1000)/1000;
       Ymi = Yo ./WI; Ymi = round(Ymi*1000)/1000;
