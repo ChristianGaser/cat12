@@ -806,7 +806,7 @@ function varargout = cat_vol_qa202110(action,varargin)
       end
       %% bias correction for original map, based on the 
       WI  = zeros(size(Yw),'single'); WI(Ywc(:)~=0) = Yw(Ywc(:)~=0)./Ywc(Ywc(:)~=0); WI(isnan(Ywe) | isinf(WI) | Ywe==0) = 0;
-      WI  = cat_vol_approx(WI,2);
+      WI  = cat_vol_approx(WI,'rec',2);
       WI  = cat_vol_smooth3X(WI,1);
 
       Ywn = Ywn./max(eps,WI); Ywn = round(Ywn*1000)/1000;
