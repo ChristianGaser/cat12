@@ -88,7 +88,7 @@ function mcsvtab = cat_roi_exportSample(job)
 %% 
 
   def.flip          = 0;
-  def.folder        = 0; 
+  def.folder        = 1; 
   def.outdir        = {pwd}; 
   def.calcroi_name  = '';
   def.delimiter     = ','; 
@@ -144,7 +144,7 @@ function mcsvtab = cat_roi_exportSample(job)
         if ~isfield(catROI(1).(atlases{ai}),'names')
           cat_stat_ROI_old(job);
           if fni == 1 
-            if ~strcmp(job.point,'.');
+            if ~strcmp(job.point,'.')
               disp('Option for decimal point is not supported for old xml-files. Files are saved using ''.'' as decimal point.');
             end
             if job.flip
