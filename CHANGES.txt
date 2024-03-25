@@ -1,4 +1,18 @@
 ------------------------------------------------------------------------
+r2567 | gaser | 2024-03-25 11:55:19
+
+Changed paths:
+ M CHANGES.txt
+ M Makefile
+ M cat12.m
+ M cat_roi_fun.m
+ M cat_surf_results.m
+ M cat_vol_slice_overlay_rgb_ui.m
+
+Changed: Write full file names for ROI measures for external analysis, because
+         BIDS data often have no exclusive filename.
+Changed: Added some fields for slice overlay to cat_surf_results.m.
+------------------------------------------------------------------------
 r2566 | gaser | 2024-03-19 20:23:32
 
 Changed paths:

@@ -125,16 +125,17 @@ scp_precompile:
 	   cp -r standalone ${NEWVERSION}_R2017b_MCR_$${i}/ ;\
 	   cp -r standalone ${PRECOMPILED}/MCR_$${i}/ ;\
 	   zip ${ZIPFOLDER}/${NEWVERSION}_R2017b_MCR_$${i}.zip -r ${NEWVERSION}_R2017b_MCR_$${i} ; \
-	   scp -O -P ${PORT} ${ZIPFOLDER}/${NEWVERSION}_R2017b_MCR_$${i}.zip  ${STARGET}; \
+	   scp -O -P ${PORT} ${ZIPFOLDER}/${NEWVERSION}_R2017b_MCR_$${i}.zip ${STARGET}; \
 	   bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${NEWVERSION}_R2017b_MCR_$${i}.zip ${STARGET_FOLDER}/cat12_latest_R2017b_MCR_$${i}.zip"; \
 	done
-	-@for i in Mac Mac_arm64; do \
+	# removed Mac_arm64 that is not working yet
+	-@for i in Mac; do \
 	   mkdir -p ${NEWVERSION}_R2023b_MCR_$${i} ;\
 	   ln -s ${PRECOMPILED}/MCR_$${i}/*spm12* ${PRECOMPILED}/MCR_$${i}/readme.txt ${PRECOMPILED}/MCR_$${i}/MCR_v232.webloc ${NEWVERSION}_R2023b_MCR_$${i}/ ;\
 	   cp -r standalone ${NEWVERSION}_R2023b_MCR_$${i}/ ;\
 	   cp -r standalone ${PRECOMPILED}/MCR_$${i}/ ;\
 	   zip ${ZIPFOLDER}/${NEWVERSION}_R2023b_MCR_$${i}.zip -r ${NEWVERSION}_R2023b_MCR_$${i} ; \
-	   scp -O -P ${PORT} ${ZIPFOLDER}/${NEWVERSION}_R2023b_MCR_$${i}.zip  ${STARGET}; \
+	   scp -O -P ${PORT} ${ZIPFOLDER}/${NEWVERSION}_R2023b_MCR_$${i}.zip ${STARGET}; \
 	   bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${NEWVERSION}_R2023b_MCR_$${i}.zip ${STARGET_FOLDER}/cat12_latest_R2023b_MCR_$${i}.zip"; \
 	done
 	-@rm -r ${NEWVERSION}_R20??b_MCR*	

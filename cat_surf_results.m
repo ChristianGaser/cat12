@@ -38,6 +38,11 @@ function varargout = cat_surf_results(action, varargin)
 %  Select render view.
 %  1 - topview, 2 - bottomview, 3 - sideview
 %
+%  * cat_surf_results('ov',structure)
+%  Define OV fields for cat_vol_slice_overlay.m.
+%  Example:
+%  struct('atlas','cat12_neuromorphometrics','slices_str','-55:5:60','xy',[5 5],'transform','axial')
+%
 %  * cat_surf_results('colorbar')
 %  Disable colorbar.
 %
@@ -913,6 +918,19 @@ switch lower(action)
   case {'backward','previous'}
 
     prev_file([],[]);
+
+  %-OV
+  %======================================================================
+  case 'ov'      
+    
+    OV = varargin{1};
+
+    if isfield(H,'Pvol_sel')
+      H.OV = OV;
+      H = update_slice_overlay(H);
+    else
+      disp('This option can only be used for volume rendering.')
+    end
 
   %-CLim
   %======================================================================
@@ -1970,12 +1988,19 @@ else
   set(gcf,'Position',[H.SS(3) - pos(3) 0 pos(3:4)]);
 end
 
-% don't update these fields if already existing because an interactive change is planned
-if ~isfield(OV,'atlas')
-  OV.atlas = 'cat12_neuromorphometrics';
-  OV.slices_str = '-55:5:60';
-  OV.xy = [5 5];
-  OV.transform = char('axial');
+% default OV fields
+OV.atlas = 'none';
+OV.slices_str = '-55:5:60';
+OV.xy = [5 5];
+OV.transform = char('axial');
+
+if isfield(H,'OV')
+  ov_field = {'atlas','slices_str','xy','transform'};
+  for i=1:numel(ov_field)
+    if isfield(H.OV,ov_field{i})
+      OV.(ov_field{i}) = H.OV.(ov_field{i});
+    end
+  end
 end
 
 % show MIP and keep position if window exists
@@ -2743,10 +2768,9 @@ if H.border_mode
   if ind == 1
   for k=1:2
     rdata = H.rdata{H.border_mode}(:, k);
-    datarange = 0:max(rdata(:));
+    datarange = unique(rdata);
     Hi = hist(rdata(:),datarange);
-    indo = [1 find(Hi==0)];
-    datarange(indo) = [];
+    datarange(Hi<2) = [];
   
     t = datarange;
     M = H.S{k}.M;
@@ -3394,11 +3418,11 @@ H.border_mode = border_mode;
 if H.border_mode
   set(H.surf, 'Enable', 'off');
   if (length(H.S{1}.Y) == 32492 || length(H.S{1}.Y) == 163842 || length(H.S{1}.Y) == 40962) && H.isfsavg
-  fprintf('To change underlying surface, disable Atlas Border Overlay.\n');
+    fprintf('To change underlying surface, disable Atlas Border Overlay.\n');
   end
 else
   if (length(H.S{1}.Y) == 32492 || length(H.S{1}.Y) == 163842 || length(H.S{1}.Y) == 40962) && H.isfsavg
-  set(H.surf,   'Enable', 'on');
+    set(H.surf,   'Enable', 'on');
   end
 end
 

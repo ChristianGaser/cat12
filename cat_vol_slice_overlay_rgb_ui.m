@@ -65,10 +65,7 @@ for i=(1:size(name,1))+1
   cmap(:,i-1) = (1:64)'/64; 
   SO.img(i).cmap = cmap;
 
-  if range(1)==range(2)
-    [mn mx] = cg_max(SO.img(i).vol);
-    SO.img(i).range = [mn mx];
-  else SO.img(i).range = range; end
+  SO.img(i).range = range;
   SO.img(i).func = 'i1(i1==0)=NaN;';
 
   if range(1) > 0
