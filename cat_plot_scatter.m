@@ -245,9 +245,9 @@ end
 
 if exist('fig','var')
   figure(fig)
+else
+  clf
 end
-
-clf
 
 if size(X,1) == 1
   X = X';
