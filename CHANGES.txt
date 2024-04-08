@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2570 | gaser | 2024-04-08 09:42:37
+
+Changed paths:
+ M CHANGES.txt
+ M README.md
+ M cat_conf_factorial.m
+ M cat_plot_scatter.m
+
+Changed: Small changes in help text.
+Changed: Updated README.md
+------------------------------------------------------------------------
 r2567 | gaser | 2024-03-25 11:55:19
 
 Changed paths:

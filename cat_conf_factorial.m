@@ -1029,6 +1029,8 @@ cov.help    = {
              'Select the files with voxel-wise covariates (i.e. GM data).'
              ''
              'Importantly, the ordering of of the covariate files has to be consistent with the ordering of the cells in a factorial design.'
+             ''
+             'The approach is similar to https://doi.org/10.1016/j.neuroimage.2006.10.007 but here allows to use TFCE statistics which is usually more powerful.'
 }';
 cov.filter  = {'image','mesh'};
 cov.ufilter = '.*';
