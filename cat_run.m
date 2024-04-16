@@ -41,12 +41,18 @@ function varargout = cat_run(job)
 
 % disable parallel processing for only one subject
 n_subjects = numel(job.data);
+name1 = spm_file(job.data{1},'fpath');
+BIDSfolder = ''; 
 if n_subjects == 1, job.nproc = 0; end
 
 if isfield(job.output,'BIDS')
-  if isfield(job.output.BIDS,'BIDSyes')
-    BIDSfolder = job.output.BIDS.BIDSyes.BIDSfolder;
-    
+  if isfield(job.output.BIDS,'BIDSyes') || isfield(job.output.BIDS,'BIDSyes2')
+    if isfield(job.output.BIDS,'BIDSyes') 
+      BIDSfolder = job.output.BIDS.BIDSyes.BIDSfolder;
+    else
+      BIDSfolder = job.output.BIDS.BIDSyes2.BIDSfolder;
+    end
+
     % get path of first data set and find "sub-" BIDS part
     name1 = spm_file(job.data{1},'fpath');
     ind = min(strfind(name1,'sub-'));
@@ -74,13 +80,17 @@ if isfield(job.output,'BIDS')
     end
     
     % we need this in job.extopts for cat_io_subfolders
-    job.extopts.BIDSfolder = BIDSfolder;
+     if isfield(job.output.BIDS,'BIDSyes') 
+       job.extopts.BIDSfolder  = BIDSfolder;
+     else
+       job.extopts.BIDSfolder2 = BIDSfolder;
+     end
   end
 end
 
 
 % If one of the input directories is a BIDS directory and multipe jobs are 
-% runningthan than create a subfolder logs to save the log-files there and 
+% running than create a subfolder logs to save the log-files there and 
 % not in the current directory. See also for a similar block in cat_parallelize.
 % .. the first BIDSdir block is a bit different ... ???
 if isfield(job.extopts,'BIDSfolder')
@@ -138,8 +148,17 @@ if ~isempty(logdir)
     cat_io_cprintf('blue','%s\n\n', logdir);
   end
 end
-
-
+% RD202403: added path and filesnames - maybe better as separate structure
+job.filedata.help        = ['Structure directory and file names. \n' ...
+                         ' logdir      .. path for log file \n' ...
+                         ' rawdir      .. origin directory of the RAW data \n' ...
+                         ' BIDSfolder  .. relative path to the main result directory \n' ...
+                         ' BIDSdir     .. absolution (full) path to the result directory \n'];
+job.filedata.rawdir      = name1; 
+job.filedata.logdir      = logdir;
+job.filedata.BIDSdir     = BIDSdir;
+job.filedata.BIDSfolder  = BIDSfolder; 
+%}
 
 if ( isfield(job.extopts,'lazy') && job.extopts.lazy && ~isfield(job,'process_index') ) || ...
    ( isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.extopts.admin.lazy && ~isfield(job,'process_index') )
@@ -151,6 +170,39 @@ if ( isfield(job.extopts,'lazy') && job.extopts.lazy && ~isfield(job,'process_in
   % reprocessing) then we need no parallel jobs.
     job.nproc = 0; 
   end
+elseif ~isempty(BIDSdir)
+  % RD202403: If BIDS is used with "incorrect" folder structure file names 
+  %           are maybe not unique after reorganization. Besides the 
+  %           overwriting of results this can cause also processing errors
+  %           if one parallel job is removing files of another one. Hence,
+  %           we should at least create an error. 
+  jobl        = update_job(job);
+  jobl.vout   = vout_job(jobl); 
+
+  cpath       = spm_file( jobl.vout.catxml ,'cpath');
+  [cpathu,ui] = unique(cpath);
+  cpathd      = cpath( setdiff(1:numel(cpath),ui) );
+  fnames      = ''; 
+  
+  if numel( cpathu ) < numel( cpath ) 
+    for i = 1:numel( cpathd )
+      sf      = find( cat_io_contains( cpath , cpathd{i} ) ); 
+      fnamesi = sprintf('%4d) Results:  %s\n', i, cpathd{i}); 
+      for j = 1:numel(sf) 
+        fnamesi = sprintf('%s     %8s:  %s\n',fnamesi, sprintf('%d. RAW',j), jobl.vout.catxml{sf(j)} ); %jobl.data{sf(j)}(1:end-2) );
+      end
+      fnames = sprintf('%s\n%s', fnames, fnamesi ); 
+    end
+    error('cat_run:BIDSnotUniqueResults', ...
+       ['You are using CAT''s BIDS output:\n' ...
+        '    %s\n' ...
+        'but the given input does not support a unique output (e.g. same filenames) in %d of %d cases:\n' ...
+        '%s\n' ...
+        'Try to select "Relative Folders" instead of "Relative BIDS Folders".\n'], ...
+        BIDSfolder, numel( cpath ) - numel( cpathu ), numel( cpath ), fnames );
+       
+  end
+  %%
 end
 
 % split job and data into separate processes to save computation time
@@ -214,13 +266,13 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     % test writing 
     try
       pp = spm_fileparts(log_name{i});
-      if ~isempty(pp) && ~exist(pp,'dir'), mkdir(pp); end
+      if ~isempty(pp) && ~exist(pp,'dir'), mkdir(pp); else, pp = pwd; end
       pid = fopen(log_name{i},'w');
       fwrite(pid,'');
       fclose(pid);
       delete(log_name{i});
     catch
-      cat_io_cprintf('err',sprintf('Cannot create "%s" file. \n',log_name{i}));
+      cat_io_cprintf('err',sprintf('Cannot create "%s" file under "%s". \n',log_name{i}),pp);
     end
 
     % call matlab with command in the background
@@ -701,9 +753,10 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     %           besides this a nice para report could be useful that include 
     %           all fields and not just the most relevant on listed in the
     %           report.
-    try
+  %  try
+      if ~exist('BIDSfolder','var'), BIDSfolder = pwd; end
       cat_run_createCSVreport(job,BIDSfolder);
-    end
+  %  end
 
 
     %% final report
@@ -786,7 +839,7 @@ function cat_run_createCSVreport(job,BIDSfolder)
 
   % filename with date 
   [~,pp1,pp2] = spm_fileparts(BIDSfolder); 
-  date = ''; %['_' datetime('now','Format','yyyyMMddHHmm')]; 
+  date = ['_' char(datetime('now','Format','yyyyMMddHHmm'))]; 
   if ~isempty(pp1), pp1 = ['_' pp1 strrep(pp2,'_','-')]; end
   matlabbatch{1}.spm.tools.cat.tools.xml2csv.fname = ...
     sprintf('CATxml%s%s.csv', pp1, date); 
@@ -798,7 +851,11 @@ function cat_run_createCSVreport(job,BIDSfolder)
   
   % run SPM batch
   warning off; 
-  evalc('spm_jobman(''run'',matlabbatch);'); 
+  try
+    evalc('spm_jobman(''run'',matlabbatch);'); 
+  catch
+    warning('Error in writing final CSV file. Use the XML2CSV batch if the file is required.'); 
+  end
   warning on; 
 
   csvfile = fullfile( ...

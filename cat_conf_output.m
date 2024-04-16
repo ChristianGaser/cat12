@@ -37,6 +37,26 @@ function [output,output_spm] = cat_conf_output(expert)
   BIDSfolder.val     = {bids_folder};
   BIDSfolder.help    = {'This is the BIDS path relative to the participant level directory (i.e. sub-*). Please note that only relative, but no absolute paths can be defined here.'};
 
+  BIDSfolder2        = BIDSfolder; 
+  BIDSfolder2.name   = 'Relative folder';
+
+  BIDSyes2       = cfg_branch;
+  BIDSyes2.tag   = 'BIDSyes2';
+  BIDSyes2.name  = 'Yes (relative folder)';
+  BIDSyes2.val   = {BIDSfolder2};
+  BIDSyes2.help  = {'Use relative directory structure for storing data although if it is not BIDS conform.  This alternative definion based on the depth of the file, controlled here by the repetition of "../" is keeping subdirectories to be more robust in case of a regular but non-BIDS structure without default directory naming "sub-##/ses-##/anat" and similar filenames, e.g. for "../../derivatives/CAT##.#_#" and the following files:';
+    '   ../group-01/sub-01/t1w.nii';
+    '   ../group-01/sub-02/t1w.nii';
+    'it results in:'; 
+    '   ../derivatives/CAT##.#_#/group-01/sub-01/t1w.nii';
+    '   ../derivatives/CAT##.#_#/group-01/sub-02/t1w.nii';
+    'rather than:';
+    '   ../derivatives/CAT##.#_#/t1w.nii';
+    '   ../derivatives/CAT##.#_#/t1w.nii';
+    'where the relative BIDS folder would also cause conflicts by overwriting results.';
+    '';
+    };
+
   BIDSyes       = cfg_branch;
   BIDSyes.tag   = 'BIDSyes';
   BIDSyes.name  = 'Yes';
@@ -52,7 +72,7 @@ function [output,output_spm] = cat_conf_output(expert)
   BIDS          = cfg_choice;
   BIDS.tag      = 'BIDS';
   BIDS.name     = 'Use BIDS directory structure?';
-  BIDS.values   = {BIDSyes BIDSno};
+  BIDS.values   = {BIDSyes2 BIDSyes BIDSno};
   if cat_get_defaults('extopts.bids_yes')
     BIDS.val      = {BIDSyes};
   else

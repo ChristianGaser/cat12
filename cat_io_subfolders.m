@@ -1,4 +1,5 @@
-function [mrifolder, reportfolder, surffolder, labelfolder, errfolder] = cat_io_subfolders(fname,job)
+function [mrifolder, reportfolder, surffolder, labelfolder, errfolder, BIDSfolder] = ...
+  cat_io_subfolders(fname,job)
 % ______________________________________________________________________
 % Prepare subfolder names, optionally with BIDS structure
 %
@@ -17,13 +18,18 @@ function [mrifolder, reportfolder, surffolder, labelfolder, errfolder] = cat_io_
 % ______________________________________________________________________
 % $Id$
     
+  BIDSfolder = ''; 
   if nargin > 1 && isfield(job,'extopts')
     if ~isfield(job.extopts,'subfolders')
       job.extopts.subfolders = cat_get_defaults('extopts.subfolders');
     end
     subfolders = job.extopts.subfolders;
-    if isfield(job.extopts,'BIDSfolder')
-      BIDSfolder = job.extopts.BIDSfolder;
+    if isfield(job.extopts,'BIDSfolder') || isfield(job.extopts,'BIDSfolder2')
+      if isfield(job.extopts,'BIDSfolder')
+        BIDSfolder = job.extopts.BIDSfolder;
+      else
+        BIDSfolder = job.extopts.BIDSfolder2;
+      end
             
       % check whether upper directory is writable
       ind = strfind(BIDSfolder,'derivatives');
@@ -58,11 +64,38 @@ function [mrifolder, reportfolder, surffolder, labelfolder, errfolder] = cat_io_
     fname = char(fname);
     % to indicate BIDS structure the last subfolder has to be named "anat"
     % and "sub-" folders should exist
-    ind = max(strfind(spm_fileparts(fname),[filesep 'sub-']));
-    if ~isempty(ind) && strcmp(spm_file(spm_file(fname,'fpath'),'basename'),'anat')
-      sub_ses_anat = fileparts(fname(ind+1:end));  
+    if isfield(job.extopts,'BIDSfolder')
+      ind = max(strfind(spm_fileparts(fname),[filesep 'sub-']));
+      if ~isempty(ind) % && strcmp(spm_file(spm_file(fname,'fpath'),'basename'),'anat')
+      % RD202303: I think it better to fosing only on the sub- directory 
+        sub_ses_anat = fileparts(fname(ind+1:end));  
+      end
+    else
+      % RD202403:
+      % alternative definion based on the depth of the file and is keeping 
+      % subdirectories to be more robust in case of a regular but non-BIDS
+      % structure wihtout anat directory or with similar filenames, e.g. 
+      % for ../derivatives/CAT##.#_#
+      %   testdir/subtestdir1/f1.nii
+      %   testdir/subtestdir2/f1.nii
+      % it result in 
+      %   testdir/derivatives/CAT##.#_#/subtestdir1/f1.nii
+      %   testdir/derivatives/CAT##.#_#/subtestdir1/f1.nii
+      % rather than
+      %   testdir/derivatives/CAT##.#_#/f1.nii
+      %   testdir/derivatives/CAT##.#_#/f1.nii
+      % what would cause conflicts
+
+      subdirs = strfind(BIDSfolder,'../');  
+      fname2  = spm_file(fname,'path'); 
+
+      for si = 1:numel(subdirs)
+        [fname2,ff,ee] = spm_fileparts(fname2);
+        sub_ses_anat = fullfile([ff ee], sub_ses_anat);
+      end
     end
   end
+  BIDSdir = sub_ses_anat;
 
   % add BIDS structure if defined
   if exist('BIDSfolder','var')
