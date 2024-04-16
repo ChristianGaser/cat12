@@ -107,8 +107,15 @@ function varargout = cat_vol_qa202310(action,varargin)
 
   % file information
   % ----------------------------------------------------------------
+  if isfield(opt,'job') 
+    [mrifolder, reportfolder] = cat_io_subfolders(Vo.fname,opt.job);
+    if isfield( opt.job, 'filedata')
+      QAS.filedata = opt.job.filedata; 
+    end
+  else
+    [mrifolder, reportfolder] = cat_io_subfolders(Vo.fname,cat_get_defaults);
+  end
   [pp,ff,ee] = spm_fileparts(Vo.fname);
-  [mrifolder, reportfolder] = cat_io_subfolders(Vo.fname);
   [QAS.filedata.path,QAS.filedata.file] = spm_fileparts(Vo.fname);
   QAS.filedata.fname  = Vo.fname;
   QAS.filedata.F      = Vo.fname; 
@@ -118,7 +125,7 @@ function varargout = cat_vol_qa202310(action,varargin)
                      floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
                    spm_str_manip(ff,sprintf('k%d',...
                      (opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
-
+  
 
   % software, parameter and job information
   % ----------------------------------------------------------------

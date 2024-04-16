@@ -1,4 +1,28 @@
 ------------------------------------------------------------------------
+r2571 | robertdahnke | 2024-04-16 12:16:03
+
+Changed paths:
+ M .gitignore
+ M CHANGES.txt
+ M cat_conf_output.m
+ M cat_io_subfolders.m
+ M cat_run.m
+ M cat_vol_qa.m
+ M cat_vol_qa202310.m
+
+(1) New:     Added warning in case of non-unique (overwriting) output in case of 
+             non-standard BIDS folder structure in cat_run by using the vout_job
+             function requred for the batch dependencies and testing for unique 
+             filennames (cat_run, cat_io_subfolders, cat_conf_output). 
+(2) New:     Extended BIDS processing folder option by additing a relative cases
+             that in cat_conf_output, cat_io_subfolders. Removed the anat test 
+             condition to focus only onf the subject directy "sub-*" to create 
+             relative BIDS path structure.    
+(3) Changed: Improved error handling in cat_vol_qa and cat_vol_qa202310 by 
+             additional try-catch blocks. Improved QC processing in case of 
+             preprocessing errors in sub-function cat12err.
+           
+------------------------------------------------------------------------
 r2570 | gaser | 2024-04-08 09:42:37
 
 Changed paths:

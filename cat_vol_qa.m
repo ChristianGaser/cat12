@@ -36,6 +36,10 @@ function varargout = cat_vol_qa(action,varargin)
 %       opt.recalc     =
 %       opt.avgfactor  = 
 %       opt.prefix     = prefix of xml output file (default cat_*.xml) 
+%
+%  4) 'p0' .. direct call
+%     
+%       qa = cat_vol_qa('p0',Pp0,opt);
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -278,6 +282,9 @@ function varargout = cat_vol_qa(action,varargin)
     case 'cat12'
     % Direct call of the specific QC version with input images given by the 
     % varargin structure used in the CAT12 pipeline (processing of one case)
+sprintf('[QAS,QAR] = %s(''cat12'',varargin{:});', opt.version)
+if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
+
       eval(sprintf('[QAS,QAR] = %s(''cat12'',varargin{:});', opt.version));
 
     case 'p0'    
@@ -366,19 +373,60 @@ function varargout = cat_vol_qa(action,varargin)
         % try to run QC estimation 
 
           % load images
-          [Yp0,Ym,Vo] = getImages(Pp0,Po,Pm,fi); 
-      
-          % general function called from CAT12
-          res.image     = spm_vol(Pp0{fi}); 
+          try
+            [Yp0,Ym,Vo] = getImages(Pp0,Po,Pm,fi); 
+          catch
+            % setup default output
 
-          try 
-            [QASfi,QARfi] = cat_vol_qa('cat12ver',Yp0,Vo,Ym,res,species,opt);
+            opt2      = opt; 
+            opt2.subj = fi;
+            opt2.job  = cat_get_defaults;
+            opt2.job.channel.vols{fi}     = [Po{fi} ',1'];
+            opt2.job.data{fi}             = [Po{fi} ',1'];
+            opt2.job.extopts.darteltpms   = {};
+            opt2.job.extopts.shootingtpms = {};
+            opt2.caterr     = struct();
+            opt2.caterrtxt  = ''; 
+            
+            [QASfi,QARfi] = cat12err(opt2,mrifolder,reportfolder);
 
             % try to update the QC structure
             [QAS, QAR, qamat, qamatm, mqamatm] = updateQAstructure(QAS, ...
               QASfi, QAR, QARfi, qamat, qamatm, mqamatm, QMAfn, fi);
-          catch e 
+
+            continue
           end
+
+          % general function called from CAT12
+          res.image     = spm_vol(Pp0{fi}); 
+
+          [QASfi,QARfi] = cat_vol_qa('cat12ver',Yp0,Vo,Ym,res,species,opt);
+
+          try
+            % try to update the QC structure
+            [QAS, QAR, qamat, qamatm, mqamatm] = updateQAstructure(QAS, ...
+              QASfi, QAR, QARfi, qamat, qamatm, mqamatm, QMAfn, fi);
+          
+          catch
+            %% this is not a good solution !
+            opt2      = opt; 
+            opt2.subj = fi;
+            opt2.job  = cat_get_defaults;
+            opt2.job.channel.vols{fi}     = [Po{fi} ',1'];
+            opt2.job.data{fi}             = [Po{fi} ',1'];
+            opt2.job.extopts.darteltpms   = {};
+            opt2.job.extopts.shootingtpms = {};
+            opt2.caterr     = struct();
+            opt2.caterrtxt  = ''; 
+            
+            [QASfi,QARfi] = cat12err(opt2,mrifolder,reportfolder);
+
+            %% try to update the QC structure
+            [QAS, QAR, qamat, qamatm, mqamatm] = updateQAstructure(QAS, ...
+              QASfi, QAR, QARfi, qamat, qamatm, mqamatm, QMAfn, fi);
+          
+          end
+      
         end
 
         % print result
@@ -557,16 +605,22 @@ function varargout = cat_vol_qa(action,varargin)
       % redo the quality rating, ie. measure scaling
       QAR = upate_rating(QAS,opt.version);
       
-      % export 
-      if opt.write_xml
-        QAS.qualityratings = QAR.qualityratings;
-        QAS.subjectratings = QAR.subjectratings;
-        QAS.ratings_help   = QAR.help;
-        
-        cat_io_xml( fullfile(pp,reportfolder,[opt.prefix ff '.xml']) ,QAS,'write'); %struct('QAS',QAS,'QAM',QAM)
-      end
     otherwise
       % catched before
+  end
+
+  % export 
+  if opt.write_xml && fi==1
+    QAS.qualityratings = QAR.qualityratings;
+    QAS.subjectratings = QAR.subjectratings;
+    QAS.ratings_help   = QAR.help;
+
+    [pp,ff] = spm_fileparts(QAS.filedata.fname);    
+    fullfile(pp,reportfolder,[opt.prefix ff '.xml']);
+
+    fprintf( 'XML-File-QA: "%s" \n' ,fullfile(pp,reportfolder,[opt.prefix ff '.xml']) )
+
+    cat_io_xml( fullfile(pp,reportfolder,[opt.prefix ff '.xml']) ,QAS,'write'); %struct('QAS',QAS,'QAM',QAM)
   end
 
   if (isempty(varargin) || isstruct(varargin{1}) || isstruct(action)) && exist('Pp0','var')
@@ -632,6 +686,18 @@ function [Yp0,Ym,Vo] = getImages(Pp0,Po,Pm,fi)
 %  Ym  .. bias-corrected image
 %  Vo  .. original image
 
+  if (isempty(Po{fi}) || ~exist(Po{fi},'file')) && ...
+      ~isempty(Pm{fi}) && exist(Pm{fi},'file')
+    Po{fi} = Pm{fi}; 
+  elseif (isempty(Pm{fi}) || ~exist(Pm{fi},'file')) && ...
+      ~isempty(Po{fi}) && exist(Po{fi},'file')
+  end
+  if isempty(Pp0{fi}) || ~exist(Pp0{fi},'file')
+    % segment?
+    cat_io_cprintf('err','Cannot find/open segmentation: \n  %s\n',Pp0{fi}) 
+  end
+  
+
   % handle gzipped original data 
   [pp,ff,ee] = spm_fileparts(Po{fi});
   if exist(fullfile(pp,[ff ee]),'file')
@@ -661,7 +727,7 @@ function [Yp0,Ym,Vo] = getImages(Pp0,Po,Pm,fi)
   Ym  = single(spm_read_vols(spm_vol(Po{fi})));
   Ym(isnan(Yp0) | isinf(Yp0)) = 0; 
   Yw  = cat_vol_morph( Yp0>2.95 , 'e',1,vx_vol)  & cat_vol_morph( Yp0>2.25 , 'e',2,vx_vol); 
-  Yb  = cat_vol_approx( Ym .* Yw + Yw .* min(Ym(:)) ,2) - min(Ym(:)); 
+  Yb  = cat_vol_approx( Ym .* Yw + Yw .* min(Ym(:)) ,'rec') - min(Ym(:)); 
   Ym  = Ym ./ max(eps,Yb); 
 
   
@@ -679,7 +745,7 @@ function [Yp0,Ym,Vo] = getImages(Pp0,Po,Pm,fi)
   end      
 end
 %==========================================================================
-function QAS = cat12err(opt,mrifolder,reportfolder)
+function [QAS,QAR] = cat12err(opt,mrifolder,reportfolder)
 %cat12err. Create short report in case of CAT preprocessing error. 
 % This report contain basic parameters used for the CAT error report
 % creation in cat_io_report.
@@ -700,7 +766,16 @@ function QAS = cat12err(opt,mrifolder,reportfolder)
      (opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3))), ...
      ];
   
-  
+  % load header for resolution 
+  if exist(QAS.filedata.F,'file')
+    V = spm_vol(QAS.filedata.F); 
+  elseif exist(QAS.filedata.Fm,'file')
+    V = spm_vol(QAS.filedata.Fm); 
+  elseif exist(QAS.filedata.Fp0,'file')
+    V = spm_vol(QAS.filedata.Fp0); 
+  end
+  vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
+
   % software, parameter and job information
   % -----------------------------------------------------------------------
   [ver_cat, rev_cat] = cat_version;
@@ -744,10 +819,27 @@ function QAS = cat12err(opt,mrifolder,reportfolder)
     {'LAB','atlas','satlas','darteltpms','shootingtpms','fontsize'});
   QAS.parameter.caterr      = opt.caterr; 
   QAS.error                 = opt.caterrtxt; 
+
+  % redo the quality rating, ie. measure scaling
+  QAS.qualitymeasures.NCR         = NaN; 
+  QAS.qualitymeasures.ICR         = NaN; 
+  QAS.qualitymeasures.contrastr   = NaN; 
+  QAS.qualitymeasures.res_ECR     = NaN; 
+  QAS.qualitymeasures.res_RMS     = mean(vx_vol.^2).^0.5;
+  QAS.subjectmeasures.vol_rel_CGW = [NaN NaN NaN]; 
+  QAS.subjectmeasures.SQR         = NaN; 
   
+  QAR = upate_rating(QAS,opt.version);
+      
   % export 
   if opt.write_xml
+
+fprintf( 'XML-File-QAERR: "%s" \n' ,fullfile(pp,reportfolder,[opt.prefix ff '.xml']) )
+    
     cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAS,'write');
+  else
+fprintf( 'no - XML-File-QA: "%s" \n' ,fullfile(pp,reportfolder,[opt.prefix ff '.xml']) )
+    
   end
 end
 %==========================================================================
