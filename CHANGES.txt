@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2573 | dahnke | 2024-04-17 17:58:34
+
+Changed paths:
+ M CHANGES.txt
+ M cat_io_subfolders.m
+ M cat_run_newcatch.m
+ M cat_surf_info.m
+ M cat_vol_qa.m
+
+Fixed:    Corrected bug in cat_vol_qa with missing rating.
+Fixed:    Corrected bug reported by Torben Lund in cat_surf_info in 
+          case of specific SPM.mat files.  
+------------------------------------------------------------------------
 r2572 | dahnke | 2024-04-17 13:59:42
 
 Changed paths:

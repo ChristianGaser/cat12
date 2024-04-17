@@ -136,6 +136,9 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb,useavg)
   
   for i=1:numel(P)
     [pp,ff,ee] = spm_fileparts(P{i});
+    if strcmp(ee,'.dat')
+      P{i} = spm_file(P{i},'ext','.gii');
+    end
     sinfo(i).fdata = dir(P{i});
     
     sinfo(i).fname = P{i};
@@ -163,6 +166,8 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb,useavg)
           clear S; 
           try
             S = cat_io_FreeSurfer('read_annotation',P{1}); 
+          catch
+            cat_io_cprintf('warn',sprintf('Warning: Error while reading annotation file: \n  %s\n',P{1}));
           end
         end
         if exist('S','var')
@@ -173,18 +178,22 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb,useavg)
         sinfo(i).ee = '';
         sinfo(i).ftype = 0;
         if sinfo(i).exist && readsurf
+        % this files are not specified by ending so we will just try to read something
           clear S; 
-          try
+          try %#ok<TRYNC>
             S = cat_io_FreeSurfer('read_surf',P{1}); 
-            if size(S.faces,2)~=3 || size(S.faces,1)<10000
+            if ~isstruct(S) || ~isfield(S,'faces') || (size(S.faces,2)~=3 || size(S.faces,1)<10000)
               clear S; 
             end
           end
-          try
-            S.cdata = cat_io_FreeSurfer('read_surf_data',P{1}); 
+          try %#ok<TRYNC>
+            S.cdata = cat_io_FreeSurfer('read_surf_data',P{1});
             if size(S.face,2)==3 || size(S.face,1)<10000
               S = rmfield(S,'cdata'); 
             end
+          end
+          if ~exist('S','var')
+            cat_io_cprintf('warn',sprintf('Warning: Error while reading surface file: \n  %s\n',P{1}));
           end
         end
         if exist('S','var')
@@ -199,12 +208,12 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb,useavg)
     sinfo(i).statready = ~isempty(regexp(noname,'^s(?<smooth>\d+)\..*')); 
     
     % side
-    if     strfind(noname,'lh.'),   sinfo(i).side='lh';   sidei = strfind(noname,'lh.');
-    elseif strfind(noname,'rh.'),   sinfo(i).side='rh';   sidei = strfind(noname,'rh.');
-    elseif strfind(noname,'cb.'),   sinfo(i).side='cb';   sidei = strfind(noname,'cb.');
-    elseif strfind(noname,'mesh.'), sinfo(i).side='mesh'; sidei = strfind(noname,'mesh.');
-    elseif strfind(noname,'lc.'),   sinfo(i).side='lc';   sidei = strfind(noname,'lc.');
-    elseif strfind(noname,'rc.'),   sinfo(i).side='rc';   sidei = strfind(noname,'rc.');
+    if     cat_io_contains(noname,'lh.'),   sinfo(i).side='lh';   sidei = strfind(noname,'lh.');
+    elseif cat_io_contains(noname,'rh.'),   sinfo(i).side='rh';   sidei = strfind(noname,'rh.');
+    elseif cat_io_contains(noname,'cb.'),   sinfo(i).side='cb';   sidei = strfind(noname,'cb.');
+    elseif cat_io_contains(noname,'mesh.'), sinfo(i).side='mesh'; sidei = strfind(noname,'mesh.');
+    elseif cat_io_contains(noname,'lc.'),   sinfo(i).side='lc';   sidei = strfind(noname,'lc.');
+    elseif cat_io_contains(noname,'rc.'),   sinfo(i).side='rc';   sidei = strfind(noname,'rc.');
     else
       
       % skip for volume files
@@ -213,21 +222,30 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb,useavg)
       end
       
       % if SPM.mat exist use that for side information
-      if exist(fullfile(pp,'SPM.mat'),'file')
-        load(fullfile(pp,'SPM.mat'));
-        [pp2,ff2]   = spm_fileparts(SPM.xY.VY(1).fname);        
-      
-        % find mesh string
-        hemi_ind = strfind(ff2,'mesh.');
-        if ~isempty(hemi_ind)
-          sinfo(i).side = ff2(hemi_ind(1):hemi_ind(1)+3);
-        else
-          % find lh|rh string
-          hemi_ind = [strfind(ff2,'lh.') strfind(ff2,'rh.') strfind(ff2,'lc.') strfind(ff2,'rc.')];
-          sinfo(i).side = ff2(hemi_ind(1):hemi_ind(1)+1);
+      % Torben Lund Mail 20240409: issues with reading some SPM.mat files that did not include the right  
+      if ~isempty(pp) && exist(fullfile(pp,'SPM.mat'),'file')
+        try %#ok<TRYNC>
+          load(fullfile(pp,'SPM.mat'),'SPM'); % this will give a warning if the var SPM does not exist 
         end
-
-        sidei=[];
+        if exist('SPM','var') 
+          if isfield(SPM,'xY') && isfield (SPM.xY,'VY') && isfield(SPM.xY.VY(1),'fname')
+            [~,ff2]   = spm_fileparts(SPM.xY.VY(1).fname);        
+            
+            % find mesh string
+            hemi_ind = strfind(ff2,'mesh.');
+            if ~isempty(hemi_ind)
+              sinfo(i).side = ff2(hemi_ind(1):hemi_ind(1)+3);
+            else
+              % find lh|rh string
+              hemi_ind = [strfind(ff2,'lh.') strfind(ff2,'rh.') strfind(ff2,'lc.') strfind(ff2,'rc.')];
+              sinfo(i).side = ff2(hemi_ind(1):hemi_ind(1)+1);
+            end
+            
+            sidei = []; % handle this later
+          else
+            cat_io_cprintf('warn',sprintf('Warning: Error SPM.mat does not include required fields: \n  %s\n',P{1}));
+          end
+        end
       else
         if gui
           if cat_get_defaults('extopts.expertgui')
@@ -274,7 +292,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb,useavg)
                               isempty(strfind(sinfo(i).posside,'.resampled_32k'));
     sinfo(i).resampled_32k = ~isempty(strfind(sinfo(i).posside,'.resampled_32k'));
     % template
-    sinfo(i).template  = ~isempty(strfind(lower(sinfo(i).ff),'.template')); 
+    sinfo(i).template      = cat_io_contains(lower(sinfo(1).ff),'.template'); 
     % CG20210226: This caused crashes in cat_surf_surf2roi.m for some files
 %    if sinfo(i).template,  sinfo(i).resampled = 1; end
     
@@ -299,7 +317,7 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb,useavg)
       % if not points exist that the string is the name
         sinfo(i).name    = '';
         sinfo(i).texture = sinfo(i).posside;
-      elseif numel(doti)==1 
+      elseif isscalar(doti) 
       % if one point exist that the first string is the dataname and the second the subject name 
         sinfo(i).name    = sinfo(i).posside(doti+1:end);
         sinfo(i).texture = sinfo(i).posside(1:doti-1);
@@ -422,8 +440,8 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb,useavg)
             [pp2,ff2,xx2] = spm_fileparts(SPM.xVol.G);
             % rename old Template name from previous versions
             ff2 = strrep(ff2,'Template_T1_IXI555_MNI152_GS',cat_get_defaults('extopts.shootingsurf'));
-            if ~isempty(strfind(ff2,'.central.freesurfer')) || ~isempty(strfind(ff2,['.central.' cat_get_defaults('extopts.shootingsurf')]))
-              if strfind(pp2,'templates_surfaces_32k')
+            if cat_io_contains(ff2,'.central.freesurfer') || cat_io_contains(ff2,['.central.' cat_get_defaults('extopts.shootingsurf')])
+              if cat_io_contains(pp2,'templates_surfaces_32k') 
                 SPM.xVol.G = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k',[ff2 xx2]);
               else
                 SPM.xVol.G = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces',[ff2 xx2]);
@@ -453,7 +471,9 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb,useavg)
             if sinfo(i).exist && ~readsurf
               clear S; 
               try
-                S = cat_io_FreeSurfer('read_annotation',P{1});
+                S = cat_io_FreeSurfer('read_annotation',P{1}); 
+              catch
+                cat_io_cprintf('warn',sprintf('Warning: Error while reading annotation file: \n  %s\n',P{1}));
               end
             end
         end
@@ -532,8 +552,8 @@ function [varargout] = cat_surf_info(P,readsurf,gui,verb,useavg)
         if ~isempty(sinfo(i).Pmesh) && exist(sinfo(i).Pmesh,'file')
           S2 = gifti(sinfo(i).Pmesh);
           if ~isstruct(S), clear S; end
-          if isfield(S2,'vertices'), S.vertices = S2.vertices; else S.vertices = []; end
-          if isfield(S2,'faces'),    S.faces    = S2.faces;    else S.faces = []; end
+          if isfield(S2,'vertices'), S.vertices = S2.vertices; else, S.vertices = []; end
+          if isfield(S2,'faces'),    S.faces    = S2.faces;    else, S.faces = []; end
         end
         if isfield(S,'vertices')
           sinfo(i).nvertices = size(S.vertices,1);

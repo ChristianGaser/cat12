@@ -68,7 +68,7 @@ function [mrifolder, reportfolder, surffolder, labelfolder, errfolder, BIDSfolde
     fname = char(fname);
     % to indicate BIDS structure the last subfolder has to be named "anat"
     % and "sub-" folders should exist
-    if isfield(job.extopts,'BIDSfolder')
+    if exist('job','var') && isfield(job,'extopts') && isfield(job.extopts,'BIDSfolder')
       ind = max(strfind(spm_fileparts(fname),[filesep 'sub-']));
       if ~isempty(ind) % && strcmp(spm_file(spm_file(fname,'fpath'),'basename'),'anat')
       % RD202303: I think it better to fosing only on the sub- directory 
