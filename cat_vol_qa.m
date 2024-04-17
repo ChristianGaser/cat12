@@ -317,7 +317,7 @@ function varargout = cat_vol_qa(action,varargin)
     case 'cat12'
     % Direct call of the specific QC version with input images given by the 
     % varargin structure used in the CAT12 pipeline (processing of one case)
-sprintf('[QAS,QAR] = %s(''cat12'',varargin{:});', opt.version)
+%sprintf('[QAS,QAR] = %s(''cat12'',varargin{:});', opt.version)
 if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
 
       eval(sprintf('[QAS,QAR] = %s(''cat12'',varargin{:});', opt.version));
@@ -651,16 +651,13 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
   end
 
   % export 
-  if opt.write_xml && fi==1
+  if strcmp(action,'cat12') % exist('Pp0','var') && isscalar(Pp0) && opt.write_xml
     QAS.qualityratings = QAR.qualityratings;
     QAS.subjectratings = QAR.subjectratings;
     QAS.ratings_help   = QAR.help;
 
     [pp,ff] = spm_fileparts(QAS.filedata.fname);    
     fullfile(pp,reportfolder,[opt.prefix ff '.xml']);
-
-    fprintf( 'XML-File-QA: "%s" \n' ,fullfile(pp,reportfolder,[opt.prefix ff '.xml']) )
-
     cat_io_xml( fullfile(pp,reportfolder,[opt.prefix ff '.xml']) ,QAS,'write'); %struct('QAS',QAS,'QAM',QAM)
   end
 
@@ -885,13 +882,7 @@ function [QAS,QAR] = cat12err(opt,mrifolder,reportfolder)
       
   % export 
   if opt.write_xml
-
-fprintf( 'XML-File-QAERR: "%s" \n' ,fullfile(pp,reportfolder,[opt.prefix ff '.xml']) )
-    
-    cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAS,'write');
-  else
-fprintf( 'no - XML-File-QA: "%s" \n' ,fullfile(pp,reportfolder,[opt.prefix ff '.xml']) )
-    
+    cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAS,'write');    
   end
 end
 %==========================================================================
