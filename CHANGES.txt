@@ -1,4 +1,19 @@
 ------------------------------------------------------------------------
+r2572 | dahnke | 2024-04-17 13:59:42
+
+Changed paths:
+ M CHANGES.txt
+ M cat_io_subfolders.m
+ M cat_vol_qa.m
+ M cat_vol_qa201602.m
+ M cat_vol_qa201901.m
+ M cat_vol_qa202110.m
+ M cat_vol_qa202205.m
+ M cat_vol_qa202310.m
+
+Fixed:    Corrected ouput directory of the QC batch in case of SPM input
+          segmentation in cat_vol_qa and subversions cat_vol_qa20*. 
+Fixed:    Corrected handling of image header inputs in cat_io_subfolders. ------------------------------------------------------------------------
 r2571 | robertdahnke | 2024-04-16 12:16:03
 
 Changed paths:

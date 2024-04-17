@@ -59,18 +59,36 @@ function varargout = cat_vol_qa(action,varargin)
   
   if nargin == 0, help cat_vol_qa; return; end
 
-  try
-    switch action
-      case 'cat12err'
-        [mrifolder, reportfolder] = cat_io_subfolders(varargin{1}.job.data{1},varargin{1}.job);
-      case 'cat12'
-        [mrifolder, reportfolder] = cat_io_subfolders(varargin{2},varargin{6}.job);
-      otherwise
-        [mrifolder, reportfolder] = cat_io_subfolders(varargin{4}.catlog,varargin{6}.job);
+  if isstruct(action)
+    if isfield(action,'reportfolder') && isempty(action.reportfolder)
+      mrifolder    = '';
+      reportfolder = ''; 
+    else
+      mrifolder    = 'mri';
+      reportfolder = 'report'; 
     end
-  catch
-    mrifolder    = 'mri';
-    reportfolder = 'report'; 
+  else
+    try
+      switch action
+        case 'cat12err'
+          [mrifolder, reportfolder] = cat_io_subfolders(varargin{1}.job.data{1},varargin{1}.job);
+        case 'cat12'
+          [mrifolder, reportfolder] = cat_io_subfolders(varargin{2},varargin{6}.job);
+        case 'cat12ver'
+          if isfield(varargin{6},'reportfolder') && isempty(varargin{6}.reportfolder)
+            mrifolder    = '';
+            reportfolder = ''; 
+          else
+            mrifolder    = 'mri';
+            reportfolder = 'report'; 
+          end
+        otherwise
+          [mrifolder, reportfolder] = cat_io_subfolders(varargin{4}.catlog,varargin{6}.job);
+      end
+    catch
+      mrifolder    = 'mri';
+      reportfolder = 'report'; 
+    end
   end
   
 
@@ -88,6 +106,14 @@ function varargout = cat_vol_qa(action,varargin)
         end
         Pm  = action.images;
         action.data = Pp0;
+      elseif isfield(action.model,'spmc0')
+        Po  = action.images;
+        Pp0 = action.model.spmc0; 
+        if numel(Po)~=numel(Pp0) && numel(Pp0)==1
+          Pp0 = repmat(Pp0,numel(Po),1);
+        end
+        Pm  = action.images;
+        action.data = Pp0;  
       elseif isfield(action.model,'spmc1')
         %% SPM case where the spmc1 should point to all other segmentation files
 
@@ -116,8 +142,10 @@ function varargout = cat_vol_qa(action,varargin)
         end
 
         %% run QC
-        action2 = rmfield(action,'model'); 
-        action2.model.catp0 = action.model.spmp0;
+         action2 = rmfield(action,'model'); 
+         action2.model.spmc0 = action.model.spmp0;
+         action2.reportfolder = ''; 
+       
         varargout{:} = cat_vol_qa(action2,varargin); 
 
         varargout{1}.data = action2.images;
@@ -141,6 +169,7 @@ function varargout = cat_vol_qa(action,varargin)
 
         action2 = rmfield(action,'model'); 
         action2.model.catp0 = spm_file(action.images,'prefix','p0');  
+
         varargout{:} = cat_vol_qa(action2,varargin); 
         return 
 
@@ -166,6 +195,12 @@ function varargout = cat_vol_qa(action,varargin)
   if cat_io_contains(opt.prefix,'VERSION')
     opt.prefix = strrep( opt.prefix , 'VERSION', strrep( opt.version ,'_','')); 
   end
+  if isfield(opt,'model') && isfield(opt.model,'spmc1')
+    opt.reportfolder = ''; 
+  else 
+    opt.reportfolder = reportfolder;
+  end
+  
 
   % check input by action
   switch action
@@ -385,6 +420,7 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
             opt2.job.data{fi}             = [Po{fi} ',1'];
             opt2.job.extopts.darteltpms   = {};
             opt2.job.extopts.shootingtpms = {};
+            opt2.job.extopts.subfolder    = isfield(action,'model') && isfield(action.model,'spmc1');  
             opt2.caterr     = struct();
             opt2.caterrtxt  = ''; 
             
@@ -590,14 +626,19 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
                 qa.subjectmeasures.vol_rel_CGW(i) = qa.subjectmeasures.vol_abs_CGW(i) ./ ...
                                                      qa.subjectmeasures.vol_TIV; 
               end
-              eval(sprintf('[QAS,QAR] = %s(''cat12'',varargin{1:4},struct(),varargin{5:end-1},struct(''qa'',qa));',opt.version));
+              varargin2 = varargin; 
+              varargin2{6}.job.extopts.subfolders = ~isempty(reportfolder); 
+              eval(sprintf('[QAS,QAR] = %s(''cat12'',varargin2{1:4},struct(),varargin2{5:end-1},struct(''qa'',qa));',opt.version));
             otherwise
-              eval(sprintf('[QAS,QAR] = %s(''cat12'',varargin{:});',opt.version));
+              varargin2 = varargin; 
+              varargin2{6}.job.extopts.subfolders = ~isempty(reportfolder); 
+              eval(sprintf('[QAS,QAR] = %s(''cat12'',varargin2{:});',opt.version));
           end
         else
         % setup the current/default version 
-          varargin2    = varargin; 
+          varargin2 = varargin; 
           varargin2{6}.version = 'cat_vol_qa202310'; 
+          varargin2{6}.job.extopts.subfolders = ~isempty(reportfolder); 
           eval(sprintf('[QAS,QAR] = %s(''cat12'',varargin2{:});', varargin2{6}.version));
         end
       end
@@ -686,11 +727,22 @@ function [Yp0,Ym,Vo] = getImages(Pp0,Po,Pm,fi)
 %  Ym  .. bias-corrected image
 %  Vo  .. original image
 
+  if Pp0{fi}(end-1)==',', Pp0{fi}(end-1:end) = []; end
+  if Po{fi}(end-1)==',',  Po{fi}(end-1:end) = []; end
+  if Pm{fi}(end-1)==',',  Pm{fi}(end-1:end) = []; end
+
   if (isempty(Po{fi}) || ~exist(Po{fi},'file')) && ...
       ~isempty(Pm{fi}) && exist(Pm{fi},'file')
     Po{fi} = Pm{fi}; 
+    if cat_get_defaults('extopts.expertgui') 
+      cat_io_cprintf('warn','Cannot find/open original image use bias corrected: \n  %s\n',Pm{fi}) 
+    end
   elseif (isempty(Pm{fi}) || ~exist(Pm{fi},'file')) && ...
-      ~isempty(Po{fi}) && exist(Po{fi},'file')
+         ~isempty(Po{fi}) && exist(Po{fi},'file')
+    Pm{fi} = Po{fi}; 
+    if cat_get_defaults('extopts.expertgui') 
+      cat_io_cprintf('warn','Cannot find/open bias corrected image use original: \n  %s\n',Po{fi}) 
+    end
   end
   if isempty(Pp0{fi}) || ~exist(Pp0{fi},'file')
     % segment?

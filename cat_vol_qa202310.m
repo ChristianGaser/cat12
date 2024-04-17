@@ -168,7 +168,7 @@ function varargout = cat_vol_qa202310(action,varargin)
   end
 
   %QAS.parameter             = opt.job; 
-  if isfield(opt,'job')
+  if isfield(opt,'job') && isfield(opt.job,'opts')
     QAS.parameter.opts        = opt.job.opts;
     QAS.parameter.extopts     = opt.job.extopts;
     %QAS.parameter.cat_pp      = 

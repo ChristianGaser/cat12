@@ -677,7 +677,7 @@ if opt.rerun || cat_io_rerun(Vo.fname, fullfile(pp,reportfolder,[opt.prefix ff '
       end
  
       %QAS.parameter             = opt.job; 
-      if isfield(opt,'job')
+      if isfield(opt,'job') && isfield(opt.job,'opts')
         QAS.parameter.opts        = opt.job.opts;
         QAS.parameter.extopts     = opt.job.extopts;
         %QAS.parameter.cat_pp      = 

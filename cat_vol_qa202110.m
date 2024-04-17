@@ -86,6 +86,8 @@ function varargout = cat_vol_qa202110(action,varargin)
   try
     if strcmp(action,'cat12err')
       [mrifolder, reportfolder] = cat_io_subfolders(varargin{1}.job.data,varargin{1}.job);
+    elseif strcmp(action,'cat12')
+      [mrifolder, reportfolder] = cat_io_subfolders(varargin{2},varargin{6}.job);
     else
       [mrifolder, reportfolder] = cat_io_subfolders(varargin{4}.catlog,varargin{6}.job);
     end
@@ -621,7 +623,7 @@ function varargout = cat_vol_qa202110(action,varargin)
       end
  
       %QAS.parameter             = opt.job; 
-      if isfield(opt,'job')
+      if isfield(opt,'job') && isfield(opt.job,'opts')
         QAS.parameter.opts        = opt.job.opts;
         QAS.parameter.extopts     = opt.job.extopts;
         %QAS.parameter.cat_pp      = 
