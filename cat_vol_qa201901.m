@@ -677,7 +677,7 @@ function varargout = cat_vol_qa201901(action,varargin)
       warning on
  
       %QAS.parameter             = opt.job; 
-      if isfield(opt,'job')
+      if isfield(opt,'job') && isfield(opt.job,'opts')
         QAS.parameter.opts        = opt.job.opts;
         QAS.parameter.extopts     = opt.job.extopts;
         %QAS.parameter.output      = opt.job.output;

@@ -80,12 +80,17 @@ function varargout = cat_vol_qa201602(action,varargin)
   cat_warnings    = struct('identifier',{},'message',{});
   if nargout>0, varargout = cell(1,nargout); end
 
-  if cat_get_defaults('extopts.subfolders')
-    mrifolder = 'mri';
-    reportfolder = 'report';
-  else
-    mrifolder = '';
-    reportfolder = '';
+   try
+    if strcmp(action,'cat12err')
+      [mrifolder, reportfolder] = cat_io_subfolders(varargin{1}.job.data,varargin{1}.job);
+    elseif strcmp(action,'cat12')
+      [mrifolder, reportfolder] = cat_io_subfolders(varargin{2},varargin{6}.job);
+    else
+      [mrifolder, reportfolder] = cat_io_subfolders(varargin{4}.catlog,varargin{6}.job);
+    end
+  catch
+    mrifolder    = 'mri'; 
+    reportfolder = 'report'; 
   end
    
   % no input and setting of default options
@@ -704,7 +709,7 @@ function varargout = cat_vol_qa201602(action,varargin)
       
       %% bias correction for original map, based on the 
       WI  = Yw./max(eps,Ywc); WI(isnan(WI) | isinf(WI)) = 0; 
-      WI  = cat_vol_approx(WI,2);
+      WI  = cat_vol_approx(WI,'nn',vx_vol,2);
       WI  = cat_vol_smooth3X(WI,1);
       Ywn = Ywn./WI; Ywn = round(Ywn*1000)/1000;
       Ymi = Yo ./WI; Ymi = round(Ymi*1000)/1000;

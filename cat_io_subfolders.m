@@ -58,8 +58,12 @@ function [mrifolder, reportfolder, surffolder, labelfolder, errfolder, BIDSfolde
     errfolder    = '';
   end
 
-  % check whether sub-name is found and "anat" and "ses-" subfolder
+  % in case of image headers just use the first filename
   sub_ses_anat = '';
+  if isstruct( fname )
+    fname = fname(1).fname; 
+  end
+  % check whether sub-name is found and "anat" and "ses-" subfolder
   if ~isempty(fname)
     fname = char(fname);
     % to indicate BIDS structure the last subfolder has to be named "anat"
