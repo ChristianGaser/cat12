@@ -126,8 +126,115 @@ function cat_run_job(job,tpm,subj)
   if exist(fullfile(pp,['c1' ff(3:end) ee]),'file') && ...
      exist(fullfile(pp,['c2' ff(3:end) ee]),'file') && ...
      exist(fullfile(pp,['c3' ff(3:end) ee]),'file') && ...
-     exist(fullfile(pp,[ff(3:end) '_seg8.mat']),'file') && strcmp(ff(1:2),'c1')
+     exist(fullfile(pp,[ff(3:end) '_seg_sn.mat']),'file') && ...
+     ... exist(fullfile(pp,[ff(3:end) '_seg_inv_sn.mat']),'file') && ...
+     strcmp(ff(1:2),'c1')
+
+      cat_io_cprintf('blue','Load SPM old-segment segmentation (*seg_sn.mat)\n ')
+
+      % create field also for dependency setup
+      if ~isfield(job.extopts,'spmAMAP'), job.extopts.spmAMAP = 0; end
+
+      job.data{subj}          = fullfile(pp,[ff ee]); 
+      job.channel.vols{subj}  = fullfile(pp,[ff ee]); 
+
+      % prepare SPM preprocessing structure 
+      images = job.channel(1).vols{subj};
+      for n = 2:numel(job.channel)
+        images  = char(images,job.channel(n).vols{subj});
+      end
+      Pseg8     = fullfile(pp,[ff(3:end) '_seg_sn.mat']); 
+      reso      = load(Pseg8); 
+      res       = reso.flags;
+      res.segsn = reso; 
+      if sum( spm_get_defaults('old.preproc.ngaus') ) == numel(reso.flags.mg) 
+        ngaus = spm_get_defaults('old.preproc.ngaus');
+        for ti = 1:numel(reso.VG)
+          job.tissue(ti).ngaus = ngaus(ti);
+          job.tissue(ti).tpm   = reso.VG(ti).fname; 
+        end
+        job.tissue(numel(ngaus)).ngaus = ngaus(end);
+        for ti = numel(reso.VG)+2:numel(job.tissue)
+          job.tissue(ti+2:end) = []; 
+        end
+        res.lkp = [];
+        if all(isfinite(cat(1,ngaus)))
+            for k=1:max(ngaus)
+                res.lkp = [res.lkp ones(1,job.tissue(k).ngaus)*k];
+            end
+        end
+      else
+        % no solution for now
+        %res.ngaus  = [inf inf inf inf]; 
+        res.lkp      = [];
+        if all(isfinite(cat(1,job.tissue.ngaus)))
+            for k=1:numel(job.tissue)
+                res.lkp = [res.lkp ones(1,job.tissue(k).ngaus)*k];
+            end
+        end
+      end
+      res.tpm = reso.VG; 
+
+      obj.image    = spm_vol(images);
+      obj.fwhm     = job.opts.fwhm;
+      obj.affreg   = reso.flags.regtype;
+      obj.biasreg  = reso.flags.biasreg;
+      obj.biasfwhm = reso.flags.biasfwhm;
+      obj.tol      = NaN .* job.opts.tol;
+      obj.reg      = NaN .* job.opts.warpreg;
+      obj.samp     = reso.flags.samp;              
+      spm_check_orientations(obj.image);
+
+      job.opts.tpm      = {reso.VG(1).fname};
+      job.opts.biasreg  = reso.flags.biasreg;
+      job.opts.biasfwhm = reso.flags.biasfwhm;
+      job.opts.samp     = reso.flags.samp;          
+
+      
+      for lkpi = 1:max(res.lkp)
+        res.mg(res.lkp==lkpi) = res.mg(res.lkp==lkpi) / sum(res.mg(res.lkp==lkpi)); 
+      end
+      res.mn = res.mn'; 
+      
+
+      job.opts.tpm     = res.tpm(1).fname; 
+      job.opts.biasreg = reso.flags; 
+      job.extopts.shootingT1 = job.extopts.T1; 
+
+      % load tpm priors 
+      tpm     = spm_load_priors8(res.tpm);
+      obj.lkp = res.lkp; 
+      obj.tpm = tpm; 
+      
+      cfname  = fullfile(pp,[ff ee]);
+      ofname  = fullfile(pp,[ff(3:end) ee]); 
+      nfname  = fullfile(pp,mrifolder,['n' ff '.nii']); 
+      copyfile(ofname,nfname,'f'); 
+
+      Ysrc0    = single(spm_read_vols(obj.image)); 
+      Ylesion  = single(isnan(Ysrc0) | isinf(Ysrc0) | Ysrc0==0); clear Ysrc0;
+      
      
+      job.channel(1).vols{subj}  = [nfname ex];
+      job.channel(1).vols0{subj} = [ofname ex];
+      res.image  = spm_vol([nfname ex]);
+      res.image0 = spm_vol([ofname ex]);
+      res.imagec = spm_vol([cfname ex]);
+      res.spmpp  = 1; 
+      job.spmpp  = 1; 
+      
+      cat_err_res.obj = obj;
+
+    elseif exist(fullfile(pp,['c1' ff(3:end) ee]),'file') && ...
+           exist(fullfile(pp,['c2' ff(3:end) ee]),'file') && ...
+           exist(fullfile(pp,['c3' ff(3:end) ee]),'file') && ...
+           exist(fullfile(pp,[ff(3:end) '_seg8.mat']),'file') && strcmp(ff(1:2),'c1')
+     
+      cat_io_cprintf('blue','Load SPM segment segmentation (*seg8.mat)\n ')
+
+      % create field also for dependency setup
+      if ~isfield(job.extopts,'spmAMAP'), job.extopts.spmAMAP = 0; end
+
       job.data{subj}          = fullfile(pp,[ff ee]); 
       job.channel.vols{subj}  = fullfile(pp,[ff ee]); 
 
@@ -142,11 +249,6 @@ function cat_run_job(job,tpm,subj)
       obj.biasreg  = cat(1,job.opts.biasreg);
       obj.biasfwhm = cat(1,job.opts.biasfwhm);
       obj.tol      = job.opts.tol;
-      obj.newtol   = 1 + ( isfield(job,'useprior') && ~isempty(job.useprior) ); 
-                        %  -1-old SPM (>9 iters, inner=tol), 
-                        %   0-old CAT more outer iterations (>19 iter, inner=tol),  
-                        %   1-new optimal/faster with additional AUC criteria to have SPM minimum iterations (>9 iters, inner=1e-2)
-                        %   2-new accurate with additioal AUC criteria but CAT minimum iterations (>19 iter, outer=tol, inner=1e-4)
       obj.lkp      = [];
       obj.reg      = job.opts.warpreg;
       obj.samp     = job.opts.samp;              
@@ -163,7 +265,7 @@ function cat_run_job(job,tpm,subj)
         error('cat_run_job1639:SPMpp_MissSeg8mat','Can''t find "%s" file!',Pseg8);
       end
       res = load(Pseg8);
-
+      
       % load tpm priors 
       tpm = spm_load_priors8(res.tpm);
       obj.lkp = res.lkp; 
@@ -349,7 +451,7 @@ function cat_run_job(job,tpm,subj)
         ppe.affreg.skullstripped = ppe.affreg.skullstripped || ...
           sum([ppe.affreg.skullstrippedpara(1)>0.8 F0vol<1500 F0std<0.4])>1; % or 2 extreme values
         % not automatic detection in animals
-        ppe.affreg.skullstripped = ppe.affreg.skullstripped && strcmp(job.extopts.species,'human');
+        ppe.affreg.skullstripped = ppe.affreg.skullstripped && strcmp(job.extopts.species,'human') && job.extopts.gcutstr<10;
         %% high intensity background (MP2Rage)
         ppe.affreg.highBGpara = [ ...
           cat_stat_nanmedian( YFm( YBG(:) > 1/3 )) ... normal background
@@ -463,6 +565,7 @@ function cat_run_job(job,tpm,subj)
              ofname,nfname,mrifolder,ppe.affreg.skullstripped);
         end
       end
+      job.extopts.gcutstr = mod(job.extopts.gcutstr,10);
 
       
       % prepare SPM preprocessing structure 

@@ -72,7 +72,11 @@ function [output,output_spm] = cat_conf_output(expert)
   BIDS          = cfg_choice;
   BIDS.tag      = 'BIDS';
   BIDS.name     = 'Use BIDS directory structure?';
-  BIDS.values   = {BIDSyes2 BIDSyes BIDSno};
+  if expert
+    BIDS.values   = {BIDSyes2 BIDSyes BIDSno};
+  else
+    BIDS.values   = {BIDSyes BIDSno};
+  end
   if cat_get_defaults('extopts.bids_yes')
     BIDS.val      = {BIDSyes};
   else
@@ -178,14 +182,16 @@ function [output,output_spm] = cat_conf_output(expert)
   bias.tag    = 'bias';
   bias.name   = 'Bias, noise and global intensity corrected T1 image';
   if expert
-    bias.val    = {native warped dartel};
+    bias.val  = {native warped dartel};
   else
-    bias.val    = {warped};
+    bias.val  = {warped};
   end
   bias.help   = {
     'This is the option to save a bias, noise, and global intensity corrected version of the original T1 image. MR images are usually corrupted by a smooth, spatially varying artifact that modulates the intensity of the image (bias). These artifacts, although not usually a problem for visual inspection, can impede automated processing of the images. The bias corrected version should have more uniform intensities within the different types of tissues and can be saved in native space and/or normalised. Noise is corrected by an adaptive non-local mean (NLM) filter (Manjon 2008, Medical Image Analysis 12).'
   ''
   };
+  bias_spm     = bias; 
+  bias_spm.val = {warped dartel};
 
   native.def  = @(val)cat_get_defaults('output.las.native', val{:});
   warped.def  = @(val)cat_get_defaults('output.las.warped', val{:});
@@ -321,12 +327,15 @@ function [output,output_spm] = cat_conf_output(expert)
   tpmc          = cfg_branch;
   tpmc.tag      = 'TPMC';
   tpmc.name     = 'Tissue Probability Map Classes';
-  tpmc.val      = {native warped modulated dartel};
   tpmc.hidden   = expert<1;
   tpmc.help     = {'Option to save the SPM tissue class 4 to 6: p#*.img, wp#*.img and m[0]wp#*.img.'
   ''
   };
+  tpmc.val      = {native warped modulated dartel};
+  tpmc_spm      = tpmc;
+  tpmc_spm.val  = {warped modulated dartel};
 
+  
   % WMH
   native.def    = @(val)cat_get_defaults('output.WMH.native', val{:});
   warped.def    = @(val)cat_get_defaults('output.WMH.warped', val{:});
@@ -471,7 +480,7 @@ function [output,output_spm] = cat_conf_output(expert)
   };
   
   output_spm            = output; 
-  output_spm.val        = {BIDS surface ROI grey_spm white_spm csf_spm label labelnative jacobianwarped warps}; 
+  output_spm.val        = {BIDS surface ROI grey_spm white_spm csf_spm tpmc_spm label bias_spm labelnative jacobianwarped warps}; 
 
 return
 %------------------------------------------------------------------------

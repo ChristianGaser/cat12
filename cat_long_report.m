@@ -108,7 +108,7 @@ function out = cat_long_report(job)
   end
   
   %% create final report structure to call cat_main_reportfig
-  if job.printlong > 1
+  if job.printlong > 0
     ppres.image      = Vmn;
     ppres.image0     = Vmn;
     ppres.Vmn        = Vmn;

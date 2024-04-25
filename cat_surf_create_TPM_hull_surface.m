@@ -114,7 +114,7 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull,onlytmp)
   
   
   % load SPM-TPM-structure
-  if ~exist('tpm','var')
+  if ~exist('tpm','var') || ~isfield(tpm(1),'dat')
     % here we load the full TPM structure 
     istpm = 1; 
     tpm = spm_load_priors8(Ptpm);

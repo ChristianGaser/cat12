@@ -37,7 +37,17 @@ global cat_err_res
 %  -------------------------------------------------------------------
 stime  = cat_io_cmd('SPM preprocessing 2 (write)'); if job.extopts.verb>1, fprintf('\n'); end
 stime2 = cat_io_cmd('  Write Segmentation','g5','',job.extopts.verb-1);
-[Ysrc,Ycls,Yy] = cat_spm_preproc_write8(res,zeros(max(res.lkp),4),zeros(1,2),[0 0],0,0);
+if ~isfield(res,'segsn')
+  [Ysrc,Ycls,Yy] = cat_spm_preproc_write8(res,zeros(max(res.lkp),4),zeros(1,2),[0 0],0,0);
+else
+  % old SPM segment
+  [Ysrc,Ycls,Yy] = cat_spm_preproc_write(res.segsn,...
+    struct('biascor',[1 0 0],'cleanup',[1 0 0],'GM',[1 0 0],'WM',[1 0 0],'CSF',[1 0 0]) );
+  YHD     = cat_vol_morph( Ysrc > 0.5*min(res.mn(1:6)),'ldc',5 )  &  (Ycls{1} + Ycls{2} + Ycls{3})<.5;
+  Ycls{4} = uint8(255 .* ( YHD &  (Ysrc < 1*min(res.mn(1:6)))));
+  Ycls{5} = uint8(255 .* ( YHD & ~(Ysrc < 1*min(res.mn(1:6)))));
+  Ycls{6} = uint8(255) - (Ycls{1} + Ycls{2} + Ycls{3} + Ycls{4} + Ycls{5}); 
+end
 
 %% CAT vs. SPMpp Pipeline
 if ~isfield(res,'spmpp')
@@ -673,7 +683,7 @@ else
 %  a PVE or other refinements. 
 %  ------------------------------------------------------------------------
   [Ycls,Ym,Ymi,Yp0b,Yb0,Yl1,Yy,YMF,indx,indy,indz,qa,job] = ...
-    cat_main_SPMpp(Ysrc,Ycls,Yy,job,res); 
+    cat_main_SPMpp(Ysrc,Ycls,Yy,job,res,stime); 
   fprintf('%5.0fs\n',etime(clock,stime)); 
 end
 
@@ -708,10 +718,18 @@ end
     % call Dartel/Shooting registration 
     job2 = job;
     job2.extopts.verb         = debug;  % do not display process (people would may get confused) 
-    job2.extopts.reg.affreg   = 4; % RD202306: do an addition registration based on the skull (i.e. sum(Ycls{1:3})) 
-                                   %           code is working but better result? {'brain','skull','GM','WM'};  
+    if isfield(job2,'spmpp') 
+      job2.extopts.reg.affreg = 0; % RD202404: no additional affine registration in case of spm preprocessed data 
+      if isfield(res,'bb')
+        job2.extopts.bb       = res.bb; % RD202404: use bb parameters from SPM processing ???
+      end
+    else
+      job2.extopts.reg.affreg = 4; % RD202306: do an addition registration based on the skull (i.e. sum(Ycls{1:3})) 
+                                   %           code is working but better result? {'brain','skull','GM','WM'}; 
+    end
+    
     if numel( job.extopts.vox ) > 1
-      Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; %job.export = 1; 
+      Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; %job2.export = 1; 
       [trans,res.ppe.reg,res.ppe.affreg.Affine_catfinal] = cat_main_registration(job2,res,Ycls,Yy,Ylesions,Yp0,Ym,Ymi,Yl1); clear Yp0; 
     else
       [trans,res.ppe.reg,res.ppe.affreg.Affine_catfinal] = cat_main_registration(job2,res,Yclsd,Yy,Ylesions);
@@ -1139,7 +1157,7 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
 
 return
 
-function [Ycls,Ym,Ymi,Yp0b,Yb,Yl1,Yy,YMF,indx,indy,indz,qa,job] = cat_main_SPMpp(Ysrc,Ycls,Yy,job,res)
+function [Ycls,Ym,Ymi,Yp0b,Yb,Yl1,Yy,YMF,indx,indy,indz,qa,job] = cat_main_SPMpp(Ysrc,Ycls,Yy,job,res,stime)
 %% SPM segmentation input  
 %  ------------------------------------------------------------------------
 %  Here, DARTEL and PBT processing is prepared. 
@@ -1188,11 +1206,48 @@ function [Ycls,Ym,Ymi,Yp0b,Yb,Yl1,Yy,YMF,indx,indy,indz,qa,job] = cat_main_SPMpp
   
   %% create (resized) label map and brainmask
   Yp0  = single(Ycls{3})/5 + single(Ycls{1})/5*2 + single(Ycls{2})/5*3;
-  Yb   = Yp0>0.5;
-  
+  Yb   = single(Ycls{3} + Ycls{1} + Ycls{2}) > 128;
+
   % load original images and get tissue thresholds
   clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
-  %Ysrc = spm_read_vols(spm_vol(fullfile(pp,[ff ee])));
+  
+  if isfield(job.extopts,'spmAMAP') && job.extopts.spmAMAP
+    fprintf('%5.0fs\n',etime(clock,stime));
+    T3thx = [ 
+        clsint(3) ... res.mg(res.lkp==3)'/sum(res.mg(res.lkp==3)) * res.mn(res.lkp==3) ...
+        clsint(1) ... res.mg(res.lkp==1)'/sum(res.mg(res.lkp==1)) * res.mn(res.lkp==1) ...
+        clsint(2) ... res.mg(res.lkp==2)'/sum(res.mg(res.lkp==2)) * res.mn(res.lkp==2) ...
+      ];
+    if all( diff( (T3thx-min(T3thx)) / (max(T3thx)-min(T3thx)) ) > .2 ) % usefull difference between tissues
+      %% intensity normalization 
+      Tth.T3th  = 0:4; 
+      Tth.T3thx = sort( [ min(Ysrc(:)) T3thx max(Ysrc(:)) ] );
+      Ym = cat_main_gintnormi(Ysrc*3,Tth) / 6;
+      Yb = (single(Ycls{3} + Ycls{1} + Ycls{2}) > 64) | ...
+           cat_vol_morph( single(Ycls{3} + Ycls{1} + Ycls{2}) > 192,'dd',1.5); 
+      Yb = cat_vol_morph( Yb ,'ldc',1.5);
+      Ycls{3} = max(Ycls{3},cat_vol_ctype(255*Yb) - Ycls{2} - Ycls{1});
+      %% add missing field and run AMAP
+      job.inv_weighting       = 0; 
+      job.extopts.AMAPframing = 1;
+      [prob,indx,indy,indz]   = cat_main_amap1639(Ym,Yb,Yb,Ycls,job,res);
+
+      % cleanup
+      if 0 %job.extopts.cleanupstr>0
+        prob = cat_main_clean_gwc1639(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol))); % default cleanup
+      end
+      for i=1:3, Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i); end
+      Ycls{3} = max(Ycls{3},cat_vol_ctype(255*Yb) - Ycls{2} - Ycls{1});
+      Yp0  = single(Ycls{3})/5 + single(Ycls{1})/5*2 + single(Ycls{2})/5*3;
+    
+    else
+      % error message 
+      cat_io_addwarning([mfilename ':cat_main_SPMpp:AMAP'],'AMAP selected but insufficient tissue contrast. Keep SPM segmentation!',4,[1 1]);
+    end
+  end
+
+
+  % load original images and get tissue thresholds
   WMth = double(max(clsint(2),...
            cat_stat_nanmedian(cat_stat_nanmedian(cat_stat_nanmedian(Ysrc(Ycls{2}>192)))))); 
   T3th = [ min([  clsint(1) - diff([clsint(1),WMth]) ,clsint(3)]) , clsint(2) , WMth];
@@ -1218,12 +1273,18 @@ function [Ycls,Ym,Ymi,Yp0b,Yb,Yl1,Yy,YMF,indx,indy,indz,qa,job] = cat_main_SPMpp
   Yp0b = Yp0(indx,indy,indz);
   clear Yp0; 
   
-  % load atlas map and prepare filling mask YMF
+  %% load atlas map and prepare filling mask YMF
   % compared to CAT default processing, we have here the DARTEL mapping, but no individual refinement 
   Vl1 = spm_vol(job.extopts.cat12atlas{1});
-  Yl1 = cat_vol_ctype( cat_vol_sample(res.tpm(1),Vl1,Yy,0)); % spm_sample_vol(Vl1,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
-  Yl1 = reshape(Yl1,size(Ym)); [D,I] = cat_vbdist(single(Yl1>0)); Yl1 = Yl1(I);   
-  YMF = NS(Yl1,job.extopts.LAB.VT) | NS(Yl1,job.extopts.LAB.BG) | NS(Yl1,job.extopts.LAB.BG);  
+  if isfield(res,'spmpp') && res.spmpp
+    Yl1 = spm_sample_vol(Vl1,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0);
+  else
+    Yl1 = cat_vol_ctype( cat_vol_sample(res.tpm(1),Vl1,Yy,0)); % spm_sample_vol(Vl1,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
+  end
+  Yl1 = reshape(Yl1,size(Ym)); [D,I] = cat_vbdist(single(Yl1>0)); Yl1 = cat_vol_ctype( Yl1(I) );   
+  YMF = NS(Yl1,job.extopts.LAB.VT) | NS(Yl1,job.extopts.LAB.BG) | NS(Yl1,job.extopts.LAB.BG);
+  YMF = cat_vol_morph( ~(Ycls{2}>128 & NS(Yl1,1)) &   cat_vol_morph(YMF | (Ycls{2}>128 & NS(Yl1,1)),'ldc',2),'l',[1 .3]);
+
 return
 
 function [Ymix,job,surf,stime] = cat_main_surf_preppara(Ymi,Yp0,job)
