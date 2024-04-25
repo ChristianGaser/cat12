@@ -1,4 +1,16 @@
 ------------------------------------------------------------------------
+r2574 | gaser | 2024-04-25 09:55:51
+
+Changed paths:
+ M CHANGES.txt
+ M cat_stat_homogeneity.m
+ M cat_vol_slice_overlay.m
+ M standalone/cat_standalone.sh
+
+Fixed: Added check whether func field exists in cat_vol_slice_overlay.m.
+Fixed: Corrected error in cat_stat_homogeneity that sometimes ocurred after 
+       removing files from list.
+------------------------------------------------------------------------
 r2573 | dahnke | 2024-04-17 17:58:34
 
 Changed paths:

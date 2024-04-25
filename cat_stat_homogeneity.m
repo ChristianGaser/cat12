@@ -1289,7 +1289,8 @@ QMzscore_scaled = 63*(H.xml.QMzscore-min_QMzscore)/(max_QMzscore-min_QMzscore); 
 
 H.C = zeros(length(H.xml.QMzscore),3);
 for i=1:length(H.xml.QMzscore)
-  H.C(i,:) = H.cmap(round(QMzscore_scaled(i))+1,:);
+  indc = min(128,round(QMzscore_scaled(i))+1);
+  H.C(i,:) = H.cmap(indc,:);
 end
 
 % create marker for different samples
