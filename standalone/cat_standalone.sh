@@ -401,7 +401,7 @@ USAGE:
    license, this has the advantage that you can use the same scripts as for the standalone version, but 
    you can run CAT12 without a GUI. Please note that standalone batches must be called in CAT12 expert
    mode. Of course, you can also create and use your own batches that you use regulary in CAT12 or
-   SPM12. With this script you canrun these batches in headless mode without any display.
+   SPM12. With this script you can run these batches in headless mode without any display.
    
    PURPOSE:
    Command line call of (CAT12) batch files for SPM12 standalone installation
