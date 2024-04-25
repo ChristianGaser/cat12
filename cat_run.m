@@ -1399,6 +1399,14 @@ for j=1:n
       parts{j,2}(end-3:end) = [];         % remove file type from filename
     end
 end
+    
+% test for SPM segmentation input and remove c1 file
+sparts = parts;
+for j=1:n
+    if isfield(job.extopts,'spmAMAP') && strcmp( parts{j,2}(1:2) , 'c1')
+      sparts{j,2}(1:2) = []; 
+    end
+end
 
 % CAT report XML file
 % ----------------------------------------------------------------------
@@ -1468,7 +1476,7 @@ for si = 1:numel(sides)
           for j = 1:n
             eval( sprintf('%s%s{j} = fullfile(  parts{j,1} , surffolder{j} , ''%s.%s.%s.gii'' ); ' , ...
               sides{si} , surfaceoutput_str , ...
-              sides{si} , surfaceoutput{soi}{soii} , parts{j,2} ) ); 
+              sides{si} , surfaceoutput{soi}{soii} , sparts{j,2} ) ); 
             voutsfields{end+1} = sprintf('%s%s',  sides{si} , surfaceoutput_str );
           end
         end
@@ -1485,7 +1493,7 @@ for si = 1:numel(sides)
           for j = 1:n
             eval( sprintf('%s%s{j} = fullfile( parts{j,1} , surffolder{j} , ''%s.%s.%s'' ); ' , ...
               sides{si} , measureoutput{soi}{soii} , ...
-              sides{si} , measureoutput{soi}{soii} , parts{j,2} ) ); 
+              sides{si} , measureoutput{soi}{soii} , sparts{j,2} ) ); 
             voutsfields{end+1} = sprintf('%s%s',  sides{si} , measureoutput{soi}{soii} );
           end
         end

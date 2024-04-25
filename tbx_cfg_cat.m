@@ -134,11 +134,10 @@ estwrite.help   = {
 %------------------------------------------------------------------------
 % CAT surface processing with existing SPM segmentation 
 
-extopts_spm = cat_conf_extopts(expert,1);   
-
-estwrite_spm        =  cfg_exbranch;
+extopts_spm         = cat_conf_extopts(expert,1);   
+estwrite_spm        = cfg_exbranch;
 estwrite_spm.tag    = 'estwrite_spm';
-estwrite_spm.name   = 'SPM12 Segmentation with surface and thickness estimation';
+estwrite_spm.name   = 'SPM segmentation with surface and thickness estimation';
 estwrite_spm.val    = {data_spm nproc extopts_spm output_spm};
 estwrite_spm.prog   = @cat_run;
 estwrite_spm.vout   = @vout;

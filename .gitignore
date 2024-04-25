@@ -6,6 +6,7 @@ Contents.txt
 cat_long_main.txt
 INSTALL.txt
 catlog*.txt
+templates_animals/
 
 # ignore zip, pdf, doc*, and nifti
 # *.mex from Octave compiling

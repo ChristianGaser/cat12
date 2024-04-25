@@ -176,7 +176,7 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
   end
 
   % display paras for developers
-  if cat_get_defaults('extopts.expertgui') > 1
+  if 0 % cat_get_defaults('extopts.expertgui') > 1
     fprintf('\nPBTsimple parameters:\n'); 
     disp(opt);
   end

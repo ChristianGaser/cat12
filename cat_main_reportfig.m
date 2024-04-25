@@ -930,21 +930,21 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
           else
             gbcc{4+gbi} = axes('Position',gbpos{gbi},'Parent',fg);     
           end
-          gbp0 = image(gbcc{4+gbi},max( 60 + 60 + 1 , min( 60+60+surfcolors, (glassbrain{gbi} / glassbrainmax) * ...
+          gbp0 = image(gbcc{4+gbi},max(1 , min( 60+60+surfcolors, (glassbrain{gbi} / glassbrainmax) * ...
             surfcolors/2 + 	60 + 60 + surfcolors/2))); hold on;
-          caxis([-1 1]); 
+          caxis([-glassbrainmax glassbrainmax]); 
           if gbi<4
             set(gbp0,'AlphaDataMapping','scaled','AlphaData',glassbr{gbi}>0.25 & get(gbp0,'CData')>(60 + 60) );
             contour(gbcc{4+gbi},log(max(0,glassbr{gbi})),[0.5 0.5],'color',repmat(0.2,1,3));
             axis equal off;
           else
             set(gbcc{4+gbi},'XTickLabel','','XTick',[],'TickLength',[0.01 0],'YAxisLocation','right',...
-              'YTick',max(1,0:surfcolors/2:surfcolors),'YTickLabel',{num2str([glassbrainmax; 0; -glassbrainmax] ,'%+0.0f')},...
+              'YTick',1:surfcolors/2:surfcolors,'YTickLabel',{num2str([glassbrainmax; 0; -glassbrainmax] ,'%+0.0f')},...
               'FontSize', fontsize*0.8,'FontName',fontname,'xcolor',fontcolor,'ycolor',fontcolor);
           end
-      %  end
+        end
         spm_orthviews('redraw');
-      end
+      %end
     else
 
       VO         = res.image(1); 
@@ -1498,7 +1498,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
             else
               cdata     = cat_io_FreeSurfer('read_surf_data',Psurf(id1).Pthick); 
             end
-            maxdiff     = 4 * ceil(std(cdata(:))*8)/8; 
+            maxdiff     = max(.02, 4 * ceil(std(cdata(:))*8)/8); 
             srange      = [-maxdiff maxdiff]; 
             boxwidth    = diff(srange)/40 / 2; % 0.05; 
           else
@@ -1526,16 +1526,17 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
             else
               Rigid = eye(4);
             end
-            for i = 1:numel(hSD)
-              for ppi = 1:numel(hSD{i}{1}.patch)
-                try
-                  V = (Rigid * ([hSD{i}{1}.patch(ppi).Vertices, ones(size(hSD{i}{1}.patch(ppi).Vertices,1),1)])' )'; 
-                  V(:,4) = []; hSD{i}{1}.patch(ppi).Vertices = V;
+            if exist('hSD','var')
+              for i = 1:numel(hSD)
+                for ppi = 1:numel(hSD{i}{1}.patch)
+                  try
+                    V = (Rigid * ([hSD{i}{1}.patch(ppi).Vertices, ones(size(hSD{i}{1}.patch(ppi).Vertices,1),1)])' )'; 
+                    V(:,4) = []; hSD{i}{1}.patch(ppi).Vertices = V;
+                  end
                 end
               end
+              for i = 1:numel(hSD), colormap(fg,cmap);  set(hSD{i}{1}.colourbar,'visible','off'); end
             end
-            for i = 1:numel(hSD), colormap(fg,cmap);  set(hSD{i}{1}.colourbar,'visible','off'); end
-
           else
             try
               if 1

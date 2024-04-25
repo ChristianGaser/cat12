@@ -176,6 +176,7 @@ switch species
   case 'baboon',          speciesdisp = ' (baboons)';
   case 'macaque',         speciesdisp = ' (macaques)';
   case 'dog',             speciesdisp = ' (dogs)'; 
+  case 'canine',          speciesdisp = ' (canine)';
   otherwise,              speciesdisp = ''; 
 end
 switch expert
@@ -318,11 +319,7 @@ if ismac
         po = [-1 -3 3 0]; % offset for correcting popup menus
     end
 else
-  if isunix % Linux
-    po = [0 0 0 0];
-  else % Windows
-    po = [0 0 0 0];
-  end
+  po = [0 0 0 0];
 end
 
 %-------------------------------------------------------------------

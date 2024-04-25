@@ -1,4 +1,43 @@
 ------------------------------------------------------------------------
+r2575 | dahnke | 2024-04-25 19:06:07
+
+Changed paths:
+ M .gitignore
+ M CHANGES.txt
+ M cat12.m
+ M cat_conf_extopts.m
+ M cat_conf_output.m
+ M cat_long_report.m
+ M cat_main.m
+ M cat_main1639.m
+ M cat_main_registration.m
+ M cat_main_reportfig.m
+ M cat_run.m
+ M cat_run_job.m
+ M cat_run_job1639.m
+ M cat_surf_create_TPM_hull_surface.m
+ M cat_vol_partvol.m
+ M cat_vol_partvol1639.m
+ M cat_vol_pbtsimple.m
+ M cat_vol_qa.m
+ M cat_vol_qa202310.m
+ M tbx_cfg_cat.m
+
+New:       Added support of SPM oldsegment input and for the SPM surface pipeline in
+           cat_conf_extopts, cat_run_job[1639], cat_main[1639], and tbx_cfg_cat. Added
+           cat_spm_preproc_write and corrected dependencies of the SPM batch in cat_run.
+           Added an option to replace the SPM input segmentation by an AMAP segmentation
+           in cat_conf_extopts and cat_main[1639].
+Changed:   Added option to force processing of data without skull-stripping that were 
+           skull-stripping was detected (e.g. severe background cleanup by defacing). 
+           Changes in cat_conf_extopts and cat_run_job[1639].
+Changed:   Added fields for WMH and blood vessel (and lesion maps) in expert GUI in
+           cat_vol_partvol[1639], cat_conf_extopts, and cat_defaults.             
+Fixed:     Tiny corrections in cat_vol_qa, cat_surf_create_TPM_hull_surface,  
+           cat_main_reportfig, and cat_vol_qa202310. 
+Fixed:     Corrected issue with TPM-based normalizations in case of template with 
+           resolutions different from 1.5 in cat_main_registration.            
+------------------------------------------------------------------------
 r2574 | gaser | 2024-04-25 09:55:51
 
 Changed paths:

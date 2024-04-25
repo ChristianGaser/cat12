@@ -265,7 +265,7 @@ end
   % boudnary box (oldbb/newbb), image resolution (oldres/newres), and the
   % size of the old image. MNI space has always a 0-slice resulting in odd
   % dimensions.
-  BB2dim = @(oldbb,newbb,olddims,oldres,newres) floor( ( olddims * oldres - sum( ( abs(oldbb) - abs(newbb) ) ) ) / oldres * (1.5/newres) / 2 ) * 2 + 1;
+  BB2dim = @(oldbb,newbb,olddims,oldres,tpmres,newres) floor( ( olddims * oldres - sum( ( abs(oldbb) - abs(newbb) ) ) ) / oldres * (tpmres/newres) / 2 ) * 2 + 1;
          
   
                     
@@ -327,14 +327,14 @@ end
   
       % resolutions:
       tmpres = abs(tmpM(1));                                                                   % template resolution 
-     %tpmres = abs(tpmM(1));                                                                   % TPM resolution 
+      tpmres = abs(tpmM(1));                                                                   % TPM resolution 
      %regres = reg(regstri).opt.rres; if isinf(regres), regres = tmpres; end                   % registration resolution
       newres = job.extopts.vox(voxi); if isinf(newres), newres = tmpres; end                   % output resolution
          
       % image dimension 
       idim = res.image(1).dim(1:3);                                                            % (interpolated) input image resolution
       tdim = res.tmp2{1}(1).dim;                                                               % registration template image size
-      odim = BB2dim(res.bb,resbb,res.tpm(1).dim,tmpres,newres);                                % res.bb~TPM, resbb~dynamic, 
+      odim = BB2dim(res.bb,resbb,res.tpm(1).dim,tmpres,tpmres,newres);                                % res.bb~TPM, resbb~dynamic, 
       
       % mat matrices for different spaces
       % M0 for the individual volume
@@ -427,7 +427,7 @@ end
           end
         end
         % export for tests
-        if export && debug
+        if export || debug
           write_nii(Ycls,job,trans,reg(regstri).testfolder,reg(regstri));
         end
         if numel( job.extopts.vox ) > 1 % job.extopts.experimental && 
@@ -465,7 +465,7 @@ end
         idim   = res.image(1).dim(1:3);                                               % (interpolated) input image size
         sdim   = res.tpm(1).dim;                                                  % registration template image size
         tdim   = res.tmp2{1}(1).dim;                                                  % registration template image size
-        odim   = BB2dim(res.bb,resbb,res.tpm(1).dim,tmpres,newres);                   % res.bb~TPM, resbb~dynamic, 
+        odim   = BB2dim(res.bb,resbb,res.tpm(1).dim,tmpres,tpmres,newres);                   % res.bb~TPM, resbb~dynamic, 
         
         % mat matrices for different spaces
         % - here M1 == M1t
@@ -518,7 +518,7 @@ end
         end
         
         % export for tests
-        if export && debug
+        if export || debug
           write_nii(Ycls,job,trans,sprintf('US_tr%3.1f_or%3.1f',tmpres,job.extopts.vox(1)));
         elseif numel( job.extopts.vox ) > 1
           % full export
@@ -712,9 +712,9 @@ function [trans,reg] = run_Shooting(Ycls,Ylesion,job,reg,res,trans,Maffinerigid,
         if debug && k1==1, gx = g{1}; end %#ok<NASGU> % just for debugging
         g{k1} = spm_bsplinc(log(g{k1}), sd.bs_args);
       end
-      g{n1+1} = log(max(g{n1+1},eps)); 
+      g{n1+1} = spm_bsplinc(log(max(g{n1+1},eps)), sd.bs_args); 
 
-      
+
       
 % -------------------------------------------------------------------------
 %  RD202101: Advanced Shooting 
@@ -1068,7 +1068,7 @@ function [trans,reg] = run_Shooting(Ycls,Ylesion,job,reg,res,trans,Maffinerigid,
     % RD202101: not sure if the transfomration is correct ...
     uo  = zeros([odim 3],'single');
     for k1=1:3
-      for i=1:odim
+      for i=1:odim(1)
         uo(:,:,i,k1)  = single(spm_slice_vol(u(:,:,:,k1),(M1r\M1t)*spm_matrix([0 0 i]),odim(1:2),[1,NaN]));
       end
     end
@@ -1204,7 +1204,7 @@ function [trans,reg] = run_Dartel(Ycls,Ylesion,job,reg,res,trans,Mad,Maffinerigi
     if any(odim ~= idim)
       uo  = zeros([odim 3],'single');
       for k1=1:3
-        for i=1:odim
+        for i=1:odim(1)
           uo(:,:,i,k1)  = single(spm_slice_vol(u(:,:,:,k1)  ,spm_matrix([0 0 i]),odim(1:2),[1,NaN]));
         end
       end

@@ -805,7 +805,7 @@ function [QAS,QAR] = cat12err(opt,mrifolder,reportfolder)
   [QAS.filedata.path,QAS.filedata.file] = ...
                         spm_fileparts(opt.job.channel.vols{opt.subj});
   QAS.filedata.fname  = opt.job.data{opt.subj};
-  QAS.filedata.F      = opt.job.data{opt.subj}; 
+  QAS.filedata.F      = fullfile(pp,[ff ee]);
   QAS.filedata.Fm     = fullfile(pp,mrifolder,['m'  ff ee]);
   QAS.filedata.Fp0    = fullfile(pp,mrifolder,['p0' ff ee]);
   QAS.filedata.fnames = [ 

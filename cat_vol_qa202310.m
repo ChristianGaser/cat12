@@ -61,8 +61,13 @@ function varargout = cat_vol_qa202310(action,varargin)
         species = varargin{5};
         if isfield(varargin{6},'qa')
           if isfield(varargin{6}.qa,'software') && isfield(varargin{6}.qa.software,'version_segment'), QAS.software.version_segment = varargin{6}.qa.software.version_segment; end
-          if isfield(varargin{6}.qa,'qualitymeasures'), QAS.qualitymeasures = cat_io_updateStruct(QAS,varargin{6}.qa.qualitymeasures); end
-          if isfield(varargin{6}.qa,'subjectmeasures'), QAS.subjectmeasures = cat_io_updateStruct(QAS,varargin{6}.qa.subjectmeasures); end
+          if exist('QAS','var')
+            if isfield(varargin{6}.qa,'qualitymeasures'), QAS.qualitymeasures = cat_io_updateStruct(QAS,varargin{6}.qa.qualitymeasures); end
+            if isfield(varargin{6}.qa,'subjectmeasures'), QAS.subjectmeasures = cat_io_updateStruct(QAS,varargin{6}.qa.subjectmeasures); end
+          else
+            if isfield(varargin{6}.qa,'qualitymeasures'), QAS.qualitymeasures = varargin{6}.qa.qualitymeasures; end
+            if isfield(varargin{6}.qa,'subjectmeasures'), QAS.subjectmeasures = varargin{6}.qa.subjectmeasures; end
+          end
         end
         
         % reduce to original native space if it was interpolated

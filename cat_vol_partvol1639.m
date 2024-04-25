@@ -133,9 +133,14 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
   switch watlas
     case 1, PwmhA = strrep(PA{1},'cat.nii','cat_wmh_soft.nii');
     case 2, PwmhA = strrep(PA{1},'cat.nii','cat_wmh.nii');
-    case 3, PwmhA = strrep(PA{1},'cat.nii','cat_wmh_miccai2017.nii');
+    case 3
+      if isfield(job.extopts,'SLtpm')
+        PwmhA = job.extopts.WMHtpm{1};
+      else
+        PwmhA = strrep(PA{1},'cat.nii','cat_wmh_miccai2017.nii');
+      end
   end
-  if exist(PwmhA,'file') && ~strcmp(PwmhA,PA{1}) 
+  if ~isempty(PwmhA) && exist(PwmhA,'file') && ~strcmp(PwmhA,PA{1}) 
     YwmhA = cat_vol_ctype( cat_vol_sample(Vtpm(1),PwmhA,Yy,0) );
   else
     YwmhA = max(0,min(1,Yp0A-2)); 
@@ -147,8 +152,12 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
 
   
   % Stroke lesion atlas
-  PslA = strrep(PA{1},'cat.nii','cat_strokelesions_ATLAS303.nii');
-  if exist(PslA,'file') && ~strcmp(PslA,PA{1}) 
+  if isfield(job.extopts,'SLtpm')
+    PslA = job.extopts.SLtpm{1}; 
+  else
+    PslA = strrep(PA{1},'cat.nii','cat_strokelesions_ATLAS303.nii');
+  end
+  if ~isempty(PslA) && exist(PslA,'file') && ~strcmp(PslA,PA{1}) 
     YslA = cat_vol_ctype( cat_vol_sample(Vtpm(1),PslA,Yy,0) );
     YslA = YslA./max(YslA(:)); 
   else
@@ -161,11 +170,15 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
   % databases in combination with CSF and WM probability maps as far as 
   % larger blood vessels are typically located along the brainstem, corpus 
   % callosum and within the insula.
-  Pbv   = strrep(PA{1},'cat.nii','cat_bloodvessels.nii');
-  Vbv   = spm_vol(Pbv);
+  if isfield(job.extopts,'BVtpm')
+    Pbv = job.extopts.BVtpm{1}; 
+  else
+    Pbv = strrep(PA{1},'cat.nii','cat_bloodvessels.nii');
+  end
   YwmA  = single(cat_vol_sample(Vtpm(1),Vtpm(2),Yy,1)); 
   YcsfA = single(cat_vol_sample(Vtpm(1),Vtpm(3),Yy,1)); 
-  if exist(Pbv,'file') 
+  if ~isempty(Pbv) && exist(Pbv,'file') 
+    Vbv  = spm_vol(Pbv);
     YbvA = single(cat_vol_sample(Vbv,Vbv,Yy,1));
     YbvA = 1 - YwmA + max(YcsfA * 0.1 , YbvA); 
   else

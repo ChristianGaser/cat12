@@ -1,4 +1,4 @@
-function extopts = cat_conf_extopts(expert,spm)
+function extopts = cat_conf_extopts(expert,spmseg)
 % Configuration file for extended CAT options
 %
 % ______________________________________________________________________
@@ -15,8 +15,8 @@ if ~exist('expert','var')
   expert = 0; % switch to de/activate further GUI options
 end
 
-if ~exist('spm','var')
-  spm = 0; % SPM segmentation input
+if ~exist('spmseg','var')
+  spmseg = 0; % SPM segmentation input
 end
 
 %_______________________________________________________________________
@@ -115,6 +115,57 @@ T1.def     = @(val)cat_get_defaults('extopts.T1', val{:});
 T1.num     = [1 1];
 T1.help    = {
   'Affine registration template.'
+};
+
+%------------------------------------------------------------------------
+
+WMHtpm         = cfg_files;
+WMHtpm.tag     = 'WMHtpm';
+WMHtpm.name    = 'WMH-TPM';
+WMHtpm.filter  = 'image';
+WMHtpm.ufilter = '';
+if isempty(cat_get_defaults('extopts.WMHtpm')) % default files without WMHtpm
+  WMHtpm.val{1}= spm_file(cat_get_defaults('extopts.T1'),'filename','cat_wmh_miccai2017.nii'); 
+else 
+  WMHtpm.def   = @(val)cat_get_defaults('extopts.WMHtpm', val{:});
+end
+WMHtpm.num     = [0 1];
+WMHtpm.help    = {
+  'White matter hyperintensity tissue probability map.'
+};
+
+%------------------------------------------------------------------------
+
+BVtpm         = cfg_files;
+BVtpm.tag     = 'BVtpm';
+BVtpm.name    = 'BV-TPM';
+BVtpm.filter  = 'image';
+BVtpm.ufilter = '';
+if isempty(cat_get_defaults('extopts.BVtpm')) % default files without BVtpm
+  BVtpm.val{1}= spm_file(cat_get_defaults('extopts.T1'),'filename','cat_bloodvessels.nii'); 
+else 
+  BVtpm.def   = @(val)cat_get_defaults('extopts.BVtpm', val{:});
+end
+BVtpm.num     = [0 1];
+BVtpm.help    = {
+  'Blood vessel tissue probability map.'
+};
+
+%------------------------------------------------------------------------
+
+SLtpm         = cfg_files;
+SLtpm.tag     = 'SLtpm';
+SLtpm.name    = 'SL-TPM';
+SLtpm.filter  = 'image';
+SLtpm.ufilter = '';
+if isempty(cat_get_defaults('extopts.SLtpm')) % default files without SLtpm
+  SLtpm.val{1}= spm_file(cat_get_defaults('extopts.T1'),'filename','cat_strokelesions_ATLAS303.nii'); 
+else
+  SLtpm.def   = @(val)cat_get_defaults('extopts.SLtpm', val{:});
+end
+SLtpm.num     = [0 1];
+SLtpm.help    = {
+  'Stroke lesion tissue probability map.'
 };
 
 %---------------------------------------------------------------------
@@ -258,7 +309,7 @@ if expert==0
   registration.tag    = 'registration';
   registration.name   = 'Spatial Registration';
   registration.values = {shooting};
-  registration.val  = {shooting};
+  registration.val    = {shooting};
 else
   if expert==1
     method        = cfg_choice;
@@ -275,7 +326,7 @@ else
   registration      = cfg_branch;
   registration.tag  = 'registration';
   registration.name = 'Spatial Registration Options';
-  if expert==2
+  if expert==2 || spmseg
     registration.val  = {T1 brainmask cat12atlas darteltpm shootingtpm regstr bb vox}; 
   else
     registration.val  = {method vox bb}; 
@@ -310,6 +361,19 @@ pbtver.help    = {
   'Experimental development parameter - do not change! '
   ''
 };
+
+spmamap        = cfg_menu;
+spmamap.tag     = 'spmAMAP';
+spmamap.name    = 'Replace SPM by AMAP segmentation (experimental)';
+spmamap.labels  = {'Yes','No'};
+spmamap.values  = {1,0};
+spmamap.val     = {0};
+spmamap.hidden  = expert<1;
+spmamap.help    = {
+  'Replace SPM segmentation by AMAP segmentation for acceptable tissue contrast between CSF, GM, and WM (e.g. T1). '
+  'The AMAP segmentation support partial volume effects that are helpful for thickness estimation and surface reconstruction. '
+  'Where the SPM segmentation often lacks in correct representation of fine structure such as gyral crones in normal high-resolution data. '
+}; 
 
 pbtres         = cfg_entry;
 pbtres.tag     = 'pbtres';
@@ -746,12 +810,14 @@ gcutstr.help      = {
   ''
 };
 if ~expert
-  gcutstr.labels  = {'none (already skull-stripped)' 'SPM approach' 'GCUT approach' 'APRG approach'};
-  gcutstr.values  = {-1 0 0.50 2};
+  gcutstr.labels  = {'none (already skull-stripped)' 'SPM approach' 'GCUT approach' 'APRG approach' 'APRG approach (force skull-stripping)' };
+  gcutstr.values  = {-1 0 0.50 2 20};
 else
-  gcutstr.labels  = {'none (post-mortem CSF~BG) (-2)','none (already skull-stripped) (-1)','SPM approach (0)','GCUT medium (0.50)','APRG approach (2)',...
-    'APRG approach V2 (2.5)','APRG approach V2 wider (2.1)','APRG approach V2 tighter (2.9)'};
-  gcutstr.values  = {-2 -1 0 0.50 2 2.5 2.1 2.9};
+  gcutstr.labels  = {'none (post-mortem CSF~BG) (-2)','none (already skull-stripped) (-1)', ...
+    'SPM approach (0)','GCUT medium (0.50)','APRG approach (2)',...
+    'APRG approach V2 (2.5)','APRG approach V2 wider (2.1)','APRG approach V2 tighter (2.9)', ...
+    'SPM approach (force skull-stripping, 0)', 'GCUT approach (force skull-stripping, 10.5)', 'APRG approach (force skull-stripping, 12)'};
+  gcutstr.values  = {-2 -1 , 0 0.50 2 , 2.5 2.1 2.9 , 10 10.5 12};
 end
 gcutstr.hidden  = expert<1;
 
@@ -1104,10 +1170,16 @@ close_parahipp.help    = {
 segmentation        = cfg_branch;
 segmentation.tag    = 'segmentation';
 segmentation.name   = 'Segmentation Options';
-segmentation.val    = {restype,setCOM,app,affmod,NCstr,LASstr,LASmyostr,gcutstr,cleanupstr,BVCstr,wmhc,slc,mrf}; % WMHCstr,
+segmentation.val    = {restype,setCOM,app,affmod,NCstr,LASstr,LASmyostr,gcutstr,cleanupstr,BVCstr,wmhc,slc,mrf,WMHtpm,BVtpm,SLtpm}; % WMHCstr,
 segmentation.hidden = expert<1; 
 segmentation.help   = {'CAT12 parameter to control the tissue classification.';''};
 
+spmsegmentation        = cfg_branch;
+spmsegmentation.tag    = 'segmentation';
+spmsegmentation.name   = 'Segmentation Options';
+spmsegmentation.val    = {spmamap,WMHtpm,BVtpm,SLtpm}; % WMHCstr,
+spmsegmentation.hidden = expert<1; 
+spmsegmentation.help   = {'CAT12 parameter to control the tissue classification.';''};
 
 admin         = cfg_branch;
 admin.tag     = 'admin';
@@ -1133,7 +1205,7 @@ surface.help    = {'CAT12 parameter to control the surface processing.';''};
 extopts       = cfg_branch;
 extopts.tag   = 'extopts';
 extopts.name  = 'Extended options for CAT12 preprocessing';
-if ~spm
+if ~spmseg
   if expert  % expert/developer options
     extopts.val   = {segmentation,registration,surface,admin}; 
   else
@@ -1141,6 +1213,10 @@ if ~spm
   end
 else
   % SPM based surface processing and thickness estimation
-  extopts.val   = {registration,vox,bb,surface,admin}; % bb is hidden
+  if expert 
+    extopts.val   = {spmsegmentation,registration,surface,admin}; 
+  else
+    extopts.val   = {vox,bb,surface,admin}; % bb is hidden
+  end
 end
 extopts.help  = {'Using the extended options you can adjust special parameters or the strength of different corrections ("0" means no correction and "0.5" is the default value that works best for a large variety of data).'};
