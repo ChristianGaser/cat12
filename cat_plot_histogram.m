@@ -217,6 +217,9 @@ end
 fig = figure;
 set(fig,'MenuBar', 'none', 'Position',[100, 0, opt.winsize]);
 
+% get shorter filenames
+[tmp, fname_tmp] = spm_str_manip(data,'C');
+
 for j = 1:n
   y = dropNaNs(cdata{j});
   if ~isempty(opt.dist)
@@ -242,8 +245,12 @@ for j = 1:n
   H(j,:) = H0;
   X(j,:) = X0;
   if ischar(data)
-    legend_str{j} = char(spm_str_manip(data(j,:),'a90'));
-  
+    if ~isempty(fname_tmp)
+      legend_str{j} = fname_tmp.m{j};
+    else
+      legend_str{j} = char(spm_str_manip(data(j,:),'a90'));
+    end
+
     % give some specific output for (normally distributed) T-values or
     % effect size (D)
     [pth,nam] = spm_fileparts(deblank(data(j,:)));
@@ -253,10 +260,10 @@ for j = 1:n
       sd = std(y);
       ES = mn/sd;
       TH5 = X0(min(find(cumsum(H0)/sum(H0) > 0.95)));
-      fprintf('%s\tmean=%g\tSD=%g\tES=%g\tTH5=%g\n',data(j,:),mn,sd,ES,TH5);
+      fprintf('%s\tmean=%g\tSD=%g\tES=%g\tTH5=%g\n',legend_str{j},mn,sd,ES,TH5);
       legend_str{j} = sprintf('TH5=%.4f %s',TH5,legend_str{j}); 
     else
-      fprintf('%s\tSD=%g\n',data(j,:),std(y));
+      fprintf('%s\tSD=%g\n',legend_str{j},std(y));
     end
   else
     legend_str{j} = num2str(j);

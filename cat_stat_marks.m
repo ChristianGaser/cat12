@@ -268,7 +268,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
 %       BWP.NCRm = evallinear(QA.qualitymeasures.NCR    ,0.05,0.35,6);
 %       BWP.MVRm = evallinear(QA.qualitymeasures.res_RMS,0.50,3.00,6);    
       
-      % SIQR is the successor of IQR and also uses the new edge-based resoltion rating 
+      % SIQR is the successor of IQR and also uses the new edge-based resolution rating 
       try
         QAM.qualityratings.SIQR      = rms([QAM.qualityratings.NCR  QAM.qualityratings.res_RMS QAM.qualityratings.res_ECR],8);   
         % further test cases
