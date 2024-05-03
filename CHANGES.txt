@@ -1,4 +1,13 @@
 ------------------------------------------------------------------------
+r2577 | gaser | 2024-05-03 21:49:53
+
+Changed paths:
+ M CHANGES.txt
+ M cat_plot_histogram.m
+ M cat_stat_marks.m
+
+Changed: Shortend filenames in cat_plot_histogram.m
+------------------------------------------------------------------------
 r2575 | dahnke | 2024-04-25 19:06:07
 
 Changed paths:
