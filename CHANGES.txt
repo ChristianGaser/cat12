@@ -1,4 +1,13 @@
 ------------------------------------------------------------------------
+r2578 | gaser | 2024-05-07 16:03:00
+
+Changed paths:
+ M CHANGES.txt
+ M cat_plot_scatter.m
+ M doc/index.html
+
+Changed: Updated CAT12 manual.
+------------------------------------------------------------------------
 r2577 | gaser | 2024-05-03 21:49:53
 
 Changed paths:
