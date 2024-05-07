@@ -299,6 +299,7 @@ if fit_poly
     end
     fprintf('Coefficients = %g\n',p)
     if i == 1, hold on; end
+    if ci, fprintf('Average Confidence Interval = +/-%g\n',mean(DELTA)); end
   end
 end
 
