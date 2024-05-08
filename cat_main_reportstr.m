@@ -54,6 +54,10 @@ function str = cat_main_reportstr(job,res,qa)
     if exist(Pseg8,'file') 
       seg8 = load(Pseg8);
     end
+    Psegsn = fullfile(pp,[ff(3:end) '_seg_sn.mat']); 
+    if exist(Psegsn,'file') 
+      segsn = load(Psegsn);
+    end
   end
   if ~isfield(res,'applyBVC')
     res.applyBVC = 0; 
@@ -342,10 +346,18 @@ function str = cat_main_reportstr(job,res,qa)
   elseif exist('seg8','var') 
     % biasfwhm, biasreg ... not available from seg8 file  
     if isfield(job.extopts,'SRP') && job.extopts.SRP == catdef.extopts.SRP, cp{4} = npara; else, cp{4} = cpara; end 
-    if job.extopts.expertgui
-      str{1} = [str{1} struct('name', 'ncls / SRP:','value',sprintf('[%s%s] / %s{%d}',...
-        sprintf('%d ',seg8.lkp(1:end-1)),sprintf('%d',seg8.lkp(end)),cp{4},job.extopts.SRP))];
-    end
+    if isfield(job.extopts,'spmAMAP') && job.extopts.spmAMAP, ca{4} = cpara; else, job.extopts.spmAMAP = 0; ca{4} = npara; end 
+    str{1} = [str{1} struct('name', 'ncls / use AMAP / SRP:','value',sprintf('[%s%s] / %s{%d} / %s{%d}',...
+      sprintf('%d ',seg8.lkp(1:end-1)), sprintf('%d',seg8.lkp(end)), ca{4}, job.extopts.spmAMAP, cp{4}, job.extopts.SRP))];
+  elseif exist('segsn','var') 
+    % biasfwhm, biasreg ... not available from seg8 file  
+    if isfield(job.extopts,'SRP') && job.extopts.SRP == catdef.extopts.SRP, cp{4} = npara; else, cp{4} = cpara; end 
+    if isfield(job.extopts,'spmAMAP') && job.extopts.spmAMAP, ca{4} = cpara; else, job.extopts.spmAMAP = 0; ca{4} = npara; end 
+    str{1} = [str{1} struct('name', 'ncls / use AMAP / SRP:','value',sprintf('[%s%s] / %s{%d} / %s{%d}',...
+      sprintf('%d ',segsn.lkp(1:end-1)), sprintf('%d',segsn.lkp(end)), ca{4}, job.extopts.spmAMAP, cp{4}, job.extopts.SRP))];
+  end
+  if isfield(job.extopts,'bids_folder') && isempty(job.extopts.bids_folder)
+    str{1} = [str{1} struct('name','BIDS folder','value',job.extopts.bids_folder)]; 
   end
 
 

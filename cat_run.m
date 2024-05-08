@@ -495,7 +495,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
               try
                 catrgmv = [cathd{1}(1) cathd{1}{2}(2:end) cathd{1}(4)]; 
               catch
-                catrgmv = cathd{1}(1); 
+                catrgmv = [cathd{1}(1) nan nan]; 
               end
             else 
               catrgmv = {'unknown'};
@@ -1184,22 +1184,29 @@ function job = update_job(job)
   end
   
   % find and check the Dartel templates
-  [tpp,tff,tee] = spm_fileparts(job.extopts.darteltpm{1});
-  job.extopts.darteltpm{1} = fullfile(tpp,[tff,tee]); 
-  numpos = min(strfind(tff,'Template_1')) + 8;
-  if isempty(numpos)
-    error('CAT:cat_main:TemplateNameError', ...
-    ['Could not find the string "Template_1" in Dartel template that \n'...
-     'indicates the first file of the Dartel template. \n' ...
-     'The given filename is "%s.%s" \n'],tff,tee);
-  end
-  job.extopts.darteltpms = cat_vol_findfiles(tpp,[tff(1:numpos) '*' tff(numpos+2:end) tee],struct('depth',1));
-  
-  % if we also have found Template_0 we have to remove it from the list
-  if numel(job.extopts.darteltpms)==7 
-    if ~isempty(strfind(job.extopts.darteltpms{1},'Template_0'))
-      for i=1:6, job.extopts.darteltpms{i} = job.extopts.darteltpms{i+1}; end
-      job.extopts.darteltpms(7) = [];
+  if isempty( job.extopts.darteltpm{1} )
+    % use TPM 
+    [tpp,tff,tee] = spm_fileparts(job.opts.tpm{1});
+    job.extopts.darteltpms{1} = fullfile(tpp,[tff,tee]); 
+    job.extopts.darteltpms    = repmat( job.extopts.darteltpms(1), 6,1 ); 
+  else
+    [tpp,tff,tee] = spm_fileparts(job.extopts.darteltpm{1});
+    job.extopts.darteltpm{1} = fullfile(tpp,[tff,tee]); 
+    numpos = min(strfind(tff,'Template_1')) + 8;
+    if isempty(numpos)
+      error('CAT:cat_main:TemplateNameError', ...
+      ['Could not find the string "Template_1" in Dartel template that \n'...
+       'indicates the first file of the Dartel template. \n' ...
+       'The given filename is "%s.%s" \n'],tff,tee);
+    end
+    job.extopts.darteltpms = cat_vol_findfiles(tpp,[tff(1:numpos) '*' tff(numpos+2:end) tee],struct('depth',1));
+    
+    % if we also have found Template_0 we have to remove it from the list
+    if numel(job.extopts.darteltpms)==7 
+      if ~isempty(strfind(job.extopts.darteltpms{1},'Template_0'))
+        for i=1:6, job.extopts.darteltpms{i} = job.extopts.darteltpms{i+1}; end
+        job.extopts.darteltpms(7) = [];
+      end
     end
   end
   
@@ -1213,23 +1220,30 @@ function job = update_job(job)
   end
 
   % find and check the Shooting templates
-  [tpp,tff,tee] = spm_fileparts(job.extopts.shootingtpm{1});
-  job.extopts.shootingtpm{1} = fullfile(tpp,[tff,tee]); 
-  numpos = min(strfind(tff,'Template_0')) + 8;
-  if isempty(numpos)
-    error('CAT:cat_main:TemplateNameError', ...
-    ['Could not find the string "Template_0" in Shooting template that \n'...
-     'indicates the first file of the Shooting template. \n' ...
-     'The given filename is "%s.%s" \n'],tff,tee);
-  end
-  job.extopts.shootingtpms = cat_vol_findfiles(tpp,[tff(1:numpos) '*' tff(numpos+2:end) tee],struct('depth',1));
-  job.extopts.shootingtpms(cellfun('length',job.extopts.shootingtpms)~=length(job.extopts.shootingtpm{1}))=[]; % remove to short/long files
-  if numel(job.extopts.shootingtpms)~=5 && any(job.extopts.regstr>0)
-    %%
-    files = ''; for di=1:numel(job.extopts.shootingtpms), files=sprintf('%s\n  %s',files,job.extopts.shootingtpms{di}); end
-    error('CAT:cat_main:TemplateFileError', ...
-     ['Could not find the expected 5 Shooting template files (Template_0 to Template_4).\n' ...
-      'Found %d templates: %s'],numel(job.extopts.shootingtpms),files);
+  if isempty( job.extopts.shootingtpm{1} )
+    % use TPM 
+    [tpp,tff,tee] = spm_fileparts(job.opts.tpm{1});
+    job.extopts.shootingtpms{1} = fullfile(tpp,[tff,tee]); 
+    job.extopts.shootingtpms    = repmat( job.extopts.shootingtpms(1), 5,1 ); 
+  else
+    [tpp,tff,tee] = spm_fileparts(job.extopts.shootingtpm{1});
+    job.extopts.shootingtpm{1} = fullfile(tpp,[tff,tee]); 
+    numpos = min(strfind(tff,'Template_0')) + 8;
+    if isempty(numpos)
+      error('CAT:cat_main:TemplateNameError', ...
+      ['Could not find the string "Template_0" in Shooting template that \n'...
+       'indicates the first file of the Shooting template. \n' ...
+       'The given filename is "%s.%s" \n'],tff,tee);
+    end
+    job.extopts.shootingtpms = cat_vol_findfiles(tpp,[tff(1:numpos) '*' tff(numpos+2:end) tee],struct('depth',1));
+    job.extopts.shootingtpms(cellfun('length',job.extopts.shootingtpms)~=length(job.extopts.shootingtpm{1}))=[]; % remove to short/long files
+    if numel(job.extopts.shootingtpms)~=5 && any(job.extopts.regstr>0)
+      %%
+      files = ''; for di=1:numel(job.extopts.shootingtpms), files=sprintf('%s\n  %s',files,job.extopts.shootingtpms{di}); end
+      error('CAT:cat_main:TemplateFileError', ...
+       ['Could not find the expected 5 Shooting template files (Template_0 to Template_4).\n' ...
+        'Found %d templates: %s'],numel(job.extopts.shootingtpms),files);
+    end
   end
   
   
@@ -1251,7 +1265,8 @@ function job = update_job(job)
   
   % deselect ROI output and print warning if ROI output is true and dartel template was changed
   [pth,nam] = spm_fileparts(job.extopts.darteltpm{1});
-  if isempty(strfind(nam,'_GS')) && isempty(strfind(nam,'_Dartel')) && isempty(strfind(nam,'IXI555')) && strcmp(job.extopts.species,'human') && cat_get_defaults('output.ROI');
+  if isempty(strfind(nam,'_GS')) && isempty(strfind(nam,'_Dartel')) && isempty(strfind(nam,'IXI555')) && ...
+      strcmp(job.extopts.species,'human') && cat_get_defaults('output.ROI') && ~isfield(job.extopts,'spmAMAP')
     warning('DARTEL:template:change',...
       ['Dartel template was changed: Please be aware that ROI analysis \n' ...
        'and other template-specific options cannot be used and ROI \n ' ...

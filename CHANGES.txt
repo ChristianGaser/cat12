@@ -1,4 +1,33 @@
 ------------------------------------------------------------------------
+r2579 | dahnke | 2024-05-08 17:39:57
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_extopts.m
+ M cat_io_writenii.m
+ M cat_main.m
+ M cat_main1639.m
+ M cat_main_registration.m
+ M cat_main_report.m
+ M cat_main_reportstr.m
+ M cat_run.m
+ M cat_run_job.m
+ M cat_run_job1639.m
+ M cat_stat_homogeneity.m
+ M tbx_cfg_cat.m
+
+Changed:  Correction and cleanup of the CAT SPM preprocessing batch in 
+          cat_conf_extopts, cat_run, cat_run_job[1639], and cat_main1639.
+          Improved documentation and help and make batch visible for default 
+          users. 
+Changed:  Allowed to have empty template files to keep the SPM registration
+          and have no specific probability maps for WMHs and lesions in 
+          cat_main[1639], cat_main_registration, and cat_run.      
+Fixed:    Corrected bug in testing for BIDS in cat_io_writenii.      
+Fixed:    Corrected bug in cat_main_report use in the retrospective CAT
+          report pointed out by Thomas Stephan (issue #24). 
+Fixed:    Corrected bug in cat_long_report > cat_stat_homogeneity in case 
+          of BIDS setting with subdirs.------------------------------------------------------------------------
 r2578 | gaser | 2024-05-07 16:03:00
 
 Changed paths:
