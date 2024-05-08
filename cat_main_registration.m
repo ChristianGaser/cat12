@@ -391,6 +391,13 @@ end
 %%
       
       try 
+        if (res.do_dartel==1 && isempty( job.extopts.darteltpm{1} ) ) || ...
+           (res.do_dartel>0  && res.do_dartel<1 && isempty( job.extopts.shootingtpm{1} ) ) || ...
+           (res.do_dartel>=2 && isempty( job.extopts.shootingtpm{1} ) ) 
+          error('cat_main_registration:TPMregerror', ...
+            'TPMs are not supported for Dartel/Shooting registration. Use previous registration.')
+        end
+
         %  main functions
         if res.do_dartel
           if job.extopts.regstr(regstri)==0       % Dartel
@@ -436,7 +443,7 @@ end
           job2.extopts.mrifolder = fullfile('mri',reg(regstri).testfolder);
           cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job2,res,trans);
         end
-      catch
+      catch e
 %% ------------------------------------------------------------------------
 %  Catch problems and use the original input (e.g. from the unified
 %  segmentation) and prepare the output by just changing BB and vox
@@ -445,8 +452,13 @@ end
 %  Segmentation. 
 %  ------------------------------------------------------------------------
        
-        cat_io_addwarning('cat_main_registration:regError',...
-          'Registration problem due to given input segmentation. \\nUse previous registration.',2,[1 1]);
+        if strcmp( e.identifier , 'cat_main_registration:TPMregerror' )
+          cat_io_addwarning('cat_main_registration:regError',...
+            'No Dartel/Shooting template was given. \\nUse previous registration to TPM.',1,[1 1]); % not a error but a feature
+        else
+          cat_io_addwarning('cat_main_registration:regError',...
+            'Registration problem due to given input segmentation. \\nUse previous registration.',2,[1 1]);
+        end
         res.Affine = res.Affine0; 
         
         % set registration parameter

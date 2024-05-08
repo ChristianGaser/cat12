@@ -94,7 +94,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
   
   pp = fileparts(V.fname); 
   if ~exist('folder','var'), folder = ''; end
-  if ~exist(fullfile(pp,folder),'dir'), mkdir(fullfile(pp,folder)); end
+  if ~exist(spm_file(fullfile(pp,folder),'fpath'),'dir'), mkdir(spm_file(fullfile(pp,folder),'fpath')); end
   
   
   % deal with label maps 
