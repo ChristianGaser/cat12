@@ -281,12 +281,23 @@ if fit_poly
     yfit{i} = polyval(p,xfit);
 
     if ci
+      alpha = 0.05;
+
       [Y2,DELTA] = cat_stat_polyconf(p,xfit,S);
       if isempty(color) && n_groups > 1
         plot_variance(xfit,Y2+DELTA,Y2-DELTA,color(i,:),0.05)
       else
         plot_variance(xfit,Y2+DELTA,Y2-DELTA,[0.75 0.75 0.75],0.1)
       end
+
+      % find standard error
+      std_err = sqrt(diag(inv(S.R)*inv(S.R')).*S.normr.^2./S.df)';
+
+      t_crit = tinv(1-alpha/2,S.df);
+
+      ci = t_crit * std_err;
+      confidence_intervals = [p - ci; p + ci];
+
     end
 
     % estimate R^2
@@ -297,9 +308,15 @@ if fit_poly
     else
       fprintf('R^2 = %g\tr = %g\tp = %g\n',R2,cc(1,2),pp(1,2))
     end
-    fprintf('Coefficients = %g\n',p)
+    fprintf('Coefficients:\n')
+    for j = 1:numel(p)
+      if ci
+        fprintf('%g (CI %g %g)\n',p(j),confidence_intervals(1,j),confidence_intervals(2,j))
+      else
+        fprintf('%g\n',p(j))
+      end
+    end
     if i == 1, hold on; end
-    if ci, fprintf('Average Confidence Interval = +/-%g\n',mean(DELTA)); end
   end
 end
 
@@ -562,7 +579,7 @@ else
     end
 end
 
-function x = tinv(p,v);
+function x = tinv(p,v)
 % TINV   Inverse of Student's T cumulative distribution function (cdf).
 %   X=TINV(P,V) returns the inverse of Student's T cdf with V degrees 
 %   of freedom, at the values in P.
@@ -573,7 +590,7 @@ function x = tinv(p,v);
 % This is an open source function that was assembled by Eric Maris using
 % open source subfunctions found on the web.
 
-if nargin < 2, 
+if nargin < 2
     error('Requires two input arguments.'); 
 end
 
@@ -666,7 +683,7 @@ end
 % SUBFUNCTION betainv
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function x = betainv(p,a,b);
+function x = betainv(p,a,b)
 %BETAINV Inverse of the beta cumulative distribution function (cdf).
 %   X = BETAINV(P,A,B) returns the inverse of the beta cdf with 
 %   parameters A and B at the values in P.
@@ -682,7 +699,7 @@ function x = betainv(p,a,b);
 
 %   B.A. Jones 1-12-93
 
-if nargin < 3, 
+if nargin < 3
     error('Requires three input arguments.'); 
 end
 
@@ -697,19 +714,19 @@ x = zeros(size(p));
 
 %   Return NaN if the arguments are outside their respective limits.
 k = find(p < 0 | p > 1 | a <= 0 | b <= 0);
-if any(k),
+if any(k)
    tmp = NaN;
    x(k) = tmp(ones(size(k))); 
 end
 
 % The inverse cdf of 0 is 0, and the inverse cdf of 1 is 1.  
 k0 = find(p == 0 & a > 0 & b > 0);
-if any(k0), 
+if any(k0)
     x(k0) = zeros(size(k0)); 
 end
 
 k1 = find(p==1);
-if any(k1), 
+if any(k1) 
     x(k1) = ones(size(k1)); 
 end
 
@@ -726,10 +743,10 @@ xk = a(k) ./ (a(k) + b(k));
 
 
 % Move starting values away from the boundaries.
-if xk == 0,
+if xk == 0
     xk = sqrt(eps);
 end
-if xk == 1,
+if xk == 1
     xk = 1 - sqrt(eps);
 end
 
@@ -742,8 +759,8 @@ crit = sqrt(eps);
 %  2) The last update is very small (compared to 100*eps).
 %  3) There are more than 100 iterations. This should NEVER happen. 
 
-while(any(abs(h) > crit * abs(xk)) & max(abs(h)) > crit    ...
-                                 & count < count_limit), 
+while(any(abs(h) > crit * abs(xk)) && max(abs(h)) > crit    ...
+                                 & count < count_limit) 
                                  
     count = count+1;    
     h = (betacdf(xk,a(k),b(k)) - pk) ./ betapdf(xk,a(k),b(k));
@@ -753,7 +770,7 @@ while(any(abs(h) > crit * abs(xk)) & max(abs(h)) > crit    ...
 % Initially, Newton's Method may take big steps.
     ksmall = find(xnew < 0);
     klarge = find(xnew > 1);
-    if any(ksmall) | any(klarge)
+    if any(ksmall) || any(klarge)
         xnew(ksmall) = xk(ksmall) /10;
         xnew(klarge) = 1 - (1 - xk(klarge))/10;
     end
@@ -764,7 +781,7 @@ end
 % Return the converged value(s).
 x(k) = xk;
 
-if count==count_limit, 
+if count==count_limit 
     fprintf('\nWarning: BETAINV did not converge.\n');
     str = 'The last step was:  ';
     outstr = sprintf([str,'%13.8f'],h);
@@ -787,7 +804,7 @@ function y = betapdf(x,a,b)
 %      [1]  M. Abramowitz and I. A. Stegun, "Handbook of Mathematical
 %      Functions", Government Printing Office, 1964, 26.1.33.
 
-if nargin < 3, 
+if nargin < 3
    error('Requires three input arguments.');
 end
 
@@ -825,7 +842,7 @@ end
 % SUBFUNCTION betacdf
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function p = betacdf(x,a,b);
+function p = betacdf(x,a,b)
 %BETACDF Beta cumulative distribution function.
 %   P = BETACDF(X,A,B) returns the beta cumulative distribution
 %   function with parameters A and B at the values in X.
@@ -839,7 +856,7 @@ function p = betacdf(x,a,b);
 %      [1]  M. Abramowitz and I. A. Stegun, "Handbook of Mathematical
 %      Functions", Government Printing Office, 1964, 26.5.
 
-if nargin < 3, 
+if nargin < 3
    error('Requires three input arguments.'); 
 end
 
