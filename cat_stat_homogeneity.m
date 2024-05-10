@@ -296,6 +296,12 @@ for i=1:n_subjects
   if isBIDS 
     % in case of BIDS CAT wrote all files into this directory 
     report_folder = pth; 
+    [ppm,pps] = spm_fileparts(report_folder);
+    % just in case that there are subdirs
+    if cat_io_contains(pps,{'mri','surf','label'})
+      pps = 'report';
+      report_folder = fullfile(ppm,pps);
+    end
   elseif ( isfield(job,'sel_xml') && isfield(job.sel_xml,'select_dir') ) 
     % in case of BIDS CAT wrote all files into this directory 
     report_folder = job.sel_xml.select_dir{1}; 

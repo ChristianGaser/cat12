@@ -127,7 +127,6 @@ function cat_run_job(job,tpm,subj)
      exist(fullfile(pp,['c2' ff(3:end) ee]),'file') && ...
      exist(fullfile(pp,['c3' ff(3:end) ee]),'file') && ...
      exist(fullfile(pp,[ff(3:end) '_seg_sn.mat']),'file') && ...
-     ... exist(fullfile(pp,[ff(3:end) '_seg_inv_sn.mat']),'file') && ...
      strcmp(ff(1:2),'c1')
 
       cat_io_cprintf('blue','Load SPM old-segment segmentation (*seg_sn.mat)\n ')
@@ -147,74 +146,59 @@ function cat_run_job(job,tpm,subj)
       reso      = load(Pseg8); 
       res       = reso.flags;
       res.segsn = reso; 
-      if sum( spm_get_defaults('old.preproc.ngaus') ) == numel(reso.flags.mg) 
-        ngaus = spm_get_defaults('old.preproc.ngaus');
-        for ti = 1:numel(reso.VG)
-          job.tissue(ti).ngaus = ngaus(ti);
-          job.tissue(ti).tpm   = reso.VG(ti).fname; 
-        end
-        job.tissue(numel(ngaus)).ngaus = ngaus(end);
-        for ti = numel(reso.VG)+2:numel(job.tissue)
-          job.tissue(ti+2:end) = []; 
-        end
-        res.lkp = [];
-        if all(isfinite(cat(1,ngaus)))
-            for k=1:max(ngaus)
-                res.lkp = [res.lkp ones(1,job.tissue(k).ngaus)*k];
-            end
-        end
-      else
-        % no solution for now
-        %res.ngaus  = [inf inf inf inf]; 
-        res.lkp      = [];
-        if all(isfinite(cat(1,job.tissue.ngaus)))
-            for k=1:numel(job.tissue)
-                res.lkp = [res.lkp ones(1,job.tissue(k).ngaus)*k];
-            end
+
+      % prepare spm classes (the GUI limits this to 3 images + automatic background class) 
+      for ti = 1:numel(res.ngaus)
+        job.tissue(ti).ngaus = res.ngaus(ti);
+        job.tissue(ti).tpm   = reso.VG(min(ti,numel(reso.VG))).fname; 
+      end
+      job.tissue(numel(res.ngaus)+1:end) = []; 
+
+      % create class parameter variable 
+      res.lkp = [];
+      if all(isfinite(cat(1,res.ngaus)))
+          for k=1:numel(res.ngaus)
+              res.lkp = [res.lkp ones(1,job.tissue(k).ngaus)*k];
+          end
+      end
+
+      % update template data and load template
+      res.tpm = reso.VG; 
+      if numel(res.lkp) == numel(res.mg)
+        for lkpi = 1:max(res.lkp)
+          res.mg(res.lkp==lkpi) = res.mg(res.lkp==lkpi) / sum(res.mg(res.lkp==lkpi)); 
         end
       end
-      res.tpm = reso.VG; 
+      res.mn       = res.mn'; 
+      tpm          = spm_load_priors8(res.tpm);
 
       obj.image    = spm_vol(images);
       obj.fwhm     = job.opts.fwhm;
-      obj.affreg   = reso.flags.regtype;
-      obj.biasreg  = reso.flags.biasreg;
-      obj.biasfwhm = reso.flags.biasfwhm;
-      obj.tol      = NaN .* job.opts.tol;
-      obj.reg      = NaN .* job.opts.warpreg;
-      obj.samp     = reso.flags.samp;              
-      spm_check_orientations(obj.image);
+      obj.affreg   = res.regtype;
+      obj.biasreg  = res.biasreg;
+      obj.biasfwhm = res.biasfwhm;
+      obj.tol      = NaN;
+      obj.reg      = res.warpreg;
+      obj.samp     = res.samp;              
+      obj.lkp      = res.lkp; 
+      obj.tpm      = tpm; 
 
-      job.opts.tpm      = {reso.VG(1).fname};
-      job.opts.biasreg  = reso.flags.biasreg;
-      job.opts.biasfwhm = reso.flags.biasfwhm;
-      job.opts.samp     = reso.flags.samp;          
-
-      
-      for lkpi = 1:max(res.lkp)
-        res.mg(res.lkp==lkpi) = res.mg(res.lkp==lkpi) / sum(res.mg(res.lkp==lkpi)); 
-      end
-      res.mn = res.mn'; 
-      
-
-      job.opts.tpm     = res.tpm(1).fname; 
-      job.opts.biasreg = reso.flags; 
-      job.extopts.shootingT1 = job.extopts.T1; 
-
-      % load tpm priors 
-      tpm     = spm_load_priors8(res.tpm);
-      obj.lkp = res.lkp; 
-      obj.tpm = tpm; 
-      
-      cfname  = fullfile(pp,[ff ee]);
-      ofname  = fullfile(pp,[ff(3:end) ee]); 
-      nfname  = fullfile(pp,mrifolder,['n' ff '.nii']); 
+      % prepare the internal T1 map
+      cfname   = fullfile(pp,[ff ee]);
+      ofname   = fullfile(pp,[ff(3:end) ee]); 
+      nfname   = fullfile(pp,mrifolder,['n' ff '.nii']); 
       copyfile(ofname,nfname,'f'); 
 
-      Ysrc0    = single(spm_read_vols(obj.image)); 
-      Ylesion  = single(isnan(Ysrc0) | isinf(Ysrc0) | Ysrc0==0); clear Ysrc0;
-      
-     
+      % update option fields
+      job.opts.tpm      = {reso.VG(1).fname};
+      job.opts.biasreg  = res.biasreg;
+      job.opts.biasfwhm = res.biasfwhm;
+      job.opts.samp     = res.samp;          
+      job.opts.tpm      = res.tpm(1).fname; 
+      job.opts.biasreg  = res.biasreg; 
+      % [abs.-displacement, membran-engery, bending-engery, linear-elasticity 2x ] 
+      job.opts.warpreg  = nan(1,5); % this does not fit to the old parameter
+      job.extopts.shootingT1 = job.extopts.T1; 
       job.channel(1).vols{subj}  = [nfname ex];
       job.channel(1).vols0{subj} = [ofname ex];
       res.image  = spm_vol([nfname ex]);
@@ -223,6 +207,11 @@ function cat_run_job(job,tpm,subj)
       res.spmpp  = 1; 
       job.spmpp  = 1; 
       
+      % load volumes
+      Ysrc0    = single(spm_read_vols(obj.image)); 
+      Ylesion  = single(isnan(Ysrc0) | isinf(Ysrc0) | Ysrc0==0); clear Ysrc0;
+  
+      % prepare error sturture
       cat_err_res.obj = obj;
 
     elseif exist(fullfile(pp,['c1' ff(3:end) ee]),'file') && ...
@@ -300,6 +289,7 @@ function cat_run_job(job,tpm,subj)
       res.spmpp  = 1; 
       job.spmpp  = 1; 
       
+      % prepare error sturture
       cat_err_res.obj = obj; 
   else
 

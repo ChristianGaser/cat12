@@ -52,15 +52,25 @@ darteltpm         = cfg_files;
 darteltpm.tag     = 'darteltpm';
 darteltpm.name    = 'Dartel Template';
 darteltpm.def     = @(val)cat_get_defaults('extopts.darteltpm', val{:});
-darteltpm.num     = [1 1];
+darteltpm.num     = [1-spmseg 1];
 darteltpm.filter  = 'image';
 darteltpm.ufilter = 'Template_1'; 
-darteltpm.help    = {
-  'Select the first of six images (iterations) of a Dartel template.  The Dartel template must be in multi-volume (5D) nifti format and should contain GM and WM segmentations. '
-  ''
-  'Please note that the use of an own Dartel template will result in deviations and unreliable results for any ROI-based estimations because the atlases will differ and any ROI processing will be therefore deselected.'
-  ''
-};
+if spmseg
+  darteltpm.help    = {
+    'Select the first of six images (iterations) of a Dartel template.  The Dartel template must be in multi-volume (5D) nifti format and should contain GM and WM segmentations. If the field is empty no Dartel registration will be perfor'
+    ''
+    'Please note that the use of an own Dartel template will result in deviations and unreliable results for any ROI-based estimations because the atlases will differ and any ROI processing will be therefore deselected.'
+    ''
+  };
+else
+  darteltpm.help    = {
+    'Select the first of six images (iterations) of a Dartel template.  The Dartel template must be in multi-volume (5D) nifti format and should contain GM and WM segmentations. '
+    ''
+    'Please note that the use of an own Dartel template will result in deviations and unreliable results for any ROI-based estimations because the atlases will differ and any ROI processing will be therefore deselected.'
+    ''
+  };
+end
+
 
 %---------------------------------------------------------------------
 
@@ -68,15 +78,24 @@ shootingtpm         = cfg_files;
 shootingtpm.tag     = 'shootingtpm';
 shootingtpm.name    = 'Shooting Template';
 shootingtpm.def     = @(val)cat_get_defaults('extopts.shootingtpm', val{:});
-shootingtpm.num     = [1 1];
+shootingtpm.num     = [1-spmseg 1];
 shootingtpm.filter  = 'image';
 shootingtpm.ufilter = 'Template_0'; 
-shootingtpm.help    = {
-  'Select the first of five images (iterations) of a Shooting template.  The Shooting template must be in multi-volume (5D) nifti format and should contain GM, WM, and background segmentations and have to be saved with at least 16 bit. '
-  ''
-  'Please note that the use of an own Shooting template will result in deviations and unreliable results for any ROI-based estimations because the atlases will differ and any ROI processing will be therefore deselected.'
-  ''
+if spmseg
+  shootingtpm.help    = {
+    'Select the first of five images (iterations) of a Shooting template.  The Shooting template must be in multi-volume (5D) nifti format and should contain GM, WM, and background segmentations and have to be saved with at least 16 bit.  If the field is empty no Dartel registration will be performed and the default SPM registration is used instead.'
+    ''
+    'Please note that the use of an own Shooting template will result in deviations and unreliable results for any ROI-based estimations because the atlases will differ and any ROI processing will be therefore deselected.'
+    ''
 };
+else
+  shootingtpm.help    = {
+    'Select the first of five images (iterations) of a Shooting template.  The Shooting template must be in multi-volume (5D) nifti format and should contain GM, WM, and background segmentations and have to be saved with at least 16 bit. '
+    ''
+    'Please note that the use of an own Shooting template will result in deviations and unreliable results for any ROI-based estimations because the atlases will differ and any ROI processing will be therefore deselected.'
+    ''
+  };
+end
 
 %------------------------------------------------------------------------
 
@@ -98,7 +117,12 @@ brainmask.tag     = 'brainmask';
 brainmask.name    = 'Brainmask';
 brainmask.filter  = 'image';
 brainmask.ufilter = 'brainmask';
-brainmask.def     = @(val)cat_get_defaults('extopts.brainmask', val{:});
+if spmseg % in case of SPM this fields are not required yet 
+  brainmask.val{1} = {''}; 
+else
+  brainmask.def    = @(val)cat_get_defaults('extopts.brainmask', val{:});
+end
+brainmask.hidden  = ~spmseg || expert<2; 
 brainmask.num     = [1 1];
 brainmask.help    = {
   'Initial brainmask.'
@@ -111,10 +135,15 @@ T1.tag     = 'T1';
 T1.name    = 'T1';
 T1.filter  = 'image';
 T1.ufilter = 'T1';
-T1.def     = @(val)cat_get_defaults('extopts.T1', val{:});
-T1.num     = [1 1];
+if spmseg % in case of SPM this fields are not required yet
+  T1.val{1}= {''}; 
+else
+  T1.def   = @(val)cat_get_defaults('extopts.T1', val{:});
+end
+T1.hidden  = ~spmseg || expert<2; 
+T1.num     = [1-spmseg 1];
 T1.help    = {
-  'Affine registration template.'
+  'Affine registration template. ' % Implement? >> If no image is give only the TPM is used for registration.
 };
 
 %------------------------------------------------------------------------
@@ -124,14 +153,18 @@ WMHtpm.tag     = 'WMHtpm';
 WMHtpm.name    = 'WMH-TPM';
 WMHtpm.filter  = 'image';
 WMHtpm.ufilter = '';
-if isempty(cat_get_defaults('extopts.WMHtpm')) % default files without WMHtpm
+WMHtpm.hidden  = ~spmseg || expert<2; 
+if spmseg % in case of SPM this fields are not required yet
+  WMHtpm.val{1}= {''}; 
+elseif isempty(cat_get_defaults('extopts.WMHtpm')) % default files without WMHtpm
   WMHtpm.val{1}= spm_file(cat_get_defaults('extopts.T1'),'filename','cat_wmh_miccai2017.nii'); 
 else 
   WMHtpm.def   = @(val)cat_get_defaults('extopts.WMHtpm', val{:});
 end
 WMHtpm.num     = [0 1];
 WMHtpm.help    = {
-  'White matter hyperintensity tissue probability map.'
+  'White matter hyperintensity tissue probability map. '
+  'If no image is give the WMH detection focus on atypical GM close to ventrile regions or within the WM that does not belong to subcortical structures without further prior weighting. '
 };
 
 %------------------------------------------------------------------------
@@ -141,14 +174,18 @@ BVtpm.tag     = 'BVtpm';
 BVtpm.name    = 'BV-TPM';
 BVtpm.filter  = 'image';
 BVtpm.ufilter = '';
-if isempty(cat_get_defaults('extopts.BVtpm')) % default files without BVtpm
+BVtpm.hidden  = ~spmseg || expert<2; 
+if spmseg % in case of SPM this fields are not required yet
+  BVtpm.val{1}= {''}; 
+elseif isempty(cat_get_defaults('extopts.BVtpm')) % default files without BVtpm
   BVtpm.val{1}= spm_file(cat_get_defaults('extopts.T1'),'filename','cat_bloodvessels.nii'); 
 else 
   BVtpm.def   = @(val)cat_get_defaults('extopts.BVtpm', val{:});
 end
 BVtpm.num     = [0 1];
 BVtpm.help    = {
-  'Blood vessel tissue probability map.'
+  'Blood vessel tissue probability map. '
+  'If no map is give the blood vessel detection focus on high intensity 1D structures without further prior weighting. '
 };
 
 %------------------------------------------------------------------------
@@ -158,7 +195,10 @@ SLtpm.tag     = 'SLtpm';
 SLtpm.name    = 'SL-TPM';
 SLtpm.filter  = 'image';
 SLtpm.ufilter = '';
-if isempty(cat_get_defaults('extopts.SLtpm')) % default files without SLtpm
+SLtpm.hidden  = ~spmseg || expert<2; 
+if spmseg
+  SLtpm.val{1} = {''};  %<UNDEFINED>
+elseif isempty(cat_get_defaults('extopts.SLtpm')) % default files without SLtpm
   SLtpm.val{1}= spm_file(cat_get_defaults('extopts.T1'),'filename','cat_strokelesions_ATLAS303.nii'); 
 else
   SLtpm.def   = @(val)cat_get_defaults('extopts.SLtpm', val{:});
@@ -177,7 +217,7 @@ bb.num      = [inf inf];
 bb.tag      = 'bb';
 bb.name     = 'Bounding box';
 bb.def      = @(val)cat_get_defaults('extopts.bb', val{:});
-bb.hidden   = expert < 1;
+bb.hidden   = expert < 1 && ~spmseg;
 bb.help     = {
   'The bounding box describes the dimensions of the volume to be written starting from the anterior commissure in mm.  It should include the entire brain (or head in the case of the Boundary Box of the SPM TPM) and additional space for smoothing the image.  The MNI 9-mm boundary box is optimized for CATs MNI152NLin2009cAsym template and supports filter cores up to 10 mm.  Although this box support 12 mm filter sizes theoretically, slight interference could occur at the edges and larger boxes are recommended for safety. '
   'Additionally, it is possible to use the boundary box of the TPM or the template for special (animal) templates with strongly different boundary boxes. '
@@ -523,7 +563,7 @@ vdist.name    = 'Mesh resolution';
 vdist.labels  = {'optimal (2)','fine (1)','extra fine (0.5)'};
 vdist.values  = {2 1 0.5};   
 vdist.def     = @(val)cat_get_defaults('extopts.vdist', val{:});
-vdist.hidden  = expert<1; 
+vdist.hidden  = expert<1 | (spmseg & expert<2); 
 vdist.help    = {
  ['Higher mesh resolution may support indipendent measuresments but also increase the chance of self-intersections. ' ...
   'For each level, the mesh resolution (number of elements) is doubled and accuracy is increased slightly (by the square root). ' ...
@@ -1135,7 +1175,12 @@ scale_cortex.tag     = 'scale_cortex';
 scale_cortex.name    = 'Modify cortical surface creation';
 scale_cortex.strtype = 'r';
 scale_cortex.num     = [1 1];
-scale_cortex.def     = @(val)cat_get_defaults('extopts.scale_cortex', val{:});
+if spmseg
+  scale_cortex.hidden = true; 
+  scale_cortex.val{1} = 0.5; 
+else
+  scale_cortex.def     = @(val)cat_get_defaults('extopts.scale_cortex', val{:});
+end
 scale_cortex.help    = {
   'Scale intensity values for cortex to start with initial surface that is closer to GM/WM border to prevent that gyri/sulci are glued if you still have glued gyri/sulci (mainly in the occ. lobe).  You can try to decrease this value (start with 0.6).  Please note that decreasing this parameter also increases the risk of an interrupted parahippocampal gyrus.'
   ''
@@ -1146,7 +1191,12 @@ add_parahipp.tag     = 'add_parahipp';
 add_parahipp.name    = 'Modify parahippocampal surface creation';
 add_parahipp.strtype = 'r';
 scale_cortex.num     = [1 1];
-add_parahipp.def     = @(val)cat_get_defaults('extopts.add_parahipp', val{:});
+if spmseg
+  add_parahipp.hidden = true; 
+  add_parahipp.val{1} = 0; 
+else
+  add_parahipp.def   = @(val)cat_get_defaults('extopts.add_parahipp', val{:});
+end
 add_parahipp.help    = {
   'Increase values in the parahippocampal area to prevent large cuts in the parahippocampal gyrus (initial surface in this area will be closer to GM/CSF border if the parahippocampal gyrus is still cut.  You can try to increase this value (start with 0.15).'
   ''
@@ -1157,7 +1207,12 @@ close_parahipp.tag     = 'close_parahipp';
 close_parahipp.name    = 'Initial morphological closing of parahippocampus';
 close_parahipp.labels  = {'No','Yes'};
 close_parahipp.values  = {0 1};
-close_parahipp.def     = @(val)cat_get_defaults('extopts.close_parahipp', val{:});
+if spmseg
+  close_parahipp.hidden = true; 
+  close_parahipp.val{1} =0;  
+else
+  close_parahipp.def   = @(val)cat_get_defaults('extopts.close_parahipp', val{:});
+end
 close_parahipp.help    = {
   'Apply initial morphological closing inside mask for parahippocampal gyrus to minimize the risk of large cuts of parahippocampal gyrus after topology correction. However, this may also lead to poorer quality of topology correction for other data and should be only used if large cuts in the parahippocampal areas occur.'
   ''
@@ -1193,7 +1248,7 @@ admin.help    = {'CAT12 parameter to control the behaviour of the preprocessing 
 surface         = cfg_branch;
 surface.tag     = 'surface';
 surface.name    = 'Surface Options';
-surface.val     = {pbtres pbtver SRP reduce_mesh vdist scale_cortex add_parahipp close_parahipp}; 
+surface.val     = {pbtres pbtver SRP vdist scale_cortex add_parahipp close_parahipp}; 
 surface.hidden  = expert<1;
 surface.help    = {'CAT12 parameter to control the surface processing.';''};
 
@@ -1216,7 +1271,7 @@ else
   if expert 
     extopts.val   = {spmsegmentation,registration,surface,admin}; 
   else
-    extopts.val   = {vox,bb,surface,admin}; % bb is hidden
+    extopts.val   = {vox,bb,registration,surface,admin}; % bb is hidden
   end
 end
 extopts.help  = {'Using the extended options you can adjust special parameters or the strength of different corrections ("0" means no correction and "0.5" is the default value that works best for a large variety of data).'};

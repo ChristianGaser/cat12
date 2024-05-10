@@ -62,7 +62,7 @@ function out = cat_main_report(job)
     end
     
     % load Ym
-    if isfield( job, 'Pm' ) && iscell(job.Pm) && ~isempty( job.Pm )  && ~isempty( job.Pm{1} )  && exist( job.Pm{fi} , 'file' )
+    if isfield( job, 'Pm' ) && iscell(job.Pm) && ~isempty( job.Pm ) && ~isempty( job.Pm{fi} )  && exist( job.Pm{fi} , 'file' )
       Vmi = spm_vol( job.Pm{fi} ); 
     elseif exist( xml.filedata.Fm , 'file' )
       Vmi = spm_vol( xml.filedata.Fm  ); 
@@ -88,7 +88,7 @@ function out = cat_main_report(job)
     end
 
     % load Yp0 
-    if isfield( job, 'Pp0' ) && iscell(job.Pp0) && ~isempty( job.Pp0{1} ) && ~isempty( job.Pp0{1} ) && exist( job.Pp0{fi} , 'file' )
+    if isfield( job, 'Pp0' ) && iscell(job.Pp0) && ~isempty( job.Pp0 ) && ~isempty( job.Pp0{fi} ) && exist( job.Pp0{fi} , 'file' )
       Vp0 = spm_vol( job.Pp0{fi} );
     elseif exist( xml.filedata.Fp0 , 'file' )
       Vp0 = spm_vol( xml.filedata.Fp0 );
