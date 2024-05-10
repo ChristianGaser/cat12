@@ -1,4 +1,12 @@
 ------------------------------------------------------------------------
+r2579 | gaser | 2024-05-10 21:01:35
+
+Changed paths:
+ M CHANGES.txt
+ M cat_plot_scatter.m
+
+Changed: Added confidence interval estimation for slopes to cat_plot_scatter.m.
+------------------------------------------------------------------------
 r2578 | gaser | 2024-05-07 16:03:00
 
 Changed paths:
