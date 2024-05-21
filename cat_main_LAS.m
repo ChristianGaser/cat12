@@ -323,7 +323,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = ...
   %            divergence information (Ydiv) and use a flexible intensity 
   %    Ysw3 .. similar to Ysw2 with a skull-near and CSF distance criteria
   %            to reconstruct WM gyri
-  %    Ysw4 .. was remove long ago
+  %    Ysw4 .. was removed long ago
   %    Ygw  .. map to of regions that we want to avoid in all possible WM
   %            definitions Ysw*
   Ysw2 = Yb2 & (Ycd - Ydiv)>2        & Ydiv<0     & Ym>(0.9 + LASstr * 0.05); % general WM

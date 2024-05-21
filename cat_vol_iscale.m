@@ -1,5 +1,5 @@
 function [TI,varargout] = cat_vol_iscale(T,action,vx_vol,varargin)
-% CAT Prprocessing Intensity Scaling Functions
+% CAT Preprocessing Intensity Scaling Functions
 % ______________________________________________________________________
 % Set of functions for intensity scaling of an image T. 
 %
@@ -213,7 +213,7 @@ function [TI,varargout] = cat_vol_iscale(T,action,vx_vol,varargin)
         WIr  = cat_vol_resize(WIrr,'dereduceV',resT2); clear WIrr;
         WIr  = WIr * median(TSr(M2r(:) & Gr(:)<Gth & TSr(:)>WIr(:)*0.95) ./ WIr(M2r(:) & Gr(:)<Gth & TSr(:)>WIr(:)*0.95));
 
-        %% rough skull-stipping
+        %% rough skull-stripping
         % use the head distance map D to find a central tissue (low gradient) with WM intensity
         [Grr,Trr,GWMrr,Drr,M2rr,resT4] = cat_vol_resize({Gr,TSr./WIr,GWMr./WIr,Dr,M2r},'reduceV',vx_vol,2,32,'meanm');
         Brr  = cat_vol_morph(Trr<1.2 & Trr>max(0.8,GWMrr) & Grr<Gth & M2rr); 

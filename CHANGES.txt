@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2582 | gaser | 2024-05-21 01:23:31
+
+Changed paths:
+ M CHANGES.txt
+ M cat_main_LAS.m
+ M cat_vol_iscale.m
+ M cat_vol_slice_overlay.m
+
+Fixed: Corrected bug in cat_vol_slice_overlay, where clipping with OV.func was 
+       not correct and atlas regions were wrong in that case.
+------------------------------------------------------------------------
 r2579 | gaser | 2024-05-10 21:01:35
 
 Changed paths:
