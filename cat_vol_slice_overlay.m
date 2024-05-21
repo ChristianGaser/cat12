@@ -185,11 +185,12 @@ else
     slices{1} = OV.slices;
   else
     SO.img(2).vol = spm_vol(OV.name);
-    [mx, mn, XYZ, img2] = volmaxmin(SO.img(2).vol);
+    if isfield(OV,'func')
+      [mx, mn, XYZ, img2] = volmaxmin(SO.img(2).vol,OV.func);
+    else
+      [mx, mn, XYZ, img2] = volmaxmin(SO.img(2).vol);
+    end
 
-    % apply function to img2
-    if isfield(OV,'func'), i1 = img2; eval(OV.func); img2 = i1; end
-    
     % threshold map and restrict coordinates
     Q = find(compare_to_threshold(img2,range(1)) & le(img2,range(2)));
     XYZ = XYZ(:, Q);
@@ -259,7 +260,11 @@ SO.transform = OV.transform;
 SO.slices = slices;
 
 if isempty(SO.slices)
-  [mx, mn, XYZ, vol] = volmaxmin(SO.img(2).vol);
+  if isfield(OV,'func')
+    [mx, mn, XYZ, vol] = volmaxmin(SO.img(2).vol,OV.func);
+  else
+    [mx, mn, XYZ, vol] = volmaxmin(SO.img(2).vol);
+  end
   
   % threshold map and restrict coordinates
   Q = find(compare_to_threshold(vol,SO.img(2).range(1)));
@@ -544,7 +549,7 @@ end
 
 % atlas labeling
 if ~isempty(xA)
-  [mx, mn, XYZ, vol] = volmaxmin(SO.img(2).vol);
+  [mx, mn, XYZ, vol] = volmaxmin(SO.img(2).vol,SO.img(2).func);
   
   % threshold map and restrict coordinates
   if SO.img(2).range(1) >= 0
@@ -555,9 +560,7 @@ if ~isempty(xA)
   M = SO.img(2).vol.mat;
   XYZmm = M(1:3, :) * [XYZ; ones(1, size(XYZ, 2))];
   
-  % apply func that is defined for "i1"
   i1 = vol;
-  eval(SO.img(2).func)
   
   % remove NaN values
   Q = find(isfinite(i1));
@@ -794,7 +797,7 @@ s = spm_str_manip(s, 'v');
 return
 
 % --------------------------------------------------------------------------
-function [mx, mn, XYZ, img] = volmaxmin(vol)
+function [mx, mn, XYZ, img] = volmaxmin(vol,func)
 
 if nargout > 2
   XYZ = [];
@@ -805,11 +808,12 @@ end
 
 mx = -Inf; mn = Inf;
 for i = 1:vol.dim(3)
-  tmp = spm_slice_vol(vol, spm_matrix([0 0 i]), vol.dim(1:2), [0 NaN]);
-  tmp1 = tmp(isfinite(tmp(:)) & (tmp(:) ~= 0));
+  i1 = spm_slice_vol(vol, spm_matrix([0 0 i]), vol.dim(1:2), [0 NaN]);
+  if nargin > 1, eval(func); end
+  tmp1 = i1(isfinite(i1(:)) & (i1(:) ~= 0));
   if ~isempty(tmp1)
     if nargout > 2
-      [Qc Qr] = find(isfinite(tmp) & (tmp ~= 0));
+      [Qc Qr] = find(isfinite(i1) & (i1 ~= 0));
       if size(Qc, 1)
         XYZ = [XYZ; [Qc Qr i * ones(size(Qc))]];
         if nargout > 3
@@ -879,7 +883,7 @@ for i = 1:nimgs
   if i == 1
     SO.img(i).cmap = gray;
     %[mx, mn] = volmaxmin(SO.img(i).vol);
-    [tmp, th]=cat_stat_histth(spm_read_vols(SO.img(i).vol),0.95,0);
+    [tmp, th] = cat_stat_histth(spm_read_vols(SO.img(i).vol),0.95,0);
 
     SO.img(i).range = th;
   else
