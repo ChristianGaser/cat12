@@ -10,9 +10,9 @@ If you use this atlas, please cite the references below.
 
 Websites:
 A) https://github.com/thalamicseg/thomas_new
+B) https://zenodo.org/records/5499504
 
 References:
-
 1) Su JH, Thomas FT, Kasoff WS, Tourdias T, Choi EY, Rutt BK, Saranathan M.
 Thalamus Optimized Multi Atlas Segmentation (THOMAS): fast, fully automated
 segmentation of thalamic nuclei from structural MRI. Neuroimage. 2019 Jul

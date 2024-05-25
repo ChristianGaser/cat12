@@ -1,23 +1,25 @@
 ROIid;ROIabbr;ROIname
-1;lAnteroventral;left anteroventral
-2;lVentral_Anterior;left ventral anterior
-3;lVentral_Lateral_Anterior;left ventral lateral anterior
-4;lVentral_Lateral_Posterior;left ventral lateral posterior
-5;lVentral_Posterolateral;left ventral posterolateral
-6;lPulvinar;left pulvinar
-7;lLateral_Geniculate;left lateral geniculate
-8;lMedial_Geniculate;left medial geniculate
-9;lCentromedian;left centromedian
-10;lMediodorsal;left mediodorsal
-11;lHabenula;left habenula
-12;rAnteroventral;right anteroventral
-13;rVentral_Anterior;right ventral anterior
-14;rVentral_Lateral_Anterior;right ventral lateral anterior
-15;rVentral_Lateral_Posterior;right ventral lateral posterior
-16;rVentral_Posterolateral;right ventral posterolateral
-17;rPulvinar;right pulvinar
-18;rLateral_Geniculate;right lateral geniculate
-19;rMedial_Geniculate;right medial geniculate
-20;rCentromedian;right centromedian
-21;rMediodorsal;right mediodorsal
-22;rHabenula;right habenula
+2;lAnteroventral;left anteroventral
+4;lVentral_Anterior;left ventral anterior
+5;lVentral_Lateral_Anterior;left ventral lateral anterior
+6;lVentral_Lateral_Posterior;left ventral lateral posterior
+7;lVentral_Posterolateral;left ventral posterolateral
+8;lPulvinar;left pulvinar
+9;lLateral_Geniculate;left lateral geniculate
+10;lMedial_Geniculate;left medial geniculate
+11;lCentromedian;left centromedian
+12;lMediodorsal;left mediodorsal
+13;lHabenula;left habenula
+14;lMTT;left mammillothalamic tract
+16;rAnteroventral;right anteroventral
+18;rVentral_Anterior;right ventral anterior
+19;rVentral_Lateral_Anterior;right ventral lateral anterior
+20;rVentral_Lateral_Posterior;right ventral lateral posterior
+21;rVentral_Posterolateral;right ventral posterolateral
+22;rPulvinar;right pulvinar
+23;rLateral_Geniculate;right lateral geniculate
+24;rMedial_Geniculate;right medial geniculate
+25;rCentromedian;right centromedian
+26;rMediodorsal;right mediodorsal
+27;rHabenula;right habenula
+28;rMTT;right mammillothalamic tract

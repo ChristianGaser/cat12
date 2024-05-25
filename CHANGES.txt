@@ -1,4 +1,18 @@
 ------------------------------------------------------------------------
+r2583 | gaser | 2024-05-25 15:33:40
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M doc/cat.html
+ M templates_MNI152NLin2009cAsym/thalamic_nuclei.csv
+ M templates_MNI152NLin2009cAsym/thalamic_nuclei.nii
+ M templates_MNI152NLin2009cAsym/thalamic_nuclei.txt
+
+Fixed: Corrected wrong labels of thalamic nuclei atlas. Thanks to Jonas Krauß
+       for poiting to this error and Manoj Saranathan for help with the atlas
+       labels.
+------------------------------------------------------------------------
 r2582 | gaser | 2024-05-21 01:23:31
 
 Changed paths:
