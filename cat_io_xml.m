@@ -267,6 +267,20 @@ function varargout = cat_io_xml(file,varargin)
       else
         error('MATLAB:cat_io_xml','"%s" does not exist!\n',file);
       end
+
+      if contains(file,'catROIs_')
+        FNatlas = fieldnames(S); 
+        for fna = 1:numel(FNatlas)
+          FNdata = fieldnames(S.(FNatlas{fna}).data); 
+          for fni = 1:numel(FNdata)
+            if ischar( S.(FNatlas{fna}).data.(FNdata{fni}) )
+              S.(FNatlas{fna}).data.(FNdata{fni}) = ...
+                eval( S.(FNatlas{fna}).data.(FNdata{fni}) );
+            end
+          end
+        end
+      end
+
     otherwise 
       error('MATLAB:cat_io_xml:read','Unknown action ''%s''!\n',action');
   end   
