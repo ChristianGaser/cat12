@@ -125,6 +125,10 @@ function str = cat_main_reportstr(job,res,qa)
         cp{3}, job.lopts.prepavg, cp{4}, job.lopts.bstr, cp{5}, job.lopts.avgLASWMHC);
     end
   end
+    if isfield(job.extopts,'BIDSfolder') && ~isempty(job.extopts.BIDSfolder)
+    str{1} = [str{1} struct('name','BIDS folder','value',cat_io_strrep( job.extopts.BIDSfolder , '_', '\_'))]; 
+  end
+
   
   % 2 lines: TPM, Template, Normalization method with voxel size
   if isfield(res,'tpm')
@@ -353,11 +357,8 @@ function str = cat_main_reportstr(job,res,qa)
     % biasfwhm, biasreg ... not available from seg8 file  
     if isfield(job.extopts,'SRP') && job.extopts.SRP == catdef.extopts.SRP, cp{4} = npara; else, cp{4} = cpara; end 
     if isfield(job.extopts,'spmAMAP') && job.extopts.spmAMAP, ca{4} = cpara; else, job.extopts.spmAMAP = 0; ca{4} = npara; end 
-    str{1} = [str{1} struct('name', 'ncls / use AMAP / SRP:','value',sprintf('[%s%s] / %s{%d} / %s{%d}',...
-      sprintf('%d ',segsn.lkp(1:end-1)), sprintf('%d',segsn.lkp(end)), ca{4}, job.extopts.spmAMAP, cp{4}, job.extopts.SRP))];
-  end
-  if isfield(job.extopts,'bids_folder') && isempty(job.extopts.bids_folder)
-    str{1} = [str{1} struct('name','BIDS folder','value',job.extopts.bids_folder)]; 
+    str{1} = [str{1} struct('name', 'use AMAP / SRP:','value',sprintf('%s{%d} / %s{%d}',...
+      ca{4}, job.extopts.spmAMAP, cp{4}, job.extopts.SRP))];
   end
 
 

@@ -600,8 +600,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 
   else
     for i=1:size(str{2},2)  % qa-measurements
-      htext(2,i,1) = text(0.01,0.48-(0.055*i), str{2}(i).name  ,'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
-      htext(2,i,2) = text(0.33,0.48-(0.055*i), str{2}(i).value ,'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
+      htext(2,i,1) = text(0.01,0.45-(0.055*i), str{2}(i).name  ,'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
+      htext(2,i,2) = text(0.33,0.45-(0.055*i), str{2}(i).value ,'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
     end
     for i=1:size(str{3},2)  % subject-measurements
       htext(3,i,1) = text(0.51,0.45-(0.055*i), str{3}(i).name  ,'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
