@@ -119,7 +119,7 @@ function varargout = cat_io_xml2csv(job)
   end
   
   % get fieldnames
-  fieldnames = getFN(xml,job.dimlim);
+  xfieldnames = getFN(xml,job.dimlim);
 
   % detect special XML cases 
   % - in case of the catROI(s)-files, we do not want to output the name/id
@@ -127,15 +127,20 @@ function varargout = cat_io_xml2csv(job)
   %   the header
   % - in case of the cat-report-files, we want to avoid some development 
   %   fields
-  [~,Sf] = spm_str_manip(job.files,'tC');
+  if numel(job.files)>1
+    [~,Sf] = spm_str_manip(job.files,'tC');
+  else
+    [~,Sf] = spm_str_manip([job.files;job.files],'tC');
+  end
   Sf.sx  = strsplit(Sf.s,'_');
   if isempty(Sf.sx), xmltype = ''; else, xmltype = Sf.sx{1}; end
   switch xmltype
     case {'catROI','catROIs'} 
       % remove special fields in case of ROI XML files
-      job.avoidfields = [ job.avoidfields; {'names';'ids'} ];
-      job.dimlim = 1024;
-  
+      job.avoidfields = [ job.avoidfields; {'names';'ids';'version';'comments'} ];
+      job.dimlim      = 1024;
+      job.fieldnames  = getFN(xml,job.dimlim);
+      xfieldnames      = job.fieldnames;
     case 'cat'
       job.avoidfields = [ job.avoidfields; {'help'; 'catlog'; 'error'; 'hardware'; ...
         'parameter.extopts.atlas'; 'parameter.extopts.satlas'; 'parameter.extopts.LAB'; ...
@@ -182,29 +187,29 @@ function varargout = cat_io_xml2csv(job)
 
   % select fields
   if ~isempty(job.fieldnames) && (~isempty(job.fieldnames{1}) || numel(job.fieldnames)>1)
-    selfieldnames = false(size(fieldnames));
+    selfieldnames = false(size(xfieldnames));
     for fni = 1:numel(job.fieldnames)
       if ~isempty(job.fieldnames{fni})
-        selfieldnames = selfieldnames | cat_io_contains(fieldnames,job.fieldnames{fni});
+        selfieldnames = selfieldnames | cat_io_contains(xfieldnames,job.fieldnames{fni});
       end
     end
-    fieldnames = fieldnames(selfieldnames);
+    xfieldnames = xfieldnames(selfieldnames);
   end  
   
   % remove critical fieldnames
   for fni = 1:numel(job.avoidfields)
     if ~isempty(job.avoidfields{fni})
-      rmfieldnames = cat_io_contains(fieldnames,job.avoidfields{fni}); 
-      fieldnames(rmfieldnames) = [];  
+      rmfieldnames = cat_io_contains(xfieldnames,job.avoidfields{fni}); 
+      xfieldnames(rmfieldnames) = [];  
     end
   end
 
   if job.verb
         % some report for error handling
     %   # data
-    fprintf('  Found/prepared %d fields of %d %s files.\n',numel(fieldnames), numel(job.files), xmltype);
+    fprintf('  Found/prepared %d fields of %d %s files.\n',numel(xfieldnames), numel(job.files), xmltype);
   end
-  if isempty(fieldnames)
+  if isempty(xfieldnames)
     fprintf('  Nothing to export - no file written.\n');
     return; 
   end
@@ -212,7 +217,7 @@ function varargout = cat_io_xml2csv(job)
 
 
   %% extract fieldnames from structure to build a table 
-  [hdr,tab] = cat_io_struct2table(xml,fieldnames,0); 
+  [hdr,tab] = cat_io_struct2table(xml,xfieldnames,0); 
 
   % create average
   existxml = cellfun(@exist,job.files); % only for existing files
@@ -228,7 +233,7 @@ function varargout = cat_io_xml2csv(job)
   end
 
   % add index
-  fieldnames = ['filenames'; fieldnames];
+  xfieldnames = ['filenames'; xfieldnames];
   hdr = [{'filename'} hdr];
   tab = [job.files(existxml>0) tab];
   if job.conclusion
@@ -238,11 +243,16 @@ function varargout = cat_io_xml2csv(job)
   % cleanup some fields
   ROInamelim = 30; 
   for hi = 2:numel(hdr)
-    if (strcmp(xmltype,'catROI') || strcmp(xmltype,'catROIs')) && cat_io_contains(fieldnames(hi),'.data.') 
-      FNP = strsplit(fieldnames{hi},'.');
+    if (strcmp(xmltype,'catROI') || strcmp(xmltype,'catROIs')) && cat_io_contains(xfieldnames(hi),'.data.') 
+      FNP = strsplit(xfieldnames{hi},'.');
       ATL = FNP{1};
       RNR = strsplit(cat_io_strrep(FNP{end},{'(',')','{','}'},' '));
-      RNR = round(str2double(RNR{2})); %RNR{2};
+      try
+        RNR = round(str2double(RNR{2})); %RNR{2};
+      catch
+        fprintf('Error: incorrect format.')
+        ROI = '';
+      end
       if isfield(xml(1).(ATL),'names') && ... % if there is a name ... 
           size(char(xml(1).(ATL).names),2)<ROInamelim % ... and if it is not too long
         ROI = ['_' strrep(xml(1).(ATL).names{RNR}(1:min(numel(xml(1).(ATL).names{RNR}),ROInamelim)),' ','_')]; 
