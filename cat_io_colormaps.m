@@ -86,7 +86,7 @@ function [C,XML] = cat_io_colormaps(Cname,ncolors)
             0.5000    0.0000    0.0000  % 8 - unusable  (dark red)
             0.4000    0.0000    0.0000  % 9 - unusable  (dark red)
           ];
-    case 'marks',
+    case 'marks'
       C = [ %JET
             0.0000    0.0000    0.5625  % 4 - -3              (dark blue)
             0.0000    0.0000    1.0000  % 3 - -2              (blue)
@@ -99,6 +99,22 @@ function [C,XML] = cat_io_colormaps(Cname,ncolors)
     % vbm-output
     % GMT output
     % ...
+    case 'trafficlight'
+      C = [
+        0.000    0.500   0.000 % dk green
+        0.000    0.900   0.000 % green
+        0.900    0.900   0.000 % yellow
+        1.000    0.000   0.000 % red
+        0.500    0.000   0.000 % dk red
+      ];
+    case 'trafficlight2'
+      C = [
+        0.000    0.000   0.900 % blue
+        0.000    0.900   0.000 % green
+        0.900    0.900   0.000 % orange
+        1.000    0.000   0.000 % red
+        0.700    0.000   0.700 % pink
+      ];
     case 'accent'
       C = accent; 
       cmap_categorical = true;
@@ -182,9 +198,16 @@ function [C,XML] = cat_io_colormaps(Cname,ncolors)
   if isempty(ncolors), ncolors = size(C,1); end
   
   % interpolate colormap, if colormap is categorical only use interpolation for larger number of colors
-  if (size(C,1)~=ncolors && ~cmap_categorical) || (size(C,1)<ncolors && cmap_categorical)
-    ss    = (size(C,1)-1)/(ncolors);
-    [X,Y] = meshgrid(1:ss:size(C,1)-ss,1:3);
+  if (size(C,1)<ncolors && ~cmap_categorical) || (size(C,1)<ncolors && cmap_categorical)
+    ss    = (size(C,1)-1) / (ncolors-1);
+    [X,Y] = meshgrid(1:ss:size(C,1),1:3);
+    C     = interp2(1:size(C,1),1:3,C',X,Y)'; 
+    XML   = cellstr([ dec2hex(round(min(255,max(0,C(:,1)*255)))), ...
+             dec2hex(round(min(255,max(0,C(:,2)*255)))), ...
+             dec2hex(round(min(255,max(0,C(:,3)*255)))) ]);
+  elseif (size(C,1)>ncolors && ~cmap_categorical)
+    ss    = (size(C,1)+1) / (ncolors);
+    [X,Y] = meshgrid(1:ss:size(C,1)+1,1:3);
     C     = interp2(1:size(C,1),1:3,C',X,Y)'; 
     XML   = cellstr([ dec2hex(round(min(255,max(0,C(:,1)*255)))), ...
              dec2hex(round(min(255,max(0,C(:,2)*255)))), ...
