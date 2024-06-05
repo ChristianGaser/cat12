@@ -33,7 +33,7 @@ function [FN,C] = cat_io_struct2cell(S,separator)
 
   FN = fieldnames(S); 
   C  = struct2cell(S); 
-  for ci = numel(C):-1:1
+  for ci = numel(C)-1:-1:1
     if isstruct(C{ci})
       % recursive call
       [FNi,Ci] = cat_io_struct2cell(C{ci}); 
@@ -43,9 +43,17 @@ function [FN,C] = cat_io_struct2cell(S,separator)
         FNi{FNii} = sprintf('%s%s%s',FN{ci},separator,FNi{FNii});
       end
 
-      % update fieldnames and cell
+      % update fieldnames and cell if not empty
       FN = [FN(1:ci-1); FNi; FN(ci+1:end)];
-      C  = [C(1:ci-1);  Ci;  C(ci+1:end)]; 
+      if numel(Ci) > 0 
+        try
+          if size(C,1) > size(C,2)
+            C  = [C(1:ci-1,:);  Ci; C(ci+1:end,:)]; 
+          else
+            C  = [C(:,1:ci-1),  Ci, C(:,ci+1:end)]; 
+          end
+        end
+      end
     end
   end
 
