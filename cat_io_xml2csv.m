@@ -227,7 +227,13 @@ function varargout = cat_io_xml2csv(job)
       if isnumeric(cell2mat(tab(existxml>0,ci))) % for all numberic fields
         avg{1,ci} = mean( cell2mat(tab(existxml>0,ci)) ); % average existing 
       else
-        avg{1,ci} = ''; 
+        % try to use spm_str_manip to extract similar starts/endings
+        try
+          [avg{1,ci},C] = spm_str_manip( tab(existxml>0,ci) ,'C');
+          if all(cellfun('isempty',C.m)); avg{1,ci}(strfind(avg{1,ci},'{,'):end) = []; end
+        catch
+          avg{1,ci} = ''; 
+        end
       end
     end
   end
@@ -307,7 +313,8 @@ function varargout = cat_io_xml2csv(job)
     cat_io_csv(fname,table,'','',struct('delimiter',job.delimiter,'komma','.'))
 
     if job.verb
-      fprintf('  Wrote a %dx%d table in "%s".\n',size(table,1)-1,size(table,2),fname);
+      fprintf('  Wrote a %dx%d table in ',size(table,1)-1,size(table,2));
+      fprintf('%s\n',spm_file( fname ,'link',sprintf('open(''%s'')',fname)));    
     end
   end
 
