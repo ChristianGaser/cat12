@@ -180,7 +180,7 @@ function out = cat_stat_getCSVXMLfield(job)
     };
   if ~isempty( job.fields ) && ~isempty( job.fields{1} )
     fields = genvarname(cat_io_strrep(cat_io_strrep(cat_io_strrep( job.fields ,replaceset{1,1},replaceset{1,2}),replaceset{2,1},replaceset{2,2}),'__','_'));
-    fields = cat_io_strrep(fields,'x0x2E','.');
+    fields = cat_io_strrep(fields,{'x0x2E','0x2E'},{'.','.'});
     for si = numel(fields):-1:1
       if ~isnan( str2double(job.fields{si}) ), fields(si) = []; end
     end 
@@ -273,7 +273,7 @@ function out = cat_stat_getCSVXMLfield(job)
     [xmlfull,xmlcell] = cat_io_struct2cell( xml );
 
     % match/select fields
-    if ~isempty( job.fields ) && isempty( job.fields{1} )
+    if ~isempty( job.fields ) && ~isempty( job.fields{1} ) %~isempty( fields ) 
       xmlfull = xmlfull( cat_io_contains( xmlfull, fields ) );
     end
 
@@ -454,7 +454,7 @@ function out = cat_stat_getCSVXMLfield(job)
         pps = textscan(pp,'%s','Delimiter',filesep); 
         if numel(job.fnamefields(fi).filesel)>1
           ff  = pps{1}{job.fnamefields(fi).filesel(1):job.fnamefields(fi).filesel(2)};
-        elseif numel(job.fnamefields(fi).filesel)==1        
+        elseif isscalar(job.fnamefields(fi).filesel)       
           try
             ff  = pps{1}{job.fnamefields(fi).filesel(1)};
           catch
@@ -532,7 +532,7 @@ function out = cat_stat_getCSVXMLfield(job)
           pps = textscan(pp,'%s','Delimiter',filesep); 
           if numel(job.idselector.filesel)>1
             ff  = pps{1}{job.idselector.filesel(1):job.idselector.filesel(2)};
-          elseif numel(job.idselector.filesel)==1        
+          elseif isscalar( job.idselector.filesel )      
             ff  = pps{1}{job.idselector.filesel(1)};
           end
         end
@@ -556,14 +556,14 @@ function out = cat_stat_getCSVXMLfield(job)
         cat_io_cprintf('err',sprintf('Cannot find data for "%s". You selected "%s" of the filename.\n',P{si},ff));
         out.(csvsvars{fi}){si,1} = nan; 
       elseif numel(ids)>1
-        if numel( unique( [csv{ids + 1,1}] ) )==1
+        if isscalar( unique( [csv{ids + 1,1}] ) )
           warn = sprintf('      Found multiple possible entries for subject "%s". Take the first entry. Check your csv file! \n',P{si}); 
           out.(csvsvars{fi}){si,1} = csv{ids + 1,csvsvari(fi)}; 
         else
           warn = sprintf('      Found multiple possible entries (index=[ %s]) for subject in "%s". Check file!\n',sprintf('%d ',ids),P{si}); 
           out.(csvsvars{fi}){si,1} = nan;
         end
-        if isempty( strfind(warns,warn) )
+        if cat_io_contains(warns,warn) 
           cat_io_cprintf('warn',warn);
           warns = [warns warn]; 
         end
@@ -575,7 +575,7 @@ function out = cat_stat_getCSVXMLfield(job)
     if  isnumeric( out.(csvsvars{fi}){1} )
       clear temp
       try 
-        error
+        %error
         temp = cell2mat(out.(csvsvars{fi})); 
         out = rmfield(out,csvsvars{fi});
         out.(csvsvars{fi}) = temp;
@@ -605,8 +605,9 @@ function out = cat_stat_getCSVXMLfield(job)
 
     % remove CSV fields
     [xmlvars,xmlvarsi] = setdiff( xmlfields , csvsvars );
-    xmlvars0 = xmlvars; %fields(xmlvarsi);
-    xmlvarsf = cat_io_strrep(xmlvars,{'.','(',')','{','}'},{'_','','','',''}); 
+    xmlvars0  = xmlvars; %fields(xmlvarsi);
+    xmlvars00 = fieldnames(XML); 
+    xmlvarsf  = cat_io_strrep(xmlvars,{'.','(',')','{','}'},{'_','','','',''}); 
 
     % check if fields exist 
     for fi = numel(xmlvars0):-1:1
@@ -638,9 +639,9 @@ function out = cat_stat_getCSVXMLfield(job)
             val = NaN;
           elseif iscell(out.(xmlvarsf{fi})(1))
             if isnumeric(out.(xmlvarsf{fi}){1})
-              var = NaN; 
+              var = NaN; %#ok<NASGU>
             else
-              var = 'NaN';
+              var = 'NaN'; %#ok<NASGU>
             end
           else
             val = 'NaN'; 
@@ -652,10 +653,19 @@ function out = cat_stat_getCSVXMLfield(job)
           else
             out.(xmlvarsf{fi}){si,1} = 'NA'; 
           end
+        elseif ischar( val )
+          out.(xmlvarsf{fi}){si,1} = val; 
         else
-          out.(xmlvarsf{fi})(si,1) = val(1); 
+          try
+            out.(xmlvarsf{fi})(si,1) = val(1); 
+          catch
+            if si>2 & ischar(out.(xmlvarsf{fi}){si-1,1})
+              out.(xmlvarsf{fi}){si,1} = 'NA'; 
+            else
+              out.(xmlvarsf{fi}){si,1} = NaN; 
+            end
+          end
         end
-     
       end
     end
 
@@ -666,18 +676,18 @@ function out = cat_stat_getCSVXMLfield(job)
     else
       missed = setdiff( job.fields , xmlvars0 ); 
     end
-    if ~isempty(missed) 
+    if numel(missed)>0 && ~isempty(missed{1})
       if job.dep
         fprintf('getCSVXML setup: Cannot find %d fields:  ',numel(missed)); 
       else
         fprintf('  Missed %d fields:      ',numel(missed)); 
       end
       for fni=1:numel(missed), cat_io_cprintf('r','%s \n',missed{fni}); end
-      fprintf('\n');
+      fprintf('\n'); 
 
-      fprintf('Further %d XML fields: ',numel(xmlvars)); 
-      for fni=1:numel(csvvars), cat_io_cprintf('b','%s \n',csvvars{fni}); end
-      fprintf('\n');
+      fprintf('Further %d XML fields: \n',numel(xmlvars00)); 
+      for fni=1:numel(xmlvars00), cat_io_cprintf('b','  %s... \n',xmlvars00{fni}); end
+      fprintf('\n\n');
 
     end
 
@@ -686,6 +696,11 @@ function out = cat_stat_getCSVXMLfield(job)
       eval(out)
       return
     end
+  end
+  if numel(out)==0
+    warning('cat_stat_getCSVXMLfields:dissMatch', ...
+      'No matching fields at all. Stop processing.'); 
+    return
   end
     
 
@@ -746,22 +761,24 @@ function out = cat_stat_getCSVXMLfield(job)
     if iscell(out.(FN{fni})) 
       for si = 1:numel(out.(FN{fni}))
         if iscell(out.(FN{fni}){si})
-          for cii = 1:numel(out.(FN{fni}{si}))
-            if ischar(out.(FN{fni}){si})
-              scsv{si+1,li} = [scsv{si+1,li} sprintf('%s ',out.(FN{fni}){si})];
-              if h, fprintf(h ,'%s ',out.(FN{fni}){si}); end
-            elseif out.(FN{fni}){si} == round(out.(FN{fni}){si})
-              scsv{si+1,li} = [scsv{si+1,li} sprintf('%d ',out.(FN{fni}){si})];
-              if h, fprintf(h ,'%d ',out.(FN{fni}){si}); end
-            else
-              scsv{si+1,li} = [scsv{si+1,li} sprintf('%f ',out.(FN{fni}){si})];
-              if h, fprintf(h ,'%f ',out.(FN{fni}){si}); end
+          try
+            for cii = 1:numel(out.(FN{fni}{si}))
+              if ischar(out.(FN{fni}){si})
+                scsv{si+1,li} = [scsv{si+1,li} sprintf('%s ',out.(FN{fni}){si})];
+                if h, fprintf(h ,'%s ',out.(FN{fni}){si}); end
+              elseif out.(FN{fni}){si} == round(out.(FN{fni}){si})
+                scsv{si+1,li} = [scsv{si+1,li} sprintf('%d ',out.(FN{fni}){si})];
+                if h, fprintf(h ,'%d ',out.(FN{fni}){si}); end
+              else
+                scsv{si+1,li} = [scsv{si+1,li} sprintf('%f ',out.(FN{fni}){si})];
+                if h, fprintf(h ,'%f ',out.(FN{fni}){si}); end
+              end
             end
           end
           if h, fprintf(h ,'\n'); end
         elseif ischar(out.(FN{fni}){si})
-          scsv{si+1,fni} = sprintf('%s',out.(FN{fni}){si});
-          if h, fprintf(h ,'%s\n',out.(FN{fni}){si}); end
+          scsv{si+1,fni} = sprintf('"%s"',out.(FN{fni}){si,:});
+          if h, fprintf(h ,'"%s"\n',out.(FN{fni}){si,:}); end
         elseif out.(FN{fni}){si} == round(out.(FN{fni}){si})
           scsv{si+1,fni} = sprintf('%d',out.(FN{fni}){si});
           if h, fprintf(h ,'%d\n',out.(FN{fni}){si}); end
@@ -770,20 +787,56 @@ function out = cat_stat_getCSVXMLfield(job)
           if h, fprintf(h ,'%f\n',out.(FN{fni}){si}); end
         end
       end
-    elseif ischar(out.(FN{fni}))
+    elseif all( ischar(out.(FN{fni})) )
       for si = 1:numel(out.(FN{fni}))
-        scsv{si+1,fni} = sprintf('%s',out.(FN{fni})(si));
-        if h, fprintf(h ,'%s\n',out.(FN{fni})(si,:)); end
+        scsv{si+1,fni} = sprintf('"%s"',out.(FN{fni})(si,:));
+        if h, fprintf(h ,'"%s"\n',out.(FN{fni})(si,:)); end
       end
-    elseif out.(FN{fni}) == round(out.(FN{fni}))
+    elseif isnumeric(out.(FN{fni})) && all( out.(FN{fni}) == round(out.(FN{fni})) )
       for si = 1:numel(out.(FN{fni}))
         scsv{si+1,fni} = sprintf('%d',out.(FN{fni})(si));
         if h, fprintf(h ,'%d\n',out.(FN{fni})(si,:)); end
       end
-    else
+    elseif mean( isnumeric(out.(FN{fni})) > 0.5)
       for si = 1:numel(out.(FN{fni}))
-        scsv{si+1,fni} = sprintf('%f',out.(FN{fni})(si));
-        if h, fprintf(h ,'%f\n',out.(FN{fni}){si}); end
+        if isnumeric(out.(FN{fni})(si))
+          scsv{si+1,fni} = sprintf('%f',out.(FN{fni})(si));
+          if h, fprintf(h ,'%f\n',out.(FN{fni}){si}); end
+        else
+          try
+            scsv{si+1,fni} = sprintf('%f',double(out.(FN{fni})(si)));
+            if h, fprintf(h ,'%f\n',double(out.(FN{fni}){si})); end
+          catch
+            scsv{si+1,fni} = nan; 
+            if h, fprintf(h ,'%f\n',nan); end
+          end
+        end
+      end
+    else
+      if si>1 
+        if isnumeric(out.(FN{fni})(si-1))
+          try
+            scsv{si+1,fni} = sprintf('%f',out.(FN{fni})(si));
+            if h, fprintf(h ,'%f\n',out.(FN{fni}){si}); end
+          catch
+            scsv{si+1,fni} = nan; 
+            if h, fprintf(h ,'%f\n',nan); end
+          end
+        elseif ischar(out.(FN{fni})(si-1))
+          try
+            scsv{si+1,fni} = sprintf('"%s"',out.(FN{fni})(si,:));
+            if h, fprintf(h ,'"%s"\n',out.(FN{fni}){si,:}); end
+          catch
+            scsv{si+1,fni} = nan; 
+            if h, fprintf(h ,'"NA"\n'); end
+          end
+        else
+          scsv{si+1,fni} = nan; 
+          if h, fprintf(h ,'"NA"\n'); end
+        end
+      else
+        scsv{si+1,fni} = nan; 
+        if h, fprintf(h ,'"NA"\n'); end
       end
     end
   end
