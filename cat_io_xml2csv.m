@@ -229,8 +229,13 @@ function varargout = cat_io_xml2csv(job)
       else
         % try to use spm_str_manip to extract similar starts/endings
         try
-          [avg{1,ci},C] = spm_str_manip( tab(existxml>0,ci) ,'C');
-          if all(cellfun('isempty',C.m)); avg{1,ci}(strfind(avg{1,ci},'{,'):end) = []; end
+          txt =  unique( tab(existxml>0,ci) ); 
+          if numel(txt) > 1
+            [avg{1,ci},C] = spm_str_manip( avg{1,ci} ,'C');
+            if all(cellfun('isempty',C.m)); avg{1,ci}(strfind(avg{1,ci},'{,'):end) = []; end
+          else 
+            avg{1,ci} = char(txt);
+          end
         catch
           avg{1,ci} = ''; 
         end
