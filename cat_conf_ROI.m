@@ -120,14 +120,20 @@ else
   ROI.val  = {noROI};
 end
 ROI.values = {noROI atlases};
-ROI.help   = {
-'Export of ROI data of volume to a xml-files. For further information see atlas specific text files in'
-['  "' cat_get_defaults('extopts.pth_templates') '" CAT12 subdir. ']
-''
-'For thickness estimation the projection-based thickness (PBT) [Dahnke:2012] is used that average cortical thickness for each GM voxel. '
-''
-'There are different atlas maps available: '
-}; 
+if expert > 1
+  commentthicknessROI = {
+    ''
+    'Developer: For fast volume-based thickness estimation without surfaces, the projection-based thickness (PBT) [Dahnke:2012] only estimates the thickness values that were than average per ROI. ' ...
+    '' };
+else
+  commentthicknessROI = {''};
+end
+ROI.help   = [{
+  'Export of ROI data of volume to a xml-files. For further information see atlas specific text files in'
+  ['  "' cat_get_defaults('extopts.pth_templates') '" CAT12 subdir. '] }
+  commentthicknessROI
+  {'There are different atlas maps available: '}
+  ]; 
 
 %%
 mai = 1; 
