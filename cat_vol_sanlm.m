@@ -371,6 +371,8 @@ function [src2,NCstr] = cat_vol_sanlm_filter(job,V,i,src)
             clear srcRS srcr srcR;
             src = src / 2;
           end
+        else
+          NCstrr1 = 0; NCstrr2 = 0; 
         end
         
         NCstrr = mean([NCstrr1 NCstrr2]); % or sum() / 2 ;
