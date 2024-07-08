@@ -311,7 +311,7 @@ switch lower(Action), case 'setup'                         %-Set up results
         if isfield(SPM.xVol,'G') && ischar(SPM.xVol.G)
           if ~exist(SPM.xVol.G,'file')
             [pp2,ff2,xx2] = spm_fileparts(SPM.xVol.G);
-            if ~isempty(strfind(ff2,'.central.freesurfer')) | ~isempty(strfind(ff2,['.central.' cat_get_defaults('extopts.shootingsurf')]))
+            if ~isempty(strfind(ff2,'.central.freesurfer')) || (exist('cat_get_defaults','file')) && (~isempty(strfind(ff2,['.central.' cat_get_defaults('extopts.shootingsurf')])))
               if strfind(pp2,'templates_surfaces_32k')
                 SPM.xVol.G = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces_32k',[ff2 xx2]);
               else
@@ -448,7 +448,7 @@ switch lower(Action), case 'setup'                         %-Set up results
         % - first we have to use the Shooting Surface for the statistic to
         %   obtain more meaningful MNI coordinates 
         % - here we have to change to the used surface (FSaverage)
-        if spm_mesh_detect(xSPM.Vspm) & exist('spm_cat12')
+        if spm_mesh_detect(xSPM.Vspm) && exist('spm_cat12') && exist('cat_get_defaults','file')
           FSavg = '.freesurfer.gii'; 
           GSavg = ['.' cat_get_defaults('extopts.shootingsurf') '.gii'];
           if ischar(SPM.xVol.G)
@@ -494,7 +494,7 @@ switch lower(Action), case 'setup'                         %-Set up results
     
     %-Atlas menu
     %----------------------------------------------------------------------
-    if ~spm_mesh_detect(xSPM.Vspm)
+    if ~spm_mesh_detect(xSPM.Vspm) && exist('cat_get_defaults','file')
         hAtlasUI = cat_spm_results_ui('SetupAtlasMenu',Finter);
     end
     
@@ -923,11 +923,15 @@ switch lower(Action), case 'setup'                         %-Set up results
             'previous ortho sections /', ...
             'previous surface rendering'};
 
+        if exist('cat_get_defaults','file')
+          str4 = ['spm_sections(xSPM,hReg,char(cat_get_defaults(''extopts.shootingT1'')));',...
+             'cat_spm_results_ui(''spm_list_cleanup'');',];
+        else
+          str4 = '';
+        end
         tmp0 = {'spm_transverse(''set'',xSPM,hReg)',...
             'spm_sections(xSPM,hReg);',...
-            ['spm_sections(xSPM,hReg,char(cat_get_defaults(''extopts.shootingT1'')));',...
-             'cat_spm_results_ui(''spm_list_cleanup'');',...
-            ],... 
+            str4,... 
              {@myslover},...
             ['spm_render(   struct( ''XYZ'',    xSPM.XYZ,',...
             '''t'',     xSPM.Z'',',...
@@ -2074,7 +2078,7 @@ for k = 1:numel(cspec)
                       h = get(findobj(fg,'type','patch','tag','CATSurfRender'),'parent'); 
                       if ~isfield(job,'view'), job.view = 'left'; end
                       viewname = '';
-                      if ~isempty(h) && isfield(job,'view')
+                      if ~isempty(h) && isfield(job,'view') && exist('cat_surf_render','file')
                         switch lower(job.view)
                           case {'r','right'},                 cat_surf_render('view',h,[  90   0]); viewname = 'r.';
                           case {'l','left'},                  cat_surf_render('view',h,[ -90   0]); viewname = 'l.'; 
