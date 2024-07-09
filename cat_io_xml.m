@@ -104,6 +104,10 @@ function varargout = cat_io_xml(file,varargin)
       for fi=1:numel(file)
         try
           tmp = cat_io_xml(file{fi});
+        catch
+          cat_io_cprintf('err','cat_io_xml:readfile',sprintf('Error reading file "%s".\nCheck XML structure for missing parts.\n', file{fi})); 
+        end
+        try
           fn = fieldnames(tmp);
           for fni = 1:numel(fn)
             varargout{1}(fi).(fn{fni}) = tmp.(fn{fni});
@@ -124,6 +128,10 @@ function varargout = cat_io_xml(file,varargin)
       for fi=1:numel(file)
         try
           tmp = cat_io_xml(file(fi,:));
+        catch
+          catchcat_io_cprintf('err','cat_io_xml:readfile',sprintf('Error reading file "%s".\nCheck XML structure for missing parts.\n', file(fi,:))); 
+        end
+        try
           fn = fieldnames(tmp);
           for fni = 1:numel(fn)
             varargout{1}(fi).(fn{fni}) = tmp.(fn{fni});
@@ -209,7 +217,7 @@ function varargout = cat_io_xml(file,varargin)
         S = struct(); 
       end
       
-      if numel(S)>1 || numel(S)>1
+      if numel(S)>1 
         error('MATLAB:cat_io_xml:write','Not implemented yet!\n');
       end
       
