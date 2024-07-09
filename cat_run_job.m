@@ -251,7 +251,7 @@ function cat_run_job(job,tpm,subj)
 
       Pseg8 = fullfile(pp,[ff(3:end) '_seg8.mat']); 
       if ~exist(Pseg8,'file')
-        error('cat_run_job1639:SPMpp_MissSeg8mat','Can''t find "%s" file!',Pseg8);
+        error('cat_run_job:SPMpp_MissSeg8mat','Can''t find "%s" file!',Pseg8);
       end
       res = load(Pseg8);
       
