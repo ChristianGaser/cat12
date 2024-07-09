@@ -252,7 +252,7 @@ function varargout = cat_vol_sanlm_file(job)
     % just to get the resulting filenames for SPM batch mode
     for i = 1:numel(job.data)
             [pth,nm,xt,vr]  = spm_fileparts(deblank(job.data{i})); 
-            varargout{1}{i} = fullfile(pth,[job.prefix nm job.suffix xt vr]);
+            varargout{1}{i,1} = fullfile(pth,[job.prefix nm job.suffix xt vr]);
     end
     if job.returnOnlyFilename
         return
