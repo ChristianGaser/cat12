@@ -231,7 +231,7 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
   % this still support some small benefits.  
   % - Basic tests in ADHD200NYC and Collins. 
   if  opt.gyrusrecon == 0
-  % Using the PBT apporach only to reconstruct the sulci.
+  % Using the PBT approach only to reconstruct the sulci.
     distcorval = 0.5; % in theory 0.5 
 
     % remove highly distant outliers
@@ -240,7 +240,7 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
     % projection-based thickness mapping
     Ygmt = cat_vol_pbtp( round(Yp0) , Ywd, Ycd);
   
-    % now correct also this values (it is a bit better this way)
+    % now correct also these values (it is a bit better this way)
     Ycd = max(0,Ycd - distcorval); Ywd = max(0,Ywd - distcorval); 
     
     % minimum to reduce issues with meninges

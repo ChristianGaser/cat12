@@ -33,7 +33,7 @@
       Please <a href="matlab:web(fullfile(fileparts(which('cat12')),'doc','index.html#cite'),'-new');">cite our papers</a> and the work of other researchers if you use this software.</p><p>
       Our main paper is:<br>
       Gaser C, Dahnke R, P.M. Thompson, Kurth K, Luders E, Alzheimer's Disease Neuroimaging Initiative.<br>
-      <a href="matlab:web('https://www.biorxiv.org/content/10.1101/2022.06.11.495736','-new');">A Computational Anatomy Toolbox for the Analysis of Structural MRI Data.</a>
+      <a href="matlab:web('https://doi.org/10.1093/gigascience/giae049','-new');">CAT: a computational anatomy toolbox for the analysis of structural MRI data.</a>
       </p>
     </div>        
   
