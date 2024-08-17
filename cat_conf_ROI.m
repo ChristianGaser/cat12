@@ -123,7 +123,7 @@ ROI.values = {noROI atlases};
 if expert > 1
   commentthicknessROI = {
     ''
-    'Developer: For fast volume-based thickness estimation without surfaces, the projection-based thickness (PBT) [Dahnke:2012] only estimates the thickness values that were than average per ROI. ' ...
+    'Developer: For fast volume-based thickness estimation without surfaces, the projection-based thickness (PBT) [Dahnke:2012] only estimates the thickness values that were than average per ROI. ' 
     '' };
 else
   commentthicknessROI = {''};
