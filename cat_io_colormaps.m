@@ -102,8 +102,8 @@ function [C,XML] = cat_io_colormaps(Cname,ncolors)
     case 'trafficlight'
       C = [
         0.000    0.500   0.000 % dk green
-        0.000    0.900   0.000 % green
-        0.900    0.900   0.000 % yellow
+        0.100    0.800   0.000 % green
+        0.900    0.700   0.000 % yellow
         1.000    0.000   0.000 % red
         0.500    0.000   0.000 % dk red
       ];
