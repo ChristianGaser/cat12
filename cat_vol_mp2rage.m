@@ -690,13 +690,13 @@ function report_figure(V,V2, Ym,Ym2,Yc, opt,spm8,res)
   str{1} = [];
   trimmingstr = {'no','brain','head'};
   biasstr     = {'no','yes','yes'};
-  ssstr       = {'no','SPM','optimized'};
+  ssstr       = {'no','SPM','optimized0','optimized'}; % 0-3
   % logstr      = {'no','exp','log2','log','log10','auto'};
   csfnoise    = {'no','yes'};
   % parameters
   str{1}(end+1).name  = 'trimming / bias-correction / skull-stripping:'; 
   str{1}(end).value   = sprintf('%s / %s / %s ', ...
-    trimmingstr{opt.headtrimming+1}, biasstr{opt.biascorrection+1}, ssstr{opt.skullstripping+1}); 
+    trimmingstr{opt.headtrimming+1}, biasstr{opt.biascorrection+1}, ssstr{opt.skullstripping+1});
   str{1}(end+1).name  = 'log-norm / contrast-norm / CSF noise:'; 
   str{1}(end).value   = sprintf('%d / %0.2f / %s ', ...
     opt.logscale, opt.intnorm, csfnoise{opt.restoreLCSFnoise+1}); 
