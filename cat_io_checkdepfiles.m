@@ -59,7 +59,7 @@ function [S,Stype,removed] = cat_io_checkdepfiles(S,usedummy)
         clear SFNi;
       end    
       if isstruct(SFN)==0 
-       if numel(SFN)==1 && size(SFN{1},1)==0 && ~isequal(SFN,S.(FN{i}))
+       if isscalar(SFN) && size(SFN{1},1)==0 && ~isequal(SFN,S.(FN{i}))
         if usedummy
           SFN = {create_dummy_volume(SFNtype)};
         else
