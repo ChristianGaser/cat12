@@ -42,12 +42,12 @@ persistent sum_time time_old n_iterations Fwaitbar progress_step Fwaitbartype Fw
 if ~nargin, help cat_progress_bar; return; end
 
 if strcmpi(action,'init')
-  if nargin > 2
+  if nargin > 1
     % catch possible errors of older calls with additional field, eg. 
     %  cat_progress_bar('Init', 10 ,'CAT-Preprocessing','Volumes Complete');
-    switch varargin{3}
+    switch varargin{2}
       case {'bar','cmd','cmd%'}
-        bartype = varargin{3};
+        bartype = varargin{2};
       otherwise
         bartype = 'bar'; 
     end
@@ -61,10 +61,18 @@ else
     if ischar(Fwaitbartype)
       bartype = Fwaitbartype;
     else
-      error('cat_progress_bar:nobar','No progess bar!');
+      if strcmpi(action,'clear')
+        return
+      else
+        error('cat_progress_bar:nobar','No progess bar!');
+      end
     end
   else
-    error('cat_progress_bar:nobar','No progess bar!');
+   if strcmpi(action,'clear')
+     return
+   else
+     error('cat_progress_bar:nobar','No progess bar!');
+   end
   end
 end
 switch bartype
