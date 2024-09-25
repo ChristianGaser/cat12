@@ -42,7 +42,18 @@ persistent sum_time time_old n_iterations Fwaitbar progress_step Fwaitbartype Fw
 if ~nargin, help cat_progress_bar; return; end
 
 if strcmpi(action,'init')
-  if nargin > 2, bartype = varargin{3}; else, bartype = 'bar';  end  
+  if nargin > 2
+    % catch possible errors of older calls with additional field, eg. 
+    %  cat_progress_bar('Init', 10 ,'CAT-Preprocessing','Volumes Complete');
+    switch varargin{3}
+      case {'bar','cmd','cmd%'}
+        bartype = varargin{3};
+      otherwise
+        bartype = 'bar'; 
+    end
+  else
+    bartype = 'bar';  
+  end  
 elseif strcmpi(action,'off') || strcmpi(action,'silent') || strcmpi(action,'quite') || strcmpi(action,'')
   return
 else
@@ -63,6 +74,16 @@ switch bartype
           %-------------------------------------------------------------------
           case 'init'
               n_iterations = varargin{1};
+
+              % from older versions that were not printed
+              %{
+              if nargin > 2
+                arg3 = varargin{2};
+              else
+                arg3 = '';
+              end
+              %}
+
               if nargin > 1 
                 arg2 = varargin{2};
                 if ~strcmp(bartype,'bar') && arg2(end)~=':'
@@ -155,7 +176,7 @@ switch bartype
               error('Unknown action string');
       end
   otherwise
-    error('error:cat_progress_bar:bartype',fprintf('Unknown bartype %s',bartype)); 
+    error('error:cat_progress_bar:bartype',sprintf('Unknown bartype "%s"',bartype)); 
 end
 
 return

@@ -405,7 +405,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     else
       %% conclusion without filelist
       spm_clf('Interactive'); 
-      cat_progress_bar('Init', sum( numel(job_data) ) ,'CAT-Preprocessing','Volumes Complete');      
+      cat_progress_bar('Init', sum( numel(job_data) ) ,'CAT-Preprocessing');      
       
       fprintf('\nStarted %d jobs with the following PIDs:\n',job.nproc);
       for i=1:job.nproc
