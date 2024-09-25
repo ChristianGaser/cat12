@@ -232,7 +232,7 @@ cdep(end).tgt_spec   = cfg_findspec({{'filter','txt','strtype','e'}});
 % In case of the fast surface processing without registration no spherical 
 % registration surface are available. Moreover, the central and thickness
 % cannot be used because the topology is also uncorrected. 
-if isfield(opts,'surface')
+if isfield(opts,'surface') && opts.surface
   surfaceoutput = { % surface texture
     {'central','sphere','sphere.reg'}  % no measures - just surfaces
     {}                          % default
@@ -311,9 +311,10 @@ if isfield(opts,'surface')
 end
 
 % XML label
-if isfield(opts,'ROImenu') && isfield(opts.ROImenu,'atlases')
+if isfield(opts,'ROImenu') && isfield(opts.ROImenu,'atlases') 
   if isfield(job.output.ROImenu.atlases,'ownatlas'), atlases = rmfield(job.output.ROImenu.atlases,'ownatlas'); end
-  is_ROI = any(cell2mat(struct2cell(atlases))) || ~isempty( job.output.ROImenu.atlases.ownatlas );
+  is_ROI = any(cell2mat(struct2cell(atlases))) || ...
+    (~isempty( job.output.ROImenu.atlases.ownatlas ) & ~isempty( job.output.ROImenu.atlases.ownatlas{1} ));
 
   if is_ROI
     cdep(end+1)          = cfg_dep;
