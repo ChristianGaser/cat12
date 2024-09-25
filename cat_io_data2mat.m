@@ -55,6 +55,8 @@ function out = cat_io_data2mat(opt,par,scaling)
 % ______________________________________________________________________
 % $Id$
 
+%#ok<*NASGU,*AGROW>
+
 if ~exist('opt','var') || (~isfield(opt,'data_type') && ~isfield(opt,'data') )
   error('No data defined.');
 end
@@ -92,14 +94,14 @@ end
   
 n_samples = numel(sample.data);
 n_subjects = zeros(n_samples,1);
-label = [];
+label = []; 
 
 V = cell(n_samples,1);
 label = [];
 for i = 1:n_samples
   V{i} = spm_data_hdr_read(char(sample.data{i}));
   n_subjects(i) = size(V{i},1);
-  label = [label; i*ones(n_subjects(i),1)];
+  label = [label; i*ones(n_subjects(i),1)]; 
 end
 n_all_subjects = numel(label);
 
@@ -114,11 +116,11 @@ for i = 1:n_confounds
   % transpose if necessary
   if m ~= n_all_subjects && n == n_all_subjects
     opt.c{i} = opt.c{i}';
-    [m,n] = size(opt.c{i});
-  end
+    m = size(opt.c{i},1);
+  end 
   
   % check size of confounds      
-  if m ~= n_all_subjects,
+  if m ~= n_all_subjects
     error('Length of nuisance parameters (m=%d) differs from number of subjects (n=%d)',m,n_all_subjects);
   end
 
@@ -179,7 +181,20 @@ if nargin > 2
     count = 1;
     for j=1:n_samples     
       for i = 1:n_subjects(j)
-        V{j}(i).pinfo(1:2,:) = V{j}(i).pinfo(1:2,:)/g(count);
+% RD20240925: I added this to create the variable "g" that was missing before. 
+        % compute mean voxel value (within per image fullmean/8 mask)
+        if ~spm_mesh_detect(V{1}(1))
+          g = spm_global(V{j}(i));
+        else
+          if isfield(V{1}(1),'private')
+            y = V{j}(i).private.cdata(:);
+          else
+            y = V{j}(i).cdata(:);
+          end
+          g = mean(y(isfinite(y)));
+        end
+% RD20240925: end added part.   
+        V{j}(i).pinfo(1:2,:) = V{j}(i).pinfo(1:2,:)/g(count); % <<< the g is not existing otherwise!
         count = count + 1;
       end
     end
@@ -240,18 +255,18 @@ if ~spm_mesh_detect(V{1}(1))
     for i = 1:n_subjects(j)
 
       vol = spm_read_vols(V{j}(i));
-      
+
       % optional smoothing if fwhm is defined
       if exist('fwhm','var')
-        if numel(fwhm) == 1
+        if isscalar(fwhm) 
           fwhm = repmat(fwhm,1,3);
         end
         if sum(fwhm) > 0
           spm_smooth(vol,vol,fwhm,0);
         end
       end
-
-      ysl = [];
+   
+      ysl = []; 
       for sl=1:Vres.dim(3)
     
         % read data inside mask
@@ -264,7 +279,6 @@ if ~spm_mesh_detect(V{1}(1))
           end
         end
         ysl = [ysl; d(mask_ind(:,:,sl))];
-        
       end
       yi(i,:) = single(ysl);
       
@@ -311,12 +325,12 @@ if spm_mesh_detect(V{1}(1))
   else
     V = V{1}(1);
   end
-  try, V = rmfield(V,'cdata'); end
+  try V = rmfield(V,'cdata'); end %#ok<TRYNC>
 else
   V = Vres;
 end
 
-save(outname,'Y','label','dim','V','ind','sample');
+save(outname,'Y','label','dim','V','ind','sample','-v7.3');
 fprintf('Save data (Y,label,V,dim,ind) in %s.\n',outname);
 
 % add additional parameters if defined
