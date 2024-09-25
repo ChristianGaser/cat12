@@ -162,7 +162,7 @@ job.filedata.BIDSfolder  = BIDSfolder;
 
 if ( isfield(job.extopts,'lazy') && job.extopts.lazy && ~isfield(job,'process_index') ) || ...
    ( isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.extopts.admin.lazy && ~isfield(job,'process_index') )
-  jobl      = update_job(job);
+  jobl      = update_job(job,0);
   jobl.vout = vout_job(jobl); 
   job.data  = remove_already_processed(jobl); 
   if numel(job.data)==0 
@@ -176,7 +176,7 @@ elseif ~isempty(BIDSdir)
   %           overwriting of results this can cause also processing errors
   %           if one parallel job is removing files of another one. Hence,
   %           we should at least create an error. 
-  jobl        = update_job(job);
+  jobl        = update_job(job,0);
   jobl.vout   = vout_job(jobl); 
 
   cpath       = spm_file( jobl.vout.catxml ,'cpath');
@@ -285,7 +285,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
              '         to ''0''. In order to split your job into different processes,\n' ...
              '         please do not use any spaces in folder names!\n\n']);
          job.nproc = 0; 
-         job = update_job(job);
+         job = update_job(job,0);
          
          varargout{1} = run_job(job);
          return; 
@@ -864,7 +864,8 @@ function cat_run_createCSVreport(job,BIDSfolder)
   fprintf('\nPrint CSV-file %s\n\n',spm_file(csvfile,'link','edit(''%s'')')); 
 return
 %_______________________________________________________________________
-function job = update_job(job)
+function job = update_job(job,verbatlas)
+  if ~exist('verbatlas','var'), verbatlas = 1; end
 
   % set GUI specific parameter if available
   FN = {}; GUIfields = {'registration','segmentation','admin','surface'}; 
@@ -1018,35 +1019,29 @@ function job = update_job(job)
     job.output = rmfield(job.output,'jacobianwarped');
   end
   
-  % ROI export 
-  for ai = 1:size(job.extopts.atlas,1)
-    [pp,ff,ee]  = spm_fileparts(job.extopts.atlas{ai,1}); 
-    job.extopts.atlas{ai,4} = job.extopts.atlas{ai,2}<=cat_get_defaults('extopts.expertgui') && ...
-      exist(job.extopts.atlas{ai,1},'file') && isfield(def.output,'atlases') && isfield(def.output.atlases,ff) && def.output.atlases.(ff);
-    % show licence message
-    if ~isempty(strfind(ff,'hammers')) && job.extopts.atlas{ai,4}
-      disp('--------------------------------------------')
-      disp('Free academic end user license agreement for Hammers atlas')
-      alert_str = ['For using the Hammers atlas, please fill out license agreement at <a href =',...
-      ' "http://brain-development.org/brain-atlases/adult-brain-atlases/adult-brain-maximum-probability-map-hammers-mith-atlas-n30r83-in-mni-space">www.brain-development.org</a>'];
-      disp(alert_str);
-      disp('--------------------------------------------')
-    end
-    if ~isempty(strfind(ff,'lpba40')) && job.extopts.atlas{ai,4}
-      disp('--------------------------------------------')
-      disp('No commercial use of LPBA40 atlas')
-      alert_str = ['Permission is granted to use this atlas without charge for non-commercial research purposes only: <a href =',...
-      ' "https://www.loni.usc.edu/docs/atlases_methods/Human_Atlas_Methods.pdf">https://www.loni.usc.edu/docs/atlases_methods/Human_Atlas_Methods.pdf</a>'];
-      disp(alert_str);
-      disp('--------------------------------------------')
-    end
-    if ~isempty(strfind(ff,'suit')) && job.extopts.atlas{ai,4}
-      disp('--------------------------------------------')
-      disp('No commercial use of SUIT cerebellar atlas')
-      alert_str = 'Creative Commons Attribution-NonCommercial 3.0 Unported License does not allow commercial use.';
-      disp(alert_str);
-      disp('--------------------------------------------')
-    end
+  %% ROI export 
+  if any( [job.extopts.atlas{ contains(spm_file(job.extopts.atlas(:,1),'path',''),'hammers') , 4 }] ) && verbatlas
+     cat_io_cprintf('err',...
+       ['-------------------------------------------- \n' ...
+        'Free academic end user license agreement for Hammers atlas! \n' ...
+        'For using the Hammers atlas, please fill out license agreement at \n  <a href = ' ...
+        '"http://brain-development.org/brain-atlases/adult-brain-atlases/adult-brain-maximum-probability-map-hammers-mith-atlas-n30r83-in-mni-space">https://www.brain-development.org</a>  \n' ...
+        '-------------------------------------------- \n']);
+  end
+  if any( [job.extopts.atlas{ contains(spm_file(job.extopts.atlas(:,1),'path',''),'lpba40') , 4 }] ) && verbatlas
+     cat_io_cprintf('warn',...
+       ['-------------------------------------------- \n' ...
+        'No commercial use of LPBA40 atlas! \n' ...
+        'Permission is granted to use this atlas without charge for non-commercial research purposes only: \n  <a href = ' ...
+        '"https://www.loni.usc.edu/docs/atlases_methods/Human_Atlas_Methods.pdf">https://www.loni.usc.edu/docs/atlases_methods/Human_Atlas_Methods.pdf</a> \n' ...
+        '-------------------------------------------- \n']);
+  end
+  if any( [job.extopts.atlas{ contains(spm_file(job.extopts.atlas(:,1),'path',''),'suit') , 4 }] ) && verbatlas
+     cat_io_cprintf('warn',...
+       ['-------------------------------------------- \n' ...
+        'No commercial use of SUIT cerebellar atlas! \n' ...
+        'Creative Commons Attribution-NonCommercial 3.0 Unported License does not allow commercial use. \n' ...
+        '-------------------------------------------- \n']);
   end
 
 
@@ -1520,10 +1515,16 @@ end
 
 % XML label
 % ----------------------------------------------------------------------
-if job.output.ROI
+if job.output.ROI %&& isfield(job.opts,'ROImenu') && isfield(job.opts.ROImenu,'atlases') 
+    if isfield(job.output.ROImenu.atlases,'ownatlas'), atlases = rmfield(job.output.ROImenu.atlases,'ownatlas'); end
+    is_ROI = any(cell2mat(struct2cell(atlases))) || ...
+      (~isempty( job.output.ROImenu.atlases.ownatlas ) & ~isempty( job.output.ROImenu.atlases.ownatlas{1} ));
+
     catroi = cell(n,1);
-    for j=1:n
-        catroi{j,1} = fullfile(parts{j,1},labelfolder{j},['catROI_',parts{j,2},'.xml']);
+    if is_ROI
+        for j=1:n
+            catroi{j,1} = fullfile(parts{j,1},labelfolder{j},['catROI_',parts{j,2},'.xml']);
+        end
     end
 end
 
@@ -1876,14 +1877,20 @@ function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
     % surface
     if job.output.surface && exist(fullfile(pp,surffolder),'dir')
       Pcentral = cat_vol_findfiles(fullfile(pp,surffolder),['*h.central.' ff '.gii']);
-      if  numel(Pcentral)==1 % miss ROI xml
+      if  isscalar(Pcentral)
         return
       end
     end
     
     % rois
-    if job.output.ROI && ~exist(fullfile(pp,labelfolder,['catROI_' ff '.xml']),'file')  % miss ROI xml
-      return
+    if job.output.ROI && isfield(opts,'ROImenu') && isfield(opts.ROImenu,'atlases') 
+      if isfield(job.output.ROImenu.atlases,'ownatlas'), atlases = rmfield(job.output.ROImenu.atlases,'ownatlas'); end
+      is_ROI = any(cell2mat(struct2cell(atlases))) || ...
+        (~isempty( job.output.ROImenu.atlases.ownatlas ) & ~isempty( job.output.ROImenu.atlases.ownatlas{1} ));
+
+      if is_ROI && ~exist(fullfile(pp,labelfolder,['catROI_' ff '.xml']),'file')
+        return
+      end
     end
       
     %% volumes 
