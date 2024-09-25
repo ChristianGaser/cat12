@@ -81,10 +81,10 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     if isfield(writes,'affine'),   write(4) = writes.affine; end
     if isfield(writes,'dartel'),   write(4) = writes.dartel; end
   elseif isnumeric(writes)
-    if numel(writes)==3, write = [writes(1:2) 0 writes(3)]; else write = writes; end
+    if numel(writes)==3, write = [writes(1:2) 0 writes(3)]; else, write = writes; end
   end
   if ~exist('YMth','var'), YMth = 0.5; end
-  if exist('YM','var'),
+  if exist('YM','var')
     if all(size(Y)==size(YM))
       YM=single(YM);
     else
@@ -94,7 +94,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
   
   pp = fileparts(V.fname); 
   if ~exist('folder','var'), folder = ''; end
-  if ~exist(spm_file(fullfile(pp,folder),'fpath'),'dir'), mkdir(spm_file(fullfile(pp,folder),'fpath')); end
+  if ~exist(spm_file(fullfile(pp,folder,'tmp'),'fpath'),'dir'), mkdir(spm_file(fullfile(pp,folder,'tmp'),'fpath')); end
   
   
   % deal with label maps 
@@ -102,7 +102,7 @@ function varargout = cat_io_writenii(V,Y,folder,pre,desc,spmtype,range,writes,tr
     case {'single','double'}
       labelmap = 0;
     case {'uint8','uint16'}
-      if all(range == [0 1]); 
+      if all(range == [0 1])
         labelmap = 1; 
         Y = single(Y); 
       else
