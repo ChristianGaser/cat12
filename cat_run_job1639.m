@@ -521,8 +521,8 @@ function cat_run_job1639(job,tpm,subj)
         end
 
         clear Vi Vn;
-        
-        
+
+
         %% Affine Preprocessing (APP) with SPM  
         %  ------------------------------------------------------------
         %  Bias correction is essential for stable affine registration 
@@ -539,7 +539,50 @@ function cat_run_job1639(job,tpm,subj)
       end
       job.extopts.gcutstr = mod(job.extopts.gcutstr,10);
       
-      % prepare SPM preprocessing structure 
+      
+
+      % MP2RAGE skull-stripping & bias-correction
+      if ppe.affreg.highBG
+        stime = cat_io_cmd('Additional MP2RAGE preprocessing');
+       
+        % mp2rage preprocessing options
+        mp2job.ofiles            = {ofname};
+        mp2job.files             = {nfname}; % list of MP2Rage images
+        mp2job.headtrimming      = 0;        % trimming to brain or head (*0-none*,1-brain,2-head)
+        mp2job.biascorrection    = 1;        % biascorrection (0-no,1-light(SPM60mm),2-average(SPM60mm+X,3-strong(SPM30+X)) #######
+        mp2job.skullstripping    = 2;        % skull-stripping (0-no, 1-SPM, 2-*optimized*)
+        mp2job.logscale          = inf;      % use log/exp scaling for more equally distributed
+                                             % tissues (0-none, 1-log, -1-exp, inf-*auto*);
+        mp2job.intnorm           = -.25;     % contrast normalization using the tan of GM normed
+                                             % values with values between 1.0 - 2.0 for light to 
+                                             % strong adaptiong (0-none, 1..2-manuel, -0..-2-*auto*)
+        mp2job.restoreLCSFnoise  = 1;        % restore values below zero (lower CSF noise)    
+        mp2job.prefix            = '';       % filename prefix (strong with PARA for parameter
+                                             % depending naming, e.g. ... ) 
+        mp2job.spm_preprocessing = 1;        % do SPM preprocessing (0-no, 1-yes (if required), 2-always)
+        mp2job.spm_cleanupfiles  = 1;        % remove temporary files
+        mp2job.report            = 0;        % create a report
+        mp2job.verb              = 0;        % be verbose (0-no,1-yes,2-details)
+        
+        % adapt tissue class number 
+        job.opts.ngaus(3) = 1;   % at least for CSF we should avoid further peaks
+        if mp2job.skullstripping % no skull-stripping triggered non-T1 case
+          % with skull-stripping we keep things simple
+          job.opts.ngaus(4) = 1; 
+          job.opts.ngaus(5) = 1; 
+          job.opts.ngaus(6) = 1; 
+        end
+
+        % call mp2rage preprocessing
+        cat_vol_mp2rage(mp2job);
+        ppe.affreg.skullstripped = 1; 
+
+        fprintf('%5.0fs\n',etime(clock,stime));   
+      end
+
+
+
+      %% prepare SPM preprocessing structure 
       images = job.channel(1).vols{subj};
       for n=2:numel(job.channel)
         images = char(images,job.channel(n).vols{subj});
@@ -597,7 +640,7 @@ function cat_run_job1639(job,tpm,subj)
         if ppe.affreg.skullstripped || job.extopts.gcutstr<0
           % print a warning for all users that did not turn off skull-stripping 
           % because processing of skull-stripped data is not standard!
-          if job.extopts.gcutstr>=0 || job.test_warnings
+          if (job.extopts.gcutstr>=0 || job.test_warnings) && ~ppe.affreg.highBG
             msg = [...
               'Detected skull-stripped or strongly masked image. Skip APP. \\n' ...
               'Use skull-stripped initial affine registration template and \\n' ...
@@ -607,17 +650,17 @@ function cat_run_job1639(job,tpm,subj)
                 '  %4.0f cm%s; normalized SD of all tissues %0.2f'],...
                 ppe.affreg.skullstrippedpara(1:4),native2unicode(179, 'latin1'),ppe.affreg.skullstrippedpara(5))]; 
             end  
-            cat_io_addwarning([mfilename 'cat_run_job:skullStrippedInputWithSkullStripping'],msg,1,[0 1],ppe.affreg.skullstrippedpara);
+            cat_io_addwarning([mfilename 'skullStrippedInputWithSkullStripping'],msg,1,[0 1],ppe.affreg.skullstrippedpara);
             
           elseif job.extopts.gcutstr<0 && ~ppe.affreg.skullstripped || job.test_warnings
-            cat_io_addwarning([mfilename 'cat_run_job:noSkullStrippingButSkull'],[...
+            cat_io_addwarning([mfilename 'noSkullStrippingButSkull'],[...
                 'Skull-Stripping is deactivated but skull was detected. \\n' ...
                 'Go on without skull-stripping what possibly will fail.'],0,[0 1],ppe.affreg.skullstrippedpara);
           end
 
           % skull-stripping of the template
           VB = spm_vol(Pb);
-          [VB2,YB]       = cat_vol_imcalc([VG,VB],Pbt,'i1 .* i2',struct('interp',3,'verb',0,'mask',-1)); %#ok<ASGLU> 
+          [VB2,YB]       = cat_vol_imcalc([VG,VB],Pbt,'i1 .* i2',struct('interp',3,'verb',0,'mask',-1)); 
           VB2.dat(:,:,:) = eval(sprintf('%s(YB/max(YB(:))*255);',spm_type(VB2.dt))); 
           VB2.pinfo      = repmat([1;0],1,size(YB,3));
           VG             = cat_spm_smoothto8bit(VB2,0.5);
@@ -636,7 +679,7 @@ function cat_run_job1639(job,tpm,subj)
         % large head intensities can disturb the whole process.
         % --------------------------------------------------------------
         % ds('l2','',vx_vol,Ym, Yt + 2*Ybg,obj.image.private.dat(:,:,:)/WMth,Ym,60)
-        if job.extopts.APP == 1070 && ~ppe.affreg.highBG && ...
+        if job.extopts.APP == 1070 && ... %%%%%%%%~ppe.affreg.highBG && ...
           ( ~isfield(job,'useprior') || isempty(job.useprior) )
           stime = cat_io_cmd('Affine preprocessing (APP)');
           Ysrc  = single(obj.image.private.dat(:,:,:)); 
@@ -665,7 +708,7 @@ function cat_run_job1639(job,tpm,subj)
       
           if ~debug, clear Yt; end
 
-          if ~( job.extopts.setCOM && ~( isfield(job,'useprior') && ~isempty(job.useprior) ) && ~ppe.affreg.highBG )
+          if ~( job.extopts.setCOM && ~( isfield(job,'useprior') && ~isempty(job.useprior) ) ) %%%%%%%%  && ~ppe.affreg.highBG )
             stime = cat_io_cmd('Affine registration','','',1,stime); 
           end
           
@@ -691,7 +734,7 @@ function cat_run_job1639(job,tpm,subj)
           VF1   = spm_smoothto8bit(VF,resa);
           VG1   = spm_smoothto8bit(VG,resa);
 
-        elseif job.extopts.setCOM && ~( isfield(job,'useprior') && ~isempty(job.useprior) ) && ~ppe.affreg.highBG 
+        elseif job.extopts.setCOM && ~( isfield(job,'useprior') && ~isempty(job.useprior) ) %%%%%%%%%&& ~ppe.affreg.highBG 
           % standard approach (no APP) with static resa value and no VG smoothing
           stime = cat_io_cmd('Coarse affine registration');
           resa  = 8;
@@ -753,7 +796,7 @@ function cat_run_job1639(job,tpm,subj)
           useprior = 0;
         
           % correct origin using COM and invert translation and use it as starting value
-          if job.extopts.setCOM && ~ppe.affreg.highBG 
+          if job.extopts.setCOM %%%%%%%%&& ~ppe.affreg.highBG 
             fprintf('%5.0fs\n',etime(clock,stime)); stime = clock;  
             Affine_com        = cat_vol_set_com(VF1);
             Affine_com(1:3,4) = -Affine_com(1:3,4);
@@ -761,7 +804,7 @@ function cat_run_job1639(job,tpm,subj)
             Affine_com = eye(4);
           end
 
-          if ~ppe.affreg.highBG ... strcmp('human',job.extopts.species) && 
+        %%%%%  if ~ppe.affreg.highBG ... strcmp('human',job.extopts.species) && 
             % affine registration
             try
               spm_plot_convergence('Init','Coarse affine registration','Mean squared difference','Iteration');
@@ -780,7 +823,7 @@ function cat_run_job1639(job,tpm,subj)
               Affine = Affine_com; 
             end
             warning on
-          end
+      %%%%%   end
         end
         
         %% APP step 2 - brainmasking and second tissue separated bias correction  
@@ -795,7 +838,7 @@ function cat_run_job1639(job,tpm,subj)
         
         
         % fine affine registration 
-        if ~useprior && ~ppe.affreg.highBG   % strcmp('human',job.extopts.species) && 
+        if ~useprior %%%%%%%%%&& ~ppe.affreg.highBG   % strcmp('human',job.extopts.species) && 
           aflags.sep = obj.samp/2; 
           aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
           aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
@@ -871,7 +914,7 @@ function cat_run_job1639(job,tpm,subj)
       Ylesion = Ylesion & ~cat_vol_morph(Yb<0.9,'dd',5); clear Yb; 
       % check settings 
       % RD202105: in primates the data, template and affreg is often inoptimal so we skip this test  
-      if sum(Ylesion(:))/1000 > 1 && strcmp('human',job.extopts.species)
+      if sum(Ylesion(:))/prod(vx_vol)/1000 > 1 && ~(ppe.affreg.highBG || ppe.affreg.skullstripped) && strcmp('human',job.extopts.species)
         fprintf('%5.0fs\n',etime(clock,stime)); stime = []; 
         if ~job.extopts.SLC
           % this could be critical and we use a warning for >1 cm3 and an alert in case of >10 cm3

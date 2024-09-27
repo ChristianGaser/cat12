@@ -557,6 +557,44 @@ function cat_run_job(job,tpm,subj)
       end
       job.extopts.gcutstr = mod(job.extopts.gcutstr,10);
 
+
+      
+      % MP2RAGE skull-stripping & bias-correction
+      if ppe.affreg.highBG
+        stime = cat_io_cmd('Additional MP2RAGE preprocessing');
+       
+        % mp2rage preprocessing options
+        mp2job.files             = {nfname}; % list of MP2Rage images
+        mp2job.headtrimming      = 0;        % trimming to brain or head (*0-none*,1-brain,2-head)
+        mp2job.biascorrection    = 1;        % biascorrection (0-no,1-light(SPM60mm),2-average(SPM60mm+X,3-strong(SPM30+X)) #######
+        mp2job.skullstripping    = 0;        % skull-stripping (0-no, 1-SPM, 2-*optimized*)
+        mp2job.logscale          = inf;      % use log/exp scaling for more equally distributed
+                                             % tissues (0-none, 1-log, -1-exp, inf-*auto*);
+        mp2job.intnorm           = -.5;      % contrast normalization using the tan of GM normed
+                                             % values with values between 1.0 - 2.0 for light to 
+                                             % strong adaptiong (0-none, 1..2-manuel, -0..-2-*auto*)
+        mp2job.restoreLCSFnoise  = 1;        % restore values below zero (lower CSF noise)    
+        mp2job.prefix            = '';       % filename prefix (strong with PARA for parameter
+                                             % depending naming, e.g. ... ) 
+        mp2job.spm_preprocessing = 1;        % do SPM preprocessing (0-no, 1-yes (if required), 2-always)
+        mp2job.spm_cleanupfiles  = 1;        % remove temporary files
+        mp2job.report            = 0;        % create a report
+        mp2job.verb              = 0;        % be verbose (0-no,1-yes,2-details)
+        
+        % adapt tissue class number 
+        job.opts.ngaus(3) = 1; % at least for CSF we should avoid further peaks
+        if mp2job.skullstripping
+          job.opts.ngaus(4) = 1; 
+          job.opts.ngaus(5) = 1; 
+          job.opts.ngaus(6) = 1; 
+        end
+        
+        % call mp2rage preprocessing
+        cat_vol_mp2rage(mp2job);
+        
+        fprintf('%5.0fs\n',etime(clock,stime));   
+      end
+
       
       % prepare SPM preprocessing structure 
       images = job.channel(1).vols{subj};
@@ -617,7 +655,7 @@ function cat_run_job(job,tpm,subj)
         if ppe.affreg.skullstripped || job.extopts.gcutstr<0
           % print a warning for all users that did not turn off skull-stripping 
           % because processing of skull-stripped data is not standard!
-          if job.extopts.gcutstr>=0 || job.test_warnings
+          if (job.extopts.gcutstr>=0 || job.test_warnings) && ~ppe.affreg.highBG
             msg = [...
               'Detected skull-stripped or strongly masked image. Skip APP. \\n' ...
               'Use skull-stripped initial affine registration template and \\n' ...
@@ -885,7 +923,7 @@ end
         Ylesion = Ylesionr>0.5; clear Ylesionr;
       end
       if exist('Ybg','var'), Ylesion(Ybg)=0; end % denoising in background
-      if sum(Ylesion(:))/1000 > 1
+      if sum(Ylesion(:))/prod(vx_vol)/1000 > 1 && ~(ppe.affreg.highBG || ppe.affreg.skullstripped) && strcmp('human',job.extopts.species)
         fprintf('%5.0fs\n',etime(clock,stime)); stime = []; 
         if ~job.extopts.SLC
           % this could be critical and we use a warning for >1 cm3 and an alert in case of >10 cm3
