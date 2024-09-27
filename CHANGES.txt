@@ -1,4 +1,13 @@
 ------------------------------------------------------------------------
+r | dahnke | 2024-09-27 18:26:57
+
+Changed paths:
+
+Fixed:    Corrected bug with the Jacobian in Shooting (Issue #32).
+Fixed:    Included MP2RAGE preprocessing in the regular pipilines. 
+Updated:  Improved skull-stripping MP2RAGE preprocessing. 
+Updated:  Improved processing pipeline for SPM input segmentation. 
+------------------------------------------------------------------------
 r2596 | gaser | 2024-08-07 11:03:33
 
 Changed paths:
