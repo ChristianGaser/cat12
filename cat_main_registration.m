@@ -420,7 +420,7 @@ end
           % Adaption to avoid boundary effects by correcting the voxel close
           % to the image boundary that are effected by the interpolation of
           % the field. 
-          msk             = cat_vol_morph( isnan( yi2(:,:,:,1)) ,'d',3); w( msk ) = NaN; 
+          msk             = cat_vol_morph( isnan( yi2(:,:,:,1)) ,'d',3); w( msk(:) ) = NaN; 
           wa              = cat_vol_approx(w,'nn',1,4); bg = cat_stat_nanmean( wa(msk(:)) ); 
           msk             = cat_vol_smooth3X(msk,2); w( isnan(w) ) = wa( isnan(w) ); 
           w               = wa .* msk + (1-msk) .* w; clear msk wa; 
@@ -497,7 +497,7 @@ end
         % Adaption to avoid boundary effects by correcting the voxel close
         % to the image boundary that are effected by the interpolation of
         % the field. 
-        msk             = cat_vol_morph( isnan( yi2(:,:,:,1)) ,'d',3); w( msk ) = NaN; 
+        msk             = cat_vol_morph( isnan( yi2(:,:,:,1)) ,'d',3); w( msk(:) ) = NaN; 
         wa              = cat_vol_approx(w,'nn',1,4); bg = cat_stat_nanmean( wa(msk(:)) ); 
         msk             = cat_vol_smooth3X(msk,2); w( isnan(w) ) = wa( isnan(w) ); 
         w               = wa .* msk + (1-msk) .* w; clear msk wa; 
@@ -765,8 +765,8 @@ function [trans,reg] = run_Shooting(Ycls,Ylesion,job,reg,res,trans,Maffinerigid,
           if job.extopts.verb && ti==1
             %cat_io_cprintf([0 0 1], '  == Very large ventricles detected. Use seperate class and adapt schedule. == \n');  
             cat_io_addwarning([mfilename ':Hydrocephalus'],sprintf( ...
-              'Very large ventricles detected (%0.2f%%%% of TIV). Use seperate class and adapt schedule. \\\\n', ...
-              sum(Yven(:))/sum(Yb(:))>0.1),1,[0 1]);   
+              'Very large ventricles detected (%0.2f%%%%%%%% of TIV). \\\\nUse seperate class and adapt schedule.', ...
+              100 * sum(Yven(:))/sum(Yb(:)>.1)),1,[0 1]);   
           end
         
 
@@ -1046,32 +1046,37 @@ function [trans,reg] = run_Shooting(Ycls,Ylesion,job,reg,res,trans,Maffinerigid,
   % thus we use the def2det function of the inverted deformations to obtain the old and 
   % in my view a more appropriate jacobian determinant 
   % The 2nd reason to use the old modulation is compatibility with cat_vol_defs.m
-  if 1
-    yi  = spm_diffeo('invdef', y  , idim, Maffinerigid * inv(M1r\M1), inv(M1r\M1)); %#ok<MINV>
-    yi2 = spm_diffeo('invdef', yi , odim, eye(4), eye(4)); 
-  else
-    yi  = spm_diffeo('invdef', y  , idim, Maffinerigid * inv(M1r(1)\M1(1)), inv(M1r\M1) ); %#ok<MINV>
-    yi2 = spm_diffeo('invdef', yi , odim, eye(4), eye(4)); 
-  end
-  w   = max( eps , abs(spm_diffeo('def2det', yi2 ) ) );
+
+  % RD20240924: first only for the jacobian without affine parameters / TIV as covariate
+  yi  = spm_diffeo('invdef', y  , idim, Maffinerigid * inv(M1r\M1), inv(M1r\M1)); 
+  yi2 = spm_diffeo('invdef', yi , odim, eye(4), eye(4) / Maffinerigid); 
+  w2  = max( eps , abs(spm_diffeo('def2det', yi2 ) ) );
+
+  % now for the final transformations
+  yi  = spm_diffeo('invdef', y  , idim, Maffinerigid * inv(M1r\M1), inv(M1r\M1)); %#ok<MINV>
+  yi2 = spm_diffeo('invdef', yi , odim, eye(4), eye(4)); 
+  % RD20240924: This would be the real jacobian that considers the also the affine registration 
+  %             in the "correct" but unexpected way and that would finally need TIV as covariate.
+  w   = max( eps , abs(spm_diffeo('def2det', yi2 ) ) ); 
+
   % avoid boundary effects that are not good for the global measurements 
   % use half registration resolution to define the amout of smoothing to reduce registration artefacts
   if 1
+    %%
     vxd = M1(1)./M1r(1); 
-    %msk = cat_vol_morph( isnan( yi2(:,:,:,1)) ,'d',2/vxd); w( msk ) = NaN; 
-    msk = true(size(w)); msk(3:end-2,3:end-2,3:end-2) = false; w( msk ) = NaN; 
-    wa  = cat_vol_approx(w,'nn',1,4); bg = cat_stat_nanmean( wa(msk(:)) ); 
+    msk = w<=eps;  w( msk(:) ) = NaN; 
+    wa  = cat_vol_approx(w,'rec'); bg = cat_stat_nanmean( wa(msk(:)) ); 
     msk = cat_vol_smooth3X(msk,1/vxd); w( isnan(w) ) = wa( isnan(w) ); 
     w   = wa .* msk + (1-msk) .* w; clear msk wa; 
     fs  = newres / 2; w = w - bg; spm_smooth(w,w,fs); w = bg + w; % spm smoothing boudary problem
+
+    msk = w2<=eps;  w2( msk(:) ) = NaN; 
+    wa  = cat_vol_approx(w2,'rec'); bg = cat_stat_nanmean( wa(msk(:)) ); 
+    msk = cat_vol_smooth3X(msk,1/vxd); w2( isnan(w2) ) = wa( isnan(w2) ); 
+    w2  = wa .* msk + (1-msk) .* w2; clear msk wa; 
+    fs  = newres / 2; w2 = w2 - bg; spm_smooth(w2,w2,fs); w2 = bg + w2; % spm smoothing boudary problem
+  
   end
- 
- % yi  = spm_diffeo('invdef', y  , idim, Maffinerigid * inv(M1r\M1t), inv(M1r\M1)); %#ok<MINV>
- % yi2 = spm_diffeo('invdef', yi , odim, eye(4), eye(4)); 
-  
-  
-  
-  
   
   % yi2 for fast high quality output
   trans.warped = struct('y',yi,'yi',yi2,'w',w,'odim',odim,'M0',M0,'M1',M1,'M2',inv(Maffinerigid),'dartel',2,'fs',fs);
@@ -1085,7 +1090,7 @@ function [trans,reg] = run_Shooting(Ycls,Ylesion,job,reg,res,trans,Maffinerigid,
       end
     end
     uo(~isfinite(uo)) = eps;
-    trans.jc = struct('u',uo*0,'odim',odim,'dt2',w); 
+    trans.jc = struct('u',uo,'odim',odim,'dt2',w2); 
   end 
 
   
