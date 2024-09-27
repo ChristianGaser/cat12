@@ -367,7 +367,8 @@ if ~isfield(res,'spmpp')
   else
     [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
     fprintf('%5.0fs\n',etime(clock,stime));
-    if job.extopts.expertgui && isfield(res,'Ylesion') && sum(res.Ylesion(:))>1000 && job.extopts.ignoreErrors < 2
+    if job.extopts.expertgui && isfield(res,'Ylesion') && sum(res.Ylesion(:))>1000 && job.extopts.ignoreErrors < 2  && ...
+      ~(res.ppe.affreg.highBG || res.ppe.affreg.skullstripped) && strcmp('human',job.extopts.species)  
       cat_io_addwarning('cat_main_SLC_noExpDef',sprintf(['SLC is deactivated but there are %0.2f cm' ...
           native2unicode(179, 'latin1') ' of voxels with zero value inside the brain!'],prod(vx_vol) .* sum(res.Ylesion(:)) / 1000 ),1,[1 1]); 
     end
@@ -848,7 +849,7 @@ if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
     [stat, val] = fileattrib(pp);
     if stat, pp = val.Name; end
 
-    [mrifolder, reportfolder, surffolder] = cat_io_subfolders(VT.fname);
+    [mrifolder, reportfolder, surffolder] = cat_io_subfolders(VT.fname,job);
 
     if cat_get_defaults('extopts.subfolders') && strcmp(mrifolder,'mri')
       pp = spm_str_manip(pp,'h'); % remove 'mri' in pathname that already exists
