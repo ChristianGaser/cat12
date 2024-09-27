@@ -16,7 +16,7 @@ function [out,outs] = cat_vol_mp2rage(job)
 %                        values with values between 1.0 - 2.0 for light to 
 %                        strong adaptiong (0-none, inf-*auot*)
 %   .restoreLCSFnoise .. restore CSF (noise) values below zero (0-no,1-yes)   
-%   .report           .. create report file 
+%   .report           .. create report and xml/mat file 
 %   .prefix           .. filename prefix (strong with PARA for parameter
 %                        depending naming, e.g. ... )
 %   .verb             .. be verbose (0-no,1-yes,2-details)
@@ -47,6 +47,7 @@ function [out,outs] = cat_vol_mp2rage(job)
   def.prefix            = 'PARA_';  % filename prefix (strong with PARA for parameter
                                     % depending naming, e.g. ... ) 
   def.spm_preprocessing = 1;        % do SPM preprocessing (0-no, 1-yes (if required), 2-always)
+  def.spm_cleanupfiles  = 1;        % remove SPM files
   def.report            = 1;        % create a report
   def.verb              = 1;        % be verbose (0-no,1-yes,2-details)
   
@@ -98,7 +99,8 @@ function [out,outs] = cat_vol_mp2rage(job)
   %    - No, should be done by PP, but may aboid precorrection. 
   %    - Maybe indirectly as part of the skull-stripping (reinclude as brain or not) 
 
-
+  %#ok<*CLOCK,*DETIM>
+    
   %% main processing 
   spm_progress_bar('Init',numel(job.files),'MP2Rage Optimization','Volumes Complete');
   for si = 1:numel(job.files)
@@ -170,7 +172,7 @@ function [out,outs] = cat_vol_mp2rage(job)
 
 
     %% load SPM mat (with tissue thresholds)
-    if etime(clock,stime2) < 10
+    if etime(clock,stime2) < 10 
       if job.verb>1, fprintf('\n'); end % no 
       stime2 = cat_io_cmd('      Load segmentation','g5','',job.verb-1);
     else
@@ -179,6 +181,13 @@ function [out,outs] = cat_vol_mp2rage(job)
 
     spm8 = load(spm_file(job.files{si},'suffix','_seg8','ext','.mat'));
     
+    % load original for skull-stripping
+    if isfield(job,'ofiles')
+      Po = job.ofiles{si};
+      Vo = spm_vol(Po); 
+      Yo = single( spm_read_vols(Vo));
+    end
+
     % load bias corrected 
 % ############# use the original if no bias corrected was written? ##########    
     Pm = spm_file(job.files{si},'prefix','m');
@@ -198,7 +207,7 @@ function [out,outs] = cat_vol_mp2rage(job)
       Sth(ci)        = cat_stat_nanstd(Ym(Ymsk(:))); 
     end
     clear Ymsk Vseg;
-    Yseg(:,:,:,6) = 1 - sum( Yseg, 4);  
+    Yseg(:,:,:,6) = 1 - cat_stat_nansum( Yseg, 4);  
     Tth(6) = cat_stat_nanmedian(Ym(Yseg(:,:,:,6) & Ym~=0));
     isMP2R = Tth(6) > Tth(3)*4;                  % MP2Rage
     isT1   = Tth(3) < Tth(1) & Tth(1) < Tth(2);  % T1 defintion  
@@ -214,11 +223,12 @@ function [out,outs] = cat_vol_mp2rage(job)
     if job.headtrimming
       %% limit image to brain  
       Vm = spm_vol(Pm);   Ym = single( spm_read_vols(Vm)); Vm.mat
-      [Ym,BB] = cat_vol_resize(Ym,'reduceBrain',Vm,10,sum(Yseg(:,:,:,1:3),4)>0.5); %Vm = BB.V; 
+      %[Ym,BB] = cat_vol_resize(Ym,'reduceBrain',Vm,10,cat_stat_nansum(Yseg(:,:,:,1:3),4)>0.5); %Vm = BB.V; 
+      Ym = cat_vol_resize(Ym,'reduceBrain',Vm,10,cat_stat_nansum(Yseg(:,:,:,1:3),4)>0.5); %Vm = BB.V; 
       Vm.mat
   %    Yseg0   = zeros([size(Ym),size(Yseg,4)],'single');    
   %    for ci = 1:size(Yseg,4)
-  %      Yseg0(:,:,:,ci) = cat_vol_resize(Yseg(:,:,:,ci) ,'reduceBrain',Vm,10,sum(Yseg(:,:,:,1:3),4)>0.5);
+  %      Yseg0(:,:,:,ci) = cat_vol_resize(Yseg(:,:,:,ci) ,'reduceBrain',Vm,10,cat_stat_nansum(Yseg(:,:,:,1:3),4)>0.5);
   %    end
       % Update affine registration for trimming
       %{
@@ -226,9 +236,9 @@ function [out,outs] = cat_vol_mp2rage(job)
       imat(1:3) = imat(1:3) - BB.trans*2; 
       spm8.Affine = spm_matrix(imat);
       Yseg = Yseg0; clear Yseg0; 
-      %}
       imat = spm_imatrix(Vm.mat);
-
+      %}
+      
       Vm.dim = size(Ym);
       
       stime2 = cat_io_cmd('      Write output','g5','',job.verb-1,stime2);
@@ -250,7 +260,7 @@ function [out,outs] = cat_vol_mp2rage(job)
 % Case 2 - Buchert 150601) extrem low contrast (remove/ignore/bullshit in=bullshit out)  
 % Case 3 - Buchert 155553) low contrast (high-res, low-freq-noise) but good segmentation
 % Case 4 - Buchert 155802) failed bias correction ...
-Yp0  = Yseg(:,:,:,1)*2 + Yseg(:,:,:,2)*3 + Yseg(:,:,:,3);
+% Yp0  = Yseg(:,:,:,1)*2 + Yseg(:,:,:,2)*3 + Yseg(:,:,:,3);
 iCon = @(x) (exp(x) - 1) / (exp(1)-1);
 
 % ######################## WMHs ?! #############  
@@ -308,8 +318,8 @@ end
       %  We are not using the CSF as we are not knowing much about it and and cannot trust the segmentation too much.  
         [Ym2r,resV] = cat_vol_resize(Ym2,'reduceV',vx_vol,2,4,'mean'); % mean here to handle noise 
         [Ygi1,Ygi2] = cat_vol_resize({ ...
-          single(smooth3(sum(Yseg(:,:,:,1:2),4))>.95 & ~Ysc & Ym2>Tth(1)), ...
-          single(smooth3(sum(Yseg(:,:,:,1:2),4))>.5  & ~Ysc)},'reduceV',vx_vol,2,4,'meanm'); 
+          single(smooth3(cat_stat_nansum(Yseg(:,:,:,1:2),4))>.95 & ~Ysc & Ym2>Tth(1)), ...
+          single(smooth3(cat_stat_nansum(Yseg(:,:,:,1:2),4))>.5  & ~Ysc)},'reduceV',vx_vol,2,4,'meanm'); 
         Ygi1  = cat_vol_localstat(Ym2r,Ygi1>.8,2,2 + isT1); % closer to WM
         Ygi2  = cat_vol_localstat(Ym2r,Ygi2>.8,4,2 + isT1); % more distant to WM
         Ygi   = cat_vol_approx( max(Ygi1,Ygi2) ); clear Ym2r Ygi1 Ygi2
@@ -360,7 +370,7 @@ end
         Yw = cat_vol_inpaint(Yi,10,40,2,1); Yw = Yw*0.9 + 0.1 * iCon(Yw./spm8.mn(2)).*spm8.mn(2);
         Yw = Yw ./ cat_stat_nanmedian(Yw(Yseg(:,:,:,2)>.95)) .* cat_stat_nanmedian(Ym2(Yseg(:,:,:,2)>.95));
         % - second estimation for 
-        Yi = max(Ywi,Yw .* ( sum(Yseg(:,:,:,6),4)>.5 )); 
+        Yi = max(Ywi,Yw .* ( cat_stat_nansum(Yseg(:,:,:,6),4)>.5 )); 
         Yw = cat_vol_inpaint(Yi,10,6 / job.biascorrection,2,1);  Yw = Yw*0.9 + 0.1 * iCon(Yw./spm8.mn(2)).*spm8.mn(2);
         Yw = Yw ./ cat_stat_nanmedian(Yw(Yseg(:,:,:,2)>.95)); % .* cat_stat_nanmedian(Ym2(Yseg(:,:,:,2)>.95));
         
@@ -447,7 +457,7 @@ end
       Ywm = cat_vol_morph( Yseg(:,:,:,2)>.9 ,'e'); 
     end
     if 0% job.logscale>0 || job.intnorm>0
-      stime2 = cat_io_cmd(sprintf('      Scale intensities (%s)',ccistr{cci}),'g5','',job.verb-1,stime2);
+      stime2 = cat_io_cmd(sprintf('      Scale intensities (%s)',ccistr{cci}),'g5','',job.verb-1,stime2); %#ok<UNRCH>
     end
 
     
@@ -539,23 +549,44 @@ end
     %% skull-stripping
     if job.skullstripping == 2 || ( job.skullstripping == 3 && isMP2R)
       stime2 = cat_io_cmd('      Optimized skull-stripping','g5','',job.verb-1,stime2);
-    
+
+      %% denoising based correction
+      % In MP2Rage, background/bone/head tissues are quite noisy and strongly 
+      % corrected by the SANLM. Hence, denoised regions are often background
+      % and should be not part of the GM class
+
+      % get noisy regions
+      Yngw = cat_vol_morph( smooth3( cat_stat_nansum(Yseg(:,:,:,1:2),4) ) > .99 ,'do',5,vx_vol);
+      Yngw = smooth3( Yngw ) < .5;
+      % gradient to get the local noise before/after correction (Yog/Ymg)
+      Yog  = cat_vol_grad(Yo);
+      Ymg  = cat_vol_grad(Ym);
+      % get correction area
+      Ynog = Yngw .* (Ym/mean(Ym(:))) .* ((Yog ./ Ymg) .* abs(Yog-Ymg)./mean(Ym(:))); clear Yog Ymg;
+      Ynog = Yseg(:,:,:,1) .* smooth3(Ynog);
+      % do correction
+      Yseg(:,:,:,4) = Yseg(:,:,:,4) + Ynog; 
+      Yseg(:,:,:,1) = Yseg(:,:,:,1) - Ynog; 
+      clear Yngw Ynog
+      
       %% cleanup
-      Ygw = smooth3( sum(Yseg(:,:,:,1:2),4) ) > .9;
-      [~,Yd] = cat_vol_downcut(single(Ygw),Ym/spm8.mn(3) .* (1-sum( Yseg(:,:,:,5:6), 4)),0.01);
+      Ygw = smooth3( cat_stat_nansum(Yseg(:,:,:,1:2),4) ) > .9;
+      Ygw = single(cat_vol_morph(Ygw,'do',3,vx_vol)); 
+      Ygw(cat_stat_nansum(Yseg(:,:,:,1:3),4)<.2) = nan;  
+      [~,Yd] = cat_vol_downcut(Ygw,Ym/spm8.mn(3) .* (1-sum( Yseg(:,:,:,5:6), 4)),0.01);
       Ygw2 = Ym/spm8.mn(2)<1.2 & smooth3(Yd<.5)>.5; 
-      % edge detection to improve skull-stripping
-      Yg  = cat_vol_grad(Ym/spm8.mn(2));
-      Yd  = cat_vol_div(Ym/spm8.mn(2));
+      %% edge detection to improve skull-stripping
+      %Yg  = cat_vol_grad(Ym/spm8.mn(2));
+      %Yd  = cat_vol_div(Ym/spm8.mn(2));
       % optimize skull-stripping
-      Yb  = sum( Yseg(:,:,:,1:3),4); 
-      Yb  = max(Yb,cat_vol_morph(Yb > .5 ,'ldc',5));
+      Yb  = smooth3( cat_stat_nansum( Yseg(:,:,:,1:3),4) ); 
+      Yb  = max(Yb,cat_vol_morph(Yb > .5 ,'ldo',1,vx_vol));
+      Yb  = max(Yb,cat_vol_morph(Yb > .5 ,'ldc',2,vx_vol));
       Yb  = max(Yb,Ygw2);
-      %
-      Yb  = smooth3( Yb )>.5; 
-      Yb  = Yb | cat_vol_smooth3X( cat_vol_morph(Yb,'dd',2.5) & ...
-        Ym<(spm8.mn(2)*0.4+0.6*spm8.mn(1)) & Ym>mean(spm8.mn(3)*0.4+0.6*spm8.mn(1)) & ...
-        Yd>-0.05 & Yg<.7 , 2)>.5;
+      Yb  = smooth3( Yb )>.8; 
+%      Yb  = Yb | cat_vol_smooth3X( cat_vol_morph(Yb,'dd',0.5,vx_vol) & ...
+%        Ym<(spm8.mn(2)*0.4+0.6*spm8.mn(1)) & Ym>mean(spm8.mn(3)*0.4+0.6*spm8.mn(1)) & ...
+%        Yd>-0.05 & Yg<.7 , 2)>.5;
     else
       % simple SPM skull-stripping as CSF+GM+WM 
       stime2 = cat_io_cmd('      SPM skull-stripping','g5','',job.skullstripping && job.verb>1,stime2);
@@ -621,13 +652,15 @@ end
     spm_write_vol(Vm2,Ym2);
 
     % save XML/mat
-    jobxml = job; jobxml.files = jobxml.files(si); 
-    jobxml.result = {Pcm};
-    jobxml.res    = res; 
-    if exist('scstr','var')
-      jobxml.scstr  = scstr;
+    if job.report
+      jobxml = job; jobxml.files = jobxml.files(si); 
+      jobxml.result = {Pcm};
+      jobxml.res    = res; 
+      if exist('scstr','var')
+        jobxml.scstr  = scstr; %#ok<NODEF>
+      end
+      cat_io_xml(spm_file(Pcm,'prefix','catmp2r_','ext','.xml'),jobxml);
     end
-    cat_io_xml(spm_file(Pcm,'prefix','catmp2r_','ext','.xml'),jobxml);
 
     out.files{si} = Pcm;
     if nargout>1
@@ -639,7 +672,9 @@ end
     % - estimated parameters
     % - original image + segmentation + new image + change image ???
     % - histogram tissues?
-    report_figure(Vm,Vm2, Ym,Ym2,Yseg, job,spm8,res);
+    if job.report 
+      report_figure(Vm,Vm2, Ym,Ym2,Yseg, job,spm8,res);
+    end
 
     if res.totalorg > res.totalcor, ccol = [0 0.5 0]; else, ccol = [0.5 0 0]; end
     if job.verb > 1
@@ -652,6 +687,13 @@ end
       fprintf('%5.0fs\n',etime(clock,stime));
     end
 
+    if def.spm_cleanupfiles
+      for ci = 1:5
+        delete( spm_file(job.files{si}, 'prefix', sprintf('c%d',ci)) ); 
+      end
+      delete( spm_file(job.files{si}, 'prefix', 'm' ) ); 
+      delete( spm_file(job.files{si}, 'suffix', '_seg8' , 'ext', '.mat' ) ); 
+    end
 
     spm_progress_bar('Set',si); 
   end
