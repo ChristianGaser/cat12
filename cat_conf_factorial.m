@@ -1293,7 +1293,9 @@ voxel_covariate = false;
 if isfield(job.des,'fd')
   fname = 'fd';
   if isfield(job.globals,'g_ancova')
-    job.des.fd.fact.ancova = 1;
+    for i=1:numel(job.des.fd.fact)
+      job.des.fd.fact(i).ancova = 1;
+    end
   end
 elseif isfield(job.des,'fblock')
   fname = 'fblock';
