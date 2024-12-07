@@ -89,7 +89,7 @@ function [out,s] = cat_plot_boxplot(data,opt)
 % opt.notched = ['x','*'] points between 1.5 and 3 times the IQR is marked with
 % 'x' and points outside 3 times IQR with '*'.
 % opt.vertical = 0 makes the boxes horizontal, by default opt.vertical = 1.
-% maxwhisker defines the length of the wh^1iskers as a function of the IQR
+% maxwhisker defines the length of the whiskers as a function of the IQR
 % (default = 1.5). If maxwhisker = 0 then boxplot displays all data  
 % values outside the box using the plotting opt.notched for points that lie
 % outside 3 times the IQR.   

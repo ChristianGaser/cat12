@@ -1,4 +1,18 @@
 ------------------------------------------------------------------------
+r2621 | gaser | 2024-12-07 23:02:18
+
+Changed paths:
+ M CHANGES.txt
+ M Contents.m
+ M Makefile
+ M cat_plot_boxplot.m
+ M doc/cat.html
+ M doc/index.html
+ M slice_overlay.m
+
+Corrected: Display og white background in slice_overlay was not correct.
+
+------------------------------------------------------------------------
 r | dahnke | 2024-09-27 18:26:57
 
 Changed paths:
