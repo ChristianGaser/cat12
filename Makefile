@@ -211,7 +211,7 @@ precompile:
 	-@echo    cd spm12/config
 	-@echo    spm_make_standalone
 #	-@echo    "Ubuntu 19.10 (run spm12_R2017b on paris to compile) : mv /Users/gaser/spm/standalone/spm12.ctf ${PRECOMPILED}/MCR_Linux/"
-	-@echo    "Ubuntu 17.10 (run spm12_R2017b with desktop on MacBook to compile) : mv /Users/gaser/spm/standalone/spm12.ctf ${PRECOMPILED}/MCR_Linux/"
+	-@echo    "Ubuntu 17.10/19.10 (run spm12_R2017b with desktop on MacBook to compile) : mv /Users/gaser/spm/standalone/spm12.ctf ${PRECOMPILED}/MCR_Linux/"
 	-@echo    "Windows 10: mv /Users/gaser/spm/standalone/spm12.[ce][tx][fe] ${PRECOMPILED}/MCR_Win/"
 	-@echo    "MacOS (run spm12_R2023b_intel): rm -rf ${PRECOMPILED}/MCR_Mac/spm12.app; mv /Users/gaser/spm/standalone/spm12.app ${PRECOMPILED}/MCR_Mac/"
 	-@echo    "MacOS ARM64 (run spm12_R2023b): rm -rf ${PRECOMPILED}/MCR_Mac_arm64/spm12.app; mv /Users/gaser/spm/standalone/spm12.app ${PRECOMPILED}/MCR_Mac_arm64/"

@@ -1,4 +1,4 @@
-function varargout = slice_overlay(action, varargin);
+function varargout = slice_overlay(action, varargin)
 % Function to display + manage slice display 
 % Slice display works on a global structure SO
 % with fields 
@@ -410,6 +410,8 @@ for i = 1:nslices
     end
     % transpose to reverse X and Y for figure
     i1 = reshape(i1, vdims(1:2))';
+    % make white background if defined
+    if all(SO.bkg_col == [1 1 1]), i1(i1==0) = 1; end
     % rescale to colormap
     [csdata badvals]= scaletocmap(...
       i1,...
@@ -426,12 +428,10 @@ for i = 1:nslices
       img(tmp) = iimg(tmp);
     end
   end
+  
   % threshold out of range values
   img(img>1) = 1;
-  
-  % make white background if defined
-  if all(SO.bkg_col == [1 1 1]), img(img==0) = 1; end
-  
+    
   image('Parent', axisd(i),...
     'ButtonDownFcn', SO.callback,...
     'CData',img);
