@@ -18,7 +18,7 @@ function out = cat_long_createTPM(job)
 % 
 %   job
 %    .files        .. cellstr of input files of the GM segment p1*.nii
-%    .fstrength    .. main control paramter 
+%    .fstrength    .. main control parameter 
 %                     0 = use original parameters
 %                     1 = hard settings for small variations (plasticity)
 %                     2 = medium settings for avg variations (aging)
@@ -33,7 +33,7 @@ function out = cat_long_createTPM(job)
 %                     (default: [ 0.30 0.25 0.20 0.15 0.10 ]);
 %    .scsize       .. filter size factor of different classes
 %                     (default: [ 1 1 1 2 2 2 ]); 
-%    .smoothness   .. main filter paramter 
+%    .smoothness   .. main filter parameter 
 %                     (default=1,range 1=accurate to 8=soft)
 %    .median       .. use median filter (default=1)
 %    .sanlm        .. use sanlm filter (default=0);

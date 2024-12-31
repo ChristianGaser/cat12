@@ -9,7 +9,7 @@ function Affine = cat_vol_set_com(V)
 % 
 % Only if no input is defined the function is called interactively and the
 % estimated transformation is applied to the images. Otherwise, only the 
-% Affine paramter is returned.
+% Affine parameter is returned.
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
