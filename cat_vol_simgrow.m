@@ -6,7 +6,7 @@
 %  DIST (3D  single) .. distance map from region-growing
 %  ALAB (3D  single) .. input label map
 %  SEG  (3D  single) .. input tissue map
-%  d    (1x1 double) .. growing treshhold paramter (max local gradient)
+%  d    (1x1 double) .. growing treshhold parameter (max local gradient)
 %                       in SEG
 %  dims (1x3 double) .. voxel dimensions (default [1,1,1])
 %  dd   (1x2 double) .. general growing limits in SEG 

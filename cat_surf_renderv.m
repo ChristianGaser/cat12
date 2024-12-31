@@ -14,7 +14,7 @@ function varargout = cat_surf_renderv(S,facevertexcdata,opt)
 %  opt              .. render parameter
 %   .mat            .. orientation matrix (e.g. for rigid registration)
 %   .view           .. render view = ['l'|'r'|'t'|'d'|'f'|b'] (default 'l')
-%   .interp         .. resolution paramter (default 1.4) 
+%   .interp         .. resolution parameter (default 1.4) 
 %                      (higer = more pixel but slower)
 %   .bd             .. image boundary (default 0.5)
 %   .h              .. figure/axis handle

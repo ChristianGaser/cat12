@@ -237,7 +237,7 @@ function varargout = cat_surf_parameters(job)
         
         if job.area
           %% local surface area by nearest neighbor approach (see Winkler 2012, 2017)
-          %  As far as cat_surf_paramters characterize the original surface
+          %  As far as cat_surf_parameters characterize the original surface
           %  her only the simple surface area is esimated an mapped to all
           %  connected vertices (simply divided by 3 that describes the COM
           %  alingment but the alignments by the voronoi / outer-circle  

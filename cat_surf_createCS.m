@@ -57,7 +57,7 @@ cstime = clock;
     opt.SRP = 0; 
   end
   
-  % surface evaluation paramter 
+  % surface evaluation parameter 
   res = struct('euler_characteristic',nan,'defect_size',nan,'lh',struct(),'rh',struct()); 
 
 %#ok<*AGROW>
