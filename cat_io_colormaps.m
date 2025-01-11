@@ -207,7 +207,7 @@ function [C,XML] = cat_io_colormaps(Cname,ncolors)
              dec2hex(round(min(255,max(0,C(:,3)*255)))) ]);
   elseif (size(C,1)>ncolors && ~cmap_categorical)
     ss    = (size(C,1)+1) / (ncolors);
-    [X,Y] = meshgrid(1:ss:size(C,1)+1,1:3);
+    [X,Y] = meshgrid(1:ss:size(C,1)+1,1:3);  X = min(size(C,1),X);
     C     = interp2(1:size(C,1),1:3,C',X,Y)'; 
     XML   = cellstr([ dec2hex(round(min(255,max(0,C(:,1)*255)))), ...
              dec2hex(round(min(255,max(0,C(:,2)*255)))), ...
