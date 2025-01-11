@@ -344,13 +344,17 @@ function FNS = getFN(SS,dimlim)
     FN  = fieldnames(S);
     FNS = {};
     for fni = 1:numel(FN)
+      for si = 1:numel(SS)
+        if ~isempty(S.(FN{fni})), continue; else, S = SS(si); end
+      end
+
       % need this for useful order of fields
       acc = num2str( 1 + round( log10( numel( S.(FN{fni}) ))) );
 
       if isstruct( S.(FN{fni}) )
         % recursive call in case of structures
         FNI = getFN(S.(FN{fni}),dimlim); 
-        if numel(S.(FN{fni})) == 1
+        if isscalar(S.(FN{fni}))
           for fnii = 1:numel(FNI)
             FNI{fnii} = [FN{fni} '.' FNI{fnii}]; 
           end
@@ -373,7 +377,7 @@ function FNS = getFN(SS,dimlim)
         % recursive call in case of structures
         FNI = {};
         for fnii = 1:numel( S.(FN{fni}) )
-          if numel( S.(FN{fni}){fnii} ) == 1
+          if isscalar( S.(FN{fni}){fnii} )
             FNI = [FNI; sprintf(['%s{%0' acc 'd}'],FN{fni},fnii) ];
           else
             acc = num2str( 1 + round( log10( numel( S.(FN{fni}){fnii} ))) );
@@ -384,7 +388,7 @@ function FNS = getFN(SS,dimlim)
           end
         end
       else
-        if numel( S.(FN{fni}) ) == 1
+        if isscalar( S.(FN{fni}) )
           FNI{1} = sprintf('%s',FN{fni});
         else
           % just extract a limited number of elements
