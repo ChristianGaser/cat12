@@ -66,7 +66,7 @@ function run = cat_io_rerun(files,filedates,verb,force)
     [pp,ff,ee] = spm_fileparts(files{fi}); files{fi} = fullfile(pp,[ff ee]); % remove additional dimensions ",1" 
     if ~exist(files{fi},'file')
       if numel(files)>1
-        run{fi} = 1; 
+        run(fi) = 1; 
         if verb
           fprintf(' Input file 2-%02d does not exist: %70s\n',fi,spm_str_manip( files{fi}, 'a70'));
         end
@@ -88,7 +88,7 @@ function run = cat_io_rerun(files,filedates,verb,force)
         if exist(filedates{fi},'file')
           fdata2 = dir(filedates{fi});
           if numel(fdata)>1
-            run{fi} = [fdata(:).datenum] >= fdata2.datenum;
+            run(fi) = [fdata(:).datenum] >= fdata2.datenum;
           else
             run(fi) = fdata.datenum >= fdata2.datenum;
           end

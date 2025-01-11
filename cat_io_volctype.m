@@ -8,6 +8,7 @@ function out = cat_io_volctype(varargin)
 %   out = cat_io_volctype(job)
 %
 %   job
+%    .data     .. images
 %    .verb     .. be verbose (default=1)
 %    .lazy     .. do not reprocess files (default=0); 
 %    .prefix   .. prefix with the keyword PARA that is replaced by the 
@@ -262,6 +263,8 @@ function out = cat_io_volctype(varargin)
           otherwise
             Yrd   = round(Y / V.pinfo(1)) * V.pinfo(1); 
         end
+      else
+        Yrd   = round(Y / V.pinfo(1)) * V.pinfo(1); 
       end
         
 
