@@ -65,7 +65,7 @@ function S=cat_io_mergeStruct(S,SN,ri,id)
       elseif ischar(S(1).(NSSFN{ni}))
         SN(sne).(NSSFN{ni}) = '';
       elseif isstruct(S(1).(NSSFN{ni}))
-        if ri<maxri
+        if ri<maxri && ~isempty(fieldnames(S))
           Stmp = cat_io_mergeStruct(struct(),S(1).(NSSFN{ni})(1),ri+1);
         else
           Stmp = struct(); 
