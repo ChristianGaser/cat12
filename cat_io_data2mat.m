@@ -250,7 +250,7 @@ if ~spm_mesh_detect(V{1}(1))
   
     
   for j=1:n_samples
-    if n_subjects(j) > 500, cat_progress_bar('Init',n_subjects(j),'reading...','subjects completed'); end
+    if n_subjects(j) > 500, cat_progress_bar('Init',n_subjects(j),'reading...','subjects completed','cmd%'); end
     yi = zeros(n_subjects(j), sum(mask_ind(:)), 'single');
     for i = 1:n_subjects(j)
 
