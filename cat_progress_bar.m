@@ -45,15 +45,15 @@ if strcmpi(action,'init')
   if nargin > 1
     % catch possible errors of older calls with additional field, eg. 
     %  cat_progress_bar('Init', 10 ,'CAT-Preprocessing','Volumes Complete');
-    switch varargin{2}
+    switch varargin{end}
       case {'bar','cmd','cmd%'}
-        bartype = varargin{2};
+        bartype = varargin{end};
       otherwise
         bartype = 'bar'; 
     end
   else
     bartype = 'bar';  
-  end  
+  end
 elseif strcmpi(action,'off') || strcmpi(action,'silent') || strcmpi(action,'quite') || strcmpi(action,'')
   return
 else
