@@ -26,10 +26,12 @@ function varargout = cat_tst_qa_normer(data,opt)
 %                key given by the data properties such as image resolution
 %                and matrix size  
 %     .siterf .. rounding factor for sites input
-%     .model  .. used model for correction
-%                 0 - median of upper median
-%                 1 - kmeans  
-%                 2 - kmeans enhanced (default) 
+%     .model  .. used model for correction (test value lower better)
+%                 0 - median of upper median      (0.05942)
+%                 1 - kmeans                      (0.10044)
+%                 2 - kmeans enhanced (default)   (0.08681)
+%                 3-4 - other kmeans models       (0.08117,0.08681)
+%                 10  - percentage model (2024)   (0.08488)
 %     .cmodel .. correction type
 %                 1 - only shift
 %                 2 - shift + scaling 
@@ -295,39 +297,26 @@ function varargout = cat_tst_qa_normer(data,opt)
         % - limitation is that the median pick just one element resulting
         %   in some random peak that depend stronger on the specific data
          
-        if 0
-          mn = median( d ); 
-          sd = abs(mn - median(d)) * 4;
+        mn = median( d( d<median(d) ) );
+        sd = std( d );
+        sd = sd * 2; % two times because we only use half ^.5
+      case 10
+        %% percentage model but best results similar to median of median
+        dd  = d; dd(isnan(dd)) = [];
+        ndd = numel(dd);
+      
+        % sort depending on QC rating (mark vs. percentage)
+        if sum(dd>10.5)/ndd > .5 % percentage rating
+          sdd = sort(dd,'ascend');
         else
-          mn = median( d( d<median(d) ) ); 
-          sd = std(    d );
+          sdd = sort(dd,'descend');
         end
-        %sd = std(    d( d<median(d) ) );  
-        sd = sd * 2; % to times because we only use half ^.5
-      case 6
-        %%
-        [hst,edges] = histcounts(d,'BinWidth',0.01); 
-        hstp        = hst+0; spm_smooth(hstp, hstp, numel(edges)*0.01 ); 
-        hsts        = hst+0; spm_smooth(hsts, hsts, numel(edges)*0.1 );
-        [~,hstpmxi] = find(hstp == max(hstp),1,'first');
-        [~,hstsmxi] = find(hsts == max(hsts),1,'first');
-        [~,hstsfsi] = find( (hsts / max(hsts)) > 0.1,1,'first'); 
-        mn =  mean(edges(hstpmxi:hstpmxi+1));
-        sd = (mean(edges(hstsmxi:hstsmxi+1)) - mean( edges(hstsfsi:hstsfsi+1)) ) * 2;
-      case 5
-        % To overcome the dependency of one element in the median model
-        % we want to use the kmeans here. We first use the median and SD
-        % to remove strong outliers and then estimate two peaks where we 
-        % use the first one as optimal value of the protocol 
-
-        ds = sort(d); 
-        ds(1:ceil(numel(ds) * 0.01))   = []; 
-        ds(floor(numel(ds) * 0.6):end) = []; 
-        npeaks   = 1;
-        [mn,sd]  = cat_stat_kmeans( ds , npeaks );
-        sd       = max(0.1,min(1.0,sd));
-        mn       = mean(mn(1)) - 0.25; % - min(0.2,mean(sd(1))); 
-        sd       = mean(sd(1).^0.01) * 2;
+         
+        % .3=0.05504; .4=0.05504; .5=0.05827; .7=0.06394
+        pc = min(.5,1-1/ndd);
+        mn = median(sdd(round(ndd*pc):round(ndd)));
+        sd = max(1,min(5,4 * abs(median(sdd(round(ndd*pc):round(0.95*ndd))) - mn)));
+         
       case {1,2,3,4} 
         %% kmeans model: Estimate peaks based on the histogram
         % * first we have to figure out how many peaks we need to fit by
@@ -381,15 +370,12 @@ hst  = filter([0.1 0.2 0.4 0.2 0.1],1,hst);
             error('no such model');
         end
     end
-%sd = cat_stat_nanstd( d(d < median(d) ));
-    mn  = repmat(mn,size(data,1),size(data,2)); 
+    mn  = repmat(mn,size(data,1),size(data,2));
     sd  = repmat(sd,size(data,1),size(data,2));
     if opt.model == 3
       sdn = max(1/1,min(32, sd * 16));
     elseif opt.model == 4
       sdn = max(1/1,min(32, sd * 4));
-    elseif opt.model == 6
-      sdn = max(1/32,min(32,sd * 2)); 
     else
       sdn = max(1/32,min(32, sd));
     end
@@ -476,16 +462,6 @@ hst  = filter([0.1 0.2 0.4 0.2 0.1],1,hst);
       hold on; 
       
       % background histogram (all data) - only vissual 
-      if 0
-        alp = 0.1; 
-        hf0 = fill( [-1.00-ss 0.25 0.25 -1.00-ss], [0 0 1.2 1.2],'r'); hf0.FaceColor = [0.0 0.5 0.9]; hf0.FaceAlpha = alp; hf0.LineStyle = 'none'; 
-        hf0 = fill( [-0.25 0.25 0.25 -0.25], [0 0 1.2 1.2],'r'); hf0.FaceColor = [0.0 0.8 0];   hf0.FaceAlpha = alp*.5; hf0.LineStyle = 'none'; 
-        hf0 = fill( [0.25 0.75 0.75 0.25], [0 0 1.2 1.2],'r');   hf0.FaceColor = [0.4 0.8 0];   hf0.FaceAlpha = alp; hf0.LineStyle = 'none'; 
-        hf0 = fill( [0.75 1.25 1.25 0.75], [0 0 1.2 1.2],'r');   hf0.FaceColor = [0.8 0.8 0];   hf0.FaceAlpha = alp; hf0.LineStyle = 'none'; 
-        hf0 = fill( [1.25 1.75 1.75 1.25], [0 0 1.2 1.2],'r');   hf0.FaceColor = [0.8 0.4 0];   hf0.FaceAlpha = alp; hf0.LineStyle = 'none'; 
-        hf0 = fill( [1.75 2.25 2.25 1.75], [0 0 1.2 1.2],'r');   hf0.FaceColor = [0.8 0.0 0];   hf0.FaceAlpha = alp; hf0.LineStyle = 'none'; 
-        hf0 = fill( [2.25 3+ss 3+ss 2.25], [0 0 1.2 1.2],'r');   hf0.FaceColor = [0.4 0.0 0];   hf0.FaceAlpha = alp; hf0.LineStyle = 'none'; 
-      end
       % green line at 0
       hp0 = plot( [0 0],[0 1.2] ); hp0.Color = [0 .8 0]; hp0.LineWidth = 2; 
       
