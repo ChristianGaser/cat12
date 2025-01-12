@@ -1,4 +1,30 @@
 ------------------------------------------------------------------------
+r2630 | dahnke | 2025-01-12 18:06:50
+
+Changed paths:
+ M CHANGES.txt
+ M cat12.m
+ M cat_conf_tools.m
+ M cat_run_job.m
+ M cat_run_job1639.m
+ M cat_stat_marks.m
+ M cat_vol_mp2rage.m
+ M cat_vol_qa.m
+ M cat_vol_qa201901.m
+ M cat_vol_qa201901x.m
+ M cat_vol_qa202110.m
+ M cat_vol_qa202205.m
+ M cat_vol_qa202310.m
+
+Changed:    Added MP(2)Rage Preprocessing call in menu (cat12.m).
+Changed:    Updated MP2rage batch structure in cat_conf_tools by  
+            removing not supported fields (trimming), adding  
+            intensity scaling option, and updating help comments.
+Changed:    Updated call of MP2Rage batch in cat_run_job(1639).
+Changed:    Updated MP2rage batch cat_vol_mp2rage. Added iterative
+            SPM preprocessing to improve corrections. Removed 
+            head trimming. Improved intensity normalisation. 
+            ------------------------------------------------------------------------
 r2621 | gaser | 2024-12-07 23:02:18
 
 Changed paths:

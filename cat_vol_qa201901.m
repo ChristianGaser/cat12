@@ -735,9 +735,9 @@ function varargout = cat_vol_qa201901(action,varargin)
       end
       if ~isfield(QAS,'subjectmeasures')
         %% in case of external/batch calls
-        QAS.subjectmeasures.vol_TIV = sum(Yp0(:)>0) ./ prod(vx_vol) / 1000;
+        QAS.subjectmeasures.vol_TIV = sum(Yp0(:)>0) .* prod(vx_vol) / 1000;
         for i = 1:3
-          QAS.subjectmeasures.vol_abs_CGW(i) = sum( Yp0toC(Yp0(:),i)) ./ prod(vx_vol) / 1000; 
+          QAS.subjectmeasures.vol_abs_CGW(i) = sum( Yp0toC(Yp0(:),i)) .* prod(vx_vol) / 1000; 
           QAS.subjectmeasures.vol_rel_CGW(i) = QAS.subjectmeasures.vol_abs_CGW(i) ./ ...
                                                QAS.subjectmeasures.vol_TIV; 
         end

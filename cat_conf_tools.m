@@ -264,66 +264,61 @@ function mp2rage = conf_vol_mp2rage(prefix,verb,expert)
   data.filter       = {'image'};
   data.ufilter      = '.*';
   data.num          = [1 Inf];
-  data.help         = {'Select images. '};
+  data.help         = {'Select head images. '};
 
   spmseg            = cfg_menu;
   spmseg.tag        = 'spmseg';
-  spmseg.name       = 'SPM Preprocessing';
+  spmseg.name       = 'SPM Preprocessing (developer)';
   spmseg.labels     = {'Yes (allways, with cleanup)'; 'Yes (only if required, no cleanup)'};
   spmseg.values     = {1 2};
-  spmseg.help       = {'Run SPM Unified Segmentation if required and delete or keep the temporary results (e.g., to rerun this batch with other options). ' ''};
+  spmseg.help       = {'Run SPM Unified Segmentation if required and delete or keep the temporary results (e.g., to rerun this batch with other options but keep the SPM results). ' ''};
   spmseg.val        = {1};
-  spmseg.hidden     = expert<1; 
-
-  trimming          = cfg_menu;
-  trimming.tag      = 'headtrimming';
-  trimming.name     = 'Crop image';
-  if expert > 1 % developer
-    trimming.labels = {'No'; 'Yes (brain)';'Yes (head)'};
-    trimming.values = {0 1 2};
-  else
-    trimming.labels = {'No';'Yes'};
-    trimming.values = {0 1};
-  end
-  trimming.val      = {1};
-  trimming.hidden   = expert<2; % ONLY DEVELOPER, NOT WORKING YET
-  trimming.help     = {'Remove noise around the head to save disk space and fasten processing. ' ''};
+  spmseg.hidden     = expert<2; 
 
   bias              = cfg_menu;
   bias.tag          = 'biascorrection';
   bias.name         = 'Additional bias corretion';
-  if expert > 1
-    bias.labels     = {'No'; 'Yes (simple)'; 'Yes (complex)'};
-    bias.values     = {0 1 2};
-    bias.help       = {'Additional bias correction based on the values extracted from the SPM segmentation of the WM (simple) or all brain tissue segments (complex). Check the reports to identify problematic cases. ' ''};
-  else
-    bias.labels     = {'No'; 'Yes'};
-    bias.values     = {0 1};
-    bias.help       = {'Additional bias correction. ' ''};
-  end
+  bias.labels       = {'No'; 'Yes - basic';'Yes - extended'};
+  bias.values       = {0 1 2};
+  bias.help         = {'Additional bias correction. ' ''};
+  bias.help         = {'Bias correction by the SPM segmentation (simple) or with additional post-correction (complex). The extend version can help in cases of reminding inhomogeneities that can be seen as local/global underestimated "blue" thickness values (< 1.5 mm) on the CAT report. ' ''};
   bias.val          = {1};
-  %bias.hidden       = expert<1;
+  %bias.hidden       = expert<1; 
+  
+  intscale          = cfg_menu;
+  intscale.tag      = 'intscale';
+  intscale.name     = 'Apply intensity harmonization';
+  intscale.help     = {'Use intensity scaling for more equally distributed tissue intensities.' ''};
+  intscale.labels   = {'No';'Yes'}; 
+  intscale.values   = {0,1};
+  intscale.val      = {1};
+  intscale.hidden   = expert>1; 
 
   logscale          = cfg_menu;
   logscale.tag      = 'log';
-  logscale.name     = 'Log/exp-based intensity transformation';
-  logscale.help     = {'Use log/exp scaling for more equally distributed tissues. The default ("auto") select a function that support the most balanced tissue peaks.' ''};
-  logscale.labels   = {'No';'Exp';'Log';'Auto'}; 
-  logscale.values   = {0,-1,1,inf};
+  logscale.name     = 'Log/exp-based intensity transformation (expert)';
+  logscale.help     = {'Use log/exp scaling for more equally distributed tissue intensities. The default ("auto") select a function that support the most balanced tissue peaks.' ''};
+  if expert > 1
+    logscale.labels   = {'No';'Yes';'Yes - exp';'Yes - log'}; 
+    logscale.values   = {0,inf,-1,1,};
+  else
+    logscale.labels   = {'No';'Yes'}; 
+    logscale.values   = {0,inf};
+  end
   logscale.val      = {inf};
-  logscale.hidden   = expert<1;
+  logscale.hidden   = expert<1; 
 
   intnorm           = cfg_menu;
   intnorm.tag       = 'intnorm';
-  intnorm.name      = 'Contrast transformation';
+  intnorm.name      = 'Contrast transformation (expert)';
   intnorm.help      = {'Contrast normalization using the tangens function of GM normed values. This results in a compression of the GM values, whereas the outer CSF and WM values keep there intensities. ' ''};
   if expert > 1
     intnorm.labels  = {'No (0)';'Light (-0.25)'; 'Standard (-0.50)'; 'Strong (-1.00)'; 'Severe (-1.50)'; 'Fixed (1.2)';'Fixed (1.4)';'Fixed (1.6)';'Fixed (1.8)';'Fixed (2.0)'}; 
     intnorm.values  = {0,  -0.25,-0.50,-1.00,-1.50,  1.2,1.4,1.6,1.8,2.0};
     intnorm.help    = [intnorm.help {'Experts have additional manuell settings with light (1.2) to strong (2.0) corrections.'}];
-  else
-    intnorm.labels  = {'No';'Light';'Standard';'Strong' }; 
-    intnorm.values  = {0,  -0.25,-0.50,-1.00};
+  elseif expert
+    intnorm.labels  = {'No';'Yes' }; 
+    intnorm.values  = {0, -0.5};
   end
   intnorm.val       = {-0.5};
   intnorm.hidden    = expert<1;
@@ -332,42 +327,42 @@ function mp2rage = conf_vol_mp2rage(prefix,verb,expert)
   bet.tag           = 'skullstripping';
   bet.name          = 'Skull-stripping';
   if expert > 1
-    bet.labels      = {'No (0)';'SPM (1)';'Optimized (2)';'Optimized (only MP2Rage; 3)'};
+    bet.labels      = {'No (0)';'SPM (1)';'Optimized (2)';'Remove noisy background (only MP2Rage; 3)'};
     bet.values      = {0,1,2,3};
-    bet.val         = {3};
+    bet.help          = {'Apply skull-stripping to the image. The "SPM" version may miss some brain regions (e.g., motorcortex/occiptial). The optimized version try to add some tissue arround in without running too much into the skull. Alternativelly only the noisy regions of the background and skull can be removed/reduced.' ''};
   else
-    bet.labels      = {'No';'SPM';'Optimized'};
-    bet.values      = {0,1,3};
-    bet.val         = {3};
+    bet.labels      = {'No';'Yes';'Remove noisy background'};
+    bet.values      = {0,2,3};
+    bet.help          = {'Remove the skull or reduce noisy background/skull regions.' ''};
   end
-  bet.help          = {'Apply skull-stripping to the image. The "SPM" version missed some brain regions (e.g., motorcortex/occiptial) in some cases. The optimized version try to add some tissue arround in without running to much into the skull. ' ''};
-
+  bet.val           = {3};
+  
 % bloodvesselscorrection - not implemented yet >> should be handled in CAT anyway 
 % maybe useful to handle SPM detected structures that were labeled as head
 % for experts
   
   CSFnoise          = cfg_menu;
   CSFnoise.tag      = 'restoreLCSFnoise';
-  CSFnoise.name     = 'Restore lower CSF noise if MP2Rage';
+  CSFnoise.name     = 'Restore lower CSF noise if MP2Rage (expert)';
   CSFnoise.labels   = {'No'; 'Yes'};
   CSFnoise.values   = {0 1};
   CSFnoise.val      = {1};
-  CSFnoise.hidden   = expert<2;
+  CSFnoise.hidden   = expert<1;
   CSFnoise.help     = {'In MP2Rage the CSF peak is quite inbalanced and the values are limited by zero. this adds some noise as far as some steps in SPM/CAT expect more variation within the CSF.' ''};
 
   prefix.val        = {'mp2rc_'}; 
-  prefix.help       = [prefix.help {'The string can include a subdirectory "mytestdir/myprefix_" that is than used to store the results. '}];
+  prefix.help       = [prefix.help {'The string can include a subdirectory "mytestdir/myprefix_" that is then used to store the results. '}];
   if expert 
     prefix.help     = [prefix.help {'The keyword "PARA" will be replaced by a string that include major parameter settings for testing. '}];
   end
 
   report            = cfg_menu;
   report.tag        = 'report';
-  report.name       = 'Print report';
+  report.name       = 'Print report (developer)';
   report.labels     = {'No'; 'Yes'};
   report.values     = {0 1};
   report.val        = {1};
-  report.hidden     = expert<1;
+  report.hidden     = expert<2;
   report.help       = {'Create a report file with parameters, results and in-/output images.' ''};
 
   verb.hidden       = expert<1; 
@@ -376,12 +371,11 @@ function mp2rage = conf_vol_mp2rage(prefix,verb,expert)
   mp2rage           = cfg_exbranch;
   mp2rage.tag       = 'mp2rage';
   mp2rage.name      = 'MP2RAGE preprocessing for CAT';
-  mp2rage.val       = {data bias logscale intnorm bet CSFnoise prefix report verb}; 
+  mp2rage.val       = {data bias intscale logscale intnorm bet CSFnoise prefix report verb}; 
   mp2rage.prog      = @cat_vol_mp2rage;
-  mp2rage.vout      = @vout_mp2rage; % define output files 
-  %mp2rage.hidden    = expert<1;
+  mp2rage.vout      = @vout_mp2rage; % define output files  d
   mp2rage.help      = {
-    'Batch to optimize MP2Rage (and other) images for CAT preprocessing (IN DEVELOPMENT). '
+    'Batch to optimize MP2Rage (and other) images for CAT preprocessing. It utilize SPM12 to correct inhomogenities, harmonize the GM-WM contrast, and finally apply a skull-stripping or reduce the noisy background/skull values. '
   };
 
 return

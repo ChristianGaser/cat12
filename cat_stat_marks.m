@@ -100,6 +100,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
   %'qualitymeasures'  'MPC'                   'linear'    [  0.11   0.33]  'mean preprocessing change map - difference between optimal T1 and p0'
   %'qualitymeasures'  'MJD'                   'linear'    [  0.05   0.15]  'mean Jacobian determinant'
   %'qualitymeasures'  'STC'                   'linear'    [  0.05   0.15]   'difference between template and label'
+   'qualitymeasures'  'FEC'                   'linear'    [   100    600]  'quick Euler characteristic'
    'qualitymeasures'  'SurfaceEulerNumber'    'linear'    [     2    100]  'average Euler number (characteristic)'
    'qualitymeasures'  'SurfaceDefectArea'     'linear'    [     0     20]  'average area of topological defects'
    'qualitymeasures'  'SurfaceDefectNumber'   'linear'    [     0    100]  'average number of defects'
@@ -199,8 +200,10 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
       if nargin<1 || isempty(varargin{1}) 
         error('MATLAB:cat_stat_marks:input','Need input structure with measurements!\n');
       end
-      if numel(varargin{1}) > 1
-        def = varargin{2}; 
+      if nargin>3 && ~isstruct(varargin{2})
+         def = cat_vol_qa('getdef',varargin{2});
+      elseif nargin>3 && isstruct(varargin{2})
+         def = varargin{2}; 
       end
       if ~isstruct(varargin{1})
         error('MATLAB:cat_stat_marks:input','Second input has to be a structure!\n');
@@ -270,21 +273,14 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
       
       % SIQR is the successor of IQR and also uses the new edge-based resolution rating 
       try
-        QAM.qualityratings.SIQR      = rms([QAM.qualityratings.NCR  QAM.qualityratings.res_RMS QAM.qualityratings.res_ECR],8);   
+        QAM.qualityratings.SIQR = rms([QAM.qualityratings.NCR  QAM.qualityratings.ICR  ...
+          QAM.qualityratings.res_RMS  QAM.qualityratings.res_ECR  QAM.qualityratings.FEC],4);   
         % further test cases
-        QAM.qualityratings.SIQR3rms2 = rms([QAM.qualityratings.NCR  QAM.qualityratings.res_RMS QAM.qualityratings.res_ECR],2);   
-        QAM.qualityratings.SIQR3rms2 = rms([QAM.qualityratings.NCR  QAM.qualityratings.res_RMS QAM.qualityratings.res_ECR],8);   
-        QAM.qualityratings.SIQR4rms2 = rms([QAM.qualityratings.NCR  QAM.qualityratings.ICR  QAM.qualityratings.res_RMS  QAM.qualityratings.res_ECR],2);   
-        QAM.qualityratings.SIQR4rms8 = rms([QAM.qualityratings.NCR  QAM.qualityratings.ICR  QAM.qualityratings.res_RMS  QAM.qualityratings.res_ECR],8);   
       catch
-        QAM.qualityratings.SIQR      = nan; 
-        QAM.qualityratings.SIQR3rms2 = nan;
-        QAM.qualityratings.SIQR3rms8 = nan;
-        QAM.qualityratings.SIQR4rms2 = nan;
-        QAM.qualityratings.SIQR4rms8 = nan; 
+        QAM.qualityratings.SIQR = nan; 
       end
-      QAM.qualityratings.IQR  = rms([QAM.qualityratings.NCR  QAM.qualityratings.res_RMS ],8);
-      QAM.subjectratings.SQR  = rms([QAM.subjectratings.vol_rel_CGW],8);
+      QAM.qualityratings.IQR  = rms([QAM.qualityratings.NCR  QAM.qualityratings.res_RMS ],4); %QAM.qualityratings.ICR;
+      QAM.subjectratings.SQR  = rms([QAM.subjectratings.vol_rel_CGW],2);
       
       varargout{1} = QAM;
     
@@ -295,7 +291,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
         case {'cat_vol_qa202110','cat_vol_qa201901'} % older version 
           varargout{2} = {'NCR','ICR','res_RMS','contrastr'}; % ,'res_BB' is not working now 
         otherwise
-          varargout{2} = {'NCR','ICR','res_RMS','res_ECR','contrastr'}; % ,'res_BB' is not working now 
+          varargout{2} = {'NCR','ICR','res_RMS','res_ECR','FEC','contrastr'}; % ,'res_BB' is not working now 
       end
       
     case 'marks'    % ausgabe einer leeren struktur

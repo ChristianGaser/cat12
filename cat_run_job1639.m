@@ -550,7 +550,7 @@ function cat_run_job1639(job,tpm,subj)
         mp2job.files             = {nfname}; % list of MP2Rage images
         mp2job.headtrimming      = 0;        % trimming to brain or head (*0-none*,1-brain,2-head)
         mp2job.biascorrection    = 1;        % biascorrection (0-no,1-light(SPM60mm),2-average(SPM60mm+X,3-strong(SPM30+X)) #######
-        mp2job.skullstripping    = 2;        % skull-stripping (0-no, 1-SPM, 2-*optimized*)
+        mp2job.skullstripping    = 3;        % skull-stripping (0-no, 1-SPM, 2-optimized, 3-*background-removal*)
         mp2job.logscale          = inf;      % use log/exp scaling for more equally distributed
                                              % tissues (0-none, 1-log, -1-exp, inf-*auto*);
         mp2job.intnorm           = -.25;     % contrast normalization using the tan of GM normed
@@ -559,14 +559,14 @@ function cat_run_job1639(job,tpm,subj)
         mp2job.restoreLCSFnoise  = 1;        % restore values below zero (lower CSF noise)    
         mp2job.prefix            = '';       % filename prefix (strong with PARA for parameter
                                              % depending naming, e.g. ... ) 
-        mp2job.spm_preprocessing = 1;        % do SPM preprocessing (0-no, 1-yes (if required), 2-always)
+        mp2job.spm_preprocessing = 2;        % do SPM preprocessing (0-no, 1-yes (if required), 2-always)
         mp2job.spm_cleanupfiles  = 1;        % remove temporary files
         mp2job.report            = 0;        % create a report
         mp2job.verb              = 0;        % be verbose (0-no,1-yes,2-details)
         
         % adapt tissue class number 
         job.opts.ngaus(3) = 1;   % at least for CSF we should avoid further peaks
-        if mp2job.skullstripping % no skull-stripping triggered non-T1 case
+        if mp2job.skullstripping>0 % no skull-stripping triggered non-T1 case
           % with skull-stripping we keep things simple
           job.opts.ngaus(4) = 1; 
           job.opts.ngaus(5) = 1; 
@@ -575,7 +575,7 @@ function cat_run_job1639(job,tpm,subj)
 
         % call mp2rage preprocessing
         cat_vol_mp2rage(mp2job);
-        ppe.affreg.skullstripped = 1; 
+        ppe.affreg.skullstripped = mp2job.skullstripping==1 | mp2job.skullstripping==2; 
 
         fprintf('%5.0fs\n',etime(clock,stime));   
       end
