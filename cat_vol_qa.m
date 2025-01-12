@@ -975,7 +975,7 @@ function QARfi = upate_rating(QASfi,version,getdef)
   switch version
     case {'cat_vol_qa201602','cat_vol_qa201901'}
       % robust versions with minimal changes/differences 
-      ndef.noise = [0.046d797 0.397905]; 
+      ndef.noise = [0.046797 0.397905]; 
       ndef.bias  = [0.338721 2.082731];
     case 'cat_vol_qa201901x'  
       % final refined version of robust version 201901 ###############
