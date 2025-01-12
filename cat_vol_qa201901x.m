@@ -679,9 +679,13 @@ function varargout = cat_vol_qa201901x(action,varargin)
       warning on
  
       %QAS.parameter             = opt.job; 
-      if isfield(opt,'job')
-        QAS.parameter.opts        = opt.job.opts;
-        QAS.parameter.extopts     = opt.job.extopts;
+      if isfield(opt,'job') 
+        if isfield(opt.job,'opts') 
+          QAS.parameter.opts        = opt.job.opts;
+        end
+        if isfield(opt.job,'extopts') 
+          QAS.parameter.extopts     = opt.job.extopts;
+        end
         %QAS.parameter.output      = opt.job.output;
         if exist('res','var')
           rf = {'Affine','lkp','mn','vr'}; % important SPM preprocessing variables
@@ -700,9 +704,7 @@ function varargout = cat_vol_qa201901x(action,varargin)
       
       %  resolution 
       QAS.qualitymeasures.res_vx_vol    = vx_vol;
-      if 1 % CAT internal resolution
-        QAS.qualitymeasures.res_vx_voli = vx_voli;
-      end
+      QAS.qualitymeasures.res_vx_voli = vx_voli;
       QAS.qualitymeasures.res_RMS       = cat_stat_nanmean(vx_vol.^2).^0.5;
       % further unused measure (just for test/comparison)
       %QAS.qualitymeasures.res_isotropy  = max(vx_vol)./min(vx_vol);
@@ -737,38 +739,73 @@ function varargout = cat_vol_qa201901x(action,varargin)
       end
       if ~isfield(QAS,'subjectmeasures')
         %% in case of external/batch calls
-        QAS.subjectmeasures.vol_TIV = sum(Yp0(:)>0) ./ prod(vx_vol) / 1000;
+        QAS.subjectmeasures.vol_TIV = sum(Yp0(:)>0) .* prod(vx_vol) / 1000;
         for i = 1:3
-          QAS.subjectmeasures.vol_abs_CGW(i) = sum( Yp0toC(Yp0(:),i)) ./ prod(vx_vol) / 1000; 
+          QAS.subjectmeasures.vol_abs_CGW(i) = sum( Yp0toC(Yp0(:),i)) .* prod(vx_vol) / 1000; 
           QAS.subjectmeasures.vol_rel_CGW(i) = QAS.subjectmeasures.vol_abs_CGW(i) ./ ...
                                                QAS.subjectmeasures.vol_TIV; 
         end
       end
 
+
+
+      %% basic level (RD202411)
+      %  To avoid to long processing times but also to standardize the data
+      %  we first fix the resolution to 1 mm. This was also done as there
+      %  is currently not enough data with higher resolution and varying 
+      %  properties. 
+      if any( vx_vol < .8 )
+        mres = 1; ss = (mres - vx_vol).^2;
+        
+        spm_smooth(Yp0, Yp0, ss); 
+        spm_smooth(Ym , Ym , ss); 
+        spm_smooth(Yo , Yo , ss); 
+        
+        Ym       = single(cat_vol_resize(Ym ,'interphdr',V,mres,1));
+        Yo       = single(cat_vol_resize(Yo ,'interphdr',V,mres,1));
+        [Yp0,V]  = cat_vol_resize(Yp0,'interphdr',V,mres,1); Yp0 = single(Yp0);
+    
+        vx_vol = repmat(mres,1,3); %#ok<*RPMT1>
+      end 
+
+
       %%  estimate QA
       %  ---------------------------------------------------------------
       % remove space arount the brain for speed-up
       [Yo,Ym,Yp0]   = cat_vol_resize({Yo,Ym,Yp0},'reduceBrain',vx_vol,4,Yp0>1.5);
-%%
-if 1      
+
+      % RD20241030: avoid lesions and masking
+      Y0 = cat_vol_morph(Yo==0,'o',1) | Yp0==0;
+      Yo(Y0)=nan; Ym(Y0)=0; Yp0(Y0)=0; 
+
       % Refined segmentation to fix skull-stripping issues in case of bad
       % segmentation. Tested on the BWP with simulated segmenation issues
       % for skull-stripping as well as WM/CSF over/underestimation.
-      if 0
-        Yp0   = Yp0 .* cat_vol_morph(cat_vol_morph(cat_vol_morph(Yp0>0.9,'e',2,vx_vol),'l',[0.5 0.2]),'d',2,vx_vol);
-      else
-        [Yp0r,resYp0] = cat_vol_resize(Yp0,'reduceV',vx_vol,2,32,'meanm');
-        Yp0r  = cat_vol_morph(cat_vol_morph(cat_vol_morph(Yp0r>0.9,'e',1),'l',[0.5 0.2]),'d',1);
-        Yp0   = Yp0 .* (cat_vol_resize(Yp0r,'dereduceV',resYp0)>.5); 
-      end
-end
-      
+      [Yp0r,resYp0] = cat_vol_resize(Yp0,'reduceV',vx_vol,2,32,'meanm');
+      Yp0r  = cat_vol_morph(cat_vol_morph(cat_vol_morph(Yp0r>0.9,'e',1),'l',[0.5 0.2]),'d',1);
+      Yp0   = Yp0 .* (cat_vol_resize(Yp0r,'dereduceV',resYp0)>.5); 
+
       % rought contast and noise estimation to get a stable T1 map for threshold estimation
       T1th = [cat_stat_nanmedian(Ym(Yp0toC(Yp0(:),1)>0.9)) ...
               cat_stat_nanmedian(Ym(Yp0toC(Yp0(:),2)>0.9)) ...
               cat_stat_nanmedian(Ym(Yp0toC(Yp0(:),3)>0.9))];
       
-if 1   
+      newNC = 1; 
+      if newNC
+        %% new more accurate approach
+        noise  = max(0,min(1,cat_stat_nanstd(Ym(Yp0(:)>2.9)) / min(abs(diff(T1th)))));
+        % we need a bit background noise for the filter!
+        Yms   = Ym + ( (T1th(3)*noise/3) .* (cat_vol_smooth3X(Yp0,2)>0 & Yp0==0) .* rand(size(Ym)) ); cat_sanlm(Yms,1,3);
+        noise = max(0,min(1,cat_stat_nanstd(Ym(Yp0(:)>.5) - Yms(Yp0(:)>.5)) / min(abs(diff(T1th))))) * 5;  
+        Ym(Y0) = nan; 
+      else
+        %% classic a bit faster approach
+        Ym(Y0) = nan; 
+        noise  = max(0,min(1,cat_stat_nanstd(Ym(Yp0(:)>2.9)) / min(abs(diff(T1th)))));
+        Yms    = Ym+0; spm_smooth(Yms,Yms,repmat(double(noise)*4,1,3));      % smoothing to reduce high frequency noise
+      end
+
+     
       % Avoid lesions defined as regions (local blobs) with high difference 
       % between the segmentation and intensity scaled image. Remove these 
       % areas from the Yp0 map that is not used for volumetric evaluation.
@@ -777,83 +814,55 @@ if 1
       Ymm  = cat_main_gintnorm(Ym,struct('T3th',[0 T1th T1th(end)*2],'T3thx',[0 1 2 3 6]));
       Ymd  = cat_vol_smooth3X( (Yp0>0) .* abs(Ymm - Yp0/3) , 2); 
       mdth = cat_stat_nanmedian(Ymd(Ymd(:) > 1.5 * cat_stat_nanmedian(Ymd(Ymd(:)>0))));
-      Ymsk = Ymd > mdth;
-      T1th = [cat_stat_nanmedian(Ym(Yp0toC(Yp0(:),1)>0.9 & ~Ymsk(:) & Ymm(:)<0.35)) ...
-              cat_stat_nanmedian(Ym(Yp0toC(Yp0(:),2)>0.9 & ~Ymsk(:) )) ...
+      Ymsk = Ymd > mdth & (Ymm>.5);
+      % tissue contrasts (corrected for noise-bias estimated on the BWP)
+      T1th = [cat_stat_nanmedian(Ym(Yp0toC(Yp0(:),1)>0.9 & ~Ymsk(:) & Ymm(:)<1.25/3)) + noise/200 ...
+              cat_stat_nanmedian(Ym(Yp0toC(Yp0(:),2)>0.9 & ~Ymsk(:) ))                + noise/150 ...
               cat_stat_nanmedian(Ym(Yp0toC(Yp0(:),3)>0.9 & ~Ymsk(:) ))];
-      Ymm  = cat_main_gintnorm(Ym,struct('T3th',[0 T1th T1th(end)*2],'T3thx',[0 1 2 3 6]));
-      Ymd  = cat_vol_smooth3X( (Yp0>0) .* abs(Ymm - Yp0/3) , 2); 
-      mdth = cat_stat_nanmedian(Ymd(Ymd(:) > 1.5 * cat_stat_nanmedian(Ymd(Ymd(:)>0))));
-      Ymsk = Ymd > mdth;
-      Yp0(Ymsk) = 0; 
-end
-
-%%
-      noise = max(0,min(1,cat_stat_nanstd(Ym(Yp0(:)>2.9)) / min(abs(diff(T1th)))));
-      Yms = Ym+0; spm_smooth(Yms,Yms,repmat(double(noise)*4,1,3));      % smoothing to reduce high frequency noise
-            
-      % basic tissue classes - erosion to avoid PVE, std to avoid other tissues (like WMHs)
-      if T1th(1) < T1th(2) && T1th(2) < T1th(3)
-        voli = @(v) (v ./ (pi * 4./3)).^(1/3); 
-        rad  = voli( QAS.subjectmeasures.vol_TIV) ./ cat_stat_nanmean(vx_vol);
-        Ysc  = 1-cat_vol_smooth3X(Yp0<1 | Yo==0,min(24,max(16,rad*2)));   % fast 'distance' map
-        Ycm  = cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<cat_stat_nanmean(T1th(1:2)),'e') & ...
-                Ysc>0.75 & Yp0<1.25;% avoid PVE & ventricle focus
-        if sum(Ycm(:)>0)<10; Ycm=cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<cat_stat_nanmean(T1th(1:2)),'e') & Yp0<1.25; end
-        if sum(Ycm(:)>0)<10; Ycm=Yp0>0.5 & Yms<cat_stat_nanmean(T1th(1:2)) & Yp0<1.25; end
-        %Ycm  = Ycm | (Yp0==1 & Ysc>0.7 & Yms<cat_stat_nanmean(T1th(2:3))); % HEBEL      
-    %    Ygm1 = round(Yp0*10)/10==2;                                       % avoid PVE 1
-    %    Ygm2 = cat_vol_morph(Yp0>1.1,'e') & cat_vol_morph(Yp0<2.9,'e');   % avoid PVE 2
-    %    Ygm  = (Ygm1 | Ygm2) & Ysc<0.9;                                   % avoid PVE & no subcortex
-        Ygm  = Yp0>1.5 & Yp0<2.5 & Ysc<0.9;  
-        Ywm  = cat_vol_morph(Yp0>2.1,'de',1.5,vx_vol) & Yp0>2.9 & ...                 % avoid PVE & subcortex
-        Yms>min(cat_stat_nanmean(T1th(2:3)),(T1th(2) + 2*noise*abs(diff(T1th(2:3)))));   % avoid WMHs2#
-        clear Ygm1 Ygm2; % Ysc; 
+      if newNC
+        noise  = max(0,min(1,cat_stat_nanstd(Ym(Yp0(:)>.5) - Yms(Yp0(:)>0.5)) / min(abs(diff(T1th))))) * 5;  
       else
-        Ycm = cat_vol_morph(Yp0>0 & Yp0<2,'de',1,vx_vol);
-        Ygm = cat_vol_morph(Yp0>1 & Yp0<3,'de',1,vx_vol);
-        Ywm = cat_vol_morph(Yp0>2 & Yp0<4,'de',1,vx_vol);
+        noise  = max(0,min(1,cat_stat_nanstd(Ym(Yp0(:)>2.9)) / min(abs(diff(T1th))))); 
       end
-        
-      
-      %% further refinements of the tissue maps
-      if T1th(1) < T1th(2) && T1th(2) < T1th(3)
-        T2th = [median(Yms(Ycm)) median(Yms(Ygm)) median(Yms(Ywm))];
-        Ycm  = Ycm & Yms>(T2th(1)-16*noise*diff(T2th(1:2))) & Ysc &...
-               Yms<(T2th(1)+0.1*noise*diff(T2th(1:2)));
-        if sum(Ycm(:)>0)<10; Ycm=cat_vol_morph(Yp0>0.5 & Yp0<1.5 & Yms<cat_stat_nanmean(T1th(1:2)),'e') & Yp0<1.25; end
-        if sum(Ycm(:)>0)<10; Ycm=Yp0>0.5 & Yms<cat_stat_nanmean(T1th(1:2)) & Yp0<1.25; end     
-        Ygm  = Ygm & Yms>(T2th(2)-2*noise*abs(diff(T1th(2:3)))) & Yms<(T2th(2)+2*noise*abs(diff(T1th(2:3))));
-        Ygm(smooth3(Ygm)<0.2) = 0;
-      end
-     % Ycm  = cat_vol_morph(Ycm,'lc'); % to avoid holes
-     % Ywm  = cat_vol_morph(Ywm,'lc'); % to avoid holes
-if 0        
-      Ywe  = cat_vol_morph(Ywm,'e'); 
-else
-     % have to close it before to avoid enlarged PVS
-      Ywe  = Ywm & cat_vol_morph(Ywm,'de',1.5,vx_vol);
-      Yce  = Ywm & cat_vol_morph(Ycm,'de',1.5,vx_vol);
-      %Ywe(Ymm<0.95) = 0; % but avoid them againg
-end
-     %Ywe  = cat_vol_morph(Ywm,'e');     
-%      Ywd  = cat_vol_
+      Yp0(Ymsk) = 0; 
+ %     fprintf('BCGW=%5.3f,%5.3f,%5.3f,%5.3f, WTH=%8.2f | ',noise,T1th/max(T1th),T1th(3));
 
-      %% RD202212 add resolution measure
-if 0      
-      res_ECR0 = estimateECR0( Ym , Yp0, T2th, vx_vol );
-else
-    % Yo was not normalized 
-      if abs(T1th(2) - 2/3) < 0.02
-        Ymm = Ym; 
-      else 
-        Ymm = cat_main_gintnorm(Ym,struct('T3th',[0 T1th T1th(end)*2],'T3thx',[0 1 2 3 6]));
+
+      % basic tissue classes - erosion to avoid PVE, std to avoid other tissues (like WMHs)
+      voli = @(v) (v ./ (pi * 4./3)).^(1/3); 
+      rad  = voli( QAS.subjectmeasures.vol_TIV) ./ cat_stat_nanmean(vx_vol);
+      Ysc  = 1-cat_vol_smooth3X(Yp0<1 | Yo==0,min(24,max(16,rad*2)));   % fast 'distance' map to focus on deep CSF
+      % definiton of basic tissue segments without PVE
+      Ycm  = Yp0>0.75 & Yp0<1.25 & cat_vol_morph(Yp0>0.25 & Yp0<1.75,'de',1,vx_vol) & Ysc>0.75;
+      Ygm  = Yp0>1.75 & Yp0<2.25 & cat_vol_morph(Yp0>1.25 & Yp0<2.75,'de',1,vx_vol);
+      Ywm  = Yp0>2.75 & Yp0<3.25 & cat_vol_morph(Yp0>2.25 & Yp0<3.75,'de',1,vx_vol);
+      if  0 % T1th(1) < T1th(2) && T1th(2) < T1th(3)
+        Ywm = Ywm & Yms>min(cat_stat_nanmean(T1th(2:3)),(T1th(2) + 1.5*noise*abs(diff(T1th(2:3)))));   % avoid WMHs2#
       end
-      %%
-      [res_ECR0, segCase, Yp0c, Ygrad] = estimateECR0( Ymm , Yp0, 1/3:1/3:1, vx_vol.^.5 );
+      % RD202411: Median filter to avoid side effects by PVE/SVD/PVS
+      Ymed = cat_vol_median3(Yms,Ywm,Ywm); 
+      Ywm(Ymed - (Yms.*Ywm) > noise/2) = 0; 
+   
+
+      %% RD202212: Edge Contrast Ratio 
+      %  To estimate the real structural resolution independent of the 
+      %  voxel size that is useless
+      Ymm = cat_main_gintnorm(Ym,struct('T3th',[0 T1th T1th(end)*2],'T3thx',[0 1 2 3 6]));
+      %res_ECR0 = estimateECR0( Ymm , Yp0, vx_vol );  
+      res_ECR0 = estimateECR0old( Ymm , Yp0, vx_vol );  
       QAS.qualitymeasures.res_ECR  = abs( 2.5 - res_ECR0 * 10 ); 
 
-end
+
+      %% Fast Euler Characteristic (FEC) 
+      QAS.qualitymeasures.FEC = estimateFEC(Yp0, vx_vol, Ymm, V);
+
+      
+      % bias correction of the original input image 
+      Yi  = Yo ./ cat_stat_nanmedian(Yo(Ywm(:))) ./ Ym; 
+      Yic = cat_vol_localstat(Yi,Yi>0,1,4); Yi(Yic>.2) = 0; 
+      Yw  = cat_vol_approx(Yi,'rec'); 
+      Ymx = Yo ./ Yw; 
+
 
       %% low resolution tissue intensity maps (smoothing)
       % High frequency noise is mostly uncritical as far as simple smoothing can reduce it. 
@@ -861,148 +870,79 @@ end
       % but will influence the noise pattern. 
       % But most important is the noise with the medium high frequencies, that we try do detect by 
       % reducing the very high and low noise pattern by filtering and pixel smoothing by reduction.
-      res = 2; vx_volx = vx_vol; %1; 
-      Yos = cat_vol_localstat(Yo,Ywm,1,1); Yo(Yos>0)=Yos(Yos>0);        % reduce high frequency noise in WM 
-      Yos = cat_vol_localstat(Yo,Ycm,1,1); Yo(Yos>0)=Yos(Yos>0);        % reduce high frequency noise in CSF
+      res = 2.3; vx_volx = vx_vol; %min(2,max(vx_vol)*2); vx_volx = vx_vol; %/max(vx_vol); 
 
-      Yg  = cat_vol_resize(Yo .* Ygm,'reduceV',vx_volx,res,32,'meanm'); % GM thr.
-      Yw  = cat_vol_resize(Yo .* Ywe,'reduceV',vx_volx,res,32,'meanm'); % WM thr. and bias correction (Ywme)
-      Yc  = cat_vol_resize(Yo .* Ycm,'reduceV',vx_volx,res,32,'min');   % CSF thr. (minimum to avoid PVE)
-      Ywc = cat_vol_resize(Ym .* Ywe,'reduceV',vx_volx,res,32,'meanm'); % for bias correction
-      Ywb = cat_vol_resize( (Yo + min(Yo(:))) .* Ywe,'reduceV',vx_volx,res,32,'max') - min(Yo(:));   % for WM inhomogeneity estimation (avoid PVE)
-      Ywn = cat_vol_resize(Yo .* Ywe,'reduceV',vx_volx,res,32,'meanm'); % for WM noise
-      Ycn = cat_vol_resize(Yo .* Yce,'reduceV',vx_volx,res,32,'meanm'); % for CSF noise
-      Ycm = cat_vol_resize(Ycm      ,'reduceV',vx_volx,res,32,'meanm'); % CSF thr. (minimum to avoid PVE)
-      Ygm = cat_vol_resize(Ygm      ,'reduceV',vx_volx,res,32,'meanm'); % GM thr.
-      Ywm = cat_vol_resize(Ywm      ,'reduceV',vx_volx,res,32,'meanm'); % WM thr. and bias correction (Ywme)
-      Ywe = cat_vol_resize(Ywe      ,'reduceV',vx_volx,res,32,'meanm'); % WM thr. and bias correction (Ywme)
-      Yce = cat_vol_resize(Yce      ,'reduceV',vx_volx,res,32,'meanm'); % WM thr. and bias correction (Ywme)
       
-      % only voxel that were the product of 
-      Yc  = Yc  .* (Ycm>=0.5); Yg  = Yg  .* (Ygm>=0.5);  Yw  = Yw  .* (Ywe>=0.5); 
-      Ywc = Ywc .* (Ywe>=0.5); Ywb = Ywb .* (Ywe>=0.5);  Ywn = Ywn .* (Ywe>=0.5);
-      Ycn = Ycn .* (Yce>=0.5);
-      
-      clear Ycm Ygm Ywm Ywme;
-      [Yo,Ym,Yp0,resr] = cat_vol_resize({Yo,Ym,Yp0},'reduceV',vx_volx,res,32,'meanm'); 
+      if 1
+  %##################      
+        % This block is a bit weired but is imporant to balance the hard noise 
+        % of the BWP and real data aspects. It uses a Gaussian smoothing to 
+        % reduce this hard noise. 
+        T0th = [cat_stat_nanmedian(Ymx(Ycm(:))) cat_stat_nanmedian(Ymx(Ygm(:))) cat_stat_nanmedian(Ymx(Ywm(:)))]; 
+        Yos  = Ymx.*Ywm + (1-Ywm).*T0th(3); spm_smooth(Yos,Yos,.5 + 1./vx_vol); Ymx(Ywm>0)=Yos(Ywm>0);  
+        Yos  = Ymx.*Ygm + (1-Ygm).*T0th(2); spm_smooth(Yos,Yos,.5 + 1./vx_vol); Ymx(Ygm>0)=Yos(Ygm>0);  
+        Yos  = Ymx.*Ycm + (1-Ycm).*T0th(1); spm_smooth(Yos,Yos,.5 + 1./vx_vol); Ymx(Ycm>0)=Yos(Ycm>0); 
+      end 
+ 
+      Ywb = cat_vol_resize(Yw        ,'reduceV',vx_volx,res,32,'meanm');   % CSF thr. (minimum to avoid PVE)
+      Yg  = cat_vol_resize(Ymx .* Ygm,'reduceV',vx_volx,res,32,'meanm'); % GM thr.
+      Yw  = cat_vol_resize(Ymx .* Ywm,'reduceV',vx_volx,res,32,'meanm'); % WM thr. and bias correction (Ywme)
+      Yc  = cat_vol_resize(Ymx .* Ycm,'reduceV',vx_volx,res,32,'meanm');   % CSF thr. (minimum to avoid PVE)
+      Ywn = cat_vol_resize(Ymx .* Ywm,'reduceV',vx_volx,res,32,'meanm'); % for WM noise
+      Ycn = cat_vol_resize(Ymx .* Ycm,'reduceV',vx_volx,res,32,'meanm'); % for CSF noise
+      Ygm = cat_vol_resize(Ygm       ,'reduceV',vx_volx,res,32,'meanm'); % GM thr.
+      Ywm = cat_vol_resize(Ywm       ,'reduceV',vx_volx,res,32,'meanm'); % WM thr. and bias correction (Ywme)
+      Ycm = cat_vol_resize(Ycm       ,'reduceV',vx_volx,res,32,'meanm'); % WM thr. and bias correction (Ywme)
+      [Yo,Ym,Yp0,resr] = cat_vol_resize({Ymx,Ym,Yp0},'reduceV',vx_volx,res,32,'meanm'); 
       resr.vx_volo = vx_vol; vx_vol=resr.vx_red .* resr.vx_volo;
+  
+      % only voxel that have multiple inputs
+      Yc  = Yc  .* (Ycm>=0.5); Yg  = Yg  .* (Ygm>=0.5);  Yw  = Yw  .* (Ywm>=0.5); 
+      Ywn = Ywn .* (Ywm>=0.5); Ycn = Ycn .* (Ycm>=0.5);
+      clear Ycm Ygm Ywm;
       
-      % intensity scaling for normalized Ym maps like in CAT12
-if 0      
-      Ywc = Ywc .* (cat_stat_nanmean(Yo(Yp0(:)>2))/cat_stat_nanmean(Ym(Yp0(:)>2)));
-else
-      if  cat_stat_nanmean(Yo(Yp0(:)>2))<0
-        Ywc = Ywc .* (cat_stat_nanmean(Yo(Yp0(:)>2))/cat_stat_nanmean(2 - Ym(Yp0(:)>2))); % RD202004: negative values in chimp data showed incorrect scalling
-      else
-        Ywc = Ywc .* (cat_stat_nanmean(Yo(Yp0(:)>2))/cat_stat_nanmean(Ym(Yp0(:)>2)));
-      end
-end
-
-      %% bias correction for original map, based on the 
-if 0
-      WI  = Yw./max(eps,Ywc); WI(isnan(WI) | isinf(WI)) = 0; 
-else
-      WI  = zeros(size(Yw),'single'); WI(Ywc(:)~=0) = Yw(Ywc(:)~=0) ./ Ywc(Ywc(:)~=0); WI(isnan(Ywe) | isinf(WI) | Ywe==0) = 0;
-end
-      WI  = cat_vol_approx(WI,'rec',2);
-      WI  = cat_vol_smooth3X(WI,1);
-
-      Ywn = Ywn./max(eps,WI); %Ywn = round(Ywn*1000)/1000;
-      Ymi = Yo ./max(eps,WI); %Ymi = round(Ymi*1000)/1000;
-      Yc  = Yc ./max(eps,WI); %Yc  = round(Yc *1000)/1000;
-      Yg  = Yg ./max(eps,WI); %Yg  = round(Yg *1000)/1000;
-      Yw  = Yw ./max(eps,WI); %Yw  = round(Yw *1000)/1000;
-      clear WIs ;
-      
-if 0       
-      Ywb = Ywb ./ cat_stat_nanmean(Ywb(Yp0(:)>2)); % ############### incorrect ###################
-end
-
-      % tissue segments for contrast estimation etc. 
-if 0 
-% original 201901 and 202110 ...  
-      CSFth = cat_stat_nanmean(Yc(~isnan(Yc(:)) & Yc(:)~=0)); 
-      GMth  = cat_stat_nanmean(Yg(~isnan(Yg(:)) & Yg(:)~=0));
-      WMth  = cat_stat_nanmean(Yw(~isnan(Yw(:)) & Yw(:)~=0)); 
-else 
-% ... but median should be more robust to avoid CON aging
-      CSFth = cat_stat_nanmedian(Yc(~isnan(Yc(:)) & Yc(:)~=0)); 
-      GMth  = cat_stat_nanmedian(Yg(~isnan(Yg(:)) & Yg(:)~=0));
+      % tissue contrasts (corrected for noise-bias estimated on the BWP)
       WMth  = cat_stat_nanmedian(Yw(~isnan(Yw(:)) & Yw(:)~=0)); 
-end
+      GMth  = cat_stat_nanmedian(Yg(~isnan(Yg(:)) & Yg(:)~=0)) + noise/220 * WMth;
+      CSFth = cat_stat_nanmedian(Yc(~isnan(Yc(:)) & Yc(:)~=0)) - noise/55 * WMth; 
+      BGth  = noise/20 * WMth; 
       T3th  = [CSFth GMth WMth];
 
-    %fprintf('CGW=%0.2f,%0.2f,%0.2f\n',T3th);
-      
-      % estimate background
-      [Ymir,resYbg] = cat_vol_resize(Ymi,'reduceV',1,6,32,'meanm'); 
-      try
-        warning 'off' 'MATLAB:cat_vol_morph:NoObject'
-        BGCth = min(T3th)/2; 
-        Ybgr = cat_vol_morph(cat_vol_morph(Ymir<BGCth,'lc',1),'e',2/cat_stat_nanmean(resYbg.vx_volr)) & ~isnan(Ymir);
-        Ybg  = cat_vol_resize(Ybgr,'dereduceV',resYbg)>0.5; clear Yosr Ybgr;
-        if sum(Ybg(:))<32, Ybg = cat_vol_morph(Yo<BGCth,'lc',1) & ~isnan(Yo); end
-        warning 'on'  'MATLAB:cat_vol_morph:NoObject'
-        BGth = cat_stat_nanmedian(Ymi(Ybg(:)));   
-      catch
-        warning 'on'  'MATLAB:cat_vol_morph:NoObject'
-        try
-          % non-zero background
-          Ygr  = cat_vol_grad(Ymir); 
-          warning 'off' 'MATLAB:cat_vol_morph:NoObject'
-          Ybgr = cat_vol_morph(cat_vol_morph(Ygr<0.3 & Yp0<0,'lc',1),'e',2/cat_stat_nanmean(resYbg.vx_volr)) & ~isnan(Ymir);
-          Ybg  = cat_vol_resize(Ybgr,'dereduceV',resYbg)>0.5; clear Yosr Ybgr;
-          if sum(Ybg(:))<32, Ybg = cat_vol_morph(Yo<BGCth,'lc',1) & ~isnan(Yo); end
-          warning 'on'  'MATLAB:cat_vol_morph:NoObject'
-          BGth = cat_stat_nanmedian(Ymi(Ybg(:)));   
-        catch
-          warning 'on'  'MATLAB:cat_vol_morph:NoObject'
-          BGth = nan; 
-        end
+      if 1  % 201901 version 
+            signal   = max([WMth,GMth]);
+      else  % maybe more robust 202110 version ? 
+            signal   = abs(diff([min([CSFth,BGth]),max([WMth,GMth])])); 
       end
-          
+ 
       % (relative) average tissue intensity of each class
       QAS.qualitymeasures.tissue_mn  = ([BGth CSFth GMth WMth]);
-      QAS.qualitymeasures.tissue_mnr = QAS.qualitymeasures.tissue_mn ./ (max([WMth,GMth])); 
-      if WMth>GMth
+      QAS.qualitymeasures.tissue_mnr = QAS.qualitymeasures.tissue_mn ./ signal; 
+      if WMth > GMth
         QAS.qualitymeasures.tissue_weighting = 'T1';
       elseif WMth<GMth && GMth<CSFth
         QAS.qualitymeasures.tissue_weighting = 'inverse';
       end
       
       % (relative) standard deviation of each class
-      QAS.qualitymeasures.tissue_std(1) = cat_stat_nanstd( Ymi(Ybg(:)) );
+      QAS.qualitymeasures.tissue_std(1) = BGth; 
       for ci=2:4
-        QAS.qualitymeasures.tissue_std(ci) = cat_stat_nanstd(Ymi(Yp0toC(Yp0(:),ci-1)>0.5 & ~isinf(Yp0(:))));
+        QAS.qualitymeasures.tissue_std(ci) = cat_stat_nanstd(Yo(Yp0toC(Yp0(:),ci-1)>0.5 & ~isinf(Yp0(:))));
       end
       QAS.qualitymeasures.tissue_stdr = QAS.qualitymeasures.tissue_std ./ (WMth-BGth);
        
-      % (relative) (mininum) tissue contrast ( CSF-GM-WM ) 
-      % - the CSF threshold varies strongly due to bad segmentations,
-      %   and anatomica variance, so its better to use GM-WM contrast 
-      %   and take care of overoptimisation with values strongly >1/3
-      %   of the relative contrast
-if 1 
-% 201901 version 
-      contrast = min(abs(diff(QAS.qualitymeasures.tissue_mn(2:4)))) ./ (max([WMth,GMth])); % default contrast
-else      
-% maybe more robust 202110 version ? 
-      contrast = min(abs(diff(QAS.qualitymeasures.tissue_mn(2:4)))) ./ abs(diff([min([CSFth,BGth]),max([WMth,GMth])])); % default contrast
-end
-      contrast = contrast + min(0,13/36 - contrast) * 1.2;                    % avoid overoptimsization
-      QAS.qualitymeasures.contrast  = contrast * (max([WMth,GMth])); 
-      QAS.qualitymeasures.contrastr = contrast;
+
+      contrast = min(abs(diff(QAS.qualitymeasures.tissue_mn(2:4)))) ./ signal; 
+      QAS.qualitymeasures.contrast  = contrast * signal;  
+      QAS.qualitymeasures.contrastr = 1/3 - abs(1/3 - contrast) / 2; 
       
-  
-      
-      
-      %% noise estimation (original (bias corrected) image)
+%      fprintf('BCGW=%5.3f,%5.3f,%5.3f,%5.3f, WTH=%8.2f CON=%0.3f\n',BGth/max(T3th),T3th/max(T3th),T3th(3),contrast);
+       
       % WM variance only in one direction to avoid WMHs!
       rms=1; nb=1;
-      NCww = sum(Ywn(:)>0) * prod(vx_vol);
-      NCwc = sum(Ycn(:)>0) * prod(vx_vol);
-      [Yos2,YM2] = cat_vol_resize({Ywn,Ywn>0},'reduceV',vx_vol,3,16,'meanm');
-      NCRw = estimateNoiseLevel(Yos2,YM2>0.5,nb,rms) / max(GMth,WMth) / contrast  ; 
+      NCww = nnz(Ywn(:)>0) * prod(vx_vol);
+      NCwc = nnz(Ycn(:)>0) * prod(vx_vol);
+      [Yos2,YM2] = cat_vol_resize({Ywn,Ywn>0},'reduceV',vx_vol,2,16,'meanm');
+      NCRw = estimateNoiseLevel(Yos2,YM2>0.5,nb,rms) / signal * contrast * 12; 
       if BGth<-0.1 && WMth<3, NCRw=NCRw/3; end% MT weighting
       clear Yos0 Yos1 Yos2 YM0 YM1 YM2;
         
@@ -1010,8 +950,8 @@ end
       % for typical T2 images we have too much signal in the CSF and can't use it for noise estimation!
       wcth = 200; 
       if CSFth<GMth && NCwc>wcth
-        [Yos2,YM2] = cat_vol_resize({Ycn,Ycn>0},'reduceV',vx_vol,3,16,'meanm');
-        NCRc = estimateNoiseLevel(Yos2,YM2>0.5,nb,rms) / max(GMth,WMth)  / contrast ; 
+        [Yos2,YM2] = cat_vol_resize({Ycn,Ycn>0},'reduceV',vx_vol,2,16,'meanm');
+        NCRc = estimateNoiseLevel(Yos2,YM2>0.5,nb,rms) / signal * contrast * 12; 
         clear Yos0 Yos1 Yos2 YM0 YM1 YM2;
       else
         NCRc = 0;
@@ -1023,28 +963,12 @@ end
       NCwc = min(wcth,max(0,NCwc-wcth)); NCww = min(wcth,NCww) - NCwc; % use CSF if possible
       if NCwc<3*wcth && NCww<10*wcth, NCRc = min(NCRc,NCRw); end
       QAS.qualitymeasures.NCR = (NCRw*NCww + NCRc*NCwc)/(NCww+NCwc);
-      %QAS.qualitymeasures.NCR = QAS.qualitymeasures.NCR * (prod(resr.vx_volo))^(1/4); %* 7.5; %15;
-      % QAS.qualitymeasures.NCR = QAS.qualitymeasures.NCR * (prod(resr.vx_volo*res))^0.4 * 5/4; %* 7.5; %15;
-      %QAS.qualitymeasures.CNR = 1 / QAS.qualitymeasures.NCR;  
-%fprintf('NCRw: %8.3f, NCRc: %8.3f, NCRf: %8.3f\n',NCRw,NCRc,(NCRw*NCww + NCRc*NCwc)/(NCww+NCwc));
-
       
-      %% Bias/Inhomogeneity (original image with smoothed WM segment)
-if 0      
-      Yosm = cat_vol_resize(Ywb,'reduceV',vx_vol,3,32,'meanm');      % resolution and noise reduction
-      for si=1:max(1,min(3,round(QAS.qualitymeasures.NCR*4))), Yosm = cat_vol_localstat(Yosm,Yosm>0,1,1); end 
-      QAS.qualitymeasures.ICR  = cat_stat_nanstd(Yosm(Yosm(:)>0)) / contrast;
-      %QAS.qualitymeasures.CIR  = 1 / QAS.qualitymeasures.ICR;
-else
-      Yosm = cat_vol_resize(Ywb,'reduceV',vx_vol,4,8,'meanm'); Yosmm = Yosm~=0;         % resolution and noise reduction
-      for si=1, mth = min(Yosm(:)) + 1; Yosm = cat_vol_localstat(Yosm + mth,Yosmm,1,1) - mth; end 
-      QAS.qualitymeasures.ICR  = cat_stat_nanstd(Yosm(Yosm(:)>0)) / (max(GMth,WMth) * contrast);
-end
 
-      %% resolution reating
-%      QAS.qualitymeasures.res_ECR  = 1 - abs( res_ECR0 / contrast); 
-   
-  
+      % Bias/Inhomogeneity (original image with smoothed WM segment)
+      QAS.qualitymeasures.ICR  = cat_stat_nanstd(Ywb(Yp0(:)>0)) * contrast * 12;
+      
+
       %% marks
       QAR = cat_stat_marks('eval',1,QAS);
 
@@ -1108,19 +1032,181 @@ function noise = estimateNoiseLevel(Ym,YM,r,rms,vx_vol)
   noise = cat_stat_nanstat1d(Ysd(YM).^rms,'median').^(1/rms); 
 end
 %=======================================================================
-function res_ECR = estimateECR0old201901a(Ym,Yp0,Tth,vx_vol)
+function [res_ECR,segCase,Yp0c,Ygrad] = estimateECR(Ym,Yp0,vx_vol)
 %% estimateECR. Quanfify anatomical details by the normalized edge strength.
 % 
-% old pure version for high quality segmentation input 
+% old pure version for high quality segmentation input that works only well
+% for the CAT12 AMAP segmenation. 
+%
+% Extension 202309:  Tested at  eroded and dilated boundaries positions
 
-% extend step by step by some details (eg. masking of problematic regions
 
-  Ygrad   = cat_vol_grad(max(Tth(2),min(1,Ym) .* (Yp0>0)) , vx_vol); 
-  res_ECR = cat_stat_nanmedian(Ygrad(Yp0(:)>2.05 & Yp0(:)<2.95),1);
-  
-end 
+  Ybad     = abs(Yp0/3 - Ym) > .5 | isnan(Ym) | isnan(Yp0) | (Yp0==0); 
+  Yp0s     = max(2,Yp0+0); spm_smooth(Yp0s,Yp0s,.5 ./ vx_vol); %max(0.4,1.4 - 0.4.*vx_vol));
+  Ywmb     = Yp0s>2.05 & Yp0s<2.95; 
+
+  if 1
+  % This sanlm is not working as intended. It is not denoising fully and when I use the 
+    Yms = Ym .* Ywmb; cat_sanlm(Yms,3,1); Ym(Ywmb) = Yms(Ywmb); 
+  else
+    Yms = Ym .* cat_vol_morph(Ywmb,'d',1); Yms = cat_vol_median3(Yms,Yms>0,Yms>0); Ym(Ywmb) = Yms(Ywmb); 
+  end
+  Ym(isnan(Ym)) = 0; Ym = max(2/3,min(1,Ym)); %spm_smooth(Ym,Ym,.4);
+
+  Ygrad = cat_vol_grad( Ym , vx_vol .^.5 ); % RD20241106: original ... the sqrt helps to bring 
+  Ygrad(cat_vol_morph(Ybad,'d',1)) = nan; % correct bad areas
+  res_ECRo = cat_stat_nanmedian(Ygrad(Ywmb(:)));
+  clear Ywmb
+  Yp0(Ybad) = nan; 
+
+  %% == EXTENSION 202309 ==
+  %  * test for segmentation errors by using gray-scale erosion 
+  %  * if the WM was overestimated than use the new boundary and export
+  Yp0e      = cat_vol_morph(max(1,Yp0),'gerode');
+  Ywmeb     = Yp0e>2.05  & Yp0e<2.95  & ~Ybad;
+  Ywmebm    = Yp0 >2.475 & Yp0e<2.525 & ~Ybad;
+  res_ECRe  = cat_stat_nanmedian(Ygrad(Ywmeb(:)));  clear Ywmeb
+  res_ECRem = cat_stat_nanmedian(Ygrad(Ywmebm(:))); clear Ywmebm 
+  [res_ECR,segCase] = max([ res_ECRo , res_ECRem, res_ECRe]);
+
+  test2 = 0; 
+  Yp0c  = Yp0;  
+  if segCase == 1 && ( max(res_ECRe,res_ECRem) * 1.05 < res_ECR )
+    %% in case of no WM overestimation test for underestimation  
+    Yp0d      = cat_vol_morph(Yp0,'gdilate');
+    Ywmdb     = Yp0d>2.05  & Yp0d<2.95  & Yp0>=1.75 & ~Ybad;
+    Ywmdbm    = Yp0d>2.475 & Yp0 <2.525 & Yp0>=1.75 & ~Ybad;
+    res_ECRd  = cat_stat_nanmedian(Ygrad(Ywmdb(:)));  clear Ywmdb 
+    res_ECRdm = cat_stat_nanmedian(Ygrad(Ywmdbm(:))); clear Ywmdbm
+     
+    [res_ECR,segCase]  = max([ res_ECRo , res_ECRe, res_ECRe, res_ECRe, res_ECRe, res_ECRdm, res_ECRd]);
+
+    % corrected segmentation 
+    if test2 && segCase >= 6 
+      Yp0d2      = cat_vol_morph(Yp0d,'gdilate');
+      Ywmdb      = Yp0d2>2.05  & Yp0d2<2.95  & Yp0>=1.75 & ~Ybad;
+      Ywmdbm     = Yp0d2>2.475 & Yp0d <2.525 & Yp0>=1.75 & ~Ybad;
+      res_ECRd2  = cat_stat_nanmedian(Ygrad(Ywmdb(:)));  clear Ywmdb 
+      res_ECRd2m = cat_stat_nanmedian(Ygrad(Ywmdbm(:))); clear Ywmdbm
+      [res_ECR,segCase]  = max([ res_ECRo , res_ECRe, res_ECRe, res_ECRe, ...
+        res_ECRe,  res_ECRdm, res_ECRd, res_ECRd2m, res_ECRd2]);
+    end
+    if segCase >=6 && segCase <= 7 
+      Yp0c(Yp0>=2) = Yp0d(Yp0>=2);
+    elseif test2 && segCase >7
+      Yp0c(Yp0>=2) = Yp0d2(Yp0>=2);
+    end
+  else
+    if test2
+      Yp0e2      = cat_vol_morph(Yp0e,'gerode');
+      Ywmeb      = Yp0e2>2.05  & Yp0e2<2.95  & ~Ybad;
+      Ywmebm     = Yp0e >2.475 & Yp0e2<2.525 & ~Ybad;
+      res_ECRe2  = cat_stat_nanmedian(Ygrad(Ywmeb(:))); % & Yb(:))
+      res_ECRe2m = cat_stat_nanmedian(Ygrad(Ywmebm(:))); % & Yb(:))
+ 
+      [res_ECR,segCase] = max([ res_ECRo , res_ECRem, res_ECRe, res_ECRe2m, res_ECRe2]);
+    end
+    
+    % corrected segmentation
+    if segCase >=2 && segCase <= 3
+      Yp0c(Yp0>2) = Yp0e(Yp0>2);
+    elseif test2 && segCase > 3
+      Yp0c(Yp0>2) = Yp0e2(Yp0>2);
+    end
+  end
+
+end  
 %=======================================================================
-function [res_ECR,segCase,Yp0c,Ygrad] = estimateECR0(Ym,Yp0,Tth,vx_vol)
+function [FEC,WMarea] = estimateFEC(Yp0,vx_vol,Ymm,V,machingcubes)
+%estimateFEC. Fast Euler Characteristic (FEC) 
+
+  if ~exist('machingcubes','var'), machingcubes = 1; end
+  Ymsr = (Ymm*3); 
+  %spm_smooth(Ymsr,Ymsr,max(0.3,1.7 - 0.7*vx_vol)); %1.6 - 0.6.*vx_vol ... 1.8 - 0.7.*vx_vol
+  spm_smooth(Ymsr,Ymsr,max(0.2,1.4 - 0.6*vx_vol)); 
+  
+  app = 1; 
+  if app == 1
+     sth  = 0.25:0.125/2:0.5; % two levels for 5 class AMAP 
+     if all(vx_vol<1.5)
+       Ymsr = max(0,max(Ymsr,cat_vol_localstat(Ymsr,Yp0>2,1,3)) - 2); % ########
+     else
+       Ymsr = max(0,Ymsr - 2); 
+     end
+    % Ymsr = max(0,cat_vol_localstat(Ymsr,Yp0>0.5,1,3) - 2); 
+  elseif app == 2
+    sth = .5; 
+    Ymsr = cat_vol_median3(Yp0,Yp0>=2,Yp0>1); 
+    [Ygmt,Ymsr] = cat_vol_pbtsimple(Ymsr,vx_vol,...
+      struct('levels',1,'extendedrange',0,'gyrusrecon',0,'keepdetails',0,'sharpening',0));
+  else
+    % FEC by creating of the WM like brain tissue of the full brain.
+    if isempty(Ymm)  % use the segmentation works very well
+      sth  = 0.25:0.5:0.75; % two levels for 5 class AMAP 
+      Ymsr = Ymsr - 2; 
+    else    % using raw data not realy
+      sth  = 0.25:0.25:0.75; 
+      Ymsr = max(-2,(Ymm .* (smooth3(Ymsr)>1) * 3) - 2); 
+    end
+  end
+
+  % light denoising of maximum filter
+  %spm_smooth(Ymsr,Ymsr,.4./vx_vol);
+  Ymsr(Yp0==0) = nan; 
+  
+  % use 2 mm is more robust (accurate in a sample)
+  smeth = 1;
+  if smeth==1
+    [Ymsr0,resYp0] = cat_vol_resize(Ymsr,'reduceV',vx_vol,2,32,'max');
+    Ymsr          = Ymsr0 + cat_vol_resize(Ymsr,'reduceV',vx_vol,2,32,'meanm');
+  elseif smeth==2
+    spm_smooth(Ymsr , Ymsr , 2 - vx_vol); V.dim = size(Ymsr); 
+    Ymsr  = single(cat_vol_resize(Ymsr,'interphdr',V,2,1));
+    resYp0.vx_volr = [2 2 2]; 
+  else
+    % this is 
+    spm_smooth(Ymsr,Ymsr,2 ./ vx_vol); % not required
+    resYp0.vx_volr = vx_vol; 
+  end
+ 
+
+  EC = zeros(size(sth)); area = EC; 
+  for sthi = 1:numel(sth) 
+    % remove other objects and holes
+    if app == 2
+      Ymsr(Ymsr> sth(sthi) & ~cat_vol_morph(Ymsr> sth(sthi),'lo',1,vx_vol)) = sth(sthi) - 0.01; % avoid BVs (eg. in ABIDE2)
+    else
+      Ymsr(Ymsr> sth(sthi) & ~cat_vol_morph(Ymsr> sth(sthi),'l')) = sth(sthi) - 0.01; % avoid BVs (eg. in ABIDE2)
+    end
+    Ymsr(Ymsr<=sth(sthi) & ~cat_vol_morph(Ymsr<=sth(sthi),'l')) = sth(sthi) + 0.01;
+    
+    if machingcubes
+      % faster binary approach on the default resolution, quite similar result
+      txt = evalc('[~,faces,vertices] = cat_vol_genus0(Ymsr,sth(sthi),1);'); 
+      CS = struct('faces',faces,'vertices',vertices);
+    else
+      % slower but finer matlab isosurface
+      CS  = isosurface(Ymsr,sth(sthi));
+    end
+    if numel(CS.vertices)>0
+      CS.vertices = CS.vertices .* repmat(resYp0.vx_volr,size(CS.vertices,1),1); 
+      EC(sthi)    = ( size(CS.vertices,1) + size(CS.faces,1) - size(spm_mesh_edges(CS),1) - 2) + 2;
+      area(sthi)  = spm_mesh_area(CS) / 100; % cm2
+      EC(sthi)    = EC(sthi); 
+    else
+      area(sthi)  = nan; 
+      EC(sthi)    = nan; 
+    end
+  end
+
+  FEC = cat_stat_nanmean(abs(EC - 2) + 2) / log(area(1)/2500 + 1);  % defined on the seg-error phantom
+  FEC = (FEC.^.5)*10; 
+  WMarea = area(1); 
+end
+%=======================================================================
+
+%=======================================================================
+function [res_ECR,segCase,Yp0c,Ygrad] = estimateECR0(Ym,Yp0,vx_vol)
 %% estimateECR. Quanfify anatomical details by the normalized edge strength.
 % 
 % old pure version for high quality segmentation input that works only well
@@ -1134,9 +1220,9 @@ function [res_ECR,segCase,Yp0c,Ygrad] = estimateECR0(Ym,Yp0,Tth,vx_vol)
 
   Yb       = Yp0>0; 
   Yp0c     = Yp0; 
-  Ygrad    = cat_vol_grad(max(Tth(2),min(1,Ym) .* Yb ) , vx_vol ); 
+  Ygrad    = cat_vol_grad(max(2/3,min(1,Ym) .* Yb ) , vx_vol ); 
   Ywmb     = Yp0>2.05 & Yp0<2.95;
-  res_ECRo = cat_stat_nanmedian(Ygrad(Ywmb(:))); % & Yb(:))
+  res_ECRo = cat_stat_nanmedian(Ygrad(Ywmb(:))); 
   clear Ywmb
 
 
@@ -1150,7 +1236,7 @@ function [res_ECR,segCase,Yp0c,Ygrad] = estimateECR0(Ym,Yp0,Tth,vx_vol)
   res_ECRem = cat_stat_nanmedian(Ygrad(Ywmebm(:))); clear Ywmebm 
   [res_ECR,segCase] = max([ res_ECRo , res_ECRem, res_ECRe]);
 
-  test2 = 1; 
+  test2 = 0; 
   if segCase == 1 && ( max(res_ECRe,res_ECRem) * 1.05 < res_ECR )
     %% in case of no WM overestimation test for underestimation  
     Yp0d      = cat_vol_morph(Yp0,'gdilate');
@@ -1201,7 +1287,7 @@ function [res_ECR,segCase,Yp0c,Ygrad] = estimateECR0(Ym,Yp0,Tth,vx_vol)
 
 %% == EXTENSION 202309 CSF ==
 if 1
-  Ygradc   = cat_vol_grad(min(Tth(2),max(Tth(1),Ym) .* Yb ) , vx_vol ); 
+  Ygradc   = cat_vol_grad(min(1,max(2/3,Ym) .* Yb ) , vx_vol ); 
   
 
   %  * test for segmentation errors by using gray-scale erosion 
@@ -1267,5 +1353,74 @@ end
 
 
 end  
-%=======================================================================
 
+function res_ECR = estimateECR0old(Ym,Yp0,vx_vol)
+%% estimateECR. Quanfify anatomical details by the normalized edge strength.
+% 
+% old pure version for high quality segmentation input that works only well
+% for the CAT12 AMAP segmenation 
+  
+  spm_smooth(Ym,Ym,0.2); % voxel smoothing to avoid missinterpretations of noise as boundary! needs to be small but not too small
+  Ybad     = abs(Yp0/3 - Ym) > .5 | isnan(Ym) | isnan(Yp0) | (Yp0==0);
+  Ym(Ybad) = nan; 
+  Ygrad    = cat_vol_grad(max(2/3,min(1,Ym) ) , vx_vol .^ .75 ); 
+  res_ECRo = cat_stat_nanmedian(Ygrad(Yp0(:)>2 & Yp0(:)<3));
+
+
+  %% == EXTENSION 202309 ==
+  %  * test for segmentation errors by using gray-scale erosion 
+  %  * if the WM was overestimated than use the new boundary and export
+  Yp0e      = cat_vol_morph(max(1,Yp0),'gerode');
+  Ywmeb     = Yp0e>2.05  & Yp0e<2.95  & ~Ybad;
+  Ywmebm    = Yp0 >2.475 & Yp0e<2.525 & ~Ybad;
+  res_ECRe  = cat_stat_nanmedian(Ygrad(Ywmeb(:)));  clear Ywmeb
+  res_ECRem = cat_stat_nanmedian(Ygrad(Ywmebm(:))); clear Ywmebm 
+  [res_ECR,segCase] = max([ res_ECRo , res_ECRem, res_ECRe]);
+
+  test2 = 1; 
+  Yp0c  = Yp0;  
+  if segCase == 1 && ( max(res_ECRe,res_ECRem) * 1.05 < res_ECR )
+    %% in case of no WM overestimation test for underestimation  
+    Yp0d      = cat_vol_morph(Yp0,'gdilate');
+    Ywmdb     = Yp0d>2.05  & Yp0d<2.95  & Yp0>=1.75 & ~Ybad;
+    Ywmdbm    = Yp0d>2.475 & Yp0 <2.525 & Yp0>=1.75 & ~Ybad;
+    res_ECRd  = cat_stat_nanmedian(Ygrad(Ywmdb(:)));  clear Ywmdb 
+    res_ECRdm = cat_stat_nanmedian(Ygrad(Ywmdbm(:))); clear Ywmdbm
+     
+    [res_ECR,segCase]  = max([ res_ECRo , res_ECRe, res_ECRe, res_ECRe, res_ECRe, res_ECRdm, res_ECRd]);
+
+    % corrected segmentation 
+    if test2 && segCase >= 6 
+      Yp0d2      = cat_vol_morph(Yp0d,'gdilate');
+      Ywmdb      = Yp0d2>2.05  & Yp0d2<2.95  & Yp0>=1.75 & ~Ybad;
+      Ywmdbm     = Yp0d2>2.475 & Yp0d <2.525 & Yp0>=1.75 & ~Ybad;
+      res_ECRd2  = cat_stat_nanmedian(Ygrad(Ywmdb(:)));  clear Ywmdb 
+      res_ECRd2m = cat_stat_nanmedian(Ygrad(Ywmdbm(:))); clear Ywmdbm
+      [res_ECR,segCase]  = max([ res_ECRo , res_ECRe, res_ECRe, res_ECRe, ...
+        res_ECRe,  res_ECRdm, res_ECRd, res_ECRd2m, res_ECRd2]);
+    end
+    if segCase >=6 && segCase <= 7 
+      Yp0c(Yp0>=2) = Yp0d(Yp0>=2);
+    elseif test2 && segCase >7
+      Yp0c(Yp0>=2) = Yp0d2(Yp0>=2);
+    end
+  else
+    if test2
+      Yp0e2      = cat_vol_morph(Yp0e,'gerode');
+      Ywmeb      = Yp0e2>2.05  & Yp0e2<2.95  & ~Ybad;
+      Ywmebm     = Yp0e >2.475 & Yp0e2<2.525 & ~Ybad;
+      res_ECRe2  = cat_stat_nanmedian(Ygrad(Ywmeb(:))); 
+      res_ECRe2m = cat_stat_nanmedian(Ygrad(Ywmebm(:))); 
+ 
+      [res_ECR,segCase] = max([ res_ECRo , res_ECRem, res_ECRe, res_ECRe2m, res_ECRe2]);
+    end
+    
+    % corrected segmentation
+    if segCase >=2 && segCase <= 3
+      Yp0c(Yp0>2) = Yp0e(Yp0>2);
+    elseif test2 && segCase > 3
+      Yp0c(Yp0>2) = Yp0e2(Yp0>2);
+    end
+  end
+
+end  

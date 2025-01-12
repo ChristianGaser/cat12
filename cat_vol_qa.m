@@ -59,6 +59,11 @@ function varargout = cat_vol_qa(action,varargin)
   
   if nargin == 0, help cat_vol_qa; return; end
 
+  if ischar(action) && strcmp(action,'getdef')
+    varargout{1} = upate_rating(struct(),varargin{1},1);
+    return
+  end
+
   if isstruct(action)
     if isfield(action,'reportfolder') && isempty(action.reportfolder)
       mrifolder    = '';
@@ -116,7 +121,7 @@ function varargout = cat_vol_qa(action,varargin)
         action.data = Pp0;  
       elseif isfield(action.model,'spmc1')
         %% SPM case where the spmc1 should point to all other segmentation files
-
+       
         % prepare and check other input files
         spmp0ne = false(numel(action.model.spmc1),1); 
         for si = 1:numel(action.model.spmc1)
@@ -223,7 +228,14 @@ function varargout = cat_vol_qa(action,varargin)
 
             deri = strfind(ppo,[filesep 'derivatives' filesep 'CAT']); 
             if isempty( deri )
-              Po{fi} = fullfile(ppo,[ff(3:end) ee]); 
+              if cat_io_contains(ff,'qcseg') 
+                ff = strrep(ff,'p0_qcseg_',''); 
+                Po{fi} = fullfile(ppo,[ff ee]);
+              elseif strcmp(ff(1:2),'p0') || strcmp(ff(1:2),'c1')
+                Po{fi} = fullfile(ppo,[ff(3:end) ee]); 
+              elseif cat_io_contains(ff,'synthseg_p0')
+                Po{fi} = fullfile(ppo,[strrep(ff,'synthseg_p0','') ee]); 
+              end
             else
               BIDShome = fileparts(ppo(1:deri(1)));
               fsep     = strfind( ppo(deri(1) + 16:end) , filesep ) + deri(1) + 16;
@@ -333,11 +345,20 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
         return
       end
     
+      % name segmentation if possible
+      switch ff(1:2)
+        case 'sy',  segment = 'synthseg'; 
+        case 'c1',  segment = 'SPM12'; 
+        case 'p0',  segment = 'CAT12'; 
+        otherwise,  segment = 'internal'; 
+      end
       % print title
       if opt.verb>1
         fprintf('\nCAT Preprocessing T1 Quality Control (');
         [ver_cat, rev_cat] = cat_version;
         cat_io_cprintf('blue',' %s',opt.version );
+        cat_io_cprintf('n',' ,'); 
+        cat_io_cprintf('blue',' %s',segment );
         cat_io_cprintf('n',' , %s ):\n',sprintf('Rev: %s %s', ver_cat, rev_cat) );
         fprintf('\n%s\n%s\n',  Theader,repmat('-',size(Theader)));  
       end
@@ -360,8 +381,8 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
         
         % setup the XML file name
         [pp,ff,ee] = spm_fileparts( Po{fi} ); 
-        sfile  = fullfile(pp,reportfolder,[opt.prefix ff '.xml']); 
-      
+        sfile   = fullfile(pp,reportfolder,[opt.prefix ff '.xml']); 
+        
         if ~exist( sfile ,'file') 
         % not processed (eg. no additional comment)
           run   = 1; 
@@ -369,7 +390,7 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
         elseif opt.rerun == 2  ||  strcmp(opt.prefix,'tmp')
         % forced processing
           run   = 1;
-          if cat_get_defaults('extopts.expetGUI') > 1
+          if cat_get_defaults('extopts.expertgui') > 1
             rerun = ' forced';
           else
             rerun = ''; 
@@ -390,16 +411,19 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
           try 
             QASfi  = cat_io_xml(sfile); 
             QARfi  = upate_rating(QASfi,opt.version);
+            cat_io_xml( sfile, QARfi, 'write+');
 
+            %QASfix = cat_io_updateStruct(QASfi, QARfi);
+            
             % try to update the QC structure
             [QAS, QAR, qamat, qamatm, mqamatm] = updateQAstructure(QAS, ...
               QASfi, QAR, QARfi, qamat, qamatm, mqamatm, QMAfn, fi);
             
-            rerun  = ' loaded';
-          catch
+            rerun   = ' loaded';
+          catch e
           % in case of problems we have to reprocess
-            run    = 1; 
-            rerun  = ' reprocessed';
+            run     = 1; 
+            rerun   = ' reprocessed';
           end
         end
 
@@ -410,9 +434,8 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
           % load images
           try
             [Yp0,Ym,Vo] = getImages(Pp0,Po,Pm,fi); 
-          catch
+          catch e
             % setup default output
-
             opt2      = opt; 
             opt2.subj = fi;
             opt2.job  = cat_get_defaults;
@@ -434,7 +457,7 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
           end
 
           % general function called from CAT12
-          res.image     = spm_vol(Pp0{fi}); 
+          res.image     = spm_vol(Po{fi}); 
 
           [QASfi,QARfi] = cat_vol_qa('cat12ver',Yp0,Vo,Ym,res,species,opt);
 
@@ -442,7 +465,7 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
             % try to update the QC structure
             [QAS, QAR, qamat, qamatm, mqamatm] = updateQAstructure(QAS, ...
               QASfi, QAR, QARfi, qamat, qamatm, mqamatm, QMAfn, fi);
-          
+            
           catch
             %% this is not a good solution !
             opt2      = opt; 
@@ -462,7 +485,6 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
               QASfi, QAR, QARfi, qamat, qamatm, mqamatm, QMAfn, fi);
           
           end
-      
         end
 
         % print result
@@ -493,13 +515,14 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
           else
           % write measurements and time
             if opt.orgval 
-              cat_io_cprintf(opt.MarkColor(max(1,floor( mqamatm(fi,end)/9.5 * ...
-                size(opt.MarkColor,1))),:),sprintf(Tline,fi,...
+              cat_io_cprintf(opt.MarkColor(min(size(opt.MarkColor,1),max(1,floor( mqamatm(fi,end)/9.5 * ...
+                size(opt.MarkColor,1)))),:),sprintf(Tline,fi,...
                 spm_str_manip(QAS(fi).filedata.fname,['a' num2str(opt.snspace(1) - 14)]),...
                 qamat(fi,:), max(1,min(9.5,mqamatm(fi,:))), rerun));
             else
-              cat_io_cprintf(opt.MarkColor(max(1,floor( mqamatm(fi,end)/9.5 * ...
-                size(opt.MarkColor,1))),:),sprintf(Tline,fi,...
+              %%
+              cat_io_cprintf(opt.MarkColor(min(size(opt.MarkColor,1),max(1,floor( mqamatm(fi,end)/9.5 * ...
+                size(opt.MarkColor,1)))),:),sprintf(Tline,fi,...
                 spm_str_manip(QAS(fi).filedata.fname,['a' num2str(opt.snspace(1) - 14)]),...
                 qamatm(fi,:), max(1,min(9.5,mqamatm(fi,:))), rerun));
             end
@@ -645,6 +668,16 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
 
       % redo the quality rating, ie. measure scaling
       QAR = upate_rating(QAS,opt.version);
+      QAS.subjectratings = QAR.subjectratings; 
+      QAS.qualityratings = QAR.qualityratings; 
+      
+
+      sfile = fullfile(pp,reportfolder,[opt.prefix ff '.xml']); 
+      if exist(sfile,'file')
+        S  = cat_io_xml( sfile ); 
+        SN = cat_io_mergeStruct( S , QAS , [], 1); 
+      end
+      cat_io_xml( sfile, SN );
       
     otherwise
       % catched before
@@ -656,9 +689,9 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
     QAS.subjectratings = QAR.subjectratings;
     QAS.ratings_help   = QAR.help;
 
-    [pp,ff] = spm_fileparts(QAS.filedata.fname);    
-    fullfile(pp,reportfolder,[opt.prefix ff '.xml']);
-    cat_io_xml( fullfile(pp,reportfolder,[opt.prefix ff '.xml']) ,QAS,'write'); %struct('QAS',QAS,'QAM',QAM)
+    [pp,ff] = spm_fileparts(QAS.filedata.fname);  
+    cat_io_xml( fullfile(pp,reportfolder,[opt.prefix ff '.xml']) ,QAS,'write+'); 
+    cat_io_xml( fullfile(pp,reportfolder,[opt.prefix ff '.xml']) ,QAR,'write+'); %struct('QAS',QAS,'QAM',QAM)
   end
 
   if (isempty(varargin) || isstruct(varargin{1}) || isstruct(action)) && exist('Pp0','var')
@@ -688,14 +721,15 @@ function [QAS, QAR, qamat, qamatm, mqamatm] = ...
   
   % color for the differen mark cases 
   for fni = 1:numel(QMAfn)
-    try
-      qamat(fi,fni)  = QAS(fi).qualitymeasures.(QMAfn{fni});
-      qamatm(fi,fni) = QAR(fi).qualityratings.(QMAfn{fni});
-    catch
-      qamat(fi,fni)  = QASfi.qualitymeasures.(QMAfn{fni});
-      qamatm(fi,fni) = QARfi.qualityratings.(QMAfn{fni});
-    end
-    
+    if isfield(QAS(fi).qualitymeasures,QMAfn{fni})
+      try
+        qamat(fi,fni)  = QAS(fi).qualitymeasures.(QMAfn{fni});
+        qamatm(fi,fni) = QAR(fi).qualityratings.(QMAfn{fni});
+      catch
+        qamat(fi,fni)  = QASfi.qualitymeasures.(QMAfn{fni});
+        qamatm(fi,fni) = QARfi.qualityratings.(QMAfn{fni});
+      end
+    end    
   end
   try
     mqamatm(fi,1) = QAR(fi).qualityratings.IQR;
@@ -715,7 +749,7 @@ function [QAS, QAR, qamat, qamatm, mqamatm] = ...
           
 end
 %==========================================================================
-function [Yp0,Ym,Vo] = getImages(Pp0,Po,Pm,fi)
+function [Yp0,Ym,Vo,p0rmse] = getImages(Pp0,Po,Pm,fi)
 %getImages. Load major images for QC processing.
 %
 %  [Yp0,Ym,Vo] = getImages(Pp0,Po,Pm,fi)
@@ -724,24 +758,24 @@ function [Yp0,Ym,Vo] = getImages(Pp0,Po,Pm,fi)
 %  Ym  .. bias-corrected image
 %  Vo  .. original image
 
-  if Pp0{fi}(end-1)==',', Pp0{fi}(end-1:end) = []; end
-  if Po{fi}(end-1)==',',  Po{fi}(end-1:end) = []; end
-  if Pm{fi}(end-1)==',',  Pm{fi}(end-1:end) = []; end
+  if numel(Pp0{fi})>1 && Pp0{fi}(end-1)==',', Pp0{fi}(end-1:end) = []; end
+  if numel(Po{fi})>1  && Po{fi}(end-1)==',',  Po{fi}(end-1:end) = []; end
+  if numel(Pm{fi})>1  && Pm{fi}(end-1)==',',  Pm{fi}(end-1:end) = []; end
 
   if (isempty(Po{fi}) || ~exist(Po{fi},'file')) && ...
       ~isempty(Pm{fi}) && exist(Pm{fi},'file')
     Po{fi} = Pm{fi}; 
     if cat_get_defaults('extopts.expertgui') 
-      cat_io_cprintf('warn','Cannot find/open original image use bias corrected: \n  %s\n',Pm{fi}) 
+      cat_io_cprintf('warn','Cannot find/open original image use bias corrected:   %80s\n',Pm{fi}) 
     end
   elseif (isempty(Pm{fi}) || ~exist(Pm{fi},'file')) && ...
          ~isempty(Po{fi}) && exist(Po{fi},'file')
     Pm{fi} = Po{fi}; 
     if cat_get_defaults('extopts.expertgui') 
-      cat_io_cprintf('warn','Cannot find/open bias corrected image use original: \n  %s\n',Po{fi}) 
+      cat_io_cprintf('warn','Cannot find/open bias corrected image use original:   %80s\n',Po{fi}) 
     end
   end
-  if isempty(Pp0{fi}) || ~exist(Pp0{fi},'file')
+  if 0 %isempty(Pp0{fi}) || ~exist(Pp0{fi},'file')
     % segment?
     cat_io_cprintf('err','Cannot find/open segmentation: \n  %s\n',Pp0{fi}) 
   end
@@ -761,37 +795,59 @@ function [Yp0,Ym,Vo] = getImages(Pp0,Po,Pm,fi)
 
   % load further images - bias corrected Ym and segmentation Yp0
   Vm  = spm_vol(Pm{fi});
-  Vp0 = spm_vol(Pp0{fi});
-  if ~isempty(Vm) && any(Vp0.dim ~= Vm.dim)
-    [Vx,Yp0] = cat_vol_imcalc(Vp0,Vm,'i1',struct('interp',2,'verb',0)); % linear interp
+  [pp0,ff0,ee0] = spm_fileparts(Pp0{fi});
+  if cat_io_contains(ff0,'qcseg')
+    Yp0 = []; 
   else
-    Yp0 = single(spm_read_vols(Vp0));
+    switch ff0(1:2) 
+      case {'p0','sy'} % cat
+        Vp0 = spm_vol(Pp0{fi});
+        if ~isempty(Vm) && any(Vp0.dim ~= Vm.dim)
+          [Vx,Yp0] = cat_vol_imcalc(Vp0,Vm,'i1',struct('interp',2,'verb',0)); % linear interp
+        else
+          Yp0 = single(spm_read_vols(Vp0));
+        end
+      case 'c1'
+        tval = [2 3 1];
+        for ci = 1:3
+          Vc = spm_vol(fullfile(pp0,sprintf('c%d%s%s',ci,ff0(3:end),ee0)));
+          if ci == 1
+            Yp0 = tval(ci) * single(spm_read_vols(Vc));
+          else
+            Yp0 = Yp0 + tval(ci) * single(spm_read_vols(Vc));
+          end
+        end 
+      otherwise
+        Yp0 = []; 
+    end
   end
   Yp0(isnan(Yp0) | isinf(Yp0)) = 0; 
-
-
+   
   % Internal bias correction to handle the original images as the processed
   % bias corrected image in CAT is also intensity normalized and endoised.
   vx_vol  = sqrt(sum(Vo.mat(1:3,1:3).^2));
   Ym  = single(spm_read_vols(spm_vol(Po{fi})));
-  Ym(isnan(Yp0) | isinf(Yp0)) = 0; 
-  Yw  = cat_vol_morph( Yp0>2.95 , 'e',1,vx_vol)  & cat_vol_morph( Yp0>2.25 , 'e',2,vx_vol); 
-  Yb  = cat_vol_approx( Ym .* Yw + Yw .* min(Ym(:)) ,'rec') - min(Ym(:)); 
-  Ym  = Ym ./ max(eps,Yb); 
-
+  if ~isempty(Yp0)
+    Ym(isnan(Yp0) | isinf(Yp0)) = 0; 
+    Yw  = cat_vol_morph( Yp0>2.95 , 'e',1,vx_vol)  & cat_vol_morph( Yp0>2.25 , 'e',2,vx_vol); 
+    Yb  = cat_vol_approx( Ym .* Yw + Yw .* min(Ym(:)) ,'rec') - min(Ym(:)); 
+    Ym  = Ym ./ max(eps,Yb); 
+  end
   
   % Detection of possible preprocessing issues in case the segmentation 
   % varies strongly from the original image. We intensity normalize here 
   % the Yp0 map to fit to the Ym. WMHs could cause problems but this is 
   % even intended.
-  Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
-  T3th = zeros(1,3); for ci = 1:3, T3th(ci) = cat_stat_nanmedian(Ym(  Yp0toC(Yp0(:),ci) > 0.95 )); end 
-  Yp0t = zeros(size(Yp0)); for ci = 1:3, Yp0t = Yp0t + T3th(ci) .* Yp0toC(Yp0,ci); end
-  rmse = (mean(Ym(Yp0(:)>0) - Yp0t(Yp0(:)>0)).^2)^0.5; 
-  if rmse>0.2
-    cat_io_cprintf('warn', ['Segmentation is maybe not fitting to the image ' ...
-      '(RMSE(Ym,Yp0)=%0.2f)?:\n  %s\n  %s'], rmse,Pm{fi}, Pp0{fi}); 
-  end      
+  if ~isempty(Yp0)
+    Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
+    T3th = zeros(1,3); for ci = 1:3, T3th(ci) = cat_stat_nanmedian(Ym(  Yp0toC(Yp0(:),ci) > 0.95 )); end 
+    Yp0t = zeros(size(Yp0)); for ci = 1:3, Yp0t = Yp0t + T3th(ci) .* Yp0toC(Yp0,ci); end
+    p0rmse = (cat_stat_nanmean(Ym(Yp0(:)>0) - Yp0t(Yp0(:)>0)).^2)^0.5; 
+    if p0rmse>0.2
+      cat_io_cprintf('warn', ['Segmentation is maybe not fitting to the image ' ...
+        '(RMSE(Ym,Yp0)=%0.2f)?:\n  %s\n  %s\n'], p0rmse,Pm{fi}, Pp0{fi}); 
+    end      
+  end
 end
 %==========================================================================
 function [QAS,QAR] = cat12err(opt,mrifolder,reportfolder)
@@ -822,8 +878,12 @@ function [QAS,QAR] = cat12err(opt,mrifolder,reportfolder)
     V = spm_vol(QAS.filedata.Fm); 
   elseif exist(QAS.filedata.Fp0,'file')
     V = spm_vol(QAS.filedata.Fp0); 
+  else
+    vx_vol = [0 0 0];
   end
-  vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
+  if ~exist('vx_vol','var')
+    vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
+  end
 
   % software, parameter and job information
   % -----------------------------------------------------------------------
@@ -874,7 +934,7 @@ function [QAS,QAR] = cat12err(opt,mrifolder,reportfolder)
   QAS.qualitymeasures.ICR         = NaN; 
   QAS.qualitymeasures.contrastr   = NaN; 
   QAS.qualitymeasures.res_ECR     = NaN; 
-  QAS.qualitymeasures.res_RMS     = mean(vx_vol.^2).^0.5;
+  QAS.qualitymeasures.res_RMS     = cat_stat_nanmean(vx_vol.^2).^0.5;
   QAS.subjectmeasures.vol_rel_CGW = [NaN NaN NaN]; 
   QAS.subjectmeasures.SQR         = NaN; 
   
@@ -882,7 +942,8 @@ function [QAS,QAR] = cat12err(opt,mrifolder,reportfolder)
       
   % export 
   if opt.write_xml
-    cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAS,'write');    
+    cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAS,'write+');    
+    cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAR,'write+');    
   end
 end
 %==========================================================================
@@ -904,21 +965,24 @@ function def = defaults
   def.versions0  = {'cat_vol_qa201602','cat_vol_qa20180207'};  % no ECR
 end
 %==========================================================================
-function QARfi = upate_rating(QASfi,version)
+function QARfi = upate_rating(QASfi,version,getdef)
 % update rating of stable versions 
 
-  ndef =  cat_stat_marks('default');
+  if ~exist('getdef','var'), getdef = 0; end
 
+  ndef =  cat_stat_marks('default');
+%version = 'default'; 
   switch version
     case {'cat_vol_qa201602','cat_vol_qa201901'}
       % robust versions with minimal changes/differences 
-      ndef.noise = [0.046797 0.397905]; 
+      ndef.noise = [0.046d797 0.397905]; 
       ndef.bias  = [0.338721 2.082731];
-    case 'cat_vol_qa201901x' 
-      % final refined version of robust version 201901 
-      ndef.noise = [    0.0164 0.1158];
-      ndef.bias  = [    0.1729 1.1483]; 
-      ndef.ECR   = [   -0.0364 1.1497];
+    case 'cat_vol_qa201901x'  
+      % final refined version of robust version 201901 ###############
+      ndef.noise = [  0.0130,   0.0682]; %[  0.0172,   0.1234];
+      ndef.bias  = [  0.1432,   1.0300]; %[  0.1668,   1.0234];
+      ndef.ECR   = [  0.2780,   1.6843]; %[  0.4141,   1.5532]; %-0.0364 1.1497];
+      ndef.FEC   = [140.0000, 410.0000]; %[100.0000, 630.0000];
     case {'cat_vol_qa202110'}
       % changes between 2019/01 and 2021/10 result a bit different version 
       % partial better, partially worse (regular successor of version 201901) 
@@ -938,17 +1002,25 @@ function QARfi = upate_rating(QASfi,version)
       % not successful 
       ndef.noise = [0.026350 0.203736]; 
       ndef.bias  = [0.120658 0.755107]; 
-    case {'cat_vol_qa202301'}
+    case {'cat_vol_qa202301'} 
       % latest reworked QC version as successor of the standard qa with
       % 202207b as mid version that was not successful 
       ndef.noise = [    0.0255 0.1887]; 
       ndef.bias  = [    0.1996 1.2632]; 
       ndef.ECR   = [    0.0596 1.1890]; 
-    case {'cat_vol_qa202310', 'cat_vol_qa202310x', 'cat_vol_qa'}
-      % the 202310(dd) represents a new start 
-      ndef.noise = [    0.0259 0.2101]; 
-      ndef.bias  = [    0.1900 1.1181]; 
-      ndef.ECR   = [    0.2883 1.4161]; 
+    case {'cat_vol_qa202310', 'cat_vol_qa'}
+      % the 202310(dd) represents a new start ###############
+      ndef.noise = [    0.0326 0.2417]; %0.0322 0.2418]; 
+      ndef.bias  = [    0.1781 0.9393]; %0.1784 0.9356]; 
+      ndef.ECR   = [  0.3597,   1.4316]; %0.3489 1.4117]; %-0.0364 1.1497];
+      ndef.FEC   = [110.0000, 480.0000];
+    case 'cat_vol_qa202412'  
+      % final refined version of robust version 201901 ###############
+      ndef.noise = [  0.0095,   0.0740]; %[  0.0172,   0.1234];
+      ndef.bias  = [  0.1695,   0.9907]; %[  0.1668,   1.0234];
+      ndef.ECR   = [  0.3859,   1.2101]; %[  0.4141,   1.5532]; %-0.0364 1.1497];
+      ndef.FEC   = [160.0000, 420.0000]; %[100.0000, 630.0000];
+    case 'default'
     otherwise
       warning('missing scaling definition'); 
       ndef.noise = [0.5  0.5]; 
@@ -957,7 +1029,12 @@ function QARfi = upate_rating(QASfi,version)
  
   ndef.QS{find(cellfun('isempty',strfind(ndef.QS(:,2),'NCR'))==0,1),4} = ndef.noise; %#ok<*STRCL1> 
   ndef.QS{find(cellfun('isempty',strfind(ndef.QS(:,2),'ICR'))==0,1),4} = ndef.bias;
-  if isfield(ndef,'ECR'),   ndef.QS{find(cellfun('isempty',strfind(ndef.QS(:,2),'ECR'  ))==0,1),4} = ndef.ECR;   end
+  if isfield(ndef,'FEC'),   ndef.QS{find(cellfun('isempty',strfind(ndef.QS(:,2),'FEC'))==0,1),4} = ndef.FEC; end
+  if isfield(ndef,'ECR'),   ndef.QS{find(cellfun('isempty',strfind(ndef.QS(:,2),'ECR'))==0,1),4} = ndef.ECR; end
  
-  QARfi = cat_stat_marks('eval',1,QASfi,ndef); 
+  if ~getdef
+    QARfi = cat_stat_marks('eval',1,QASfi,ndef);
+  else
+    QARfi = ndef;
+  end
 end
