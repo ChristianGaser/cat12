@@ -23,8 +23,19 @@ Changed:    Updated MP2rage batch structure in cat_conf_tools by
 Changed:    Updated call of MP2Rage batch in cat_run_job(1639).
 Changed:    Updated MP2rage batch cat_vol_mp2rage. Added iterative
             SPM preprocessing to improve corrections. Removed 
-            head trimming. Improved intensity normalisation. 
-            ------------------------------------------------------------------------
+            head trimming. Improved intensity normalisation.
+Changed:    Corrected bug in TIV update in cat_vol_qa201901(x),
+            cat_vol_qa202110, cat_vol_qa202205 and cat_vol_qa202310.
+Changed:    Added settings to run with SPM12 and synthseg input in
+            cat_vol_qa and correction of smaller bugs. Updated default
+            scalings of different versions by latest BWP runs.
+Changed:    Updates of cat_vol_qa201901x and cat_vol_qa 202310 to
+            (i) limit processing resolution, (ii) improve lesion masking,
+            (iii) simplified correction of tissue segments, (iv) further
+            simplifications/cleanup. Added FEC estimation.
+New:        Added cat_vol_qa202412 with own quick simple segmentation.
+            
+------------------------------------------------------------------------
 r2621 | gaser | 2024-12-07 23:02:18
 
 Changed paths:
