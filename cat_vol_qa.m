@@ -346,6 +346,7 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
       end
     
       % name segmentation if possible
+      [pp,ff,ee] = spm_fileparts(Pp0{1});
       switch ff(1:2)
         case 'sy',  segment = 'synthseg'; 
         case 'c1',  segment = 'SPM12'; 
