@@ -568,7 +568,7 @@ function varargout = reduceBrain(Y,varargin)
   else
     error('ERROR:reduceBrain: unknown error using d.');
   end
-  d = round(d ./ vx_vol([1 1 2 2 3 3]));
+  d = max(1,round(d ./ vx_vol([1 1 2 2 3 3])));
   
   % prepare BB or M variable 
   if numel(varargin) > 2  &&  ndims(varargin{3}) == 3
