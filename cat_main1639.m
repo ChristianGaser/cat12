@@ -125,8 +125,8 @@ if ~isfield(res,'spmpp')
     [Ysrcr,resGI] = cat_vol_resize(Ysrc      , 'reduceV', vx_vol, 0.6, 32, 'meanm');
     Ybr           = cat_vol_resize(single(Yb), 'reduceV', vx_vol, 0.6, 32, 'meanm')>0.5;
     Yclsr = cell(size(Ycls)); for i=1:6, Yclsr{i} = cat_vol_resize(Ycls{i},'reduceV',vx_vol,0.6,32,'meanm'); end
-    Yyr = zeros([size(Yb),3],'single'); for i=1:3, Yyr(:,:,:,i) = cat_vol_resize(Yy(:,:,:,i),'reduceV',vx_vol,0.6,32,'meanm'); end
-    [Ymr,Yb,T3th,Tth,job.inv_weighting,noise] = cat_main_gintnorm1639(Ysrcr,Yclsr,Ybr,resGI.vx_volr,res,job.extopts);
+    %Yyr = zeros([size(Ybr),3],'single'); for i=1:3, Yyr(:,:,:,i) = cat_vol_resize(Yy(:,:,:,i),'reduceV',vx_vol,0.6,32,'meanm'); end
+    [Ymr,Ybr,T3th,Tth,job.inv_weighting,noise] = cat_main_gintnorm1639(Ysrcr,Yclsr,Ybr,resGI.vx_volr,res,job.extopts);
     clear Ymr Ybr Ysrcr Yclsr; 
     Ym = cat_main_gintnorm1639(Ysrc,Tth); 
   else
@@ -520,7 +520,7 @@ if ~isfield(res,'spmpp')
   
   
   %% Final Cleanup
-  %  -------------------------------------------------------------------
+  %  -------------- -----------------------------------------------------
   %  There is one major parameter to control the strength of the cleanup.
   %  As far as the cleanup has a strong relation to the skull-stripping, 
   %  cleanupstr is controlled by the gcutstr. 
