@@ -912,8 +912,8 @@ function varargout = interhdr(Y,varargin)
       Y  = single(Y); 
     end
     % setup images
-    Vt.dat(:,:,:) = Y(:,:,:); 
-    Vi.dat(:,:,:) = Y(:,:,:); 
+    Vt = rmfield(Vt,'dat'); Vt.dat(:,:,:) = Y(:,:,:); Vt.dim = size(Y);
+    Vi = rmfield(Vi,'dat'); Vi.dat(:,:,:) = Y(:,:,:); Vi.dim = size(Y); 
     
     [Vo,Y] = cat_vol_imcalc(Vt,Vi,'i1',struct('interp',interp,'verb',0));
     
