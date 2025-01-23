@@ -301,7 +301,9 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
   Ybg = cat_vol_laplace3R(Ybg,Ybg==1.5,0.005)<1.5 & Ym<2.9 & Ym>1.8 & Ydiv>-0.02;
   Ya1(Ybg)=LAB.BG;                                                         % basal ganglia
   Ya1(YA==LAB.TH & Ym>1.9 & Ym<2.85 & Ydiv>-0.1)=LAB.TH;                   % thalamus
-  Ya1(YA==LAB.HC & Ym>1.9 & Ym<2.85 & Ydiv>-0.1 & Yg<.2)=LAB.HC;                   % hippocampus
+  % RD202501: hippocampus definition was not optimal here as we need a clear parahippocampus for surface reconstruction 
+  Ya1( cat_vol_morph(YA==LAB.HC,'dd',3) & Ym>1.5 & Ym<2.5 & ~(cat_vol_morph(YA==LAB.PH,'dd',2) | ...
+    YA==LAB.TH | cat_vol_morph(YA==LAB.NV,'dd',5,vx_vol))) = LAB.HC;  % hippocampus & ~cat_vol_morph(YA==LAB.PH,'d')
   NBVC = BVCstr > 0 && BVCstr <= 1; % RD202306: new BV correction by default
   if NBVC
     % define some high intensity BVs and the neocortex
@@ -318,10 +320,17 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
        (Yp0>1.5 & Ym<3.5 & Ybgd>1 & Ybgd<8 & (Ybgd>4 | ...
        Ydiv<-0.02+Ybgd/200))) & Ya1==0)=LAB.CT;                            % cerebrum
   end
-  Ya1((Yp0>2.0 & Ym>2.0) & YA==LAB.CB)=LAB.CB;                             % cerebellum
+  % use region-growing in case of the cerebellum to compensate for fine structure
+  Ycb  = single(YA==LAB.CB) + 2*single(cat_vol_morph( YA==LAB.CT,'de',6)); 
+  Ycb(Yp0<1 & Ym<2) = nan; Ycb(cat_vol_morph( YA~=LAB.CB,'de',12)) = nan; 
+  [Ycb,Yd] = cat_vol_downcut(Ycb,Ym,noise); 
+  Ycb = single(YA==LAB.CB) | cat_vol_smooth3X(Ycb==1 & Yd<100,2)>.7; 
+  % set other regions
+  Ya1((Yp0>2.0 & Ym>2.0  & Ym<3.1) & Ycb)=LAB.CB;                          % cerebellum
   Ya1((Yp0>2.0 & Ym>2.0) & YA==LAB.BS)=LAB.BS;                             % brainstem
   Ya1((Yp0>2.0 & Ym>2.0) & YA==LAB.ON)=LAB.ON;                             % optical nerv
-  Ya1((Yp0>2.0 & Ym>2.0) & YA==LAB.MB)=LAB.MB;                             % midbrain
+  Ya1((Yp0>2.0 & Ym>2.0) & cat_vol_smooth3X(YA==LAB.MB,2)>.1)=LAB.MB;      % midbrain
+  Ya1((Yp0>2.0 & Ym>2.0) & YA==LAB.PH & Ya1==0)=LAB.CT;                    % added PH as cortex
   %%
   if NBVC
     % create a cerebellar mask to avoid corrections there
@@ -342,11 +351,12 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
     [~,Yd] = cat_vol_downcut(Ya0,Ym,noise  ); clear Ya0 
     Ya0 = single(Ya1>0 & Ya1~=LAB.BV); Ya0(Ym<1.7) = nan; 
     [~,Yd2] = cat_vol_downcut(Ya0,Ym,noise * 16); clear Ya0
-    Ya1( ((Yd - Yd2)>10) & Ym>2.4 & YA==LAB.CT & ~Ycb3 & ~Yhc3) = LAB.BV; % add highly distant voxels
+    Ya1( ((Yd - Yd2)>10./YbvA) & Ym>2.4 & YA==LAB.CT & ~Ycb3 & ~Yhc3 & YbvA>.7) = LAB.BV; % add highly distant voxels
     Ya1(Ya1==0 & Ym>2.4 & Yd>70 & Yd2>50 & ~cat_vol_morph(YA>1 & YA~=LAB.HD,'d') & ~Ycb3 & ~Yhc3) = LAB.BV; % mask further BV
     Ya1(Ya1==0 & Ym>2.2 & Yd<20 & ~cat_vol_morph(YA>1 & YA~=LAB.HD,'d') & ~Ycb3) = LAB.CT; % add also save brain voxels
+    Ya1(Ya1==LAB.BV & cat_vol_morph(Ya1==LAB.BV,'l',[inf 16])==0) = 0;
     clear Ycb3 Yhc3
-
+    
     %% modified old lines
     Ya1((Ya1==0 & Yp0<1.5 & Ym<1.5 & Yp0>1.3 & Ym>1.3) & YA==LAB.BV) = LAB.BV; % low-int BV  (updated due to cerebellar errors RD20190929)
     Ya1((cat_vol_morph(Ya1==0 & YA~=LAB.CB,'e') & (Ym>2.5 | Ym<1.7) & YA==LAB.CT & ...
@@ -375,7 +385,7 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
     Ya1 = cat_vol_median3c(Ya1,Yb);                                          % smoothing
   end
   clear Ybg Ybgd; 
-  Ya1((Yp0>1.75 & Ym>1.75 & Yp0<2.5 & Ym<2.5) & Ya1==LAB.MB)=0;            % midbrain correction
+  Ya1((Yp0>1.75 & Ym>1.75 & Yp0<2.5 & Ym<2.5) & Ya1==LAB.MB) = 0;          % midbrain correction
   Ya1(Ya1==LAB.CT & ~cat_vol_morph(Ya1==LAB.CT,'do',1.4)) = 0; 
   if 0
     %% display for development
@@ -386,7 +396,12 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
     
   end
 
-  
+  % correction of structures that should be compact
+  Ya1(Ya1==LAB.BS & ~cat_vol_morph(cat_vol_morph(Ya1==LAB.BS,'o'),'c')) = 0; 
+  Ya1(Ya1==LAB.MB & ~cat_vol_morph(cat_vol_morph(Ya1==LAB.MB,'o'),'c')) = 0; 
+  Ya1(Ya1==LAB.PH) = 0; 
+
+
   %% Mapping of ventricles:
   %  Ventricle estimation with a previous definition of non ventricle CSF
   %  to have a second ROI in the region-growin. Using only the ventricle
@@ -394,17 +409,20 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
   %  because dartle failed for large ventricle. 
   %  It is important to use labopen for each side!
   stime = cat_io_cmd('  Ventricle detection','g5','',verb,stime); dispc=dispc+1;
-  Ynv = cat_vol_morph(cat_vol_morph(~Yb,'d',4,vx_vol) | ...
-        (YA==LAB.CB | YA==LAB.BS),'d',2,vx_vol) | cat_vol_morph(YA==LAB.NV,'e',1,vx_vol);
-  Ynv = Ynv | (~cat_vol_morph((Yp0>0 & Yp0<1.5 & (YA==LAB.VT)),'dd',20,vx_vol) & Yp0<1.5);
-  Ynv = single(Ynv & Ym<2 & ~cat_vol_morph(Yp0<2 & (YA==LAB.VT) & Yg<0.2,'d',4,vx_vol));
-  Ynv = smooth3(round(Ynv))>0.5; 
+  %% RD202501: added parahypocampus here to avoid overgrowing ventricles and filling issues and defects 
+  Yph = Ym>2 & cat_vol_smooth3X(YA==LAB.PH | YA==LAB.HC,2)>.1; 
+  Ynv = cat_vol_morph(~Yb,'d',4,vx_vol) | cat_vol_morph(YA==LAB.CB,'dd',10,vx_vol) | ...% RD202501: extend CB 
+        cat_vol_morph(YA==LAB.BS,'dd',2,vx_vol) | cat_vol_morph(YA==LAB.NV,'e',1,vx_vol) | cat_vol_morph(YA==LAB.TH & Ym<2.5,'e',1,vx_vol); 
+  Ynv = Ynv | Yph | (~cat_vol_morph((Yp0>0 & Yp0<1.5 & (YA==LAB.VT)),'dd',20,vx_vol) & Yp0<1.5);
+  Ynv = single(Ynv & Ym<2 & ~cat_vol_morph(Yp0<2 & (YA==LAB.VT) & Yg<0.2,'d',4,vx_vol) & ~Yph);
+  Ynv = smooth3(round(Ynv))>0.5;
   % between thamlamus
   Ynv = Ynv | (cat_vol_morph(Ya1==LAB.TH,'c',10) & Yp0<2) | YA==LAB.CB | YA==LAB.BS;
   Ynv = smooth3(Ynv)>0.8;
   Yvt = single(smooth3(Yp0<1.5 & (YA==LAB.VT) & Yg<0.25 & ~Ynv)>0.7); 
   Yvt(Yvt==0 & Ynv)=2; Yvt(Yvt==0 & Ym>1.8)=nan; Yvt(Yvt==0)=1.5;
-  
+  Yvt(Yvt==0 & Ydiv<-0.1) = nan; 
+
   %% subcortical stroke lesions
   if exist('Ylesionmsk','var'), Yvt(Ylesionmsk>0.5) = nan; end
   Yvt( cat_vol_morph(YslA>0.6 & Ym<2 & Ydiv./(Ym+eps)>0 & Yp0A>2.5   , 'do', 1 ) ) = 2; % WM
@@ -429,8 +447,10 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
   %% bottleneck
   Yvt2 = cat_vol_laplace3R(Yvt,Yvt==1.5,0.01); % first growing for large regions
   Yvt(cat_vol_morph(Yvt2<1.4,'o',2) & ~isnan(Yvt) & Yp0<1.5) = 1; 
-  Yvt(cat_vol_morph(Yvt2>1.8,'o',2) & ~isnan(Yvt) & Yp0<1.5) = 2; 
-  Yvt2 = cat_vol_laplace3R(Yvt,Yvt==1.5,0.002);
+  Yvt(cat_vol_morph(Yvt2>1.6,'o',2) & ~isnan(Yvt) & Yp0<1.5) = 2; 
+  Ygx = Ym/3 ./ cat_vol_localstat(Ym/3,Ym>1.125,1,3,1); Yvt(Yvt==1.5 & Ygx<.5)=nan; 
+  Ygx = Ym/3 ./ cat_vol_localstat(Ym/3,Ym>1.25,1,3,1); Yvt(Yvt==1.5 & Ygx<.8)=nan; 
+  Yvt2 = cat_vol_laplace3R(Yvt,Yvt==1.5,0.001);
   % remove small objects
   warning('off','MATLAB:cat_vol_morph:NoObject');
   Yvt = cat_vol_morph(Yvt2<1.5, 'l', [10 0.1]);
@@ -827,13 +847,17 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
   [tmp0,tmp1,Ya1] = cat_vbdist(Ya1,Yb); clear tmp0 tmp1;
   Ya1(Ybv) = LAB.BV; 
   
-  % consider gyrus parahippocampalis
-  Ya1(YA==LAB.PH) = LAB.PH;
+  % consider gyrus parahippocampalis | cat_vol_morph(Ya1==LAB.HC,'e')
+  % RD202501: add defintion of parahippocampal gyrus (with some extensive processing to really have a whole free thing but we will try to first keep it simple)
+  Yph = cat_vol_morph((YA==LAB.PH ),'dd',1.9) & cat_vol_morph(Ya1==LAB.VT | Ya1==LAB.HC,'dd',4,vx_vol) & Ym>2.125 & Ydiv<0.05; 
+  Ya1(Yph>0) = LAB.PH; clear Yph; % parahippocampus
   
   %% side aligment using laplace to correct for missalignments due to the normalization
   stime = cat_io_cmd('  Side alignment','g5','',verb,stime); dispc=dispc+1;
   YBG  = Ya1==LAB.BG | Ya1==LAB.TH;
-  YMF  = Ya1==LAB.VT | Ya1==LAB.BG | Ya1==LAB.TH | Ya1==LAB.HI | Ya1==LAB.TH; % add the thalamus (RD20190913)
+  YMF  = Ya1==LAB.VT | Ya1==LAB.BG | Ya1==LAB.TH | Ya1==LAB.HI | Ya1==LAB.PH; % add the thalamus (RD20190913)
+  YMF(smooth3(YMF)<.5) = 0; 
+  YMF  = cat_vol_morph(cat_vol_morph(YMF,'c',2),'o'); 
   YMF2 = cat_vol_morph(YMF,'d',2,vx_vol) | Ya1==LAB.CB | Ya1==LAB.BS | Ya1==LAB.MB;
   Ymf  = max(Ym,smooth3(single(YMF2*3))); 
   Ycenter = cat_vol_smooth3X(YS==0,6)<0.9 & cat_vol_smooth3X(YS==1,6)<0.9 & ~YMF2 & Yp0>0 & Ym<3.1 & (Yp0<2.5 | Ya1==LAB.BV);
@@ -843,10 +867,10 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
   if ~debug, clear YMF2 Yt YS; end
   
   %% YMF for FreeSurfer fsaverage
-  Ysm  = cat_vol_morph(Ys==2,'d',1.75,vx_vol) & cat_vol_morph(Ys==1,'d',1.75,vx_vol);
-  YMF  = cat_vol_morph(Ya1==LAB.VT | Ya1==LAB.BG | Ya1==LAB.HI | (Ya1==LAB.TH & smooth3(Yp0)>1.25),'c',3,vx_vol) & ~Ysm; % changed thalamus (RD20190913)
-  %YMF  = YMF | (cat_vol_morph(YA==LAB.CT & YBG,'c',6) & ~Ysm); 
-  YMF  = Ym<=2.5  & cat_vol_morph(YMF | Ym>2.3,'c',1) & cat_vol_morph(YMF,'d',2,vx_vol);
+  Ysm  = cat_vol_morph(Ys==2,'d',1.75,vx_vol) & cat_vol_morph(Ys==1,'d',1.75,vx_vol); 
+  YMF  = cat_vol_morph(Ya1==LAB.VT | Ya1==LAB.PH | Ya1==LAB.BG | Ya1==LAB.HI | (Ya1==LAB.TH & smooth3(Yp0)>1.25),'dc',2,vx_vol) & ~Ysm; % changed thalamus (RD20190913)
+  YMF  = Ym<=2.75  & cat_vol_morph(YMF | Ym>2.3,'c',1) & cat_vol_morph(YMF,'dd',2,vx_vol);
+  %YMF  = cat_vol_morph(YMF,'do',1.5);
   YMF  = smooth3(YMF)>0.5;
   clear Ysm; 
   
