@@ -182,17 +182,18 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   clear Yms;
    
   % filling
-  Ymf  = max(Ym,min(1,YMF & ~NS(Ya,opt.LAB.HC) & ~( cat_vol_morph( NS(Ya,opt.LAB.HC),'d',2) & NS(Ya,opt.LAB.TH) ))); 
-  Ymfs = cat_vol_smooth3X(Ymf,1); 
-  Ytmp = cat_vol_morph(YMF,'d',3) & Ymfs>2.3/3;
+  % RD202501: harder boundary compared to before and distance morphometry
+  Ymf  = max(Ym,min(1,YMF & ~NS(Ya,opt.LAB.HC) & ~( cat_vol_morph( NS(Ya,opt.LAB.HC),'dd',2,vx_vol) & NS(Ya,opt.LAB.TH) ))); 
+  Ymfs = cat_vol_smooth3X(Ymf,.5); % RD202501: harder boundary compared to before
+  Ytmp = cat_vol_morph(YMF,'dd',3,vx_vol) & Ymfs>2.1/3;
   Ymf(Ytmp) = max(min(Ym(Ytmp),0),Ymfs(Ytmp)); clear Ytmp Ymfs; 
   Ymf = Ymf * 3;
-  
+ 
   % removing fine WM structures in the hippocampus area to reduce topological and geometrical defects (added RD20190912)
   % use erode to reduce probability of cutting other gyri
-  HCmask = cat_vol_morph( NS(Ya,opt.LAB.HC) , 'de', 1.5, vx_vol); 
+  HCmask = cat_vol_morph( NS(Ya,opt.LAB.HC) , 'de', 1.5, vx_vol) & ~YMF; % RD202501: open only not filled regions
   Ymf( HCmask ) =  min(2,Ymf( HCmask )); clear HCmask; 
-
+  
   % surface output and evaluation parameter 
   Psurf = struct(); 
   res   = struct('euler_characteristic',nan,'defect_size',nan,'lh',struct(),'rh',struct()); 
@@ -338,7 +339,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
       eval(sprintf('Psurf(si).%s = %s;',surffile{sfi},surffile{sfi})); 
     end
     
-    
+
     %% reduce for object area
     switch opt.surf{si}
       case {'lh'},  Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.BV) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB)) .* (mod(Ya,2)==1); Yside = mod(Ya,2)==1; 
@@ -355,7 +356,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
     if ~iscerebellum 
       % RD202107:  Use atlas and Shooting template information to close the
       %            hippocampal gyrus but open the hippocampal region.
-      mask_parahipp = NS(Ya,opt.LAB.PH) | NS(Ya,opt.LAB.HC) | NS(Ya,opt.LAB.VT); 
+      mask_parahipp = opt.close_parahipp & (NS(Ya,opt.LAB.PH) | NS(Ya,opt.LAB.HC) | NS(Ya,opt.LAB.VT));
       if isempty(Ytemplate)
         VT = NS(Ya,opt.LAB.PH) | NS(Ya,opt.LAB.HC); % this does not work but also should not create problems
       else
@@ -1979,7 +1980,7 @@ function Ymf = hippocampus_amygdala_cleanup(Ymf,Ya,vx_vol,close_parahipp,doit)
 
 
     
-    %% RD202107: closing jof parahippocampal gyri
+    %% RD202107: closing parahippocampal gyri
     %  --------------------------------------------------------------------
     %  We are mostly interested in closing of holes in deep parahippocampal 
     %  regions. Hence, we will limit our operations by an enlargements of
