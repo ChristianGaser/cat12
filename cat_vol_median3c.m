@@ -5,17 +5,19 @@
 % 
 %  This is a special subversion to filter label maps!
 % 
-%  M = cat_vol_median3c(D[,Bi,Bn])
+%  M = cat_vol_median3c(D[,Bi,Bn,iter,nb])
 % 
-%  D  (single)  .. 3D matrix for filter process 
-%  Bi (logical) .. 3D matrix that mark voxel that should be filtered
-%  Bn (logical) .. 3D matrix that mark voxel that are used as neighbors 
-% 
+%  D    (single)  .. 3D matrix for filter process 
+%  Bi   (logical) .. 3D matrix that mark voxel that should be filtered
+%  Bn   (logical) .. 3D matrix that mark voxel that are used as neighbors 
+%  iter (double)  .. number of interations (<=10, default=1)
+%  nb   (double)  .. number of neighbors (<=10, default=1); 
+%
 %  Examples: 
 %   1)
 %     A = round(smooth3(rand(50,50,3,'single')*3));
 %     B = false(size(A)); B(5:end-4,5:end-4,:)=true; 
-%     C = cat_vol_median3c(A,B); C = cat_vol_median3c(C,B); 
+%     C = cat_vol_median3c(A,B,B,2,2); 
 %     ds('d2smns','',1,A+B,C,2);
 %
 %  See also cat_vol_median3, compile.
