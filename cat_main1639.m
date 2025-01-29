@@ -223,24 +223,22 @@ if ~isfield(res,'spmpp')
   %  RD20210307: Update of the Yy to the TMP but with the BB of the TPM.
   finaffreg = 2; % final affine registration (1-GWM,2-BM,3-GM,4-WM)
   if job.extopts.WMHC || job.extopts.SLC
+    %%
     if ~debug, stime = cat_io_cmd(sprintf('Fast Optimized Shooting registration'),'','',job.extopts.verb); end
     res2 = res; 
     job2 = job;
-    job2.extopts.bb           = 1; % registration to TPM space
+    job2.extopts.bb           = 0;      % registration to TPM space
     job2.extopts.verb         = debug;  % do not display process (people would may get confused) 
     job2.extopts.vox          = abs(res.tpm(1).mat(1));  % TPM resolution to replace old Yy  
     job2.extopts.reg.affreg   = finaffreg; % RD202306: do an addition registration based on the skull (i.e. sum(Ycls{1:3})) 
-                                   %           code is working but better result?
+                                           %           code is working but better result?
     if job.extopts.regstr>0
-      job2.extopts.regstr     = 13;    % lower resolution (2mm)
+      job2.extopts.regstr     = 12;    % lower resolution (2mm) 
       job2.extopts.reg.nits   = 8;     % less iterations
       %job2.extopts.shootingtpms(3:end) = [];  % remove high templates, we only need low frequency corrections .. NO! This would cause problems with the interpolation 
-      res2 = res; 
       res2.do_dartel          = 2;      % use shooting
     else
       fprintf('\n');
-      job2.extopts.verb        = 0; 
-      job2.extopts.vox         = abs(res.tpm(1).mat(1));  % TPM resolution to replace old Yy 
       job2.extopts.reg.iterlim = 1;      % only 1-2 inner iterations
       res2.do_dartel           = 1;      % use dartel
     end
@@ -251,6 +249,14 @@ if ~isfield(res,'spmpp')
     end  
     Yy2  = trans1.warped.y;
     if ~debug, clear job2 res2; end
+%%
+    if 0
+    %% quick CAT atlas test 
+      YA0 = cat_vol_ctype( cat_vol_sample(res.tpm(1),job.extopts.cat12atlas{1},Yy ,0) );
+      YA1 = cat_vol_ctype( cat_vol_sample(res.tpm(1),job.extopts.cat12atlas{1},Yy2,0) );
+      ds('d2sm','',vx_vol,Ym/3+(single(YA0)/20),Ym/3+(single(YA1)/20),125)
+    end      
+      
 
     % Shooting did not include areas outside of the boundary box
     %
