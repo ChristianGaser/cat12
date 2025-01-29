@@ -782,29 +782,26 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
 
   res2 = res; 
   job2 = job;
-  job2.extopts.bb             = 1; 
+  job2.extopts.bb             = 0;      % registration to TPM space
   job2.extopts.verb           = 0;      % do not display process (people would may get confused) 
   job2.extopts.vox            = abs(res.tpm(1).mat(1));  % TPM resolution to replace old Yy  
+  job2.extopts.reg.affreg     = 2;      % new final affine registration (1-GWM,2-BM,3-GM,4-WM)
   if job.extopts.regstr>0
-    job2.extopts.regstr       = 15;     % low resolution 
-    job2.extopts.reg.nits     = 16;     % less iterations
-    job2.extopts.reg.affreg   = 0;      % new affine registration
+    job2.extopts.regstr       = 13;     % low resolution 
+    job2.extopts.reg.nits     = 8;      % less iterations
     %job2.extopts.shootingtpms(3:end) = [];      % remove high templates, we only need low frequency corrections 
                                                  % NO! This would cause problems with the interpolation
     res2 = res; 
     res2.do_dartel            = 2;      % use shooting
   else
     fprintf('\n');
-    job2.extopts.verb         = 0; 
-    job2.extopts.vox          = abs(res.tpm(1).mat(1));  % TPM resolution to replace old Yy 
     job2.extopts.reg.iterlim  = 1;      % only 1-2 inner iterations
-    job2.extopts.reg.affreg   = 0;      % new affine registration
     res2.do_dartel            = 1;      % use dartel
   end
   if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
-    [trans,res.ppe.reginitp,res.Affine] = cat_main_registration(job2,res2,Ycls(1:2),Yy,res.Ylesion); 
+    [trans,res.ppe.reginitp,res.Affine] = cat_main_registration(job2,res2,Ycls(1:3),Yy,res.Ylesion); 
   else
-    [trans,res.ppe.reginitp,res.Affine] = cat_main_registration(job2,res2,Ycls(1:2),Yy); 
+    [trans,res.ppe.reginitp,res.Affine] = cat_main_registration(job2,res2,Ycls(1:3),Yy); 
   end
   Yy2  = trans.warped.y;
  

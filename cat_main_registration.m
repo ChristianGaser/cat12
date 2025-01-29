@@ -215,7 +215,7 @@ if dreg.affreg && ( ~isfield(job,'useprior') || isempty(job.useprior) || ~exist(
   % create individual and template registration image
   Yb  = zeros(size(Ycls{1})); 
   Ybt = zeros(Vtmpb(1).dim,'single');
-  for ci = 1:3
+  for ci = 1:min(numel(Vtmpb),numel(Ycls))
     Ybt = Ybt + spm_read_vols( Vtmpb(ci) ) * cw(ci); 
     Yb  = Yb  + single(Ycls{ci})/255 * cw(ci);  
   end
@@ -346,8 +346,11 @@ end
       %  M1   = tpmM;  
       %  imat = spm_imatrix(tmpM); imat(1:3) = imat(1:3) + imat(7:9).*(tdim - (newres/tmpres*odim))/2; imat(7:9) = imat(7:9) * newres/tmpres; M1   = spm_matrix(imat);
       %else
-      imat = spm_imatrix(tmpM); imat(1:3) = imat(1:3) + imat(7:9).*(tdim - (newres/tmpres*odim))/2; imat(7:9) = imat(7:9) * newres/tmpres; M1   = spm_matrix(imat);
-      %end
+      if isscalar(job.extopts.bb) && job.extopts.bb == 0 % TPM case 
+        M1   = tpmM;
+      else
+        imat = spm_imatrix(tmpM); imat(1:3) = imat(1:3) + imat(7:9).*(tdim - (newres/tmpres*odim))/2; imat(7:9) = imat(7:9) * newres/tmpres; M1   = spm_matrix(imat);
+      end
       imat = spm_imatrix(eye(4)); imat(1:3) = imat(1:3) + imat(7:9).*(tdim - (newres/tmpres*odim))/2; imat(7:9) = imat(7:9) * newres/tmpres; Mad  = spm_matrix(imat);
       
       % affine and rigid parameters for registration 
@@ -388,14 +391,16 @@ end
         TAR          = R;
       end
 
-%%
-      
+%%    
       try 
         if (res.do_dartel==1 && isempty( job.extopts.darteltpm{1} ) ) || ...
            (res.do_dartel>0  && res.do_dartel<1 && isempty( job.extopts.shootingtpm{1} ) ) || ...
            (res.do_dartel>=2 && isempty( job.extopts.shootingtpm{1} ) ) 
           error('cat_main_registration:useSPMreg', ...
             'TPMs are not supported for Dartel/Shooting registration. Use previous registration.')
+        elseif res.do_dartel<0
+          error('cat_main_registration:testBackup', ...
+            'Test backup routing that should use the previous registration.')
         end
 
         %  main functions
@@ -455,6 +460,9 @@ end
         if strcmp( e.identifier , 'cat_main_registration:useSPMreg' )
           cat_io_addwarning('cat_main_registration:useSPMreg',...
             'No Dartel/Shooting template was given. \\nUse previous registration to TPM.',0,[1 1]); % not a error but a feature
+        elseif strcmp( e.identifier , 'cat_main_registration:testBackup' )
+          cat_io_addwarning('cat_main_registration:testBackup', ...
+            'Test backup routing that should use the previous registration.',1,[1 1]); % not a error but a feature
         else
           cat_io_addwarning('cat_main_registration:regError',...
             'Registration problem due to given input segmentation. \\nUse previous registration.',2,[1 1]);
@@ -468,11 +476,15 @@ end
         tmpM   = Vtmp(1).mat; 
         
         % resolutions
-        % - in this case tpmres == tmpres
-        tmpres = abs(tmpM(1));                                                        % template resolution 
-        %tpmres = abs(tpmM(1));     
-        newres = job.extopts.vox(voxi); if isinf(newres), newres = tmpres; end        % output resolution
- 
+        if isscalar(job.extopts.bb) && job.extopts.bb == 0 % TPM case 
+          tmpres = abs(tpmM(1));                                                        % TPM resolution 
+          newres = tmpres;                                                              % output resolution
+        else
+          % - in this case tpmres == tmpres
+          tmpres = abs(tmpM(1));                                                        % template resolution 
+          newres = job.extopts.vox(voxi); if isinf(newres), newres = tmpres; end        % output resolution
+        end
+       
         % image size/dimension 
         idim   = res.image(1).dim(1:3);                                               % (interpolated) input image size
         sdim   = res.tpm(1).dim;                                                  % registration template image size
@@ -486,8 +498,11 @@ end
         %if isfield( job.extopts , 'bb' )  &&  numel( job.extopts.bb ) == 1  && job.extopts.bb == 1
         %  M1   = tpmM;
         %else
-        imat = spm_imatrix(tmpM); imat(1:3) = imat(1:3) + imat(7:9).*(tdim - (newres/tmpres*odim))/2; imat(7:9) = imat(7:9) * newres/tmpres; M1   = spm_matrix(imat);
-        %end
+        if isscalar(job.extopts.bb) && job.extopts.bb == 0 % TPM case 
+          M1    = tpmM;
+        else
+          imat = spm_imatrix(tmpM); imat(1:3) = imat(1:3) + imat(7:9).*(tdim - (newres/tmpres*odim))/2; imat(7:9) = imat(7:9) * newres/tmpres; M1   = spm_matrix(imat);
+        end
         
         % estimate the inverse transformation 
         yid             = spm_diffeo('invdef', Yy , sdim, inv(tpmM\M1), M1\res.Affine*M0); 
@@ -746,8 +761,8 @@ function [trans,reg] = run_Shooting(Ycls,Ylesion,job,reg,res,trans,Maffinerigid,
           % use the CSF class directly
           Yven = cat_vol_morph( cat_vol_morph( cat_vol_morph(f{3},'l',[10 0.1]), 'o' ,1) ,'d'); 
         else
-          % if CSF==BG than find the large central CSF region within the brain
-          Ygwm = f{2} + f{1}; 
+          %% if CSF==BG than find the large central CSF region within the brain
+          Ygwm = cat_vol_localstat( single(f{2} + f{1}) , (f{2} + f{1} + f{3}/2)>0, 1 ,1); % smoothing only of tissue probs
 
           % the brainmask requires large close in case of open ventricles that are connected to extra-ventricluar CSF 
           Yb   = cat_vol_morph(Ygwm,'ldc',12/tempres2(ti));
@@ -755,7 +770,7 @@ function [trans,reg] = run_Shooting(Ycls,Ylesion,job,reg,res,trans,Maffinerigid,
 
           % seperate the biggest part
           Yven = (Yb - Ygwm)>0.9 & Ybd>0.9; 
-          Yven = cat_vol_morph(cat_vol_morph( cat_vol_morph( Yven ,'lo',1) ,'d',max(1,1/rred(ti))),'l'); 
+          Yven = cat_vol_morph(cat_vol_morph( cat_vol_morph( Yven ,'ldo',3,tempres2(ti)) ,'d',max(1,1/rred(ti))),'l'); 
           Yven = min(1,cat_vol_smooth3X(Yven,4/tempres2(ti))*1.5);  
           %Yven = Yven ./ max(Yven(:)); 
         end
@@ -785,17 +800,11 @@ function [trans,reg] = run_Shooting(Ycls,Ylesion,job,reg,res,trans,Maffinerigid,
           end
 
           % seperate template ventricle
-          % no labopen because the ventricle is to small
+          % no labopen because the ventricle is too small here
           Ygven     = exp(g{3}) .* cat_vol_smooth3X(Yven,2/tempres2(ti)); 
           Ygven     = cat_vol_morph( cat_vol_morph( cat_vol_morph(Ygven>0.5,'l') ,'d',max(1,1/rred(ti))),'l');  
           Ygven     = exp(g{3}) .* cat_vol_smooth3X(Ygven,4/tempres2(ti));
-          % moreover ... 
-          if 0
-            Ygvenoc   = Ygven; 
-            Ygven     = min(1,Ygven / mean(Ygven(Ygven(:)>0.2))) * 0.99;
-            Ygvenoc   = Ygven - Ygvenoc; 
-          end
-
+         
           % seperate individual ventricle 
           f{n1+2} = ones(rdims(ti,1:3),'single');
           f{n1+1} = max(eps,Yven - Ygwm);
