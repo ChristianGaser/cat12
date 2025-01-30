@@ -75,6 +75,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
       Yb = Yb>0.5;                                      % convert to logical 
       postmortem = 1; 
     else 
+      Yb = smooth3( sum(P(:,:,:,1:3),4) ) > 128;
       postmortem = 0; 
     end
 
@@ -129,7 +130,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
         tth = [clsint(1) clsint(2) clsint(3)]; 
         Ycc = cat_vol_morph(YbA,'e',3) & sum( P(:,:,:,4:6) , 4 ) & ...
           Ysrc>(min(tth) - mean( abs(diff(tth))) ) & Ysrc<(max(tth) + mean( abs(diff(tth)) ));
-        [Ytmp,Yct] = min( cat( 4 , abs(Ysrc - tth(1)) ,  abs(Ysrc - tth(2)) ,  abs(Ysrc - tth(3)) ) , [], 4); clear Ytmp
+        [~,Yct] = min( cat( 4 , abs(Ysrc - tth(1)) ,  abs(Ysrc - tth(2)) ,  abs(Ysrc - tth(3)) ) , [], 4); clear Ytmp
         P(:,:,:,1) = P(:,:,:,1) + P(:,:,:,5) .* uint8( Ycc & Yct==1 );
         P(:,:,:,2) = P(:,:,:,2) + P(:,:,:,5) .* uint8( Ycc & Yct==2 );  
         P(:,:,:,3) = P(:,:,:,3) + P(:,:,:,5) .* uint8( Ycc & Yct==3 );  
@@ -137,6 +138,45 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
         clear Ycc tth Yct; 
       end
     end
+
+
+    if job.extopts.inv_weighting  &&  cat_stat_nanmedian(Ysrc(P(:,:,:,2)>128)) > cat_stat_nanmedian(Ysrc(P(:,:,:,3)>128))
+    %% RD202501: added extra cleanup to avoid blood-vessel-like structures in PD/FLAIR 
+      stime2 = cat_io_cmd('  Update PD input','g5','',job.extopts.verb-1,stime2);
+
+    
+      %% correction of GM-CSF partial volume effects that are similar to blood vessels
+      Yw  = single(P(:,:,:,2))/255; Ywo=Yw; 
+      Yww = cat_vol_approx(cat_vol_localstat(Yw .* (Yw>.3),Yw>.3,1,3),'rec'); Yw  = Yw ./ Yww; % correct TPM bias
+      Yw(smooth3(Yw)<.15) = 0;
+      Yw = min(Yw,cat_vol_median3(Yw ,Yb | Yw>0,true(size(Ysrc)),0.7));
+      Yww = cat_vol_approx(cat_vol_localstat(Yw .* (Yw>.3),Yw>.3,1,3),'rec'); Yw  = Yw ./ Yww; % correct TPM bias
+      Yw(smooth3(Yw)<.15) = 0;  
+      Yw = min(Yw,cat_vol_median3(Yw ,Yb | Yw>0,true(size(Ysrc)),0.5));
+      for i=.9:-.2:.2, Yw(cat_vol_morph(Yw>i,'l',[1000,2])==0 & Yw>i)=0; end % remove smaller objects
+      Ymsk = smooth3(Yw)>.3; 
+      Yw(Ymsk) = max(Ywo(Ymsk),Yw(Ymsk));
+      Yw  = Yw*0.3 + 0.7*Ywo;
+      Ydw = Yw - Ywo; 
+
+      P(:,:,:,1) = cat_vol_ctype(single(P(:,:,:,1)) + min(0,-Ydw)*255); 
+      P(:,:,:,2) = cat_vol_ctype(single(P(:,:,:,2)) + Ydw*255); 
+      P(:,:,:,3) = cat_vol_ctype(single(P(:,:,:,3)) - min(0,Ydw)*255); 
+      clear Yw Yw2 Ydw Ywo;
+
+      
+      % additiuonal bias correction 
+      Yp0  = (single(P(:,:,:,1))*3/255 + single(P(:,:,:,2))*2/255 + single(P(:,:,:,3))/255) .* Yb; 
+      Yi   = (Ysrc ./ max(eps,Yp0)); 
+      Yi(isnan(Yi) | isinf(Yi) | ( Yi>2*cat_stat_nanmedian(Yi(Yb))) | ( Yi<0.25*cat_stat_nanmedian(Yi(Yb))) ) = 0; 
+      Yi   = cat_vol_median3(Yi,Yi>0,Yi>0); 
+      Yw   = cat_vol_approx(Yi,'rec'); 
+      Yw   = cat_vol_smooth3X(Yw,2); 
+      Yw   = Yw ./ mean(Yw(Yb)); 
+      Ysrc = Ysrc ./ Yw; 
+      clear Yi Yw Yp0; 
+    end
+
 
     % clear WM segment
     Ywm = P(:,:,:,2) > 128; 
@@ -178,7 +218,6 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
         clear Pc1 Ybb;
       end
     end
-    clear YbA;
 
     
 
@@ -366,7 +405,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
     elseif postmortem
       % already done 
     elseif size(P,4)==4 || size(P,4)==3 % skull-stripped
-      [Yb,Ybb,Yg,Ydiv,P] = cat_main_updateSPM_skullstriped(Ysrc,P,res,vx_vol,T3th);
+      [~,~,Yg,Ydiv,P] = cat_main_updateSPM_skullstriped(Ysrc,P,res,vx_vol,T3th);
       Yb = Ybx; Ybb = Ybx; 
     elseif isfield(job.extopts,'inv_weighting') && job.extopts.inv_weighting
       %% estimate gradient (edge) and divergence maps
@@ -707,7 +746,6 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
         % use longitudinal TPM
         [Ytmp,Ytmp,Yg,Ydiv] = cat_main_updateSPM_gcut0(Ysrc,P,vx_vol,T3th); clear Ytmp;  %#ok<ASGLU>
         Yb  = YbA > 0.5;
-        Ybb = Yb; 
         clear YbA
       elseif size(P,4)==4 || size(P,4)==3
         cat_io_cprintf('warn','\n  Skull-stripped input - refine original mask                                 ')
