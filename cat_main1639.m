@@ -393,17 +393,17 @@ if ~isfield(res,'spmpp')
   stime = cat_io_cmd('ROI segmentation (partitioning)');
   if job.extopts.SLC
     if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
-      [Yl1,Ycls,YMF] = cat_vol_partvol1639(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,res.Ylesion); %,Ydt,Ydti);
+      [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,res.Ylesion); %,Ydt,Ydti);
       fprintf('%5.0fs\n',etime(clock,stime));
     else 
-      [Yl1,Ycls,YMF] = cat_vol_partvol1639(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
+      [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
       fprintf('%5.0fs\n',etime(clock,stime));
       if isfield(res,'Ylesion') && sum(res.Ylesion(:)==0) 
         cat_io_addwarning([mfilename ':SLC_noExpDef'],'SLC is set for manual lesion correction but no lesions were found!',1,[1 1]); 
       end
     end
   else
-    [Yl1,Ycls,YMF] = cat_vol_partvol1639(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
+    [Yl1,Ycls,YMF] = cat_vol_partvol(Ymi,Ycls,Yb,Yy,vx_vol,job.extopts,tpm.V,noise,job,false(size(Ym)));
     fprintf('%5.0fs\n',etime(clock,stime));
     if job.extopts.expertgui && isfield(res,'Ylesion') && sum(res.Ylesion(:))>1000 && job.extopts.ignoreErrors < 2  && ...
       ~(res.ppe.affreg.highBG || res.ppe.affreg.skullstripped) && strcmp('human',job.extopts.species)
