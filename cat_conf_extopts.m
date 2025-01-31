@@ -914,6 +914,10 @@ LASstr.name    = 'Strength of Local Adaptive Segmentation';
 if ~expert 
   LASstr.labels  = {'none','light','medium','strong'};
   LASstr.values  = {0 0.25 0.50 0.75};
+elseif expert == 2
+  LASstr.labels  = {'none (0)','ultralight (eps)','light (0.25)','medium (0.50)','strong (0.75)','heavy (1.00)', ...
+                    'simple-ultraligh (1.01)', 'simple-light (1.5)','simple-heavy (2.0)'};
+  LASstr.values  = {0 eps 0.25 0.50 0.75 1.00 1.01 1.50 2.0};
 else
   LASstr.labels  = {'none (0)','ultralight (eps)','light (0.25)','medium (0.50)','strong (0.75)','heavy (1.00)'};
   LASstr.values  = {0 eps 0.25 0.50 0.75 1.00};
@@ -923,6 +927,12 @@ LASstr.help    = {
   'Additionally to WM-inhomogeneities, GM intensity can vary across different regions such as the motor cortex, the basal ganglia, or the occipital lobe. These changes have an anatomical background (e.g. iron content, myelinization), but are dependent on the MR-protocol and often lead to underestimation of GM at higher intensities and overestimation of CSF at lower intensities. Therefore, a local intensity transformation of all tissue classes is used to reduce these effects in the image. This local adaptive segmentation (LAS) is applied before the final AMAP segmentation.'
   ''
 };
+if expert == 2
+  LASstr.help    = [LASstr.help(1:end-1); {
+    'The developer mode also allows seletion of the simplified LAS version with less additional corrections of the classification that is also used as backup function of the default LAS function. '
+    ''
+  }];
+end
 LASstr.hidden = expert<1;
 
 
