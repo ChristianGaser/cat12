@@ -283,9 +283,7 @@ if ~isfield(res,'spmpp')
   if debug, Ym = Ymo; Ycls = Yclso; Ysrc = Ysrco; end 
   if job.extopts.LASstr>0
     if job.extopts.LASstr>1 
-      extoptsLAS2 = job.extopts;
-      extoptsLAS2.LASstr = extoptsLAS2.LASstr-1; 
-      stime = cat_io_cmd(sprintf('Local adaptive segmentation 2 (LASstr=%0.2f)',extoptsLAS2.LASstr));
+      stime = cat_io_cmd(sprintf('Simplified Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr-1));
     else
       stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr)); 
     end
@@ -310,9 +308,14 @@ if ~isfield(res,'spmpp')
     
     % main call of LAS
     if job.extopts.LASstr>1 
-      [Ymi,Ym,Ycls] = cat_main_LASs(Ysrc,Ycls,Ym,Yb,Yy,Tth,res,vx_vol,extoptsLAS2); % use Yclsi after cat_vol_partvol
+      Ymi = cat_main_LASsimple(Ysrc,Ycls,T3th,job.extopts.LASstr);
     else
-      [Ymi,Ym,Ycls] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
+      try 
+        [Ymi,Ym,Ycls] = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,T3th,res,vx_vol,job.extopts,Tth); 
+      catch
+        cat_io_addwarning([mfilename ':cat_main_LAS'],'Error in cat_main_LAS use cat_main_LASsimple.',3,[1 1]);
+        Ymi = cat_main_LASsimple(Ysrc,Ycls,T3th,job.extopts.LASstr);
+      end
     end
     stime2 = clock; % not really correct but better than before
     
