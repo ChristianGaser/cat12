@@ -13,8 +13,8 @@
 % of SPM12 (Wellcome Department of Cognitive Neurology) to provide computational
 % morphometry. It is developed by Christian Gaser and Robert Dahnke (Jena
 % University Hospital, Departments of Psychiatry and Neurology) and is available 
-% to the scientific community under the terms of the GNU General Public Licence as 
-% published by the Free Software Foundation; either version 2 of the Licence, 
+% to the scientific community under the terms of the GNU General Public License as 
+% published by the Free Software Foundation; either version 2 of the License, 
 % or (at your option) any later version.
 %
 % If you use any CAT12 code for commercial application, please email 
