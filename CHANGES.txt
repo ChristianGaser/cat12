@@ -1,4 +1,14 @@
 ------------------------------------------------------------------------
+r2647 | gaser | 2025-02-09 01:53:58
+
+Changed paths:
+ M CHANGES.txt
+ M cat_surf_results.m
+ M cat_vol_slice_overlay.m
+
+Updated: Added new options for defining minimum slucter extent and overlap to
+         atlas label to cat_surf_results.m and cat_vol_slice_overlay.m
+         ------------------------------------------------------------------------
 r2630 | dahnke | 2025-01-12 18:06:50
 
 Changed paths:

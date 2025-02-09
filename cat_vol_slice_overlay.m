@@ -15,6 +15,8 @@ function OV = cat_vol_slice_overlay(OV)
 % OV.atlas      - define atlas for labeling (e.g. 'cat12_cobra')
 %                 comment this out for interactive selection
 %                 or use 'none' for no atlas information
+% OV.min_extent - minimum cluster extent for atlas labeling
+% OV.min_overlap- minimum overlap to atlas regions for atlas labeling
 % OV.save       - save result as png/jpg/pdf/tif
 %                 comment this out for interactive selection or use '' for not 
 %                 saving any file or use just file extension (png/jpg/pdf/tif) to 
@@ -538,25 +540,45 @@ else
       j = j + 1;
     end
   end
-    atlas = spm_input('Select atlas?', '1', 'm', atlas_labels);
-    atlas_name = atlas_labels{atlas};
-    if atlas > 1
-      xA = spm_atlas('load',atlas_name);
-    else
-      xA = [];
-    end
+  atlas = spm_input('Select atlas?', '1', 'm', atlas_labels);
+  atlas_name = atlas_labels{atlas};
+  if atlas > 1
+    xA = spm_atlas('load',atlas_name);
+  else
+    xA = [];
+  end
+end
+
+[mx, mn, XYZ, vol] = volmaxmin(SO.img(2).vol,SO.img(2).func);
+
+% threshold map and restrict coordinates
+if SO.img(2).range(1) >= 0
+  Q = find(compare_to_threshold(vol,SO.img(2).range(1)));
+  XYZ = XYZ(:, Q);
+  vol = vol(Q);
+end
+
+if isempty(XYZ)
+  fprintf("No results for %s found.\n", img);
+  return;
 end
 
 % atlas labeling
-if ~isempty(xA)
-  [mx, mn, XYZ, vol] = volmaxmin(SO.img(2).vol,SO.img(2).func);
-  
-  % threshold map and restrict coordinates
-  if SO.img(2).range(1) >= 0
-    Q = find(compare_to_threshold(vol,SO.img(2).range(1)));
-    XYZ = XYZ(:, Q);
-    vol = vol(Q);
+if ~isempty(xA) & ~isempty(XYZ)
+
+  % threshold values for printing table
+  if isfield(OV, 'min_extent')
+    min_extent = OV.min_extent;
+  else
+    min_extent = 1;
   end
+
+  if isfield(OV, 'min_overlap')
+    min_overlap = OV.min_overlap;
+  else
+    min_overlap = 1;
+  end
+  
   M = SO.img(2).vol.mat;
   XYZmm = M(1:3, :) * [XYZ; ones(1, size(XYZ, 2))];
   
@@ -575,11 +597,9 @@ if ~isempty(xA)
   Zj     = cell(max(A)+2,1);
   maxZ   = zeros(max(A)+2,1);
   XYZmmj = cell(max(A)+2,1);
-  Q      = [];
   
   for k = 1:min(max(A))
     j = find(A == k);
-    Q = [Q j];
     
     [labk{k}, Pl{k}]  = spm_atlas('query',xA,XYZmm(:,j));
     Zj{k} = i1(j);
@@ -622,12 +642,15 @@ if ~isempty(xA)
         end
         
         if logP, val = 10^(-maxZ(j)); else val = maxZ(j); end
-        fprintf('%7.2g\t%12d\t%4.0f %4.0f %4.0f',val,length(Zj{j}),XYZmmj{j}(:,indZ));
-        for m=1:numel(labk{j})
-          if Pl{j}(m) >= 1,
-            if m==1, fprintf('\t%3.0f%%\t%s\n',Pl{j}(m),labk{j}{m});
-            else     fprintf('%7s\t%12s\t%15s\t%3.0f%%\t%s\n','       ','       ','               ',...
-              Pl{j}(m),labk{j}{m});
+
+        if length(Zj{j}) >= min_extent
+          fprintf('%7.2g\t%12d\t%4.0f %4.0f %4.0f',val,length(Zj{j}),XYZmmj{j}(:,indZ));
+          for m=1:numel(labk{j})
+            if Pl{j}(m) >= min_overlap
+              if m==1, fprintf('\t%3.0f%%\t%s\n',Pl{j}(m),labk{j}{m});
+              else     fprintf('%7s\t%12s\t%15s\t%3.0f%%\t%s\n','       ','       ','               ',...
+                Pl{j}(m),labk{j}{m});
+              end
             end
           end
         end
