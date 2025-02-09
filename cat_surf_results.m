@@ -30,8 +30,8 @@ function varargout = cat_surf_results(action, varargin)
 %  Select border overlay. 
 %  0 - no border, 1 - Desikan-Killiany DK40, 2- Destrieux 2009, 3 - HCP Multi-Modal Parcellation
 %
-%  * cat_surf_results('atlas',1..3)
-%  Select atlas labeling. 
+%  * cat_surf_results('atlas',1..3,min_extent,min_overlap)
+%  Select atlas labeling and apply minimum cluster extent and atlas overlap. 
 %  1 - Desikan-Killiany DK40, 2- Destrieux 2009, 3 - HCP Multi-Modal Parcellation
 %
 %  * cat_surf_results('view',1..3)
@@ -1184,12 +1184,23 @@ switch lower(action)
       select_border(border_mode);
     end
   
-  %- set atlas 
+  %- set atlas
   %======================================================================
   case 'atlas'
     atlas_mode = varargin{1};
+    if nargin > 2
+      min_extent = varargin{2};
+    else
+      min_extent = 1;
+    end
+    if nargin > 3
+      min_overlap = varargin{3};
+    else
+      min_overlap = 1;
+    end
+    
     if any(atlas_mode == 1:3)
-      select_atlas(atlas_mode);
+      select_atlas(atlas_mode, min_extent, min_overlap);
     end
 
   %- set view
@@ -1208,10 +1219,12 @@ switch lower(action)
       switch varargin{1}
         case {1,'white'}
           if get(H.bkg, 'Value')==0
+            H.bkg_val = [1 1 1];
             cat_surf_results('background');
           end
         case {0,2,'black'}
           if get(H.bkg, 'Value')==1
+            H.bkg_val = [0 0 0];
             cat_surf_results('background');
           end
         otherwise
@@ -1548,7 +1561,7 @@ H.cmap_col = col;
 if nargout, Ho = H; end
 
 %==========================================================================
-function Ho = select_atlas(atlas)
+function Ho = select_atlas(atlas, min_extent, min_overlap)
 global H
 
 % get threshold from clipping
@@ -1608,26 +1621,28 @@ for ind = [1 3]
         
         dmax = d(indp); dmax = max(dmax(N));
         
-        if H.logP(H.results_sel), fprintf('\n%1.5f\t%16d', 10^(-dmax), k);
-        else, fprintf('\n%.5f\t%16d', dmax, k); end
-        
-        Nrdata = rdata2(N);
-        roi_size = zeros(size(rcsv, 1) - 1, 1);
-        
-        for j = 2:size(rcsv, 1)
-          ind3 = find(Nrdata == rcsv{j, 1});
-          roi_size(j - 1) = 100 * length(ind3) / k;
-        end
-        
-        % sort wrt size
-        [ii, jj] = sort(roi_size, 'descend');
-        jj(ii == 0) = [];
-        
-        for j = 1:length(jj)
-          if roi_size(jj(j)) > 1
-            if j == 1, fprintf('\t%3.0f%s\t%s\n', roi_size(jj(j)), '%', rcsv{jj(j) + 1, 2});
-            else, fprintf('%7s\t%16s\t%3.0f%s\t%s\n', '       ', '        ', ...
-                roi_size(jj(j)), '%', rcsv{jj(j) + 1, 2});
+        if k >= min_extent
+          if H.logP(H.results_sel), fprintf('\n%1.5f\t%16d', 10^(-dmax), k);
+          else, fprintf('\n%.5f\t%16d', dmax, k); end
+          
+          Nrdata = rdata2(N);
+          roi_size = zeros(size(rcsv, 1) - 1, 1);
+          
+          for j = 2:size(rcsv, 1)
+            ind3 = find(Nrdata == rcsv{j, 1});
+            roi_size(j - 1) = 100 * length(ind3) / k;
+          end
+          
+          % sort wrt size
+          [ii, jj] = sort(roi_size, 'descend');
+          jj(ii == 0) = [];
+          
+          for j = 1:length(jj)
+            if roi_size(jj(j)) >= min_overlap
+              if j == 1, fprintf('\t%3.0f%s\t%s\n', roi_size(jj(j)), '%', rcsv{jj(j) + 1, 2});
+              else, fprintf('%7s\t%16s\t%3.0f%s\t%s\n', '       ', '        ', ...
+                  roi_size(jj(j)), '%', rcsv{jj(j) + 1, 2});
+              end
             end
           end
         end
@@ -1654,25 +1669,28 @@ for ind = [1 3]
         k = length(N);
         
         dmin = d(indn); dmin = min(dmin(N));
-        if H.logP(H.results_sel), fprintf('\n%1.5f\t%16d', 10^(dmin), k);
-        else, fprintf('\n%.5f\t%16d', -dmin, k); end
-        
-        Nrdata = rdata2(N);
-        roi_size = zeros(size(rcsv, 1) - 1, 1);
-        for j = 2:size(rcsv, 1)
-          ind3 = find(Nrdata == rcsv{j, 1});
-          roi_size(j - 1) = 100 * length(ind3) / k;
-        end
-        
-        % sort wrt size
-        [ii, jj] = sort(roi_size, 'descend');
-        jj(ii == 0) = [];
-        
-        for j = 1:length(jj)
-          if roi_size(jj(j)) > 1
-            if j == 1, fprintf('\t%3.0f%s\t%s\n', roi_size(jj(j)), '%', rcsv{jj(j) + 1, 2});
-            else, fprintf('%7s\t%16s\t%3.0f%s\t%s\n', '       ', '        ', ...
-                roi_size(jj(j)), '%', rcsv{jj(j) + 1, 2});
+
+        if k >= min_extent
+          if H.logP(H.results_sel), fprintf('\n%1.5f\t%16d', 10^(dmin), k);
+          else, fprintf('\n%.5f\t%16d', -dmin, k); end
+          
+          Nrdata = rdata2(N);
+          roi_size = zeros(size(rcsv, 1) - 1, 1);
+          for j = 2:size(rcsv, 1)
+            ind3 = find(Nrdata == rcsv{j, 1});
+            roi_size(j - 1) = 100 * length(ind3) / k;
+          end
+          
+          % sort wrt size
+          [ii, jj] = sort(roi_size, 'descend');
+          jj(ii == 0) = [];
+          
+          for j = 1:length(jj)
+            if roi_size(jj(j)) >= min_overlap
+              if j == 1, fprintf('\t%3.0f%s\t%s\n', roi_size(jj(j)), '%', rcsv{jj(j) + 1, 2});
+              else, fprintf('%7s\t%16s\t%3.0f%s\t%s\n', '       ', '        ', ...
+                  roi_size(jj(j)), '%', rcsv{jj(j) + 1, 2});
+              end
             end
           end
         end
