@@ -641,14 +641,19 @@ if ~isempty(xA) & ~isempty(XYZ)
           fprintf('%7s\t%12s\t%15s\t%s\n\n',valname,'Cluster-Size','    xyz [mm]   ','Overlap of atlas region');
         end
         
-        if logP, val = 10^(-maxZ(j)); else val = maxZ(j); end
+        if maxZ(j) < 0
+          maxZ(j) = -maxZ(j);
+        end
+
+        if logP val = 10^(-maxZ(j));
+        else    val = maxZ(j); end
 
         if length(Zj{j}) >= min_extent
           fprintf('%7.2g\t%12d\t%4.0f %4.0f %4.0f',val,length(Zj{j}),XYZmmj{j}(:,indZ));
           for m=1:numel(labk{j})
             if Pl{j}(m) >= min_overlap
               if m==1, fprintf('\t%3.0f%%\t%s\n',Pl{j}(m),labk{j}{m});
-              else     fprintf('%7s\t%12s\t%15s\t%3.0f%%\t%s\n','       ','       ','               ',...
+              else,    fprintf('%7s\t%12s\t%15s\t%3.0f%%\t%s\n','       ','       ','               ',...
                 Pl{j}(m),labk{j}{m});
               end
             end

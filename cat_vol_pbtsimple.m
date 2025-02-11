@@ -643,7 +643,7 @@ function [Ycd, Ywd] = cat_vol_cwdist(Yp0,vx_vol,opt)
     opt.extendedrange = opt.extendedrange * opt.range; 
 
     % additional correction map for values behind tissue boundary, e.g., 
-    % for the WMD we stimate the distance from the GM/CSF boundary to 
+    % for the WMD we estimate the distance from the GM/CSF boundary to 
     % limit WMD values to the maximal thickness value
     % same idea as below
     if opt.extendedrange
