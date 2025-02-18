@@ -268,7 +268,8 @@ function writecsv(filename,C,sheet,pos,opt)
   end
   M=cell2mat(M');
 
-  if ~exist(fileparts(filename),'dir'), mkdir(fileparts(filename)); end
+  hdir = fileparts(filename); 
+  if ~isempty(hdir) && ~exist(hdir,'dir'), mkdir(hdir); end
   
   f=fopen(filename,'w'); 
   if f~=-1
