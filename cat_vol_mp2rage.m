@@ -156,8 +156,8 @@ function [out,outs] = cat_vol_mp2rage(job)
     Vm = spm_vol( job.files{si} ); 
     Ym = spm_read_vols( Vm ); 
     [Ymr,res] = cat_vol_resize(Ym,'reduceV',1,4,16,'meanm'); 
-    Ymo    = cat_vol_morph(smooth3(Ymr) > 0.95*median(Ymr(:)),'lc',4) & Ymr~=0; 
-    res.isMP2R = sum(Ymo(:) | Ymr(:)==0) > 0.95*numel(Ymo); 
+    Ymo    = cat_vol_morph(smooth3(Ymr) > 0.9*median(Ymr(:)),'lc',4) & Ymr~=0; 
+    res.isMP2R = sum(Ymo(:) | Ymr(:)==0) > 0.98*numel(Ymo); 
     clear Ymo Ymr Ym Vm; 
     
 
@@ -242,7 +242,7 @@ function [out,outs] = cat_vol_mp2rage(job)
         
         % run SPM 
         sii = 0; spmfailed = 0;
-        while i==1 & sii<3
+        while sii<3
           sii = sii + 1; 
           try
             evalc('spm_jobman(''run'',matlabbatch)'); 
@@ -350,7 +350,7 @@ function [out,outs] = cat_vol_mp2rage(job)
                  cat_vol_morph( smooth3((Yseg{5})>.2 & (Ym)>0.05*Tth(2))>.7,'lo',3)*mth;
           Ypx( smooth3(Ypx>0)<.1 | Ym==0 | (Yg>.5 & Yseg{2}<.1)) = 0;  
           Ypx(Ypx==0 & Yhdpp>0.1 & Yhdpp<.5 & Ym>min(Tth(1:2))) = mth;
-          Ympx = (Ypx~=0) .* cat_vol_localstat(Ym,Ypx>0,1,2+isT1); 
+          Ympx = (Ypx~=0) .* cat_vol_localstat(Ym,Ypx>0,1,2+res.isT1); 
           if isfatsup==0
             [Ymr,Ypxr,resV] = cat_vol_resize( {max(Ym,Ympx),Ypx},'reduceV',vx_vol,1.5,4,'meanm'); %clear Ypx
             Ywi0 = cat_vol_approx(Ymr ./ Ypxr); 
@@ -363,7 +363,7 @@ function [out,outs] = cat_vol_mp2rage(job)
           end
           %%
           [Ymr,Ypxr,resV] = cat_vol_resize( {max(Ym,Ympx),Ypx},'reduceV',vx_vol,1.5,4,'meanm'); %clear Ypx
-          Ywr  = cat_vol_localstat(Ymr ./ Ypxr,Ypxr>0,2,2+isT1); 
+          Ywr  = cat_vol_localstat(Ymr ./ Ypxr,Ypxr>0,2,2+res.isT1); 
           Ywir = cat_vol_approx(Ywr); clear Ywr Ymr; 
          % Ymxr = cat_vol_smooth3X(Ypxr~=0,8); clear Ypxr; 
          % Ywir = cat_vol_smooth3X(Ywir,2).*Ymxr + (1-Ymxr).*cat_vol_smooth3X(Ywir,2); 
@@ -431,7 +431,7 @@ function [out,outs] = cat_vol_mp2rage(job)
     Pseg = cell(1,6); Tth = zeros(1,6); Sth = Tth; 
     for ci = 1:5
       Pseg{ci}       = spm_file(job.files{si},'prefix',sprintf('c%d',ci)); 
-      Vseg(ci)       = spm_vol(Pseg{ci}); %#ok<AGROW> 
+      Vseg(ci)       = spm_vol(Pseg{ci}); 
       Yseg(:,:,:,ci) = single( spm_read_vols(Vseg(ci)) );
       Ymsk           = cat_vol_morph( Yseg(:,:,:,ci)>.9 ,'e') & Ym~=0; 
       Tth(ci)        = cat_stat_nanmedian(Ym(Ymsk(:))); 
@@ -642,7 +642,7 @@ function [out,outs] = cat_vol_mp2rage(job)
             %%
             Ypx = Ypx + (Ypx==0 & Yhdpp>.1 & Ym>Tth(3) & Yg>0.1) .* (Yhdpp .* max(spm8.mn(spm8.lkp==5))); 
           
-            Ympx = (Ypx~=0) .* cat_vol_localstat(Ym,Ypx>0,2,2+isT1); 
+            Ympx = (Ypx~=0) .* cat_vol_localstat(Ym,Ypx>0,2,2+res.isT1); 
             %{
             Ywi0 = cat_vol_approx(Ympx ./ Ypx); 
             Ywi0 = cat_vol_smooth3X(Ywi0,32);
