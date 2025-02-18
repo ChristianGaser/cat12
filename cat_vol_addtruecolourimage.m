@@ -37,7 +37,7 @@ function cat_vol_addtruecolourimage(P,cmap)
   
   if rgb_overlay
     cmap = [((1:64)/64)' zeros(64,2)];
-  else
+  elseif ~exist('cmap','var')
     cmap = jet(64);
   end
   
