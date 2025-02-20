@@ -761,11 +761,14 @@ for i=1:qn
     if ~isempty(chop)
       ii = ii + cumsum(i>=chop); 
     end
+
+    data{ii}(isnan(data{ii}) | isinf(data{ii})) = []; 
+
     
     % estimate kde
     n2 = 0;
     % Get the next data set from the array or cell array
-    if iscell(data), col = data{ii}(:);
+    if iscell(data), col = data{ii}(:); 
     else col = data(:,ii); end
     % estimate # of mesh points w.r.t. data size
     n2 = max(n2,ceil(log2(numel(col)))) - 2;
@@ -1209,6 +1212,7 @@ end
 %---------------------------------------------
 function  out=fixed_point(t,N,I,a2)
 % this implements the function t-zeta*gamma^[l](t)
+if isempty(a2), a2=0; end
 l=7;
 f=2*pi^(2*l)*sum(I.^l.*a2.*exp(-I*pi^2*t));
 for s=l-1:-1:2
