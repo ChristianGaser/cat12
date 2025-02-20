@@ -419,7 +419,10 @@ end
           %% define warping variables based on previous deformation
           % estimate the inverse transformation 
           yid             = spm_diffeo('invdef', Yy , odim, inv(tpmM\M1), M1\res.Affine*M0); 
+          % RD202502: strange error with   Rusak2021_sub-ADNI003S5209_simGMatrophy0.00mm.nii  so we repalce bad voxels by neighbors
+          %yidbad          = isinf(yid) | yid<0 | yid>200; yid(yidbad) = nan; clear yidbad;
           yi              = spm_diffeo('invdef', yid, idim, inv(M1\res.Affine*M0), eye(4)); clear yid; 
+          %yibad           = isinf(yi) | yi<0 | yi>max(size(yi)); yi(yibad) = nan; clear clear yidbad;
           yi2             = spm_diffeo('invdef', yi , odim, eye(4), eye(4)); 
           w               = max( eps , abs(spm_diffeo('def2det', yi2 ) ) ); 
           % Adaption to avoid boundary effects by correcting the voxel close
@@ -506,7 +509,10 @@ end
         
         % estimate the inverse transformation 
         yid             = spm_diffeo('invdef', Yy , sdim, inv(tpmM\M1), M1\res.Affine*M0); 
+        % RD202502: strange error with   Rusak2021_sub-ADNI003S5209_simGMatrophy0.00mm.nii  so we repalce bad voxels by neighbors% RD202502: strange error with   Rusak2021_sub-ADNI003S5209_simGMatrophy0.00mm.nii  so we repalce bad voxels by neighbors
+        %yidbad          = isinf(yid) | yid<0 | yid>200; yid(yidbad) = nan; clear yidbad;
         yi              = spm_diffeo('invdef', yid, idim, inv(M1\res.Affine*M0), eye(4)); clear yid; 
+        %yibad           = isinf(yi) | yi<0 | yi>max(size(yi)); yi(yibad) = nan; clear clear yidbad;
         yi2             = spm_diffeo('invdef', yi , odim, eye(4), eye(4)); 
         w               = max( eps , abs(spm_diffeo('def2det', yi2 ) ) ); 
         % Adaption to avoid boundary effects by correcting the voxel close
