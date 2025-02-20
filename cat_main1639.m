@@ -298,11 +298,12 @@ if ~isfield(res,'spmpp')
 
     if LASmyostr
       stime2  = cat_io_cmd(sprintf('\n  LAS myelination correction (LASmyostr=%0.2f)',LASmyostr),'g5','',job.extopts.verb); 
-      vx_volo = sqrt(sum(res.image0(1).mat(1:3,1:3).^2));
       % It is better to avoid updating of the Ym and Ysrc here because some
       % of the problems depend on inhomogenities that can be corrected by 
       % LAS and a final correct at the end.
-      [Ymx,Ysrcx,Ycls,Ycor,glcor,tmp] = cat_main_correctmyelination(Ym,Ysrc,Ycls,Yb,vx_vol,vx_volo,T3th,LASmyostr,Yy,job.extopts.cat12atlas,res.tpm);
+      % LASstr meaning: 
+      %   0 - none, eps - only Ycls, 0.25 - Ycls + bias correction, .50/.75/1.0 - Ycls + BC + light/medium/strong post correction, ...  
+      [Ym,Ysrc,Ycls,Ycor] = cat_main_correctmyelination(Ym,Ysrc,Ycls,Yb,vx_vol,res.image(1),T3th,LASmyostr,Yy,job.extopts.cat12atlas,res.tpm, res.image.fname);
       fprintf('%6.0fs',etime(clock,stime2)); clear Ymx Ysrcx;
     end
     
@@ -320,8 +321,9 @@ if ~isfield(res,'spmpp')
     stime2 = clock; % not really correct but better than before
     
     % RD202102:   update Ymi since the LAS correction is currently not local enough in case of artefacts 
-    if LASmyostr 
-      Ymi = max( min( Ymi , min( 2.5 , Ymi )*0.25 + 0.75*( 2.5 - 0.5 * LASmyostr) / 3 ) , Ymi - Ycor / 3 );
+    % RD202502:   the correction is currently not working/tested for T2/PD/FLAIR
+    if LASmyostr >= .5 && ~job.extopts.inv_weighting 
+      Ymi = max( min( Ymi , min( 2.25 , Ymi )*0.25 + 0.75*( 2.25 - 0.5 * LASmyostr) / 3 ) , Ymi - Ycor / 3 );
       clear Yp0; 
     end
     

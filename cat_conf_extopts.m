@@ -938,25 +938,40 @@ LASstr.hidden = expert<1;
 
 LASmyostr         = cfg_menu;
 LASmyostr.tag     = 'LASmyostr';
-LASmyostr.name    = 'Strength of LAS myelin correction';
+LASmyostr.name    = 'Strength of LAS myelin correction (expert)';
 if ~expert 
-  LASmyostr.labels  = {'none','light','medium','strong'};
-  LASmyostr.values  = {0 0.25 0.50 0.75};
+  LASmyostr.labels  = {'no','yes'};
+  LASmyostr.values  = {0 0.50};
+  LASmyostr.help    = {
+    'IN DEVELOPMENT'
+    'Add more local myelination correction of LAS based on the assumption of an equally thick cortex. '
+    'Please, note that because myelination increases with age this will interact with aging and atrophy in degenerative diseases. '
+    ''
+  };
 else
   LASmyostr.labels  = {'none (0)','ultralight (eps)','light (0.25)','medium (0.50)','strong (0.75)','heavy (1.00)'};
   LASmyostr.values  = {0 eps 0.25 0.50 0.75 1.00};
+  LASmyostr.help    = {
+    'IN DEVELOPMENT'
+    'Add more local myelination correction of LAS based on the assumption of an equally thick cortex. '
+    'Please, note that because myelination increases with age this will interact with aging and atrophy in degenerative diseases. '
+    ''
+    ' eps - ultralight: only correct SPM segmentation (no effect) '
+    ' .25 - light:      correct SPM segmentation + bias correction (no effect)'
+    ' .50 - medium:     correct SPM segmentation + bias correction + light  image correction'
+    ' .75 - strong:     correct SPM segmentation + bias correction + medium image correction'
+    ' 1.0 - heavy:      correct SPM segmentation + bias correction + strong image correction'
+    ''
+  };
 end
 LASmyostr.val     = {0};
-LASmyostr.help    = {
-  'Add more local myelination correction of LAS based on the assumption of an equally thick cortex. '
-  'Please, note that because myelination increases with age this will interact with aging and atrophy in degenerative diseases. '
-  ''
-  'IN DEVELOPMENT'
-};
 % RD202104: 
 %  Ideally, the myelination should be used to classify the L4 (VanEssen) but
 %  for a sample resolution of about 1 mm the thickness estimation becomes 
 %  more instable (depending on the metric).
+% RD202501: 
+%  Works now better but it overcorrect atropic cases, whereas others 
+%  (Buchert) could still be improved further. 
 LASmyostr.hidden = expert<1;
 
 

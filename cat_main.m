@@ -243,7 +243,8 @@ if ~isfield(res,'spmpp')
   %            after the general call of the LAS function.
   %            > add this later to the LAS function inclusive the denoising
   %            > this may also work for T2/PD maps 
-  if job.extopts.LASstr>0 && job.extopts.ignoreErrors < 3 && ~job.extopts.inv_weighting
+  %  RD202501: Update the simpler LAS function to support also T2/PD/FLAIR data. 
+  if job.extopts.LASstr>0 && job.extopts.ignoreErrors < 3 
     if job.extopts.LASstr>1 || job.extopts.inv_weighting
       stime = cat_io_cmd(sprintf('Simplified Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr-1));
     else
@@ -260,11 +261,11 @@ if ~isfield(res,'spmpp')
     % LASmyostr = min(1,LASmyostr + 0.5*job.extopts.inv_weighting); % force correction in case of inverse data?
     if LASmyostr 
       stime2  = cat_io_cmd(sprintf('\n  LAS myelination correction (LASmyostr=%0.2f)',LASmyostr),'g5','',job.extopts.verb); 
-      vx_volo = sqrt(sum(res.image0(1).mat(1:3,1:3).^2));
       % It is better to avoid updating of the Ym and Ysrc here because some
       % of the problems depend on inhomogenities that can be corrected by 
       % LAS and a final correct at the end.
-      [Ymx,Ysrcx,Ycls,Ycor,glcor,tmp] = cat_main_correctmyelination(Ym,Ysrc,Ycls,Yb,vx_vol,vx_volo,T3th,LASmyostr,Yy,job.extopts.cat12atlas,res.tpm);
+      %   0 - none, eps - only Ycls, 0.25 - Ycls + bias correction, .50/.75/1.0 - Ycls + BC + light/medium/strong post correction, ...  
+      [Ym,Ysrc,Ycls,Ycor] = cat_main_correctmyelination(Ym,Ysrc,Ycls,Yb,vx_vol,res.image(1),T3th,LASmyostr,Yy,job.extopts.cat12atlas,res.tpm,res.image.fname);
       fprintf('%6.0fs\n',etime(clock,stime2)); clear Ymx Ysrcx;
     end
 
@@ -283,9 +284,9 @@ if ~isfield(res,'spmpp')
     stime2 = clock; % not really correct but better than before
 
     % RD202102:   update Ymi since the LAS correction is currently not local enough in case of artefacts 
-    if LASmyostr 
-      Ymi = max( min( Ymi , min( 2.5 , Ymi )*0.25 + 0.75*( 2.5 - 0.5 * LASmyostr) / 3 ) , Ymi - Ycor / 3 );
-      clear Yp0; 
+    % RD202502:   the correction is currently not working/tested for T2/PD/FLAIR
+    if ~job.extopts.inv_weighting 
+      Ymi = max( min( Yp0/3 , min( 2.25 , Yp0/3 )*0.25 + 0.75*( 2.25 - 0.5 * LASmyostr) / 3 ) , Yp0/3 - Ycor / 3 );
     end
   else
     % just a node because it is the result of the inverse contrast warning
