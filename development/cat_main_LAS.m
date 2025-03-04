@@ -70,7 +70,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
 
   % set this variable to 1 for simpler debuging without reduceBrain
   % function (that normally save half of processing time)
-  debug   = extopts.debug; % debug = 1;
+  if isfield(extopts,'debug'); debug = extopts.debug; else, debug = 0; end
   verb    = extopts.verb-1;
   vxv     = 1/ mean(vx_vol);
   dsize   = size(Ysrc);
@@ -336,7 +336,7 @@ function [Yml,Ymg,Ycls,Ycls2,T3th] = cat_main_LAS(Ysrc,Ycls,Ym,Yb0,Yy,T3th,res,v
   Ywmtpm(smooth3(Ywmtpm & Ym<11/12)<0.5)=0;
   Ywm = Ywm & ~Ywmtpm & ~Ybvv & ~Yss; % no WM area
   Ycm = Ycm | ( (Ycx | Yccm | Ybcm) & Yg<0.2 & Ym>0 & Ydiv>-0.05 & Ym<0.3 & Yb ) | Ybvv;
-  if ~debug, clear Ycwm Yccm Ycd; end
+  if ~debug, clear Ycwm Yccm; end
   % mapping of the brainstem to the WM (well there were some small GM
   % structures, but the should not effect the local segmentation to much.
   Ybs = cat_vol_morph(NS(Yl1,LAB.BS) & Ym<1.2 & Ym>0.9 & Yp0>2.5,'c',2*vxv) & Ym<1.2 & Ym>0.9 & Yp0>1.5;
