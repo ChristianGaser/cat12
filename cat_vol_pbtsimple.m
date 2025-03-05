@@ -14,7 +14,6 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
 %   Ypp     .. percentage position map 
 %   Yp0     .. tissue label map (1-CSF, 2-GM, 3-WM)
 %   vx_vol  .. voxel-size (in mm, default=1)
-
 %   opt     .. parameter structure 
 %
 %    .supersimple (0-no, 1-yes; default=1)
