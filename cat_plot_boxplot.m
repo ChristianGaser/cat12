@@ -651,7 +651,8 @@ for i=1:qn
   % violin plot
   if opt.violin
     indn = max(find(U(:,i)<median_y(1,i)));
-    
+    if isempty(indn), continue; end
+
     % correct length/thickness of median line
     median_x(:,i) = [F(indn,i)+i-offset;flipud(i-offset-F(indn,i))];
     
