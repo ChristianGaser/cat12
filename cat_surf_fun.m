@@ -1489,8 +1489,10 @@ function res = cat_surf_evalCS(CS,Tpbt,Tfs,Ym,Ypp,Pcentral,mat,verb,estSI)
     if verb
       fprintf('    Surface PBT thickness values:        %0.4f%s%0.4f (md=%0.4f,mx=%0.4f)\n',...
         res.pbtthickness_mn_sd_md_mx(1),native2unicode(177, 'latin1'),res.pbtthickness_mn_sd_md_mx(2:end)); 
-      fprintf('    Surface FS  thickness values:        %0.4f%s%0.4f (md=%0.4f,mx=%0.4f)\n',...
-        res.fsthickness_mn_sd_md_mx(1),native2unicode(177, 'latin1'),res.fsthickness_mn_sd_md_mx(2:end)); 
+      if ~isnan(res.fsthickness_mn_sd_md_mx(1))
+        fprintf('    Surface FS  thickness values:        %0.4f%s%0.4f (md=%0.4f,mx=%0.4f)\n',...
+          res.fsthickness_mn_sd_md_mx(1),native2unicode(177, 'latin1'),res.fsthickness_mn_sd_md_mx(2:end)); 
+      end
     end
   end
   
@@ -2041,7 +2043,7 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
   def.redterm  = 2;       % reduction term of the iteration, e.g. 2 = half resolution every iteration
   def.verb     = 1;       % display information 
   def.debug    = 2;       % save results 
-  def.accuracy = 1/2^3;   % smallest used step-size (the value should not be to small 
+  def.accuracy = 1/2^5;   % smallest used step-size (the value should not be to small 
                           % because there should also be a gab between the structures and a reasonalbe running time) 
   def.optimize = 1;       % use percentage position values for optimization  
   def.mat      = [];
@@ -2100,7 +2102,7 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
   
   i   = 0; final = 0; SIO = 1; SI = 90; SIO2 = 100; 
   if opt.verb, fprintf('\n'); end
-  while (i < opt.iterfull / 4) || (SI>1 && SI<SIO2*0.9) % more iterations improve the int and especialy the pos and SI values but increase also the thdiff value  
+  while (i < round(opt.iterfull/2)*2 ) || (SI>0.1 && SI<SIO2*0.95 && mod(i,2)==1) % more iterations improve the int and especialy the pos and SI values but increase also the thdiff value  
     i = i + 1;
    
     % In theory the search/correction size would be half each time (0.5 0.25 0.125 ... 2^i)
@@ -2108,7 +2110,7 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
     % The changes are limited by opt.accuracy for anatomical (min sulcus-width) and runtime reasons.
     % If optimization is used than the test starts again but with higher accuracy ( 0.125 ). 
     % Smaller values support better int/pos values but more intersections.
-    corrsize  = max( opt.accuracy/2 , 1 ./ opt.redterm.^(i+2) );
+    corrsize  = max( .1 , 1 ./ opt.redterm.^(i+1) ); %(i/4+.5) );
    
     % outer and inner boundary
     VO = S.vertices - N .* repmat(Tp,1,3);
@@ -2151,13 +2153,14 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
     %  overestimation of thickness. 
     %  I also tried a model based on the Ym but this was worse especially 
     %  due to the blurred sulci. 
+      cterm   = 0.1; % accurancy limit of Ypp
       coristr = max(0.5, 1 - i / opt.iteropt  ) / 2; % factor
      
       GWth = 1;
       CGth = 0;
 
-      YI = cat_surf_isocolors2(Ypp,VI,opt.mat); 
-      YO = cat_surf_isocolors2(Ypp,VO,opt.mat);  
+      YI = cat_surf_isocolors2(Ypp,VI,opt.mat);  YI = min(1,YI + 0.1);
+      YO = cat_surf_isocolors2(Ypp,VO,opt.mat);  YO = max(0,YO - 0.1);  
 
       if opt.verb>1, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),native2unicode(177, 'latin1'),std(YI),mean(YO),native2unicode(177, 'latin1'),std(YO)); end 
 
@@ -2171,9 +2174,9 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
       VOC   = S.vertices - N .* repmat( Tp - (Tpc - YO) + (Twc - YI) ,1,3);    % outer surface  
     
       % get values
-      YIC   = cat_surf_isocolors2(Ypp,VIC,opt.mat);
-      YppI  = cat_surf_isocolors2(Ypp,VI ,opt.mat);
-      YppIC = cat_surf_isocolors2(Ypp,VIC,opt.mat);  
+      YIC   = cat_surf_isocolors2(Ypp,VIC,opt.mat); YIC   = min(1,YIC   + cterm);
+      YppI  = cat_surf_isocolors2(Ypp,VI ,opt.mat); YppI  = min(1,YppI  + cterm);
+      YppIC = cat_surf_isocolors2(Ypp,VIC,opt.mat); YppIC = min(1,YppIC + cterm);
       
       % 
       VIg   = cat_surf_volgrad(VIC,N,Ypp,opt.mat);
@@ -2184,23 +2187,25 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
       clear YppIC YIC YppI VIg; 
       
       % test new outer surface position
-      YppOC = cat_surf_isocolors2(Ypp,VOC,opt.mat);  
-      VOg   = cat_surf_volgrad(VOC,N,Ypp,opt.mat);
-      if 0 
-% ###################        
-        % RD20210403: This is worse for int/pos (-0.001/-0.010) but helps
-        %             to reduce ISs (-4%) while thdiff a bit worse (+0.002). 
-        %             If Rachels SIC is also used than 0 is better ...
-        YOC   = cat_surf_isocolors2(Ypp,VOC,opt.mat);  
-        YppO  = cat_surf_isocolors2(Ypp,VO ,opt.mat);  
-        YO    = YO .* YppOC .* ( Tpc==0 & ...
-          abs( YO - CGth ) > abs( YOC - CGth ) & ...
-          cat_surf_edgeangle( Vg , VOg ) < opt.alphaYpp & ...
-          YppOC < YppO & YppOC>CGth & YOC>1.50); % 0.01 & 1.5 
-      elseif false
-        YO  = YO .* (0.5 + 0.5*YppOC) .* ( Tpc==0 & ...
-          cat_surf_edgeangle( Vg , VOg ) < opt.alphaYpp & ...
-          YppOC>CGth );
+      if 0
+        YppOC = cat_surf_isocolors2(Ypp,VOC,opt.mat); YppOC = min(0.0,YppOC - cterm);
+        VOg   = cat_surf_volgrad(VOC,N,Ypp,opt.mat);
+        if 0 
+  % ###################        
+          % RD20210403: This is worse for int/pos (-0.001/-0.010) but helps
+          %             to reduce ISs (-4%) while thdiff a bit worse (+0.002). 
+          %             If Rachels SIC is also used than 0 is better ...
+          YOC   = cat_surf_isocolors2(Ypp,VOC,opt.mat);  YOC  = max(0,YOC - cterm);
+          YppO  = cat_surf_isocolors2(Ypp,VO ,opt.mat);  YppO = max(0,YppO - cterm);
+          YO    = YO .* YppOC .* ( Tpc==0 & ...
+            abs( YO - CGth ) > abs( YOC - CGth ) & ...
+            cat_surf_edgeangle( Vg , VOg ) < opt.alphaYpp & ...
+            YppOC < YppO & YppOC>CGth & YOC>1.50); % 0.01 & 1.5 
+        elseif false
+          YO  = YO .* (0.5 + 0.5*YppOC) .* ( Tpc==0 & ...
+            cat_surf_edgeangle( Vg , VOg ) < opt.alphaYpp & ...
+            YppOC>CGth );
+        end
       end
       YI = YI .* TAs;
       YO = YO .* TAs; 
@@ -2272,9 +2277,9 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
     
     
     % RD20210403: smoothing block that is not realy necessary anymore
-    if 0 
+    if 1
       % adaptive smoothing
-      if 0
+      if 1
         Tf  = max(1,min(6,Tn)); inorm = ( opt.iteropt*3 - i ) / (opt.iteropt*3); 
         Tpc = Tpc./max(Tpc(:)); Tpc = single(spm_mesh_smooth(M,double(Tpc) , 1 )) * 1/2 .* Tf .* (1-TAs/2); VOCSf = max(0,min(1,repmat(0.2 .* inorm .* abs(Tpc(Tpc>0 | VTPO(:,1)>0)),1,3))); 
         Twc = Twc./max(Twc(:)); Twc = single(spm_mesh_smooth(M,double(Twc) , 1 )) * 2/2 .* Tf .* (1-TAs/2); VICSf = max(0,min(1,repmat(0.8 .* inorm .* abs(Twc(Twc>0 | VTPI(:,1)>0)),1,3)));
@@ -2299,9 +2304,9 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
       clear VICS VOCS 
 
       % surface smoothing 
-      if 0 
-        VOC = cat_surf_smooth(M,VOC,sf/2 * 0.25,1);
-        VIC = cat_surf_smooth(M,VIC,sf/2 * 0.25,1);
+      if 1 
+        VOC = cat_surf_smooth(M,VOC,sf,1);
+        VIC = cat_surf_smooth(M,VIC,sf,1);
       end
 
       % remove outlier ... this has NO effect 
@@ -2330,8 +2335,8 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
 
     % update normals 
     N   = spm_mesh_normals(S);
-    if 0 % RD20210401: lightly better int/pos but much more intersections 
-      N   = smoothsurf(N,sf); 
+    if 1 % RD20210401: lightly better int/pos but much more intersections 
+      N   = smoothsurf(N,1); %sf); 
       Ns  = sum(N.^2,2).^.5;
       N   = N ./ repmat(Ns,1,3); 
     end
@@ -3035,7 +3040,6 @@ opt.model=0;
   
 
 end
-
 function cat_surf_show_orthview(Psurf,Pm,color,cnames)
   fg = spm_figure('GetWin','Graphics');
   %fg = spm_figure('Create','SurfaceOverlay');%,Psurf);
