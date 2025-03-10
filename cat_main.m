@@ -804,7 +804,21 @@ if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
     %if ~isfield(job.output,'pp'),               job.output.pp               = struct('native',0,'warped',0,'dartel',0);  end % this is now in defaults and not required here 
     if ~isfield(job.output,'surf_measures'),    job.output.surf_measures    = 1; end % developer
     
-    if job.extopts.SRP >= 30
+    if job.extopts.SRP >= 40
+      %% Yb0 was modified in cat_main_amap* for some conditions and we can use it as better mask in 
+      % cat_surf_createCS3 except for inv_weighting or if gcut was not used
+      if ~(job.extopts.gcutstr>0 && ~job.inv_weighting)
+        Yb0(:) = 1;
+      end
+
+      [Yth1, S, Psurf, qa.createCS] = ... 
+        cat_surf_createCS4(VT,VT0,Ymix,Yl1,YMF,YT,Yb0,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
+        'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,'SRP', mod(job.extopts.SRP,10), ...
+        'Affine',res.Affine,'surf',{surf},...
+        'verb',job.extopts.verb,'useprior',job.useprior),job); 
+      qa.subjectmeasures.EC_abs = NaN;
+      qa.subjectmeasures.defect_size = NaN;
+    elseif job.extopts.SRP >= 30
      % Yb0 was modified in cat_main_amap* for some conditions and we can use it as better mask in 
       % cat_surf_createCS3 except for inv_weighting or if gcut was not used
       if ~(job.extopts.gcutstr>0 && ~job.inv_weighting)
