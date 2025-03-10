@@ -845,9 +845,12 @@ function varargout = interhdr(Y,varargin)
     %% Updated 20220805 to avoid unbalance and boundary problems in low resolution cases (e.g., 16mm)
     vmat(7:9) = sign(vmat(7:9)) .* res; % this is the goal res
     Vi.dim    = ceil(sizeO3 ./ (res./resV) / 2)*2 + mod(sizeO3,2); % here we _add_ a voxel to keep a even or odd resolution
+    %Vi.dim    = round((Vi.dim ./ vmat(7:9) - 1 ) / 2)*2 + 1;  
     vmat(1:3) = vmat(1:3) - vmat(7:9)/2 + vmat(7:9) .* (sizeO3 ./ (res./resV) - Vi.dim)/2; % if we add something we have to adjust for it 
     Vi.mat    = spm_matrix(vmat);
   end
+
+  
   
   % main interpolation 
   Vt = V;
@@ -912,9 +915,11 @@ function varargout = interhdr(Y,varargin)
       Y  = single(Y); 
     end
     % setup images
-    Vt = rmfield(Vt,'dat'); Vt.dat(:,:,:) = Y(:,:,:); Vt.dim = size(Y);
-    Vi = rmfield(Vi,'dat'); Vi.dat(:,:,:) = Y(:,:,:); Vi.dim = size(Y); 
-    
+    if isfield(Vt,'dat'),  Vt = rmfield(Vt,'dat'); end
+    if isfield(Vi,'dat'),  Vi = rmfield(Vi,'dat'); end
+    Vt.dat(:,:,:) = Y(:,:,:); Vt.dim = size(Y);
+    Vi.dat(:,:,:) = zeros(Vi.dim); 
+
     [Vo,Y] = cat_vol_imcalc(Vt,Vi,'i1',struct('interp',interp,'verb',0));
     
     Vo.pinfo = V.pinfo; 
