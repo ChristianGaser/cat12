@@ -240,7 +240,7 @@ EXAMPLE
    cat_parallelize.sh -c gunzip *.zip
      Parallelize unzipping of all zip-files in current folder. 
      
-   cat_parallelize.sh -p 8 -l /tmp -c "cat_standalone.sh  -s ~/spm/standalone/ -m /Applications/MATLAB/MATLAB_Runtime/v93/ -b cat_standalone_segment.m" sTRIO*.nii
+   cat_parallelize.sh -p 8 -l /tmp -c "cat_standalone.sh  -s ~/spm/standalone/ -m /Applications/MATLAB/MATLAB_Runtime/v232/ -b cat_standalone_segment.m" sTRIO*.nii
      Parallelize CAT12 preprocessing by splitting all sTRIO*.nii files into 8 jobs 
      (processes) and save log-file in /tmp folder. 
 

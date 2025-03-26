@@ -119,7 +119,7 @@ scp_precompile:
 	-@find ${PRECOMPILED} -type f -name .DS_Store -exec rm {} \;
 	-@chmod -R a+r,go-w ${PRECOMPILED}
 	-@find ${PRECOMPILED} -type f \( -name "*.sh" -o -name "spm12" \) -exec chmod a+x {} \;
-	-@for i in Win Linux; do \
+	-@for i in Win; do \
 	   mkdir -p ${NEWVERSION}_R2017b_MCR_$${i} ;\
 	   ln -s ${PRECOMPILED}/MCR_$${i}/*spm12* ${PRECOMPILED}/MCR_$${i}/readme.txt ${PRECOMPILED}/MCR_$${i}/MCR_v93.webloc ${NEWVERSION}_R2017b_MCR_$${i}/ ;\
 	   cp -r standalone ${NEWVERSION}_R2017b_MCR_$${i}/ ;\
@@ -129,7 +129,7 @@ scp_precompile:
 	   bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${NEWVERSION}_R2017b_MCR_$${i}.zip ${STARGET_FOLDER}/cat12_latest_R2017b_MCR_$${i}.zip"; \
 	done
 	# removed Mac_arm64 that is not working yet
-	-@for i in Mac; do \
+	-@for i in Mac Linux; do \
 	   mkdir -p ${NEWVERSION}_R2023b_MCR_$${i} ;\
 	   ln -s ${PRECOMPILED}/MCR_$${i}/*spm12* ${PRECOMPILED}/MCR_$${i}/readme.txt ${PRECOMPILED}/MCR_$${i}/MCR_v232.webloc ${NEWVERSION}_R2023b_MCR_$${i}/ ;\
 	   cp -r standalone ${NEWVERSION}_R2023b_MCR_$${i}/ ;\

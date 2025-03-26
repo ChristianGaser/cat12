@@ -29,13 +29,13 @@ CAT12 is designed to work with SPM12 and Matlab versions 7.4 (R2007a) or newer. 
 - After restarting SPM12 either call CAT12 via the toolbox button or (as short-cut) type *cat12* on the Matlab command line.
 
 ## Download Standalone Version (no need for Matlab licene)
-The advantage of the standalone version is that no Matlab license is needed. Only the (free) Matlab Runtime R2017b (v93) has to be downloaded. However, there are some limitations (e.g. no parallelization and no interactive help in the GUI version) and the standalone version is mainly intended to run without GUI on Unix systems. Please check the [ENIGMA CAT12](https://neuro-jena.github.io/enigma-cat12/#standalone) site fore more information and examples to call CAT12 from shell scripts.
+The advantage of the standalone version is that no Matlab license is needed. Only the (free) Matlab Runtime R2023b (v232) has to be downloaded. However, there are some limitations (e.g. no parallelization and no interactive help in the GUI version) and the standalone version is mainly intended to run without GUI on Unix systems. Please check the [ENIGMA CAT12](https://neuro-jena.github.io/enigma-cat12/#standalone) site fore more information and examples to call CAT12 from shell scripts.
 
 The MATLAB Compiler Runtime (MCR) enables you to run applications compiled within MATLAB using MATLAB Compiler. MCR does not require a MATLAB license and can be used to run the MATLAB compiled program on computers which do not have MATLAB installed.
 
 |CAT12 Standalone|MCR|
 |---|---:|
-[Linux](http://dbm.neuro.uni-jena.de/cat12/cat12_latest_R2017b_MCR_Linux.zip) |[Linux](https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/glnxa64/MCR_R2017b_glnxa64_installer.zip)|
+[Linux](http://dbm.neuro.uni-jena.de/cat12/cat12_latest_R2023b_MCR_Linux.zip) |[Linux](https://ssd.mathworks.com/supportfiles/downloads/R2023b/Release/10/deployment_files/installer/complete/glnxa64/MATLAB_Runtime_R2023b_Update_10_glnxa64.zip)|
 [Mac](https://dbm.neuro.uni-jena.de/cat12/cat12_latest_R2023b_MCR_Mac.zip) |[Mac](https://ssd.mathworks.com/supportfiles/downloads/R2023b/Release/5/deployment_files/installer/complete/maci64/MATLAB_Runtime_R2023b_Update_5_maci64.dmg.zip)|
 [Windows](https://dbm.neuro.uni-jena.de/cat12/cat12_latest_R2017b_MCR_Win.zip) |[Windows](https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/win64/MCR_R2017b_win64_installer.exe)|
 

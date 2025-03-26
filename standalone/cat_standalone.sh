@@ -412,7 +412,7 @@ EXAMPLES
      -a1 directory structure
      -a2 output directory
    -----------------------------------------------------------------------------------------------
-   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
+   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v232 \ 
        -b ${cwd}/cat_standalone_dicom2nii.m *.dcm \ 
        -a1 " 'patid_date' " -a2 "{'converted'}"
    Import DICOM files *.dcm and save converted nifti files in directory "converted" with structure 
@@ -428,7 +428,7 @@ EXAMPLES
    -----------------------------------------------------------------------------------------------
    De-facing
    -----------------------------------------------------------------------------------------------
-   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
+   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v232 \ 
        -b ${cwd}/cat_standalone_deface.m sTRIO*.nii
    Apply de-facing to sTRIO*.nii and save the files prefixed by "anon_".
 
@@ -437,13 +437,13 @@ EXAMPLES
      -a1 TPM
      -a2 Shooting template
    -----------------------------------------------------------------------------------------------
-   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
+   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v232 \ 
        -b ${cwd}/cat_standalone_segment.m sTRIO0001.nii
    Preprocess (segment) the single file sTRIO0001.nii using the default CAT12 preprocessing batch. 
    SPM12 standalone version is located in $SPMROOT and Matlab Compiler Runtime in
-   /Applications/MATLAB/MATLAB_Runtime/v93.
+   /Applications/MATLAB/MATLAB_Runtime/v232.
 
-   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
+   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v232 \ 
        -b ${cwd}/cat_standalone_segment.m sTRIO000*.nii.gz \ 
        -a1 " '${cat12_dir}/templates_MNI152NLin2009cAsym/TPM_Age11.5.nii' " \ 
        -a2 " '${cat12_dir}/templates_MNI152NLin2009cAsym/Template_0_GS1mm.nii' "
@@ -452,7 +452,7 @@ EXAMPLES
    with CAT12). Please note that zipped file can only be handled with this standalone batch and also
    note the multiple quotes for parameter a1 and a2.
 
-   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
+   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v232 \ 
        -b ${cwd}/cat_standalone_segment.m sTRIO0001.nii \ 
        -a "matlabbatch{1}.spm.tools.cat.estwrite.output.surface = 0;"
    Preprocess (segment) the single file sTRIO0001.nii using the default CAT12 preprocessing batch, 
@@ -463,14 +463,14 @@ EXAMPLES
      -a1 longitudinal model (0 - developmental; 1 - plasticity/learning; 2 - aging; 3 - save models 1 and 2)
      -a2 TPM
    -----------------------------------------------------------------------------------------------
-   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
+   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v232 \ 
        -b ${cwd}/cat_standalone_segment_long.m sTRIO000*.nii \ 
        -a1 "2"
    Preprocess (segment) the files sTRIO000*.nii with the longitudinal pipeline optimized for 
    detecting aging/developmental effects. In order to choose the longitudinal model optimized for 
    detecting small changes due to plasticity/learning change the a1 parameter to "1".
 
-   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
+   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v232 \ 
        -b ${cwd}/cat_standalone_segment_long.m sTRIO000*.nii \ 
        -a1 "1" -a2 " '${cat12_dir}/templates_MNI152NLin2009cAsym/TPM_Age11.5.nii' "
    Preprocess (segment) the files sTRIO000*.nii with the longitudinal pipeline optimized for 
@@ -480,7 +480,7 @@ EXAMPLES
    -----------------------------------------------------------------------------------------------
    Segmentation (simple mode)
    -----------------------------------------------------------------------------------------------
-   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
+   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v232 \ 
        -b ${cwd}/cat_standalone_simple.m sTRIO0001.nii
    Process the single file sTRIO0001.nii using the simple processing batch. 
 
@@ -489,7 +489,7 @@ EXAMPLES
      -a1 smoothing filter size surface values
      -a2 use 32k mesh from HCP (or 164k mesh from Freesurfer)
    -----------------------------------------------------------------------------------------------
-   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
+   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v232 \ 
        -b ${cwd}/cat_standalone_resample.m surf/lh.thickness.sTRIO0001 \ 
        -a1 "12" -a2 "1" 
    Resample and smooth the single thickness file lh.thickness.sTRIO0001 with 12mm and save the 
@@ -501,7 +501,7 @@ EXAMPLES
      -a1 smoothing filter size
      -a2 prepending string for smoothed file (e.g. 's6')
    -----------------------------------------------------------------------------------------------
-   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
+   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v232 \ 
        -b ${cwd}/cat_standalone_smooth.m mri/sTRIO*nii \ 
        -a1 "[6 6 6]" -a2 " 's6' "
    Smooth the volume files sTRIO*nii with 6mm and prepend the string "s6" to the smoothed files.
@@ -512,7 +512,7 @@ EXAMPLES
      -a1 csv output filename
      -a2 enable global scaling with TIV (only for volumes meaningful)
    -----------------------------------------------------------------------------------------------
-   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
+   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v232 \ 
        -b ${cwd}/cat_standalone_get_quality.m mri/mwp1sTRIO*nii \ 
        -a1 " 'Quality_measures.csv' " -a2 "1"
    Estimate sample homogeneity (after preprocessing) using mean z-scores with global scaling with TIV 
@@ -525,7 +525,7 @@ EXAMPLES
      -a1 csv output filename
      -a2 enable global scaling with TIV (only for volumes meaningful)
    -----------------------------------------------------------------------------------------------
-   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
+   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v232 \ 
        -b ${cwd}/cat_standalone_get_IQR.m report/cat_*.xml \ 
        -a1 " 'IQR.txt' "
    Estimate weighted overall image quality (before preprocessing) using xml-files in report folder 
@@ -536,7 +536,7 @@ EXAMPLES
    Estimate mean/volume inside ROI
      -a1 output-file string
    -----------------------------------------------------------------------------------------------
-   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
+   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v232 \ 
        -b ${cwd}/cat_standalone_get_ROI_values.m label/catROI_*.xml \ 
        -a1 " 'ROI' " 
    Save mean volume values in mL (e.g. GM volume) or the mean surface values (e.g. thickness) for 
@@ -550,7 +550,7 @@ EXAMPLES
      -a2 save TIV only
      -a3 add filenames
    -----------------------------------------------------------------------------------------------
-   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
+   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v232 \ 
        -b ${cwd}/cat_standalone_getTIV.m report/cat_*.xml \ 
        -a1 " 'TIV.txt' " -a2 "1" -a3 "1"
    Estimate TIV only and save file names and values for each data set in TIV.txt.
@@ -563,7 +563,7 @@ EXAMPLES
      -a1 contrast number
      -a2 number of permutations
    -----------------------------------------------------------------------------------------------
-   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v93 \ 
+   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v232 \ 
        -b ${cwd}/cat_standalone_tfce.m SPM.mat \ 
        -a1 "2" -a2 "20000"
    Call estimation of TFCE statistics for the given SPM.mat file for contrast number 2 with 20000 
@@ -572,18 +572,18 @@ EXAMPLES
    -----------------------------------------------------------------------------------------------
    Calling standard Matlab mode
    -----------------------------------------------------------------------------------------------
-   cat_standalone.sh -ns -e -m matlab_R2017b \ 
+   cat_standalone.sh -ns -e -m matlab_R2023b \ 
        -b ${cwd}/cat_standalone_segment.m sTRIO0001.nii \ 
        -a "matlabbatch{1}.spm.tools.cat.estwrite.output.surface = 0;"
    Preprocess (segment) the single file sTRIO0001.nii in standard Matlab mode (using CAT12 expert
    mode) and the default CAT12 preprocessing batch, but skip surface estimation. As Matlab command
-   matlab_R2017b is used.
+   matlab_R2023b is used.
 
    -----------------------------------------------------------------------------------------------
    Parallelization
    -----------------------------------------------------------------------------------------------
    cat_parallelize.sh -p 8 -l /tmp \ 
-       -c "cat_standalone.sh  -m /Applications/MATLAB/MATLAB_Runtime/v93 -b ${cwd}/cat_standalone_segment.m" sTRIO*.nii
+       -c "cat_standalone.sh  -m /Applications/MATLAB/MATLAB_Runtime/v232 -b ${cwd}/cat_standalone_segment.m" sTRIO*.nii
    Parallelize CAT12 preprocessing by splitting all sTRIO*.nii files into 8 jobs 
    (processes) and save log file in /tmp folder. 
 
@@ -599,7 +599,7 @@ USED FUNCTIONS:
    cat_parallelize.sh
    SPM12 standalone version (compiled)
    CAT12 toolbox (compiled within SPM12 if installed)
-   MATLAB Compiler Runtime R2017b (Version 9.3)
+   MATLAB Compiler Runtime R2023b (Version 23.2)
 
 This script was written by Christian Gaser (christian.gaser@uni-jena.de).
 This is ${version}.
