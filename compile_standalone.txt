@@ -9,7 +9,7 @@ https://en.wikibooks.org/wiki/SPM/Standalone
 
 Steps for compiling
 -----------------------------------------
-1. Open SPM12
+1. Open SPM25
 2. Change into folder spm12/config
 3. Call spm_make_standalone
 
@@ -29,10 +29,10 @@ as spm12.
 
 Call the run_spm12.sh in that folder where the argument is the path to 
 your MCR installation (with version number):
-./spm_exec/run_spm12.sh /usr/local/MATLAB/MATLAB_Compiler_Runtime/v715/
+./spm_exec/run_spm25.sh /usr/local/MATLAB/MATLAB_Compiler_Runtime/v232/
 
-On Linux/Mac, you can edit the Shell script run_spm12.sh to hardcode the 
+On Linux/Mac, you can edit the Shell script run_spm25.sh to hardcode the 
 location of the MCR installation, thus removing the need of providing it on the 
 command line.
 
-On Windows systems simply double-click on spm12_wxx.exe.
+On Windows systems simply double-click on spm25_wxx.exe.

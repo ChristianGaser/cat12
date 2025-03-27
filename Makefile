@@ -118,27 +118,18 @@ scp_precompile:
 	-@echo scp_precompile
 	-@find ${PRECOMPILED} -type f -name .DS_Store -exec rm {} \;
 	-@chmod -R a+r,go-w ${PRECOMPILED}
-	-@find ${PRECOMPILED} -type f \( -name "*.sh" -o -name "spm12" \) -exec chmod a+x {} \;
-	-@for i in Win; do \
-	   mkdir -p ${NEWVERSION}_R2017b_MCR_$${i} ;\
-	   ln -s ${PRECOMPILED}/MCR_$${i}/*spm12* ${PRECOMPILED}/MCR_$${i}/readme.txt ${PRECOMPILED}/MCR_$${i}/MCR_v93.webloc ${NEWVERSION}_R2017b_MCR_$${i}/ ;\
-	   cp -r standalone ${NEWVERSION}_R2017b_MCR_$${i}/ ;\
-	   cp -r standalone ${PRECOMPILED}/MCR_$${i}/ ;\
-	   zip ${ZIPFOLDER}/${NEWVERSION}_R2017b_MCR_$${i}.zip -r ${NEWVERSION}_R2017b_MCR_$${i} ; \
-	   scp -O -P ${PORT} ${ZIPFOLDER}/${NEWVERSION}_R2017b_MCR_$${i}.zip ${STARGET}; \
-	   bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${NEWVERSION}_R2017b_MCR_$${i}.zip ${STARGET_FOLDER}/cat12_latest_R2017b_MCR_$${i}.zip"; \
-	done
+	-@find ${PRECOMPILED} -type f \( -name "*.sh" -o -name "spm25" \) -exec chmod a+x {} \;
 	# removed Mac_arm64 that is not working yet
-	-@for i in Mac Linux; do \
+	-@for i in Mac Linux Win MAC_arm64; do \
 	   mkdir -p ${NEWVERSION}_R2023b_MCR_$${i} ;\
-	   ln -s ${PRECOMPILED}/MCR_$${i}/*spm12* ${PRECOMPILED}/MCR_$${i}/readme.txt ${PRECOMPILED}/MCR_$${i}/MCR_v232.webloc ${NEWVERSION}_R2023b_MCR_$${i}/ ;\
+	   ln -s ${PRECOMPILED}/MCR_$${i}/*spm25* ${PRECOMPILED}/MCR_$${i}/readme.txt ${PRECOMPILED}/MCR_$${i}/MCR_v232.webloc ${NEWVERSION}_R2023b_MCR_$${i}/ ;\
 	   cp -r standalone ${NEWVERSION}_R2023b_MCR_$${i}/ ;\
 	   cp -r standalone ${PRECOMPILED}/MCR_$${i}/ ;\
 	   zip ${ZIPFOLDER}/${NEWVERSION}_R2023b_MCR_$${i}.zip -r ${NEWVERSION}_R2023b_MCR_$${i} ; \
 	   scp -O -P ${PORT} ${ZIPFOLDER}/${NEWVERSION}_R2023b_MCR_$${i}.zip ${STARGET}; \
 	   bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${NEWVERSION}_R2023b_MCR_$${i}.zip ${STARGET_FOLDER}/cat12_latest_R2023b_MCR_$${i}.zip"; \
 	done
-	-@rm -r ${NEWVERSION}_R20??b_MCR*	
+	-@rm -r ${NEWVERSION}_R2023b_MCR*	
 	-@echo Please keep in mind to change ../enigma-cat12/index.html
 	-@see ../enigma-cat12/index.html
 	
@@ -208,15 +199,15 @@ precompile:
 	-@echo    
 	-@echo Checklist for precompiling CAT12
 	-@echo -----------------------------------------------
-	-@echo    spm12_R2017b
+	-@echo    spm12_R2023b
 	-@echo    spm fmri
 	-@echo    cd spm12/config
 	-@echo    spm_make_standalone
-#	-@echo    "Ubuntu 19.10 (run spm12_R2017b on paris to compile) : mv /Users/gaser/spm/standalone/spm12.ctf ${PRECOMPILED}/MCR_Linux/"
-	-@echo    "Ubuntu 17.10/19.10 (run spm12_R2017b with desktop on MacBook to compile) : mv /Users/gaser/spm/standalone/spm12.ctf ${PRECOMPILED}/MCR_Linux/"
-	-@echo    "Windows 10: mv /Users/gaser/spm/standalone/spm12.[ce][tx][fe] ${PRECOMPILED}/MCR_Win/"
-	-@echo    "MacOS (run spm12_R2023b_intel): rm -rf ${PRECOMPILED}/MCR_Mac/spm12.app; mv /Users/gaser/spm/standalone/spm12.app ${PRECOMPILED}/MCR_Mac/"
-	-@echo    "MacOS ARM64 (run spm12_R2023b): rm -rf ${PRECOMPILED}/MCR_Mac_arm64/spm12.app; mv /Users/gaser/spm/standalone/spm12.app ${PRECOMPILED}/MCR_Mac_arm64/"
+#	-@echo    "Ubuntu 19.10 (run spm12_R2023b on paris to compile) : mv /Users/gaser/spm/standalone/spm25.ctf ${PRECOMPILED}/MCR_Linux/"
+	-@echo    "Ubuntu 17.10/19.10 (run spm25_R2023b with desktop on MacBook to compile) : mv /Users/gaser/spm/standalone/spm25.ctf ${PRECOMPILED}/MCR_Linux/"
+	-@echo    "Windows 10: mv /Users/gaser/spm/standalone/spm25.[ce][tx][fe] ${PRECOMPILED}/MCR_Win/"
+	-@echo    "MacOS (run spm25_R2023b_intel): rm -rf ${PRECOMPILED}/MCR_Mac/spm25.app; mv /Users/gaser/spm/standalone/spm25.app ${PRECOMPILED}/MCR_Mac/"
+	-@echo    "MacOS ARM64 (run spm25_R2023b): rm -rf ${PRECOMPILED}/MCR_Mac_arm64/spm25.app; mv /Users/gaser/spm/standalone/spm25.app ${PRECOMPILED}/MCR_Mac_arm64/"
 	-@echo    
 
 # print help for standalone
