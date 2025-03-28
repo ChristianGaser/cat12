@@ -763,9 +763,11 @@ for i=1:qn
       ii = ii + cumsum(i>=chop); 
     end
 
+try
     data{ii}(isnan(data{ii}) | isinf(data{ii})) = []; 
-
-    
+catch
+  continue
+end
     % estimate kde
     n2 = 0;
     % Get the next data set from the array or cell array
