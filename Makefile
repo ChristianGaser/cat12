@@ -184,8 +184,8 @@ checklist:
 	-@echo    cat12_all.m in /Volumes/UltraMax/validate_skullstripping_withT12
 	-@echo    calc_kappa_c0_SPM12_T12.m
 	-@echo    
-	-@echo 8. Check Windows 10 + Ubuntu 17.10
-	-@echo    VirtualBox.app
+	-@echo 8. Check Windows 11 + Ubuntu 18.04
+	-@echo    UTM.app
 	-@echo    CAT12 GUI Segment
 	-@echo    
 	-@echo 9. Check old SPM12 version on UltraMax
@@ -203,11 +203,10 @@ precompile:
 	-@echo    spm fmri
 	-@echo    cd spm12/config
 	-@echo    spm_make_standalone
-#	-@echo    "Ubuntu 19.10 (run spm12_R2023b on paris to compile) : mv /Users/gaser/spm/standalone/spm25.ctf ${PRECOMPILED}/MCR_Linux/"
-	-@echo    "Ubuntu 17.10/19.10 (run spm25_R2023b with desktop on MacBook to compile) : mv /Users/gaser/spm/standalone/spm25.ctf ${PRECOMPILED}/MCR_Linux/"
-	-@echo    "Windows 10: mv /Users/gaser/spm/standalone/spm25.[ce][tx][fe] ${PRECOMPILED}/MCR_Win/"
-	-@echo    "MacOS (run spm25_R2023b_intel): rm -rf ${PRECOMPILED}/MCR_Mac/spm25.app; mv /Users/gaser/spm/standalone/spm25.app ${PRECOMPILED}/MCR_Mac/"
-	-@echo    "MacOS ARM64 (run spm25_R2023b): rm -rf ${PRECOMPILED}/MCR_Mac_arm64/spm25.app; mv /Users/gaser/spm/standalone/spm25.app ${PRECOMPILED}/MCR_Mac_arm64/"
+	-@echo    "Ubuntu 18.04 (run under UTM) : mv /Users/gaser/spm/standalone/spm25.ctf ${PRECOMPILED}/MCR_Linux/"
+	-@echo    "Windows 11 ARM64(run under UTM): mv /Users/gaser/spm/standalone/spm25.[ce][tx][fe] ${PRECOMPILED}/MCR_Win/"
+	-@echo    "MacOS INTEL (use /Applications/MATLAB_R2023b_intel.app/bin/matlab): rm -rf ${PRECOMPILED}/MCR_Mac/spm25.app; mv /Users/gaser/spm/standalone/spm25.app ${PRECOMPILED}/MCR_Mac/"
+	-@echo    "MacOS ARM64: rm -rf ${PRECOMPILED}/MCR_Mac_arm64/spm25.app; mv /Users/gaser/spm/standalone/spm25.app ${PRECOMPILED}/MCR_Mac_arm64/"
 	-@echo    
 
 # print help for standalone
