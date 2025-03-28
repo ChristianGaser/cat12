@@ -99,9 +99,10 @@ if ismac && (ST == 137 || ST == 127)
   cmd = ['sudo find ' CATDir ' -name "*.mexmac*" -exec xattr -d com.apple.quarantine {} \;'];
   system(cmd); fprintf([strrep(cmd,'\','\\') '\n']);
   [ST, RS] = system(cmd); % rerund command again
+  return
 end
 
-if ST > 1
+if ST > 1 && ST~=139 % 139: data setup error
   if ispc
     [ST, RS] = system('systeminfo.exe');
   else
