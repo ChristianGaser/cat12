@@ -2275,7 +2275,7 @@ function myHist(obj,evt,H)
 objTextures = findobj(get(findobj(get(get(obj,'parent'),'parent'),'Label','Textures'),'Children'),'Checked','on');
 if isfield( H , 'textures')
   currentTexture = cellfun('isempty',strfind( H.textures(:,1) , objTextures.Label ))==0  &  cellfun('length',H.textures(:,1)) ==  length(objTextures.Label); 
-  cat_plot_histogram( struct( 'P' , H.textures{currentTexture,2}.fname ))
+  cat_plot_histogram( H.textures{currentTexture,2}.fname )
 else
   cat_plot_histogram(  H.cdata );
 end
