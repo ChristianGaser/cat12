@@ -30,9 +30,9 @@ function varargout = cat_check_system_output(status,result,debugON,trerr)
     if nargout>0, varargout{1} = true; varargout{2} = result; end
     if trerr
       try
-        error('CAT:system_error',sprintf(result)); 
+        error('CAT:system_error',sprintf('CAT System_error: %s',result)); 
       catch
-        fprintf('%s',sprintf(result)); 
+        fprintf('CAT System_error: %s',sprintf(result)); 
       end
     else
       cat_io_cprintf('warn','CAT:system_error:%s',sprintf(result)); 
