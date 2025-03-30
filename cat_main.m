@@ -251,12 +251,15 @@ if ~isfield(res,'spmpp')
       stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr)); 
     end
 
-    % RD202102: Extension of LAS to correct protocoll depending differences
+    % RD202102: Extension of LAS to correct protocol depending differences
     %           of cortical GM intensities due to myelination.   
     if isfield(job.extopts,'LASmyostr') 
       LASmyostr = job.extopts.LASmyostr; 
     else
       LASmyostr = job.extopts.LASstr; 
+    end
+    if job.extopts.inv_weighting
+      LASmyostr = 1; 
     end
     % LASmyostr = min(1,LASmyostr + 0.5*job.extopts.inv_weighting); % force correction in case of inverse data?
     if LASmyostr 
@@ -287,6 +290,8 @@ if ~isfield(res,'spmpp')
     % RD202502:   the correction is currently not working/tested for T2/PD/FLAIR
     if ~job.extopts.inv_weighting 
       Ymi = max( min( Yp0/3 , min( 2.25 , Yp0/3 )*0.25 + 0.75*( 2.25 - 0.5 * LASmyostr) / 3 ) , Yp0/3 - Ycor / 3 );
+    else
+      Ymi = max(Ymi,max(Ymi,min(1.1,Ycor*3)));  
     end
   else
     % just a node because it is the result of the inverse contrast warning
@@ -801,7 +806,6 @@ if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
     if ~isfield(job.extopts,'close_parahipp'),  job.extopts.close_parahipp  = cat_get_defaults('extopts.close_parahipp'); end
     if ~isfield(job.extopts,'pbtmethod'),       job.extopts.pbtmethod       = cat_get_defaults('extopts.pbtmethod'); end
     if ~isfield(job.extopts,'reduce_mesh'),     job.extopts.reduce_mesh     = 1; end % cat_get_defaults('extopts.reduce_mesh'); end
-    %if ~isfield(job.output,'pp'),               job.output.pp               = struct('native',0,'warped',0,'dartel',0);  end % this is now in defaults and not required here 
     if ~isfield(job.output,'surf_measures'),    job.output.surf_measures    = 1; end % developer
     
     if job.extopts.SRP >= 40
