@@ -38,10 +38,11 @@
 %        ./BWP                          # basic BWP image (provided nifti's) 
 %        ./BWPgt                        # the ground-truth segmentation as labelmap + shell script to oranize BWP data
 %        ./IXI-T1                       # unpacked IXI data
-%        ./ATLAS                        # ... ##########
+%        ./ATLAS_2                      # unpacked ATLAS 2.0 dataset
 %        ./ds004173-download            # unpacked MR-ART
-%        ./20211122-SyntheticDataset    # unpacked Rusak atrophy #############
-%
+%        ./20211122-SyntheticDataset    # unpacked Rusak atrophy RAW data 
+%                                         use  Rusak2021makeSimpleBids.sh  to reorganize the files 
+%        ./Rusak2021                    # unpacked reoganizid Rusak RAW and preprocessed data
 %
 %
 %   4. Download the preprocessed data from for each dataset from the Giga 
@@ -87,44 +88,47 @@ datadir   = '/Volumes/WDE18TB/MRData/Dahnke2025_QC';
 % version. 
 qaversions = {
     'cat_vol_qa201901';  % classic version (quite stable since 2016)
-    'cat_vol_qa201901x'; % refined, debugged version of 201901 
+    'cat_vol_qa201901x'; % refined, debugged version of 201901 (* default *)
     'cat_vol_qa202110';  % second classic version (successor of 201901) - problems in bias estimation 
     'cat_vol_qa202110x'; % refined, debugged version of 202110   
     'cat_vol_qa202205';  % last regular version before update (successor of 202110, stopped)
-    'cat_vol_qa202310';  % redesigned version based on 201901 and 202110  * default *
+    'cat_vol_qa202310';  % redesigned version based on 201901 and 202110 
     'cat_vol_qa202412';  % experimental version with internal segmentation >> qcseg
      };
+%qaversions = {'cat_vol_qa201901x'};
 
 % specify the used prerprocessing: {'SPM','CAT'}, where qcseg requires cat_vol_qa2024012
 % some test cases (cat_tst_qa_simerrBWP, cat_tst_qa_resizeBWP) do not support other imput segmentations than CAT 
 segment  = {'CAT','SPM'};
-%segment  = {'SPM'}; 
+%segment  = {'CAT'}; 
 fasttest = 0; % run test just on a subset
 recalcQC = 0; % re-estimate QC values 
 
 % we use the developer modus to use the lazy flag to 
+if ~exist('cat_get_defaults','file'), spm 'fmri'; cat12('developer'); end
 if cat_get_defaults('extopts.expertgui')<2, cat12('developer'); end
+set(0,'DefaultFigureVisible','off');
 
 % extend BWP test data (if required)
 cat_tst_qa_resampleBWP( datadir )
 % gunzip all files for SPM
-if 0
-  gzfiles = cat_vol_findfiles( datadir , '*.nii.gz' ); 
-  for fi = 1:numel(gzfiles)
-    fprintf([0 .5 0],'  Gunzip %s\n',gzfiles{fi});  
-    system(sprintf('gunzip %s',gzfiles{fi})); 
-  end
+gzfiles = cat_vol_findfiles( datadir , '*.nii.gz' ); 
+gzfiles( cellfun( @(x) any( contains(x,{'20211122-SyntheticDataset','Testing'})),  gzfiles )) = []; % don't unzip files from these dirs
+for fi = 1:numel(gzfiles)
+  fprintf('  Gunzip %s\n',gzfiles{fi});  
+  system(sprintf('gunzip %s',gzfiles{fi})); 
 end
 
+
 % run tests us (un)commenting to run/avoid specific tests
-%cat_tst_qa_bwpmaintest( datadir, qaversions, segment, fasttest, recalcQC )        % test/scaling setup of the QMs on the brain web phantom 
-%cat_tst_qa_simerrBWP( datadir, qaversions, fasttest, recalcQC )                   % effects of segmentation problems on QM (CAT only)
-%cat_tst_qa_resizeBWP( datadir, qaversions, recalcQC )                             % test of the resolution QM (CAT only)
+cat_tst_qa_bwpmaintest( datadir, qaversions, segment, fasttest, recalcQC )        % test/scaling setup of the QMs on the brain web phantom 
+cat_tst_qa_simerrBWP( datadir, qaversions, fasttest, recalcQC )                   % effects of segmentation problems on QM (CAT only)
+cat_tst_qa_resizeBWP( datadir, qaversions, recalcQC )                             % test of the resolution QM (CAT only)
 cat_tst_qa_Rusak_aging( datadir, qaversions, segment, fasttest, recalcQC )        % test of the QM in simulated atrophy data based on real ADNI scans
 
-%cat_tst_qa_IXI( datadir, qaversions, segment, fasttest, recalcQC )                % aging/sex/site effects in healty population 
-%cat_tst_qa_ATLAS( datadir, qaversions, segment, fasttest, recalcQC )              % differences between original and masked stroke lesions 
-%cat_tst_qa_MRART_expertgroups( datadir, qaversions, segment, fasttest, recalcQC ) % real data with movement artifacts
+cat_tst_qa_IXI( datadir, qaversions, segment, fasttest, recalcQC )                % aging/sex/site effects in healty population 
+cat_tst_qa_ATLAS2( datadir, qaversions, segment, fasttest, recalcQC )              % differences between original and masked stroke lesions 
+cat_tst_qa_MRART_expertgroups( datadir, qaversions, segment, fasttest, recalcQC ) % real data with movement artifacts
 
 
 % TODO: 
@@ -132,3 +136,5 @@ cat_tst_qa_Rusak_aging( datadir, qaversions, segment, fasttest, recalcQC )      
 % - Run preprocessing of full sample 
 % - test for missing data ...
 % - cleanup variables 
+% - test octave
+% - check for personal paths and OS depend things

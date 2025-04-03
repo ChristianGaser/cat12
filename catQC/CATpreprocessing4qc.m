@@ -3,11 +3,12 @@
 % spm SPM - SPM25 (25.01.02)
 % cfg_basicio BasicIO - Unknown
 %-----------------------------------------------------------------------
+cattempdir = fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym'); 
 matlabbatch{1}.spm.tools.cat.estwrite.data = '<UNDEFINED>';
 matlabbatch{1}.spm.tools.cat.estwrite.data_wmh = {''};
 matlabbatch{1}.spm.tools.cat.estwrite.nproc = min(6,cat_get_defaults('extopts.nproc'));
 matlabbatch{1}.spm.tools.cat.estwrite.useprior = '';
-matlabbatch{1}.spm.tools.cat.estwrite.opts.tpm = {'/Users/dahnke/Documents/MATLAB/spm/tpm/TPM.nii'};
+matlabbatch{1}.spm.tools.cat.estwrite.opts.tpm = {fullfile(spm('dir'),'tpm','TPM.nii')}; 
 matlabbatch{1}.spm.tools.cat.estwrite.opts.affreg = 'mni';
 matlabbatch{1}.spm.tools.cat.estwrite.opts.ngaus = [1 1 2 3 4 2];
 matlabbatch{1}.spm.tools.cat.estwrite.opts.warpreg = [0 0.001 0.5 0.05 0.2];
@@ -27,14 +28,14 @@ matlabbatch{1}.spm.tools.cat.estwrite.extopts.segmentation.BVCstr = 0.5;
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.segmentation.WMHC = 2;
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.segmentation.SLC = 0;
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.segmentation.mrf = 1;
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.segmentation.WMHtpm = {'/Users/dahnke/Documents/MATLAB/spm/toolbox/cat12/templates_MNI152NLin2009cAsym/cat_wmh_miccai2017.nii'};
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.segmentation.BVtpm = {'/Users/dahnke/Documents/MATLAB/spm/toolbox/cat12/templates_MNI152NLin2009cAsym/cat_bloodvessels.nii'};
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.segmentation.SLtpm = {'/Users/dahnke/Documents/MATLAB/spm/toolbox/cat12/templates_MNI152NLin2009cAsym/cat_strokelesions_ATLAS303.nii'};
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.T1 = {'/Users/dahnke/Documents/MATLAB/spm/toolbox/cat12/templates_MNI152NLin2009cAsym/T1.nii'};
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.brainmask = {'/Users/dahnke/Documents/MATLAB/spm/toolbox/cat12/templates_MNI152NLin2009cAsym/brainmask.nii'};
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.cat12atlas = {'/Users/dahnke/Documents/MATLAB/spm/toolbox/cat12/templates_MNI152NLin2009cAsym/cat.nii'};
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.darteltpm = {'/Users/dahnke/Documents/MATLAB/spm/toolbox/cat12/templates_MNI152NLin2009cAsym/Template_1_Dartel.nii'};
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.shootingtpm = {'/Users/dahnke/Documents/MATLAB/spm/toolbox/cat12/templates_MNI152NLin2009cAsym/Template_0_GS.nii'};
+matlabbatch{1}.spm.tools.cat.estwrite.extopts.segmentation.WMHtpm = {fullfile(cattempdir,'cat_wmh_miccai2017.nii')};
+matlabbatch{1}.spm.tools.cat.estwrite.extopts.segmentation.BVtpm = {fullfile(cattempdir,'cat_bloodvessels.nii')};
+matlabbatch{1}.spm.tools.cat.estwrite.extopts.segmentation.SLtpm = {fullfile(cattempdir,'cat_strokelesions_ATLAS303.nii')};
+matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.T1 = {fullfile(cattempdir,'T1.nii')};
+matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.brainmask = {fullfile(cattempdir,'brainmask.nii')};
+matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.cat12atlas = {fullfile(cattempdir,'cat.nii')};
+matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.darteltpm = {fullfile(cattempdir,'Template_1_Dartel.nii')};
+matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.shootingtpm = {fullfile(cattempdir,'Template_0_GS.nii')};
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.regstr = 0.5;
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.bb = 12;
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.vox = 1.5;

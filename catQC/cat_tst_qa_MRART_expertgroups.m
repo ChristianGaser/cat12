@@ -19,7 +19,13 @@ function cat_tst_qa_MRART_expertgroups( datadir, qaversions, segment, fasttest, 
 cat_io_cprintf([0 0.5 0],'\n\n== Run cat_tst_qa_MRART_expertgroups ==\n') 
 
 % ### datadir ###
-maindir  = fullfile(datadir,'ds004173-download'); 
+if ~exist( 'datadir' , 'var' )
+  maindir  = '/Volumes/WDE18TB/MRData/Dahnke2025_QC/ds004173-download'; 
+else
+  maindir  = fullfile(datadir,'ds004173-download'); 
+end
+
+
 
 % ### QC version ### 
 if ~exist( 'qaversions' , 'var')
@@ -45,13 +51,13 @@ fast = {'full','fast'};
 
 
 [cv,rn]   = cat_version;
-catppdir  = fullfile(maindir,'derivatives',sprintf('%s_R%s',cv,rn)); 
+catppdir  = fullfile(maindir,'derivatives',sprintf('%s',cv)); %sprintf('%s_R%s',cv,rn)); 
 [~,CATver,ext] = fileparts(catppdir); CATver = [CATver ext]; clear ext
 mriqcdir  = fullfile(maindir,'derivatives','mriqc-0.16.1');
 resultdir = fullfile(maindir,'derivatives',['results_' CATver]);
-printdir  = fullfile(fileparts(maindir),sprintf('MR-ART_%s_%s',fast{fasttest+1},datestr(clock,'YYYYmm')));
+printdir  = fullfile(fileparts(maindir),'+results',sprintf('MR-ART_%s_%s',fast{fasttest+1},datestr(clock,'YYYYmm')));
 exprating = fullfile(maindir,'derivatives','scores.tsv');
-partis    = fullfile(maindir,'participants.csv');
+partis    = fullfile(maindir,'participants.tsv');
 FS        = [10 10];
 if fasttest, pres = '-r300'; else, pres = '-r1200'; end
 % translate marks into percentage ratingop
@@ -62,34 +68,40 @@ si = 1;
 qais = 1:numel(qaversions); 
 
 
-%%
-runPP     = 1; 
-if runPP
-  for si = 1:numel(segment)
-    clear matlabbatch; 
-    ARTfiles = cat_vol_findfiles( maindir , 'sub*.nii',struct('depth',3));
-    switch segment{si}
-      case 'CAT'
-        CATpreprocessing4qc;
-        matlabbatch{1}.spm.tools.cat.estwrite.data = ARTfiles;
+% preprocessing
+for si = 1:numel(segment)
+  clear matlabbatch; 
+  ARTfiles = cat_vol_findfiles( maindir , 'sub*.nii',struct('depth',3));
+  switch segment{si}
+    case 'CAT'
+      CATpreprocessing4qc;
+      ARTfilesCAT = ARTfiles;
+      for fi = 1:numel(ARTfiles)
+        p0files{fi} = spm_file(ARTfiles{fi},'path',fullfile(maindir,'derivatives','CAT12.9',spm_str_manip(ARTfiles{fi},'hht'),'anat'),'prefix','p0');
+      end
+      ARTfilesCAT( cellfun(@(x) exist(x,'file'),p0files)>0 ) = [];
+      if ~isempty( ARTfilesCAT )
+        matlabbatch{1}.spm.tools.cat.estwrite.data = ARTfilesCAT;
         matlabbatch{1}.spm.tools.cat.estwrite.extopts.admin.lazy = 1; 
-        matlabbatch{1}.spm.tools.cat.estwrite.output.BIDS = struct('BIDSyes',struct('BIDSfolder','../derivatives/CAT12.9'));
+        matlabbatch{1}.spm.tools.cat.estwrite.output.BIDS = ...
+          struct('BIDSyes',struct('BIDSfolder',fullfile('..','derivatives','CAT12.9')));
         spm_jobman('run',matlabbatch);
-      case 'SPM'
-        SPMpreprocessing4qc;
-        ARTfilesSPM = ARTfiles;
-        ARTfilesSPM( cellfun(@(x) exist(x,'file'),spm_file(ARTfiles,'prefix','c1'))>0 ) = [];
-        if ~isempty( ARTfilesSPM )
-          matlabbatch{1}.spm.spatial.preproc.channel.vols = ARTfilesSPM;
-          spm_jobman('run',matlabbatch);
-        end
-      case 'synthseg'
-        error('synthseg is not prepared in the public script ... use MATLAB help')
-      case 'qcseg'
-        fprintf('No preprocessing required.\n\n');
-    end
+      end
+    case 'SPM'
+      SPMpreprocessing4qc;
+      ARTfilesSPM = ARTfiles;
+      ARTfilesSPM( cellfun(@(x) exist(x,'file'),spm_file(ARTfiles,'prefix','c1'))>0 ) = [];
+      if ~isempty( ARTfilesSPM )
+        matlabbatch{1}.spm.spatial.preproc.channel.vols = ARTfilesSPM;
+        spm_jobman('run',matlabbatch);
+      end
+    case 'synthseg'
+      error('synthseg is not prepared in the public script ... use MATLAB help')
+    case 'qcseg'
+      fprintf('No preprocessing required.\n\n');
   end
 end
+
 
 
 %%
@@ -102,22 +114,25 @@ for qai = qais
   if fasttest, Pc1{qai} = Pc1{qai}(1:4:end); end
   if fasttest, Pss{qai} = Pss{qai}(1:4:end); end
   if fasttest, Pqs{qai} = Pqs{qai}(1:4:end); end
-  %%
-  if rerun
   %% (re)processing of QC values
-    cat_vol_qa('p0',Pp0{qai},struct('prefix',[qaversions{qai} '_'],'version',qaversions{ qai },'rerun',rerun ));
-  %% (re)processing of QC values
-    cat_vol_qa('p0',Pc1{qai},struct('model',struct('spmc1',1),'prefix',[qaversions{qai} '_spm_'],'version',qaversions{ qai },'rerun',rerun ));
-  %% (re)processing of QC values
-    cat_vol_qa('p0',Pss{qai},struct('prefix',[qaversions{qai} '_synthseg_'],'version',qaversions{ qai },'rerun',2 ));
-  %% (re)processing of QC values
-    cat_vol_qa('p0',Pqs{qai},struct('prefix',[qaversions{qai} '_qcseg_'],'version',qaversions{ qai },'rerun',2 ));
+  if 1 %rerun
+    for si = 1:numel(segment)
+      switch segment{si}
+        case 'CAT'
+          cat_vol_qa('p0',Pp0{qai},struct('prefix',[qaversions{qai} '_'],'version',qaversions{ qai },'rerun',rerun*2));
+        case 'SPM' 
+          cat_vol_qa('p0',Pc1{qai},struct('model',struct('spmc1',1),'prefix',[qaversions{qai} '_spm_'],'version',qaversions{ qai },'rerun',rerun*2));
+        case 'synthseg'
+          cat_vol_qa('p0',Pss{qai},struct('prefix',[qaversions{qai} '_synthseg_'],'version',qaversions{ qai },'rerun',rerun*2));
+        case 'qcseg'
+          cat_vol_qa('p0',Pqs{qai},struct('prefix',[qaversions{qai} '_qcseg_'],'version',qaversions{ qai },'rerun',rerun*2));
+      end
+    end
   end
 end
 
 
-set(0,'DefaultFigureVisible','off');
-CSV = cat_io_csv(partis); 
+CSV = cat_io_csv(partis,struct('delimiter',' ')); 
 
 %% create figure
 %segment = 'SPM';%SPM'; %'synthseg';
@@ -219,25 +234,24 @@ for si = 1:numel(segment)
       end
   
       %% get synthseg 
-      [pp,ff] = fileparts(Pp0{qai}{xi}); pp = strrep(pp,catppdir,maindir); 
-      synthseg_vol_mat = fullfile(pp,['synthsegvol_' ff(3:end) '.mat']); 
-      Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
-      if exist(synthseg_vol_mat,'file')
-        load(synthseg_vol_mat,'synthsegvol'); 
-      else
-        P = fullfile(pp,sprintf('synthseg_%s.nii',ff)); 
-        V = spm_vol(P); 
-        Y = spm_read_vols(V); 
-        vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
-        for ci = 1:3
-          synthsegvol(ci) = sum(Yp0toC(Y(:),ci)) * prod(vx_vol)/1000; 
+      if contains(segment{si},'synthseg')
+        [pp,ff] = fileparts(Pp0{qai}{xi}); pp = strrep(pp,catppdir,maindir); 
+        synthseg_vol_mat = fullfile(pp,['synthsegvol_' ff(3:end) '.mat']); 
+        Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
+        if exist(synthseg_vol_mat,'file')
+          load(synthseg_vol_mat,'synthsegvol'); 
+        else
+          P = fullfile(pp,sprintf('synthseg_%s.nii',ff)); 
+          V = spm_vol(P); 
+          Y = spm_read_vols(V); 
+          vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
+          for ci = 1:3
+            synthsegvol(ci) = sum(Yp0toC(Y(:),ci)) * prod(vx_vol)/1000; 
+          end
+          save(synthseg_vol_mat,'synthsegvol'); 
         end
-        save(synthseg_vol_mat,'synthsegvol'); 
-      end
-      synthsegvols(xi,1:3) = synthsegvol / sum(synthsegvol);
+        synthsegvols(xi,1:3) = synthsegvol / sum(synthsegvol);
   
-  
-      if contains(segment{si},'synthseg') ...|| contains(segment{si},'qcseg')
         xml(xi).subjectmeasures.vol_rel_CGW(1:3)  = synthsegvols(xi,:); 
       end     
   
@@ -378,6 +392,8 @@ for si = 1:numel(segment)
     if 0
       clear QSD; 
       fh = figure(22);
+      fh.Visible = 'off';
+      fh.Interruptible = 'off';
       fh.Position(3:4) = [200 200];
       QM = {'NCR','ICR','res_RES','res_ECR','FEC','SIQR'};   
       cl = [.8 0 .2;   0.8 0.6 0;  0.2 0.5 0;  .0 .5 .9; 0. 0 0.9;  0 0 0 ]; 
@@ -452,6 +468,8 @@ for si = 1:numel(segment)
       
         % print boxplot figure
         if verb, fig = figure(40); else, fig = figure(); end
+        fig.Visible = 'off';
+        fig.Interruptible = 'off'; 
         fig.Position(3:4) = [130 200]; 
         fig.Name = sprintf('MR-ART - Boxplot - %s %s',qaversions{qai},strrep(QFN{fni1,6},'_','\_'));  
         if ~verb, fig.Visible = 'off'; else, fig.Visible = 'on'; end
@@ -484,6 +502,8 @@ for si = 1:numel(segment)
   
       %% age dependency
       fig = figure(12); fig.Position(3:4) = [300 200]; clf; 
+      fig.Visible = 'off';
+      fig.Interruptible = 'off'; 
       gcol = [0 0.8 0; 0.8 0.7 0; 0.8 0 0]; hold on; 
       gnam = {'no','light','strong'};
       if 0
@@ -667,6 +687,8 @@ for si = 1:numel(segment)
   
         % age dependency in normalized data
         fig = figure(12); fig.Position(3:4) = [300 200]; clf; 
+        fig.Visible = 'off';
+        fig.Interruptible = 'off'; 
         gcol = [0 0.8 0; 0.8 0.7 0; 0.8 0 0]; hold on; 
         gnam = {'no','light','strong'};
         for gi = 1:max(Q.group)
@@ -697,7 +719,9 @@ for si = 1:numel(segment)
   
         %% figure 2
         % -----------------------------------------------------------------
-        fig = figure(); fig.Position(3:4) = [800 200]; 
+        fig = figure(); fig.Position(3:4) = [800 200];
+        fig.Visible = 'off';
+        fig.Interruptible = 'off'; 
         fig.Name = sprintf('MR-ART - ROC - %s',qaversions{qai});  
         if ~verb, fig.Visible = 'off'; end
   
@@ -772,7 +796,9 @@ for si = 1:numel(segment)
       % * there is a lot of normal variance :(
     
         %if ~exist('fig4','var'), 
-        if verb, fig = figure(41); else, fig = figure(); end; clf;  
+        if verb, fig = figure(41); else, fig = figure(); end; clf; 
+        fig.Visible = 'off';
+        fig.Interruptible = 'off'; 
         fig.Position(3:4) = [600 200];
         fig.Name = sprintf('MR-ART - rGMV changes - %s',qaversions{qai});  
         if ~verb, fig.Visible = 'off'; else, fig.Visible = 'on'; end
@@ -813,7 +839,7 @@ for si = 1:numel(segment)
           if fni2>1, ylabel off; ah.YTickLabel = {}; end
           %Q.fit.(dfield) = fit( double(Q.(dfield2)(Q.(dfield2)>0 & Q.group==2)) , double(Q.(dfield1)(Q.(dfield2)>0 & Q.group==2)) ,'poly1'); hp = plot(Q.fit.(dfield)); hp.Color = [0 0.5 0];
           %Q.fit.(dfield) = fit( double(Q.(dfield2)(Q.(dfield2)>0 & Q.group==3)) , double(Q.(dfield1)(Q.(dfield2)>0 & Q.group==3)) ,'poly1'); hp = plot(Q.fit.(dfield)); hp.Color = [0.5 0 0];
-         % try
+          try
             Q.fit.(dfield) = fit( double(Q.(dfield2)(Q.(dfield2)>0 & ~isnan(Q.(dfield1)) & ~isnan(Q.(dfield2)))) , ...
               double(Q.(dfield1)( Q.(dfield2)>0 & ~isnan(Q.(dfield1)) & ~isnan(Q.(dfield2)))) ,'poly1'); 
             hp = plot(Q.fit.(dfield)); hp.Color = [0.6 0 0];
@@ -821,7 +847,7 @@ for si = 1:numel(segment)
             if fni2==1, ylabel([QFN{QM1(fni1),6} ' change ']); else, ylabel(''); end 
             xlabel(strrep(dfield2,'_','\_'));
             subtitle(sprintf('%0.3f',Q.fit.(dfield).p1));
-         % end 
+          end 
           title(sprintf('%s change',strrep(QFN{QM2(fni2),2},'_','\_')))
         end
    

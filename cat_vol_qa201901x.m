@@ -755,7 +755,7 @@ function varargout = cat_vol_qa201901x(action,varargin)
       %  is currently not enough data with higher resolution and varying 
       %  properties. 
       if any( vx_vol < .8 )
-        mres = 1; ss = (mres - vx_vol).^2;
+        mres = 1; ss = min(2,(mres - vx_vol).^2);
         
         spm_smooth(Yp0, Yp0, ss); 
         spm_smooth(Ym , Ym , ss); 

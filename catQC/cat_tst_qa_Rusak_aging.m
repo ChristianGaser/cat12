@@ -23,8 +23,7 @@ runPP      = 1;
 
 % ### datadir ###
 if ~exist( 'datadir0' , 'var' )
-  datadir    = '/Volumes/SG5TB/MRData/202503_QA/Rusak2021';
-  datadir   = '/Volumes/WDE18TB/MRData/Dahnke2025_QC/Rusak2021'; %20211122-SyntheticDataset 
+  datadir   = '/Volumes/WDE18TB/MRData/Dahnke2025_QC/Rusak2021';
 else
   datadir    = fullfile(datadir0,'Rusak2021');
 end
@@ -61,9 +60,13 @@ if runPP
     switch segment{si}
       case 'CAT'
         CATpreprocessing4qc;
-        matlabbatch{1}.spm.tools.cat.estwrite.data = Rusakfiles;
-        matlabbatch{1}.spm.tools.cat.estwrite.extopts.admin.lazy = 1; % derivatives
-        spm_jobman('run',matlabbatch);
+        RusakfilesCAT = Rusakfiles;
+        RusakfilesCAT( cellfun(@(x) exist(x,'file'),spm_file(Rusakfiles,'prefix',['mri' filesep 'p0']))>0 ) = [];
+        if ~isempty( RusakfilesCAT )
+          matlabbatch{1}.spm.tools.cat.estwrite.data = RusakfilesCAT; 
+          matlabbatch{1}.spm.tools.cat.estwrite.extopts.admin.lazy = 1; 
+          spm_jobman('run',matlabbatch);
+        end
       case 'SPM'
         SPMpreprocessing4qc;
         RusakfilesSPM = Rusakfiles; 
@@ -187,7 +190,7 @@ for segi = 1:numel(segment)
       % figure
       fh = figure(4); clf; 
       fh.Position(3:4) = [1000 400];
-      fname = sprintf('Rusak2021_%s_%s',qaversions{qai},datestr(clock,'YYYYmmdd'));
+      fname = sprintf('Rusak2021_%s',qaversions{qai}); %,datestr(clock,'YYYYmmdd'));
       annotation('textbox',[0 0.95 1 0.05 ],'FitBoxToText','off','LineStyle','none','Fontsize',12,'String',...
         sprintf('Rusak2021: %s - %s', strrep(qaversions{qai},'_','\_'), datestr(clock,'YYYYmmdd')) );
       pos = [1 1 2 2 3 3 4 4 5 5 6 6; 

@@ -460,8 +460,17 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
           % general function called from CAT12
           res.image     = spm_vol(Po{fi}); 
 
-          [QASfi,QARfi] = cat_vol_qa('cat12ver',Yp0,Vo,Ym,res,species,opt);
-
+          if ~isempty(Yp0)
+            try
+              [QASfi,QARfi] = cat_vol_qa('cat12ver',Yp0,Vo,Ym,res,species,opt);
+            catch
+              opt2 = opt; opt2.version = 'cat_vol_qa202412';
+              [QASfi,QARfi] = cat_vol_qa('cat12ver',Yp0,Vo,Ym,res,species,opt2);
+            end
+          else
+            opt2 = opt; opt2.version = 'cat_vol_qa202412';
+            [QASfi,QARfi] = cat_vol_qa('cat12ver',Yp0,Vo,Ym,res,species,opt2);
+          end
           try
             % try to update the QC structure
             [QAS, QAR, qamat, qamatm, mqamatm] = updateQAstructure(QAS, ...
@@ -961,7 +970,7 @@ function def = defaults
   def.snspace    = [100,7,3];
   %def.nogui      = exist('XT','var');
   def.rerun      = 1;         % 0-load if exist, 1-reprocess if "necessary", 2-reprocess 
-  def.version    = 'cat_vol_qa202310';
+  def.version    = 'cat_vol_qa201901x';
   def.MarkColor  = cat_io_colormaps('marks+',40); 
   def.versions0  = {'cat_vol_qa201602','cat_vol_qa20180207'};  % no ECR
 end

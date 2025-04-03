@@ -757,7 +757,7 @@ function varargout = cat_vol_qa202412(action,varargin)
       %  Lower resolution improve time 
       mres = 1; % analyse resolution 
       if any( vx_vol < .8*mres )
-        ss = (mres - vx_vol).^2;
+        ss = min(2,(mres - vx_vol).^2);
         spm_smooth(Yo , Yo , ss); Yo = single(Yo); 
         [Yo,Vr] = cat_vol_resize(Yo ,'interphdr',V,mres,1);
         V = Vr.hdrN; vx_vol = repmat(mres,1,3); %#ok<*RPMT1>

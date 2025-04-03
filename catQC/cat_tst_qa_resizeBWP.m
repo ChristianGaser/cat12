@@ -64,7 +64,7 @@ function cat_tst_qa_resizeBWP( datadir0, qaversions, rerun )
   if ~exist( 'datadir0' , 'var' )
     datadir  = '/Volumes/SG5TB/MRData/202503_QA';
   else
-    datadir  = fullfile(datadir0,'BWP'); 
+    datadir  = datadir0; 
   end
   % ### QC version ### 
   if ~exist( 'qaversions' , 'var')
@@ -80,17 +80,17 @@ function cat_tst_qa_resizeBWP( datadir0, qaversions, rerun )
   end
   if ~exist( 'rerun', 'var'), rerun = 0; end
   
-  resdir   = fullfile(fileparts(datadir),'BWPrestest');
-  outdir   = fullfile(fileparts(datadir), '+results',['BWPrestest_' datestr(clock,'YYYYmm')]); 
-  if ~exist(fullfile(resdir,'mri'),'dir'), mkdir(fullfile(resdir,'mri')); end  
+  outdir   = fullfile(datadir,'BWPrestest');
+  resdir   = fullfile(datadir, '+results',['BWPrestest_' datestr(clock,'YYYYmm')]); 
+  if ~exist(fullfile(outdir,'mri'),'dir'), mkdir(fullfile(outdir,'mri')); end  
   
   % testdata from BWP
   Po = {
-    fullfile(datadir,'BWPC_HC_T1_pn1_rf020pA_vx100x100x100.nii')
-    ...fullfile(datadir,'BWPC_HC_T1_pn1_rf020pB_vx100x100x100.nii')
-    ...fullfile(datadir,'BWPC_HC_T1_pn1_rf020pB_vx100x100x100.nii')
+    fullfile(datadir,'BWP','BWPC_HC_T1_pn1_rf020pA_vx100x100x100.nii')
+    ...fullfile(datadir,'BWP','BWPC_HC_T1_pn1_rf020pB_vx100x100x100.nii')
+    ...fullfile(datadir,'BWP','BWPC_HC_T1_pn1_rf020pB_vx100x100x100.nii')
     };
-  P    = spm_file(Po,'path',resdir); 
+  P    = spm_file(Po,'path',outdir); 
   Pp0o = spm_file(Po,'prefix',['mri' filesep 'p0']); 
   Pp0  = spm_file(P ,'prefix',['mri' filesep 'p0']); 
   for fi = 1:numel(Po), copyfile(Po{fi}  ,P{fi}); end
@@ -264,7 +264,7 @@ function cat_tst_qa_resizeBWP( datadir0, qaversions, rerun )
       qcmatlabbatch{1}.spm.tools.cat.tools.iqe.model.catp0  = Pp0; 
       qcmatlabbatch{1}.spm.tools.cat.tools.iqe.opts.prefix  = prefixgt;
       qcmatlabbatch{1}.spm.tools.cat.tools.iqe.opts.verb    = 2;
-      qcmatlabbatch{1}.spm.tools.cat.tools.iqe.opts.rerun   = 1;
+      qcmatlabbatch{1}.spm.tools.cat.tools.iqe.opts.rerun   = 0;
       qcmatlabbatch{1}.spm.tools.cat.tools.iqe.opts.version = qafile;
       Prsqc = spm_file( Prs(pi,:) ,'path',fullfile(outdir,'report'),'prefix',prefixgt,'ext','.xml');
       spm_jobman('run',qcmatlabbatch); 
@@ -408,7 +408,7 @@ function cat_tst_qa_resizeBWP( datadir0, qaversions, rerun )
         
         % save figures
         % update this here to have up to date value in case of batch mode 
-        printoutdir   = fullfile(outdir,'results',datestr(clock,'YYYYmm')); 
+        printoutdir   = fullfile(resdir,'results',datestr(clock,'YYYYmm')); 
         if ~exist(printoutdir,'dir'), mkdir(printoutdir); end
         [~,ff]        = spm_fileparts(P{pi}); 
         printname     = sprintf('testcase%d_%s',testcase,ff);

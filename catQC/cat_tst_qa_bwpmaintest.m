@@ -71,9 +71,13 @@ if recalc.runPP
     switch segment{si}
       case 'CAT'
         CATpreprocessing4qc;
-        matlabbatch{1}.spm.tools.cat.estwrite.data = BWPfiles;
-        matlabbatch{1}.spm.tools.cat.estwrite.extopts.admin.lazy = 1; 
-        spm_jobman('run',matlabbatch);
+        BWPfilesCAT = BWPfiles; 
+        BWPfilesCAT( cellfun(@(x) exist(x,'file'),spm_file(BWPfilesCAT,'prefix',['mri' filesep 'p0']))>0 ) = [];
+        if ~isempty( BWPfilesCAT )
+          matlabbatch{1}.spm.tools.cat.estwrite.data = BWPfiles;
+          matlabbatch{1}.spm.tools.cat.estwrite.extopts.admin.lazy = 1; 
+          spm_jobman('run',matlabbatch);
+        end
       case 'SPM'
         SPMpreprocessing4qc;
         BWPfilesSPM = BWPfiles; 
@@ -228,17 +232,19 @@ for qai = qais
     for mi = method
       % -- do QA ---------------------------------------------------------
       % xml-filenames  
+      P.p0a{mi}{pi,1} = P.p0{mi}{pi,1};
       for pi=1:numel(P.p0{mi})
         [pp,ff] = fileparts(P.p0{mi}{pi});
         if strcmp(P.bwp(mi,1),'CAT12')
           P.xml{mi}{pi,1} = fullfile(fileparts(pp),'report',[qafile '_' ff(3:end) '.xml']);
         elseif strcmp(P.bwp(mi,1),'SPM12')
-          P.xml{mi}{pi,1} = fullfile(pp,'report',[qafile '_' ff(3:end) '.xml']);
+          P.xml{mi}{pi,1} = fullfile(pp,'report',[qafile '_spm_' ff(3:end) '.xml']);
+          P.p0a{mi}{pi,1} = fullfile(pp,['c1' ff(3:end) '.nii']); % for kappa
         elseif strcmp(P.bwp(mi,1),'synthseg')
           P.xml{mi}{pi,1} = fullfile(pp,'report',[qafile '_' strrep(ff,'synthseg_p0','synthseg_') '.xml']);
         elseif strcmp(P.bwp(mi,1),'qcseg')
           P.xml{mi}{pi,1} = fullfile(pp,'report',[qafile '_qcseg_' ff '.xml']);
-          P.p0{mi}{pi,1} = fullfile(pp,['p0_qcseg_' ff '.nii']); % for kappa
+          P.p0a{mi}{pi,1} = fullfile(pp,['p0_qcseg_' ff '.nii']); % for kappa
         end
         P.p0e{mi}(pi) = exist(P.xml{mi}{pi},'file') | strcmp(P.bwp(mi,1),'qcseg');
         % check data
@@ -268,9 +274,9 @@ for qai = qais
           qav = [qaversions{qai} '_']; 
         end
         if recalc.qa(1)>1
-          cat_vol_qa('p0',P.p0{mi},struct('prefix',qav,'version',qafile,'rerun',2));
+          cat_vol_qa('p0',P.p0a{mi},struct('prefix',qav,'version',qafile,'rerun',2));
         else
-          cat_vol_qa('p0',P.p0{mi}(P.p0e{mi}==0),struct('prefix',qav,'version',qafile,'rerun',0));
+          cat_vol_qa('p0',P.p0a{mi}(P.p0e{mi}==0),struct('prefix',qav,'version',qafile,'rerun',0));
         end
         xml = cat_io_xml(P.xml{mi});
         save(P.qamat{mi},'xml');

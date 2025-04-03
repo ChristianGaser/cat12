@@ -62,9 +62,13 @@ function cat_tst_qa_IXI( datadir0 , qaversions , segment, fasttest, rerun )
       switch segment{si}
         case 'CAT'
           CATpreprocessing4qc;
-          matlabbatch{1}.spm.tools.cat.estwrite.data = IXIfiles;
-          matlabbatch{1}.spm.tools.cat.estwrite.extopts.admin.lazy = 1; 
-          spm_jobman('run',matlabbatch);
+          IXIfilesCAT = IXIfiles;
+          IXIfilesCAT( cellfun(@(x) exist(x,'file'),spm_file(IXIfilesCAT,'prefix',['mri' filesep 'p0']))>0 ) = [];
+          if ~isempty( IXIfilesCAT )
+            matlabbatch{1}.spm.tools.cat.estwrite.data = IXIfilesCAT; 
+            matlabbatch{1}.spm.tools.cat.estwrite.extopts.admin.lazy = 1; 
+            spm_jobman('run',matlabbatch);
+          end
         case 'SPM'
           SPMpreprocessing4qc;
           IXIfilesSPM = IXIfiles; 
@@ -129,9 +133,7 @@ function cat_tst_qa_IXI( datadir0 , qaversions , segment, fasttest, rerun )
   
   % create figure
   fh = figure(39);
-  %if ~fasttest
-    fh.Visible = 'off';
-  %end
+  fh.Visible = 'off';
   fh.Interruptible = 'off';
   fh.Position(3:4) = [600,200]; 
   for si = 1:numel(segment)
