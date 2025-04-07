@@ -1,4 +1,86 @@
 ------------------------------------------------------------------------
+r2679 | gaser | 2025-04-08 00:41:58
+
+Changed paths:
+ M CAT.glnx86/CAT_AddValuesToSurf
+ M CAT.glnx86/CAT_AverageSurfaces
+ M CAT.glnx86/CAT_BlurSurfHK
+ M CAT.glnx86/CAT_DumpCurv
+ M CAT.glnx86/CAT_DumpSurfArea
+ M CAT.glnx86/CAT_DumpSurfaceRatio
+ M CAT.glnx86/CAT_FixTopology
+ M CAT.glnx86/CAT_FractalDimension
+ M CAT.glnx86/CAT_Hausdorff
+ M CAT.glnx86/CAT_Isometize
+ M CAT.glnx86/CAT_MarkDefects
+ M CAT.glnx86/CAT_RefineMesh
+ M CAT.glnx86/CAT_ResampleSphericalSurf
+ M CAT.glnx86/CAT_ResampleSphericalSurfSPH
+ M CAT.glnx86/CAT_ResampleSurf
+ M CAT.glnx86/CAT_SelfIntersect
+ M CAT.glnx86/CAT_SeparatePolygon
+ M CAT.glnx86/CAT_SmoothConvexity
+ M CAT.glnx86/CAT_SulcusDepth
+ M CAT.glnx86/CAT_Surf2Sphere
+ M CAT.glnx86/CAT_SurfCentral2Pial
+ M CAT.glnx86/CAT_SurfDistance
+ M CAT.glnx86/CAT_SurfWarp
+ M CAT.glnx86/CAT_VolMarchingCubes
+ M CAT.glnx86/CAT_VolThicknessPbt
+ M CAT.maca64/CAT_AddValuesToSurf
+ M CAT.maca64/CAT_AverageSurfaces
+ M CAT.maca64/CAT_BlurSurfHK
+ M CAT.maca64/CAT_DumpCurv
+ M CAT.maca64/CAT_DumpSurfArea
+ M CAT.maca64/CAT_DumpSurfaceRatio
+ M CAT.maca64/CAT_FixTopology
+ M CAT.maca64/CAT_FractalDimension
+ M CAT.maca64/CAT_Hausdorff
+ M CAT.maca64/CAT_Isometize
+ M CAT.maca64/CAT_MarkDefects
+ M CAT.maca64/CAT_RefineMesh
+ M CAT.maca64/CAT_ResampleSphericalSurf
+ M CAT.maca64/CAT_ResampleSphericalSurfSPH
+ M CAT.maca64/CAT_ResampleSurf
+ M CAT.maca64/CAT_SelfIntersect
+ M CAT.maca64/CAT_SeparatePolygon
+ M CAT.maca64/CAT_SmoothConvexity
+ M CAT.maca64/CAT_SulcusDepth
+ M CAT.maca64/CAT_Surf2Sphere
+ M CAT.maca64/CAT_SurfCentral2Pial
+ M CAT.maca64/CAT_SurfDistance
+ M CAT.maca64/CAT_SurfWarp
+ M CAT.maca64/CAT_VolMarchingCubes
+ M CAT.maca64/CAT_VolThicknessPbt
+ M CAT.w32/CAT_AddValuesToSurf.exe
+ M CAT.w32/CAT_AverageSurfaces.exe
+ M CAT.w32/CAT_BlurSurfHK.exe
+ M CAT.w32/CAT_DumpCurv.exe
+ M CAT.w32/CAT_DumpSurfArea.exe
+ M CAT.w32/CAT_DumpSurfaceRatio.exe
+ M CAT.w32/CAT_FixTopology.exe
+ M CAT.w32/CAT_FractalDimension.exe
+ M CAT.w32/CAT_Hausdorff.exe
+ M CAT.w32/CAT_Isometize.exe
+ M CAT.w32/CAT_MarkDefects.exe
+ M CAT.w32/CAT_RefineMesh.exe
+ M CAT.w32/CAT_ResampleSphericalSurf.exe
+ M CAT.w32/CAT_ResampleSphericalSurfSPH.exe
+ M CAT.w32/CAT_ResampleSurf.exe
+ M CAT.w32/CAT_SelfIntersect.exe
+ M CAT.w32/CAT_SeparatePolygon.exe
+ M CAT.w32/CAT_SmoothConvexity.exe
+ M CAT.w32/CAT_SulcusDepth.exe
+ M CAT.w32/CAT_Surf2Sphere.exe
+ M CAT.w32/CAT_SurfCentral2Pial.exe
+ M CAT.w32/CAT_SurfDistance.exe
+ M CAT.w32/CAT_SurfWarp.exe
+ M CAT.w32/CAT_VolMarchingCubes.exe
+ M CAT.w32/CAT_VolThicknessPbt.exe
+ M CHANGES.txt
+
+Updated: Updated binaries.
+------------------------------------------------------------------------
 r2665 | gaser | 2025-03-26 17:16:06
 
 Changed paths:
