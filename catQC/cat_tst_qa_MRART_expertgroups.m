@@ -49,6 +49,8 @@ if ~exist( 'fasttest', 'var'), fasttest = 0; end
 if ~exist( 'rerun', 'var'), rerun = 0; end
 fast = {'full','fast'}; 
 
+warning off
+
 
 [cv,rn]   = cat_version;
 catppdir  = fullfile(maindir,'derivatives',sprintf('%s',cv)); %sprintf('%s_R%s',cv,rn)); 
@@ -115,7 +117,7 @@ for qai = qais
   if fasttest, Pss{qai} = Pss{qai}(1:4:end); end
   if fasttest, Pqs{qai} = Pqs{qai}(1:4:end); end
   %% (re)processing of QC values
-  if 1 %rerun
+  %if rerun
     for si = 1:numel(segment)
       switch segment{si}
         case 'CAT'
@@ -128,7 +130,7 @@ for qai = qais
           cat_vol_qa('p0',Pqs{qai},struct('prefix',[qaversions{qai} '_qcseg_'],'version',qaversions{ qai },'rerun',rerun*2));
       end
     end
-  end
+  %end
 end
 
 
@@ -176,7 +178,7 @@ for si = 1:numel(segment)
       if fasttest && numel(Pp0)>numel(Pxml), Pxml = Pxml(1:4:end); end
     end
     xml    = cat_io_xml(Pxml); 
-    if contains( segment{si} ,'CAT')
+    if 0 %contains( segment{si} ,'CAT')
       xmlspm = cat_io_xml(Pxmlspm); 
     end
   
@@ -563,6 +565,8 @@ for si = 1:numel(segment)
       clear sens2 spec2 sensg2 specg2 cf
       if QFN{fni1,4}
         fig = figure; fig.Position(3:4) = [600 200]; 
+        fig.Visible = 'off';
+        fig.Interruptible = 'off'; 
         fig.Name = sprintf('MR-ART - ROC - %s',qaversions{qai});  
         if ~verb, fig.Visible = 'off'; end
   
@@ -868,3 +872,5 @@ for si = 1:numel(segment)
   end
 end
 fprintf('all done.\n')
+warning on
+

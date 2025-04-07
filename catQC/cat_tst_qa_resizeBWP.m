@@ -157,8 +157,13 @@ function cat_tst_qa_resizeBWP( datadir0, qaversions, rerun )
         rxlabel{ri} = sprintf('r%0.2fx%0.2fx%0.2fmm',res(ri,:)); 
         fprintf('\n      %s',rxlabel{ri});   
        
+        % define both output (the Prs for processing and the Prp and Pp0rs as its simulated and real result for evaluation)
+        Prs{pi,ri}        = char(spm_file(P{pi},'path',fullfile(outdir),      'prefix',sprintf('r%0.2fx%0.2fx%0.2fmm_',res(ri,:)))); 
+        Prp{pi,ri}        = char(spm_file(P{pi},'path',fullfile(outdir),      'prefix',sprintf('p0r%0.2fx%0.2fx%0.2fmm_',res(ri,:)))); 
+        Pp0rs{pi,ri}      = char(spm_file(P{pi},'path',fullfile(outdir,'mri'),'prefix',sprintf('p0r%0.2fx%0.2fx%0.2fmm_',res(ri,:)))); 
+      
         % we just use the batch functionality of the cat_vol_resize function
-        if recalc>0 || ~exist(Prp{pi,ri},'file')
+        if recalc>0 || ~exist(Pp0rs{pi,ri},'file')
           %% T1
           clear job; 
           job.data          = P(pi);
@@ -194,10 +199,6 @@ function cat_tst_qa_resizeBWP( datadir0, qaversions, rerun )
           cat_vol_resize(job);
         end
     
-        % define both output (the Prs for processing and the Prp and Pp0rs as its simulated and real result for evaluation)
-        Prs{pi,ri}        = char(spm_file(P{pi},'path',fullfile(outdir),      'prefix',sprintf('r%0.2fx%0.2fx%0.2fmm_',res(ri,:)))); 
-        Prp{pi,ri}        = char(spm_file(P{pi},'path',fullfile(outdir),      'prefix',sprintf('p0r%0.2fx%0.2fx%0.2fmm_',res(ri,:)))); 
-        Pp0rs{pi,ri}      = char(spm_file(P{pi},'path',fullfile(outdir,'mri'),'prefix',sprintf('p0r%0.2fx%0.2fx%0.2fmm_',res(ri,:)))); 
       end
       fprintf('\n');
         

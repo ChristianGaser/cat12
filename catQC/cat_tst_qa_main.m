@@ -1,7 +1,14 @@
 % QA main script to run the various analysis in (Dahnke et al. 2025)
+%
+%    Dahnke R., Kalc P., Ziegler G., Grosskreutz J., Gaser C. 
+%    The Good, the Bad, and the Ugly: Segmentation-Based Quality Control 
+%    of Structural Magnetic Resonance Images
+%    https://www.biorxiv.org/content/10.1101/2025.02.28.640096v1
+%
 % -------------------------------------------------------------------------
 % The package comes with data from the brain web phantom (BWP) that were 
-% created as customized simulations (). 
+% created as customized simulations (Cocosco et al., 1997, Collins et al., 
+% 1998, AubertBroche et al., 2006). 
 % The data was converted to NIFTI and organized via the shell script:
 %
 %   ./BWPgt/convertCollinsR2.sh
@@ -34,20 +41,9 @@
 %       MR-ART (10.9 GB):   https://openneuro.org/datasets/ds004173/versions/1.0.2
 %                           (As we need all files, the direct download is the easiest)
 %
-%      The data directory should look like: 
-%        ./BWP                          # basic BWP image (provided nifti's) 
-%        ./BWPgt                        # the ground-truth segmentation as labelmap + shell script to oranize BWP data
-%        ./IXI-T1                       # unpacked IXI data
-%        ./ATLAS_2                      # unpacked ATLAS 2.0 dataset
-%        ./ds004173-download            # unpacked MR-ART
-%        ./20211122-SyntheticDataset    # unpacked Rusak atrophy RAW data 
-%                                         use  Rusak2021makeSimpleBids.sh  to reorganize the files 
-%        ./Rusak2021                    # unpacked reoganizid Rusak RAW and preprocessed data
-%
-%
 %   4. Download the preprocessed data from for each dataset from the Giga 
-%      Science server. Unpack the preprocessed data into the specific 
-%      project directories. All dataset include # images: 
+%      Science server. Unpack the preprocessed data and merge them with the  
+%      specific project directory. 
 %
 %        dataset    N       comment
 %        BWP        675     (75 + 300 + 300)
@@ -63,9 +59,28 @@
 %
 %   5. The script gunzip files and will create the following addition directories
 %      if you did not download the preprocessed files
-%        ./BWPr                         # low-resolution cases of the BWP
-%        ./BWPsegerr                    # directory to simulate segmenation errors
-%        ./BWPrestest
+%
+%      The data directory should look like: 
+%        ./BWP                          # basic BWP image (provided nifti's) 
+%        ./BWPr                         # BWP files with lower resolution (created with cat_tst_qa_resampleBWP)
+%        ./BWPgt                        # the ground-truth segmentation as labelmap + shell script to oranize BWP data
+%        ./BWPrestest                   # BWP resolution/smoothing tests
+%        ./IXI-T1                       # unpacked IXI data
+%        ./ATLAS_2                      # unpacked ATLAS 2.0 dataset
+%        ./ds004173-download            # unpacked MR-ART
+%        ./20211122-SyntheticDataset    # unpacked Rusak atrophy RAW data 
+%                                         use  Rusak2021makeSimpleBids.sh  to reorganize the files 
+%        ./Rusak2021                    # unpacked reoganizid Rusak RAW and preprocessed data
+%        ./+results                     # directory that include result figures of the different tests
+%        ./+slices                      # example slices used in the figures
+%     
+%      The directories typically include:
+%       (1) the SPM preprocessing files in the same directory as the raw images
+%           (c1*.nii, c2*.nii, c3*.nii, m*.nii, *seg8.mat)
+%       (2) the CAT preprocessing files in the mri (p0*.nii, m*.nii) and report directory 
+%           (catreportj*.jpg, catreport*.pdf, catlog*.txt, cat_*.xml, cat_*.mat)  
+%           in case of the MRART the cat-files are in the derivatives directory 
+%       (3) the QC files (cat_vol_qa######_*) in the report directory  
 %
 %
 %   6. Your specification: 
@@ -95,12 +110,12 @@ qaversions = {
     'cat_vol_qa202310';  % redesigned version based on 201901 and 202110 
     'cat_vol_qa202412';  % experimental version with internal segmentation >> qcseg
      };
-%qaversions = {'cat_vol_qa201901x'};
+qaversions = {'cat_vol_qa201901x'}; % lets start with one
 
 % specify the used prerprocessing: {'SPM','CAT'}, where qcseg requires cat_vol_qa2024012
 % some test cases (cat_tst_qa_simerrBWP, cat_tst_qa_resizeBWP) do not support other imput segmentations than CAT 
 segment  = {'CAT','SPM'};
-%segment  = {'CAT'}; 
+segment  = {'CAT'}; % lets start with one
 fasttest = 0; % run test just on a subset
 recalcQC = 0; % re-estimate QC values 
 
@@ -127,14 +142,5 @@ cat_tst_qa_resizeBWP( datadir, qaversions, recalcQC )                           
 cat_tst_qa_Rusak_aging( datadir, qaversions, segment, fasttest, recalcQC )        % test of the QM in simulated atrophy data based on real ADNI scans
 
 cat_tst_qa_IXI( datadir, qaversions, segment, fasttest, recalcQC )                % aging/sex/site effects in healty population 
-cat_tst_qa_ATLAS2( datadir, qaversions, segment, fasttest, recalcQC )              % differences between original and masked stroke lesions 
+cat_tst_qa_ATLAS2( datadir, qaversions, segment, fasttest, recalcQC )             % differences between original and masked stroke lesions 
 cat_tst_qa_MRART_expertgroups( datadir, qaversions, segment, fasttest, recalcQC ) % real data with movement artifacts
-
-
-% TODO: 
-% - Kappa processing 
-% - Run preprocessing of full sample 
-% - test for missing data ...
-% - cleanup variables 
-% - test octave
-% - check for personal paths and OS depend things
