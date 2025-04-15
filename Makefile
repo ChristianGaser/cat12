@@ -50,6 +50,7 @@ install: copy_longmode
 	-@test ! -d ${TARGET} || rm -rf ${TARGET}/*
 	-@mkdir -p ${TARGET}
 	-@cp -R ${FILES} ${TARGET}/
+	-@gzip -d ${TARGET}/*/*.nii.gz
 
 #install on UltraMax
 install2: copy_longmode
@@ -57,6 +58,7 @@ install2: copy_longmode
 	-@test ! -d ${TARGET2} || rm -rf ${TARGET2}/*
 	-@mkdir -p ${TARGET2}
 	-@cp -R ${FILES} ${TARGET2}/
+	-@gzip -d ${TARGET2}/*/*.nii.gz
 
 #install on paris
 install3: copy_longmode
@@ -64,6 +66,7 @@ install3: copy_longmode
 	-@bash -c "ssh ${STARGET3_HOST} 'test ! -d ${STARGET3_FOLDER} || rm -rf ${STARGET3_FOLDER}/*'"
 	-@bash -c "ssh ${STARGET3_HOST} 'test -d ${STARGET3_FOLDER} || mkdir ${STARGET3_FOLDER}'"
 	-@scp -r ${FILES} ${STARGET3}/
+	-@gzip -d ${TARGET3}/*/*.nii.gz
 
 # install for octave
 install4: copy_longmode
@@ -71,6 +74,7 @@ install4: copy_longmode
 	-@test ! -d ${TARGET4} || rm -rf ${TARGET4}/*
 	-@mkdir -p ${TARGET4}
 	-@cp -R ${FILES} ${TARGET4}/
+	-@gzip -d ${TARGET4}/*/*.nii.gz
 
 # print available commands
 help:
@@ -103,6 +107,7 @@ zip: update clean
 	-@test ! -d cat12 || rm -r cat12
 	-@mkdir cat12
 	-@cp -rp ${FILES} cat12
+	-@gzip -d cat12/*/.nii.gz
 	-@bash update_revision.sh
 	-@zip ${ZIPFOLDER}/${ZIPFILE} -rm cat12
 

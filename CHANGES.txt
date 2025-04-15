@@ -1,4 +1,60 @@
 ------------------------------------------------------------------------
+r2685 | gaser | 2025-04-15 14:59:48
+
+Changed paths:
+ M CHANGES.txt
+ M Makefile
+ M cat_surf_vol2surf.m
+ D templates_MNI152NLin2009cAsym/Schaefer2018_100Parcels_17Networks_order.nii
+ D templates_MNI152NLin2009cAsym/Schaefer2018_200Parcels_17Networks_order.nii
+ D templates_MNI152NLin2009cAsym/Schaefer2018_400Parcels_17Networks_order.nii
+ D templates_MNI152NLin2009cAsym/Schaefer2018_600Parcels_17Networks_order.nii
+ D templates_MNI152NLin2009cAsym/T1.nii
+ D templates_MNI152NLin2009cAsym/TPM_Age11.5.nii
+ D templates_MNI152NLin2009cAsym/Template_0_GS.nii
+ D templates_MNI152NLin2009cAsym/Template_1_Dartel.nii
+ D templates_MNI152NLin2009cAsym/Template_1_GS.nii
+ D templates_MNI152NLin2009cAsym/Template_2_Dartel.nii
+ D templates_MNI152NLin2009cAsym/Template_2_GS.nii
+ D templates_MNI152NLin2009cAsym/Template_3_Dartel.nii
+ D templates_MNI152NLin2009cAsym/Template_3_GS.nii
+ D templates_MNI152NLin2009cAsym/Template_4_Dartel.nii
+ D templates_MNI152NLin2009cAsym/Template_4_GS.nii
+ D templates_MNI152NLin2009cAsym/Template_5_Dartel.nii
+ D templates_MNI152NLin2009cAsym/Template_6_Dartel.nii
+ D templates_MNI152NLin2009cAsym/Template_T1.nii
+ D templates_MNI152NLin2009cAsym/Template_T1_masked.nii
+ D templates_MNI152NLin2009cAsym/Tian_Subcortex_S4_7T.nii
+ D templates_MNI152NLin2009cAsym/aal3.nii
+ D templates_MNI152NLin2009cAsym/anatomy3.nii
+ D templates_MNI152NLin2009cAsym/brainmask.nii
+ D templates_MNI152NLin2009cAsym/brainmask_GM.nii
+ D templates_MNI152NLin2009cAsym/brainmask_GMtight.nii
+ D templates_MNI152NLin2009cAsym/brainmask_T1.nii
+ D templates_MNI152NLin2009cAsym/cat.nii
+ D templates_MNI152NLin2009cAsym/cat_1mm.nii
+ D templates_MNI152NLin2009cAsym/cat_bloodvessels.nii
+ D templates_MNI152NLin2009cAsym/cat_strokelesions_ATLAS303.nii
+ D templates_MNI152NLin2009cAsym/cat_wmh.nii
+ D templates_MNI152NLin2009cAsym/cat_wmh_miccai2017.nii
+ D templates_MNI152NLin2009cAsym/cobra.nii
+ D templates_MNI152NLin2009cAsym/hammers.nii
+ D templates_MNI152NLin2009cAsym/ibsr.nii
+ D templates_MNI152NLin2009cAsym/julichbrain.nii
+ D templates_MNI152NLin2009cAsym/lpba40.nii
+ D templates_MNI152NLin2009cAsym/mori.nii
+ D templates_MNI152NLin2009cAsym/neuromorphometrics.nii
+ D templates_MNI152NLin2009cAsym/suit.nii
+ D templates_MNI152NLin2009cAsym/thalamic_nuclei.nii
+ D templates_MNI152NLin2009cAsym/thalamus.nii
+ D templates_MNI152NLin2009cAsym/y_MNI152NLin2009cAsym_to_MNI152NLin2009cSym.nii
+
+Removed: nii files in templates_MNI152NLin2009cAsym
+Added:   nii.gz files to templates_MNI152NLin2009cAsym
+Updated: Considered use of zipped nii files in Makefile.
+Updated: Consider other surfaces in datafieldname in cat_surf_vol2surf.m
+
+------------------------------------------------------------------------
 r2679 | gaser | 2025-04-08 00:41:58
 
 Changed paths:

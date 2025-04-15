@@ -272,7 +272,7 @@ function out = cat_surf_vol2surf(varargin)
     end
   end
   fprintf('.\n\n');
-  if isempty(job.datafieldname), dsep = ''; else dsep = '_'; end
+  if isempty(job.datafieldname), dsep0 = ''; else dsep0 = '_'; end
 
   if template
   % normalized volume to Template surface
@@ -297,6 +297,9 @@ function out = cat_surf_vol2surf(varargin)
       % replace dots in volume name with "_"
       ffv(strfind(ffv,'.')) = '_';
       
+      if ~strcmp(job.sinfo_lh(vi).dataname, 'central')
+        dsep = [dsep0 job.sinfo_lh(vi).dataname '_'];
+      end
      
       for si=1:numel(side)
       
@@ -381,6 +384,9 @@ function out = cat_surf_vol2surf(varargin)
       % replace dots in volume name with "_"
       ffv(strfind(ffv,'.')) = '_';
 
+      if ~strcmp(job.sinfo_lh(vi).dataname, 'central')
+        dsep = [dsep0 job.sinfo_lh(vi).dataname '_'];
+      end
       
       %%
       for si=1:numel(side)
