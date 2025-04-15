@@ -107,7 +107,7 @@ zip: update clean
 	-@test ! -d cat12 || rm -r cat12
 	-@mkdir cat12
 	-@cp -rp ${FILES} cat12
-	-@gzip -d cat12/*/.nii.gz
+	-@gzip -d cat12/templates_MNI152NLin2009cAsym/*.nii.gz
 	-@bash update_revision.sh
 	-@zip ${ZIPFOLDER}/${ZIPFILE} -rm cat12
 
