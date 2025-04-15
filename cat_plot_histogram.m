@@ -247,8 +247,10 @@ for j = 1:n
   if ischar(data)
     if ~isempty(fname_tmp)
       legend_str{j} = fname_tmp.m{j};
+      length_leg    = max(cellfun(@length,fname_tmp.m));
     else
       legend_str{j} = char(spm_str_manip(data(j,:),'a90'));
+      length_leg    = size(char(spm_str_manip(data,'a90'),2));
     end
 
     % give some specific output for (normally distributed) T-values or
@@ -263,7 +265,8 @@ for j = 1:n
       fprintf('%s\tmean=%g\tSD=%g\tES=%g\tTH5=%g\n',legend_str{j},mn,sd,ES,TH5);
       legend_str{j} = sprintf('TH5=%.4f %s',TH5,legend_str{j}); 
     else
-      fprintf('%s\tSD=%g\n',legend_str{j},std(y));
+      fprintf( sprintf('%%%ds\tMN=%%8g, MD=%%8g, SD=%%8g\n',length_leg), ...
+        legend_str{j}, mean(y), median(y), std(y));
     end
   else
     legend_str{j} = num2str(j);
