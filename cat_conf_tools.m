@@ -1755,9 +1755,11 @@ function qa = conf_vol_qa(expert,outdir)
     ''
   };
   if expert > 1
-    version.labels  = {'202310 (current)', '202110x (reworked 202310)','201901x (reworked 202310)', ...
+    version.labels  = {'202412 (expertimental with own simple segmentation)', ...
+                       '202310', '202110x (reworked 202310)','201901x (reworked 202310, default)', ...
                        '202205', '202110', '201901','201602'};
-    version.values  = {'cat_vol_qa202310', 'cat_vol_qa202110x', 'cat_vol_qa201901x', ...
+    version.values  = {'cat_vol_qa202412', ...
+                       'cat_vol_qa202310', 'cat_vol_qa202110x', 'cat_vol_qa201901x', ...
                        'cat_vol_qa202205', 'cat_vol_qa202110', 'cat_vol_qa201901',  'cat_vol_qa201602'};
     version.help    = [ version.help , { 
      ['The developer GUI further supports updated versions (cat_vol_qa#x) of 201901 and 202110 ' ...
@@ -1766,8 +1768,8 @@ function qa = conf_vol_qa(expert,outdir)
       ''
     }];
   else
-    version.labels  = {'202310 (current)', '202205', '202110', '201901', '201602'};
-    version.values  = {'cat_vol_qa202310', 'cat_vol_qa202205', 'cat_vol_qa202110', 'cat_vol_qa201901', 'cat_vol_qa201602'};
+    version.labels  = {'201901x (reworked, default)', '202310', '202205', '202110', '201901', '201602'};
+    version.values  = {'cat_vol_qa201901x', 'cat_vol_qa202310', 'cat_vol_qa202205', 'cat_vol_qa202110', 'cat_vol_qa201901', 'cat_vol_qa201602'};
   end
   % remove undefined cases
   for vi = numel(version.values):-1:1
@@ -1776,7 +1778,7 @@ function qa = conf_vol_qa(expert,outdir)
       version.labels(vi) = []; 
     end
   end
-  version.val     = {'cat_vol_qa202310'};
+  version.val     = {'cat_vol_qa201901x'};
   version.hidden  = expert<1;
   
   rerun         = cfg_menu;
