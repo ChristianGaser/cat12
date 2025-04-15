@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2689 | gaser | 2025-04-15 15:00:15
+
+Changed paths:
+ M CHANGES.txt
+
+Removed: nii files in templates_MNI152NLin2009cAsym
+Added:   nii.gz files to templates_MNI152NLin2009cAsym
+Updated: Considered use of zipped nii files in Makefile.
+Updated: Consider other surfaces in datafieldname in cat_surf_vol2surf.m
+
+------------------------------------------------------------------------
 r2685 | gaser | 2025-04-15 14:59:48
 
 Changed paths:
