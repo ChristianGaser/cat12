@@ -55,6 +55,13 @@ if ~strcmp(nam,'cat12')
   spm('alert!',sprintf('Please check that you do not have multiple CAT12 installations in your path!\nYour current CAT12 version is installed in %s but should be installed in %s',pth,fullfile(catdir)),'WARNING');
 end
 
+% find all zipped nifti's and unpack if necessary
+niigz = cat_vol_findfiles(pth,'*.nii.gz'); 
+nii   = cat_io_strrep(cat_vol_findfiles(pth,'*.nii'),'.nii','.nii.gz');
+niigz = setdiff(niigz,nii); 
+if ~isempty(niigz), gunzip(niigz); end
+clear niigz nii
+
 % check that mex-files on MAC are not blocked
 try
   feval(@cat_sanlm,single(rand(6,6,6)),1,3);
