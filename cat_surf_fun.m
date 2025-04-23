@@ -164,7 +164,10 @@ function varargout = cat_surf_fun(action,S,varargin)
       %  See also tfs, tmin, and tmax for unlinked/unrelated surfaced.
       if nargin<2, help cat_surf_fun>cat_surf_tlink; return; end
       varargout{1} = cat_surf_tlink(S,varargin{1});
-      
+    
+    case 'checknormaldir'
+       varargout{1} = cat_surf_checkNormalDir(S);
+
     case 'meshinterp'
       %S=cat_surf_meshinterp(S,interp,method,distth)  
       varargout{1} = cat_surf_meshinterp(S,varargin{:});  
@@ -232,7 +235,7 @@ function varargout = cat_surf_fun(action,S,varargin)
     case 'vdist'
     % ?
       if nargin<2, help cat_surf_fun>show_orthview; return; end
-      [varargout{1},varargout{2},varargout{3}] = cat_surf_vdist(S,varargin);
+      [varargout{1},varargout{2}] = cat_surf_vdist(S,varargin);
     
     case {'vol2surf','isocolor'}
       [varargout{1}] = cat_surf_isocolors2(S,varargin{:});
@@ -551,9 +554,14 @@ end
 function [IS,OS] = cat_surf_createinneroutersurface(S,T,Yp0)
   if ~exist('Yp0','var')
     % render surface
-    
-    
     Yp0 = 0; 
+  end
+  
+  % test flipping
+  flipped = cat_surf_checkNormalDir(S); 
+  if flipped && isfield( S , 'mati' )
+    S.faces   = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; 
+    if isfield( S , 'mati' ), S.mati(7) = - S.mati(7); end
   end
   
   % call laplace 
@@ -1574,13 +1582,15 @@ function cat_surf_saveICO(S,Tpbt,Pcs,subdir,Pm,mat,writeTfs,writeSI,writeL4,writ
   %  if S.mati(7)<0, S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; end
   %end
   
-  
+  flipped = cat_surf_fun('checkNormalDir',S);
+  if flipped, S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; end
+
   % normalized surface normals
   N = spm_mesh_normals(S);                             
   %  matx = spm_imatrix( [S.vmat; 0 0 0 1] ); matx([1:3,9:12]) = 0; matx(6:9) = 1; % only rotate
   %  vmat = spm_matrix( matx ); vmat(4,:) = []; 
   %  N = -(vmat  * [N' ; ones(1,size(N,1))])';
-  
+
   % inner and outer surface
   VI  = S.vertices + N .* repmat(Tpbt / 2,1,3); 
   VO  = S.vertices - N .* repmat(Tpbt / 2,1,3); 
@@ -1664,12 +1674,7 @@ function cat_surf_saveICO(S,Tpbt,Pcs,subdir,Pm,mat,writeTfs,writeSI,writeL4,writ
     if writeL4
       % use a given volume 
       SL = gifti(Player4);
-      
       warning off MATLAB:subscripting:noSubscriptsSpecified
-      %SL.vertices = (S.vmati * [SL.vertices' ; ones(1,size(SL.vertices,1))])';
-      %if S.mati(7)<0,  SL.faces = [SL.faces(:,1) SL.faces(:,3) SL.faces(:,2)]; end
-      %VL = SL.vertices;
-
       int = cat_surf_isocolors2(Pm,SL,mat); cat_io_FreeSurfer('write_surf_data',PintL4,int);
     end
 
@@ -1703,10 +1708,6 @@ function cat_surf_saveICO(S,Tpbt,Pcs,subdir,Pm,mat,writeTfs,writeSI,writeL4,writ
       [ sprintf('cat_surf_fun(''show_orthview'',{''%s'';''%s'';''%s''},',Pcentral,Ppial,Pwhite) '''%s'')']));
   end
   
-  if 0
-    if ndims(Pm)==3, Ym=Pm; else, Ym=spm_read_vols(spm_vol(Pm)); end
-    res = cat_surf_evalCS(S,Tpbt,[],Ym,Ypp,Tclasses)
-  end
 end
 
 function Sg = cat_surf_volgrad(varargin)
@@ -1818,7 +1819,19 @@ function [S,Tn,SI] = cat_surf_collision_correction_ry(S,T,Y,opt)
   
   % detection and correction for flipped faces to have always the same normal direction
   flipped = cat_surf_checkNormalDir(S); %,T,Y,opt.interpBB);
-  if flipped && isfield(S,'mati'), S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; S.mati(7) = - S.mati(7); end
+  if flipped
+    S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; 
+    if isfield(S,'mati'), S.mati(7) = - S.mati(7); end
+  end
+
+  % addition flip test
+  N    = spm_mesh_normals(S); 
+  VI = S.vertices + N .* repmat(T/2,1,3); 
+  YI = cat_surf_isocolors2(Y,VI,opt.mat);
+  flipped2 = mean(YI)<.2; 
+  if flipped2
+    S.faces   = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; 
+  end
 
   % simple surface smoothing
   smoothsurf = @(V,s) [ ...        
@@ -1963,15 +1976,22 @@ function [S,Tn,SI] = cat_surf_collision_correction_ry(S,T,Y,opt)
   
   if opt.verb, fprintf('\n'); end
   % final settings: back to world thickness in mm 
-  if flipped && isfield(S,'mati'), S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; S.mati(7) = - S.mati(7); end
+  if flipped2
+    S.faces   = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; 
+  end
+  if flipped 
+    S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)];
+    if isfield(S , 'mati' ), S.mati(7) = - S.mati(7); end 
+  end
 end
 
 function flipped = cat_surf_checkNormalDir(S)
 % estimate the orientation of the surface by adding the normals and
 % testing which directions makes the surface great again :D
   N       = spm_mesh_normals(S); 
-  Snin    = mean( abs(S.vertices(:) - N(:) ) ) > mean( abs(S.vertices(:) + N(:) ) ); 
-  flipped = ~Snin;
+  %flipped = abs(mean( S.vertices(:) - 2*N(:) ) ) > abs(mean( S.vertices(:) + 2*N(:) ) ); 
+  %flipped = any(mean(N)) ; (mean( S.vertices(:) - 2*N(:) ) ) > abs(mean( S.vertices(:) + 2*N(:) ) ); 
+  flipped = spm_mesh_area( S.vertices + N ) > spm_mesh_area( S.vertices - N ); % normals are here invers!
 end
 
 function V = cat_surf_smooth(M,V,s,mode)
@@ -2048,6 +2068,8 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
   def.optimize = 1;       % use percentage position values for optimization  
   def.mat      = [];
   def.ta       = 1; 
+  def.CS4      = 0; 
+  
   opt          = cat_io_checkinopt(opt,def); 
   opt.iteropt  = find( 1 ./ opt.redterm.^(1:100)  < opt.accuracy , 1); 
   opt.iterfull = round( opt.iteropt * (1 + opt.optimize) ); 
@@ -2057,7 +2079,7 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
 
   % detection and correction for flipped faces to have always the same normal direction
   flipped = cat_surf_checkNormalDir(S); 
-  if flipped
+  if flipped 
     S.faces   = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; 
     if isfield( S , 'mati' ), S.mati(7) = - S.mati(7); end
   end
@@ -2080,7 +2102,18 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
     N   = N ./ repmat(Ns,1,3); 
     clear Ns; 
   end
+
+
+  % second flip test
+  VI = S.vertices + N .* repmat(Tw,1,3); 
+  YI = cat_surf_isocolors2(Ypp,VI,opt.mat);
+  flipped2 = mean(YI)<.2; 
+  if flipped2
+    S.faces   = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; 
+    N         = -N; 
+  end
   
+
   % curvature
   C = spm_mesh_curvature(S);
   C = spm_mesh_smooth(M,C,1);
@@ -2102,7 +2135,8 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
   
   i   = 0; final = 0; SIO = 1; SI = 90; SIO2 = 100; 
   if opt.verb, fprintf('\n'); end
-  while (i < round(opt.iterfull/2)*2 ) || (SI>0.1 && SI<SIO2*0.95 && mod(i,2)==1) % more iterations improve the int and especialy the pos and SI values but increase also the thdiff value  
+  if opt.CS4, SIO2th = 0.9; else, SIO2th = 0.95; end 
+  while (i < round(opt.iterfull/2)*2 ) || (SI>0.1 && SI<SIO2*SIO2th && mod(i,2)==1) % more iterations improve the int and especialy the pos and SI values but increase also the thdiff value  
     i = i + 1;
    
     % In theory the search/correction size would be half each time (0.5 0.25 0.125 ... 2^i)
@@ -2153,14 +2187,18 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
     %  overestimation of thickness. 
     %  I also tried a model based on the Ym but this was worse especially 
     %  due to the blurred sulci. 
-      cterm   = 0.1; % accurancy limit of Ypp
-      coristr = max(0.5, 1 - i / opt.iteropt  ) / 2; % factor
-     
+      if opt.CS4 
+        cterm   = 0.01; %.1; % accurancy limit of Ypp ... between 0.01 and .1
+        coristr = max(0.05, 1 - i / opt.iteropt  ); % factor
+      else
+        cterm   = 0; %.1; % accurancy limit of Ypp ... between 0.01 and .1
+        coristr = max(0.5, 1 - i / opt.iteropt  ) / 2; % factor
+      end
       GWth = 1;
       CGth = 0;
 
-      YI = cat_surf_isocolors2(Ypp,VI,opt.mat);  YI = min(1,YI + 0.1);
-      YO = cat_surf_isocolors2(Ypp,VO,opt.mat);  YO = max(0,YO - 0.1);  
+      YI = cat_surf_isocolors2(Ypp,VI,opt.mat); YI = min(1,YI + cterm);
+      YO = cat_surf_isocolors2(Ypp,VO,opt.mat); YO = max(0,YO - cterm); 
 
       if opt.verb>1, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),native2unicode(177, 'latin1'),std(YI),mean(YO),native2unicode(177, 'latin1'),std(YO)); end 
 
@@ -2170,9 +2208,14 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
       
       % test new inner surface position .. balance corrections in both
       % directions to keep the thickness
-      VIC   = S.vertices + N .* repmat( Tw - (Twc - YI) + (Tpc - YO) ,1,3);    % inner surface 
-      VOC   = S.vertices - N .* repmat( Tp - (Tpc - YO) + (Twc - YI) ,1,3);    % outer surface  
-    
+      if opt.CS4 
+        VIC   = S.vertices + N .* repmat( Tw - (Twc - YI) + (Tpc - YO) ,1,3) / 2;    % inner surface 
+        VOC   = S.vertices - N .* repmat( Tp - (Tpc - YO) + (Twc - YI) ,1,3) * 4;    % outer surface  
+      else
+        VIC   = S.vertices + N .* repmat( Tw - (Twc - YI) + (Tpc - YO) ,1,3);    % inner surface 
+        VOC   = S.vertices - N .* repmat( Tp - (Tpc - YO) + (Twc - YI) ,1,3);    % outer surface  
+      end
+
       % get values
       YIC   = cat_surf_isocolors2(Ypp,VIC,opt.mat); YIC   = min(1,YIC   + cterm);
       YppI  = cat_surf_isocolors2(Ypp,VI ,opt.mat); YppI  = min(1,YppI  + cterm);
@@ -2212,7 +2255,7 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
       clear YppOC YOC YppO VOg; 
       
       if opt.verb>1, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),native2unicode(177, 'latin1'),std(YI),mean(YO),native2unicode(177, 'latin1'),std(YO)); end
-      
+ 
       % add to other correction map
       Tpc = Tpc - YO; clear YO; 
       Twc = Twc - YI; clear YI; 
@@ -2277,7 +2320,7 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
     
     
     % RD20210403: smoothing block that is not realy necessary anymore
-    if 1
+    if 0
       % adaptive smoothing
       if 1
         Tf  = max(1,min(6,Tn)); inorm = ( opt.iteropt*3 - i ) / (opt.iteropt*3); 
@@ -2363,6 +2406,9 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
   end
   
   if opt.verb, fprintf('\n'); end
+  if 0 % flipped2
+    S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; 
+  end
   if flipped
     S.faces = [S.faces(:,1) S.faces(:,3) S.faces(:,2)]; 
     if isfield(S , 'mati' ), S.mati(7) = - S.mati(7); end
