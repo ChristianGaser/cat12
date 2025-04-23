@@ -399,7 +399,7 @@ cstime = clock;
 
     %% pbt calculation
     if strcmp(opt.pbtmethod,'pbtsimple') 
-      [Yth1i,Yppi] = cat_vol_pbtsimple(Ymfs,opt.interpV); 
+      [Yth1i,Yppi] = cat_vol_pbtsimple(Ymfs,opt.interpV,struct('classic',1)); 
     else 
       [Yth1i,Yppi] = cat_vol_pbt(Ymfs,struct('method',opt.pbtmethod,'resV',opt.interpV,'vmat',...
         V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1],'pbtlas',opt.pbtlas)); % avoid underestimated thickness in gyri
@@ -735,7 +735,7 @@ cstime = clock;
       if debug, saveSurf(CS,Pcentral); cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata); tic; end
       
       % call collision correction
-      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,struct('optimize',opt.SRP==2,'verb',verblc,'mat',Smat.matlabIBB_mm)); 
+      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,struct('optimize',opt.SRP==2,'verb',verblc,'mat',Smat.matlabIBB_mm,'CS4',0)); 
       if verblc, fprintf('\b\b'); end
       if strcmpi(spm_check_version,'octave') 
         cat_io_addwarning('cat_surf_createCS2:nofullSRP','Fine correction of surface collisions is not yet available under Octave.',2)

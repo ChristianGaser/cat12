@@ -78,7 +78,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   def.sharpenCB           = 1;                                % sharpening function for the cerebellum (in development, RD2017-2019)
   def.thick_measure       = 1;                                % 0-PBT; 1-Tfs (Freesurfer method using mean(TnearIS,TnearOS))
   def.thick_limit         = 5;                                % 5mm upper limit for thickness (same limit as used in Freesurfer)
-  def.SRP                 = 3;                                % correction of surface collisions: 0 - none; 1 - SI, 2 - SIC with optimization
+  def.SRP                 = 2;                                % correction of surface collisions: 0 - none; 1 - SI, 2 - SIC with optimization
   def.surf_measures       = 1;                                % 0 - none, 1 - only thickness, 2 - expert maps (myelin,defects), 3 - developer (WMT,CSFT, ...),
                                                               % 4 - debug output, 5 - debug extended (more substeps and mex output)
   %def.WMT                 = 0;                                % pbt-based WM/CSF width/depth/thickness estimation 
@@ -466,7 +466,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
     %% pbt calculation
     stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,native2unicode(179, 'latin1'))); stimet =stime;
     if strcmp(opt.pbtmethod,'pbtsimple') 
-      [Yth1i,Yppi] = cat_vol_pbtsimple(Ymfs,opt.interpV); 
+      [Yth1i,Yppi] = cat_vol_pbtsimple(Ymfs,opt.interpV,struct('classic',opt.SRP < 4)); 
     else 
       [Yth1i,Yppi,Ymfs] = cat_vol_pbt(Ymfs,struct('method',opt.pbtmethod,'resV',opt.interpV,'vmat',...
         V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1],'pbtlas',opt.pbtlas)); % avoid underestimated thickness in gyri
@@ -1000,8 +1000,8 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
 
       % load surf and map thickness
       CS = loadSurf(Praw);
-      
-      
+
+
       % evaluate and save results
       if isempty(stime), stime = clock; end
       fprintf('%5.0fs',etime(clock,stime)); stime = []; if debug, fprintf('\n'); end
@@ -1243,7 +1243,7 @@ if opt.SRP
     cat_system(cmd);
     Tfs0 = cat_io_FreeSurfer('read_surf_data',Pthick); 
 end
-if opt.SRP>2 % SRP23
+if opt.SRP==3 % SRP23
 %% RD20210401: Optimization of white/pial/quantil surfaces 
 %  The idea of using the deformation of the central to pial/white surface
 %  based on the Ypp map but does not really work 
@@ -1337,16 +1337,22 @@ end
       while SIs>5 && SIs<SIOs*0.9 && iter<=maxiter
         SIOs = SIs; iter = iter + 1; 
         [CS,facevertexcdata,SIs] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,...
-            struct('optimize',iter<2 && opt.SRP>=2,'verb',verblc,'mat',Smat.matlabIBB_mm,'vx_vol',vx_vol)); 
+            struct('optimize',iter<2 && opt.SRP>=2,'verb',verblc,'mat',Smat.matlabIBB_mm,'vx_vol',vx_vol,'CS4',opt.SRP>3)); 
         if verblc, fprintf('\b\b'); end
         if strcmpi(spm_check_version,'octave') && iter == 1
           cat_io_addwarning('cat_surf_createCS2:nofullSRP','Fine correction of surface collisions is not yet available under Octave.',2)
         elseif iter == 1 % to keep it fast we just do this once
-          [CS,facevertexcdata,SIs] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3)); 
+          [CS,facevertexcdata,SIs] = cat_surf_fun('collisionCorrectionRY' ,...
+            CS,facevertexcdata,Yppi,struct('Pcs',Pcentral,'verb',verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3)); 
         end
       end
       %if debug, toc; end
-      
+     
+      % RD202504: correction required in case of Rusak2021 thickness phantom 
+      flipped = cat_surf_fun('checkNormalDir',CS); 
+      if flipped, CS.faces = [CS.faces(:,1) CS.faces(:,3) CS.faces(:,2)]; end
+      saveSurf(CS,Pcentral);
+       
       
       
       %% evaluate and save results
@@ -1482,9 +1488,10 @@ end
     
     
     % create white and central surfaces
+    stime = cat_io_cmd('  Create pial and white surface','g5','',opt.verb,stime); 
     cat_surf_fun('white',Pcentral);
     cat_surf_fun('pial',Pcentral);
-    
+  
     
     % write myelination map (Ypp intensity of layer 4)  
     if opt.surf_measures > 1 
