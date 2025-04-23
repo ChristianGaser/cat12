@@ -388,6 +388,8 @@ function out = cat_surf_vol2surf(varargin)
         dsep = dsep0;
       else
         dsep = [dsep0 job.sinfo_lh(vi).dataname '_'];
+      else
+        dsep = dsep0; 
       end
       
       %%

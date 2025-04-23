@@ -1,5 +1,5 @@
-function out = cat_plot_histogram(data,opt)
-% Format out = cat_plot_histogram(data,opt);
+function varargout = cat_plot_histogram(data,opt)
+% Format [out,out2] = cat_plot_histogram(data,opt);
 % Show histogram of one or more image or surface data 
 % If data are spmT-files also print mean, std, effect size,
 % and upper 5%-tail cutoff
@@ -14,6 +14,8 @@ function out = cat_plot_histogram(data,opt)
 % ylim           = [];
 % dist           = 'kernel' (normal, gamma, rician, rayleigh, poisson, weibull)
 %                  see fitdist for all distributions
+% out            = histogram values
+% out2           = statistic of histogram values
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -257,16 +259,23 @@ for j = 1:n
     % effect size (D)
     [pth,nam] = spm_fileparts(deblank(data(j,:)));
     spmT_found = ~isempty(strfind(nam,'spmT')) || strcmp(nam(1),'D');
+    mn = mean(y);
+    sd = std(y);
+    ES = mn/sd;
     if spmT_found
-      mn = mean(y);
-      sd = std(y);
-      ES = mn/sd;
       TH5 = X0(min(find(cumsum(H0)/sum(H0) > 0.95)));
       fprintf('%s\tmean=%g\tSD=%g\tES=%g\tTH5=%g\n',legend_str{j},mn,sd,ES,TH5);
-      legend_str{j} = sprintf('TH5=%.4f %s',TH5,legend_str{j}); 
+      legend_str{j} = sprintf('TH5=%.4f %s',TH5,legend_str{j});
+      out2(j) = struct('name',legend_str{j},'mean',mn,'std',sd,'ES',ES,'TH5'); 
     else
-      fprintf( sprintf('%%%ds\tMN=%%8g, MD=%%8g, SD=%%8g\n',length_leg), ...
-        legend_str{j}, mean(y), median(y), std(y));
+      if j==1
+        fprintf( sprintf('\n%%%ds\t%%10s %%10s %%10s %%10s %%10s\n',length_leg), ...
+          'file', 'mean', 'median', 'std', 'ES', 'maxFreq');
+      end
+      fprintf( sprintf('%%%ds\t%%10s %%10s %%10s %%10s %%10s\n',length_leg), ...
+        legend_str{j}, sprintf('%8g',mn), sprintf('%8g',median(y)), ...
+        sprintf('%8g',sd), sprintf('%8g',ES), sprintf('%8g',max(H(j,:))));
+       out2(j) = struct('name',legend_str{j},'mean',mn,'std',sd,'ES',ES,'maxFreq',max(Hfit(j,:)) ); 
     end
   else
     legend_str{j} = num2str(j);
@@ -321,7 +330,11 @@ if ~isempty(opt.ylim) && numel(opt.ylim) == 2
 end
 
 if nargout
-  out = HP;
+  varargout{1} = HP;
+
+  if nargout > 1
+    varargout{2} = out2; 
+  end
 end
 
 %_______________________________________________________________________

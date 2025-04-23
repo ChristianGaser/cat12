@@ -22,12 +22,12 @@ templates_animals/
 *.~ 
 
 # but consider nifti in template folders
-!templates_MNI152NLin2009cAsym/*.nii
-!templates_MNI152NLin2009cAsym_1mm/*.nii
-!templates_MNI152NLin2009cSym/*.nii
-!templates_external/*.nii
-!templates_animals/*nii
-!templates_volumes_not_distributed/*nii
+!templates_MNI152NLin2009cAsym/*.nii.gz
+!templates_MNI152NLin2009cAsym_1mm/*.nii.gz
+!templates_MNI152NLin2009cSym/*.nii.gz
+!templates_external/*.nii.gz
+!templates_animals/*nii.gz
+!templates_volumes_not_distributed/*nii.gz
 
 # exclude some folders
 /logs
