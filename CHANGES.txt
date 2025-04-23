@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2693 | gaser | 2025-04-23 14:37:09
+
+Changed paths:
+ M CHANGES.txt
+ M cat_main_amap.m
+ M cat_main_amap1639.m
+ M cat_main_reportstr.m
+ M cat_surf_vol2surf.m
+ M spm_cat12.m
+ M tbx_cfg_cat.m
+
+Updated: Updated to new SPM12/SPM25 version.
+------------------------------------------------------------------------
 r2690 | gaser | 2025-04-15 15:01:13
 
 Changed paths:

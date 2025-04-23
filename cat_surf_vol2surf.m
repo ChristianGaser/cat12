@@ -384,7 +384,9 @@ function out = cat_surf_vol2surf(varargin)
       % replace dots in volume name with "_"
       ffv(strfind(ffv,'.')) = '_';
 
-      if ~strcmp(job.sinfo_lh(vi).dataname, 'central')
+      if strcmp(job.sinfo_lh(vi).dataname, 'central')
+        dsep = dsep0;
+      else
         dsep = [dsep0 job.sinfo_lh(vi).dataname '_'];
       end
       

@@ -68,7 +68,7 @@ catch
     
     % check that patches and updates exist
     if ~exist('savexml') || ~exist('fcnchk')
-      error('Please update and patch SPM12 first')
+      error('Please update and patch SPM first')
     end
   elseif ismac 
     CATDir = fullfile(catdir);
@@ -300,10 +300,9 @@ if cat_io_matlabversion > 20212
   set(F,'Position',Fpos);
   
   % CAT help 
-  pos = Fgraph.Position(3:4);
   web(url,'-noaddressbox','-new')
 else
-  spm_help('!Disp',url,'',Fgraph,'Computational Anatomy Toolbox for SPM12');
+  spm_help('!Disp',url,'',Fgraph,'Computational Anatomy Toolbox for SPM12 or SPM25');
 end
 
 % check that binaries for surface tools are running 
@@ -330,7 +329,7 @@ cat_io_cprintf([0.0 0.0 0.5],' CAT default file:\n\t%s\n\n',deffile);
 % call GUI
 cat12('fig'); 
 
-% force use of PET modality in SPM12 to avoid problems of very low variance in spm_spm.m
+% force use of PET modality in SPM to avoid problems of very low variance in spm_spm.m
 warning off
 spm('chmod','PET');
 warning on

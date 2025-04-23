@@ -68,16 +68,16 @@ function str = cat_main_reportstr(job,res,qa)
   if ~isempty(isbeta), catv = [catv(1:isbeta-1) '\color[rgb]{0.8 0 0}' catv(isbeta:isbeta+3 ) '\color[rgb]{0.8 0 0}' catv(isbeta+4:end)]; end
 
 % red version in case of old version?
-  % 1 line: Matlab, SPM12, CAT12 version number and GUI and experimental mode 
+  % 1 line: Matlab, SPM, CAT12 version number and GUI and experimental mode 
   if strcmpi(spm_check_version,'octave')
-    str{1} = [str{1} struct('name', 'Version: OS / SPM12 / CAT12:','value',...
+    str{1} = [str{1} struct('name', 'Version: OS / SPM / CAT12:','value',...
       sprintf('%s / %s / %s (%s)',qa.software.system,...
       qa.software.version_spm,qa.software.version_cat,catv))];
     % native2unicode is working on the command line but not in the figure
     cub = '^3';
     pm  = '+/-';
   else
-    str{1} = [str{1} struct('name', 'Version: OS / Matlab / SPM12 / CAT12:','value',...
+    str{1} = [str{1} struct('name', 'Version: OS / Matlab / SPM / CAT12:','value',...
       sprintf('%s / %s / %s / %s (%s)',qa.software.system,qa.software.version_matlab,...
       qa.software.version_spm,qa.software.version_cat,catv))];
     cub = native2unicode(179, 'latin1'); % char(179);

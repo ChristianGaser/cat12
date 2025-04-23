@@ -149,7 +149,7 @@ end
     end
 
     % display something
-    stime = cat_io_cmd(sprintf('Amap using initial SPM12 segmentations (MRF filter strength %0.2f)',job.extopts.mrf));       
+    stime = cat_io_cmd(sprintf('Amap using initial SPM segmentations (MRF filter strength %0.2f)',job.extopts.mrf));       
 
     %% intensity values
     Ymib = abs(double(Ymib)); 
@@ -329,8 +329,8 @@ end
     prob = prob(:,:,:,[2 3 1]);  
     clear vol Ymib
 
-    % finally use brainmask before cleanup that was derived from SPM12 segmentations and additionally include
-    % areas where GM from Amap > GM from SPM12. This will result in a brainmask where GM areas
+    % finally use brainmask before cleanup that was derived from SPM segmentations and additionally include
+    % areas where GM from Amap > GM from SPM. This will result in a brainmask where GM areas
     % hopefully are all included and not cut 
     if job.extopts.gcutstr>0 && ~isfield(job.extopts,'inv_weighting') && ~job.extopts.inv_weighting
       Yb0(indx,indy,indz) = Yb0(indx,indy,indz) | ((prob(:,:,:,1) > 0) & Yb(indx,indy,indz)); % & ~Ycls{1}(indx,indy,indz));
