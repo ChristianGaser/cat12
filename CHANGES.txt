@@ -1,4 +1,30 @@
 ------------------------------------------------------------------------
+r2701 | dahnke | 2025-04-23 18:45:28
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_extopts.m
+ M cat_io_data2mat.m
+ M cat_surf_createCS.m
+ M cat_surf_createCS2.m
+ M cat_surf_createCS4.m
+ M cat_surf_fun.m
+ M cat_vol_pbtsimple.m
+
+Updated:  Added further surface pipelines to configure cat_pbt_simple 
+          and cat_surf_createCS# in expert GUI (cat_conf_extopts). 
+Updated:  Added new functionality in cat_pbt_simple: 
+           (1) additional blood vessel correction (working)
+           (2) myelin correction (experimental, SRP: 24,41)) 
+           (3) extended position map (experimental)
+           (4) presharpening (experimental, SRP: 24,41)
+           (5) remove outliers (experimental, SRP: 24,41))
+Updated:  Added cat_pbt_simple setup in cat_surf_createCS[24]. 
+Updated:  Modified settings of the self-intersection correction and
+          surface optimization in cat_surf_fun:
+Updated:  Modified test of flipped surface normals in cat_surf_fun:
+          cat_sur_checkNormalDir that would need final cleanup. 
+  ------------------------------------------------------------------------
 r2699 | gaser | 2025-04-23 15:48:10
 
 Changed paths:
