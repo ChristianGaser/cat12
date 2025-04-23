@@ -43,6 +43,9 @@ function [Yth,S,Psurf,res] = cat_surf_createCS4(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
 
   %#ok<*AGROW,*STREMP,*ASGLU,*SFLD,*STFLD>
 
+  % get both sides in the atlas map
+  NS = @(Ys,s) Ys==s | Ys==s+1; 
+  
   % Turn off gifti data warning in gifti/subsref (line 45)
   %   Warning: A value of class "int32" was indexed with no subscripts specified. 
   %            Currently the result of this operation is the indexed value itself, 
@@ -50,18 +53,86 @@ function [Yth,S,Psurf,res] = cat_surf_createCS4(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
   warning('off','MATLAB:subscripting:noSubscriptsSpecified');
   cstime = clock;
 
+  % test-variables that should be (partially) removed later
   use_cat_vol_pbtsimple   = 1;
   use_fullpreprocess      = 1;
-  use_high_resolution     = 0;
-  skip_registration       = 1;
-  create_white_pial       = 1;
-  deformsurf              = 1; 
-  % dynamic parameters
-  createsurface_scl       = max(.5,min(3, sum(Yb0(:) & Ym(:)<2.5/3) ./ sum(Yb0(:) & Ym(:)>2.5/3) )); % close-opening for surface creation depending on atrophy
-  createsurface_postfwhm  = 4 * opt.interpV; % lower resolution / lower PVE need more smoothing    
+  use_high_resolution     = 0; % force .5 mm surface creation and processing otherwise use input resolution  
+  skip_registration       = 1; % skip spherical registration for quick tests
+  create_white_pial       = 1; % uses only the quick WM and Pial surface estimation 
 
-  % remove mask_parahipp
-  % check Yth
+  myelinCorrection        = .4; % .25 - sight correction, 1 - maximum correction
+  deepFilling             = 1; % fill deep holes that were not closed by the YMF map or WMHs and PVSs
+  sharpenGyri             = 1; % refine thin WM gyri 
+  dynamicThresholds       = 1; % estimate athropy dependend smoothing and position creation thresholds
+                               % (i.e. closer to pial in case less WM, closer to WM in case of much WM) 
+  setcut2zero             = 1; % works but result in worse values as could be expected
+  create_surf             = 1; % V1: fancy-strange topology correction, dynamic Ypp threshold  
+                               % V2: morph-based topology correction, fixed Ypp threshold (worse values, thick but more broken thin gyri)
+  deformsurf              = 1; % V0: no, need stronger surface smoohting ( bad surface values - need .5 Ypp threshold )
+                               % V1: old version - better values but self-intersections issues
+                               % V2: new version - worse  values but less self-intersection issues (similar values - surface show steps)
+  if opt.SRP<2 
+    myelinCorrection      = 0; 
+    deepFilling           = 0; 
+    sharpenGyri           = 0;
+    dynamicThresholds     = 0;
+    setcut2zero           = 0; 
+    create_surf           = 1; 
+    deformsurf            = 1; 
+  end
+  if opt.SRP>2
+    create_surf           = 2; 
+    deformsurf            = 2; 
+  end
+
+  % == dynamic parameters ==
+  % The basic ideas is that the surface creation of atrophic braings should 
+  % profit by lower position thresholds to reduce risk of breaking thin 
+  % structures, whereas less atrophic brains rquire higher thresholds to 
+  % avoid blurring of thin sulci. 
+  %
+  % large CSF areas (ventricle/external CSF) are biasing the estimation of CSF in the sulci
+  if dynamicThresholds
+    YlargeCSF               = cat_vol_morph(Yb0 & Ym<1.5/3,'o',2); 
+    % extended WM vs. extended sulcal CSF volume to quantify thin sulci in relation to the gyri
+    createsurface_ppth0     = sum(Yb0(:) & ~YlargeCSF(:) & ~YMF(:) & Ym(:)>2.25/3) / ...
+                              sum(Yb0(:) & ~YlargeCSF(:) & ~YMF(:) & Ym(:)<1.75/3);
+    % close-opening for surface creation depending on atrophy 
+    createsurface_scl0      = sum(Yb0(:) & ~YlargeCSF(:) & ~YMF(:) & Ym(:)<2.75/3) / ...
+                              sum(Yb0(:) & ~YlargeCSF(:) & ~YMF(:) & Ym(:)>2.75/3);
+    createsurface_ppth      = max(.5,min(1.5, createsurface_ppth0 )); 
+    createsurface_scl       = max(.9,min(1.5, createsurface_scl0 ));
+    % blood vessels (BV) requires higher (WM-closer) position threshold and stronger opening
+    createsurface_BV        = sum(NS(Ya(:),7)) / sum(Yb0(:)); 
+    % prefere open if many blood vessels
+    createsurface_scl       = max(0.9,createsurface_scl - createsurface_BV*30); 
+    createsurface_ppth      = createsurface_ppth + createsurface_BV * 10; 
+    % adapt smoothing parameters for deformation and blood vessels
+    createsurface_prefwhm   = -4 * (2 -   (deformsurf>0)); 
+    createsurface_postfwhm  =  2 * (3 - 2*(deformsurf>0)); % lower resolution / lower PVE need more smoothing (required especially without deformsurf)    
+    createsurface_prefwhm   = createsurface_prefwhm  * max( 1,min(2,createsurface_BV / .005 * createsurface_scl0));
+    createsurface_postfwhm  = createsurface_postfwhm * max( 1,min(2,createsurface_BV / .005 * createsurface_scl0));
+    % isosurface threshold
+    th_initial = 0.50 * min(1.333,max( 0.666, createsurface_ppth / createsurface_scl ) );
+  
+    if opt.verb
+      fprintf('\n  bv=%0.02f, scl=%0.2f(%0.2f), ppth=%0.2f(%0.2f), fwhm=%0.1f/%0.1f, thi=%.2f ', ...
+        createsurface_BV, createsurface_scl, createsurface_scl0, ...
+        createsurface_ppth, createsurface_ppth0, ...
+        createsurface_prefwhm, createsurface_postfwhm, ...
+        th_initial);
+    end
+  else
+  % fixed parameters
+    createsurface_scl       =  .9; 
+    createsurface_prefwhm   = -.2; 
+    createsurface_postfwhm  =  2; 
+    th_initial              =  0.55; % .6 shows more blue gyral breaks 
+    fprintf('\n scl=%0.2f, fwhm=%0.1f/%0.1f, thi=%.2f ', ...
+      createsurface_scl, createsurface_prefwhm, createsurface_postfwhm, th_initial); 
+  end
+  %Ywmhs = Ym<2.5/3 & cat_vol_morph(Ym>2.5/3,'lc'); rWMHV = sum(Ywmhs(:))./sum(Ym(:)>2.5/3); clear Ywmhs; 
+  
 
   % set debugging variable
   dbs   = dbstatus; debug = 1; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
@@ -99,9 +170,6 @@ function [Yth,S,Psurf,res] = cat_surf_createCS4(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
   % for testing only  
   skip_registration = debug | opt.skip_registration;
   
-  % isosurface threshold
-  th_initial = 0.50; 
-  
   % Another parameter to control runtime is the accuracy of the surface
   % deformation. As far as we primary adapt the mesh resolution above, it 
   % is useful to use sqrt values rather than linear values to avoid square
@@ -112,14 +180,6 @@ function [Yth,S,Psurf,res] = cat_surf_createCS4(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
   QMC    = cat_io_colormaps('marks+',17);
   color  = @(m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
   rate   = @(x,best,worst) min(6,max(1, max(0,x-best) ./ (worst-best) * 5 + 1));
-   
-  
-  % some internal overview for developers
-  if opt.verb>2 
-    fprintf('\nSurface reconstruction:              %s\n',....
-      sprintf('%s',char( cellfun(@(x) [x ' '],opt.surf,'UniformOutput',0) )')); 
-    fprintf('  PBT resolution:                    %0.3f\n',opt.interpV);
-  end  
   
   if exist('job','var')
     [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(V0.fname,job);
@@ -140,13 +200,10 @@ function [Yth,S,Psurf,res] = cat_surf_createCS4(V,V0,Ym,Ya,YMF,Ytemplate,Yb0,opt
 
   if ~exist(fullfile(pp0_surffolder),'dir'), mkdir(fullfile(pp0_surffolder)); end
 
-  %% get both sides in the atlas map
-  NS = @(Ys,s) Ys==s | Ys==s+1; 
-  
   % apply the modified mask from gcut
   % for non-gcut approaches or inverse weighting Yb0 only contains ones
   Ym = Ym.*(Yb0>0.5);
-  
+
   % noise reduction for higher resolutions (>=1 mm full correction, 1.5 mm as lower limit)
   % (added 20160920 ~R1010 due to severe sulcus reconstruction problems with 1.5 Tesla data)
 if use_fullpreprocess
@@ -155,8 +212,75 @@ if use_fullpreprocess
   Ym  = mf * Yms  +  (1-mf) * Ym;
   clear Yms;
 end
-  % filling
+  %% filling
   Ymf  = max(Ym,min(1,YMF & ~NS(Ya,opt.LAB.HC) & ~( cat_vol_morph( NS(Ya,opt.LAB.HC),'dd',2,vx_vol)))); 
+  
+  if deepFilling || sharpenGyri
+    % estimate CC to avoid changes in that range
+    Ycc  = cat_vol_morph( ...
+             cat_vol_morph(mod(Ya,2)==0 & Ya>0,'d') & ...
+             cat_vol_morph(mod(Ya,2)==1,'d') & Ymf>2.5/3 ,'l'); 
+    Ycc  = smooth3(cat_vol_morph( Ycc ,'dd', 15) & Ymf<.95)>.5; 
+  end
+
+  if deepFilling
+    % filling of deep wholes 
+    [~,D] = cat_vol_downcut( single(cat_vol_morph( Ymf<2/3,'ldo',1)) , 1 - Ymf.^10, .01); 
+    Ymf1  = min(1,Ymf + max(0,smooth3( D==max(D(:)) ) .* (1 - NS(Ya,opt.LAB.CB) - Ycc)));
+    Ymf1(Ymf<.95 & ~cat_vol_morph(Ymf<0.95,'ldo',1.5,vx_vol)) = 1; 
+  else
+    Ymf1 = Ymf; 
+  end
+
+  %%
+  if sharpenGyri
+    %% open to avoid BVs
+    
+    % define WMH/PVS correction map by high CSF and low WM proportion
+    Yp0toC = @(c) 1-min(1,abs(max(1,Ymf1*3)-c));
+    %Ycsf = Yp0toC(1); spm_smooth(Ycsf,Ycsf,8./vx_vol); 
+    %Ygm  = Yp0toC(2); spm_smooth(Ygm ,Ygm ,2./vx_vol);
+    %Ywm  = Yp0toC(3); spm_smooth(Ygm ,Ygm ,4./vx_vol);
+    six = [1 2 4]; sd=numel(six)+1; Ywm = Yp0toC(3)/sd;  
+    for si = six, Ywms = Yp0toC(3); spm_smooth(Ywms ,Ywms ,4./vx_vol); Ywm = Ywm + Ywms/sd; end
+    %Yvt  = single(cat_vol_morph(NS(Ya,opt.LAB.VT),'dd',5,vx_vol)); spm_smooth(Yvt ,Yvt ,16./vx_vol);
+    %Ycsf = max(Ycsf,min(2,Yvt*8)); clear Yvt; 
+    
+    % thickness and position estimate to correct (too) thick regions 
+    [Ygmt,Ypp] = cat_vol_pbtsimple(Ymf1*3,vx_vol,struct('supersimple',1));
+    Ygmt = cat_vol_approx(Ygmt .* (Ygmt<10)); 
+
+    % potential region of change - partial volume voxels with real GM but not WM neighbor (ie. thin gyri)
+    Ypve  = min(3,cat_vol_smooth3X(Ymf1>2/3 & Ymf1<2.5/3 & ~(cat_vol_morph( Ymf1<2.25/3 ,'d') & cat_vol_morph( Ymf1>2.75/3 ,'d')),4) * 4); 
+   
+    %% potential change
+    for xii=1:1
+      Ymgc0 = cat_vol_morph(Ymf1 .* (Ymf1>0/3),'gc',1,vx_vol); 
+      Ymgo0 = cat_vol_morph(Ymf1 .* (Ymf1>0/3),'go',1,vx_vol); 
+      Ymgc  = cat_vol_morph(Ymf1 .* (Ymf1>2/3),'gc',1,vx_vol); 
+      Ymgo  = cat_vol_morph(Ymf1 .* (Ymf1>2/3),'go',1,vx_vol); 
+      Ymc   = cat_vol_median3( Ymgc - Ymgo + Ymgc0 - Ymgo0 , Ymf>0 & Ymf<1,Ymf>=0,.2); 
+      clear Ymgc0 Ymgo0 Ymgc Ymgo
+  
+      % final correction
+      Yecb = 1 * NS(Ya,opt.LAB.CB);
+      if xii==1, Ymf2 = Ymf1; end
+      Ymf2 = max(Ymf2,min(2.7/3,Ymf2 + ( Ymc .* 3*(1-th_initial) .* smooth3( Ywm .* Ypp.^.1 .* (Ygmt+Yecb).^2 .* Ypve).^2  ).^2));
+      Ymf2 = max(Ymf2,min(3.2/3,Ymf2 + ( Ymc .* 1*(1-th_initial) .*        ( Ywm .* Ypp.^.1 .* (Ygmt+Yecb).^2 .* Ypve).^2  )   ));
+      
+      Ymfc = Ymf2>2.5/3 & smooth3(Ymf2)<2.5/3 & Ypve; Ymfc(smooth3(Ymfc)<.3)=0; 
+      Ymf2 = max(Ymf2,Ymfc*3.5/3); % PVE voxel that disappear for light changes
+      
+      cat_sanlm(Ymf2,1,3);
+      clear Yecb
+    end
+
+   
+    %% final update
+    Ymf   = Ymf1 * (th_initial-1/3)*3 + (1 - (th_initial-1/3)*3) * Ymf2;
+    clear Xmf1 Ymf2 Ypve Ygmt Ypp;
+  end
+ 
   Ymfs = cat_vol_smooth3X(Ymf,1);
   Ytmp = cat_vol_morph(YMF,'dd',3,vx_vol) & Ymfs>2.1/3;
   Ymf(Ytmp) = max(min(Ym(Ytmp),0),Ymfs(Ytmp)); clear Ytmp Ymfs; 
@@ -210,6 +334,7 @@ end
    
     % surface filenames
     Pm         = fullfile(pp0,mrifolder, sprintf('m%s',ff));    % raw
+    Pdefects   = fullfile(pp0,mrifolder, sprintf('defects_%s.nii',ff));    % defect
     Pcentral   = fullfile(pp0_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff));          % central
     Pcentralr  = fullfile(pp0_surffolder,sprintf('%s.central.resampled.%s.gii',opt.surf{si},ff));%#ok<NASGU> % central .. used in inactive path
     Player4    = fullfile(pp0_surffolder,sprintf('%s.layer4.%s.gii',opt.surf{si},ff));           % layer4
@@ -261,12 +386,23 @@ end
     
     
     %% reduce for object area
+    Ynocerebrum = ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.BV) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB) | NS(Ya,opt.LAB.BS)); 
     switch opt.surf{si}
-      case {'lh'},  Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.BV) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB) | NS(Ya,opt.LAB.BS)) .* (mod(Ya,2)==1); Yside = mod(Ya,2)==1; 
-      case {'rh'},  Ymfs = Ymf .* (Ya>0) .* ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.BV) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB) | NS(Ya,opt.LAB.BS)) .* (mod(Ya,2)==0); Yside = mod(Ya,2)==0;  
-      case {'cb'},  Ymfs = Ymf .* (Ya>0) .*   NS(Ya,opt.LAB.CB); Yside = true(size(Ymfs)); % new full cerebellum reconstruction
+      case {'lh'}
+        Ymfs  = Ymf .* (Ya>0) .* Ynocerebrum .* (mod(Ya,2)==1); 
+        Yside = mod(Ya,2)==1; 
+      case {'rh'}  
+        Ymfs  = Ymf .* (Ya>0) .* Ynocerebrum .* (mod(Ya,2)==0); 
+        Yside = mod(Ya,2)==0;  
+      case {'cb'}
+        Ymfs  = Ymf .* (Ya>0) .* NS(Ya,opt.LAB.CB); 
+        Yside = true(size(Ymfs)); % new full cerebellum reconstruction
     end 
-   
+    clear Ynocerebrum
+    % mark cutting regions to avoid cortical modelling (i.e. to avoid/reduce thickness estimates)
+    Ycutregion = min(1,max(0,Ymf - 2 + NS(Ya,opt.LAB.VT)) * 1 .* ...
+      smooth3( NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB) | NS(Ya,opt.LAB.VT) | NS(Ya,opt.LAB.TH) | ~Yside )); 
+
     % print something
     if si==1, fprintf('\n'); end
     fprintf('%s:\n',opt.surf{si});
@@ -287,14 +423,20 @@ end
    
     % removing background (smoothing to remove artifacts)
     switch opt.surf{si}
-      case {'lh','rh'},  [Ymfs,Ysidei,mask_parahipp,VT,HC,BB] = cat_vol_resize({Ymfs,Yside,mask_parahipp,VT,HC},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
-      case {'cb'},       [Ymfs,Ysidei,BB] = cat_vol_resize({Ymfs,Yside},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
+      case {'lh','rh'}
+        [Ymfs,Ysidei,mask_parahipp,VT,HC,Ycutregion,BB] = ...
+          cat_vol_resize({Ymfs,Yside,mask_parahipp,VT,HC,Ycutregion},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
+      case {'cb'}
+        [Ymfs,Ysidei,Ycutregion,BB] = ...
+          cat_vol_resize({Ymfs,Yside,Ycutregion},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
     end
     
     % interpolation 
     imethod         = 'cubic'; % cubic should be better in general - however, linear is better for small thickness (version?)
     [Ymfs,resI]     = cat_vol_resize(max(1,Ymfs),'interp',V,opt.interpV,imethod);                  % interpolate volume
     Ysidei          = cat_vol_resize(Ysidei,'interp',V,opt.interpV,imethod)>0.5;                   % interpolate volume (small dilatation)
+    Ycutregion      = cat_vol_resize(Ycutregion,'interp',V,opt.interpV,imethod);
+    Ycutregiond     = cat_vol_smooth3X( cat_vol_morph(Ycutregion,'dd',1.5,opt.interpV), 4);        % a smooth version to mix maps
     
     if ~iscerebellum
       % get dilated mask of gyrus parahippocampalis and hippocampus of both sides
@@ -322,13 +464,14 @@ end
     stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,native2unicode(179, 'latin1')),'g5'); stimet = stime;
     if strcmp(opt.pbtmethod,'pbtsimple') 
       if use_cat_vol_pbtsimple
-        [Yth1i,Yppi] = cat_vol_pbtsimple(Ymfs,opt.interpV);
+        [Yth1i,Yppi,Ymfsc] = cat_vol_pbtsimple(Ymfs, opt.interpV, struct('classic', opt.SRP<1,'myelinCorrection',myelinCorrection));
+        Ymfs = Ymfs .* Ycutregion + (1-Ycutregion) .* Ymfsc; clear Ymfsc
         Vppm = Vmfs;
         Vppm.fname = ppm_name;
         spm_write_vol(Vppm, Yppi);
         Vppm = spm_vol(ppm_name);        
       else
-        cmd = sprintf('CAT_VolThicknessPbt -median-filter 2 -sharpen 0.02 -fwhm 3 -downsample 0 "%s" "%s" "%s"',Vmfs.fname,gmt_name, ppm_name);
+        cmd = sprintf('CAT_VolThicknessPbt -median-filter 2 -sharpen 0.02 -fwhm 3 -downsample 0 "%s" "%s" "%s"', Vmfs.fname, gmt_name, ppm_name);
         cat_system(cmd,opt.verb-3);
         Vgmt = spm_vol(gmt_name); Yth1i = spm_read_vols(Vgmt);      
         Vppm = spm_vol(ppm_name); Yppi = spm_read_vols(Vppm);
@@ -336,20 +479,41 @@ end
     else 
       [Yth1i,Yppi,Ymfs] = cat_vol_pbt(Ymfs,struct('method',opt.pbtmethod,'resV',opt.interpV,'vmat',...
         V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1],'pbtlas',opt.pbtlas)); % avoid underestimated thickness in gyri
-    end  
+    end   
+    % RD20250330: The aim is to smoothing cutting regions to avoid defects there. 
+    Yppi = max(0,min(1,(cat_vol_smooth3X(Yppi,4)-.5)*4 + .5)) .* Ycutregiond  + (1-Ycutregiond) .* Yppi; 
+  
 
-    Yth = cat_vol_resize(Yth1i,'deinterp',resI);                         % back to original resolution
+    Yth = cat_vol_resize(Yth1i,'deinterp',resI);                       % back to original resolution
     Yth = cat_vol_resize(Yth+1,'dereduceBrain',BB)-1;                  % adding background
     
     % use interpolated ppm image instead of 0.5mm version
     if ~use_high_resolution
-      Ypp = cat_vol_resize(Yppi + 1,'deinterp',resI);                       % back to original resolution
-      Ypp = cat_vol_resize(Ypp,'dereduceBrain',BB) - 1;
-      Vpp          = cat_io_writenii(V,Ypp,'',sprintf('%s.pp',opt.surf{si}) ,...
-        'percentage position map - V2 - pial=1/3, central=1/2, white=2/3, 0 and 1 to stablize white/pial values','uint8',[0,1/255],[1 0 0]); 
-      Vppm          = Vpp(1);
+      %% RD202503: Smoothing before resolution reduction clearly improves the results.
+      if create_surf == 2 && deformsurf
+        % RD202503: Adaptation for thickness to be closer to CSF/WM in thick/thin regions - need further tests!
+        Ypps = max(Yppi>=1., Yppi .* min(2,max(.5, Yth1i / (1.25 / opt.interpV) ) )); 
+      else
+        Ypps = Yppi; 
+      end
+      if create_surf == 2 && deformsurf  ||  1  % special filling
+        for xi = 1:2
+          [~,D] = cat_vol_downcut( single(cat_vol_morph( Ypps<.5,'ldo',4)), 1 - Ypps, .02); 
+          D = cat_vol_median3(D,D>1000);
+          Yfill = cat_vol_morph( Ymfs>2.2 & Ypps<.7 & smooth3(D)>1000 , 'd' );  clear D; 
+          Ypps  = max(Ypps,Yfill); clear Yfill; 
+        end
+      end
+      Ypps  = smooth3(Ypps);
+      Ypp   = Yppi .* Ycutregiond  +  (1-Ycutregiond) .* Ypps;   
+      Yfill = Ypp < th_initial  &  ~cat_vol_morph(Ypp < th_initial,'ldo',1); Ypp( Yfill ) = max(Ypp(Yfill),th_initial); 
+      Ypp  = cat_vol_resize( Ypp ,'deinterp',resI);                       % back to original resolution
+      Ypp  = cat_vol_resize(Ypp,'dereduceBrain',BB);
+      Vpp  = cat_io_writenii(V,Ypp,'',sprintf('%s.pp',opt.surf{si}) ,...
+        'initial percentage position map - V2 - pial=1/3, central=1/2, white=2/3, 0 and 1 to stablize white/pial values','int8',[0,1/100],[1 0 0]); 
+      Vppm = Vpp(1);
     end
-    clear M v x3; 
+    clear M v x3 Ycutregiond  
 
     if opt.vol
       S = struct(); Psurf = '';
@@ -416,38 +580,76 @@ end
       % -post-fwhm = 2: psot smoothing with 2mm (use lower threshold of 0.49)
       % -scl-opening ... 0.9 too less for old subjects with thin WM and WMHs >> 1.5 
       %cmd = sprintf('CAT_VolMarchingCubes -local-smoothing 10 -scl-opening "0.9" -median-filter "2" -pre-fwhm "-2" -post-fwhm "1.5" -thresh "%g" "%s" "%s"',th_initial,Vppm.fname,Pcentral);
-      %%
-      cmd = sprintf('CAT_VolMarchingCubes -local-smoothing 10 -scl-opening "%d" -median-filter "2" -pre-fwhm "-4" -post-fwhm "%d" -thresh "%g" "%s" "%s"', ...
-        createsurface_scl, createsurface_postfwhm, th_initial, Vppm.fname, Pcentral);
+      if ~deformsurf, th_initial = .5; end
+      if exist(Pcentral,'file'), delete(Pcentral); end % have to delete it to get useful error messages in case of reprocessing/testing
+      if create_surf == 1 % old version
+        cmd = sprintf('CAT_VolMarchingCubesOld -local-smoothing 10 -scl-opening "%d" -median-filter "2" -pre-fwhm "%0.1f" -post-fwhm "%0.1f" -thresh "%g" "%s" "%s" "%s"', ...
+          createsurface_scl, createsurface_prefwhm, createsurface_postfwhm, th_initial, Vppm.fname, Pcentral, Pdefects);
+      else 
+        cmd = sprintf('CAT_VolMarchingCubes "%s" "%s" -thresh "%0.4f" ', ... -pre-fwhm "%0.4f" -post-fwhm "%0.4f"
+          Vppm.fname, Pcentral, .6); % , createsurface_prefwhm, createsurface_postfwhm 
+      end
       cat_system(cmd,opt.verb-3);
-      %cat_surf_render2(Pcentral)
-      % Collins-without: 2.5996 ± 0.6292 mm, 0.0798 / 0.1096, 10.29% (121.38 cm²) 24.19% (285.46 cm²)
-      % Collins-with:    2.5713 ± 0.6525 mm, 0.0723 / 0.0934,  8.51% (98.93 cm²)  23.79% (276.42 cm²)
+     
+      if ~use_high_resolution  
+      % Update Ypp without offsets for surface reconstruction
+        Ypp  = cat_vol_resize(Yppi,'deinterp',resI);                      
+        Ypp  = cat_vol_resize(Ypp,'dereduceBrain',BB);
+        Vpp  = cat_io_writenii(V,Ypp,'',sprintf('%s.pp',opt.surf{si}) ,...
+          'percentage position map - V2 - pial=1/3, central=1/2, white=2/3, 0 and 1 to stablize white/pial values','int8',[0,1/100],[1 0 0]); 
+      end
+    
       
       %%
-      if deformsurf 
-      % - this step causes problems in defect areas, where the correction is not in the Ypp
-      % - this artefacts are already in the surface and just became obvious
-      % - nevertheless it improves the results
-        stepsize = [0.1 0.01 0.001];
+      if deformsurf==1
+        % old surface deformation function 
+        stepsize = [0.1 0.01 0.001]; 
         for ss = 1:numel(stepsize)
           cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none  0  1  -1  .1 ' ...           
                       'avg  -0.1  0.1 .2  .1  5  0 "0.5"  "0.5"  n 0  0  0 %d  %g  0.0 0'], ...    
                       Vppm.fname,Pcentral,Pcentral,20,stepsize(ss) );
           cat_system(cmd,opt.verb-3);
         end
+      elseif deformsurf==2
+        % new surface reconstruction function
+        % w1:    0.05 (schärfer) - 0.15 (smoother)
+        % w2:    gradientstärke:   0.1 geringer effect
+        % w3:    isovalue:         0.8 - 1.2 "schrittweite"                 >> 4 
+        % sigma: filterbreite      0.2* - 0.4 (und w3 zusammen reduzieren)  >> 0.05
+        deformsurfversion = 3; 
+        if deformsurfversion == 1
+        % original single call
+          cmd = sprintf('CAT_SurfDeform "%s" "%s" "%s" ',Vppm.fname,Pcentral,Pcentral);
+          cat_system(cmd,opt.verb-3);
+        elseif deformsurfversion == 2 
+        % modified single call (better)
+          cmd = sprintf('CAT_SurfDeform -iter 150 -w1 0.01 -w3 4.0 -sigma 0.05 "%s" "%s" "%s" ',Vppm.fname,Pcentral,Pcentral);
+          cat_system(cmd,opt.verb-3);
+        else
+        % multi call with some adaptions (best) 
+          iters    = [50  40  30   20   10]; 
+          stepsize = [0.2 0.1 0.05 0.02 0.01]; 
+          for ss = 1:numel(stepsize)
+            cmd = sprintf('CAT_SurfDeform -iter %d -w1 "%0.8f" -w3 "%0.8f" -verbose -sigma 0.05 "%s" "%s" "%s" ', ...    
+                        iters(ss), stepsize(ss)/10, stepsize(ss)*20, Vppm.fname, Pcentral, Pcentral); %
+            [~,txt] = cat_system(cmd,opt.verb - 2);
+          end
+        end
       end
-       
+
       CS = loadSurf(Pcentral);
+      if setcut2zero
+        facevertexcdatanocut = 1 - cat_surf_fun('isocolors',Ycutregion,CS.vertices,Smat.matlabIBB_mm); 
+        facevertexcdatanocut = max(0.5,min(1,(cat_surf_fun('smoothcdata',CS,facevertexcdatanocut,4) - .5) * 2)); % * median(vx_vol)
+      else
+        facevertexcdatanocut = 1; 
+      end
       EC0 = size(CS.vertices,1) + size(CS.faces,1) - size(spm_mesh_edges(CS),1);
-      
       if EC0 ~= 2
         warning('cat_surf_createCS3:CAT_MarchingCubesGenus0', ...
            'Extracted surface might have small topology issues (Euler count = %d).\n',EC0); 
       end      
-
-      if ~debug, clear mask_parahipp_smoothed; end
-                  
+                        
       % evaluate and save results
       if isempty(stime), stime = clock; end
       fprintf('%5.0fs',etime(clock,stime)); stime = []; if 1, fprintf('\n'); end %debug
@@ -462,25 +664,26 @@ end
     end
 
     % get thickness data
-    facevertexcdata = cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm); 
+    facevertexcdata = cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm) .* facevertexcdatanocut; 
     cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
 
     if opt.SRP>0
       %% call collision correction
       %  RD202108: Use further iterations if self-intersections are still very high.  
       %            (test data was an high resolution ex-vivo chimp PD image that had still strong SIs after first correction) 
-      stime = cat_io_cmd('  Reduction of surface collisions with optimization:','g5','',opt.verb,stime); 
-      verblc = debug;  
-      for xi = 1:2 %opt.SRP % interation 1 with optimization, 2 without
+      stime  = cat_io_cmd('  Reduction of surface collisions with optimization:','g5','',opt.verb,stime); 
+      verblc = 0; %debug;  
+      for xi = 1:2 %opt.SRP % interation 1 with optimization, 2 without .. 
         [CS,facevertexcdata,SIs] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,...
-          struct('optimize',xi==1,'verb',verblc,'mat',Smat.matlabIBB_mm,'vx_vol',vx_vol)); 
+          struct('optimize',xi==1,'verb',verblc,'mat',Smat.matlabIBB_mm,'vx_vol',vx_vol,'CS4',1)); 
         if verblc, fprintf('\b\b'); end
         if xi == 1 && opt.SRP>1 % this function is quite slow if multiple jobs are running!
-          [CS,facevertexcdata,SIs] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Ymfs,...
+          [CS,facevertexcdata,SIs] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Yppi,...
             struct('Pcs',Pcentral,'verb',verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^2));
           if verblc, fprintf('\b\b'); end
         end
       end
+      facevertexcdata = facevertexcdata .* facevertexcdatanocut; 
       saveSurf(CS,Pcentral); cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
     end
 
@@ -521,7 +724,7 @@ end
       end
       
       % apply upper thickness limit
-      facevertexcdata = cat_io_FreeSurfer('read_surf_data',Pthick);  
+      facevertexcdata = cat_io_FreeSurfer('read_surf_data',Pthick) .* facevertexcdatanocut;  
       facevertexcdata(facevertexcdata > opt.thick_limit) = opt.thick_limit;
       cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);  
       
