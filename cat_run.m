@@ -830,8 +830,8 @@ function cat_run_createCSVreport(job,BIDSfolder)
   matlabbatch{1}.spm.tools.cat.tools.xml2csv.files = job.data; 
   for fi = 1:numel(job.data)
     [~, reportfolderfi] = cat_io_subfolders(job.data{fi}, job);
-    matlabbatch{1}.spm.tools.cat.tools.xml2csv.files{fi} = spm_file(job.data{fi}, ...
-      'path', fullfile( spm_fileparts(job.data{fi}), reportfolderfi ), ...
+    matlabbatch{1}.spm.tools.cat.tools.xml2csv.files{fi} = spm_file( strrep(job.data{fi},'.gz',''), ...
+      'path', spm_file( fullfile( spm_fileparts(job.data{fi}), reportfolderfi,'t' ),'fpath'), ...
       'prefix', 'cat_', 'ext', '.xml');
   end
 
@@ -844,7 +844,7 @@ function cat_run_createCSVreport(job,BIDSfolder)
   matlabbatch{1}.spm.tools.cat.tools.xml2csv.fname = ...
     sprintf('CATxml%s%s.csv', pp1, date); 
   matlabbatch{1}.spm.tools.cat.tools.xml2csv.outdir       = ...
-    {fullfile( spm_fileparts(job.data{fi}), spm_str_manip(reportfolderfi,'h'))};
+    {spm_file( fullfile( spm_fileparts(job.data{fi}), spm_str_manip(reportfolderfi,'h')),'fpath') };
   matlabbatch{1}.spm.tools.cat.tools.xml2csv.fieldnames   = {' '};
   matlabbatch{1}.spm.tools.cat.tools.xml2csv.avoidfields  = {''};
   matlabbatch{1}.spm.tools.cat.tools.xml2csv.report       = 'default';
@@ -861,7 +861,9 @@ function cat_run_createCSVreport(job,BIDSfolder)
   csvfile = fullfile( ...
     matlabbatch{1}.spm.tools.cat.tools.xml2csv.outdir{1}, ...
     matlabbatch{1}.spm.tools.cat.tools.xml2csv.fname ); 
-  fprintf('\nPrint CSV-file %s\n\n',spm_file(csvfile,'link','edit(''%s'')')); 
+  if exist(csvfile,'file')
+    fprintf('\nPrint CSV-file %s\n\n',spm_file(csvfile,'link','edit(''%s'')')); 
+  end
 return
 %_______________________________________________________________________
 function job = update_job(job,verbatlas)
