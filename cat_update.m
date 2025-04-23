@@ -32,7 +32,8 @@ if isdeployed
   return;
 end
 
-url = 'http://www.neuro.uni-jena.de/cat12/';
+% Github release url
+url_github = 'https://api.github.com/repos/ChristianGaser/cat12/releases';
 
 if ~nargin
   update = false;
@@ -40,47 +41,36 @@ else
   update = true;
 end
 
-r = 0;
+% get current release
+r = cat_version;
+r = str2double(strrep(r,'CAT',''));
 
-% get current release number
-[n, r] = cat_version;
-r = str2double(r);
-
-% get new release numbers
+% get new release
 try
-  [s,sts] = urlread(url,'Timeout',2);
+  [jsonStr, sts] = urlread(url_github,'Timeout',2);
 catch
-  [s,sts] = urlread(url);
+  [jsonStr, sts] = urlread(url_github);
 end
 
 if ~sts
-  sts = NaN;
   msg = sprintf('Cannot access %s. Please check your proxy and/or firewall to allow access.\nYou can download your update at %s\n',url,url); 
-  if ~nargout, fprintf(msg); else varargout = {sts, msg}; end
+  if ~nargout, fprintf(msg); else varargout = {NaN, msg}; end
   return
 end
 
-n = regexp(s,'cat12_r(\d.*?)\.zip','tokens');
-if isempty(n)
-  sts= Inf;
-  msg = 'There are no updates available yet.';
-  if ~nargout, fprintf([blanks(9) msg '\n']);
-  else varargout = {sts, msg}; end
-  return;
-else
-  % get largest release number
-  rnew = [];
-  for i=1:length(n)
-    rnew = [rnew str2double(n{i})];
-  end
-  rnew = max(rnew);
+data = jsondecode(jsonStr);
+% get largest release number
+rnew = [];
+for i = 1:length(data)
+  rnew = [rnew str2double(data(i).tag_name)];
 end
+rnew = max(rnew);
 
 if rnew > r
-  sts = n;
+  sts = rnew;
   msg = sprintf('         A new version of CAT12 is available on:\n');
-  msg = [msg sprintf('   %s\n',url)];
-  msg = [msg sprintf('        (Your version: %d - New version: %d)\n',r,rnew)];
+  msg = [msg sprintf('   %s\n',url_github)];
+  msg = [msg sprintf('        (Your version: %g - New version: %g)\n',r,rnew)];
   if ~nargout, fprintf(msg); else varargout = {sts, msg}; end
 else
   sts = 0;
@@ -90,8 +80,10 @@ else
   return
 end
 
+url = sprintf('https://github.com/ChristianGaser/cat12/releases/download/%g/cat%g.zip',rnew,rnew);
+
 if update
-  overwrite = spm_input(sprintf('Update to r%d',rnew),1,'m','yes|no|download only',[1 -1 0],1);
+  overwrite = spm_input(sprintf('Update to %g',rnew),1,'m','yes|no|download only',[1 -1 0],1);
   d0 = spm('Dir');
   d  = fileparts(fileparts(which('cat12')));
   
@@ -159,7 +151,8 @@ if update
       delete(get(0,'Children')); spm('clean'); evalc('spm_rmpath'); drawnow
       m = '          Download and install CAT12...\n';
       if ~nargout, fprintf(m); else varargout = {sts, [msg m]}; end
-      s = unzip([url sprintf('cat12_r%d.zip',rnew)], d);
+            
+      s = unzip(url, d);
       m = sprintf('         Success: %d files have been updated.\n',numel(s));
       if ~nargout, fprintf(m); else varargout = {sts, [msg m]}; end
       addpath(d0);
@@ -194,7 +187,7 @@ if update
         fprintf('          Warning %s.\n',warnmsg);
     end  
   elseif overwrite == 0
-    web([url sprintf('cat12_r%d.zip',rnew)],'-browser');
+    web(url,'-browser');
     fprintf('Unzip file to %s\n',d);
   end
 end

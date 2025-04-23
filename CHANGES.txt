@@ -1,4 +1,14 @@
 ------------------------------------------------------------------------
+r2699 | gaser | 2025-04-23 15:48:10
+
+Changed paths:
+ M CHANGES.txt
+ M Makefile
+ M cat_update.m
+ M doc/cat.txt
+
+Updated: New update procedure to get releases from Github.
+------------------------------------------------------------------------
 r2693 | gaser | 2025-04-23 14:37:09
 
 Changed paths:

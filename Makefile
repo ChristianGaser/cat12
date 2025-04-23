@@ -89,7 +89,6 @@ docs:
 # update version numbers
 update: docs copy_longmode
 	-@git fetch
-	-@git tag -f v${VERSION} -m "Release version ${VERSION}"
 	-@echo '% Computational Anatomy Toolbox' > Contents.m
 	-@echo '% Version' ${REVISION}' ('${NEWVERSION}')' ${DATE} >> Contents.m
 	-@cat Contents_info.txt >> Contents.m
@@ -113,6 +112,7 @@ zip: update clean
 
 # scp release
 scp: docs zip
+	-@git tag -f ${VERSION} -m "Release version ${VERSION}"
 	-@echo scp to http://${STARGET_HOST}/cat12/${ZIPFILE}
 	-@scp -O -P ${PORT} CHANGES.txt ${ZIPFOLDER}/${ZIPFILE} ${STARGET}
 	-@bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${ZIPFILE} ${STARGET_FOLDER}/cat12_latest.zip"
