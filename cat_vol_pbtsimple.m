@@ -1,4 +1,4 @@
-function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
+function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
 %cat_vol_pbtsimple. Simple cortical thickness/position estimation.  
 % Estimation of voxel-based distances and projection-based thickness (PBT) 
 % and surface position based on a label map. Required isotropic input. 
@@ -8,7 +8,7 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
 % Although, the values look quite similar difference in the surface are 
 % good detectable for small structures, in particular occipital sulci.
 %
-%   [Ygmt, Ypp] = cat_vol_pbtsimple( Yp0 , vx_vol, opt )
+%   [Ygmt, Ypp, Yp0] = cat_vol_pbtsimple( Yp0 , vx_vol, opt )
 %
 %   Ygmt    .. GM thickness map 
 %   Ypp     .. percentage position map 
@@ -74,7 +74,24 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
 %      especially the position RMSE value by ~0.01 (ie, unclear if this is 
 %      really better). 
 %
-%   See also cat_vol_pbt, cat_vol_createCS[123].
+%    .NBV (0-no, 1-yes; default=1)
+%      Additional, new blood vessel correction based on a WM region growing.
+%
+%    .myelinCorrection (0-no, 0.25-light, 0.33-default, 0.5-strong, 1.0-maximum)
+%      Correction of myelinated GM areas that often result in severe GM 
+%      unterestimations. The code is experimental code from the (pre) LAS
+%      correction that estimated the GM and WM thickness to extend thin GM 
+%      areas if there is a lot of GM-WM PVE behind.
+%      This correction is not fully correct but the introduced error is 
+%      expected to be smaller than before. 
+%
+%    .extendedpp (0-no, 1-yes; default=0)  
+%      Extended position map to support using 0 and 1 as robust boundaries.
+%      It improves position values and reduce self intersections with 
+%      slightly thinner thickness and a bit worse intensity values.  
+%      ... need further work and tests (RD202503)
+%
+%   See also cat_vol_pbt, cat_vol_createCS[23].
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -116,9 +133,10 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
                              %   Collins-0:   2.5633 ± 0.6876 mm, 0.0728 / 0.0805,  SI= 7.67%
                              %                                   -0.0005 / 0.0129,     +8.48%
                              %
-  def.WMTC            = 0;   % Voxel-based topology correction of small WM-defects 
+  def.WMTC            = 1;   % Voxel-based topology correction of small WM-defects 
                              % based on the volume output of cat_vol_genus0 
-                             % ... not really working ... just keep it now for sentimental reasons before it will be remove in future  
+                             % ... not really working also in version 2 
+                             % ... just keep it now for sentimental reasons before it will be remove in future  
                              %
   def.levels          = 8;   % Number of dual distance estimates.
                              % Larger values are more accurate but need more time (log-change).
@@ -159,6 +177,28 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
                              %   Collins-1:  2.5633 ± 0.6876 mm, 0.0728 / 0.0805,  SI=7.67%
                              %                                   0.0002 / 0.0040,  SI=0.55%
                              %
+  % Updates 202503-04                            
+  def.extendedpp      = 0;   % extended position map to support using 0 and 1 as robust
+                             % boundaries even with interpolation. It improves position  
+                             % values and reduce self intersections with slightly thinner 
+                             % thickness and a bit worse intensity values.  (RD202503)
+                             %  ... need further work and tests
+                             %
+  def.NBVC             = 1;  % new blood vessel correction (RD202503)
+                             %
+  def.myelinCorrection = .4; % correction for large cortical myelination artefacts that 
+                             % cause strong local underestimation that is similar to the 
+                             % extended LAS correction (cat_main_correctmyelination) (RD202503)
+                             %
+  def.presharpening    = 1;  % Sharpening by enhancing the WM that disappear for grayscale 
+                             % opening. vs closing or smoothing vs. non-smooting (RD202504). 
+                             % Highly import in older as well as younger subjects to avoid 
+                             % broken structures with severe thickness overestimation. 
+                             %
+  def.removeoutliers   = 1;  % Addition approximation to detect and remove outlieres before 
+                             % final approximation. 
+                             %
+  def.classic          = 0;  % Use only operations before 202503 modifications
 
   opt = cat_io_checkinopt(opt,def);
 
@@ -172,6 +212,18 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
     opt.gyrusrecon    = 0; % reconstruct gyri (in very young/old subjects with thin WM)
     opt.keepdetails   = 0; % important for small (occipital) sulci
     opt.sharpening    = 0; % reduce blurring of the Ypp map 
+    opt.NBVC          = 0; % new additional blood vessel correction (RD202503)
+    opt.extendedpp    = 0; % extended position map 
+    opt.myelinCorrection = 0; % myelination correction
+    opt.presharpening    = 0;
+    opt.removeoutliers   = 0;
+  end
+  if opt.classic 
+    opt.NBVC             = 0; 
+    opt.extendedpp       = 0; 
+    opt.myelinCorrection = 0; 
+    opt.presharpening    = 0; 
+    opt.removeoutliers   = 0;
   end
 
   % display paras for developers
@@ -183,12 +235,120 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
 
   
   %  WM topology correction (relevant in thin WM subjects such as OASIS31):
-  if opt.WMTC 
+  if opt.WMTC == 2 % udpate version 
+    opt2 = opt; opt.levels = 2; 
+    [Ycd, Ywd] = cat_vol_cwdist(smooth3(Yp0), vx_vol, opt2);
+    Ygmt1 = cat_vol_pbtp( round(Yp0) , Ywd, Ycd);
+    Ygmt1 = cat_vol_approx(Ygmt1); 
+
+    Yp0c   = WMTC(Yp0); 
+    Ythick = Ygmt1>median(Ygmt1(:)); 
+    Yp0(Ythick) = Yp0c(Ythick); clear Ythick; 
+  elseif opt.WMTC == 1 % default approach
     Yp0 = WMTC(Yp0);
   end
 
 
 
+  if opt.NBVC
+    %% RD202503: new blood vessel correction 
+    % In principle this is not really new and should be done by other functions before. 
+    % However, it is so essential for PBT and not to difficult to include it here (too). 
+    % First the save WM area is estimated and then extended by a region growing method
+    % that focus on lower intensities in the Yp0 label mapf for GM and CSF. 
+    Yp0s   = Yp0; Yp0s(Yp0s<1.5) = -inf; 
+    Ywm    = cat_vol_morph(Yp0s>2.5,'ldo',2,vx_vol) | cat_vol_morph(Yp0s>2.75,'ldo',1); 
+    [~,Yd] = cat_vol_downcut(single(Ywm), Yp0s-1, -.001); clear Ywm; 
+    Ymsk   = Yd > 1000000; 
+    % Ymsk as regions that we want to correct 
+    [~,I]  = cat_vbdist(single(~Ymsk),Yp0s>1.5); Yp0(Ymsk) = Yp0(I(Ymsk));
+    Yp0s   = smooth3(Yp0); 
+    Ymsk   = cat_vol_morph(Ymsk,'dd',2,vx_vol);
+    Yp0(Ymsk) = Yp0s(Ymsk); 
+    % CSF enhancement (by WM distnace) for better estimation of asymmetry and suppression of artefact ?
+    Yd(Ymsk) = 0; 
+    Yp0    = max( min(1.5,Yp0) , Yp0 - max(0,Yd/1000 .* (Ymsk)) );
+    clear Yp0s Ymsk;
+  end
+
+
+
+  if opt.presharpening 
+    %Yp0d = cat_vol_morph(Yp0==0,'dd',3,vx_vol);
+
+    Ymgc = cat_vol_morph(Yp0,'gc',2); 
+    Ymgo = cat_vol_morph(Yp0,'go',2); 
+
+    if opt.presharpening > 1
+    % this is super slow! (+300s/side) 
+      Ymgc2 = cat_vol_morph(Ymgc,'gc',6); 
+      Ymgo2 = cat_vol_morph(Ymgo,'go',6); 
+    end
+
+    % we need a simple thickness estiamte to know where to correct
+    [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,struct('supersimple',1,'presharpening',0));
+    
+    % define WMH/PVS correction map by high CSF and low WM proportion
+    Yp0toC = @(c) 1-min(1,abs(max(1,Yp0*3)-c));
+    Ycsf = Yp0toC(1); spm_smooth(Ycsf,Ycsf,8./vx_vol); % more CSF >> stronger correction required
+    Ygm  = Yp0toC(2); spm_smooth(Ygm ,Ygm ,2./vx_vol); % more GM  >> stronger correction required 
+    Ywm  = Yp0toC(3); spm_smooth(Ywm ,Ywm ,4./vx_vol); % less WM  >> stronger correction required ... here closing of WMHs/PVSs helps but to much can 
+
+    % RD20250407: the weigting is still not optimal
+    Yp0  = min(3,Yp0 - (Ymgo - Ymgc) .* Ywm*4 .* Ygm .* (smooth3(Yp0)>2.1) .* (smooth3(Yp0)<2.6) .* min(4,max(0,Ygmt - median(Ygmt(:)) - std(Ygmt(:))) .* smooth3(Ypp*2)) ) ; 
+    Yp0  = min(3,Yp0 - (Ymgo - Ymgc) .* Ywm*4 .* Ygm .* (smooth3(Yp0)>2.1) .* (smooth3(Yp0)<2.6) .* min(4,max(0,Ygmt - median(Ygmt(:))) .* smooth3(Ypp*4)) ) ; 
+    if opt.presharpening > 1
+      % to fully work some stronger weighting is probably needed
+      Yp0  = min(3,Yp0 - (Ymgo2 - Ymgc2) .* Ywm*4 .* Ygm .* (smooth3(Yp0)>2.1) .* (smooth3(Yp0)<2.6) .* min(4,max(0,Ygmt - median(Ygmt(:))) .* smooth3(Ypp*2)) ) ; 
+      clear Ymgc2 Ymgo2;
+    end
+
+    % filling of deep wholes
+    % not fully working 
+    %[~,D] = cat_vol_downcut( single(cat_vol_morph( Yp0<2 | Yp0d,'ldo',1)) , 1 - (Yp0/3).^10, .0001); 
+    %Yp0  = min(3,Yp0 + smooth3( D==max(D(:)))); clear Yp0d
+ 
+    clear Ygmt Ypp Ymgc Ymgo Ycsf Ygm Ywm; 
+  end
+
+
+
+  if opt.myelinCorrection > 0
+    % quick estimation of the cortical thickness
+    opt2 = opt; opt.levels = 4; 
+    [Ycd, Ywd] = cat_vol_cwdist(Yp0, vx_vol, opt2);
+  
+    % remove highly distant outliers
+    [Yp0, Ywd, Ycd] = cleanupVessels(Yp0, Ywd, Ycd, opt.distcleanup);
+  
+    % projection-based thickness mapping
+    Ygmt0 = cat_vol_pbtp( round(Yp0) , Ywd, Ycd);
+    Ygmt0 = cat_vol_approx(Ygmt0); 
+  
+    % reestimation of the CSF distance 
+    Ypp   = min(1,min(Ygmt0,Ycd) ./ max(eps,Ygmt0)); Ypp(Yp0>2.5 & Ypp==0) = 1; 
+    Ycdc2 = cat_vbdist( single( max(Yp0<=1, 1 - Ycd - Ypp) ), true(size(Ycd)) );
+    Ycdc2(Ycdc2 > 6 / mean(vx_vol)) = 0; 
+   
+    % estimate the full tissue thickness (we needed the GM thickness and WM to reconstruct the sulcus)
+    Ybmt  = cat_vol_pbtp( min(3,4 - min(2,Yp0)), Ycdc2, Ycdc2*inf); 
+    Ybmt  = cat_vol_approx(Ybmt); 
+
+    % estimate correction area
+    medgmt = median(Ygmt0(:)); 
+    try iqrgmt = iqr(Ygmt0(:)); catch, iqrgmt = std(Ygmt0(:)); end
+    YenoughWM  = Ycdc2 < Ybmt - 1.5;
+    YthinnerGM = max(0,medgmt - 1.5*iqrgmt - Ygmt0); 
+    Yclose2CSF = Ycdc2>0 & Ycdc2<(medgmt - 1.5*iqrgmt); 
+    Ygmwmpve   = cat_vol_morph(Yp0>2 & Yp0<2.9,'do',1); % | smooth3(Yp0>2 & Yp0<2.9)>.7);
+    Ycor = YenoughWM & YthinnerGM & Yclose2CSF & Ygmwmpve;
+    clear YenoughWM YthinnerGM Yclose2CSF Ygmwmpve;
+    Yp0  = max(min(Yp0,2),Yp0 - smooth3( Ycor ) * opt.myelinCorrection);
+    clear Ycdc2 Ybmt Ycor; 
+  end
+
+
+  
   % (1) Distance estimation:
   % --------------------------------------------------------------------
   if opt.levels == 0 
@@ -290,14 +450,16 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
 
     % 1. sulcus-reconstruction: 
     %    first, we just use the classic estimation to get a corrected CSF distance
+    %Ygmt1 = min( Ywdc + Ycdc, cat_vol_pbtp( round(Yp0c) , Ywdc, Ycdc));
     Ygmt1 = cat_vol_pbtp( round(Yp0c) , Ywdc, Ycdc);
     Ygmt1 = pbtsulccor(Ygmt1, Ycdc, Ywdc);
     Ygmt1 = cat_vol_approx(Ygmt1, 'rec');            
     Ycdc  = min(Ygmt1,Ycdc); Ywdc = min(Ygmt1,Ywdc); 
     YM    = Ywdc>0 & Ycdc>0; Ycdc(YM) = min(Ycdc(YM), Ygmt1(YM) - Ywdc(YM)); % update
-    
+
     % 2. gyrus reconstruction: 
     %    now, we can process the inverse/dual case go get
+    %Ygmt2 = min( Ywdc + Ycdc, cat_vol_pbtp(round(4 - Yp0), Ycdc, Ywdc));
     Ygmt2 = cat_vol_pbtp(round(4 - Yp0), Ycdc, Ywdc);
     Ygmt2 = pbtsulccor(Ygmt2, Ycdc, Ywdc);
     Ygmt2 = cat_vol_approx(Ygmt2, 'rec');
@@ -306,8 +468,17 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
     
     % 3. final estimation: 
     %    having now the correct distance values the finale thickness estimations are applied
+    %Ygmt  = min( Ywdc + Ycdc, cat_vol_pbtp( round(Yp0) , Ywdc, Ycdc));
     Ygmt  = cat_vol_pbtp( round(Yp0) , Ywdc, Ycdc);
     Ygmt  = pbtsulccor(Ygmt, Ycdc, Ywdc); 
+
+    % 4. post correction: 
+    %    remove outlier 
+    if opt.removeoutliers
+      Ygmta = cat_vol_approx(Ygmt, 'rec');
+      Yblue = smooth3( (Ygmt - Ygmta) < -1.5 )>.6 & Ygmt>0; 
+      Ygmt(Yblue) = 0; 
+    end
 
     % remove thick outliers to avoid meninges  
     Ygmt( Ygmt > Ygmt1 .* (median(Ygmt1(Ygmt1(:)>0)) / median(Ygmt(Ygmt(:)>0))) ) = 0; clear Ygmt1;
@@ -350,6 +521,28 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
   clear Ycdc YM;
 
 
+  if opt.extendedpp
+    if 1 
+      % Ypp-based - performed better in ADNI (better position - more fitting thickness)
+      [D,I] = cat_vbdist(single(Ypp>0)); Ypp(Ypp<=0) = max(-0.2,0 - Ypp(I(Ypp<=0)) - D(Ypp<=0)/20); 
+      [D,I] = cat_vbdist(single(Ypp<1)); Ypp(Ypp>=1) = min( 1.2,1 + max(0,1 - Ypp(I(Ypp>=1))) + D(Ypp>=1)/20); 
+      clear D I; 
+      % additional filtering of the boundary regions helps too
+      if 1
+        YM = Ypp> 0.8 & Ypp<1.2; Ypps = cat_vol_localstat(Ypp,YM,1,1,4); Ypp(YM) = Ypps(YM); 
+        YM = Ypp>-0.2 & Ypp<0.2; Ypps = cat_vol_localstat(Ypp,YM,1,1,4); Ypp(YM) = Ypps(YM); 
+      else
+        YM = Ypp> 0.8 & Ypp<1.2; Ypp = cat_vol_laplace3R(Ypp,YM,.2);  
+        YM = Ypp>-0.2 & Ypp<0.2; Ypp = cat_vol_laplace3R(Ypp,YM,.2);  
+      end
+      clear Ypps YM; 
+    else
+      % Yp0-based ... not really working
+      Ypp(Ypp>=1) = 1   + (Yp0(Ypp>=1) - 2.5);
+      Ypp(Ypp<=0) = 0   + min(0,Yp0(Ypp<=0) - 1.5);
+    end
+  end
+
 
   % (5) Voxel-size resolution correction:
   % --------------------------------------------------------------------
@@ -358,8 +551,9 @@ function [Ygmt,Ypp] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
 
   % (*) EXTRA: magic sharpending function - enhancement of fine structures
   if opt.sharpening 
-    [Ypp, Ygmt] = sharpening(Ypp, Ygmt, vx_vol);
+    [Ypp, Ygmt] = sharpening(Ypp, Ygmt, vx_vol, opt.extendedpp);
   end
+
 end
 % ======================================================================
 function Yp0 = WMTC(Yp0)
@@ -470,7 +664,7 @@ function [Ywd, Ycd, Ygmt] = keepdetails(Yp0, Ywd, Ycd, Ygmt, vx_vol, extendedran
   end
 end
 % ======================================================================
-function [Ypp, Ygmt] = sharpening(Ypp, Ygmt, vx_vol)
+function [Ypp, Ygmt] = sharpening(Ypp, Ygmt, vx_vol, extended)
 % sharpening. Reduce  
 %
 %  [Ypp, Ygmt] = sharpening(Ypp, Ygmt, vx_vol)
@@ -489,7 +683,9 @@ function [Ypp, Ygmt] = sharpening(Ypp, Ygmt, vx_vol)
 
   % final smoothing to prepare surface reconstruction that also correct for WM topology issues 
   spm_smooth(Ypps,Ypps,.5/mean(vx_vol)); 
-  Ypps = min(Ypp>0, max(0,Ypps)); % remove background artifacts  
+  if ~extended
+    Ypps = min(Ypp>0, max(0,Ypps)); % remove background artifacts  
+  end
 
   % New version that only change mid-position values relevant for surface
   % creation. Although this avoid the old binary-like better thickness 
@@ -652,8 +848,13 @@ function [Ycd, Ywd] = cat_vol_cwdist(Yp0,vx_vol,opt)
       for si = 1:hss
         offset = max(0,min(opt.range, opt.range * si/(hss+1))); 
 
-        Ycdlc  = Ycdlc + 1/hss * max(0,cat_vbdist(single(Yp0 < ( 2.5 - offset)), Yp0 < 2.5 + opt.extendedrange ) - .5); 
-        Ycdhc  = Ycdhc + 1/hss * max(0,cat_vbdist(single(Yp0 < ( 2.5 + offset)), Yp0 < 2.5 + opt.extendedrange ) - .5);  
+        if 0
+          Ycdlc  = Ycdlc + 1/hss * max(0,cat_vbdist(single(cat_vol_morph(Yp0 < ( 2.5 - offset),'do',1+offset*2)), Yp0 < 2.5 + opt.extendedrange ) - .5); 
+          Ycdhc  = Ycdhc + 1/hss * max(0,cat_vbdist(single(cat_vol_morph(Yp0 < ( 2.5 + offset),'dc',1+offset*2)), Yp0 < 2.5 + opt.extendedrange ) - .5);  
+        else
+          Ycdlc  = Ycdlc + 1/hss * max(0,cat_vbdist(single(Yp0 < ( 2.5 - offset)), Yp0 < 2.5 + opt.extendedrange ) - .5); 
+          Ycdhc  = Ycdhc + 1/hss * max(0,cat_vbdist(single(Yp0 < ( 2.5 + offset)), Yp0 < 2.5 + opt.extendedrange ) - .5); 
+        end
 
         Ywdlc  = Ywdlc + 1/hss * max(0,cat_vbdist(single(Yp0 > ( 1.5 - offset)), Yp0 > 1.5 - opt.extendedrange ) - .5); 
         Ywdhc  = Ywdhc + 1/hss * max(0,cat_vbdist(single(Yp0 > ( 1.5 + offset)), Yp0 > 1.5 - opt.extendedrange ) - .5); 
