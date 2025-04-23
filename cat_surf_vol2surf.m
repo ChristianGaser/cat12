@@ -386,6 +386,8 @@ function out = cat_surf_vol2surf(varargin)
 
       if ~strcmp(job.sinfo_lh(vi).dataname, 'central')
         dsep = [dsep0 job.sinfo_lh(vi).dataname '_'];
+      else
+        dsep = dsep0; 
       end
       
       %%
