@@ -20,6 +20,7 @@ function out = cat_vol_maskimage(job)
   def.mask   = {''};
   def.bmask  = {''};
   def.recalc = 0; 
+  def.lazy   = 1; 
   job = cat_io_checkinopt(job,def);
 
   job.data  = cellstr(job.data);
@@ -27,8 +28,8 @@ function out = cat_vol_maskimage(job)
   job.bmask = cellstr(job.bmask);
   
   % convert to really empty strings
-  if numel(job.mask)==1  && isempty(job.mask{1}),  job.mask  = {}; end
-  if numel(job.bmask)==1 && isempty(job.bmask{1}), job.bmask = {}; end
+  if isscalar(job.mask)  && isempty(job.mask{1}),  job.mask  = {}; end
+  if isscalar(job.bmask) && isempty(job.bmask{1}), job.bmask = {}; end
   
   % create output structure
   Po = cell(numel(job.data),1); 
@@ -47,7 +48,7 @@ function out = cat_vol_maskimage(job)
     % for GUI output
     if job.returnOnlyFilename
       continue; 
-    elseif exist(Po{di},'file') && job.recalc
+    elseif exist(Po{di},'file') && (job.recalc || job.lazy==1)
       delete(Po{di}); 
     end
   end
@@ -56,7 +57,7 @@ function out = cat_vol_maskimage(job)
   end
   
   % error handling in case of missmatching number of files
-  if numel(job.data)==1 && numel(job.mask)>1 && numel(job.bmask)==0
+  if isscalar(job.data) && numel(job.mask)>1 && numel(job.bmask)==0
     % ok, multiple masks
   elseif( numel(job.data)~=numel(job.mask)  && numel(job.mask)>1  ) || ...
      ( numel(job.data)~=numel(job.bmask) && numel(job.bmask)>1 )
@@ -87,11 +88,11 @@ function out = cat_vol_maskimage(job)
 
     % load other images and use imcalc to mask the images
     imcalcopt = struct('verb',0);
-    if numel(job.data)==1 && numel(job.mask)>0 && numel(job.bmask)==0
+    if isscalar(job.data) && numel(job.mask)>0 && numel(job.bmask)==0
       Vm = spm_vol(char(job.mask));
       cat_vol_imcalc([Vi;Vm],Vo,sprintf('i1 %s',...
         sprintf(' .* ( i%d<0.5 ) ',(1:numel(job.mask))+1)),imcalcopt); 
-    elseif numel(job.data)==1 && numel(job.mask)>0 && numel(job.bmask)==0
+    elseif numel(job.data)>1 && numel(job.mask)>0 && numel(job.bmask)==0
       Vm = spm_vol(char(job.mask));
       Vb = spm_vol(char(job.bmask));
       cat_vol_imcalc([Vi;Vm;Vb],Vo,sprintf('i1 %s %s',...
