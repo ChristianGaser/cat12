@@ -2210,7 +2210,7 @@ function headtrimming = conf_vol_headtrimming(intlim,spm_type,prefix,suffix,verb
   suffix.hidden         = expert<1; 
   intlim.hidden         = expert<1; 
   lazy.hidden           = expert<1;
-  lazy.val              = 1; 
+  lazy.val              = {1};
   intlim.num            = [1 inf]; 
   
   % update input variables
