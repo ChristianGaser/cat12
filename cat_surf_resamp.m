@@ -322,7 +322,11 @@ function vout = cat_surf_resamp(varargin)
         cmd = sprintf('CAT_AddValuesToSurf "%s" "%s" "%s"',Presamp,Pfwhm,Pfwhm_gii);
         err = cat_system(cmd,job.debug,def.trerr);% if err, continue; end
 
-        if exist(Pfwhm_gii,'file'), Psname = Pfwhm_gii; end
+        if exist(Pfwhm_gii,'file')
+          Psname = Pfwhm_gii;
+        else
+          error('File %s could not be found which points to issue while writing files. Please check permission and repeat processing of that subject.',Pfwhm_gii);
+        end
 
         %% remove path from metadata to allow that files can be moved (pathname is fixed in metadata) 
         [pp2,ff2,ex2]   = spm_fileparts(Psname); %#ok<ASGLU>

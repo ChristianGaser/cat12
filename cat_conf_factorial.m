@@ -1440,8 +1440,12 @@ else
   job.globalm.gmsca.gmsca_no = 1;
 end
 
-% call SPM factorial design
-out = spm_run_factorial_design(job);
+% call SPM factorial design two times if needed (design matrix is sometimes not displayed)
+try
+  out = spm_run_factorial_design(job);
+catch
+  out = spm_run_factorial_design(job);
+end
 
 if isfield(job.check_SPM.check_SPM_zscore,'do_check_zscore') || job.check_SPM.check_SPM_ortho
   job = cat_stat_check_SPM(job);

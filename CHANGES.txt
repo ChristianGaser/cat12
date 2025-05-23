@@ -1,4 +1,17 @@
 ------------------------------------------------------------------------
+r2709 | gaser | 2025-05-23 15:51:40
+
+Changed paths:
+ M CHANGES.txt
+ M cat_conf_factorial.m
+ M cat_plot_histogram.m
+ M cat_surf_resamp.m
+
+Fixed: Call spm_run_factorial_design twice to ensure that design matrix is 
+       correctly displayed in cat_conf_factorial.m
+Fixed: Added missing argument in cat_plot_histogram for displaying T-maps.
+Fixed: Added error message if smoothed file is not found in cat_surf_resamp.m
+ ------------------------------------------------------------------------
 r2701 | dahnke | 2025-04-23 18:45:28
 
 Changed paths:

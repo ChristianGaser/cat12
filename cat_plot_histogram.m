@@ -266,7 +266,7 @@ for j = 1:n
       TH5 = X0(min(find(cumsum(H0)/sum(H0) > 0.95)));
       fprintf('%s\tmean=%g\tSD=%g\tES=%g\tTH5=%g\n',legend_str{j},mn,sd,ES,TH5);
       legend_str{j} = sprintf('TH5=%.4f %s',TH5,legend_str{j});
-      out2(j) = struct('name',legend_str{j},'mean',mn,'std',sd,'ES',ES,'TH5'); 
+      out2(j) = struct('name',legend_str{j},'mean',mn,'std',sd,'ES',ES,'TH5',TH5); 
     else
       if j==1
         fprintf( sprintf('\n%%%ds\t%%10s %%10s %%10s %%10s %%10s\n',length_leg), ...
