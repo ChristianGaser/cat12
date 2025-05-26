@@ -286,7 +286,7 @@ if 1
 end
   
   % do registration
-  if ~isfield( job , 'useprior' ) || isempty( job.useprior )
+  if ~isfield( job , 'useprior' ) || isempty( job.useprior )  &&  ~isempty(job.opts.affreg)
     warning('off','MATLAB:RandStream:ActivatingLegacyGenerators')
     % try to use the newer version that is updated in SPM12
     try
