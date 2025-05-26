@@ -60,6 +60,7 @@ niigz = cat_vol_findfiles(pth,'*.nii.gz');
 nii   = cat_io_strrep(cat_vol_findfiles(pth,'*.nii'),'.nii','.nii.gz');
 niigz = setdiff(niigz,nii); 
 if ~isempty(niigz), gunzip(niigz); end
+for fi = 1:numel(niigz), if cat_io_contains(niigz{fi},'templates_animals'), delete(niigz{fi}); end; end
 clear niigz nii
 
 % check that mex-files on MAC are not blocked
@@ -331,10 +332,18 @@ cat_io_cprintf([0.0 0.0 0.5],sprintf([ ...
     '  |  ____/ / _ \\\\ \\\\_   _/   ' expertguitext '\n' ...
     '  | |___  / /_\\\\ \\\\  | |     Computational Anatomy Toolbox\n' ...
     '  |____/ /_/   \\\\_\\\\ |_|     CAT12.9 - https://neuro-jena.github.io\n\n']));
-cat_io_cprintf([0.0 0.0 0.5],' CAT default file:\n\t%s\n\n',deffile); 
+cat_io_cprintf([0.0 0.0 0.5],'  CAT default file:\n\t%s\n\n',deffile); 
 
 % call GUI
 cat12('fig'); 
+
+% animal template dir warning
+if exist('species','var') && ~strcmp(species,'human') && ~exist(fullfile(catdir,'templates_animals'),'dir')
+  cat_io_cprintf('err',sprintf([ ...
+    '\n  Warning: The "templates_animals" subdirectory is missing. ' ...
+    '\n           You can download it from: ' ...
+    '\n             https://github.com/robdahn/primetemp \n\n']));  
+end
 
 % force use of PET modality in SPM to avoid problems of very low variance in spm_spm.m
 warning off
