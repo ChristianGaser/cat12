@@ -52,9 +52,10 @@ function [out,s] = cat_plot_boxplot(data,opt)
 %  opt.subsets     = false(1,numel(data)); 
 %  opt.hflip       = 0;              flip x-axis in case of horizontal bars
 %  opt.darkmode    = 0;              dark color mode with black background
-%  opt.I          = [];              optional definition of repetitions, subjects, time points and groups to
-%                                    support plot of connected data 
-%                                    This matrix can be used from SPM.xX.I
+%  opt.I          = [];              optional definition of replications, subjects, groups and time points to
+%                                    support plot of connected data. Replications should be defined in 1st
+%                                    column, all other columns are recognized automatically.
+%                                    This matrix can be used from SPM.xX.I.
 %
 %  The returned matrix s has one column for each dataset as follows:
 %
@@ -176,7 +177,7 @@ if isfield(opt,'I') && ~isempty(opt.I)
   sz = size(opt.I);
   if sz(2) > sz(1), I = I'; sz = size(I); end
 
-  % add repitition and group if not defined
+  % add replication and group if not defined
   if sz(2) == 3
     opt.I = [ones(sz(1),1) opt.I];
     sz = size(opt.I);
@@ -191,27 +192,50 @@ if isfield(opt,'I') && ~isempty(opt.I)
     if numel(data{1}) ~= sz(1)
       error('Size mismatch between data (n=%d) and time points (n=%d)',numel(data{1}),sz(1));
     else
+    
+      I1 = opt.I;
+      % column with the maximum value defines subjects
+      [x,y] = find(I1==max(I1(:)));
+      col_subj = y(1);
+      I1(:,col_subj) = 0; % set subject values to zero for further search
+      
+      % column with varying numbers for one subject defines time points (or replications)
+      [x,y] = find(diff(I1(x,:))~=0);
+      col_tp = y(1);
+      I1(:,col_tp) = 0; % set replication values to zero for further search
+      
+      % get column which defines groups (where maximum number is found in
+      % remaining values
+      [x,y] = find(I1==max(I1(:)));
+      col_group = max(y);
+
+      % remaining column defines replications
+      ind = 1:4;
+      ind([col_group col_tp col_subj]) = [];
+      col_repl = ind;
+
       % otherwise rebuild data cells according to time points and groups
       data0 = data{1};
-      I1 = opt.I;
+      opt.I = opt.I(:,[col_tp col_subj col_group col_repl]);
       offset = 0;
       names = [];
-      
-      for i = 1:max(opt.I(:,3))
-        ind3 = opt.I(:,3) == i;
-        for j = 1:max(opt.I(ind3,4))
+      I1 = opt.I;
+            
+      for i = 1:max(opt.I(:,col_group))
+        ind3 = opt.I(:,col_group) == i;
+        for j = 1:max(opt.I(ind3,col_tp))
           
           % prepare names
           names = char(names,sprintf('%d-%d',i,j));
         
-          ind4 = opt.I(:,4) == j;
+          ind4 = opt.I(:,col_tp) == j;
           data1{j+offset} = data{1}(ind3 & ind4);
           
           % create new opt.I with new TP number
-          I1(ind3 & ind4,4) = j + offset;
-          I1(ind3 & ind4,3) = 1;
+          I1(ind3 & ind4,col_tp) = j + offset;
+          I1(ind3 & ind4,col_group) = 1;
         end
-        offset = offset + max(opt.I(ind3,4));
+        offset = offset + max(opt.I(ind3,col_tp));
       end
       data = data1; clear data1
       opt.I = I1; clear I1

@@ -1,4 +1,15 @@
 ------------------------------------------------------------------------
+r2712 | gaser | 2025-06-18 12:08:43
+
+Changed paths:
+ M CHANGES.txt
+ M cat_plot_boxplot.m
+ M cat_surf_vol2surf.m
+
+Fixed: Doubled "else" removed in cat_surf_vol2surf.m.
+Fixed: I matrix in cat_plot_boxplot is now automatically recognized regardless
+       of column order.
+------------------------------------------------------------------------
 r2709 | gaser | 2025-05-23 15:51:40
 
 Changed paths:
