@@ -404,8 +404,8 @@ for i=1:n_subjects
   end
 
   if ~isfield(xml,'qualityratings') && ~isfield(xml,'QAM')
-    cat_io_cprintf('warn',['\nQuality rating is not saved for %s. Report file %s is incomplete. ' ...
-      '\nPlease repeat preprocessing and check for potential errors in the "err" folder.\n'],H.files.fname{i},xml_files(i,:));  
+    cat_io_cprintf('warn',['\nQuality rating is not saved for %s. \nReport file %s is incomplete. ' ...
+      '\nPlease repeat preprocessing and check for potential errors in the "err" folder.\n'],H.files.fname{i},xml_file);  
     H.isxml = false;
     break
   end
