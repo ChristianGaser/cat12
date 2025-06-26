@@ -503,18 +503,26 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
             %%
             cati = find(cellfun('isempty',strfind(txt,'GM thickness (GMT): '))==0,1,'last');
             if ~isempty(cati) 
-              cathd   = textscan( txt{cati} ,'%s','Delimiter',':'); 
-              cathd   = textscan( cathd{1}{2} ,'%s','Delimiter',' ');
-              catgmt  = [cathd{1}(1) cathd{1}(3)]; 
+              try
+                cathd   = textscan( txt{cati} ,'%s','Delimiter',':'); 
+                cathd   = textscan( cathd{1}{2} ,'%s','Delimiter',' ');
+                catgmt  = [cathd{1}(1) cathd{1}(3)]; 
+              catch
+                catgmt  = {'unknown'};
+              end
             else 
               catgmt  = {'unknown'};
             end
             %% surface intensity / position RMSE
             cati = find(cellfun('isempty',strfind(txt,'Surface intensity / position RMSE: '))==0,1,'last');
             if ~isempty(cati) 
-              cathd   = textscan( txt{cati}  ,'%s','Delimiter',':'); 
-              cathd   = textscan( cathd{1}{2},'%s','Delimiter',' ');
-              catSRMSE   = [cathd{1}(1) cathd{1}(3)]; 
+              try
+                cathd   = textscan( txt{cati}  ,'%s','Delimiter',':'); 
+                cathd   = textscan( cathd{1}{2},'%s','Delimiter',' ');
+                catSRMSE   = [cathd{1}(1) cathd{1}(3)]; 
+              catch
+                catSRMSE   = {'unknown'};
+              end
             else 
               catSRMSE  = {'unknown'};
             end
@@ -672,7 +680,11 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
               
                 % add GMV - colors only for developer
                 if job.extopts.expertgui > 1 && ~strcmp(catgmt{1},'unknown')
-                  col = colorgmt(GMC,str2double(catrgmv{3}) / 1200 * 2.5); 
+                  try
+                    col = colorgmt(GMC,str2double(catrgmv{3}) / 1200 * 2.5); 
+                  catch
+                    col = [0 0 0];
+                  end
                 else
                   col = [0 0 0];
                 end
@@ -1022,28 +1034,30 @@ function job = update_job(job,verbatlas)
   end
   
   %% ROI export 
-  if any( [job.extopts.atlas{ contains(spm_file(job.extopts.atlas(:,1),'path',''),'hammers') , 4 }] ) && verbatlas
-     cat_io_cprintf('err',...
-       ['-------------------------------------------- \n' ...
-        'Free academic end user license agreement for Hammers atlas! \n' ...
-        'For using the Hammers atlas, please fill out license agreement at \n  <a href = ' ...
-        '"http://brain-development.org/brain-atlases/adult-brain-atlases/adult-brain-maximum-probability-map-hammers-mith-atlas-n30r83-in-mni-space">https://www.brain-development.org</a>  \n' ...
-        '-------------------------------------------- \n']);
-  end
-  if any( [job.extopts.atlas{ contains(spm_file(job.extopts.atlas(:,1),'path',''),'lpba40') , 4 }] ) && verbatlas
-     cat_io_cprintf('warn',...
-       ['-------------------------------------------- \n' ...
-        'No commercial use of LPBA40 atlas! \n' ...
-        'Permission is granted to use this atlas without charge for non-commercial research purposes only: \n  <a href = ' ...
-        '"https://www.loni.usc.edu/docs/atlases_methods/Human_Atlas_Methods.pdf">https://www.loni.usc.edu/docs/atlases_methods/Human_Atlas_Methods.pdf</a> \n' ...
-        '-------------------------------------------- \n']);
-  end
-  if any( [job.extopts.atlas{ contains(spm_file(job.extopts.atlas(:,1),'path',''),'suit') , 4 }] ) && verbatlas
-     cat_io_cprintf('warn',...
-       ['-------------------------------------------- \n' ...
-        'No commercial use of SUIT cerebellar atlas! \n' ...
-        'Creative Commons Attribution-NonCommercial 3.0 Unported License does not allow commercial use. \n' ...
-        '-------------------------------------------- \n']);
+  if ~isempty(job.extopts.atlas)
+    if any( [job.extopts.atlas{ contains(spm_file(job.extopts.atlas(:,1),'path',''),'hammers') , 4 }] ) && verbatlas
+       cat_io_cprintf('err',...
+         ['-------------------------------------------- \n' ...
+          'Free academic end user license agreement for Hammers atlas! \n' ...
+          'For using the Hammers atlas, please fill out license agreement at \n  <a href = ' ...
+          '"http://brain-development.org/brain-atlases/adult-brain-atlases/adult-brain-maximum-probability-map-hammers-mith-atlas-n30r83-in-mni-space">https://www.brain-development.org</a>  \n' ...
+          '-------------------------------------------- \n']);
+    end
+    if any( [job.extopts.atlas{ contains(spm_file(job.extopts.atlas(:,1),'path',''),'lpba40') , 4 }] ) && verbatlas
+       cat_io_cprintf('warn',...
+         ['-------------------------------------------- \n' ...
+          'No commercial use of LPBA40 atlas! \n' ...
+          'Permission is granted to use this atlas without charge for non-commercial research purposes only: \n  <a href = ' ...
+          '"https://www.loni.usc.edu/docs/atlases_methods/Human_Atlas_Methods.pdf">https://www.loni.usc.edu/docs/atlases_methods/Human_Atlas_Methods.pdf</a> \n' ...
+          '-------------------------------------------- \n']);
+    end
+    if any( [job.extopts.atlas{ contains(spm_file(job.extopts.atlas(:,1),'path',''),'suit') , 4 }] ) && verbatlas
+       cat_io_cprintf('warn',...
+         ['-------------------------------------------- \n' ...
+          'No commercial use of SUIT cerebellar atlas! \n' ...
+          'Creative Commons Attribution-NonCommercial 3.0 Unported License does not allow commercial use. \n' ...
+          '-------------------------------------------- \n']);
+    end
   end
 
 
