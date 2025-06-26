@@ -102,6 +102,7 @@ function varargout = cat_io_xml(file,varargin)
       spm_progress_bar('Init',numel(file),...
         sprintf('read XML\n%d',numel(file)),'Files Completed'); 
       for fi=1:numel(file)
+        if ~exist(file{fi},'file'), continue; end
         try
           tmp = cat_io_xml(file{fi});
         catch
