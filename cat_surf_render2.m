@@ -953,7 +953,7 @@ switch lower(action)
         uimenu(c1, 'Label', sprintf('Dir:    %s'              ,spm_str_manip(sinfo1(1).pp,  'a40'))); 
         %%
         % Inflation off ... to slow and unimportant
-        % uimenu(cmenu, 'Label','Inflate', 'Interruptible','off', 'Callback',{@myInflate, H});
+        uimenu(cmenu, 'Label','Inflate', 'Interruptible','off', 'Callback',{@myInflate, H});
         
          
         
