@@ -451,7 +451,7 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
     % 1. sulcus-reconstruction: 
     %    first, we just use the classic estimation to get a corrected CSF distance
     %Ygmt1 = min( Ywdc + Ycdc, cat_vol_pbtp( round(Yp0c) , Ywdc, Ycdc));
-    Ygmt1 = cat_vol_pbtp( round(Yp0c) , Ywdc, Ycdc);
+    Ygmt1 = cat_vol_pbtp( round(Yp0c) , Ywdc, Ycdc); % important here not to use minimum with Ywdc+Ycdc that would kill gyrus recon!
     Ygmt1 = pbtsulccor(Ygmt1, Ycdc, Ywdc);
     Ygmt1 = cat_vol_approx(Ygmt1, 'rec');            
     Ycdc  = min(Ygmt1,Ycdc); Ywdc = min(Ygmt1,Ywdc); 
