@@ -29,8 +29,16 @@ jobs:
       - name: Build standalone
         run: |
           matlab -batch "cd(fullfile('spm','config')); spm_make_standalone(fullfile('..','standalone'), {'toolbox/cat12'});"
+      - name: Zip standalone
+        run: |
+          cd spm
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            7z a ../cat12-${{ matrix.os }}.zip standalone > /dev/null
+          else
+            zip -r ../cat12-${{ matrix.os }}.zip standalone > /dev/null
+          fi
       - uses: actions/upload-artifact@v3
         with:
           name: cat12-${{ matrix.os }}
-          path: spm/standalone
+          path: cat12-${{ matrix.os }}.zip
 
