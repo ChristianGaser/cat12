@@ -10,7 +10,7 @@
 
 
 REVISION=`git rev-list --count HEAD`
-DATE=`git log --date short |grep "Date:"|head -1|cut -f2 -d':'|sed -e s'/ //g'`
+DATE=`git log --date short |grep "Date:" | head -1 | cut -f2 -d':' | sed -e 's/ //g'`
 
 perl -p -i -e 's/\$Id\$/\$Id: '$REVISION' '$DATE' \$/g' cat12/*.m
 perl -p -i -e 's/\$Id\$/\$Id: '$REVISION' '$DATE' \$/g' cat12/*.sh
