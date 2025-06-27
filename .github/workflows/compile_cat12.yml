@@ -23,6 +23,9 @@ jobs:
         with:
           repository: spm/spm
           path: spm
+      - name: Install rsync
+        if: runner.os == 'Windows'
+        run: choco install -y rsync
       - name: Install CAT12 in SPM toolbox
         run: |
           mkdir -p spm/toolbox/cat12
