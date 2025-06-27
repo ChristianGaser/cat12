@@ -13,6 +13,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
+      - name: Update
+        run: make update
       - name: Checkout SPM
         uses: actions/checkout@v3
         with:
