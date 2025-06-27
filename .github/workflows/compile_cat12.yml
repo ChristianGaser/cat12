@@ -37,7 +37,7 @@ jobs:
           release: R2023b
       - name: Build standalone
         run: |
-          matlab -batch "cd(fullfile('spm','config')); spm_make_standalone(fullfile('..','standalone'), {'toolbox/cat12'});"
+          matlab -batch "compile; cd(fullfile('spm','config')); spm_make_standalone(fullfile('..','standalone'), {'toolbox/cat12'});"
       - name: Zip standalone
         run: |
           cd spm
@@ -46,7 +46,7 @@ jobs:
           else
             zip -r ../cat12-${{ matrix.os }}.zip standalone > /dev/null
           fi
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: cat12-${{ matrix.os }}
           path: cat12-${{ matrix.os }}.zip
