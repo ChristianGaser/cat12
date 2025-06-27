@@ -21,7 +21,16 @@ jobs:
       - name: Install CAT12 in SPM toolbox
         run: |
           mkdir -p spm/toolbox/cat12
-          rsync -a --exclude='.git' ./ spm/toolbox/cat12/
+          rsync -a --exclude='.git' \
+            --exclude='batches/' \
+            --exclude='catQC/' \
+            --exclude='check_pipeline/' \
+            --exclude='development/' \
+            --exclude='html/' \
+            --exclude='internal/' \
+            --exclude='mexmaca/' \
+            --exclude='mexmaci/' \
+            ./ spm/toolbox/cat12/
       - name: Setup MATLAB
         uses: matlab-actions/setup-matlab@v2
         with:
