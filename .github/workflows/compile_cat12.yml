@@ -22,6 +22,11 @@ jobs:
         run: |
           mkdir -p spm/toolbox/cat12
           rsync -a --exclude='.git' ./ spm/toolbox/cat12/
+      - name: Add precompiled CAT12 binaries
+        run: |
+          curl -fsSL -o CAT_Binaries.zip https://github.com/ChristianGaser/cat12/releases/download/12.9/CAT_Binaries.zip
+          unzip -q CAT_Binaries.zip
+          rsync -a CAT_Binaries/* spm/toolbox/cat12/
       - name: Setup MATLAB
         uses: matlab-actions/setup-matlab@v2
         with:
@@ -29,8 +34,16 @@ jobs:
       - name: Build standalone
         run: |
           matlab -batch "cd(fullfile('spm','config')); spm_make_standalone(fullfile('..','standalone'), {'toolbox/cat12'});"
+      - name: Zip standalone
+        run: |
+          cd spm
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            7z a ../cat12-${{ matrix.os }}.zip standalone > /dev/null
+          else
+            zip -r ../cat12-${{ matrix.os }}.zip standalone > /dev/null
+          fi
       - uses: actions/upload-artifact@v3
         with:
           name: cat12-${{ matrix.os }}
-          path: spm/standalone
+          path: cat12-${{ matrix.os }}.zip
 
