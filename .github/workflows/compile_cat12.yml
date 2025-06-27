@@ -22,11 +22,6 @@ jobs:
         run: |
           mkdir -p spm/toolbox/cat12
           rsync -a --exclude='.git' ./ spm/toolbox/cat12/
-      - name: Add precompiled CAT12 binaries
-        run: |
-          curl -fsSL -o CAT_Binaries.zip https://github.com/ChristianGaser/cat12/releases/download/12.9/CAT_Binaries.zip
-          unzip -q CAT_Binaries.zip
-          rsync -a CAT_Binaries/* spm/toolbox/cat12/
       - name: Setup MATLAB
         uses: matlab-actions/setup-matlab@v2
         with:
