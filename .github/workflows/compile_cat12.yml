@@ -94,9 +94,8 @@ jobs:
         run: choco install zip -y
         shell: bash
 
-      - name: Compress to ZIP (specific MCR version)
+      - name: Compress to ZIP
         run: |
-          cd ..
           mv standalone cat_standalone
           zip -r cat_standalone_${{ github.ref_name }}_${{ matrix.os_name }}_${{ env.MATLAB_VERSION }}.zip cat_standalone runtime_installer
 
