@@ -57,9 +57,11 @@ jobs:
           path: spm
           
       - name: Install CAT12 in SPM toolbox
+        shell: bash
         run: |
           mkdir -p spm/toolbox/cat12
           rsync -a --exclude='.git' \
+            --exclude='spm/toolbox/cat12/'
             --exclude='batches/' \
             --exclude='catQC/' \
             --exclude='check_pipeline/' \
