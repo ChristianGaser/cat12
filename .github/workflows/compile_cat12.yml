@@ -98,3 +98,8 @@ jobs:
         run: |
           mv standalone cat_standalone
           zip -r cat_standalone_${{ github.ref_name }}_${{ matrix.os_name }}_${{ env.MATLAB_VERSION }}.zip cat_standalone runtime_installer
+
+      - name: Release standalone
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ../cat_standalone*.zip
