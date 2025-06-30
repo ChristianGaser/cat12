@@ -93,6 +93,7 @@ jobs:
         run: |
           cd ..
           zip -r cat_standalone_${{ github.ref_name }}_${{ matrix.os_name }}.zip standalone runtime_installer
+          
       - name: Compress to ZIP (specific MCR version)
         if: matrix.version != 'latest'
         run: |
