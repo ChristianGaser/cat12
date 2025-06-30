@@ -56,6 +56,10 @@ jobs:
           repository: spm/spm
           path: spm
           
+      - name: Install rsync
+        if: runner.os == 'Windows'
+        run: choco install -y rsync
+
       - name: Install CAT12 in SPM toolbox
         shell: bash
         run: |
@@ -82,7 +86,7 @@ jobs:
             spm_make_standalone
             mkdir('runtime_installer');
             if ~isMATLABReleaseOlderThan("R2024b")
-              compiler.runtime.customInstaller('Runtime_${{ env.MATLAB_VERSION }}_for_spm_standalone_${{ github.ref_name }}', '../standalone/requiredMCRProducts.txt', OutputDir='../runtime_installer');
+              compiler.runtime.customInstaller('Runtime_${{ env.MATLAB_VERSION }}_for_cat_standalone_${{ github.ref_name }}', '../standalone/requiredMCRProducts.txt', OutputDir='../runtime_installer');
             end
 
       - name: Install zip on Windows
@@ -90,17 +94,11 @@ jobs:
         run: choco install zip -y
         shell: bash
 
-      - name: Compress to ZIP (latest)
-        if: matrix.version == 'latest'
-        run: |
-          cd ..
-          zip -r cat_standalone_${{ github.ref_name }}_${{ matrix.os_name }}.zip standalone runtime_installer
-          
       - name: Compress to ZIP (specific MCR version)
-        if: matrix.version != 'latest'
         run: |
           cd ..
-          zip -r cat_standalone_${{ github.ref_name }}_${{ matrix.os_name }}_${{ env.MATLAB_VERSION }}.zip standalone runtime_installer
+          mv standalone cat_standalone
+          zip -r cat_standalone_${{ github.ref_name }}_${{ matrix.os_name }}_${{ env.MATLAB_VERSION }}.zip cat_standalone runtime_installer
 
       - name: Release standalone
         uses: softprops/action-gh-release@v2
