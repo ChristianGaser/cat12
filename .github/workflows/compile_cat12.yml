@@ -84,13 +84,13 @@ jobs:
         run: |
           cd spm/toolbox/cat12
           make update
-          ls
           cd ../
 
       - name: Release CAT12
         if: runner.os == 'Linux'
-        run:
+        run: |
           ls
+          pwd
           ls cat12
           zip -r cat_${{ github.ref_name }}.zip -i cat12
 
