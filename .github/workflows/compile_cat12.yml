@@ -2,8 +2,8 @@ name: Build CAT12 standalone
 
 on:
   workflow_dispatch:
-    tags:
-      - "[0-9][0-9].[0-9][0-9]*"
+  #  tags:
+  #    - "[0-9][0-9].[0-9][0-9]*"
 
 env:
   MLM_LICENSE_TOKEN: ${{ secrets.MATLAB_BATCH_TOKEN }}
@@ -45,8 +45,8 @@ jobs:
           matlab_release=$(cat matlab_release.txt)
           echo "MATLAB_VERSION=$matlab_release" >> $GITHUB_ENV
 
-      - name: Checkout CAT
-        uses: actions/checkout@v4
+      #- name: Checkout CAT
+      #  uses: actions/checkout@v4
 
       - name: Checkout SPM
         uses: actions/checkout@v3
@@ -78,6 +78,8 @@ jobs:
         uses: matlab-actions/run-command@v2
         with:
           command: |
+            addpath(genpath('spm'));
+            savepath;
             cd('spm/toolbox/cat12')
             compile
             cd('spm')
