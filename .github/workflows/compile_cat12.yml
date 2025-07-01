@@ -113,7 +113,6 @@ jobs:
 
       - name: Compress to ZIP
         run: |
-          ls
           cd spm
           ls
           mv standalone cat_standalone
