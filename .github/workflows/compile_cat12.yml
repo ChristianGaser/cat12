@@ -17,8 +17,8 @@ jobs:
       matrix:
         # This actions compiles by default with the newest available matlab version
         version: ["R2023b"]
-        os: ["ubuntu-latest"] # macos-13 has Intel architecture, macos-latest has Apple Silicon
-        #os: ["ubuntu-latest", "macos-13", "macos-latest", "windows-latest"] # macos-13 has Intel architecture, macos-latest has Apple Silicon
+        os: ["ubuntu-18.04"]
+        #os: ["ubuntu-18.04", "macos-13", "macos-latest", "windows-latest"] # macos-13 has Intel architecture, macos-latest has Apple Silicon
 
     steps:
       - name: Set up MATLAB
@@ -44,9 +44,6 @@ jobs:
         run: |
           matlab_release=$(cat matlab_release.txt)
           echo "MATLAB_VERSION=$matlab_release" >> $GITHUB_ENV
-
-      #- name: Checkout CAT
-      #  uses: actions/checkout@v4
 
       - name: Checkout SPM
         uses: actions/checkout@v3
@@ -79,7 +76,6 @@ jobs:
         with:
           command: |
             addpath('spm');
-            savepath;
             cd('spm/toolbox/cat12')
             compile
             cd('spm')
