@@ -100,6 +100,7 @@ jobs:
             cd('spm');
             addpath(genpath('.'));
             savepath;
+            cd('config');
             spm_make_standalone
             mkdir('runtime_installer');
             if ~isMATLABReleaseOlderThan("R2024b")
