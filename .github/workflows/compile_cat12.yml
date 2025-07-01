@@ -90,7 +90,6 @@ jobs:
 
       - name: Release CAT12
         if: runner.os == 'Linux'
-        uses: softprops/action-gh-release@v2
         run:
           zip -r cat_${{ github.ref_name }}.zip cat12
 
