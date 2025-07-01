@@ -8,17 +8,9 @@ env:
 
 jobs:
   test_compile:
-    runs-on: ubuntu-latest
-    container:
-      image: ubuntu:18.04
+    runs-on: ubuntu-22.04
       
     steps:
-      - name: Install dependencies
-        run: |
-          apt-get update
-          apt-get install -y build-essential wget
-          # weitere Abhängigkeiten (ggf. MATLAB Runtime, git, ...)
-          
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -49,6 +41,19 @@ jobs:
             --exclude='mexmaci/' \
             ./ spm/toolbox/cat12/
 
+      - name: Compile MEX in Ubuntu 18.04 container
+        run: |
+          docker pull ubuntu:18.04
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace \
+            ubuntu:18.04 \
+            bash -c "
+              apt-get update &&
+              apt-get install -y build-essential wget &&
+              # <deine Kommandos zum Kompilieren, ggf. MATLAB/MCR-Setup etc.>
+              ls
+            "
       - name: Compile CAT12 mex-files
         uses: matlab-actions/run-command@v2
         with:
