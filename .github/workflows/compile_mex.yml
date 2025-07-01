@@ -8,6 +8,7 @@ env:
 
 jobs:
   test_compile:
+    name: Compile CAT12 mex-files
     runs-on: ubuntu-22.04
       
     steps:
