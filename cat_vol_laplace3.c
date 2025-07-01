@@ -80,7 +80,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   
   /* indices of the neighbor Ni (index distance) and euclidean distance NW */
   const int   NI[]  = { -1, 1, -x, x, -xy, xy};  
-  const int   sN = sizeof(NI)/4;    
+  const int   sN = sizeof(NI) / sizeof(NI[0]);
   
   /* output data */
   mxArray *hlps[2];

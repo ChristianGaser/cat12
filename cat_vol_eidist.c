@@ -251,9 +251,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   double   *S = mxGetPr(SS);
   if (nrhs<3) {S[0]=1; S[1]=1; S[2]=1;} else S=mxGetPr(prhs[2]);
   
-  float s1 = fabs((float)S[0]);
-  float s2 = fabs((float)S[1]);
-  float s3 = fabs((float)S[2]); /* x,y,z - voxel size */
+  float s1 = (float)fabs(S[0]);
+  float s2 = (float)fabs(S[1]);
+  float s3 = (float)fabs(S[2]); /* x,y,z - voxel size */
   const float   s12  = sqrt( s1*s1  + s2*s2); /* xy  - voxel size */
   const float   s13  = sqrt( s1*s1  + s3*s3); /* xz  - voxel size */
   const float   s23  = sqrt( s2*s2  + s3*s3); /* yz  - voxel size */
