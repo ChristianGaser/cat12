@@ -88,6 +88,7 @@ jobs:
       - name: Release CAT12
         if: runner.os == 'Linux'
         run: |
+          rm -rf standalone
           cd spm/toolbox
           zip -r cat_${{ github.ref_name }}.zip cat12
 
@@ -96,14 +97,14 @@ jobs:
         uses: matlab-actions/run-command@v2
         with:
           command: |
+            mkdir('runtime_installer');
             cd('spm');
             addpath(genpath('.'));
             savepath;
-            mkdir('runtime_installer');
             cd('config');
             spm_make_standalone
             if ~isMATLABReleaseOlderThan("R2024b")
-              compiler.runtime.customInstaller('Runtime_${{ env.MATLAB_VERSION }}_for_cat_standalone_${{ github.ref_name }}', '../standalone/requiredMCRProducts.txt', OutputDir='../runtime_installer');
+              compiler.runtime.customInstaller('Runtime_${{ env.MATLAB_VERSION }}_for_cat_standalone_${{ github.ref_name }}', '../standalone/requiredMCRProducts.txt', OutputDir='../../runtime_installer');
             end
 
       - name: Install zip on Windows
@@ -113,10 +114,6 @@ jobs:
 
       - name: Compress to ZIP
         run: |
-          cd ..
-          ls
-          find -name standalone
-          find -name runtime_installer
           mv standalone cat_standalone
           zip -r cat_standalone_${{ github.ref_name }}_${{ matrix.os_name }}_${{ env.MATLAB_VERSION }}.zip cat_standalone runtime_installer
 
