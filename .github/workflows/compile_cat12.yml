@@ -19,8 +19,8 @@ jobs:
         #os: ["ubuntu-22.04", "macos-13", "macos-latest", "windows-latest"] # macos-13 has Intel architecture, macos-latest has Apple Silicon
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      #- name: Checkout code
+      #  uses: actions/checkout@v4
 
       - name: Set up MATLAB
         uses: matlab-actions/setup-matlab@v2
@@ -88,7 +88,6 @@ jobs:
       - name: Release CAT12
         if: runner.os == 'Linux'
         run: |
-          rm -rf standalone
           cd spm/toolbox
           zip -r cat_${{ github.ref_name }}.zip cat12
 
