@@ -13,6 +13,12 @@ jobs:
       image: ubuntu:18.04
       
     steps:
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y build-essential wget
+          # weitere Abhängigkeiten (ggf. MATLAB Runtime, git, ...)
+          
       - name: Checkout code
         uses: actions/checkout@v4
 
