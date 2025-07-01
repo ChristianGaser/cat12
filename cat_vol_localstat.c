@@ -94,12 +94,12 @@
 
 
 /* qicksort for median */
-void swap(float *a, float *b)
+void swap_float(float *a, float *b)
 {
   float t=*a; *a=*b; *b=t;
 }
 
-void sort(float arr[], int beg, int end)
+void sort_float(float arr[], int beg, int end)
 {
   if (end > beg + 1)
   {
@@ -110,11 +110,11 @@ void sort(float arr[], int beg, int end)
       if (arr[l] <= piv)
         l++;
       else
-        swap(&arr[l], &arr[--r]);
+        swap_float(&arr[l], &arr[--r]);
     }
-    swap(&arr[--l], &arr[beg]);
-    sort(arr, beg, l);
-    sort(arr, r, end);
+    swap_float(&arr[--l], &arr[beg]);
+    sort_float(arr, beg, l);
+    sort_float(arr, r, end);
   }
 }
 
@@ -329,7 +329,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         /* median */
         if (st==8) {
           if (n>nh*nh*nh) { 
-            sort(NV,0,n); 
+            sort_float(NV,0,n); 
             md=(int)ROUND(n*0.5);
             NVmd   = NV[md];
             M[ind] = NV[md];
@@ -351,7 +351,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
               NVmd = (NV[0] + NV[1]) / 2.0;  
             }
             else {
-              sort(NV,0,n); 
+              sort_float(NV,0,n); 
              NVmd = NV[(int)(n/2.0)];
             }
           }
@@ -396,7 +396,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             if ( stdpc[di]>1 ) {stdp[di]=sqrtf((stdp[di]/(stdpc[di]-1)));} else {stdp[di] = 0.0;}
             if ( stdnc[di]>1 ) {stdn[di]=sqrtf((stdn[di]/(stdnc[di]-1)));} else {stdn[di] = 0.0;}
           }
-         /* sort(stdd,0,2); */
+         /* sort_float(stdd,0,2); */
 
           M[ind]=stdd[0];
           M2[ind]=stdd[1];

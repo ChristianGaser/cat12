@@ -127,19 +127,19 @@ int sub2ind(int x, int y, int z, int s[]) {
 }
 
 
-float fpow(float x, float y) {
+float pow_float(float x, float y) {
   return (float) pow((double) x,(double) y); 
 }
 
-float fsqr(float x) {
+float sqr_float(float x) {
   return x*x; 
 }
 
-float fsqrt(float x) {
+float sqrt_float(float x) {
   return (float) sqrt((double) x); 
 }
 
-float ffloor(float x) {
+float floor_float(float x) {
   return (float) floor((double) x); 
 }
 
@@ -152,8 +152,8 @@ float isoval(float SEG[], float x, float y, float z, int s[]){
 
   int i;
   float seg=0.0, n=0.0;
-  float fx = ffloor(x),   fy = ffloor(y),   fz = ffloor(z);
-  float cx = ffloor(x+1), cy = ffloor(y+1), cz = ffloor(z+1);
+  float fx = floor_float(x),   fy = floor_float(y),   fz = floor_float(z);
+  float cx = floor_float(x+1), cy = floor_float(y+1), cz = floor_float(z+1);
     
   float wfx = cx-x, wfy = cy-y, wfz = cz-z;
   float wcx = x-fx, wcy = y-fy, wcz = z-fz;
@@ -506,7 +506,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         dinu = (float)iu - (float)nu; dinu *= s1;
         dinv = (float)iv - (float)nv; dinv *= s2;
         dinw = (float)iw - (float)nw; dinw *= s3;
-        DIN  = fsqrt(fsqr(dinu) + fsqr(dinv) + fsqr(dinw) - (3*0.5) ); /* 0.5 is the boundary vs. grid-distance */  
+        DIN  = sqrt_float(sqr_float(dinu) + sqr_float(dinv) + sqr_float(dinw) - (3*0.5) ); /* 0.5 is the boundary vs. grid-distance */  
 
         /* For voxels that are not too close to the object the exact 
          * Euclidean distance should be estimated. For closer points
@@ -532,7 +532,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             dinu = (float)iu - WMu; dinu *= s1;
             dinv = (float)iv - WMv; dinv *= s2;
             dinw = (float)iw - WMw; dinw *= s3;
-            DINE = fsqrt(fsqr(dinu) + fsqr(dinv) + fsqr(dinw)); 
+            DINE = sqrt_float(sqr_float(dinu) + sqr_float(dinv) + sqr_float(dinw)); 
 
             if ( false ) { // WM<0.45 || WM>0.55 ) { // 0.4 0.6
               WMu = (float)nu + 0.5*dinu*dcf; 
