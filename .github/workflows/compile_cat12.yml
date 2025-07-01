@@ -84,14 +84,11 @@ jobs:
         run: |
           cd spm/toolbox/cat12
           make update
-          cd ../
 
       - name: Release CAT12
         if: runner.os == 'Linux'
         run: |
-          ls
-          pwd
-          ls cat12
+          cd spm/toolbox
           zip -r cat_${{ github.ref_name }}.zip -i cat12
 
       # 1) Add SPM with subfolders to the path 2) Run spm_make_standalone in matlab 3) Create runtime_installer
@@ -99,6 +96,7 @@ jobs:
         uses: matlab-actions/run-command@v2
         with:
           command: |
+            cd('spm');
             addpath(genpath('.'));
             savepath;
             spm_make_standalone
