@@ -100,8 +100,8 @@ jobs:
             addpath(genpath('.'));
             savepath;
             cd('config');
-            spm_make_standalone
             mkdir('runtime_installer');
+            spm_make_standalone
             if ~isMATLABReleaseOlderThan("R2024b")
               compiler.runtime.customInstaller('Runtime_${{ env.MATLAB_VERSION }}_for_cat_standalone_${{ github.ref_name }}', '../standalone/requiredMCRProducts.txt', OutputDir='../runtime_installer');
             end
