@@ -90,6 +90,13 @@
   #define FNAN 0.0f/0.0f
 #endif
 
+#ifndef min
+#define min(a,b) (((a)<(b))?(a):(b))
+#endif
+#ifndef max
+#define max(a,b) (((a)>(b))?(a):(b))
+#endif
+
 #define index(A,B,C,DIM) ((C)*DIM[0]*DIM[1] + (B)*DIM[0] + (A))
 
 
@@ -119,13 +126,9 @@ void sort_float(float arr[], int beg, int end)
 }
 
 
-
 /* floating point versions */
-float min(float a, float b) { if (a<b) return a; else return b; }
-float max(float a, float b) { if (a>b) return a; else return b; }
 float abs2(float n) { if (n<0) return -n; else return n; }        
 float pow2(float n) { return n*n; }
-
 
 
 /* main function */
