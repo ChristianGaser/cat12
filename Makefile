@@ -84,7 +84,7 @@ help:
 #make html documentation
 docs:
 	-@cat doc/cat.txt | sed -e 's/VERSION/'${NEWVERSION}'/g' -e 's/RELNUMBER/r'${REVISION}'/g' -e 's/DATE/'${DATE}'/g' > doc/cat.html
-	-@cp -R doc/* ../cat12-help/
+	-@test ! -d ../cat12-help || cp -R doc/* ../cat12-help/
 
 # update version numbers
 update: docs copy_longmode
@@ -96,7 +96,7 @@ update: docs copy_longmode
 	-@echo '% Computational Anatomy Toolbox' > INSTALL.txt
 	-@echo '% Version ' ${REVISION} ${NEWVERSION} ${DATE} >> INSTALL.txt
 	-@cat INSTALL_info.txt >> INSTALL.txt
-	-@cp cat_spm_results_ui.m ../tfce/
+	-@test ! -d ../tfce/ || cp cat_spm_results_ui.m ../tfce/
 	-@perl -p -i -e "s/${OLDVERSION}/${NEWVERSION}/g" spm_cat12.m
 	-@chmod a+x CAT.*/*
 
