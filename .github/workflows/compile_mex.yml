@@ -25,35 +25,6 @@ jobs:
           repository: spm/spm
           path: spm
 
-      - name: Install CAT12 in SPM toolbox
-        shell: bash
-        run: |
-          mkdir -p spm/toolbox/cat12
-          rsync -a --exclude='.git' \
-            --exclude='spm/toolbox/cat12/' \
-            --exclude='batches/' \
-            --exclude='catQC/' \
-            --exclude='check_pipeline/' \
-            --exclude='development/' \
-            --exclude='html/' \
-            --exclude='internal/' \
-            --exclude='mexmaca/' \
-            --exclude='mexmaci/' \
-            ./ spm/toolbox/cat12/
-
-      - name: Compile MEX in Ubuntu 18.04 container
-        run: |
-          docker pull ubuntu:18.04
-          docker run --rm \
-            -v ${{ github.workspace }}:/workspace \
-            -w /workspace \
-            ubuntu:18.04 \
-            bash -c "
-              apt-get update &&
-              apt-get install -y build-essential wget &&
-              # <deine Kommandos zum Kompilieren, ggf. MATLAB/MCR-Setup etc.>
-              ls
-            "
       - name: Compile CAT12 mex-files
         uses: matlab-actions/run-command@v2
         with:
