@@ -89,7 +89,8 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           cd spm/toolbox
-          zip -r cat_${{ github.ref_name }}.zip -i cat12
+          ls
+          zip -r cat_${{ github.ref_name }}.zip cat12
 
       # 1) Add SPM with subfolders to the path 2) Run spm_make_standalone in matlab 3) Create runtime_installer
       - name: Build MATLAB standalone
