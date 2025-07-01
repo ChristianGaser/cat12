@@ -105,14 +105,14 @@ function varargout = compile(comp,test,verb)
     ncw  = cell(1,2);   % number of warnings
     
     mex -O -largeArrayDims  cat_vol_eidist.c
-    mex -O -largeArrayDims  cat_vol_vbdist.c
+    mex -O -largeArrayDims  cat_vbdist.c
     mex -O -largeArrayDims  cat_vol_localstat.c
     mex -O -largeArrayDims  cat_vol_pbtp.c
     mex -O -largeArrayDims  cat_sanlm.c sanlm_float.c
 
     
     mex -O -largeArrayDims COPTIMFLAGS='-O3 -fwrapv -DNDEBUG' cat_vol_eidist.c
-    mex -O -largeArrayDims COPTIMFLAGS='-O3 -fwrapv -DNDEBUG' cat_vol_vbdist.c
+    mex -O -largeArrayDims COPTIMFLAGS='-O3 -fwrapv -DNDEBUG' cat_vbdist.c
     mex -O -largeArrayDims COPTIMFLAGS='-O3 -fwrapv -DNDEBUG' cat_vol_localstat.c
     mex -O -largeArrayDims COPTIMFLAGS='-O3 -fwrapv -DNDEBUG' cat_vol_pbtp.c
     mex -O -largeArrayDims COPTIMFLAGS='-O3 -fwrapv -DNDEBUG' cat_sanlm.c sanlm_float.c
