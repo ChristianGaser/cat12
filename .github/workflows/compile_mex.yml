@@ -7,44 +7,39 @@ env:
   MLM_LICENSE_TOKEN: ${{ secrets.MATLAB_BATCH_TOKEN }}
 
 jobs:
-  build_matlab_standalone:
-    name: Build CAT12 standalone
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        # This actions compiles by default with the newest available matlab version
-        version: ["R2023b"]
-        os: ["ubuntu-latest"] # macos-13 has Intel architecture, macos-latest has Apple Silicon
-        #os: ["ubuntu-latest", "macos-13", "macos-latest", "windows-latest"] # macos-13 has Intel architecture, macos-latest has Apple Silicon
+  test_compile:
+    runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Set up MATLAB
-        id: setup_matlab
         uses: matlab-actions/setup-matlab@v2
         with:
-          release: ${{matrix.version}}
-          products: MATLAB_Compiler
-
-      - name: Extract MATLAB version to file
-        uses: matlab-actions/run-command@v2
+          release: R2023b
+          
+      - name: Checkout SPM
+        uses: actions/checkout@v3
         with:
-          command: |
-            fileID = fopen('matlab_release.txt', 'w')
-            fprintf(fileID, matlabRelease.Release)
-            fclose(fileID)
-        # sometimes this step hangs when closing matlab, automatically terminating after 2 minutes solves the issue
-        timeout-minutes: 2
-        continue-on-error: true
+          repository: spm/spm
+          path: spm
 
-      - name: Set environment variable with MATLAB version
-        shell: bash # Works on Windows as well because of shell: bash
+      - name: Install CAT12 in SPM toolbox
+        shell: bash
         run: |
-          matlab_release=$(cat matlab_release.txt)
-          echo "MATLAB_VERSION=$matlab_release" >> $GITHUB_ENV
-
-      #- name: Checkout CAT
-      #  uses: actions/checkout@v4
+          mkdir -p spm/toolbox/cat12
+          rsync -a --exclude='.git' \
+            --exclude='spm/toolbox/cat12/' \
+            --exclude='batches/' \
+            --exclude='catQC/' \
+            --exclude='check_pipeline/' \
+            --exclude='development/' \
+            --exclude='html/' \
+            --exclude='internal/' \
+            --exclude='mexmaca/' \
+            --exclude='mexmaci/' \
+            ./ spm/toolbox/cat12/
 
       - name: Compile CAT12 mex-files
         uses: matlab-actions/run-command@v2
