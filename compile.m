@@ -131,7 +131,8 @@ function varargout = compile(comp,test,verb)
               %}
             end
            
-            rc{nci}{ncj} = evalc([mexcmd ' ' mexflag ' ' nc{nci}{ncj}]);
+            rc{nci}{ncj} = evalc([mexcmd ' ' mexflag ' ' nc{nci}{ncj}])
+            lasterror
             %{
             catch 
               rcc{nci}(ncj) = 1; 
