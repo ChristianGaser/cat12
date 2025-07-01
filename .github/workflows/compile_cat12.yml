@@ -113,7 +113,7 @@ jobs:
 
       - name: Compress to ZIP
         run: |
-          cd ../
+          cd ../../../
           ls
           mv standalone cat_standalone
           zip -r cat_standalone_${{ github.ref_name }}_${{ matrix.os_name }}_${{ env.MATLAB_VERSION }}.zip cat_standalone runtime_installer
