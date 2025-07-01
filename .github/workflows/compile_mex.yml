@@ -24,6 +24,10 @@ jobs:
         with:
           release: R2023b
           
+      - name: Install rsync
+        if: runner.os == 'Windows'
+        run: choco install -y rsync
+
       - name: Checkout SPM
         uses: actions/checkout@v3
         with:
