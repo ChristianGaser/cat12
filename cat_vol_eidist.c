@@ -237,7 +237,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   const int     x  = (int)sL[0];
   const int     y  = (int)sL[1];
   const int     xy = x*y;
-  int           sizeL[] = {(int)sL[0],(int)sL[1],(int)sL[2]}; 
+  int           sizeL[3] = {(int)sL[0],(int)sL[1],(int)sL[2]}; 
 
   if (nL!=nD) mexErrMsgTxt("ERROR:cat_vol_eidist: images must have the same number of elements.\n");
   
@@ -246,7 +246,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
    * Indices of the neighbor NI (index distance) and euclidean distance ND. 
    * Set default voxel size=[1 1 1] or use input.
    */
-  const mwSize sS[] = {1,3}; 
+  const mwSize sS[2] = {1,3}; 
   mxArray *SS = mxCreateNumericArray(2,sS,mxDOUBLE_CLASS,mxREAL);
   double   *S = mxGetPr(SS);
   if (nrhs<3) {S[0]=1; S[1]=1; S[2]=1;} else S=mxGetPr(prhs[2]);
@@ -259,11 +259,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   const float   s23  = sqrt( s2*s2  + s3*s3); /* yz  - voxel size */
   const float   s123 = sqrt(s12*s12 + s3*s3); /* nL - voxel size */
   
-  const int   NI[]  = { 1, -1, x, -x, xy, -xy, -x-1, -x+1, x-1, x+1,      
+  const int   NI[26]  = { 1, -1, x, -x, xy, -xy, -x-1, -x+1, x-1, x+1,      
                        -xy-1, -xy+1, xy-1, xy+1, -xy-x, -xy+x, xy-x, xy+x,
                        -xy-x-1, -xy-x+1, -xy+x-1, -xy+x+1, xy-x-1, xy-x+1,
                        xy+x-1,xy+x+1};  
-  const float ND[]  = { s1, s1, s2, s2, s3, s3, s12, s12,s12,s12,
+  const float ND[26]  = { s1, s1, s2, s2, s3, s3, s12, s12,s12,s12,
                         s13, s13, s13, s13, s23, s23, s23, s23,  
                         s123, s123, s123, s123, s123, s123, s123, s123};
   const int kllv = (sL[0]+sL[1]+sL[2]);

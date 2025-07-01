@@ -72,14 +72,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   float LB  = (float) mxGetScalar(prhs[1]);
   float HB  = (float) mxGetScalar(prhs[2]);
   float TH  = (float) mxGetScalar(prhs[3]); if ( TH>=0.5 || TH<0.0001 ) mexErrMsgTxt("ERROR:laplace3: threshhold must be >0.0001 and smaller than 0.5\n");
-  const mwSize sS[] = {1,3}; 
+  const mwSize sS[2] = {1,3}; 
   mxArray *SS = mxCreateNumericArray(2,sS,mxDOUBLE_CLASS,mxREAL);
   double*S = mxGetPr(SS);
   if (nrhs<3) {S[0]=1.0; S[1]=1.0; S[2]=1.0;} else {S = mxGetPr(prhs[2]);}
  
   
   /* indices of the neighbor Ni (index distance) and euclidean distance NW */
-  const int   NI[]  = { -1, 1, -x, x, -xy, xy};  
+  const int   NI[6]  = { -1, 1, -x, x, -xy, xy};  
   const int   sN = sizeof(NI) / sizeof(NI[0]);
   
   /* output data */

@@ -91,8 +91,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
   for (int i=0;i<n;i++) {if (maxYa<Ya[i]) maxYa=Ya[i];}
-  const int sV[] = {1,256}; 
-  const mwSize sVm[] = {1,2}, sdsv[] = {1,256}; 
+  const int sV[2] = {1,256}; 
+  const mwSize sVm[2] = {1,2}, sdsv[2] = {1,256}; 
   
   /* output data */
   plhs[0]    = mxCreateNumericArray(2,sVm,mxSINGLE_CLASS,mxREAL);

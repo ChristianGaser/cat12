@@ -110,7 +110,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   
   /* main information about input data (size, dimensions, ...) */
   const mwSize *sL = mxGetDimensions(prhs[0]); 
-  mwSize sSEG[] = {sL[0],sL[1],sL[2]}; 
+  mwSize sSEG[3] = {sL[0],sL[1],sL[2]}; 
   const int     dL = mxGetNumberOfDimensions(prhs[0]);
   const int     nL = mxGetNumberOfElements(prhs[0]);
   const int     x  = sL[0];
@@ -121,8 +121,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   const int     nr = nrhs;
   
   /* indices of the neighbor Ni (index distance) and euclidean distance NW */
-  const int   NI[]  = {  0, -1,-x+1, -x,-x-1,  -xy+1,-xy,-xy-1,  -xy+x+1,-xy+x,-xy+x-1,  -xy-x+1,-xy-x,-xy-x-1};  
-  const float ND[]  = {0.0,1.0,  s2,1.0,  s2,     s2,1.0,   s2,       s3,   s2,     s3,       s3,   s2,     s3};
+  const int   NI[14]  = {  0, -1,-x+1, -x,-x-1,  -xy+1,-xy,-xy-1,  -xy+x+1,-xy+x,-xy+x-1,  -xy-x+1,-xy-x,-xy-x-1};  
+  const float ND[14]  = {0.0,1.0,  s2,1.0,  s2,     s2,1.0,   s2,       s3,   s2,     s3,       s3,   s2,     s3};
   const int   sN = sizeof(NI) / sizeof(NI[0]);
   float       DN[sN],DI[sN],GMTN[sN],WMDN[sN],SEGN[sN],DNm;
   

@@ -97,7 +97,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   
   /* get parameters or set defaults */
   bool debug; 
-  const mwSize sS[] = {1,3}; 
+  const mwSize sS[2] = {1,3}; 
   mxArray *SS = mxCreateNumericArray(2,sS,mxDOUBLE_CLASS,mxREAL);
   double  *S = mxGetPr(SS);
   if (nrhs<3) {S[0]=1.0; S[1]=1.0; S[2]=1.0;} else {S = mxGetPr(prhs[2]);}
@@ -110,8 +110,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   const float   s123 = (float) sqrt( (double) s12*s12 + s3*s3); /* xyz - voxel size */
   
   /* indices of the neighbor Ni (index distance) and euclidean distance NW */
-  const int   NI[] = {  0, -1,-x+1, -x,-x-1,  -xy+1,-xy,-xy-1,  -xy+x+1,-xy+x,-xy+x-1,  -xy-x+1,-xy-x,-xy-x-1};  
-  const float ND[] = {0.0, s1, s12, s2, s12,    s13, s3,  s13,     s123,  s23,   s123,     s123,  s23,   s123};
+  const int   NI[14] = {  0, -1,-x+1, -x,-x-1,  -xy+1,-xy,-xy-1,  -xy+x+1,-xy+x,-xy+x-1,  -xy-x+1,-xy-x,-xy-x-1};  
+  const float ND[14] = {0.0, s1, s12, s2, s12,    s13, s3,  s13,     s123,  s23,   s123,     s123,  s23,   s123};
   const int   sN = sizeof(NI) / sizeof(NI[0]);
   
   float       DN[sN];

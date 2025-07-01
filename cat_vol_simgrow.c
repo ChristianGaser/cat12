@@ -60,7 +60,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   const int     y  = sL[1];
   const int     xy = x*y;
 
-  const mwSize sSS[] = {1,3}, sdsv[] = {1,2}; 
+  const mwSize sSS[2] = {1,3}, sdsv[2] = {1,2}; 
   mxArray *SS  = mxCreateNumericArray(2,sSS, mxDOUBLE_CLASS,mxREAL); double*S  = mxGetPr(SS);
   mxArray *dsv = mxCreateNumericArray(2,sdsv,mxDOUBLE_CLASS,mxREAL); double*dd = mxGetPr(dsv);
   float dI=0.0; double*SEGd; if (nrhs>=3) {SEGd=mxGetPr(prhs[2]); dI=(float) SEGd[0];}; 
@@ -68,7 +68,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if (nrhs<5) {dd[0]=0.1; dd[1]=10.0;}    else {dd=mxGetPr(prhs[4]);}
     
   /* indices of the neighbor Ni (index distance) and euclidean distance NW */
-  const int   NI[]  = {  1, -1,  x, -x, xy,-xy, -x-1,-x+1,x-1,x+1, -xy-1,-xy+1,xy-1,xy+1, -xy-x,-xy+x,xy-x,xy+x, 
+  const int   NI[26]  = {  1, -1,  x, -x, xy,-xy, -x-1,-x+1,x-1,x+1, -xy-1,-xy+1,xy-1,xy+1, -xy-x,-xy+x,xy-x,xy+x, 
                          -xy-x-1,-xy-x+1,-xy+x-1,-xy+x+1, xy-x-1,xy-x+1,xy+x-1,xy+x+1};  
  
   int         ni,u,v,w,nu,nv,nw;
