@@ -76,7 +76,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
  
   /* indices of the neighbor Ni (index distance) and euclidean distance NW */
   const int   sN = 6;
-  const int   NI[sN]  = { -1, 1, -x, x, -xy, xy};  
+  const int   NI[6]  = { -1, 1, -x, x, -xy, xy};  
   
   /* output data */
   mxArray *hlps[2];
