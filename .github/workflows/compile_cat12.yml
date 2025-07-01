@@ -2,8 +2,6 @@ name: Build CAT12 standalone
 
 on:
   workflow_dispatch:
-  #  tags:
-  #    - "[0-9][0-9].[0-9][0-9]*"
 
 env:
   MLM_LICENSE_TOKEN: ${{ secrets.MATLAB_BATCH_TOKEN }}
@@ -21,6 +19,9 @@ jobs:
         #os: ["ubuntu-22.04", "macos-13", "macos-latest", "windows-latest"] # macos-13 has Intel architecture, macos-latest has Apple Silicon
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Set up MATLAB
         id: setup_matlab
         uses: matlab-actions/setup-matlab@v2
