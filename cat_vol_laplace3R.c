@@ -75,8 +75,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if (nrhs<3) {S[0]=1.0; S[1]=1.0; S[2]=1.0;} else {S = mxGetPr(prhs[2]);}
  
   /* indices of the neighbor Ni (index distance) and euclidean distance NW */
-  const int   NI[6]  = { -1, 1, -x, x, -xy, xy};  
-  const int   sN = sizeof(NI) / sizeof(NI[0]);
+  const int   sN = 6;
+  const int   NI[sN]  = { -1, 1, -x, x, -xy, xy};  
   
   /* output data */
   mxArray *hlps[2];

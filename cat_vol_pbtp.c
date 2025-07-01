@@ -121,11 +121,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   const int     nr = nrhs;
   
   /* indices of the neighbor Ni (index distance) and euclidean distance NW */
-  const int   NI[14]  = {  0, -1,-x+1, -x,-x-1,  -xy+1,-xy,-xy-1,  -xy+x+1,-xy+x,-xy+x-1,  -xy-x+1,-xy-x,-xy-x-1};  
-  const float ND[14]  = {0.0,1.0,  s2,1.0,  s2,     s2,1.0,   s2,       s3,   s2,     s3,       s3,   s2,     s3};
-  const int   sN = sizeof(NI) / sizeof(NI[0]);
+  const int   sN = 14;
+  const int   NI[sN]  = {  0, -1,-x+1, -x,-x-1,  -xy+1,-xy,-xy-1,  -xy+x+1,-xy+x,-xy+x-1,  -xy-x+1,-xy-x,-xy-x-1};  
+  const float ND[sN]  = {0.0,1.0,  s2,1.0,  s2,     s2,1.0,   s2,       s3,   s2,     s3,       s3,   s2,     s3};
   float       DN[sN],DI[sN],GMTN[sN],WMDN[sN],SEGN[sN],DNm;
-  
   float       du, dv, dw, dnu, dnv, dnw, d, dcf, WMu, WMv, WMw, GMu, GMv, GMw, SEGl, SEGu, tmpfloat;
   int         ni,u,v,w,nu,nv,nw, tmpint, WMC=0, CSFC=0;
     
