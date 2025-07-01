@@ -33,20 +33,19 @@
 #include <stdlib.h>
 /* #include "matrix.h" */
 
+#ifndef min
+#define min(a,b) (((a)<(b))?(a):(b))
+#endif
+#ifndef max
+#define max(a,b) (((a)>(b))?(a):(b))
+#endif
+
 struct opt_type {
   int   CSFD;                         /* use CSFD */
   int   PVE;                          /* 0, 1=fast, 2=exact */
   float LB, HB, LLB, HLB, LHB, HHB;   /* boundary */
   int   sL[3];
   } opt;
-
-float min(float a, float b) {
-  if (a<b) return a; else return b; 
-}
-
-float max(float a, float b) {
-  if (a>b) return a; else return b; 
-}
 
 /* get all values of the voxels which are in WMD-range (children of this voxel) */
 float pmax(const float GMT[], const float RPM[], const float SEG[], const float ND[], const float WMD, const float SEGI, const int sA) {
