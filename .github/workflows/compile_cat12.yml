@@ -17,8 +17,8 @@ jobs:
       matrix:
         # This actions compiles by default with the newest available matlab version
         version: ["R2023b"]
-        os: ["ubuntu-18.04"]
-        #os: ["ubuntu-18.04", "macos-13", "macos-latest", "windows-latest"] # macos-13 has Intel architecture, macos-latest has Apple Silicon
+        os: ["ubuntu-22.04"]
+        #os: ["ubuntu-22.04", "macos-13", "macos-latest", "windows-latest"] # macos-13 has Intel architecture, macos-latest has Apple Silicon
 
     steps:
       - name: Set up MATLAB
