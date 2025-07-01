@@ -113,10 +113,12 @@ jobs:
 
       - name: Compress to ZIP
         run: |
-          cd ..
+          ls
+          cd spm
           ls
           mv standalone cat_standalone
           zip -r cat_standalone_${{ github.ref_name }}_${{ matrix.os_name }}_${{ env.MATLAB_VERSION }}.zip cat_standalone runtime_installer
+          ls
 
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
