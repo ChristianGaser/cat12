@@ -78,7 +78,7 @@ jobs:
         uses: matlab-actions/run-command@v2
         with:
           command: |
-            addpath(genpath('spm'));
+            addpath('spm');
             savepath;
             cd('spm/toolbox/cat12')
             compile
