@@ -9,7 +9,11 @@ env:
 jobs:
   test_compile:
     name: Compile CAT12 mex-files
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-22.04", "macos-13", "macos-latest", "windows-latest"] # macos-13 has Intel architecture, macos-latest has Apple Silicon
       
     steps:
       - name: Checkout code
