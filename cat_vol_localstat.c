@@ -121,9 +121,9 @@ void sort_float(float arr[], int beg, int end)
 
 
 /* floating point versions */
-float min(float a, float b) {	if (a<b) return a; else return b; }
-float max(float a, float b) {	if (a>b) return a; else return b; }
-float abs2(float n) {	if (n<0) return -n; else return n; }        
+float min(float a, float b) { if (a<b) return a; else return b; }
+float max(float a, float b) { if (a>b) return a; else return b; }
+float abs2(float n) { if (n<0) return -n; else return n; }        
 float pow2(float n) { return n*n; }
 
 
@@ -285,7 +285,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           M[ind]  = 0.0; for (nn=0;nn<n;nn++) { M[ind]+= NV[nn]; nx++;}; M[ind]/=nx; NVmn=M[ind];
           M2[ind] = M[ind];
           NVstd   = 0.0; for (nn=0;nn<n;nn++) { NVstd += (NV[nn]-NVmn)*(NV[nn]-NVmn);};
-          M[ind]  = sqrtf((NVstd/(nx-1.0)));
+          M[ind]  = sqrtf((float)(NVstd/(nx-1.0)));
         };
 
 
@@ -348,7 +348,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
           /* mean (or better median) intensity in the area */
           /*  M[ind] = 0.0; for (nn=0;nn<n;nn++) { M[ind]+= NV[nn]; nx++;}; M[ind]/=nx; NVmn=M[ind]; */
           if (n>1) { if (n==2) {
-              NVmd = (NV[0] + NV[1]) / 2.0;  
+              NVmd = (NV[0] + NV[1]) / 2.0f;  
             }
             else {
               sort_float(NV,0,n); 
@@ -392,9 +392,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
               }
             }
 
-            if ( stddc[di]>1 ) {stdd[di]=sqrtf((stdd[di]/(stddc[di]-1)));} else {stdd[di] = 0.0;}
-            if ( stdpc[di]>1 ) {stdp[di]=sqrtf((stdp[di]/(stdpc[di]-1)));} else {stdp[di] = 0.0;}
-            if ( stdnc[di]>1 ) {stdn[di]=sqrtf((stdn[di]/(stdnc[di]-1)));} else {stdn[di] = 0.0;}
+            if ( stddc[di]>1 ) {stdd[di]=sqrtf((float)(stdd[di]/(stddc[di]-1)));} else {stdd[di] = 0.0;}
+            if ( stdpc[di]>1 ) {stdp[di]=sqrtf((float)(stdp[di]/(stdpc[di]-1)));} else {stdp[di] = 0.0;}
+            if ( stdnc[di]>1 ) {stdn[di]=sqrtf((float)(stdn[di]/(stdnc[di]-1)));} else {stdn[di] = 0.0;}
           }
          /* sort_float(stdd,0,2); */
 
