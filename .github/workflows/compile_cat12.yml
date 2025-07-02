@@ -19,16 +19,16 @@ jobs:
         include: # These includes are just giving the OSs additional names
           - os: ubuntu-22.04
             os_name: Linux
-            mex_name: mexa64
+            mex_ext: mexa64
           - os: macos-13
             os_name: macOS_Intel
-            mex_name: mexmaci64
+            mex_ext: mexmaci64
           - os: macos-latest
-            os_name: macOS_Arm64
-            mex_name: mexmmaca64
+            os_name: macOS_ARM64
+            mex_ext: mexmaca64
           - os: windows-latest
             os_name: Windows
-            mex_name: mexw64
+            mex_ext: mexw64
     steps:
       - name: Checkout CAT12
         uses: actions/checkout@v4
@@ -113,11 +113,6 @@ jobs:
         run: |
           cd spm/toolbox
           zip -r ../../cat_${{ github.ref_name }}_${{ matrix.os_name }}.zip cat12
-
-      - name: Zip mex-files
-        run: |
-          cd spm/toolbox
-          zip -r ../../cat_${{ github.ref_name }}_${{ matrix.mex_name }}.zip . -i cat12/*.${{ matrix.mex_name }}
 
       # 1) Add SPM with subfolders to the path 2) Run spm_make_standalone in matlab
       - name: Build MATLAB standalone
