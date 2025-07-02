@@ -31,6 +31,9 @@ jobs:
             os_name: Windows
             mex_name: mexw64
     steps:
+      - name: Checkout CAT12
+        uses: actions/checkout@v4
+
       - name: Update
         run: make update
 
@@ -105,7 +108,7 @@ jobs:
       - name: Zip mex-files
         run: zip -r ../../cat_${{ github.ref_name }}_${{ matrix.mex_name }}.zip cat12/*.${{ matrix.mex_name }}
 
-      # 1) Add SPM with subfolders to the path 2) Run spm_make_standalone in matlab 3) Create runtime_installer
+      # 1) Add SPM with subfolders to the path 2) Run spm_make_standalone in matlab
       - name: Build MATLAB standalone
         uses: matlab-actions/run-command@v2
         with:
