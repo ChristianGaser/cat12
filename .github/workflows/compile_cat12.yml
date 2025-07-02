@@ -103,6 +103,11 @@ jobs:
             cd('spm/toolbox/cat12')
             compile
             
+      - name: Install zip on Windows
+        if: runner.os == 'Windows'
+        run: choco install zip -y
+        shell: bash
+
       - name: Release CAT12
         if: runner.os == 'Linux'
         run: |
@@ -110,7 +115,9 @@ jobs:
           zip -r ../../cat_${{ github.ref_name }}_${{ matrix.os_name }}.zip cat12
 
       - name: Zip mex-files
-        run: zip -r ../../cat_${{ github.ref_name }}_${{ matrix.mex_name }}.zip . -i cat12/*.${{ matrix.mex_name }}
+        run: |
+          cd spm/toolbox
+          zip -r ../../cat_${{ github.ref_name }}_${{ matrix.mex_name }}.zip . -i cat12/*.${{ matrix.mex_name }}
 
       # 1) Add SPM with subfolders to the path 2) Run spm_make_standalone in matlab
       - name: Build MATLAB standalone
@@ -122,11 +129,6 @@ jobs:
             savepath;
             cd('config');
             spm_make_standalone
-
-      - name: Install zip on Windows
-        if: runner.os == 'Windows'
-        run: choco install zip -y
-        shell: bash
 
       - name: Compress to ZIP
         run: |
