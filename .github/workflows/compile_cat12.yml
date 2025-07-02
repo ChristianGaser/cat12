@@ -15,8 +15,7 @@ jobs:
       matrix:
         # This actions compiles by default with the newest available matlab version
         version: ["R2023b"]
-        os: ["ubuntu-22.04"]
-        #os: ["ubuntu-22.04", "macos-13", "macos-latest", "windows-latest"] # macos-13 has Intel architecture, macos-latest has Apple Silicon
+        os: ["ubuntu-22.04", "macos-13", "macos-latest", "windows-latest"] # macos-13 has Intel architecture, macos-latest has Apple Silicon
         include: # These includes are just giving the OSs additional names
           - os: ubuntu-22.04
             os_name: Linux
@@ -65,9 +64,14 @@ jobs:
             --exclude='Makefile' \
             ./ spm/toolbox/cat12/
 
-      - name: Cleanup
+      - name: Cleanup (Linux/Mac)
+        if: runner.os != 'Windows'
         run: rm -rf standalone
-
+      
+      - name: Cleanup (Windows)
+        if: runner.os == 'Windows'
+        run: Remove-Item -Recurse -Force standalone
+  
       - name: Set up MATLAB
         uses: matlab-actions/setup-matlab@v2
         with:
@@ -106,7 +110,7 @@ jobs:
           zip -r ../../cat_${{ github.ref_name }}_${{ matrix.os_name }}.zip cat12/*.mexa64
 
       - name: Zip mex-files
-        run: zip -r ../../cat_${{ github.ref_name }}_${{ matrix.mex_name }}.zip cat12/*.${{ matrix.mex_name }}
+        run: zip -r ../../cat_${{ github.ref_name }}_${{ matrix.mex_name }}.zip . -i cat12/*.${{ matrix.mex_name }}
 
       # 1) Add SPM with subfolders to the path 2) Run spm_make_standalone in matlab
       - name: Build MATLAB standalone
