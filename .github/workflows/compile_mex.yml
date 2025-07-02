@@ -20,7 +20,7 @@ jobs:
             mex_name: mexmaci64
           - os: macos-latest
             os_name: macOS_Arm64
-            mex_name: mexmmaca64
+            mex_name: mexmaca64
           - os: windows-latest
             os_name: Windows
             mex_name: mexw64
@@ -83,7 +83,7 @@ jobs:
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: cat_standalone_${{ github.ref_name }}_${{ matrix.os_name }}_${{ env.MATLAB_VERSION }}
+          name: cat_${{ github.ref_name }}_${{ matrix.mex_name }}
           path: cat_*.zip
 
 
