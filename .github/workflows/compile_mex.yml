@@ -14,16 +14,16 @@ jobs:
         include: # These includes are just giving the OSs additional names
           - os: ubuntu-22.04
             os_name: Linux
-            mex_name: mexa64
+            mex_ext: mexa64
           - os: macos-13
             os_name: macOS_Intel
-            mex_name: mexmaci64
+            mex_ext: mexmaci64
           - os: macos-latest
             os_name: macOS_Arm64
-            mex_name: mexmaca64
+            mex_ext: mexmaca64
           - os: windows-latest
             os_name: Windows
-            mex_name: mexw64
+            mex_ext: mexw64
       
     steps:
       - name: Checkout code
@@ -78,12 +78,12 @@ jobs:
       - name: Zip mex-files
         run: |
           cd spm/toolbox/
-          zip -r ../../cat_${{ github.ref_name }}_${{ matrix.mex_name }}.zip . -i cat12/*.${{ matrix.mex_name }}
+          zip -r ../../cat_${{ github.ref_name }}_${{ matrix.mex_ext }}.zip . -i cat12/*.${{ matrix.mex_ext }}
 
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: cat_${{ github.ref_name }}_${{ matrix.mex_name }}
+          name: cat_${{ github.ref_name }}_${{ matrix.mex_ext }}
           path: cat_*.zip
 
 
