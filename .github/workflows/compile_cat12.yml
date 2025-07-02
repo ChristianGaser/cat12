@@ -22,6 +22,9 @@ jobs:
       - name: Checkout CAT12
         uses: actions/checkout@v4
 
+      - name: Update
+        run: make update
+
       - name: Install rsync
         if: runner.os == 'Windows'
         run: choco install -y rsync
@@ -46,13 +49,11 @@ jobs:
             --exclude='internal/' \
             --exclude='mexmaca/' \
             --exclude='mexmaci/' \
-            cat12/ spm/toolbox/cat12/
+            --exclude='Makefile' \
+            ./cat12 spm/toolbox/cat12/
 
-      - name: Update
-        run: |
-          rm -rf standalone
-          cd spm/toolbox/cat12
-          make update
+      - name: Cleanup
+        run: rm -rf standalone
 
       - name: Set up MATLAB
         uses: matlab-actions/setup-matlab@v2
