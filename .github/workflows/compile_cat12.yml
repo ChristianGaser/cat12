@@ -54,7 +54,7 @@ jobs:
             ./ spm/toolbox/cat12/
 
       - name: Cleanup
-        run: |rm -rf standalone
+        run: rm -rf standalone
 
       - name: Set up MATLAB
         uses: matlab-actions/setup-matlab@v2
