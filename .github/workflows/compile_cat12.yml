@@ -19,8 +19,29 @@ jobs:
         #os: ["ubuntu-22.04", "macos-13", "macos-latest", "windows-latest"] # macos-13 has Intel architecture, macos-latest has Apple Silicon
 
     steps:
-      #- name: Checkout code
-      #  uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Checkout SPM
+        uses: actions/checkout@v3
+        with:
+          repository: spm/spm
+          path: spm
+
+      - name: Release CAT12
+        if: runner.os == 'Linux'
+        run: |
+          pwd
+          ls
+          make update
+          cd ..
+          zip -r cat_${{ github.ref_name }}.zip cat12
+          
+      - name: Install CAT12 in SPM toolbox
+        shell: bash
+        run: |
+          rm -rf batches catQC check_pipeline development html internal mexmac*
+          mv cat12 spm/toolbox 
 
       - name: Set up MATLAB
         uses: matlab-actions/setup-matlab@v2
@@ -45,32 +66,6 @@ jobs:
           matlab_release=$(cat matlab_release.txt)
           echo "MATLAB_VERSION=$matlab_release" >> $GITHUB_ENV
 
-      - name: Install rsync
-        if: runner.os == 'Windows'
-        run: choco install -y rsync
-
-      - name: Checkout SPM
-        uses: actions/checkout@v3
-        with:
-          repository: spm/spm
-          path: spm
-          
-      - name: Install CAT12 in SPM toolbox
-        shell: bash
-        run: |
-          mkdir -p spm/toolbox/cat12
-          rsync -a --exclude='.git' \
-            --exclude='spm/toolbox/cat12/' \
-            --exclude='batches/' \
-            --exclude='catQC/' \
-            --exclude='check_pipeline/' \
-            --exclude='development/' \
-            --exclude='html/' \
-            --exclude='internal/' \
-            --exclude='mexmaca/' \
-            --exclude='mexmaci/' \
-            ./ spm/toolbox/cat12/
-
       - name: Compile CAT12 mex-files
         uses: matlab-actions/run-command@v2
         with:
@@ -80,17 +75,6 @@ jobs:
             compile
             cd('spm')
             
-      - name: Update
-        run: |
-          cd spm/toolbox/cat12
-          make update
-
-      - name: Release CAT12
-        if: runner.os == 'Linux'
-        run: |
-          cd spm/toolbox
-          zip -r cat_${{ github.ref_name }}.zip cat12
-
       # 1) Add SPM with subfolders to the path 2) Run spm_make_standalone in matlab 3) Create runtime_installer
       - name: Build MATLAB standalone
         uses: matlab-actions/run-command@v2
