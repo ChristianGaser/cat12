@@ -32,21 +32,59 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: spm/spm
-          path: ../spm
+          path: ../name: Build CAT12 standalone
 
+on:
+  workflow_dispatch:
+
+env:
+  MLM_LICENSE_TOKEN: ${{ secrets.MATLAB_BATCH_TOKEN }}
+
+jobs:
+  build_matlab_standalone:
+    name: Build CAT12 standalone
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # This actions compiles by default with the newest available matlab version
+        version: ["R2023b"]
+        os: ["ubuntu-22.04"]
+        #os: ["ubuntu-22.04", "macos-13", "macos-latest", "windows-latest"] # macos-13 has Intel architecture, macos-latest has Apple Silicon
+
+    steps:
+      - name: Install rsync
+        if: runner.os == 'Windows'
+        run: choco install -y rsync
+
+      - name: Checkout SPM
+        uses: actions/checkout@v3
+        with:
+          repository: spm/spm
+          path: spm
+          
       - name: Install CAT12 in SPM toolbox
         shell: bash
         run: |
-          pwd
-          ls
-          cd ..
-          mv cat12 spm/toolbox
+          mkdir -p spm/toolbox/cat12
+          rsync -a --exclude='.git' \
+            --exclude='spm/toolbox/cat12/' \
+            --exclude='batches/' \
+            --exclude='catQC/' \
+            --exclude='check_pipeline/' \
+            --exclude='development/' \
+            --exclude='html/' \
+            --exclude='internal/' \
+            --exclude='mexmaca/' \
+            --exclude='mexmaci/' \
+            ./ spm/toolbox/cat12/
 
-      - name: list
-        shell: bash
+      - name: Update
         run: |
-          pwd
-          ls
+          rm -rf standalone
+          cd spm/toolbox/cat12
+          rn [cM]*txt
+          make update
 
       - name: Set up MATLAB
         uses: matlab-actions/setup-matlab@v2
@@ -75,23 +113,28 @@ jobs:
         uses: matlab-actions/run-command@v2
         with:
           command: |
-            addpath('../spm');
-            cd('../spm/toolbox/cat12')
+            addpath('spm');
+            cd('spm/toolbox/cat12')
             compile
-
+            
       - name: Release CAT12
         if: runner.os == 'Linux'
         run: |
-          cd ../spm/toolbox
-          zip -r ../cat_${{ github.ref_name }}.zip cat12
-            
+          cd spm/toolbox
+          zip -r ../../cat_${{ github.ref_name }}.zip cat12
+
+      - name: List
+        if: runner.os == 'Linux'
+        run: |
+          ls
+
       # 1) Add SPM with subfolders to the path 2) Run spm_make_standalone in matlab 3) Create runtime_installer
       - name: Build MATLAB standalone
         uses: matlab-actions/run-command@v2
         with:
           command: |
-            mkdir('../runtime_installer');
-            cd('../spm');
+            mkdir('runtime_installer');
+            cd('spm');
             addpath(genpath('.'));
             savepath;
             cd('config');
