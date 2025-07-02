@@ -46,15 +46,12 @@ jobs:
             --exclude='internal/' \
             --exclude='mexmaca/' \
             --exclude='mexmaci/' \
-            ./ spm/toolbox/cat12/
+            cat12/ spm/toolbox/cat12/
 
       - name: Update
         run: |
-          pwd
           rm -rf standalone
-          ls spm/toolbox/cat12
           cd spm/toolbox/cat12
-          ls *
           make update
 
       - name: Set up MATLAB
