@@ -22,25 +22,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Release CAT12
+        if: runner.os == 'Linux'
+        run: |
+          rm -rf batches catQC check_pipeline development html internal mexmac*
+          make update
+          cd ..
+          zip -r cat_${{ github.ref_name }}.zip cat12
+          
       - name: Checkout SPM
         uses: actions/checkout@v3
         with:
           repository: spm/spm
           path: spm
 
-      - name: Release CAT12
-        if: runner.os == 'Linux'
-        run: |
-          pwd
-          ls
-          make update
-          cd ..
-          zip -r cat_${{ github.ref_name }}.zip cat12
-          
       - name: Install CAT12 in SPM toolbox
         shell: bash
         run: |
-          rm -rf batches catQC check_pipeline development html internal mexmac*
+          pwd
+          cd ..
           mv cat12 spm/toolbox 
 
       - name: Set up MATLAB
