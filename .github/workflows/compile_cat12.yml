@@ -47,8 +47,10 @@ jobs:
 
       - name: Update
         run: |
+          ls 
           rm -rf standalone
           cd spm/toolbox/cat12
+          ls
           make update
 
       - name: Set up MATLAB
