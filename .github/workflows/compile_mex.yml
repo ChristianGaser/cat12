@@ -3,9 +3,6 @@ name: Compile CAT12 mex-files
 on:
   workflow_dispatch:
 
-env:
-  MLM_LICENSE_TOKEN: ${{ secrets.MATLAB_BATCH_TOKEN }}
-
 jobs:
   test_compile:
     name: Compile CAT12 mex-files
@@ -48,6 +45,8 @@ jobs:
             --exclude='internal/' \
             --exclude='mexmaca/' \
             --exclude='mexmaci/' \
+            --exclude='spm/' \
+            --exclude='Makefile' \
             ./ spm/toolbox/cat12/
 
       - name: Compile CAT12 mex-files
@@ -57,5 +56,21 @@ jobs:
             addpath('spm');
             cd('spm/toolbox/cat12')
             compile
-            cd('spm')
-            
+
+      - name: Install zip on Windows
+        if: runner.os == 'Windows'
+        run: choco install zip -y
+        shell: bash
+
+      - name: Zip mex-files
+        run: |
+          cd spm/toolbox/
+          zip -r ../../cat_${{ github.ref_name }}_${{ matrix.mex_name }}.zip . -i cat12/*.${{ matrix.mex_name }}
+
+      - name: Upload ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: cat_standalone_${{ github.ref_name }}_${{ matrix.os_name }}_${{ env.MATLAB_VERSION }}
+          path: cat_*.zip
+
+
