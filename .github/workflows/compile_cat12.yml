@@ -107,7 +107,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           cd spm/toolbox
-          zip -r ../../cat_${{ github.ref_name }}_${{ matrix.os_name }}.zip cat12/*.mexa64
+          zip -r ../../cat_${{ github.ref_name }}_${{ matrix.os_name }}.zip cat12
 
       - name: Zip mex-files
         run: zip -r ../../cat_${{ github.ref_name }}_${{ matrix.mex_name }}.zip . -i cat12/*.${{ matrix.mex_name }}
