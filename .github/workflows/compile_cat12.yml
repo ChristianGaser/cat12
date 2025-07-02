@@ -19,40 +19,6 @@ jobs:
         #os: ["ubuntu-22.04", "macos-13", "macos-latest", "windows-latest"] # macos-13 has Intel architecture, macos-latest has Apple Silicon
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Update CAT12
-        if: runner.os == 'Linux'
-        run: |
-          rm -rf .git batches catQC check_pipeline development html internal mexmac* [cM]*txt
-          make update
-                    
-      - name: Checkout SPM
-        uses: actions/checkout@v3
-        with:
-          repository: spm/spm
-          path: ../name: Build CAT12 standalone
-
-on:
-  workflow_dispatch:
-
-env:
-  MLM_LICENSE_TOKEN: ${{ secrets.MATLAB_BATCH_TOKEN }}
-
-jobs:
-  build_matlab_standalone:
-    name: Build CAT12 standalone
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        # This actions compiles by default with the newest available matlab version
-        version: ["R2023b"]
-        os: ["ubuntu-22.04"]
-        #os: ["ubuntu-22.04", "macos-13", "macos-latest", "windows-latest"] # macos-13 has Intel architecture, macos-latest has Apple Silicon
-
-    steps:
       - name: Install rsync
         if: runner.os == 'Windows'
         run: choco install -y rsync
