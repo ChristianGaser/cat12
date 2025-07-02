@@ -19,6 +19,9 @@ jobs:
         #os: ["ubuntu-22.04", "macos-13", "macos-latest", "windows-latest"] # macos-13 has Intel architecture, macos-latest has Apple Silicon
 
     steps:
+      - name: Checkout CAT12
+        uses: actions/checkout@v4
+
       - name: Install rsync
         if: runner.os == 'Windows'
         run: choco install -y rsync
@@ -51,7 +54,7 @@ jobs:
           rm -rf standalone
           ls spm/toolbox/cat12
           cd spm/toolbox/cat12
-          pwd
+          ls *
           make update
 
       - name: Set up MATLAB
