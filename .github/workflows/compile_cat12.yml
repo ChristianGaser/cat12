@@ -22,26 +22,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Release CAT12
+      - name: Update CAT12
         if: runner.os == 'Linux'
         run: |
-          rm -rf batches catQC check_pipeline development html internal mexmac*
+          rm -rf .git batches catQC check_pipeline development html internal mexmac* [cM]*txt
           make update
-          cd ..
-          zip -r cat_${{ github.ref_name }}.zip cat12
-          
+                    
       - name: Checkout SPM
         uses: actions/checkout@v3
         with:
           repository: spm/spm
-          path: spm
+          path: ../spm
 
       - name: Install CAT12 in SPM toolbox
         shell: bash
         run: |
           pwd
+          ls
           cd ..
-          mv cat12 spm/toolbox 
+          mv cat12 spm/toolbox
+
+      - name: list
+        shell: bash
+        run: |
+          pwd
+          ls
 
       - name: Set up MATLAB
         uses: matlab-actions/setup-matlab@v2
@@ -70,18 +75,23 @@ jobs:
         uses: matlab-actions/run-command@v2
         with:
           command: |
-            addpath('spm');
-            cd('spm/toolbox/cat12')
+            addpath('../spm');
+            cd('../spm/toolbox/cat12')
             compile
-            cd('spm')
+
+      - name: Release CAT12
+        if: runner.os == 'Linux'
+        run: |
+          cd ../spm/toolbox
+          zip -r ../cat_${{ github.ref_name }}.zip cat12
             
       # 1) Add SPM with subfolders to the path 2) Run spm_make_standalone in matlab 3) Create runtime_installer
       - name: Build MATLAB standalone
         uses: matlab-actions/run-command@v2
         with:
           command: |
-            mkdir('runtime_installer');
-            cd('spm');
+            mkdir('../runtime_installer');
+            cd('../spm');
             addpath(genpath('.'));
             savepath;
             cd('config');
