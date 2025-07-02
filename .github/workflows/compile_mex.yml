@@ -11,6 +11,19 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-22.04", "macos-13", "macos-latest", "windows-latest"] # macos-13 has Intel architecture, macos-latest has Apple Silicon
+        include: # These includes are just giving the OSs additional names
+          - os: ubuntu-22.04
+            os_name: Linux
+            mex_name: mexa64
+          - os: macos-13
+            os_name: macOS_Intel
+            mex_name: mexmaci64
+          - os: macos-latest
+            os_name: macOS_Arm64
+            mex_name: mexmmaca64
+          - os: windows-latest
+            os_name: Windows
+            mex_name: mexw64
       
     steps:
       - name: Checkout code
