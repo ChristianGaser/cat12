@@ -426,15 +426,13 @@ function S = cat_surf_reduce(S,red)
     if exist(Ptmpn,'file'); break; end
   end
   delete(Ptmpo)
-  if ~exist(Ptmpn,'file'); 
+  if ~exist(Ptmpn,'file') 
     error('cat_surf_fun:reducemesh','Failed %d times to reduce surface resolution.\n%s',i);
   end
   
   Sgii = gifti(Ptmpn); delete(Ptmpn); 
   S = struct('vertices',Sgii.vertices,'faces',Sgii.faces);
 end
-
-
 %% area mapping concept
 %  ------------------------------------------------------------------------
 %  We need two functions, one that create the mapping between two very 
@@ -2135,7 +2133,7 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
   
   i   = 0; final = 0; SIO = 1; SI = 90; SIO2 = 100; 
   if opt.verb, fprintf('\n'); end
-  if opt.CS4, SIO2th = 0.9; else, SIO2th = 0.95; end 
+  if opt.CS4, SIO2th = 0.98; else, SIO2th = 0.95; end 
   while (i < round(opt.iterfull/2)*2 ) || (SI>0.1 && SI<SIO2*SIO2th && mod(i,2)==1) % more iterations improve the int and especialy the pos and SI values but increase also the thdiff value  
     i = i + 1;
    
@@ -2210,7 +2208,7 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
       % directions to keep the thickness
       if opt.CS4 
         VIC   = S.vertices + N .* repmat( Tw - (Twc - YI) + (Tpc - YO) ,1,3) / 2;    % inner surface 
-        VOC   = S.vertices - N .* repmat( Tp - (Tpc - YO) + (Twc - YI) ,1,3) * 4;    % outer surface  
+        VOC   = S.vertices - N .* repmat( Tp - (Tpc - YO) + (Twc - YI) ,1,3) * 2;    % outer surface  
       else
         VIC   = S.vertices + N .* repmat( Tw - (Twc - YI) + (Tpc - YO) ,1,3);    % inner surface 
         VOC   = S.vertices - N .* repmat( Tp - (Tpc - YO) + (Twc - YI) ,1,3);    % outer surface  
@@ -2289,7 +2287,7 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
     VIC = S.vertices + N .* repmat(Tw,1,3); 
     
     % edge flip
-    if 1 % this has a huge positive effects 
+    if 0 % this has a huge positive effects - RD202506: this might cause some issues ... try without
       sm   = sf; % smoothness - 1 is not enougth
       fa   = 60; % error angle (worst case is 180 )
       E    = spm_mesh_edges(S);
