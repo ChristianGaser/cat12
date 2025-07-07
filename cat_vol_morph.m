@@ -1,4 +1,4 @@
-function vol = cat_vol_morph(vol,action,n,vx_vol)
+function varargout = cat_vol_morph(vol,action,n,vx_vol,verb)
 % ______________________________________________________________________
 % Morphological operations for a volume vol based on a 26-neighborhood 
 % (erode, dilate, open, close) or a distance transformation (disterode,
@@ -56,10 +56,17 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
 %    
 %
 %   Morphological operations with distance operation (sphere):
-%    - dd | distdilate
-%    - de | disterode
-%    - dc | distclose
-%    - do | distopen
+%    - dd  | distdilate
+%    - de  | disterode
+%    - dc  | distclose
+%    - do  | distopen
+%
+%    - adc | autodistclose    applies n-iterations of local adaptive
+%                             closing to reduce topology defects
+%    - ado | autodistopen     applies n-iterations of local adaptive 
+%                             opening to reduce topology defects
+%    - tc  | topoclose        topology correction with closing
+%    - to  | topoopen         topology correction with closing
 %
 %    - l  | lab          n(1) largest object/cluster with at least 
 %                        n(2) absolute voxels for negative n(2)
@@ -79,6 +86,7 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
 % $Id$
 
 
+  if nargin < 5, verb   = 0; end
   if nargin < 4, vx_vol = 1; end
   if nargin < 3, n      = 1; end
   if nargin < 2, action = ''; end
@@ -90,7 +98,8 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
 
     actions = {'dilate','erode','open','close','labclose','labopen','cdilate',...
       'cerode','cclose','copen','labcclose','labcopen','labclosebg','labopenbg',...
-      'lab','distdilate','disterode','distclose','distopen','labdistclose','labdistopen'};
+      'lab','distdilate','disterode','distclose','distopen','labdistclose','labdistopen', ...
+      'WMtc'};
     sel = spm_input('Operation ?',1,'m',actions);
     action = actions{sel};
     if strcmp(action,'lab')
@@ -110,7 +119,7 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
       V(i).pinfo(1) = 1;
       spm_write_vol(V(i),out);
     end
-    clear vol
+    if nargout, varargout{1} = vol; end 
     return
   end
   
@@ -121,14 +130,16 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
   end
   
   switch lower(action)
-    case {'gdilate','graydilate','gd','gerode','grayerode','ge' ...
-          'grayopen','gopen','go','grayclose','gclose','gc'}
+    case {'gdilate','graydilate','gd','gerode','grayerode','ge', ...
+          'grayopen','gopen','go','grayclose','gclose','gc', ...
+          'autodistopen','autodistclose','ado','adc', ...
+          'topoclose','tc','topoopen','to','topocorr','wmtc'}
     otherwise
       vol = vol>0.5; 
   end
   vol(isnan(vol)) = 0;
   
-  if numel(vx_vol) ==  1, vx_vol = repmat(vx_vol,1,3); end
+  if isscalar(vx_vol), vx_vol = repmat(vx_vol,1,3); end
   if any(size(vx_vol)~= [1,3])
     error('MATLAB:cat_vol_morph:vx_vol', ...
       'Wrong vx_vol size. It has to be a 1x3 matrix.\n'); 
@@ -144,10 +155,12 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
   switch lower(action)
     case {'l','lab','lcc','lco','labcclose','labcopen', ...
               'lc','lo','labclose','labopen', ...
-              'ldc','ldo','labdistclose','labdistopen'}
+              'ldc','ldo','labdistclose','labdistopen',...
+              'topoclose','tc','topoopen','to','topocorr','wmtc', ...
+              }
       % not return in this case
     otherwise
-      if n <= 0, return; end 
+      if n <= 0, if nargout, varargout{1} = vol; end; return; end 
   end
   
   
@@ -194,7 +207,8 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
         case {'grayerode' ,'ge','gerode'},  minmax = 2; 
       end
 
-      vol = cat_vol_localstat(single(vol),true(size(vol)),round(nn/mean(vx_vol)),minmax);
+      minvol = min(vol)+1; 
+      vol = cat_vol_localstat( single(vol+minvol), true(size(vol)), (nn/mean(vx_vol)), minmax) - minvol; %cat_vol_morph(vol>0, dx , ceil(nn/mean(vx_vol))) 
     
       % add background
       vol = cat_vol_resize(vol,'dereduceBrain',BB);  
@@ -291,7 +305,7 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
         if exist('n','var') && nn(1)>1
           vol = single(vol); classVol = 'single'; 
           
-          if numel(nn) == 1, nn(2) = 0; end
+          if isscalar(nn), nn(2) = 0; end
           snum = sum(num); 
           if nn(2)>0 && nn(2)<1
             lim = find(num/snum>nn(2),1,'last'); 
@@ -315,11 +329,17 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
     % are bad represented for lower resolutions and lead to unaccurate 
     % results.
     case {'distdilate','dd'}
-      [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,n + 1,vol>0); 
+      [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,nn + 1,vol>0); 
       
-      if n>5 %|| (sum(vol(:)>0)/numel(vol))>0.8
+      if nn / mean(vx_vol) > 3 
+        [vol,resYp0] = cat_vol_resize(vol,'reduceV', 1, nn/5, 32, 'meanm'); 
+        vol = vol > .5;
+        nn  = nn * resYp0.vx_red(1); 
+      end
+
+      if n>3 %|| (sum(vol(:)>0)/numel(vol))>0.8
         % faster for large distances and smaller objects 
-        vol = cat_vbdist(single(vol),true(size(vol)),vx_vol) <= nn;
+        vol = cat_vbdist(single(vol), true(size(vol)), vx_vol) <= nn;
       else
         % faster for small distances 
         % this is the new approach that supports euclidean distance metric
@@ -328,6 +348,10 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
         d = max(0,cat_vbdist(d,true(size(d)),vx_vol) - 0.5); d(1) = d(end);
         d = max(0,nn - d); 
         vol = min(1,convn(single(vol),d,'same')) >= 0.5; % PVE map without >0.5  
+      end
+
+      if exist('resYp0','var')
+        vol = cat_vol_resize(vol,'dereduceV',resYp0) >= 0.5; 
       end
       
       % add background
@@ -338,7 +362,13 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
 
     case {'distclose','dc'}
       [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,n + 1,vol>0); 
-     
+
+      if nn / mean(vx_vol) > 3 
+        [vol,resYp0] = cat_vol_resize(single(vol),'reduceV', 1, max(2,nn/5), 32, 'meanm'); 
+        vol = vol > .5;
+        nn  = nn / resYp0.vx_red(1); 
+      end
+
       sz   = size(vol);
       vol2 = zeros(sz(1)+(2*nv(1)),sz(2)+(2*nv(2)),sz(3)+(2*nv(3)),'single');
       vol2(nv(1)+1:sz(1)+nv(1),nv(2)+1:sz(2)+nv(2),nv(3)+1:sz(3)+nv(3)) = single(vol);
@@ -353,6 +383,10 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
         vol2 = cat_vol_morph(vol2,'disterode' ,nn,vx_vol);       
       end
       vol  = vol | vol2(nv(1)+1:sz(1)+nv(1),nv(2)+1:sz(2)+nv(2),nv(3)+1:sz(3)+nv(3));
+  
+      if exist('resYp0','var')
+        vol = cat_vol_resize(vol,'dereduceV',resYp0) >= 0.5; 
+      end
 
       % add background
       vol = cat_vol_resize(vol,'dereduceBrain',BB);  
@@ -367,6 +401,104 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
     case {'labdistopen','ldo'}
       vol = cat_vol_morph(vol,'distopen',nn,vx_vol); 
       vol = cat_vol_morph(vol,'lab',nn,vx_vol); % removing of other objects
+
+
+    % topology correction function 
+    % ===================================================================
+
+    case {'topoopen','to'}
+      if verb, vol0 = vol; ptime(1) = datetime('now'); end
+      vol = 1 - cat_vol_morph(1 - vol, 'tc',1,vx_vol,0); 
+      if verb, ptime(2) = datetime('now'); evaltopo(vol0,vol,action,nn,ptime); end
+
+    case {'topoclose','tc'}
+      vol = single(vol); 
+      if verb, ptime(1) = datetime('now'); end
+
+      if verb, vol0 = vol; end; tbf = false(size(vol)); 
+      evalc('tbf = ( (vol<.5) & cat_vol_morph(vol>.5,''d'') & smooth3(cat_vol_genus0(single(vol),.5))>.6 );'); 
+      vol = max( vol , min(0.51, min(vol(:)) + diff([min(vol(:)) max(vol(:)) ]) .* (tbf &  ~(vol>.5) )) ) ; 
+      if verb, ptime(2) = datetime('now'); evaltopo(vol0,vol,action,nn,ptime); end
+     
+    case 'wmtc'
+      % WM specific topology correction
+      %vol = vol - 2;
+
+      if verb, vol0 = vol; ptime(1) = datetime('now'); end
+      vol = cat_vol_morph(vol,'adc',1,vx_vol,0); % high bias, more defects ... maybe better to avoid here
+      vol = cat_vol_morph(vol,'tc',1,vx_vol,0);
+      vol = cat_vol_morph(vol,'to',1,vx_vol,0);
+      if verb, ptime(2) = datetime('now'); evaltopo(vol0,vol,action,nn,ptime); end
+
+      %vol = vol + 2; 
+
+    case {'topocorr','tcx'} 
+      ptime(1) = datetime('now'); 
+
+      vol0 = vol;
+      vol  = max(0,min(1,vol)); 
+      for ni=1:abs(nn)
+        if nn>0
+          vol = cat_vol_morph(vol, 'ado',1,vx_vol,0); 
+          vol = cat_vol_morph(vol, 'adc',1,vx_vol,0); 
+        else
+          vol = cat_vol_morph(vol, 'adc',1,vx_vol,0); 
+          vol = cat_vol_morph(vol, 'ado',1,vx_vol,0); 
+        end
+      end
+
+      % only one object (but maybe multiple backgrounds)
+      vol = vol .* (0.5 * (vol>0.5) + 0.5 * cat_vol_morph(vol > .5,'l')); 
+      
+      % restore possible larger range
+      vol(vol==0) = vol0(vol==0); 
+      vol(vol==1) = vol0(vol==1); 
+   
+      if verb || nargout>1,  ptime(2) = datetime('now'); varargout{2} = evaltopo(vol0,vol,action,nn,ptime); end
+
+
+    case {'autodistopen','ado'}
+      if verb, vol0 = vol; ptime(1) = datetime('now'); end
+      vol = 1 - cat_vol_morph(1 - vol, 'adc',nn,vx_vol,0); 
+      if verb, ptime(2) = datetime('now'); evaltopo(vol0,vol,action,nn,ptime); end
+     
+    case {'autodistclose','adc'}
+      % more iterations are do not really improve the topology and increase
+      % the corrected volume much stronger
+
+      if verb, ptime(1) = datetime('now'); end
+      
+      if ~isscalar(vx_vol) && any(std(vx_vol)>0)
+        cat_io_cprintf('warn','cat_vol_morph:autodistcloseopen. Function not prepared for various voxel size.'); 
+      end
+
+      Yoc   = vol > (nn/2); 
+      
+      % distance operation for dilation and thickness (maximum estimation)
+      [Yod,Yodi] = cat_vbdist(single(Yoc));                   % distance estimation
+      % approximate the avaible space by estimating the thickness of the structure
+      Ydt   = cat_vol_pbtp(single(2 + Yoc), Yod, Yod*inf);    % thickness estimation 
+      Ydt(Ydt > median(Ydt(Yod(:)>0 & Yod(:)<2)  )) = 0; % remove extremly high values ### * 1.5
+      Ydt( abs(Ydt - cat_vol_approx(Ydt))>1 ) = 0;            % remove standard outliers
+      Ydt   = cat_vol_approx(Ydt);                            % approximation 
+      Ydt   = max(1,Ydt - 2);                                 % correct to keep a skeleton
+      
+      % distance estimation for erosion
+      [Yodd,Yoddi] = cat_vbdist(single(Ydt(Yodi)<Yod)); 
+      Yoc1 = max( vol , Yodd > (Ydt(Yodi(Yoddi))) ); % default would be .5 but with sc
+      clear Yodd Yoddi; 
+      
+      % use skeleton to avoid blurring
+      Yocd = cat_vbdist(single(Yoc1 <= 0.1));  % not zero because of interpolation artifacts
+      Ydiv = smooth3(cat_vol_div(Yocd,1,1,1)); % divergence to define skeleton
+      Ysc  = max(0,min(1, smooth3( -max(-1,Ydiv) .* (Ydiv<-.1 & Ydiv>-0.4) * 10))); clear Ydiv
+      Yoc  = max( vol , min(0.51, smooth3( min(2, (Yoc1 * 1.5).^4  ) .* Ysc).^4 )); clear Ysc
+     
+      % Evaluation: 
+      if verb, ptime(2) = datetime('now'); evaltopo(vol,Yoc,action,nn,ptime); end
+
+      vol(vol>0) = Yoc(vol>0); 
+       
 
     % =================================================================== 
     case {'selftest','st'}
@@ -417,4 +549,43 @@ function vol = cat_vol_morph(vol,action,n,vx_vol)
   eval(sprintf('vol = %s(vol);',classVol));
   if isa(classVol,'uint8'); vol = 255*vol; end
 
+  if nargout, varargout{1} = vol; end 
+end
+function EC = evaltopo(vol1,vol2,action,nn,ptime) 
+%evaltopo. Evaluation function of the autodistclose/open function. 
+  
+  vol1 = max(0,min(1,vol1)); 
+  vol2 = max(0,min(1,vol2)); 
+
+  [vol,l1] = spm_bwlabel(double(vol1>.5)); %#ok<ASGLU>
+  evalc('[~,faces,vertices] = cat_vol_genus0(single(vol),.5,1);'); 
+  CS  = struct('faces',faces,'vertices',vertices);
+  EC(1) = ( size(CS.vertices,1) + size(CS.faces,1) - size(spm_mesh_edges(CS),1) - 2) + 2;
+
+  [vol,l2] = spm_bwlabel(double(vol2>.5)); %#ok<ASGLU>
+  evalc('[~,faces,vertices] = cat_vol_genus0(single(vol),.5,1);'); 
+  CS  = struct('faces',faces,'vertices',vertices);
+  EC(2) = ( size(CS.vertices,1) + size(CS.faces,1) - size(spm_mesh_edges(CS),1) - 2) + 2;
+  clear vol; 
+
+  ccol = [.5 0 0; 0.2 0.2 0.2; 0 0.5 0]; 
+  volb = [ nnz(vol1(:)>.5), nnz(vol2(:)>.5) ] / 1000; 
+  volp = [ sum(vol1(:))   , sum(vol2(:))    ] / 1000; 
+  
+  % print
+  fprintf('\n  Overview (operation="%s", n=%d): \n',action,nn)
+  cat_io_cprintf( ccol( ( diff(volb)/volb(1) < .02 ) +  ( diff(volb)/volb(1) < .05 ) + 1 , :), sprintf( ...
+    '    Binary-Volume:                   %+6.2f%%%% (%0.0fk %+0.0fk>> %0.0fk)   \n', ...
+    diff(volb)/volb(1) * 100, volb(1), diff( volb ), volb(2) )); 
+  cat_io_cprintf( ccol( ( diff(volp)/volp(1) < .02 ) +  ( diff(volp)/volp(1) < .05 ) + 1 , :), sprintf( ...
+    '    PVE-Volume:                      %+6.2f%%%% (%0.0fk %+0.0fk>> %0.0fk)   \n', ...
+    diff(volp)/volp(1) * 100, volp(1), diff( volp ), volp(2) )); 
+  cat_io_cprintf( ccol( ( diff([ l1 , l2 ])<=0 )*2 + 1 , :), sprintf(  ...
+    '    Number of Components:            %+6.0f%%%% (%3d  %+3d >> %3d)   \n', ...
+    diff([ l1 , l2 ]) ./ l1 * 100 , l1, diff([ l1 , l2 ]), l2 )); 
+  cat_io_cprintf( ccol( ( diff([ abs(EC) ])<0 ) + ( diff([ abs(EC) ])<=0 ) + 1 , :), sprintf( ...
+    '    Fast abs. Euler Characteristic:  %+6.0f%%%% (%3d  %+3d >> %3d) \n', ...
+    diff([ abs(EC) ]) ./ abs(EC(1)) * 100, abs(EC(1)), diff([ abs(EC) ]), abs(EC(2)) )); 
+  if exist('ptime','var'), fprintf('    Time:  %0.0fs \n', seconds(ptime(2) - ptime(1)) ); end
+  fprintf('\n'); 
 end
