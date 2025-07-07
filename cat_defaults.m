@@ -309,6 +309,7 @@ cat.extopts.atlas       = { ...
   fullfile(cat.extopts.pth_templates,'hammers.nii')                                  0  {'csf','gm','wm'}   0; ... % atlas based on 30 subjects with 95 regions
   fullfile(cat.extopts.pth_templates,'thalamus.nii')                                 0  {'gm'}              1; ... % thalamic nuclei based on DTI from 70 subjects with 14 regions
   fullfile(cat.extopts.pth_templates,'thalamic_nuclei.nii')                          0  {'gm'}              1; ... % thalamic nuclei based on hi-res T2 from 9 subjects with 22 regions
+  fullfile(cat.extopts.pth_templates,'hyperthalamus.nii')                            0  {'gm','wm'}         0; ... % thalamic nuclei based on DTI from 70 subjects with 14 regions
   fullfile(cat.extopts.pth_templates,'suit.nii')                                     0  {'gm','wm'}         1; ... % cerebellar lobes from 20 subjects
   fullfile(cat.extopts.pth_templates,'ibsr.nii')                                     0  {'csf','gm','wm'}   0; ... % less regions, 18 subjects, low-res T1 image quality
   fullfile(cat.extopts.pth_templates,'aal3.nii')                                     1  {'gm'}              0; ... % many regions, but only labeled on one subject 
