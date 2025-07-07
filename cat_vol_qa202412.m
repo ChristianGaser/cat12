@@ -855,7 +855,7 @@ function varargout = cat_vol_qa202412(action,varargin)
       
 
       if opt.writeQCseg
-        Vp0 = V; Vp0.fname = fullfile(pp,['p0_qcseg_' ff ee]); Vp0.dt(1) = 2; Vp0.pinfo(1) = 3/255;
+        Vp0 = V; Vp0.fname = fullfile(pp,['p0_qcseg_' ff '.nii']); Vp0.dt(1) = 2; Vp0.pinfo(1) = 3/255;
         spm_write_vol(Vp0,Yp0); 
       end
       %% in case of external/batch calls

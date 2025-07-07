@@ -81,7 +81,7 @@ function cat_tst_qa_resizeBWP( datadir0, qaversions, rerun )
   if ~exist( 'rerun', 'var'), rerun = 0; end
   
   outdir   = fullfile(datadir,'BWPrestest');
-  resdir   = fullfile(datadir, '+results',['BWPrestest_' datestr(clock,'YYYYmm')]); 
+  resdir   = fullfile(datadir, '+results',['BWPrestest_' char(datetime('now','format','yyyyMM'))]); 
   if ~exist(fullfile(outdir,'mri'),'dir'), mkdir(fullfile(outdir,'mri')); end  
   
   % testdata from BWP

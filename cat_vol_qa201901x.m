@@ -246,7 +246,7 @@ function varargout = cat_vol_qa201901x(action,varargin)
 %        if strcmpi(spm_check_version,'octave'), warning off; end
         Vo  = spm_vol(varargin{2});
 %        if strcmpi(spm_check_version,'octave'), warning on; end
-        Yo  = single(spm_read_vols(Vo));    
+        evalc('Yo  = single(spm_read_vols(Vo))');    
         Ym  = varargin{3}; 
         res = varargin{4};
         V   = res.image;
@@ -382,15 +382,15 @@ function varargout = cat_vol_qa201901x(action,varargin)
           if any(Vp0.dim ~= Vm.dim)
             [Vx,Yp0] = cat_vol_imcalc(Vp0,Vm,'i1',struct('interp',2,'verb',0));
           else
-            Yp0 = single(spm_read_vols(Vp0));
+            evalc('Yp0 = single(spm_read_vols(Vp0))');
           end
           Yp0(isnan(Yp0) | isinf(Yp0)) = 0; 
           if 0 %~isempty(Pm{fi}) && exist(Pm{fi},'file') ################################
-            Ym  = single(spm_read_vols(spm_vol(Pm{fi})));
+            evalc('Ym  = single(spm_read_vols(spm_vol(Pm{fi})))');
             Ym(isnan(Yp0) | isinf(Yp0)) = 0; 
           elseif 1==1 %end
           %if ~exist(Ym,'var') || round( cat_stat_nanmean(Ym(round(Yp0)==3)) * 100) ~= 100 
-            Ym  = single(spm_read_vols(spm_vol(Po{fi})));
+            evalc('Ym  = single(spm_read_vols(spm_vol(Po{fi})))');
             Ym(isnan(Yp0) | isinf(Yp0)) = 0; 
             Yw  = Yp0>2.95 | cat_vol_morph( Yp0>2.25 , 'e'); 
             Yb  = cat_vol_approx( Ym .* Yw + Yw .* min(Ym(:)) ) - min(Ym(:)); 
@@ -405,7 +405,7 @@ function varargout = cat_vol_qa201901x(action,varargin)
             cat_io_cprintf('warn','Segmentation is maybe not fitting to the image (RMSE(Ym,Yp0)=%0.2f)?:\n  %s\n  %s',rmse,Pm{fi},Pp0{fi}); 
           end
           
-          res.image = spm_vol(Pp0{fi}); 
+          evalc('res.image = spm_vol(Pp0{fi});');  
           [QASfi,QAMfi] = cat_vol_qa201901x('cat12',Yp0,Vo,Ym,res,species,opt);
 
           if isnan(QASfi.qualitymeasures.NCR)

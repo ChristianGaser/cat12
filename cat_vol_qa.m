@@ -222,11 +222,14 @@ function varargout = cat_vol_qa(action,varargin)
         if numel(action)==2
           Po = Pp0; Pm = Pp0;
           for fi=1:numel(Pp0)
-            [pp,ff,ee] = spm_fileparts(Pp0{fi});
+            [pp,ff,ee] = spm_fileparts(Pp0{fi}); 
+            if strcmp(ee,'.gz'), ee =[ff(end-3:end) ee]; ff = ff(1:end-4);  end
             [ppa,ppb] = spm_fileparts(pp); 
             if strcmp(ppb,'mri'), ppo = ppa; else, ppo = pp; end 
 
-            deri = strfind(ppo,[filesep 'derivatives' filesep 'CAT']); 
+            deri = min([ strfind(ppo,[filesep 'derivatives' filesep 'CAT']), ...
+                         strfind(ppo,[filesep 'derivatives' filesep 'SPM']), ...
+                         strfind(ppo,[filesep 'derivatives' filesep 'T1P'])]); 
             if isempty( deri )
               if cat_io_contains(ff,'qcseg') 
                 ff = strrep(ff,'p0_qcseg_',''); 
@@ -239,10 +242,15 @@ function varargout = cat_vol_qa(action,varargin)
             else
               BIDShome = fileparts(ppo(1:deri(1)));
               fsep     = strfind( ppo(deri(1) + 16:end) , filesep ) + deri(1) + 16;
-              
-              Po{fi} = fullfile( BIDShome, ppo(fsep(1):end) , [ff(3:end) ee] );
-
-
+              if isempty(fsep)
+                Pofi = cat_vol_findfiles(BIDShome,[ff(3:end) '.nii.gz']); 
+                if isempty(Pofi)
+                  Pofi = cat_vol_findfiles(BIDShome,[ff(3:end) '.nii']); 
+                end
+                Po{fi} = Pofi{1}; 
+              else
+                Po{fi} = fullfile( BIDShome, ppo(fsep(1):end) , [ff(3:end) ee] );
+              end
             end
             Pm{fi} = fullfile(pp,['m'  ff(3:end) ee]);
 
@@ -381,7 +389,7 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
         stime1 = clock; 
         
         % setup the XML file name
-        [pp,ff,ee] = spm_fileparts( Po{fi} ); 
+        [pp,ff,ee] = spm_fileparts( strrep(Po{fi},'.nii.gz','.nii') ); 
         sfile   = fullfile(pp,reportfolder,[opt.prefix ff '.xml']); 
         
         if ~exist( sfile ,'file') 
@@ -458,7 +466,7 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
           end
 
           % general function called from CAT12
-          res.image     = spm_vol(Po{fi}); 
+          evalc('res.image     = spm_vol(Po{fi});'); 
 
           if ~isempty(Yp0)
             try
@@ -794,37 +802,37 @@ function [Yp0,Ym,Vo,p0rmse] = getImages(Pp0,Po,Pm,fi)
   % handle gzipped original data 
   [pp,ff,ee] = spm_fileparts(Po{fi});
   if exist(fullfile(pp,[ff ee]),'file')
-    Vo  = spm_vol(Po{fi});
-  elseif exist(fullfile(pp,[ff ee '.gz']),'file')
-    gunzip(fullfile(pp,[ff ee '.gz']));
-    Vo  = spm_vol(Po{fi});
-    delete(fullfile(pp,[ff ee '.gz'])); 
+    evalc('Vo  = spm_vol(Po{fi});');
+  %elseif exist(fullfile(pp,[ff ee '.gz']),'file')
+  %  gunzip(fullfile(pp,[ff ee '.gz']));
+  %  Vo  = spm_vol(Po{fi});
+  %  delete(fullfile(pp,[ff ee '.gz'])); 
   else
     error('cat_vol_qa:noYo','No original image.');
   end
 
   % load further images - bias corrected Ym and segmentation Yp0
-  Vm  = spm_vol(Pm{fi});
+  evalc('Vm  = spm_vol(Pm{fi})');
   [pp0,ff0,ee0] = spm_fileparts(Pp0{fi});
   if cat_io_contains(ff0,'qcseg')
     Yp0 = []; 
   else
     switch ff0(1:2) 
       case {'p0','sy'} % cat
-        Vp0 = spm_vol(Pp0{fi});
+        evalc('Vp0 = spm_vol(Pp0{fi});');
         if ~isempty(Vm) && any(Vp0.dim ~= Vm.dim)
           [Vx,Yp0] = cat_vol_imcalc(Vp0,Vm,'i1',struct('interp',2,'verb',0)); % linear interp
         else
-          Yp0 = single(spm_read_vols(Vp0));
+          evalc('Yp0 = single(spm_read_vols(Vp0))');
         end
       case 'c1'
         tval = [2 3 1];
         for ci = 1:3
-          Vc = spm_vol(fullfile(pp0,sprintf('c%d%s%s',ci,ff0(3:end),ee0)));
+          evalc('Vc = spm_vol(fullfile(pp0,sprintf(''c%d%s%s'',ci,ff0(3:end),ee0)));');
           if ci == 1
-            Yp0 = tval(ci) * single(spm_read_vols(Vc));
+            evalc('Yp0 = tval(ci) * single(spm_read_vols(Vc))');
           else
-            Yp0 = Yp0 + tval(ci) * single(spm_read_vols(Vc));
+            evalc('Yp0 = Yp0 + tval(ci) * single(spm_read_vols(Vc))');
           end
         end 
       otherwise
@@ -836,7 +844,7 @@ function [Yp0,Ym,Vo,p0rmse] = getImages(Pp0,Po,Pm,fi)
   % Internal bias correction to handle the original images as the processed
   % bias corrected image in CAT is also intensity normalized and endoised.
   vx_vol  = sqrt(sum(Vo.mat(1:3,1:3).^2));
-  Ym  = single(spm_read_vols(spm_vol(Po{fi})));
+  evalc('Ym  = single(spm_read_vols(spm_vol(Po{fi})))');
   if ~isempty(Yp0)
     Ym(isnan(Yp0) | isinf(Yp0)) = 0; 
     Yw  = cat_vol_morph( Yp0>2.95 , 'e',1,vx_vol)  & cat_vol_morph( Yp0>2.25 , 'e',2,vx_vol); 

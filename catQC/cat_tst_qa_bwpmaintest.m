@@ -473,8 +473,9 @@ for qai = qais
       warning off; 
       [Q.fit.FEC, Q.fit.FECstat]  = robustfit(Q.FECgt(M,1),Q.FECo(M,1));
       warning on; 
-      default.QS{find(cellfun('isempty',strfind(default.QS(:,2),'FEC'))==0),4} = ...
-        round( [Q.fit.FEC(1) + Q.fit.FEC(2),Q.fit.FEC(1)+Q.fit.FEC(2 ) * 6] , -1 ); 
+      if ~isempty(FECpos)
+        default.QS{FECpos,4} = round([Q.fit.FEC(1) + Q.fit.FEC(2), Q.fit.FEC(1) + Q.fit.FEC(2) * 6], -1);
+      end
     catch
       Q.fit.FEC = [nan nan]; Q.fit.FECstat = struct('coeffcorr',nan(2,2),'p',nan(2,2)); 
       default.QS{find(cellfun('isempty',strfind(default.QS(:,2),'FEC'))==0),4} = [100 850];
