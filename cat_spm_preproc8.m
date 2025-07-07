@@ -474,6 +474,7 @@ for iter=1:60 % RD202012: increased from 30
                     break;
                 end
             end
+            
         else
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % Estimate histogram parameters
@@ -543,10 +544,10 @@ for iter=1:60 % RD202012: increased from 30
             end
         end
         
- 
-        if iter1 > 2 && ~((ll-ooll)>2*tol11*nm) || isnan(ll), break; end % RD202012: increased to minimum iteration - default was subit>1 
         ooll = ll; 
 
+        if iter1 > 2 && ~((ll-ooll)>2*tol11*nm) || isnan(ll), break; end % RD202012: increased to minimum iteration - default was subit>1 
+        
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Estimate bias
