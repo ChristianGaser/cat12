@@ -811,23 +811,19 @@ if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
     if job.extopts.SRP >= 40
       %% Yb0 was modified in cat_main_amap* for some conditions and we can use it as better mask in 
       % cat_surf_createCS3 except for inv_weighting or if gcut was not used
-      if ~(job.extopts.gcutstr>0 && ~job.inv_weighting)
-        Yb0(:) = 1;
-      end
-
+      if ~(job.extopts.gcutstr>0 && ~job.inv_weighting), Yb0(:) = 1; end
+ 
       [Yth1, S, Psurf, qa.createCS] = ... 
-        cat_surf_createCS4(VT,VT0,Ymix,Yl1,YMF,YT,Yb0,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
-        'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,'SRP', mod(job.extopts.SRP,10), ...
-        'Affine',res.Affine,'surf',{surf},...
-        'verb',job.extopts.verb,'useprior',job.useprior),job); 
+        cat_surf_createCS4(VT,VT0,Ymi,Ymix,Yl1,YMF,Yb0,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
+        'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,'SRP', mod(job.extopts.SRP,10), 'vdist', 2, ... job.extopts.vdist, ...
+        'Affine',res.Affine,'surf',{surf},'verb',job.extopts.verb,'useprior',job.useprior),job); 
       qa.subjectmeasures.EC_abs = NaN;
       qa.subjectmeasures.defect_size = NaN;
+
     elseif job.extopts.SRP >= 30
      % Yb0 was modified in cat_main_amap* for some conditions and we can use it as better mask in 
       % cat_surf_createCS3 except for inv_weighting or if gcut was not used
-      if ~(job.extopts.gcutstr>0 && ~job.inv_weighting)
-        Yb0(:) = 1;
-      end
+      if ~(job.extopts.gcutstr>0 && ~job.inv_weighting), Yb0(:) = 1; end
 
       [Yth1, S, Psurf, qa.createCS] = ...
         cat_surf_createCS3(VT,VT0,Ymix,Yl1,YMF,YT,Yb0,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
@@ -1205,6 +1201,249 @@ function [Ycls,Ym,Ymi,Yp0b,Yb,Yl1,Yy,YMF,indx,indy,indz,qa,job] = cat_main_SPMpp
     Yb     = cat_vol_morph(Yb,'ldc',8,R.vx_volr);                          % close mask (even large ventricles)
     Yb     = cat_vol_morph(Yb,'dd',1,R.vx_volr);                           % add 1 mm to have some CSF around the brain and simpliefy PVEs
     Yb     = cat_vol_resize(smooth3(Yb),'dereduceV',R)>0.5;                % reinterpolate image and add some space around it
+    clear R;
+
+    Ycls{3} = cat_vol_ctype(single(Ycls{3}) .* Yb); 
+    Ycls{4} = cat_vol_ctype(255 * (1-Yb));
+  else
+    Yb = Ycls{1} + Ycls{2} + Ycls{3}; 
+  end
+  for i=1:numel(Ycls)
+    [Pc(:,:,:,i),BB] = cat_vol_resize(Ycls{i},'reduceBrain',repmat(job.opts.redspmres,1,3),2,Yb); 
+  end
+  Pc = cat_main_clean_gwc(Pc,round(1./mean(vx_vol)),2);
+  for i=1:3, Ycls{i} = cat_vol_resize(Pc(:,:,:,i),'dereduceBrain',BB); end; clear Pc Yb; 
+  
+  %% create (resized) label map and brainmask
+  Yp0  = single(Ycls{3})/5 + single(Ycls{1})/5*2 + single(Ycls{2})/5*3;
+  Yb   = single(Ycls{3} + Ycls{1} + Ycls{2}) > 128;
+
+  % load original images and get tissue thresholds
+  clsint = @(x) round( sum(res.mn(res.lkp==x) .* res.mg(res.lkp==x)') * 10^5)/10^5;
+  
+  if isfield(job.extopts,'spmAMAP') && job.extopts.spmAMAP
+    fprintf('%5.0fs\n',etime(clock,stime));
+    T3thx  = [ clsint(3) clsint(1) clsint(2) ];
+    T3thx  = [ cat_stat_nanmedian(Ysrc(Ycls{3}(:)>128)) ...
+               cat_stat_nanmedian(Ysrc(Ycls{1}(:)>128)) ...
+               cat_stat_nanmedian(Ysrc(Ycls{2}(:)>128)) ];
+    
+    if any( diff( (T3thx-min(T3thx)) / (max(T3thx)-min(T3thx)) ) > .2 ) 
+    % Usefull constrast between ALL tissues? 
+    % Not allways working and especially in such cases AMAP is needed. 
+    % This is expert processing and AMAP is not default!
+    % It inlcudes also some basic corrections (skull-stripping, bias
+    % correction, 
+
+      %% brain masking
+      if 0
+        Yb = (single(Ycls{3} + Ycls{1} + Ycls{2}) > 64) | ...
+             cat_vol_morph( single(Ycls{3} + Ycls{1} + Ycls{2}) > 192,'dd',1.5); 
+        Yb = cat_vol_morph( Yb ,'ldc',1.5,vx_vol);
+        Ycls{3} = max(Ycls{3},cat_vol_ctype(255*Yb) - Ycls{2} - Ycls{1});
+      else
+        P = cat(4,Ycls{1},Ycls{2},Ycls{3},0*Ycls{4},0*Ycls{4},Ycls{4}); 
+        res.isMP2RAGE = 0; 
+        Yb = cat_main_APRG(Ysrc,P,res,double(T3thx));
+        Yb = cat_vol_morph( Yb ,'ldc',6,vx_vol);
+        Yb = cat_vol_smooth3X(Yb,4)>.4; 
+        clear P
+      end
+
+      %% bias correction 
+      Yg = cat_vol_grad(Ysrc) ./ Ysrc; 
+      if T3thx(2) < T3thx(3) % T1
+        Yi = Ysrc .* ( Ycls{2}>128 & Ysrc > cat_stat_nanmedian(T3thx(2:3)) & Ysrc < T3thx(3)*1.2 & Yg < cat_stat_nanmedian(Yg(Yb(:))) ) + ...
+             Ysrc .* ( Ycls{1}>128 & Ysrc > T3thx(2)*.9 & Ysrc < mean(T3thx(2:3)) & Yg < cat_stat_nanmedian(Yg(Yb(:))) ) * T3thx(3) / T3thx(2); 
+      else % T2/PD
+        Yi = Ysrc .* ( Ycls{2}>128 & Ysrc < cat_stat_nanmedian(T3thx(2:3)) & Yg < cat_stat_nanmedian(Yg(Yb(:))) ); 
+        Yi = Yi + ... 
+             Ysrc .* ( Ycls{1}>128 & Ysrc > T3thx(1)*.9 & Ysrc > T3thx(1)*1.1  & Yg < cat_stat_nanmedian(Yg(Yb(:)) ) & Yi==0 ) * T3thx(3) / T3thx(2); 
+        Ymsl = ( (Ycls{5}>128 | Ycls{4}>128) & Ysrc > min(T3thx)/4 & Ysrc < min(T3thx)*.8 & smooth3(Yg) < cat_stat_nanmedian(Yg(Yb(:))) & Yi==0 ); 
+        Yi = Yi + ... 
+             Ysrc .* Ymsl * T3thx(3) / cat_stat_nanmedian(Ysrc(Ymsl(:))); 
+      end
+      Yi = cat_vol_approx(Yi,'rec');
+      Ysrc = Ysrc ./ Yi * T3thx(3);
+      clear Yi; 
+
+      %% intensity normalization 
+      if T3thx(2) < T3thx(3) % T1
+        T3thx2 = [ cat_stat_nanmedian(Ysrc(Ycls{3}(:)>128 & Yg(:)<.3)) ...
+                   cat_stat_nanmedian(Ysrc(Ycls{1}(:)>128 & Yg(:)<.3)) ...
+                   cat_stat_nanmedian(Ysrc(Ycls{2}(:)>128 & Yg(:)<.3)) ];
+        Tth.T3th  = [0 .05 1:5]; 
+        Tth.T3thx = sort( [ min(Ysrc(:)) cat_stat_nanmedian([min(Ysrc(:)),T3thx2(1)]) T3thx2 T3thx2(3)+diff(T3thx2(2:3)) max(Ysrc(:)) ] );
+      else
+        T3thx2 = [ cat_stat_nanmedian(Ysrc(Ycls{3}(:)>128 & Yg(:)<.3)) ... ...
+                   cat_stat_nanmedian(Ysrc(Ycls{1}(:)>128 & Yg(:)<.3)) ...
+                   cat_stat_nanmedian(Ysrc(Ycls{2}(:)>128 & Yg(:)<.3)) ];
+        Tth.T3th  = [0 .05 1:5]; 
+        Tth.T3thx = sort( [ min(Ysrc(:)) cat_stat_nanmedian([min(Ysrc(:)),min(T3thx2)]) T3thx2 max(T3thx2)-diff([max(T3thx2),max([setdiff(T3thx2,max(T3thx2))])]) max(Ysrc(:)) ] );
+      end
+      Ym = cat_main_gintnormi(Ysrc/3,Tth) / 3;
+      Ym = cat_vol_sanlm(struct('data',res.image.fname,'verb',0,'NCstr',job.extopts.NCstr),res.image,1,Ym);
+ Yclso=Ycls; 
+     
+      %% LAS
+      if 1
+        stime = cat_io_cmd(sprintf('Local adaptive segmentation (LASstr=%0.2f)',job.extopts.LASstr)); 
+        %Ymi = cat_main_LAS(Ysrc,Ycls,Ym,Yb,Yy,Tth.T3thx(3:5) ,res,vx_vol,job.extopts,struct('T3thx',Tth.T3th,'T3th',Tth.T3thx)); 
+        Ymi = cat_main_LASsimple(Ysrc,Ycls); %,,job.extopts.LASstr); 
+        Ymi = cat_vol_sanlm(struct('data',res.image0.fname,'verb',0,'NCstr',job.extopts.NCstr),res.image,1,Ymi);
+        Ym  = Ymi; 
+        stime = cat_io_cmd(' ','','',job.extopts.verb,clock); fprintf('%5.0fs\n',etime(clock,stime)); clear Ymx Ysrcx;
+      else
+        Ymi = Ym;
+      end
+ 
+      %% add missing field and run AMAP
+      job.inv_weighting       = T3thx(2) > T3thx(3); 
+      job.extopts.AMAPframing = 0;
+      job.extopts.inv_weighting = T3thx(2) > T3thx(3);
+      [prob,indx,indy,indz]   = cat_main_amap(min(10,Ymi+0), Yb & Ymi>1/6, Yb & Ymi>1/6, Ycls, job,res);
+      stime = cat_io_cmd(' ');
+     
+      %% cleanup (just the default value) 
+      if job.extopts.cleanupstr > 0 && T3thx(2) < T3thx(3) 
+        prob = cat_main_clean_gwc1639(prob,min(1,job.extopts.cleanupstr*2/mean(vx_vol))); % default cleanup  
+        for i=1:3, Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i); end
+      elseif T3thx(2) > T3thx(3) 
+% close WM in PDw        
+        Yb0  = sum(prob,4) > 0;
+        Yw   = single(prob(:,:,:,2)); 
+        Yw   = Yw .* cat_vol_morph(Yw > 0,'l',[.1 10]);
+        Yw   = Yw .* (cat_vol_morph(Yb0,'de',2,vx_vol) | cat_vol_morph(Yw > 0,'ldo',1.9,vx_vol));
+        Yw   = Yw .* cat_vol_morph(Yw > 0,'l',[.1 10]);
+        Yw   = Yw .* (cat_vol_morph(Yb0,'de',5,vx_vol) | cat_vol_morph(Yw > 0,'ldo',1.2,vx_vol));
+        prob(:,:,:,1) = prob(:,:,:,1) + prob(:,:,:,2) .* uint8(Yw==0 & Ym(indx,indy,indz)>1/6 & Ym(indx,indy,indz)<5/6); % GM
+        prob(:,:,:,3) = prob(:,:,:,3) + prob(:,:,:,2) .* uint8(Yw==0 & Ym(indx,indy,indz)>5/6 & Ym(indx,indy,indz)<6/6); % CSF
+        prob(:,:,:,2) = prob(:,:,:,2) .* uint8(Yw>0);
+        clear Yb0 Yw; 
+
+        prob = cat_main_clean_gwc1639(prob,min(1,job.extopts.cleanupstr*4/mean(vx_vol))); % default cleanup
+        for i=1:3, Ycls{i}(:) = 0; Ycls{i}(indx,indy,indz) = prob(:,:,:,i); end
+        Ycls{3} = max(Ycls{3},cat_vol_ctype(255*Yb) - Ycls{2} - Ycls{1});
+      end
+      Yp0  = single(Ycls{3})/255 + single(Ycls{1})/255*2 + single(Ycls{2})/255*3;
+    else
+      % error message 
+      cat_io_addwarning([mfilename ':cat_main_SPMpp:AMAP'],'AMAP selected but insufficient tissue contrast. Keep SPM segmentation!',4,[1 1]);
+      
+      % the intensity normalized images are here represented by the segmentation 
+      Ym   = Yp0/255*5/3;
+      Ymi  = Yp0/255*5/3; 
+    end
+  else
+    % the intensity normalized images are here represented by the segmentation 
+    Ym   = Yp0/255*5/3;
+    Ymi  = Yp0/255*5/3; 
+  end
+
+  % RD202506: try updating Ym(i) 
+  if ~( isfield(job.extopts,'spmAMAP') && job.extopts.spmAMAP && any( diff( (T3thx-min(T3thx)) / (max(T3thx)-min(T3thx)) ) > .2 ) )
+    % apply intensity normalization with denoising (used for export and surface evaluation)
+    % bias correction
+    Ym = Ysrc ./ cat_vol_approx( (Ycls{2}>240).*Ysrc ); 
+    % threshold estimation
+    Yg = cat_vol_grad(Ym) ./ cat_stat_nanmedian(Ym(Ycls{2}(:)>128)); 
+    if cat_stat_nanmedian(Ym(Ycls{3}(:)>128 & Yg(:)<.6)) < cat_stat_nanmedian(Ym(Ycls{2}(:)>128 & Yg(:)<.3))
+      T3thx2 = [ min([ cat_stat_nanmedian(Ym(Ycls{3}(:)>240 & Yg(:)<.05)) cat_stat_nanmedian(Ym(Ycls{3}(:)>192 & Yg(:)<.1)) ]) ...
+                 cat_stat_nanmedian(Ym(Ycls{1}(:)>128 & Yg(:)<.3)) ...
+                 cat_stat_nanmedian(Ym(Ycls{2}(:)>128 & Yg(:)<.3)) ];
+      Tth.T3th  = [0 .05 1:5]; 
+      Tth.T3thx = sort( [ min(Ym(:)) cat_stat_nanmedian([min(Ym(:)),T3thx2(1)/10]) T3thx2 T3thx2(3)+diff(T3thx2(2:3)) max(Ym(:)) ] );
+    else
+      T3thx2 = [ cat_stat_nanmedian(Ym(Ycls{3}(:)>128 & Yg(:)<.3)) ... 
+                 cat_stat_nanmedian(Ym(Ycls{1}(:)>128 & Yg(:)<.3)) ...
+                 cat_stat_nanmedian(Ym(Ycls{2}(:)>128 & Yg(:)<.3)) ];
+      Tth.T3th  = [0 .05 1:5]; 
+      Tth.T3thx = sort( [ min(Ym(:)) cat_stat_nanmedian([min(Ym(:)),min(T3thx2)]) T3thx2 max(T3thx2)-diff([max(T3thx2),max([setdiff(T3thx2,max(T3thx2))])]) max(Ym(:)) ] );
+    end
+    % global normalization 
+    Ym = cat_main_gintnormi(Ym/3,Tth)/3;
+    % denoising
+    cat_sanlm(Ym,1,3); 
+    % local normalization ( higher values are more stable?! )
+    Ymi = cat_main_LASsimple(Ym*1000,Ycls); 
+  end
+
+
+  % load original images and get tissue thresholds
+  WMth = double(max(clsint(2),...
+           cat_stat_nanmedian(cat_stat_nanmedian(cat_stat_nanmedian(Ysrc(Ycls{2}>192)))))); 
+  T3th = [ min([  clsint(1) - diff([clsint(1),WMth]) ,clsint(3)]) , clsint(2) , WMth];
+  clear Ysrc
+  
+  job.extopts.WMHC          = 0;
+  job.extopts.SLC           = 0;
+  job.extopts.LASmyostr     = 0; 
+  job.extopts.inv_weighting = T3th(3)<T3th(2);
+  job.inv_weighting         = T3th(3)<T3th(2);
+  job.useprior              = '';
+
+   
+  % low resolution Yp0b
+  sz = size(Yb);
+  [indx, indy, indz] = ind2sub(sz,find(Yb>0));
+  indx = max((min(indx) - 1),1):min((max(indx) + 1),sz(1));
+  indy = max((min(indy) - 1),1):min((max(indy) + 1),sz(2));
+  indz = max((min(indz) - 1),1):min((max(indz) + 1),sz(3));
+  Yp0b = Yp0(indx,indy,indz);
+ 
+  
+  %% load atlas map and prepare filling mask YMF
+  % compared to CAT default processing, we have here the DARTEL mapping, but no individual refinement 
+  if 1
+    Vl1 = spm_vol(job.extopts.cat12atlas{1});
+    if isfield(res,'spmpp') && res.spmpp
+      Yl1 = spm_sample_vol(Vl1,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0);
+    else
+      Yl1 = cat_vol_ctype( cat_vol_sample(res.tpm(1),Vl1,Yy,0)); % spm_sample_vol(Vl1,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
+    end
+    Yl1 = reshape(Yl1,size(Ym)); [D,I] = cat_vbdist(single(Yl1>0), Yp0>0); Yl1 = cat_vol_ctype( Yl1(I) );   
+    YMF = NS(Yl1,job.extopts.LAB.VT) | NS(Yl1,job.extopts.LAB.BG);
+    YMF = cat_vol_morph( ~(Ycls{2}>128 & NS(Yl1,1)) &   cat_vol_morph(YMF | (Ycls{2}>128 & NS(Yl1,1)),'ldc',2),'l',[1 .3]);
+  else
+    [Yl1,Ycls,YMF] = cat_vol_partvol1639(Ym*3,Ycls,Yb,Yy,vx_vol,job.extopts,res.tpm,1,job,false(size(Ym)));
+  end
+return
+
+function [Ycls,Ym,Ymi,Yp0b,Yb,Yl1,Yy,YMF,indx,indy,indz,qa,job] = cat_main_SPMppold(Ysrc,Ycls,Yy,job,res,stime)
+%% SPM segmentation input  
+%  ------------------------------------------------------------------------
+%  Here, DARTEL and PBT processing is prepared. 
+%  We simply use the SPM segmentation as it is, without further modelling 
+%  of the partial volume effect or other refinements. 
+%  ------------------------------------------------------------------------
+  
+  NS = @(Ys,s) Ys==s | Ys==s+1;         % for side independent atlas labels
+    
+  % QA WMH values required by cat_vol_qa later
+  qa.subjectmeasures.WMH_abs    = nan;  % absolute WMH volume without PVE
+  qa.subjectmeasures.WMH_rel    = nan;  % relative WMH volume to TIV without PVE
+  qa.subjectmeasures.WMH_WM_rel = nan;  % relative WMH volume to WM without PVE
+  qa.subjectmeasures.WMH_abs    = nan;  % absolute WMH volume without PVE in cm^3
+
+  vx_vol  = sqrt(sum(res.image(1).mat(1:3,1:3).^2));  
+   
+  %% Update Ycls: cleanup on original data
+  Yb = Ycls{1} + Ycls{2} + Ycls{3}; 
+  for i=1:numel(Ycls)
+    [Pc(:,:,:,i),BB] = cat_vol_resize(Ycls{i},'reduceBrain',repmat(job.opts.redspmres,1,3),2,Yb); %#ok<AGROW>
+  end 
+  Pc = cat_main_clean_gwc(Pc,round(1./mean(vx_vol)),2);
+  for i=1:3, Ycls{i} = cat_vol_resize(Pc(:,:,:,i),'dereduceBrain',BB); end; clear Pc Yb; 
+ 
+  %% Update Ycls: cleanup on original data
+  if numel(Ycls)==3
+    % in post-mortem data there is no CSF and CSF==BG
+    Yb     = Ycls{1} + Ycls{2}; 
+    [Yb,R] = cat_vol_resize(single(Yb),'reduceV',vx_vol,1,32,'meanm');     % use lower resolution to save time 
+    Yb     = cat_vol_morph(Yb>128,'ldo',3,R.vx_volr);                      % do some cleanup 
+    Yb     = cat_vol_morph(Yb,'ldc',8,R.vx_volr);                          % close mask (even large ventricles)
+    Yb     = cat_vol_morph(Yb,'dd',1,R.vx_volr);                           % add 1 mm to have some CSF around the brain and simpliefy PVEs
+    Yb     = cat_vol_resize(smooth3(Yb),'dereduceV',R)>0.5;                % reinterpolate image and add some space around it
     
     Ycls{3} = cat_vol_ctype(single(Ycls{3}) .* Yb); 
     Ycls{4} = cat_vol_ctype(255 * (1-Yb));
@@ -1270,7 +1509,7 @@ function [Ycls,Ym,Ymi,Yp0b,Yb,Yl1,Yy,YMF,indx,indy,indz,qa,job] = cat_main_SPMpp
       Ym = cat_vol_sanlm(struct('data',res.image.fname,'verb',0,'NCstr',job.extopts.NCstr),res.image,1,Ym);
       
       %% add missing field and run AMAP
-      job.inv_weighting       = 0; 
+      job.inv_weighting       = 1; 
       job.extopts.AMAPframing = 1;
       [prob,indx,indy,indz]   = cat_main_amap1639(Ym+0,Yb,Yb,Ycls,job,res);
 
@@ -1316,21 +1555,22 @@ function [Ycls,Ym,Ymi,Yp0b,Yb,Yl1,Yy,YMF,indx,indy,indz,qa,job] = cat_main_SPMpp
   Yp0b = Yp0(indx,indy,indz);
   clear Yp0; 
   
+  
   %% load atlas map and prepare filling mask YMF
   % compared to CAT default processing, we have here the DARTEL mapping, but no individual refinement 
-  if 1
-    Vl1 = spm_vol(job.extopts.cat12atlas{1});
-    if isfield(res,'spmpp') && res.spmpp
-      Yl1 = spm_sample_vol(Vl1,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0);
-    else
-      Yl1 = cat_vol_ctype( cat_vol_sample(res.tpm(1),Vl1,Yy,0)); % spm_sample_vol(Vl1,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
-    end
-    Yl1 = reshape(Yl1,size(Ym)); [D,I] = cat_vbdist(single(Yl1>0)); Yl1 = cat_vol_ctype( Yl1(I) );   
-    YMF = NS(Yl1,job.extopts.LAB.VT) | NS(Yl1,job.extopts.LAB.BG) | NS(Yl1,job.extopts.LAB.BG);
-    YMF = cat_vol_morph( ~(Ycls{2}>128 & NS(Yl1,1)) &   cat_vol_morph(YMF | (Ycls{2}>128 & NS(Yl1,1)),'ldc',2),'l',[1 .3]);
-  else
-    [Yl1,Ycls,YMF] = cat_vol_partvol1639(Ym*3,Ycls,Yb,Yy,vx_vol,job.extopts,res.tpm,1,job,false(size(Ym)));
-  end
+  Vl1 = spm_vol(job.extopts.cat12atlas{1});
+  Yl1 = cat_vol_ctype( cat_vol_sample(res.tpm(1),Vl1,Yy,0)); % spm_sample_vol(Vl1,double(Yy(:,:,:,1)),double(Yy(:,:,:,2)),double(Yy(:,:,:,3)),0));
+  Yl1 = reshape(Yl1,size(Ym)); [D,I] = cat_vbdist(single(Yl1>0), Yp0>0); Yl1 = cat_vol_ctype( Yl1(I) );   
+  YMF = NS(Yl1,job.extopts.LAB.VT) | NS(Yl1,job.extopts.LAB.BG);
+  % refine closing area on low resolution 
+  [Yp0r,YMFr,BB]    = cat_vol_resize({Yp0 ,YMF },'reduceBrain',vx_vol,4,Yb);
+  [Yp0r,YMFr,resTr] = cat_vol_resize({Yp0r,YMFr},'reduceV',vx_vol,2,64);
+  YMFr = single( min(1,(YMFr>.5) + 0.5*(Yp0r>2.5)));  
+  YMFr = cat_vol_laplace3R(YMFr,Yp0r<2.5 & ~YMFr,0.01);
+  YMF = cat_vol_resize(YMFr,'dereduceV',resTr);
+  YMF = cat_vol_resize(YMF,'dereduceBrain',BB)>.75;
+  % combine with WM
+  YMF = smooth3( cat_vol_morph( ~(Ycls{2}>128 & NS(Yl1,1)) &   cat_vol_morph(YMF | (Ycls{2}>128 & NS(Yl1,1)),'ldc',2),'l',[1 .3]) );
 return
 
 function [Ymix,job,surf,stime] = cat_main_surf_preppara(Ymi,Yp0,job,vx_vol)
