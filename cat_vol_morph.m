@@ -199,7 +199,7 @@ function varargout = cat_vol_morph(vol,action,n,vx_vol,verb)
   
     case {'gdilate','graydilate','gd','gerode','grayerode','ge'}
       % remove the background volume that is outside the dilation region
-      [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,n+1,vol>0); 
+      [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,n+1,vol>0);
       
       % use of single input for convn is faster and less memory demanding
       switch lower(action)
@@ -211,8 +211,8 @@ function varargout = cat_vol_morph(vol,action,n,vx_vol,verb)
       vol = cat_vol_localstat( single(vol+minvol), true(size(vol)), (nn/mean(vx_vol)), minmax) - minvol; %cat_vol_morph(vol>0, dx , ceil(nn/mean(vx_vol))) 
     
       % add background
-      vol = cat_vol_resize(vol,'dereduceBrain',BB);  
-
+      vol = cat_vol_resize(vol,'dereduceBrain',BB);
+    
     case {'grayopen','gopen','go'}
       vol = cat_vol_morph(vol,'gerode' ,n,vx_vol); 
       vol = cat_vol_morph(vol,'gdilate',n,vx_vol); 
@@ -228,15 +228,15 @@ function varargout = cat_vol_morph(vol,action,n,vx_vol,verb)
   % =================================================================== 
     case {'cdilate','cd'}
       % remove the background volume that is outside the dilation region
-      [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,n+1,vol>0); 
+      [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,n+1,vol>0);
       
       % use of single input for convn is faster and less memory demanding
       vol = convn(single(vol),ones(2*round(nn/vx_vol(1))+1,...
         2*round(nn/vx_vol(2))+1,2*round(nn/vx_vol(3))+1),'same') > 0; 
 
       % add background
-      vol = cat_vol_resize(vol,'dereduceBrain',BB);  
-      
+      vol = cat_vol_resize(vol,'dereduceBrain',BB);
+
     case {'cerode','ce'}
       vol = ~cat_vol_morph(~vol,'cdilate',n,vx_vol); 
 
@@ -253,8 +253,8 @@ function varargout = cat_vol_morph(vol,action,n,vx_vol,verb)
         vol = vol2(nv(1)+1:sz(1)+nv(1),nv(2)+1:sz(2)+nv(2),nv(3)+1:sz(3)+nv(3))>0;
       elseif test == 2
         % remove the background volume that is outside the dilation region
-        [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,1,vol>0); 
-        
+        [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,1,vol>0);
+      
         % We need to enlarge the image. Otherwise the dilation will reach
         % the image boundary and final close the region between object and
         % image boundary.
@@ -264,9 +264,9 @@ function varargout = cat_vol_morph(vol,action,n,vx_vol,verb)
         vol2 = cat_vol_morph(vol2,'cdilate',n,vx_vol); 
         vol2 = cat_vol_morph(vol2,'cerode' ,n,vx_vol); 
         vol = vol2(nv(1)+1:sz(1)+nv(1),nv(2)+1:sz(2)+nv(2),nv(3)+1:sz(3)+nv(3))>0;
-        
+
         % add background
-        vol = cat_vol_resize(vol,'dereduceBrain',BB);  
+        vol = cat_vol_resize(vol,'dereduceBrain',BB);
       else
         vol = cat_vol_morph(vol,'cdilate',n,vx_vol); 
         vol = cat_vol_morph(vol,'cerode' ,n,vx_vol); 
@@ -298,7 +298,7 @@ function varargout = cat_vol_morph(vol,action,n,vx_vol,verb)
       [ROI,num]  = spm_bwlabel(real(vol),6);
       
       if num>0
-        num        = hist( ROI( ROI(:)>0 ) , 1:num);
+        num        = hist( ROI( ROI(:)>0 ) , 1:num); %#ok<HIST>
         [num,numi] = sort(num,'descend');
         vol        = ROI == numi(1);	
         
@@ -329,8 +329,9 @@ function varargout = cat_vol_morph(vol,action,n,vx_vol,verb)
     % are bad represented for lower resolutions and lead to unaccurate 
     % results.
     case {'distdilate','dd'}
-      [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,nn + 1,vol>0); 
-      
+      % remove the background volume that is outside the dilation region
+      [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,nn+1,vol>0);
+    
       if nn / mean(vx_vol) > 3 
         [vol,resYp0] = cat_vol_resize(vol,'reduceV', 1, nn/5, 32, 'meanm'); 
         vol = vol > .5;
@@ -356,13 +357,14 @@ function varargout = cat_vol_morph(vol,action,n,vx_vol,verb)
       
       % add background
       vol = cat_vol_resize(vol,'dereduceBrain',BB);
-      
+ 
     case {'disterode','de'}
       vol = ~cat_vol_morph(~vol,'distdilate',nn,vx_vol); 
 
     case {'distclose','dc'}
-      [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,n + 1,vol>0); 
-
+      % remove the background volume that is outside the dilation region
+      [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,nn+1,vol>0);
+    
       if nn / mean(vx_vol) > 3 
         [vol,resYp0] = cat_vol_resize(single(vol),'reduceV', 1, max(2,nn/5), 32, 'meanm'); 
         vol = vol > .5;
@@ -387,10 +389,11 @@ function varargout = cat_vol_morph(vol,action,n,vx_vol,verb)
       if exist('resYp0','var')
         vol = cat_vol_resize(vol,'dereduceV',resYp0) >= 0.5; 
       end
-
+   
       % add background
-      vol = cat_vol_resize(vol,'dereduceBrain',BB);  
-      
+      vol = cat_vol_resize(vol,'dereduceBrain',BB);
+   
+
     case {'distopen','do'}
       vol = ~cat_vol_morph(~vol,'distclose',nn,vx_vol); 
       
@@ -408,6 +411,11 @@ function varargout = cat_vol_morph(vol,action,n,vx_vol,verb)
 
     case {'topoopen','to'}
       if verb, vol0 = vol; ptime(1) = datetime('now'); end
+      if all(vol==round(vol))
+        vol = cat_vol_morph(vol,'l',1)>0;
+      else
+        vol = min(vol,.5) + ( cat_vol_morph(vol,'l').*max(0,vol-.5));
+      end
       vol = 1 - cat_vol_morph(1 - vol, 'tc',1,vx_vol,0); 
       if verb, ptime(2) = datetime('now'); evaltopo(vol0,vol,action,nn,ptime); end
 
@@ -415,47 +423,27 @@ function varargout = cat_vol_morph(vol,action,n,vx_vol,verb)
       vol = single(vol); 
       if verb, ptime(1) = datetime('now'); end
 
-      if verb, vol0 = vol; end; tbf = false(size(vol)); 
+      vol0 = vol; tbf = false(size(vol)); 
       evalc('tbf = ( (vol<.5) & cat_vol_morph(vol>.5,''d'') & smooth3(cat_vol_genus0(single(vol),.5))>.6 );'); 
       vol = max( vol , min(0.51, min(vol(:)) + diff([min(vol(:)) max(vol(:)) ]) .* (tbf &  ~(vol>.5) )) ) ; 
+      
+      if all(vol0==round(vol0))
+        vol = cat_vol_morph(vol,'l',1)>0;
+      else
+        vol = min(vol,.5) + ( cat_vol_morph(vol,'l').*max(0,vol-.5));
+      end
+      
       if verb, ptime(2) = datetime('now'); evaltopo(vol0,vol,action,nn,ptime); end
      
     case 'wmtc'
       % WM specific topology correction
-      %vol = vol - 2;
-
+      vol = min(vol,.5) + ( cat_vol_morph(vol,'l').*max(0,vol-.5));
+       
       if verb, vol0 = vol; ptime(1) = datetime('now'); end
       vol = cat_vol_morph(vol,'adc',1,vx_vol,0); % high bias, more defects ... maybe better to avoid here
       vol = cat_vol_morph(vol,'tc',1,vx_vol,0);
       vol = cat_vol_morph(vol,'to',1,vx_vol,0);
       if verb, ptime(2) = datetime('now'); evaltopo(vol0,vol,action,nn,ptime); end
-
-      %vol = vol + 2; 
-
-    case {'topocorr','tcx'} 
-      ptime(1) = datetime('now'); 
-
-      vol0 = vol;
-      vol  = max(0,min(1,vol)); 
-      for ni=1:abs(nn)
-        if nn>0
-          vol = cat_vol_morph(vol, 'ado',1,vx_vol,0); 
-          vol = cat_vol_morph(vol, 'adc',1,vx_vol,0); 
-        else
-          vol = cat_vol_morph(vol, 'adc',1,vx_vol,0); 
-          vol = cat_vol_morph(vol, 'ado',1,vx_vol,0); 
-        end
-      end
-
-      % only one object (but maybe multiple backgrounds)
-      vol = vol .* (0.5 * (vol>0.5) + 0.5 * cat_vol_morph(vol > .5,'l')); 
-      
-      % restore possible larger range
-      vol(vol==0) = vol0(vol==0); 
-      vol(vol==1) = vol0(vol==1); 
-   
-      if verb || nargout>1,  ptime(2) = datetime('now'); varargout{2} = evaltopo(vol0,vol,action,nn,ptime); end
-
 
     case {'autodistopen','ado'}
       if verb, vol0 = vol; ptime(1) = datetime('now'); end
@@ -545,10 +533,10 @@ function varargout = cat_vol_morph(vol,action,n,vx_vol,verb)
     otherwise
       error('MATLAB:cat_vol_morph:UnknownAction','Unknown action ''%s ''',action);
   end
-  
+ 
   eval(sprintf('vol = %s(vol);',classVol));
   if isa(classVol,'uint8'); vol = 255*vol; end
-
+  
   if nargout, varargout{1} = vol; end 
 end
 function EC = evaltopo(vol1,vol2,action,nn,ptime) 
