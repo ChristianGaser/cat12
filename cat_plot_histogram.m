@@ -220,7 +220,11 @@ fig = figure;
 set(fig,'MenuBar', 'none', 'Position',[100, 0, opt.winsize]);
 
 % get shorter filenames
-[tmp, fname_tmp] = spm_str_manip(data,'C');
+if iscellstr(data)
+  [tmp, fname_tmp] = spm_str_manip(data,'C');
+else
+  fname_tmp = struct('s','','e','','m',num2str(1:numel(data))); 
+end
 
 for j = 1:n
   y = dropNaNs(cdata{j});
@@ -247,12 +251,17 @@ for j = 1:n
   H(j,:) = H0;
   X(j,:) = X0;
   if ischar(data)
-    if ~isempty(fname_tmp)
-      legend_str{j} = fname_tmp.m{j};
-      length_leg    = max(cellfun(@length,fname_tmp.m));
-    else
-      legend_str{j} = char(spm_str_manip(data(j,:),'a90'));
-      length_leg    = size(char(spm_str_manip(data,'a90'),2));
+    try 
+      if ~isempty(fname_tmp)
+        legend_str{j} = fname_tmp.m{j};
+        length_leg    = max(cellfun(@length,fname_tmp.m));
+      else
+        legend_str{j} = char(spm_str_manip(data(j,:),'a90'));
+        length_leg    = size(char(spm_str_manip(data,'a90'),2));
+      end
+    catch
+      legend_str{j} = sprintf('%d',j); 
+      length_leg    = 1; 
     end
 
     % give some specific output for (normally distributed) T-values or
