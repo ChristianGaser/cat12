@@ -24,7 +24,7 @@ function Yg = cat_vol_grad(Ym,vx_vol,method,repNaN)
   if ~exist('vx_vol','var'), vx_vol = ones(1,3); end
   if ~exist('method','var'), method = 1; end
   if ~exist('repNaN','var'), repNaN = 1; end
-  if numel(vx_vol) == 1
+  if isscalar(vx_vol)
     vx_vol(2:3) = vx_vol(1); 
   elseif numel(vx_vol) ~= 3
     error('cat_vol_grad:vx_vol','The size of the second input (vx_vol) has to be 1 or 3.\n'); 
@@ -37,9 +37,14 @@ function Yg = cat_vol_grad(Ym,vx_vol,method,repNaN)
     Ynan  = isnan(Ym); 
     [D,I] = cat_vbdist(single(~Ynan),cat_vol_morph(~Ynan,'d',1)); Ym(D<2) = Ym(I(D<2)); % replace nan
     clear D I; 
+  else
+    Ynan = false(size(Ym)); 
   end
   
-  [gx,gy,gz] = cat_vol_gradient3(single(Ym)); 
+  % remove empty space/nan
+  [Ym,BB]     = cat_vol_resize(Ym,'reduceBrain', 1, 4, Ym~=0 & ~Ynan); 
+  
+  [gx,gy,gz] = cat_vol_gradient3(Ym); 
  
   % averaging 
   switch method
@@ -48,6 +53,8 @@ function Yg = cat_vol_grad(Ym,vx_vol,method,repNaN)
     case 2, Yg = ((gx/vx_vol(1)).^2 + (gy/vx_vol(2)).^2 + (gz/vx_vol(3)).^2).^(0.5);  % gradient length
   end
   
+  Yg  = cat_vol_resize(Yg, 'dereduceBrain', BB); 
+
   % restore nan 
   if repNaN==1
     Yg(Ynan) = 0;
