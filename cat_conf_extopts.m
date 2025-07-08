@@ -57,7 +57,7 @@ darteltpm.filter  = 'image';
 darteltpm.ufilter = 'Template_1'; 
 if spmseg
   darteltpm.help    = {
-    'Select the first of six images (iterations) of a Dartel template.  The Dartel template must be in multi-volume (5D) nifti format and should contain GM and WM segmentations. If the field is empty no Dartel registration will be perfor'
+    'Select the first of six images (iterations) of a Dartel template.  The Dartel template must be in multi-volume (5D) nifti format and should contain GM and WM segmentations. If the field is empty no Dartel registration will be performed.'
     ''
     'Please note that the use of an own Dartel template will result in deviations and unreliable results for any ROI-based estimations because the atlases will differ and any ROI processing will be therefore deselected.'
     ''
@@ -164,7 +164,7 @@ end
 WMHtpm.num     = [0 1];
 WMHtpm.help    = {
   'White matter hyperintensity tissue probability map. '
-  'If no image is give the WMH detection focus on atypical GM close to ventrile regions or within the WM that does not belong to subcortical structures without further prior weighting. '
+  'If no image is give the WMH detection focus on atypical GM close to ventricular regions or within the WM that does not belong to subcortical structures without further prior weighting. '
 };
 
 %------------------------------------------------------------------------
@@ -448,50 +448,51 @@ SRP.tag     = 'SRP';
 SRP.name    = 'Surface reconstruction pipeline';
 if ~expert
   SRP.labels  = {...
-    'CS1 without SIC',...
-    'CS2 with SIC',... 
+    'CS1 (legacy)',...
+    'CS2 (classic)',... 
+    'CS4 (sulcus & gyrus reconstruction; IN DEVELOPMENT)',...
   };
-  SRP.values  = {10 22}; 
-elseif expert == 1
+  SRP.values  = {11 22 42}; 
+elseif expert >= 1
   SRP.labels  = {...
-    'CS1 without SIC (10)',...
-    'CS2 without SIC (20)',...
-    'CS1 with SIC (12)',... 
-    'CS2 with SIC (22)',... 
-    'CS2 with SIC (24; V2025)',... 
-    'CS3 with SIC (30; IN DEVELOPMENT)',... 
-    'CS3 with fast SIC (33; IN DEVELOPMENT)',... 
-    'CS4 without SIC (40; IN DEVELOPMENT)',... 
-    'CS4 with SIC (41; IN DEVELOPMENT)',... 
-    'CS4 with SIC (42; V2025a; IN DEVELOPMENT)',... 
-    'CS4 with SIC (43; V2025b; IN DEVELOPMENT)',... 
+    'CS1 (11; legacy)',...
+    'CS2 (22; classic)',... 
+    'CS2 with CS41+ gyrus reconstruction (24)',... 
+    'CS4 c-function full resolution (40; IN DEVELOPMENT)',... 
+    'CS4 sulcus+gyrus reconstuction A (41; IN DEVELOPMENT)',... 
+    'CS4 sulcus+gyrus reconstuction B (42; IN DEVELOPMENT)',... 
   };
-  SRP.values  = {10 20 12 22 24 30 33 40 41 42 43}; 
+  SRP.values  = {11  22 24  40 41 42}; 
 elseif expert > 1
   SRP.labels  = {...
     'CS1 without SIC (10)',...
     'CS1 with SIC without optimization (11)',... 
     'CS1 with SIC with optimization (12)',... 
+    ...
     'CS2 without SIC (20)',...
     'CS2 with SIC without optimization (21)',... 
     'CS2 with SIC with optimization (22)',... 
-    'CS2 with SIC with optimization (24; IN DEVELOPMENT V2025 myo+sharp)',... 
-    'CS3 without SIC (30; IN DEVELOPMENT)',... 
-    'CS3 with fast SIC with optimization (33; IN DEVELOPMENT)',... 
-    'CS4 without SIC (40; IN DEVELOPMENT)',...
-    'CS4 with SIC (41; IN DEVELOPMENT)',... 
-    'CS4 with SIC (42; IN DEVELOPMENT V2025 myo+sharp)',... 
-    'CS4 with SIC (43; IN DEVELOPMENT V2025 myo+sharp+newsurf+newdef)',... 
+    'CS2 with SIC with optimization with CS41+ gyrus recon. (24; IN DEVELOPMENT)',...
+    ...
+    'CS4 c-function full resolution (40; IN DEVELOPMENT)',... 
+    'CS4 sulcus+gyrus reconstuction A (41; IN DEVELOPMENT)',... 
+    'CS4 sulcus+gyrus reconstuction B (42; IN DEVELOPMENT)',... 
+    'CS4 sulcus+gyrus reconstuction B no opt. (43; IN DEVELOPMENT)',... 
     };
-  SRP.values  = {10 11 12 20 21 22 24 30 33 40 41 42 43};
+  SRP.values  = {10 11 12   20 21 22 24   40 41 42 43};
 end
 SRP.help    = {
-  ['CAT uses the projection-based thickness approach (PBT; Dahnke et al., 2012) to reconstruct the central surface.  ' ...
-   'With CAT12.8, we extensively revised the surface reconstruction pipeline (SRP), resulting in a new reconstruction scheme (CS2) that supports better control of the mesh resolution and runtime.  ' ... 
-   'Both pipelines provide high-precision reconstruction of the central surface and estimation of cortical thickness, which allows estimation of the cortical layer by transforming the surface points along the surface normals.  ' ...
+   'CAT uses the projection-based thickness approach (PBT; Dahnke et al., 2012) to reconstruct the central surface.  ' 
+   ''
+   'With CAT12.8, we extensively revised the surface reconstruction pipeline (SRP), resulting in a new reconstruction scheme (CS2) that supports better control of the mesh resolution and runtime.  '
+   ''
+  ['With CAT12.10, we added a new pipeline (CS4) with a gyrus reconstruction scheme in atrophic cases and a new topology correction. ' ...
+   'The gyrus reconstruction works similar as the sulcus reconstruction and helps in cases where the CSF describe the cortex better than the WM does. ']
+   ''
+  ['All pipelines provide high-precision reconstruction of the central surface and estimation of cortical thickness, which allows estimation of the cortical layer by transforming the surface points along the surface normals.  ' ...
    'In particular, this allows the estimation of white and pial surfaces by addition/subtraction of half thickness.  ' ...
-   'Because the surface normals are modeled quite simply, the interface suffers locally from self-intersections (SIs), especially in highly convoluted regions with high GM but low CSF/WM fractions (i.e. in young subjects).  ' ...
-   'Although these overlaps are usually not a problem in structural analyses, SIs are still inoptimal and may cause issues for mapping 3D information onto the surface.  ' ... 
+   'Because the surface normals are modelled quite simply, the interface suffers locally from self-intersections, especially in highly convoluted regions with high GM but low CSF/WM fractions (i.e. in young subjects).  ' ...
+   'Although these overlaps are usually not a problem in structural analyses, self-intersections are still suboptimal and may cause issues for mapping 3D information onto the surface.  ' ...
    'We have therefore developed a fast self-intersection correction (SIC) to provide accurate inner and outer surfaces.  ' ...
    'The SIC reduces SIs below 1% of the total area, which are also almost invisible and can be neglected.  '] 
    ''
@@ -501,10 +502,10 @@ SRP.hidden  = expert < 1;
 
 
 % Control surface mesh resolution by different pipelines.
-% Major problem is that MATLAB sometimes fatally crashs in the SPM/MATLAB 
-% mesh reduction function. Hence, volumetric resultion is used to control  
-% the resultion of the created isosurfaces. However, topology correction 
-% used a normalized mesh with oversampling the insula. 
+% Major problem is that MATLAB sometimes fatally crashes in the SPM/MATLAB
+% mesh reduction function. Hence, volumetric resolution is used to control
+% the resolution of the created isosurfaces. However, topology correction
+% used a normalized mesh with oversampling the insula.
 reduce_mesh         = cfg_menu;
 reduce_mesh.tag     = 'reduce_mesh';
 reduce_mesh.name    = 'Reduce Mesh';
@@ -530,29 +531,29 @@ elseif expert > 1
   reduce_mesh.values  = {0 1 2 3 5 4 6};
 end
 reduce_mesh.def     = @(val)cat_get_defaults('extopts.reduce_mesh', val{:});
-reduce_mesh.hidden  = expert<1;
+reduce_mesh.hidden  = expert<2;
 reduce_mesh.help    = {
-  ['Limitation of the surface resolution is essential for fast processing and acurate and equaly distributed meshes. ' ...
-   'Mesh resolution depends in general on the voxel resolution used for surface creation and can be modified afterwards by refinment and reduction. ' ...
-   'However, surface mesh reduction is not trivial and we observered fatal MATLAB errors (full uncatchable crash) and freezing of the following spherical registration on some computers. ' ...
-   'This variable therefor controls multiple ways to handle mesh resolution in the surface creation process. '] 
+  ['Limitation of the surface resolution is essential for fast processing, accurate and equally distributed meshes. ' ...
+   'Mesh resolution depends in general on the voxel resolution used for surface creation and can be modified afterwards by refinement and reduction. ' ...
+   'However, surface mesh reduction is not trivial and we observed fatal MATLAB errors (full uncatchable crash) and freezing of the following spherical registration on some computers. ' ...
+   'This variable therefor controls multiple ways to handle mesh resolution in the surface creation process. ']
    ''
-  ['The first setting (0) uses no reduction at all, creating the intial surface at the PBT resolution and also use no mesh reduction and is very slow. ' ...
+  ['The first setting (0) uses no reduction at all, creating the initial surface at the PBT resolution and also use no mesh reduction and is very slow. ' ...
    'In general, PBT is processed at 0.5 mm and surface creation result in about 1.200k faces with a quadratic increase of processing time. ' ...
    'However, this resolution is not necessary for nearly all analysis that often takes place at meshes with 164k (FreeSurfer) or 32k (HCP). ']
    ...
-  ['Option (1) and (2) use volume reduction to created intial meshes on an optimal (1, depending on the final mesh resolution) or ' ...
+  ['Option (1) and (2) use volume reduction to created initial meshes on an optimal (1, depending on the final mesh resolution) or ' ...
    'the internal voxel-resolution (2, depending on your image resolution). ' ...
    'In both cases the maps are refined and further adapted to the PBT position map with a final mesh resolution of about 300k. '];    
    ''
-  ['Surface-based reduction by SPM (3,5) or MATLAB (4,6) are used to optimize the initial surface, supporing a fast but still accurate topology correction.  ' ...
-   'Although this option support best quality, both the SPM and the MATLAB function can cause unreproducable MATLAB crash and are therefore not used yet!  ' ...
+  ['Surface-based reduction by SPM (3,5) or MATLAB (4,6) are used to optimize the initial surface, supporting a fast but still accurate topology correction.  ' ...
+   'Although this option support best quality, both the SPM and the MATLAB function can cause unreproducible MATLAB crash and are therefore not used yet!  ' ...
    'After topology correction the resolution of the mesh is increased again and adapted for PBT position map.  ' ...
    'In option 3 and 4, a supersampling with following reduction is used to obtain an optimal equally distributed sampling. ' ...
    'However, some systems showed problems in the spherical registration (freezing) that seamed to depend on these severe modifications of the mesh. ' ...
    'Hence, option (1) and (2) only use a normal refinement without supersampling.']  
    ''
-   'These settings are still in developent!'
+   'These settings are still in development!'
    ''
 };
 
@@ -575,17 +576,17 @@ vdist.values  = {2 1 0.5};
 vdist.def     = @(val)cat_get_defaults('extopts.vdist', val{:});
 vdist.hidden  = expert<1 | (spmseg & expert<2); 
 vdist.help    = {
- ['Higher mesh resolution may support indipendent measuresments but also increase the chance of self-intersections. ' ...
+ ['Higher mesh resolution may support independent measurements but also increase the chance of self-intersections. ' ...
   'For each level, the mesh resolution (number of elements) is doubled and accuracy is increased slightly (by the square root). ' ...
   'The depends in addition on the "reduce mesh" parameter. ']
  ['The mesh resolution is defined by an absolute resolution (e.g. 1 point per 1 mm) and smaller surfaces have therefore a smaller number of total mesh elements. ' ...
   '']
   ''
-  '  Setting     distance limit between vertices     number faces'      
-  '  ------------------------------------------------------------'
-  '  optimal:                  1.41 mm                     ~200k'
-  '  fine:                     1.00 mm                     ~400k'
-  '  extra fine:               0.71 mm                     ~800k'
+  '  Setting     distance limit between vertices    reconres (CS4)   number faces  '      
+  '  ------------------------------------------------------------------------------'
+  '  optimal:                  1.41 mm                 1.0 mm           ~200k'
+  '  fine:                     1.00 mm                 0.7 mm           ~400k'
+  '  extra fine:               0.71 mm                 0.5 mm           ~800k'
   ''
   'Experimental parameter that only works for "SRP>=20" (CAT12.8, 202003)!'
   ''
@@ -642,7 +643,7 @@ if expert
   ignoreErrors.labels = {'Interrupt on errors (0)','Ignore errors (continue with the next subject, 1)','Ignore errors (use backup functions - IN DEVELOPMENT, 2)',...
     'Ignore errors (always use backup functions, 3)','Ignore errors (always use backup functions without AMAP, 4)'};
   ignoreErrors.values = {0 1 2 3 4};
-  ignoreErrors.help   = [ignoreErrors.help {'The last two options were designed to test the backup funnction with/without AMAP (experimental!)'}];
+  ignoreErrors.help   = [ignoreErrors.help {'The last two options were designed to test the backup function with/without AMAP (experimental!)'}];
 else
   ignoreErrors.labels = {'Interrupt on errors','Ignore errors (continue with the next subject)','Ignore errors (use backup functions - IN DEVELOPMENT)'};
   ignoreErrors.values = {0 1 2};
@@ -731,7 +732,7 @@ resopt.name   = 'Optimal resolution';
 resopt.def    = @(val)cat_get_defaults('extopts.resval', val{:});
 resopt.num    = [1 2];
 resopt.help   = {
-    'Preprocessing with an "optimal" voxel dimension that utilize the median and the volume of the voxel size for special handling of anisotropic images.  In many cases, untypically high slice-resolution (e.g. 0.5 mm for 1.5 Tesla) comes along with higher slice-thickness and increased image interferences.  Our tests showed that a simple interpolation to the best voxel resolution not only resulted in much longer calculation times but also in a poor segmenation (and surface reconstruction) compared to the fixed option with e.g. 1 mm.  Hence, this option tries to incooperate the voxel volume and its anisotropy to balance the internal resolution.  E.g., an image with 0.5x0.5x1.5 mm will resampled at a resolution of 0.9x0.9x0.9 mm. ' 
+    'Preprocessing with an "optimal" voxel dimension that utilize the median and the volume of the voxel size for special handling of anisotropic images.  In many cases, atypically high slice-resolution (e.g. 0.5 mm for 1.5 Tesla) comes along with higher slice-thickness and increased image interferences.  Our tests showed that a simple interpolation to the best voxel resolution not only resulted in much longer calculation times but also in a poor segmentation (and surface reconstruction) compared to the fixed option with e.g. 1 mm.  Hence, this option tries to incorporate the voxel volume and its anisotropy to balance the internal resolution.  E.g., an image with 0.5x0.5x1.5 mm will resampled at a resolution of 0.9x0.9x0.9 mm. '
     'The first parameters defines the lowest spatial resolution, while the second defines a tolerance range to avoid tiny interpolations for almost correct resolutions. '
     ''
     'Examples:'
@@ -855,7 +856,7 @@ gcutstr.def       = @(val)cat_get_defaults('extopts.gcutstr', val{:});
 gcutstr.help      = {
   'Method of initial skull-stripping before AMAP segmentation. The SPM approach works quite stable for the majority of data. However, in some rare cases parts of GM (i.e. in frontal lobe) might be cut. If this happens the GCUT approach is a good alternative. GCUT is a graph-cut/region-growing approach starting from the WM area. '
   'APRG (adaptive probability region-growing) is a new method that refines the probability maps of the SPM approach by region-growing techniques of the gcut approach with a final surface-based optimization strategy. This is currently the method with the most accurate and reliable results. '
-  'If you use already skull-stripped data you can turn off skull-stripping although this is automaticaly detected in most cases. '
+  'If you use already skull-stripped data you can turn off skull-stripping although this is automatically detected in most cases. '
   'Please note that the choice of the skull-stripping method will also influence the estimation of TIV, because the methods mainly differ in the handling of the outer CSF around the cortical surface. '
   ''
 };
@@ -939,7 +940,7 @@ LASstr.help    = {
 };
 if expert == 2
   LASstr.help    = [LASstr.help(1:end-1); {
-    'The developer mode also allows seletion of the simplified LAS version with less additional corrections of the classification that is also used as backup function of the default LAS function. '
+    'The developer mode also allows selection of the simplified LAS version with less additional corrections of the classification that is also used as backup function of the default LAS function. '
     ''
   }];
 end
@@ -978,10 +979,10 @@ LASmyostr.val     = {0};
 % RD202104: 
 %  Ideally, the myelination should be used to classify the L4 (VanEssen) but
 %  for a sample resolution of about 1 mm the thickness estimation becomes 
-%  more instable (depending on the metric).
-% RD202501: 
-%  Works now better but it overcorrect atropic cases, whereas others 
-%  (Buchert) could still be improved further. 
+%  more unstable (depending on the metric).
+% RD202501:
+%  Works now better but it overcorrect atrophic cases, whereas others
+%  (Buchert) could still be improved further.
 LASmyostr.hidden = expert<1;
 
 
@@ -1051,7 +1052,7 @@ slc.name   = 'Stroke Lesion Correction (SLC) - in development';
 slc.def    = @(val)cat_get_defaults('extopts.SLC', val{:});
 slc.help   = {
   'WARNING: Please note that the handling of stroke lesion is still under development. '
-  'Without further correction, stroke lesions will be handled by their most probable tissue class, i.e. typically as CSF or GM. Because the spatial registration tries to normalize these regions, the normalization of large regions will lead to strong inproper deformations. '
+  'Without further correction, stroke lesions will be handled by their most probable tissue class, i.e. typically as CSF or GM. Because the spatial registration tries to normalize these regions, the normalization of large regions will lead to strong improper deformations. '
   'To avoid poor deformations, we created a work-around by manually defined lesion maps. The "Manual image (lesion) masking" tool can be used to set the image intensity to zeros to avoid normalization of stroke lesions. '
   ''
   ' 0) No Correction. '
@@ -1080,8 +1081,8 @@ end
 %------------------------------------------------------------------------
 % Currently there are to much different strategies and this parameter needs 
 % revision. There a three basic APP functions that each include an initial 
-% rough and a following fine method. The first is the SPM appraoch that 
-% is a simple iterative call of the Unified segmentation with following 
+% rough and a following fine method. The first is the SPM approach that
+% is a simple iterative call of the Unified segmentation with following
 % maximum-based bias correction. It is relatively stable but slow and can be 
 % combined with the other APP routines. The second one is the classical 
 % APP approach with default and fine processing (1070), followed by further 
@@ -1090,9 +1091,9 @@ end
 %
 % So we need more test to find out which strategies will survive to support 
 % an alternative if the standard failed with a fast standard and slow but 
-% more powerfull other routines. Hence APP1070 (init) or it successor
-% should be the standard. The SPM routines are a good alternative due to 
-% their differnt concept. 
+% more powerful other routines. Hence APP1070 (init) or it successor
+% should be the standard. The SPM routines are a good alternative due to
+% their different concept.
 %------------------------------------------------------------------------
 
 
@@ -1101,7 +1102,7 @@ app.tag    = 'APP';
 app.name   = 'Affine Preprocessing (APP)';
 % short help text
 app.help   = { ...
-    'Affine registration and SPM preprocessing can fail or be biased in some subjects with deviating anatomy (e.g. other species/neonates) or in images with strong signal inhomogeneities (e.g. incorrected inhomogeneities as locally underestimated thickness vissible as "blue spots" in the CAT report), or untypical intensities (e.g. synthetic images).  An initial bias correction can help to reduce such problems (similar to ADNI N3 bias correction).  Recommended are the "default" and "SPM" option.' 
+    'Affine registration and SPM preprocessing can fail or be biased in some subjects with deviating anatomy (e.g. other species/neonates) or in images with strong signal inhomogeneities (e.g. uncorrected inhomogeneities as locally underestimated thickness visible as "blue spots" in the CAT report), or untypical intensities (e.g. synthetic images).  An initial bias correction can help to reduce such problems (similar to ADNI N3 bias correction).  Recommended are the "default" and "SPM" option.'
     ''
     ' none    - no additional bias correction (0)' 
     ' default - default APP bias correction (1070)' 
@@ -1142,9 +1143,9 @@ if expert
     ''
    ['CAT first applies a classical (stepwise) affine registration of the optimized T1 image to a single T1 image via "spm_affreg", followed by another (step-wise) TPM-based registration via "spm_maff8" (labeled as "SPM preprocessing 1 (estimate 1)"). ' ...
     'Although the TPM-based registration is more advanced and pretty good in most cases, we observed severe problems in younger/older subjects, where the correct initial affine registration was replaced by an inaccurate solution that was often biased by the head. ' ...
-    'Thus, we have implemented different tests to detect and ignore possible incorrect results that can controlled here directy (no/force TPM registration). ' ]
+    'Thus, we have implemented different tests to detect and ignore possible incorrect results that can controlled here directly (no/force TPM registration). ' ]
     ''
-    'In addition, we observed that a head mask often improves and mosty fasten SPM preprocessing that is used by default but can be switch off here (TPM registration without head masking). '
+    'In addition, we observed that a head mask often improves and mostly fasten SPM preprocessing that is used by default but can be switch off here (TPM registration without head masking). '
     ''}];
 else
   setCOM.labels = {'No','Yes'};
@@ -1171,20 +1172,20 @@ affmod.tag      = 'affmod';
 affmod.name     = 'Modify Affine Scaling';
 affmod.help     = { 
    ['If the affine registration is inaccurate the intial tissue classification of the "Unified Segmentation will be not optimal. ' ...
-    'Although multiple routines such as scull-stripping, cleanup, and non-linear registration catch a lot of problems some cases amy still suffer (mostly vissible as bad skull-stripping). ' ...
+    'Although multiple routines such as scull-stripping, cleanup, and non-linear registration catch a lot of problems some cases may still suffer (mostly visible as bad skull-stripping). ' ...
     'In problematic cases (eg. outlier in the covariance analysis) you can check the brain outline of the original image in the CAT report. ' ...
-    'If it appears to be too small/large, you can addapt the scaling here. ' ...
+    'If it appears to be too small/large, you can adapt the scaling here. ' ...
     'If the outline is to small and runs within the brain (e.g. in children) and parts of are missing (blue regions in the label image in the CAT report) than increase this parameter. ' ...
-    'If the outline is to large and runs some where beyond the brain (e.g. in elderly) and unremoved meninges are vissible as GM than decrease this parameter. ']
+    'If the outline is to large and runs some where beyond the brain (e.g. in elderly) and unremoved meninges are visible as GM than decrease this parameter. ']
     ''
     }; 
-  % 'The correction can also help to adjust for too soft (desrease template size) or too hard skull-stripping (increase template size). ']
+  % 'The correction can also help to adjust for too soft (descrease template size) or too hard skull-stripping (increase template size). ']
 if expert
   affmod.help = [affmod.help; {
    ['Use one value for isotropic scaling, otherwise specify x y and z scaling: [Sx Sy Sz]. ' ...
-    'Moreover, you can specify a final translation: [Tx Ty Tz], i.e. you have to enter a 1x6 matrix with 3 percentual values for the scaling and 3 mm vlaues, e.g., [ 0 0 -10, 0 0 -1] to correct only the z-axis scaling and position. ']
+    'Moreover, you can specify a final translation: [Tx Ty Tz], i.e. you have to enter a 1x6 matrix with 3 percentual values for the scaling and 3 mm values, e.g., [ 0 0 -10, 0 0 -1] to correct only the z-axis scaling and position. ']
     ''
-    'Use negative/postive values to indicate percentual reductions/increasements of the TPM, e.g., an 10% decrease/incease of the TPM size is definfed by the value -10/10 that result in a scaling factor of (0.92/1.10). ' 
+    'Use negative/positive values to indicate percentual reductions/increasements of the TPM, e.g., an 10% decrease/increase of the TPM size is defined by the value -10/10 that result in a scaling factor of (0.92/1.10). '
     ''
     ''}];
 end
