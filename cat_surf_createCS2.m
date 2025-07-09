@@ -466,7 +466,11 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
     %% pbt calculation
     stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,native2unicode(179, 'latin1'))); stimet =stime;
     if strcmp(opt.pbtmethod,'pbtsimple') 
-      [Yth1i,Yppi] = cat_vol_pbtsimple(Ymfs,opt.interpV,struct('classic',opt.SRP < 4)); 
+      if opt.SRP>3
+       [Yth1i,Yppi] = cat_vol_pbtsimpleCS4(Ymfs,opt.interpV); 
+      else
+       [Yth1i,Yppi] = cat_vol_pbtsimple(Ymfs,opt.interpV,struct('classic',opt.SRP < 4)); 
+      end
     else 
       [Yth1i,Yppi,Ymfs] = cat_vol_pbt(Ymfs,struct('method',opt.pbtmethod,'resV',opt.interpV,'vmat',...
         V.mat(1:3,:)*[0 1 0 0; 1 0 0 0; 0 0 1 0; 0 0 0 1],'pbtlas',opt.pbtlas)); % avoid underestimated thickness in gyri
@@ -616,6 +620,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
     
     
     
+    time_sr = clock;
     %% surface creation 
     %  --------------------------------------------------------------------
     %  Surface create should be at 0.5 mm to support a useful description
@@ -1448,13 +1453,23 @@ end
     
     
     % Test without surface registration - just a shortcut for manual tests! 
-    if 0
-      cat_io_cmd('  ','g5','',opt.verb,stime);  
-      S.(opt.surf{si}) = struct('faces',CS.faces,'vertices',CS.vertices,'vmat',vmat,'vmati',vmati,'mati',mati,'th1',facevertexcdata); 
-      if si==numel(opt.surf) && si == 1
-        cat_io_cmd('  ','g5','',opt.verb,cstime);
-        sprintf('%5ds\n',round(etime(clock,cstime)));
-      end
+    if isscalar(opt.surf)
+      
+      %% only for test visualization
+      fprintf('\n');
+      res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS', ...
+        loadSurf(Pcentral), cat_io_FreeSurfer('read_surf_data',Ppbt), facevertexcdata, ...
+        Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,2,0);
+      CS2 = CS; CS2.cdata = facevertexcdata; cat_surf_render2(CS2)
+      title(sprintf('CS4%d, nV=%d, IE=%0.3f, PE=%0.3f, ptime=%0.0fs, time=%s', ...
+        opt.SRP, size(CS.vertices,1), ...
+        mean( [ res.(opt.surf{si}).createCS_final.RMSE_Ym_white,  res.(opt.surf{si}).createCS_final.RMSE_Ym_layer4,   res.(opt.surf{si}).createCS_final.RMSE_Ym_pial ] ) , ...
+        mean( [ res.(opt.surf{si}).createCS_final.RMSE_Ypp_white, res.(opt.surf{si}).createCS_final.RMSE_Ypp_central, res.(opt.surf{si}).createCS_final.RMSE_Ypp_pial ] ) , ...
+        etime(clock,time_sr), datetime))
+      subtitle( strrep( spm_str_manip(P(si).Pcentral,'a90') ,'_','\_'))
+      fprintf('    Runtime:                             %0.0fs\n',etime(clock,time_sr)); 
+
+
       continue
     end
     
@@ -1731,6 +1746,7 @@ end
     
     %% surfaces in spm_orthview
     if exist(Pm,'file'), Po = Pm; else, Po = V0.fname; end
+    if exist(Po,'file') && exist([V0.fname '.gz'],'file'), Po = [V0.fname '.gz']; end
     
     Porthfiles = '{'; Porthcolor = '{'; Porthnames = '{';
     for si=1:numel(Psurf)
