@@ -327,7 +327,11 @@ for i=1:n_subjects
     subjname = subjname(5:end);
 
     % check for filenames
-    if isempty(strfind(data_name,subjname))
+    if i > numel(xml_files) 
+      cat_io_cprintf('warn','\nSkip use of xml-files for quality measures because of not enough XML files were found.\n');
+      H.isxml = false;
+      break
+    elseif isempty(strfind(data_name,subjname))
       cat_io_cprintf('warn','\nSkip use of xml-files for quality measures because of deviating subject names:\n%s vs. %s\n',H.files.fname{i},xml_files(i,:));
       H.isxml = false;
       break
@@ -403,7 +407,11 @@ for i=1:n_subjects
     break
   end
 
-  if ~isfield(xml,'qualityratings') && ~isfield(xml,'QAM')
+  if i > numel(xml_files) 
+    cat_io_cprintf('warn','\nSkip use of xml-files for quality measures because of not enough XML files were found.\n');
+    H.isxml = false;
+    break
+  elseif ~isfield(xml,'qualityratings') && ~isfield(xml,'QAM')
     cat_io_cprintf('warn',['\nQuality rating is not saved for %s. Report file %s is incomplete. ' ...
       '\nPlease repeat preprocessing and check for potential errors in the "err" folder.\n'],H.files.fname{i},xml_files(i,:));  
     H.isxml = false;
