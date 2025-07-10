@@ -106,7 +106,7 @@ function varargout = cat_vol_qa(action,varargin)
       if isfield(action.model,'catp0')
         Po  = action.images;
         Pp0 = action.model.catp0; 
-        if numel(Po)~=numel(Pp0) && numel(Pp0)==1
+        if numel(Po)~=numel(Pp0) && isscalar(Pp0)
           Pp0 = repmat(Pp0,numel(Po),1);
         end
         Pm  = action.images;
@@ -114,7 +114,7 @@ function varargout = cat_vol_qa(action,varargin)
       elseif isfield(action.model,'spmc0')
         Po  = action.images;
         Pp0 = action.model.spmc0; 
-        if numel(Po)~=numel(Pp0) && numel(Pp0)==1
+        if numel(Po)~=numel(Pp0) && isscalar(Pp0)
           Pp0 = repmat(Pp0,numel(Po),1);
         end
         Pm  = action.images;
@@ -938,7 +938,6 @@ function [QAS,QAR] = cat12err(opt,mrifolder,reportfolder)
   catch
     QAS.hardware.numcores = 1;
   end
-  
   
   % save important preprocessing parameters 
   QAS.parameter.opts        = opt.job.opts;

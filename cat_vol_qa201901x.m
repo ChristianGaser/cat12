@@ -679,22 +679,16 @@ function varargout = cat_vol_qa201901x(action,varargin)
       warning on
  
       %QAS.parameter             = opt.job; 
-      if isfield(opt,'job') 
-        if isfield(opt.job,'opts') 
-          QAS.parameter.opts        = opt.job.opts;
-        end
-        if isfield(opt.job,'extopts') 
-          QAS.parameter.extopts     = opt.job.extopts;
-        end
-        %QAS.parameter.output      = opt.job.output;
-        if exist('res','var')
-          rf = {'Affine','lkp','mn','vr'}; % important SPM preprocessing variables
-          for rfi=1:numel(rf)
-            if isfield(res,rf{rfi}), QAS.parameter.spm.(rf{rfi}) = res.(rf{rfi}); end
-          end
+      QAS.parameter.vbm =  rmfield(cat_get_defaults,'output');
+      if isfield(opt,'job') && isfield(opt.job,'opts'),    QAS.parameter.opts        = opt.job.opts; end
+      if isfield(opt,'job') && isfield(opt.job,'extopts'), QAS.parameter.opts        = opt.job.extopts; end
+      if exist('res','var')
+        rf = {'Affine','Affine0','lkp','mn','vr','ll'}; % important SPM preprocessing variables
+        for rfi=1:numel(rf)
+          if isfield(res,rf{rfi}), QAS.SPMpreprocessing.(rf{rfi}) = res.(rf{rfi}); end
         end
       end
-     
+
       %% resolution, boundary box
       %  ---------------------------------------------------------------
       QAS.software.cat_qa_warnings = struct('identifier',{},'message',{});
