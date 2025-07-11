@@ -65,7 +65,7 @@ function varargout = cat_io_xml(file,varargin)
   if exist('varargin','var') 
     if numel(varargin)==0
       action='read';
-    elseif numel(varargin)==1 
+    elseif isscalar(varargin)
       if ischar(varargin{1})
         action='read'; % can only be read yet
       else
@@ -97,7 +97,7 @@ function varargout = cat_io_xml(file,varargin)
   % multi-file read 
   if strcmp(action,'read')
     varargout{1} = struct();
-    if verbose, fprintf('% 6d/% 6d',0,numel(file)); end
+    if verbose, fprintf('% 6d/% 6d',0,numel(cellstr(file))); end
     if iscell(file) && numel(file)>1 
       spm_progress_bar('Init',numel(file),...
         sprintf('read XML\n%d',numel(file)),'Files Completed'); 
@@ -126,11 +126,21 @@ function varargout = cat_io_xml(file,varargin)
     elseif ischar(file) && size(file,1)>1
       spm_progress_bar('Init',size(file,1),...
         sprintf('read XML\n%s',size(file,1)),'Files Completed'); 
-      for fi=1:numel(file)
+      for fi=1:size(file,1)
         try
-          tmp = cat_io_xml(file(fi,:));
+          if exist(file(fi,:),'file')
+            tmp = cat_io_xml(file(fi,:));
+          else
+            [pp,ff] = spm_fileparts(file(fi,:)); 
+            xmlfile = fullfile(pp,[ff '.xml']); 
+            if exist(xmlfile,'file')
+              tmp = cat_io_xml( xmlfile );
+            else
+              cat_io_cprintf('err','cat_io_xml:readfile',sprintf('Cannot find "%s" xml/mat file.\n', fullfile(pp,ff))); 
+            end
+          end
         catch
-          catchcat_io_cprintf('err','cat_io_xml:readfile',sprintf('Error reading file "%s".\nCheck XML structure for missing parts.\n', file(fi,:))); 
+          cat_io_cprintf('err','cat_io_xml:readfile',sprintf('Error reading file "%s".\nCheck XML structure for missing parts.\n', file(fi,:))); 
         end
         try
           fn = fieldnames(tmp);
@@ -151,7 +161,7 @@ function varargout = cat_io_xml(file,varargin)
   
   if iscell(file) && size(file,1)<=1, file = char(file); end
   
-  [pp,ff,ee] = fileparts(file); if ~strcmp(ee,'.xml'), file = [file '.xml']; end
+  [~,ff,ee] = fileparts(file); if ~strcmp(ee,'.xml'), file = [file '.xml']; end
   if isempty(ff), return; end
   
   mfile = [file(1:end-4) '.mat']; 
