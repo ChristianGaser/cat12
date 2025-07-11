@@ -1024,6 +1024,10 @@ switch lower(action)
         end
         mv = cat_stat_nanmean(c(:)); sv = cat_stat_nanstd(c(:)); 
         H.clim(2:3) = [ mv - H.datascaleval * sv ,  mv + H.datascaleval * sv];
+        case 'C'
+          nclim = str2num(H.datascale(2:end)); %#ok<ST2NM>
+          if numel(nclim)~=2, error('incorrect clim input'); end
+          H.clim(2:3) = nclim;
         otherwise
           error('unkown H.datascale %s.\n',H.datascale);
       end
@@ -1303,7 +1307,7 @@ switch lower(action)
   case 'batch'
     job = varargin{1};
     
-    if any(1 - cellfun(@exist,job.cdata)) 
+    if any(~cellfun(@exist,job.cdata)) 
       if size(job.cdata,1)==1,  cat_io_cprintf('err', 'Input file does not exist!\n'); 
       else,                     cat_io_cprintf('err', 'Input files do not exist!\n');
       end
@@ -1316,6 +1320,7 @@ switch lower(action)
     
     %% set parameter
     % RD202003: not working ... ,'colorbar'
+    %if isfield(job,'render') && isfield(job.render,'clims'), job.render.clim = job.render.clims; end
     FN = {'surface','view','texture','transparency','invcolormap','colormap','clims','background','showfilename'}; 
     for fni=1:numel(FN)
       %%
@@ -1335,16 +1340,15 @@ switch lower(action)
     
     %% save result
     if isfield(job,'fparts')
-      fparts = job.fparts; 
-      files = cat_surf_results('print',fparts);
+      files = cat_surf_results('print',job.fparts);
     else
       files = cat_surf_results('print');
     end
     varargout{1}.png = files; 
     
     % close figure after export
+    close(H.figure); 
     clear -globalvar H; 
-    close(22); 
     
     
   %- save image
@@ -1365,7 +1369,7 @@ switch lower(action)
       fparts.outdir = pp; 
     end
     [tmp, pathname, ext] = spm_fileparts(pp);
-    filename = fullfile(fparts.outdir,[pathname ext '_' fparts.prefix ff fparts.suffix '.png']); %#ok<AGROW>
+    filename = fullfile(fparts.outdir,[fparts.prefix pathname ext '_' ff fparts.suffix '.png']); %#ok<AGROW>
     if ~exist(fparts.outdir,'dir')
       mkdir(fparts.outdir)
     end
