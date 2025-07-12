@@ -275,7 +275,8 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   for si=1:numel(opt.surf)
    
     % surface filenames
-    Pm         = fullfile(pp0,mrifolder, sprintf('m%s',ff));    % raw
+    Pm         = fullfile(pp0,mrifolder, sprintf('m%s.nii',ff));    % raw
+    Pp0        = fullfile(pp0,mrifolder, sprintf('p0%s.nii',ff));    % raw
     Praw       = fullfile(pp0_surffolder,sprintf('%s.central.nofix.%s.gii',opt.surf{si},ff));    % raw
     Praw2      = fullfile(pp0_surffolder,sprintf('%s.central.nofix_sep.%s.gii',opt.surf{si},ff));    % raw
     Psphere0   = fullfile(pp0_surffolder,sprintf('%s.sphere.nofix.%s.gii',opt.surf{si},ff));     % sphere.nofix
@@ -1342,7 +1343,7 @@ end
       while SIs>5 && SIs<SIOs*0.9 && iter<=maxiter
         SIOs = SIs; iter = iter + 1; 
         [CS,facevertexcdata,SIs] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,...
-            struct('optimize',iter<2 && opt.SRP>=2,'verb',verblc,'mat',Smat.matlabIBB_mm,'vx_vol',vx_vol,'CS4',opt.SRP>3)); 
+            struct('optimize',iter<2 && opt.SRP>=2,'verb',verblc,'mat',Smat.matlabIBB_mm,'vx_vol',vx_vol,'CS4',0)); %opt.SRP>3)); 
         if verblc, fprintf('\b\b'); end
         if strcmpi(spm_check_version,'octave') && iter == 1
           cat_io_addwarning('cat_surf_createCS2:nofullSRP','Fine correction of surface collisions is not yet available under Octave.',2)
@@ -1457,20 +1458,43 @@ end
       
       %% only for test visualization
       fprintf('\n');
+      
+      cat_surf_fun('white',Pcentral);
+      cat_surf_fun('pial',Pcentral);
+  
+      FSthick = cat_io_FreeSurfer('read_surf_data',Pthick); 
       res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS', ...
-        loadSurf(Pcentral), cat_io_FreeSurfer('read_surf_data',Ppbt), facevertexcdata, ...
+        loadSurf(Pcentral), cat_io_FreeSurfer('read_surf_data',Ppbt), cat_io_FreeSurfer('read_surf_data',Pthick), ...
         Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,2,0);
       CS2 = CS; CS2.cdata = facevertexcdata; cat_surf_render2(CS2)
-      title(sprintf('CS4%d, nV=%d, IE=%0.3f, PE=%0.3f, ptime=%0.0fs, time=%s', ...
-        opt.SRP, size(CS.vertices,1), ...
+      title(sprintf('CS4%d, nF=%0.0fk, EC=%d, Tpbt=%0.3f±%0.3f, Tfs=%0.3f±%0.3f, \n IE=%0.3f, PE=%0.3f, ptime=%0.0fs, time=%s', ...
+        opt.SRP, size(CS.faces,1)/1000, EC0, ...
+        mean( facevertexcdata ), std(facevertexcdata), mean( FSthick ), std(FSthick), ...
         mean( [ res.(opt.surf{si}).createCS_final.RMSE_Ym_white,  res.(opt.surf{si}).createCS_final.RMSE_Ym_layer4,   res.(opt.surf{si}).createCS_final.RMSE_Ym_pial ] ) , ...
         mean( [ res.(opt.surf{si}).createCS_final.RMSE_Ypp_white, res.(opt.surf{si}).createCS_final.RMSE_Ypp_central, res.(opt.surf{si}).createCS_final.RMSE_Ypp_pial ] ) , ...
         etime(clock,time_sr), datetime))
-      subtitle( strrep( spm_str_manip(P(si).Pcentral,'a90') ,'_','\_'))
+      
+      % surfaces in spm_orthview
+      Po = Pm; if ~exist(Po,'file'); Po = V0.fname; end
+      if ~exist(Po,'file')  && exist([V0.fname '.gz'],'file'), Po = [V0.fname '.gz']; end
+      Porthfiles = ['{', sprintf('''%s'',''%s''', Ppial, Pwhite ) '}'];
+      Porthcolor = '{''-g'',''-r''}';  
+      Porthnames = '{''white'',''pial''}'; 
+      fprintf('  Show surfaces in orthview:  %s\n',spm_file(Po ,'link',...
+        sprintf('cat_surf_fun(''show_orthview'',%s,''%s'',%s,%s)',Porthfiles,Po,Porthcolor,Porthnames))) ;
+      fprintf('  Show surfaces in orthview:   %s | %s | %s | (%s) | %s \n', ...
+        spm_file([opt.surf{si} '.pbt'],'link', sprintf('H=cat_surf_display(''%s'');',Ppbt)), ...
+        spm_file([opt.surf{si} '.thick'],'link', sprintf('H=cat_surf_display(''%s'');',Pthick)), ...
+        spm_file('segmentation' ,'link', sprintf('cat_surf_fun(''show_orthview'',%s,''%s'',%s,%s)',Porthfiles,Pp0, Porthcolor,Porthnames)), ...
+        spm_file('ppmap'        ,'link', sprintf('cat_surf_fun(''show_orthview'',%s,''%s'',%s,%s)',Porthfiles,Vpp.fname, Porthcolor,Porthnames)), ...
+        spm_file('original'     ,'link', sprintf('cat_surf_fun(''show_orthview'',%s,''%s'',%s,%s)',Porthfiles,Po,        Porthcolor,Porthnames)));
+      
+
+      subtitle( strrep( spm_str_manip(Pcentral,'a90') ,'_','\_'))
       fprintf('    Runtime:                             %0.0fs\n',etime(clock,time_sr)); 
-
-
-      continue
+   
+      
+      return
     end
     
     
@@ -1745,8 +1769,11 @@ end
     end
     
     %% surfaces in spm_orthview
-    if exist(Pm,'file'), Po = Pm; else, Po = V0.fname; end
-    if exist(Po,'file') && exist([V0.fname '.gz'],'file'), Po = [V0.fname '.gz']; end
+    if exist(Pp0,'file'), Po = Pp0; 
+    elseif exist(Pm,'file'), Po = Pm; 
+    else, Po = V0.fname; 
+    end
+    if ~exist(Po,'file') && exist([V0.fname '.gz'],'file'), Po = [V0.fname '.gz']; end
     
     Porthfiles = '{'; Porthcolor = '{'; Porthnames = '{';
     for si=1:numel(Psurf)
