@@ -162,7 +162,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
   for si = 1:numel(opt.surf)
    
     % prepare longitudinal case if required 
-    useprior = setupprior(opt,surffolder,P);
+    useprior = setupprior(opt,surffolder,P,si);
 
 
     %% reduce for object area
@@ -263,7 +263,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
 
 
     %% RD20250330: The aim is to smoothing cutting regions to avoid defects there. 
-    if 0;;
+    if 0
       % just for manual tests
       opt.create_surf = 2;   % V1 works better for lowres reconstruction >= 1 mm, whereas V2 is better for highres reconstruction  < 1 mm 
       opt.deformsurf  = 1;   % V1 is more accurate but 10x slower than V2 so that V1 is better for lowres and V2 for highres reconstructions
@@ -306,9 +306,14 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       stime = cat_io_cmd('  Load and refine subject average surface','g5','',opt.verb); %if opt.verb>2, fprintf('\n'); end
           
       % for use of average prior in long. pipeline we have to deform the average mesh to current pp distance map        
-      cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none  0  1  -1  .1 ' ...   
+      CS = loadSurf(P(si).Pcentral);
+      if opt.deformsurf==1 &&  size(CS.faces,1) < 400000 
+        cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none  0  1  -1  .1 ' ...   
                      'avg  %0.3f  %0.3f .2  .1  5  0 "0.5"  "0.5"  n 0  0  0 %d %g  0.0 0 %d'], ...          
-                      Vppmi.fname,P(si).Pcentral,P(si).Pcentral,-0.1,0.1,100,0.01,1); 
+                      Vppm.fname,P(si).Pcentral,P(si).Pcentral,-0.1,0.1,100,0.01,1); 
+      else
+         cmd = sprintf('CAT_SurfDeform -iter 100 "%s" "%s" "%s"', Vppm.fname, P(si).Pcentral, P(si).Pcentral);
+      end
       cat_system(cmd,opt.verb-3);
       CS = loadSurf(P(si).Pcentral);
     else
@@ -992,7 +997,7 @@ function [P,pp0,mrifolder,pp0_surffolder,ff] = setFileNames(V0,job,opt)
   end
 end
 %==========================================================================
-function useprior = setupprior(opt,surffolder,P)
+function useprior = setupprior(opt,surffolder,P,si)
 
   % use surface of given (average) data as prior for longitudinal mode
   if isfield(opt,'useprior') && ~isempty(opt.useprior) 
@@ -1001,7 +1006,7 @@ function useprior = setupprior(opt,surffolder,P)
     [pp1,ff1] = spm_fileparts(opt.useprior);
     % correct '../' parts in directory for BIDS structure
     [stat, val] = fileattrib(fullfile(pp1,surffolder));
-    if stat, pp1_surffolder = val.Name; else, pp1_surffolder = fullfile(pp1,surffolder);  end
+    if stat, pp1_surffolder = val.Name; else, pp1_surffolder = fullfile(pp1,'surf');  end
     
     % try to copy surface files from prior to individual surface data 
     useprior = 1;
@@ -1012,7 +1017,7 @@ function useprior = setupprior(opt,surffolder,P)
     if ~useprior
       warn_str = sprintf('Surface files for %s not found. Move on with individual surface extraction.\n',pp1_surffolder);
       fprintf('\nWARNING: %s',warn_str);
-      cat_io_addwarning('cat_surf_createCS3:noPiorSurface', warn_str);
+      cat_io_addwarning('cat_surf_createCS4:noPiorSurface', warn_str);
     else
       fprintf('\nUse existing surface as prior and thus skip many processing steps:\n%s\n',pp1_surffolder);
     end      
