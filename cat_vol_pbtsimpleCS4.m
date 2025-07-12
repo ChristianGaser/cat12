@@ -154,9 +154,10 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
   end
 
   % close holes (important for SPM with unsufficient WM correction)
+if 0  
   Yp0 = max(Yp0, 3.0 * smooth3(cat_vol_morph(Yp0>2.75,'ldc',1.5)) ); 
   Yp0 = max(Yp0, 2.5 * smooth3(cat_vol_morph(Yp0>2.25,'ldc',1.5)) ); 
-
+end
 
   %% RD202503: new blood vessel correction 
   if opt.NBVC, Yp0 = NBVC(Yp0,vx_vol); end
@@ -180,7 +181,7 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
   % correct reconstrution overestimation 
   % - important to keep small sulci open, eg. rh.BWPT central and CC sulcus 
   % - correct thinner areas stronger to improve reconstruction
-  pbtsulccor = @(Ygmtx, Ycdx, Ywdx) max(0,Ygmtx - 0.25 .* (Ygmtx < (Ycdx + Ywdx))); 
+  pbtsulccor = @(Ygmtx, Ycdx, Ywdx) max(0,Ygmtx - 0.125 .* (Ygmtx < (Ycdx + Ywdx))); 
   Ygmtw0 = pbtsulccor(Ygmtw0, Ycd0, Ywd0); 
   Ygmtc0 = pbtsulccor(Ygmtc0, Ycd0, Ywd0); 
 
@@ -200,7 +201,7 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
       opt.range * opt.extendedrange, opt.keepdetails);
   end  
 
-  if opt.verb, fprintf('\n  Thickness estimation:           %0.3fs\n', etime(clock,c)); c = clock; end %#ok<*DETIM>
+  if opt.verb, fprintf('\n    Thickness estimation:           %0.3fs\n', etime(clock,c)); c = clock; end %#ok<*DETIM>
 
 
   %% CSF/WM blurring/reconstruction maps
@@ -263,7 +264,8 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
   Ypp(cat_vol_morph(Yp0>2.75,'l')) = 1; Ypp(Yp0<1.5) = 0; 
   Ypp = oneObject(Ypp,vx_vol); 
   Ypp = Yppsmooth(Ypp,Ygmt0,vx_vol,[0.5,-1]);  % correction of strong outliers (eg. from mixing)
-  
+  Ypp = max( -.1 , min( 1.1, Ypp + (Ypp>.95) .* max(0,Yp0 - 2.5) + (Ypp<.05) .* min(0,Yp0 - 1.5)  )); % PVE for interpolation and deformation 
+
   % final scaling
   Ygmt = Ygmt0 * mean(vx_vol); 
 
@@ -272,19 +274,19 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
 
   % evaluation
   if opt.verb
-    fprintf('  PP preparation (gsr=%0.3f):     %0.3fs\n', gsr, etime(clock,c)); c = clock; 
-    fprintf('  Sulcus / gyrus reconstruction: %5.2f%% / %4.2f%%\n', srecon*100, grecon*100);  
-    fprintf('  Median thickness + IQR:        %5.2f ± %4.2f mm\n', ...
+    fprintf('    PP preparation (gsr=%0.3f):     %0.3fs\n', gsr, etime(clock,c)); c = clock; 
+    fprintf('    Sulcus / gyrus reconstruction:  %5.2f%% / %4.2f%%\n', srecon*100, grecon*100);  
+    fprintf('    Median thickness + IQR:        %5.2f ± %4.2f mm\n', ...
       median( Ygmt( Ypp(:)>.4 & Ypp(:)<.6 )) , iqr( Ygmt( Ypp(:)>.3 & Ypp(:)<.7 ))); 
     x = 0:0.01:10;  
     h = smooth( hist( Ygmt( Ypp(:)>.45 & Ypp(:)<.55 ) , x),2); h = h/sum(h);
     try
       hi = find(h==max(h),1); hil = find(h==max(h(100:hi-30)),1); hih = find(h==max(h(hi+30:end)),1); 
-      fprintf('  Peak (x:y):                    %5.2f:%4.4f | %5.2f:%4.4f | %5.2f:%4.4f\n', x(hil), h(hil), x(hi), h(hi), x(hih), h(hih));
+      fprintf('    Peak (x:y):                    %5.2f:%4.4f | %5.2f:%4.4f | %5.2f:%4.4f\n', x(hil), h(hil), x(hi), h(hi), x(hih), h(hih));
     end
   end
 
-  Yp0o=Yp0; 
+  Yp0o = Yp0; 
   %% Update Yp0
   % Yp0=Yp0o; Yp0 = max(Yp0,(Ypp>.5) .* 2 + (max(0,min(1,0-Ywd0))));  Yp0 = min(Yp0,2*(Ypp>.5) + 1 + max(0,min(1,max(0,((Ygmt0 - Ywd0 + .75))).^4)));
   Yp0=Yp0o; Yp0 = max(Yp0,(Ypp>.5) .* 2 + (max(0,cat_vol_smooth3X(Ypp,.5)*2-1)).^4); Yp0 = min(Yp0,2*(Ypp>.5) + 2 - max(0,1 - cat_vol_smooth3X(Ypp,.5)*.5).^64); 
@@ -396,9 +398,9 @@ function [Ypp, Ygmt] = sharpening(Ypp, Ygmt, vx_vol, extended)
 
   % final smoothing to prepare surface reconstruction that also correct for WM topology issues 
   spm_smooth(Ypps,Ypps,.5/mean(vx_vol)); 
-  if ~extended
-    Ypps = min(Ypp>0, max(0,Ypps)); % remove background artifacts  
-  end
+  %if ~extended
+  %  Ypps = min(Ypp>0, max(0,Ypps)); % remove background artifacts  
+  %end
 
   % New version that only change mid-position values relevant for surface
   % creation. Although this avoid the old binary-like better thickness 
