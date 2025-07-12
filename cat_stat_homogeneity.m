@@ -327,7 +327,7 @@ for i=1:n_subjects
     subjname = subjname(5:end);
 
     % check for filenames
-    if i > numel(xml_files) 
+    if i > size(xml_files,1) 
       cat_io_cprintf('warn','\nSkip use of xml-files for quality measures because of not enough XML files were found.\n');
       H.isxml = false;
       break
@@ -407,7 +407,7 @@ for i=1:n_subjects
     break
   end
 
-  if i > numel(xml_files) 
+  if i > size(xml_files,1) 
     cat_io_cprintf('warn','\nSkip use of xml-files for quality measures because of not enough XML files were found.\n');
     H.isxml = false;
     break

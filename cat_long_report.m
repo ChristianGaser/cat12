@@ -593,8 +593,12 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
     ppjob.output.surface  = ~isempty(Psurf); 
     
     % get preprocessing settings/data from the first variable
-    ppres                 = xml(1).SPMpreprocessing; 
-    ppres.do_dartel       = (ppjob.extopts.regstr > 0) + 1; 
+    ppres                 = xml(1).SPMpreprocessing;
+    try
+      ppres.do_dartel     = (ppjob.extopts.regstr > 0) + 1;
+    catch
+      ppres.do_dartel     = -1; 
+    end
     ppres.ppe             = struct();
     ppres.tpm             = spm_vol(fullfile(spm('dir'),'tpm','TPM.nii')); % replace by default SPM TPM
     ppres.stime           = clock; 
