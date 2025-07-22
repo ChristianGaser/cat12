@@ -221,9 +221,9 @@ set(fig,'MenuBar', 'none', 'Position',[100, 0, opt.winsize]);
 
 % get shorter filenames
 if iscellstr(data)
-  [tmp, fname_tmp] = spm_str_manip(data,'C');
-else
   fname_tmp = struct('s','','e','','m',num2str(1:numel(data))); 
+else
+  [tmp, fname_tmp] = spm_str_manip(data,'C');
 end
 
 for j = 1:n
