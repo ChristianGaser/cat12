@@ -1,4 +1,13 @@
 ------------------------------------------------------------------------
+r2854 | gaser | 2025-07-28 10:18:23
+
+Changed paths:
+ M CHANGES.txt
+
+Added:   Added CAT_SurfCorrectThicknessFolding to binries.
+
+
+------------------------------------------------------------------------
 r2853 | gaser | 2025-07-28 10:17:49
 
 Changed paths:
