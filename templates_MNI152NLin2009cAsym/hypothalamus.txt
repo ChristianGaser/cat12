@@ -1,0 +1,9 @@
+Hypothalamus atlas:
+--------------------------------------------------------------------------------
+High-resolution in vivo anatomical atlas of the human hypothalamic region. A minimum deformation averaging (MDA) pipeline was employed to produce a normalized, high-resolution template from multimodal magnetic resonance imaging (MRI) datasets. This template was used to delineate hypothalamic (n = 13) and extrahypothalamic (n = 12) gray and white matter structures. 
+
+The atlas is cropped and side alignment was adapted. 
+
+Reference: 
+Neudorfer, C., Germann, J., Elias, G.J.B. et al. A high-resolution in vivo magnetic resonance imaging atlas of the human hypothalamic region. Scientific Data, 7, 305 (2020). https://doi.org/10.1038/s41597-020-00644-6
+https://zenodo.org/records/3942115
