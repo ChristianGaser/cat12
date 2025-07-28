@@ -1,4 +1,36 @@
 ------------------------------------------------------------------------
+r2853 | gaser | 2025-07-28 10:17:49
+
+Changed paths:
+ M CAT.glnx86/CAT_Surf2Sphere
+ M CAT.glnx86/CAT_SurfCentral2Pial
+ M CAT.glnx86/CAT_SurfDeform
+ M CAT.glnx86/CAT_SurfDistance
+ M CAT.glnx86/CAT_SurfWarp
+ M CAT.glnx86/CAT_VolMarchingCubes
+ M CAT.glnx86/CAT_VolThicknessPbt
+ M CAT.maca64/CAT_Surf2Sphere
+ M CAT.maca64/CAT_SurfCentral2Pial
+ M CAT.maca64/CAT_SurfDeform
+ M CAT.maca64/CAT_SurfDistance
+ M CAT.maca64/CAT_SurfWarp
+ M CAT.maca64/CAT_VolMarchingCubes
+ M CAT.maca64/CAT_VolThicknessPbt
+ M CAT.w32/CAT_Surf2Sphere.exe
+ M CAT.w32/CAT_SurfCentral2Pial.exe
+ M CAT.w32/CAT_SurfDeform.exe
+ M CAT.w32/CAT_SurfDistance.exe
+ M CAT.w32/CAT_SurfWarp.exe
+ M CAT.w32/CAT_VolMarchingCubes.exe
+ M CAT.w32/CAT_VolThicknessPbt.exe
+ M CHANGES.txt
+
+Fixed:   Corrected misspelled name of hyopthalamus atlas.
+Added:   Added CAT_SurfCorrectThicknessFolding to binries.
+Changed: Recompiled binaries
+
+
+------------------------------------------------------------------------
 r2852 | gaser | 2025-07-28 10:12:38
 
 Changed paths:
