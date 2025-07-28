@@ -278,8 +278,9 @@ end
     fprintf('    Sulcus / gyrus reconstruction:  %5.2f%% / %4.2f%%\n', srecon*100, grecon*100);  
     fprintf('    Median thickness + IQR:        %5.2f ± %4.2f mm\n', ...
       median( Ygmt( Ypp(:)>.4 & Ypp(:)<.6 )) , iqr( Ygmt( Ypp(:)>.3 & Ypp(:)<.7 ))); 
-    x = 0:0.01:10;  
-    h = smooth( hist( Ygmt( Ypp(:)>.45 & Ypp(:)<.55 ) , x),2); h = h/sum(h);
+    x = 0:0.01:10;
+    % smooth gives an error here @Robert
+    %h = smooth( hist( Ygmt( Ypp(:)>.45 & Ypp(:)<.55 ) , x),2); h = h/sum(h);
     try
       hi = find(h==max(h),1); hil = find(h==max(h(100:hi-30)),1); hih = find(h==max(h(hi+30:end)),1); 
       fprintf('    Peak (x:y):                    %5.2f:%4.4f | %5.2f:%4.4f | %5.2f:%4.4f\n', x(hil), h(hil), x(hi), h(hi), x(hih), h(hih));

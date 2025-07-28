@@ -528,12 +528,20 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         cmd = sprintf('CAT_SurfDistance -mean -thickness "%s" "%s" "%s"',P(si).Ppbt,P(si).Pcentral,P(si).Pthick);
         cat_system(cmd,opt.verb-3);
       end
-      
-      % apply upper thickness limit
-      facevertexcdata = cat_io_FreeSurfer('read_surf_data',P(si).Pthick) .* facevertexcdatanocut;  
-      facevertexcdata(facevertexcdata > opt.thick_limit) = opt.thick_limit;
-      cat_io_FreeSurfer('write_surf_data',P(si).Pthick,facevertexcdata);  
-      
+
+      % Correction of thickness folding results in much more homogeneous values
+      if 1
+        stime = cat_io_cmd('  Correct Thickness Folding','g5','',opt.verb,stime); 
+        cmd = sprintf('CAT_SurfCorrectThicknessFolding -max "%f" "%s" "%s" "%s"',opt.thick_limit,P(si).Pcentral,P(si).Pthick,P(si).Pthick);
+        cat_system(cmd,opt.verb-3);
+        facevertexcdata = cat_io_FreeSurfer('read_surf_data',P(si).Pthick) .* facevertexcdatanocut;  
+      else
+        % apply upper thickness limit
+        facevertexcdata = cat_io_FreeSurfer('read_surf_data',P(si).Pthick) .* facevertexcdatanocut;  
+        facevertexcdata(facevertexcdata > opt.thick_limit) = opt.thick_limit;
+        cat_io_FreeSurfer('write_surf_data',P(si).Pthick,facevertexcdata);  
+      end
+                  
       % final surface evaluation 
       res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS', ...
         loadSurf(P(si).Pcentral), cat_io_FreeSurfer('read_surf_data',P(si).Ppbt), facevertexcdata, ...

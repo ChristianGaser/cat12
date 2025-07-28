@@ -1,4 +1,46 @@
 ------------------------------------------------------------------------
+r2852 | gaser | 2025-07-28 10:12:38
+
+Changed paths:
+ M CAT.maca64/CAT_AddValuesToSurf
+ M CAT.maca64/CAT_AverageSurfaces
+ M CAT.maca64/CAT_BlurSurfHK
+ M CAT.maca64/CAT_DumpCurv
+ M CAT.maca64/CAT_DumpSurfArea
+ M CAT.maca64/CAT_DumpSurfaceRatio
+ M CAT.maca64/CAT_FixTopology
+ M CAT.maca64/CAT_FractalDimension
+ M CAT.maca64/CAT_Hausdorff
+ M CAT.maca64/CAT_Isometize
+ M CAT.maca64/CAT_MarkDefects
+ M CAT.maca64/CAT_RefineMesh
+ M CAT.maca64/CAT_ResampleSphericalSurf
+ M CAT.maca64/CAT_ResampleSphericalSurfSPH
+ M CAT.maca64/CAT_ResampleSurf
+ M CAT.maca64/CAT_SelfIntersect
+ M CAT.maca64/CAT_SeparatePolygon
+ M CAT.maca64/CAT_SmoothConvexity
+ M CAT.maca64/CAT_SulcusDepth
+ M CAT.maca64/CAT_Surf2Sphere
+ M CAT.maca64/CAT_SurfCentral2Pial
+ M CAT.maca64/CAT_SurfDeform
+ M CAT.maca64/CAT_SurfDistance
+ M CAT.maca64/CAT_SurfWarp
+ M CAT.maca64/CAT_VolMarchingCubes
+ M CAT.maca64/CAT_VolThicknessPbt
+ M CHANGES.txt
+ M cat_defaults.m
+ M cat_surf_createCS4.m
+ M cat_vol_pbtsimpleCS4.m
+ M doc/index.html
+ D templates_MNI152NLin2009cAsym/hyperthalamus.csv
+ D templates_MNI152NLin2009cAsym/hyperthalamus.nii.gz
+ D templates_MNI152NLin2009cAsym/hyperthalamus.txt
+
+Fixed:   Commented out not working hist-smoothing in cat_vol_pbtsimpleCS4.m
+Changed: Added CAT_SurfCorrectThicknessFolding to cat_surf_createCS4.m
+
+------------------------------------------------------------------------
 r2712 | gaser | 2025-06-18 12:08:43
 
 Changed paths:
