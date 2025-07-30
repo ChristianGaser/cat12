@@ -325,7 +325,8 @@ function vout = cat_surf_resamp(varargin)
         if exist(Pfwhm_gii,'file')
           Psname = Pfwhm_gii;
         else
-          error('File %s could not be found which points to issue while writing files. Please check permission and repeat processing of that subject.',Pfwhm_gii);
+          cat_io_cprintf('err','The file\n  %s \ncould not be found which points to issue while writing files. Please check permission and repeat processing of that subject.\n',Pfwhm_gii);
+          continue
         end
 
         %% remove path from metadata to allow that files can be moved (pathname is fixed in metadata) 
