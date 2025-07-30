@@ -710,7 +710,7 @@ function [Ycd, Ywd] = cat_vol_cwdist(Yp0,opt,vx_vol)
 end
 % ======================================================================
 function [Ywd, Ycd, Ygmt] = keepdetails(Yp0, Ywd, Ycd, Ygmt, vx_vol, extendedrange,level)   
-% Although distances and thickness are quite good, PBT slightly trend to  
+% Although distances and thickness are quite good, PBT slightly tend to  
 % over-estimate the thickness in sulcal regions without CSF as the middle 
 % voxel is counted for both sides (simplified). Moreover, initial surface 
 % are partially created just on the original internal resolution (~1 mm), 

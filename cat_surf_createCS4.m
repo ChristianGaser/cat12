@@ -85,7 +85,8 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
   def.LAB                 = cat_get_defaults('extopts.LAB');  % brain regions 
   % RD20250306: Tfs has large issues currently with some corrected defects
   def.useprior            = ''; 
-  def.thick_limit         = 5;                                % 5mm upper limit for thickness (same limit as used in Freesurfer)
+  def.thick_limit         = 6;                                % 6mm upper limit for thickness (similar limit as used in Freesurfer)
+  def.foldingcorrection   = 1;                                % tickness correction that is influence by folding
   def.thick_measure       = 0;                                % 0-PBT; 1-Tfs (Freesurfer method using mean(TnearIS,TnearOS)) ##########
   def.fsavgDir            = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces'); 
   def.outputpp.native     = 0;  % output of Ypp map for cortical orientation in EEG/MEG 
@@ -530,8 +531,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       end
 
       % Correction of thickness folding results in much more homogeneous values
-      if 1
-        stime = cat_io_cmd('  Correct Thickness Folding','g5','',opt.verb,stime); 
+      if opt.foldingcorrection
         cmd = sprintf('CAT_SurfCorrectThicknessFolding -max "%f" "%s" "%s" "%s"',opt.thick_limit,P(si).Pcentral,P(si).Pthick,P(si).Pthick);
         cat_system(cmd,opt.verb-3);
         facevertexcdata = cat_io_FreeSurfer('read_surf_data',P(si).Pthick) .* facevertexcdatanocut;  
@@ -547,7 +547,12 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         loadSurf(P(si).Pcentral), cat_io_FreeSurfer('read_surf_data',P(si).Ppbt), facevertexcdata, ...
         Ymfs,Yppi,P(si).Pcentral,Smat.matlabIBB_mm,debug + (cat_get_defaults('extopts.expertgui')>1),cat_get_defaults('extopts.expertgui')>1);
     else % otherwise simply copy ?h.pbt.* to ?h.thickness.*
-      copyfile(P(si).Ppbt,P(si).Pthick,'f'); 
+      if opt.foldingcorrection
+        cmd = sprintf('CAT_SurfCorrectThicknessFolding -max "%f" "%s" "%s" "%s"',opt.thick_limit,P(si).Pcentral,P(si).Ppbt,P(si).Pthick);
+        cat_system(cmd,opt.verb-3);
+      else
+        copyfile(P(si).Ppbt,P(si).Pthick,'f'); 
+      end
       res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS', ...
         loadSurf(P(si).Pcentral), cat_io_FreeSurfer('read_surf_data',P(si).Ppbt), [], ...
         Ymfs, Yppi, P(si).Pcentral, Smat.matlabIBB_mm, debug, cat_get_defaults('extopts.expertgui')>1);
