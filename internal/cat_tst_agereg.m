@@ -16,7 +16,7 @@ function matlabbatch = cat_tst_agereg(files, Presdir, Pmethod, dataname, ...
 
   % some parameters
   smoothingVS = [8 12];                 % use defaults
-  nprog       = 6 * (numel(files)>100); % paralize only large amounts  
+  nprog       = 6 * (numel(files)>1000); % paralize only large amounts  
 
 
   % resdir settings
@@ -291,6 +291,8 @@ function matlabbatch = cat_tst_agereg(files, Presdir, Pmethod, dataname, ...
 
 
   % render results
+  nfiles = numel( age ); 
+  nfiles = round( nfiles , floor(log10( max(1,nfiles) )) ); 
   if ~isvol 
     for ddi = 1:3
       mi = mi + 1; 
@@ -300,19 +302,22 @@ function matlabbatch = cat_tst_agereg(files, Presdir, Pmethod, dataname, ...
             cfg_dep('Contrast Manager: All Stats Images', ...
               substruct('.','val', '{}',{mi_con}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','spm'));
           matlabbatch{mi}.spm.tools.cat.stools.renderresults.fparts.prefix    = 'renderStat_';
-          matlabbatch{mi}.spm.tools.cat.stools.renderresults.render.clims     = 'C 0 16';
+          matlabbatch{mi}.spm.tools.cat.stools.renderresults.render.clims     = ...
+            sprintf('C 0 %d', round( (log( nfiles ) * 4 ) / 4 ) * 4 );  % 'C 0 16';
         case 2
           matlabbatch{mi}.spm.tools.cat.stools.renderresults.cdata(1) = ...
             cfg_dep('Contrast Manager: All Con Images', ...
                substruct('.','val', '{}',{mi_con}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','con'));
           matlabbatch{mi}.spm.tools.cat.stools.renderresults.fparts.prefix    = 'renderCon_';
-          matlabbatch{mi}.spm.tools.cat.stools.renderresults.render.clims     = 'C 0 0.02';
+          matlabbatch{mi}.spm.tools.cat.stools.renderresults.render.clims     = ...
+            sprintf('C 0 %d', round( .2 / log( nfiles ) , 2 )); % 'C 0 0.02';
         case 3
           matlabbatch{mi}.spm.tools.cat.stools.renderresults.cdata(1) = {
             fullfile( resdir , 'ResMS.gii' );
             };
           matlabbatch{mi}.spm.tools.cat.stools.renderresults.fparts.prefix    = 'renderResMS_';
-          matlabbatch{mi}.spm.tools.cat.stools.renderresults.render.clims     = 'C 0 0.3';
+          matlabbatch{mi}.spm.tools.cat.stools.renderresults.render.clims     = ...
+            sprintf('C 0 %d', round( 2 / log( nfiles ) , 2 ) ); % 'C 0 0.3';
       end
       matlabbatch{mi}.spm.tools.cat.stools.renderresults.render.view          = 1;
       matlabbatch{mi}.spm.tools.cat.stools.renderresults.render.texture       = 1;

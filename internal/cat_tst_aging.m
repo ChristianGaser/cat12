@@ -18,12 +18,17 @@ function cat_tst_aging(Pmethod, Presdir, Praw, subsets)
   % - check steps: 
   %   - name missing files (for reprocessing) or just to count the failures
   %   - add SPM parameter tests >> to improve segmentation?
+  % - use different age ranges: 
+  %   - full 
+  %   - development (<18)
+  %   - adult (>=18)
+  %   - elderly and Alzheimers (>50)
   %   
-  % - integrate further variables
+  % - integrate further variables (problem is - what do we expect? )
   %   - intensity 
   %   - curvature
   %   - global GI? 
-  %   - 
+  %   
   % - extend super young and super old
   % - add non-healty in ageing plot 
   % - add further cohorts plots
@@ -36,8 +41,11 @@ function cat_tst_aging(Pmethod, Presdir, Praw, subsets)
   addpath(fullfile(fileparts(which('cat12')),'internal')); 
   
 
-  % Find preocessed data that is available for all methods. 
-  datas = 'thickness'; Pdata = cell(1,size(Pmethod,1),1);
+
+
+  %  Find preocessed data that is available for all methods. 
+  %  ----------------------------------------------------------------------
+  datas = 'pbt'; Pdata = cell(1,size(Pmethod,1),1);
   for pi = 1:size(Pmethod,1)
     if pi == 1
       if ~exist(Pmethod{pi,2},'dir') && ~exist(fullfile(Pmethod{pi,2},subsets{sdi}),'dir')
@@ -69,7 +77,10 @@ function cat_tst_aging(Pmethod, Presdir, Praw, subsets)
   fprintf('%16s: %4d files\n\n', 'overlap', length(Pdata{pi}) ); 
   
 
+
+
   %% define further files
+  %  ----------------------------------------------------------------------
   for pi = 1:size(Pmethod,1)
     
     Pcentral{pi} = cat_io_strrep( Pdata{pi}, datas, 'central'); 
@@ -97,7 +108,6 @@ function cat_tst_aging(Pmethod, Presdir, Praw, subsets)
       cellfun(@(x) exist(x,'file')==0, Pxml{pi})  &  cellfun(@(x) exist(x,'file')==2, Pp0{pi}) )} ) ); 
     Pexistx(:,pi) = cellfun(@(x) exist(x,'file'),Pxml{pi});
   end
-  %%
   for pi = 1:size(Pmethod,1)
     Pdata{pi}( sum(Pexistx==0,2)>0 ) = [];
     Pwhite{pi}( sum(Pexistx==0,2)>0 ) = [];
@@ -110,7 +120,10 @@ function cat_tst_aging(Pmethod, Presdir, Praw, subsets)
   Pdemo = spm_file( cat_io_strrep( Pdata{1}, {sprintf('lh.%s.',datas); Pmethod{1,2}}, {'',Praw}), 'ext','.xml');
 
 
+
+
   %% extract basic demographic parameters
+  %  ----------------------------------------------------------------------
   age = []; sex = []; siten = {}; project = {}; cohortn = []; scanner = {}; 
   for si = 1:numel(Pdemo)
     demo  = cat_io_xml( Pdemo{si} ); 
@@ -139,7 +152,8 @@ function cat_tst_aging(Pmethod, Presdir, Praw, subsets)
     unique(cohortn), cellfun(@(x) {num2str(x)},num2cell(1:numel(unique(cohortn))))) ); %#ok<NASGU>
   HC = contains(cohortn,'HC'); 
 
-  % CSV import for special cases 
+  % ##### CSV import for special cases #####
+  % MR-ART?
   if 0
     csv    = cat_io_csv(Pcsv{pi}{1}); 
     csv    = sortrows(csv,1);
@@ -216,7 +230,7 @@ function cat_tst_aging(Pmethod, Presdir, Praw, subsets)
 %    if ~isempty(matlabbatch), spm_jobman('run',matlabbatch); end
 
 % thickness not working
-    for sm = {'pbt'} %,'thickness'}
+    for sm = {'pbt','thickness'}
       %%
       Pdatapi = strrep( Pdata{pi} ,sprintf('lh.%s.',datas), sprintf('lh.%s.',sm{1})); 
       matlabbatch = cat_tst_agereg( Pdatapi, Presdir, Pmethod{pi,1}, sm{1}, age, sex, HC, tiv(:,pi), 1, onlyAllreadySmoothed);
@@ -226,17 +240,19 @@ function cat_tst_aging(Pmethod, Presdir, Praw, subsets)
   
   
   
-  %%
+  %% global statistics
+  %  ----------------------------------------------------------------------
   fprintf('Print figures: \n'); 
   fh = figure(50); set(fh,'Visible',1,'Interruptible',0); 
   %%
   for mi = 1:4 
-    % not working: cubicinterp
-    % not fitting: log10
-    % too simple:  logistic4
-    % too fitting: smoothingspline
+    % fitting models: 
+    % - not working: cubicinterp
+    % - not fitting: log10
+    % - too simple:  logistic4
+    % - too fitting: smoothingspline
     % >> test the poly# fit and use the best fitting one
-    dfit   = {'poly1','poly2','poly3','poly4','poly5'}; %,'poly6','poly7','poly8','poly9'}; 
+    dfit   = {'poly1','poly2','poly3','poly4','poly5'}; 
     roundf = 1;  
     xrange = [ floor( prctile(age(:),.1)/5)*5 , ceil( prctile(age(:),99.9)/5)*5 ];
     switch mi
@@ -380,6 +396,8 @@ function cat_tst_aging(Pmethod, Presdir, Praw, subsets)
 
 
     %% test of field strength difference
+    %  - this is not really working as it does not consider the diffent slopes in aging
+    %    (eg. a method that did not show aging might have better results here)
     clear name dstrength methodfielddiff
     dsi = 0; fields = [1.5 3.0]; subname = '';
     for pi = 1:size(Pmethod,1)
@@ -403,13 +421,14 @@ function cat_tst_aging(Pmethod, Presdir, Praw, subsets)
       size(Pmethod,1)*2, 1)) + repmat([-.2;+.2],size(Pmethod,1),1))))); 
     title(fhfieldx, sprintf('Method vs. fieldstrength (Nsub=%d, Nsites=%d, higher p-values are better)', ...
       numel(age), numel(unique(site))) ); subtitle(fhfieldx,subname);
-    xlabel(fhfieldx,'Method + fieldstrength'); ylabel(fhfieldx,ylab); 
+    xlabel(fhfieldx,'Method + fieldstrength'); ylabel(fhfieldx,ylab,'Rotation',90); 
     print(fh,fullfile(Presdir,sprintf('cat_tst_fieldstrength_%s',deblank(tlab))),'-r300','-dpng');
     fprintf('    %s\n',fullfile(Presdir,sprintf('cat_tst_fieldstrength_%s.png',deblank(tlab)))); 
 
 
 
     %% group-diffs 
+    %  - also not optimal
     clear name dstrength methodfielddiff tts ttsp
     projects = {'ADNI','AIBL','OASIS3'}; 
     dsi = 0; subname = ''; cohorts = {'HC','MCI','AD'}; %unique(cohortn);
@@ -439,7 +458,7 @@ function cat_tst_aging(Pmethod, Presdir, Praw, subsets)
         'groupcolor',repmat( cat_io_colormaps('trafficlight',3), size(Pmethod,1), 1) ));
       title(fhcohortx, sprintf('Alzheimer''s in %s (tst HC vs. AD, Nsub=%d, Nsites=%d, lower p-values are better)', ...
         [projects{:}], numel(age), numel(unique(site))) ); subtitle(fhcohortx, subname);
-      xlabel(fhcohortx, 'Method+Cohort'); ylabel(fhcohortx, ylab); hold on;
+      xlabel(fhcohortx, 'Method+Cohort'); ylabel(fhcohortx, ylab,'Rotation',90); hold on;
       % ... save ...
       print(fh, fullfile(Presdir,sprintf('cat_tst_Alzheimers_%s',deblank(tlab))),'-r300','-dpng');
       fprintf('    %s\n',fullfile(Presdir,sprintf('cat_tst_Alzheimers_%s.png',deblank(tlab)))); 
@@ -450,8 +469,8 @@ function cat_tst_aging(Pmethod, Presdir, Praw, subsets)
     %% sex differences (in puberty)
     clf(fh); 
     fh.Position(3:4) = [1200 800]; sgcolor = [.5 0 0; 0 0 .5]; sgmarker = {'o','^'};
-    tiledlayout( round(size(Pmethod,1)/3) , ...
-      ceil(size(Pmethod,1) /  round(size(Pmethod,1)/3)), ...
+    tiledlayout( round(size(Pmethod,1)*2) , ...
+      ceil(size(Pmethod,1) /  round(size(Pmethod,1)*2)), ...
       'TileSpacing', 'compact', 'Padding', 'compact'); 
     for pi = 1:size(Pmethod,1)
       nexttile; 
