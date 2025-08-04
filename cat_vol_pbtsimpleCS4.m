@@ -181,19 +181,21 @@ end
   % correct reconstrution overestimation 
   % - important to keep small sulci open, eg. rh.BWPT central and CC sulcus 
   % - correct thinner areas stronger to improve reconstruction
-  pbtsulccor = @(Ygmtx, Ycdx, Ywdx) max(0,Ygmtx - 0.125 .* (Ygmtx < (Ycdx + Ywdx))); 
-  Ygmtw0 = pbtsulccor(Ygmtw0, Ycd0, Ywd0); 
-  Ygmtc0 = pbtsulccor(Ygmtc0, Ycd0, Ywd0); 
-
+  if 1 % RD20250903: can maybe avoided ... intensity/position (Colins): 0.08/0.02 better with correction & 0.04 thicker 
+    pbtsulccor = @(Ygmtx, Ycdx, Ywdx) max(0,Ygmtx - 0.125 .* (Ygmtx < (Ycdx + Ywdx))); 
+    Ygmtw0 = pbtsulccor(Ygmtw0, Ycd0, Ywd0); 
+    Ygmtc0 = pbtsulccor(Ygmtc0, Ycd0, Ywd0); 
+  end
+  
 
   % minimum tickness map and cleanup (removal of extrem outliers and approximation) 
   % - not useful for Ygmtw0/Ygmtc0!
   Ygmt0  = min(Ygmtw0,Ygmtc0); 
   Ygmt0  = cleanupPBT(Ygmt0, 1, 0); % filter limits has only minor effects
-  
+
 
   % update distance information
-  Ycd0  = min(Ygmt0,Ycd0); Ywd0 = min(Ygmt0,Ywd0); 
+  Ycd0 = min(Ygmt0,Ycd0); Ywd0 = min(Ygmt0,Ywd0); 
  
   % this functions emphasize fine structurs, ie., to avoid blurring of small sulci
   if opt.keepdetails 
@@ -212,46 +214,67 @@ end
   % - undefined values GM values are defined by neighbours
   % - neutral regions are defined by CSF
   % - next both areas are extend by intensity emphasized values 
-  if opt.gyrusrecon
-    % define sulci/gyri as areas closed WM/CSF regions
-    Ygsr   = cat_vol_morph( cat_vol_morph( Yp0<2.5 & cat_vol_morph(Yp0>2.5,'dc',10,vx_vol) & (Ygmtw0 < Ygmtc0) & (Ygmt0*1.05 <= Ycd0+Ywd0) , 'do',1.5), 'dd',1); % large sculci
-    Ygsr   = max(Ygsr,cat_vol_morph( cat_vol_morph( Yp0<2.75 & cat_vol_morph(Yp0>2.75,'dc',3,vx_vol) & (Ygmtw0 < Ygmtc0) & (Ygmt0*1.05 <= Ycd0+Ywd0) , 'do',1), 'dd',2)); % small sulci
-    Ygsr   = Ygsr*.5 + max(Yp0>2.5,cat_vol_morph(Yp0>=2.25 & ~Ygsr & cat_vol_morph(Yp0<2.25,'dc',10,vx_vol) & (Ygmtc0 < Ygmt0*1.1) & (Ygmt0*1.05 <= Ycd0+Ywd0),'do',1.5));
-    % basic extension by distance function
-    [~,I]  = cat_vbdist( single(Ygsr>.25),Yp0>1.1);  Ygsr = single(Ygsr(I)); clear I;
+  if opt.gyrusrecon 
+    if opt.gyrusrecon == 1 
+    % complex version ... 
     
-  
-    % general (global) relation between sulci and gyri
-    %  to avoid gyrus reconstruction in case of many sulci that comes with high risk of bridge defects
-    gsr    = max(.7,min(1.3,nnz(Ygsr(:)==.5) ./ nnz(Ygsr(:)==1  & Yp0(:)<2.5))); 
-    % in case of very thick cortices as in children (about 3 mm, e.g., BUSS## dataset) 
-    % it is better to avoid the reconstruction whereas in case of low thickness 
-    % (about 2 mm) the need is even higher!   
-    % Besides thickness also high variance of thickness (> 0.75 mm) the risk 
-    % of sulcul blurring increases stongly
-    mdGMT  = median(Ygmt0(round(Yp0(:))==2)) * mean(vx_vol); 
-    iqrGMT = iqr(Ygmt0(round(Yp0(:))==2)) * mean(vx_vol); 
-    gsr    = max(0.3, min(1.7, gsr  .*  max(0.5,min(2,1 + (mdGMT - 2.5))) .* max(.5,min(2,(iqrGMT-.5))))); 
-   
-    % local refinement
-    Ygsr(Yp0<1.5)                                         = max(0.55,min(0.80, 0.75  / gsr));      % extend blurred sulci
-    Ygsr(Yp0<1.5 & ~cat_vol_morph(Yp0<1.5,'do',2,vx_vol)) = max(0.50,min(0.75, 0.625 / gsr.^.5));  % pro sulci
-    Ygsr(cat_vol_morph(Yp0<1.5,'do',2,vx_vol))            = max(0.75,min(0.95, 0.875 / gsr.^.5));  % pro gyri
-    %Ygsr  = 1 - max(1-Ygsr, max(0,min(1,2-Yp0)).^.75);            % limited emphasization, as thin gyri often have lower GM probability ... 
-    Ygsr   =     max(Ygsr,   max(0,min(1,Yp0-2)).^.75);            % emphasize WM 
-    Ygsr   = Yppsmooth(Ygsr,Ygmt0,vx_vol,[0,-1]);                  % outlier correction 
-    Ygsr   = max(0,min(1,cat_vol_smooth3X(Ygsr,2) * 2 - 1));       % final smoothing  .^ (1.5 - Ygsr); ... too small cause edges and bridges (eg. Collins) 
-  
+      % define sulci/gyri as areas closed WM/CSF regions
+      Ygsr   = cat_vol_morph( cat_vol_morph( Yp0<2.5 & cat_vol_morph(Yp0>2.5,'dc',10,vx_vol) & (Ygmtw0 < Ygmtc0) & (Ygmt0*1.05 <= Ycd0+Ywd0) , 'do',1.5), 'dd',1); % large sculci
+      Ygsr   = max(Ygsr,cat_vol_morph( cat_vol_morph( Yp0<2.75 & cat_vol_morph(Yp0>2.75,'dc',3,vx_vol) & (Ygmtw0 < Ygmtc0) & (Ygmt0*1.05 <= Ycd0+Ywd0) , 'do',1), 'dd',2)); % small sulci
+      Ygsr   = Ygsr*.5 + max(Yp0>2.5,cat_vol_morph(Yp0>=2.25 & ~Ygsr & cat_vol_morph(Yp0<2.25,'dc',10,vx_vol) & (Ygmtc0 < Ygmt0*1.1) & (Ygmt0*1.05 <= Ycd0+Ywd0),'do',1.5));
+      % basic extension by distance function
+      [~,I]  = cat_vbdist( single(Ygsr>.25),Yp0>1.1);  Ygsr = single(Ygsr(I)); clear I;
+      
     
-    %% percentage blurred sulcal/gyral volume (regions that need reconstrution
+      % general (global) relation between sulci and gyri
+      %  to avoid gyrus reconstruction in case of many sulci that comes with high risk of bridge defects
+      gsr    = max(.7,min(1.3,nnz(Ygsr(:)==.5) ./ nnz(Ygsr(:)==1  & Yp0(:)<2.5))); 
+      % in case of very thick cortices as in children (about 3 mm, e.g., BUSS## dataset) 
+      % it is better to avoid the reconstruction whereas in case of low thickness 
+      % (about 2 mm) the need is even higher!   
+      % Besides thickness also high variance of thickness (> 0.75 mm) the risk 
+      % of sulcul blurring increases stongly
+      mdGMT  = median(Ygmt0(round(Yp0(:))==2)) * mean(vx_vol); 
+      iqrGMT = iqr(Ygmt0(round(Yp0(:))==2)) * mean(vx_vol); 
+      gsr    = max(0.3, min(1.7, gsr  .*  max(0.5,min(2,1 + (mdGMT - 2.5))) .* max(.5,min(2,(iqrGMT-.5))))); 
+     
+      % local refinement
+      Ygsr(Yp0<1.5)                                         = max(0.55,min(0.80, 0.75  / gsr));      % extend blurred sulci
+      Ygsr(Yp0<1.5 & ~cat_vol_morph(Yp0<1.5,'do',2,vx_vol)) = max(0.50,min(0.75, 0.625 / gsr.^.5));  % pro sulci
+      Ygsr(cat_vol_morph(Yp0<1.5,'do',2,vx_vol))            = max(0.75,min(0.95, 0.875 / gsr.^.5));  % pro gyri
+      %Ygsr  = 1 - max(1-Ygsr, max(0,min(1,2-Yp0)).^.75);            % limited emphasization, as thin gyri often have lower GM probability ... 
+      Ygsr   =     max(Ygsr,   max(0,min(1,Yp0-2)).^.75);            % emphasize WM 
+      Ygsr   = Yppsmooth(Ygsr,Ygmt0,vx_vol,[0,-1]);                  % outlier correction 
+      Ygsr   = max(0,min(1,cat_vol_smooth3X(Ygsr,2) * 2 - 1));       % final smoothing  .^ (1.5 - Ygsr); ... too small cause edges and bridges (eg. Collins) 
+    else 
+    % simpler version based on the minimum thickness selector
+      
+      % local gyrus-sulcus definition 
+      [~,Ygmt0I]  = min(cat(4,Ygmtw0,Ygmtc0),[],4);
+      Ymsk1  = 1; % max(0,min(1,(Ycd0>1/vx_vol) .* Ycd0./max(eps,Ygmtw0) .* (5 ./ (Ygmt0*mean(vx_vol))) + (Yp0>2.5))); % use the uncorrected maps to outline the sulcus .. not working
+      Ymsk2  = max(0,cat_vol_smooth3X(Yp0-1,2)); % up-weight WM and down-weight CSF regions
+      Ygsr   = max(0,min(1,cat_vol_smooth3X(Ygmt0I .* Ymsk1 .* Ymsk2 , 2 ) - 1)) .^ 1.25; % .^ x with x>1 to prefere sulci
+    
+      % general (global) relation between sulci and gyri
+      mdGMT  = median(Ygmt0(round(Yp0(:))==2)) * mean(vx_vol); 
+      iqrGMT = iqr(Ygmt0(round(Yp0(:))==2)) * mean(vx_vol); 
+      gsr    = max(0.5, min(1.7, max(0.5,min(2,1 + (mdGMT - 2.5))) .* max(.5,min(2,(iqrGMT-.5))))); 
+    end
+    
+    % percentage blurred sulcal/gyral volume (regions that need reconstrution as evaluation parameter)
     srecon = sum(Ygsr(:)<.25 & round(Yp0(:))==2 & (Ygmtw0(:) < Ygmt0(:)*1.1) & (Ygmt0(:)*1.05 <= Ycd0(:)+Ywd0(:)) ) / sum( round(Yp0(:))==2 ); 
     grecon = sum(Ygsr(:)>.75 & round(Yp0(:))==2 & (Ygmtc0(:) < Ygmt0(:)*1.1) & (Ygmt0(:)*1.05 <= Ycd0(:)+Ywd0(:)) ) / sum( round(Yp0(:))==2 ); 
   
-    % position map 
+    % position maps
+    % Yppg - gyrus map with further weighting to avoid bridges
+    % Ypps - suclus map with two defintions based on the minimum thickness Ygmt0 and the WM driven thicknes Ygmtw0. 
+    %        The Ygmtw0 is better in gyrus reconstruction but also more noisy and prone to bridges
     Yppg = min(1, max(  Ygmt0 .* (Yp0>2.5) , max( Ycd0 .* Ygsr.^.1, (Yp0>1.5) .* (Ygmt0-Ywd0) .* Ygsr.^2)) ./ Ygmt0); 
     Ypps = 0.5 .* min(1, max( 0 , max(Yp0>2.5, (Yp0>1.5) .* max(eps,Ygmtw0-Ywd0) ./ max(eps,Ygmtw0) .* Ygsr ))) + ... 
            0.5 .* min(1, max( 0 , max(Yp0>2.5, (Yp0>1.5) .* min(Ycd0,Ygmt0-Ywd0) ./ max(eps,Ygmt0))));
+    % add the global weighting to avoid bridges 
     Yppg = Yppg .* Ypps.^max(0.05, min(.5, .1 * (gsr.^4)));
+    % final combination 
     Ypp  = Yppg.*Ygsr + (1-Ygsr).*Ypps; 
   else
     gsr  = 0; srecon = 1; grecon = 0; 
