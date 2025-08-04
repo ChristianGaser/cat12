@@ -516,6 +516,10 @@ if ~isfield(res,'spmpp')
   %  ds('d2sm','',1,Ym,single(prob(:,:,:,1))/255/3 + single(prob(:,:,:,2))/255*2/3 + single(prob(:,:,:,3))/255,50);
   %  -------------------------------------------------------------------
   job.extopts.AMAPframing = 1;
+  if 0
+    % RD202509: EXPERIMENTAL: sharpening for AMAP to improve gyral structures in surface reconstruction 
+    Ymi = Ymi + (Ymi - smooth3(Ymi)) / 2; 
+  end
   [prob,indx,indy,indz] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res);
   
    

@@ -497,6 +497,10 @@ if ~isfield(res,'spmpp')
   %  RD202101: There are differences by using only the new brainmask
   %  -------------------------------------------------------------------
   job.extopts.AMAPframing   = 1;
+  if 0
+    % RD202509: EXPERIMENTAL: sharpening for AMAP to improve gyral structures in surface reconstruction 
+    Ymi = Ymi + (Ymi - smooth3(Ymi)) / 2; 
+  end
   try
     % there is a bug with empty images CG7T >> catch with old function
     [prob,indx,indy,indz,ath] = cat_main_amap(Ymi,Yb,Yb0,Ycls,job,res);
