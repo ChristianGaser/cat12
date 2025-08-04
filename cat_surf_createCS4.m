@@ -59,7 +59,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
   skip_registration       = isfield(opt,'surf') && isscalar(opt.surf); % skip spherical registration for quick tests
   create_white_pial       = 1; % uses only the quick WM and Pial surface estimation 
 
-  myelinCorrection        = .2; % .25 - sight correction, 1 - maximum correction
+  myelinCorrection        = .5; % .25 - sight correction, 1 - maximum correction
   setcut2zero             = 0; % works but result in worse values as could be expected
   
   % surface output and evaluation parameter 
@@ -499,8 +499,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       % apply upper thickness limit
       % here the 5 mm thickness limit of FreeSurfer might be better rather then our 6 mm 
       facevertexcdata = cat_io_FreeSurfer('read_surf_data',P(si).Pthick) .* facevertexcdatanocut;  
-      facevertexcdata(facevertexcdata > opt.thick_limit) = opt.thick_limit; 
-      cat_io_FreeSurfer('write_surf_data',P(si).Pthick,facevertexcdata);  
+      cat_io_FreeSurfer('write_surf_data', P(si).Pthick, min(opt.thick_limit,facevertexcdata) );  
     else
       % otherwise simply use the original values of the PBT map  
       % WARNING: 
@@ -509,18 +508,18 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       %   We use here the orignal PBT values as they are less depending on 
       %   local highly individual features.  
       facevertexcdata = cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm) .* facevertexcdatanocut; 
-      cat_io_FreeSurfer('write_surf_data',P(si).Ppbt,facevertexcdata);
+      cat_io_FreeSurfer('write_surf_data', P(si).Ppbt,   facevertexcdata);
+      cat_io_FreeSurfer('write_surf_data', P(si).Pthick, min(opt.thick_limit,facevertexcdata) );  
     end
     fprintf('\n');
     
 
     % correct thickness based on folding pattern 
     if opt.foldingcorrection
-      cmd = sprintf('CAT_SurfCorrectThicknessFolding -max "%f" "%s" "%s" "%s"',opt.thick_limit,P(si).Pcentral,P(si).Ppbt,P(si).Pthick);
+      cmd = sprintf('CAT_SurfCorrectThicknessFolding -max "%f" "%s" "%s" "%s"', opt.thick_limit, P(si).Pcentral, P(si).Pthick, P(si).Pthick);
       cat_system(cmd,opt.verb-3);
-    else
-      copyfile(P(si).Ppbt,P(si).Pthick,'f'); 
     end
+
 
     % final surface evaluation 
     res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS', ...

@@ -77,6 +77,7 @@ function [Yth,S,Psurf,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Yt
   def.sharpen             = 0;                                % sharpening function (in development, RD2019)
   def.sharpenCB           = 1;                                % sharpening function for the cerebellum (in development, RD2017-2019)
   def.thick_measure       = 1;                                % 0-PBT; 1-Tfs (Freesurfer method using mean(TnearIS,TnearOS))
+  def.foldingcorrection   = 1;                                % tickness correction that is influence by folding
   def.thick_limit         = 5;                                % 5mm upper limit for thickness (same limit as used in Freesurfer)
   def.SRP                 = 2;                                % correction of surface collisions: 0 - none; 1 - SI, 2 - SIC with optimization
   def.surf_measures       = 1;                                % 0 - none, 1 - only thickness, 2 - expert maps (myelin,defects), 3 - developer (WMT,CSFT, ...),
@@ -1466,14 +1467,18 @@ end
       res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS', ...
         loadSurf(Pcentral), cat_io_FreeSurfer('read_surf_data',Ppbt), cat_io_FreeSurfer('read_surf_data',Pthick), ...
         Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,2,0);
-      CS2 = CS; CS2.cdata = facevertexcdata; cat_surf_render2(CS2)
+      CS2 = CS; CS2.cdata = facevertexcdata; H = cat_surf_render2(CS2);
+      cat_surf_render2('clim',H,[0 6]); 
+      cat_surf_render2('view',H,cat_io_strrep(opt.surf{si},{'lh','rh','ch'},{'right','left','back'})); 
+      cat_surf_render2('ColourBar',H,'on');
       title(sprintf('CS4%d, nF=%0.0fk, EC=%d, Tpbt=%0.3f±%0.3f, Tfs=%0.3f±%0.3f, \n IE=%0.3f, PE=%0.3f, ptime=%0.0fs, time=%s', ...
         opt.SRP, size(CS.faces,1)/1000, EC0, ...
         mean( facevertexcdata ), std(facevertexcdata), mean( FSthick ), std(FSthick), ...
         mean( [ res.(opt.surf{si}).createCS_final.RMSE_Ym_white,  res.(opt.surf{si}).createCS_final.RMSE_Ym_layer4,   res.(opt.surf{si}).createCS_final.RMSE_Ym_pial ] ) , ...
         mean( [ res.(opt.surf{si}).createCS_final.RMSE_Ypp_white, res.(opt.surf{si}).createCS_final.RMSE_Ypp_central, res.(opt.surf{si}).createCS_final.RMSE_Ypp_pial ] ) , ...
         etime(clock,time_sr), datetime))
-      
+      fprintf('    Runtime:                             %0.0fs\n',etime(clock,time_sr)); 
+
       % surfaces in spm_orthview
       Po = Pm; if ~exist(Po,'file'); Po = V0.fname; end
       if ~exist(Po,'file')  && exist([V0.fname '.gz'],'file'), Po = [V0.fname '.gz']; end
@@ -1555,8 +1560,7 @@ end
       
       % apply upper thickness limit
       facevertexcdata = cat_io_FreeSurfer('read_surf_data',Pthick);  
-      facevertexcdata(facevertexcdata > opt.thick_limit) = opt.thick_limit;
-      cat_io_FreeSurfer('write_surf_data',Pthick,facevertexcdata);  
+      cat_io_FreeSurfer('write_surf_data', P(si).Pthick, min(opt.thick_limit,facevertexcdata) );  
       
       % final surface evaluation 
       if debug || cat_get_defaults('extopts.expertgui')>1, fprintf('\n'); end
@@ -1572,6 +1576,12 @@ end
     
     end
     
+
+    % correct thickness based on folding pattern 
+    if opt.foldingcorrection
+      cmd = sprintf('CAT_SurfCorrectThicknessFolding -max "%f" "%s" "%s" "%s"', opt.thick_limit, Pcentral, Pthick, Pthick);
+      cat_system(cmd,opt.verb-3);
+    end
     
     
     
