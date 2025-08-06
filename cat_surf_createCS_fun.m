@@ -8,7 +8,7 @@ function varargout = cat_surf_createCS_fun(action,varargin)
       evalProcessing(varargin{:});
   
     case 'addSurfaceQualityMeasures'
-      varargout = addSurfaceQualityMeasures(varargin{:});
+      varargout{1} = addSurfaceQualityMeasures(varargin{:});
     
     case 'quickeval'
       quickeval(varargin{:});
