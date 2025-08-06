@@ -704,7 +704,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
 
                 % surf vals 
                 if job.extopts.expertgui > 0 && ~strcmp(catgmt{1},'unknown')
-                  colorsurf = @(SI,m)  SI(max(1,min(size(SI,1),round((max(0,m-0.06)*1000)+1))),:);
+                  colorsurf = @(SI,m)  SI(max(1,min(size(SI,1),round((max(0.0,m-0.05)*300)+5))),:);
                   cat_io_cprintf(kcol,', '); 
                   cat_io_cprintf(colorsurf(GMC,str2double( catSRMSE{1} )),sprintf('surf=%s',catSRMSE{1}));  
                   cat_io_cprintf(kcol,', '); 

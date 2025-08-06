@@ -1345,13 +1345,13 @@ function res = cat_surf_evalCS(CS,Tpbt,Tfs,Ym,Ypp,Pcentral,mat,verb,estSI)
     if verb
       fprintf('    Local intensity RMSE (lower=better): ')
       if uL4 && exist('L4','var')
-        cat_io_cprintf( color( rate( mean( [rms(II),rms(IC),rms(IO)] ) , 0.05 , 0.30 )) , sprintf('%0.4f ',mean( [rms(II),rms(IC),rms(IO)] )) ); 
+        cat_io_cprintf( color( rate( mean( [rms(II),rms(IC),rms(IO)] ) , 0.05 , 0.50 )) , sprintf('%0.4f ',mean( [rms(II),rms(IC),rms(IO)] )) ); 
       else
-        cat_io_cprintf( color( rate( mean( [rms(II),rms(IO)] ) , 0.05 , 0.30 )) , sprintf('%0.4f ',mean( [rms(II),rms(IO)] )) ); 
+        cat_io_cprintf( color( rate( mean( [rms(II),rms(IO)] ) , 0.05 , 0.50 )) , sprintf('%0.4f ',mean( [rms(II),rms(IO)] )) ); 
       end
-      cat_io_cprintf( color( rate( rms(II) , 0.05 , 0.30 )) , sprintf('(IS=%0.4f,',rms(II)) ); 
-      if uL4 && exist('L4','var'), cat_io_cprintf( color( rate( rms(IC) , 0.05 , 0.30 )) , sprintf('L4=%0.4f,',rms(IC)) ); end
-      cat_io_cprintf( color( rate( rms(IO) , 0.05 , 0.30 )) , sprintf('OS=%0.4f)\n',rms(IO)) ); 
+      cat_io_cprintf( color( rate( rms(II) , 0.05 , 0.50 )) , sprintf('(IS=%0.4f,',rms(II)) ); 
+      if uL4 && exist('L4','var'), cat_io_cprintf( color( rate( rms(IC) , 0.05 , 0.50 )) , sprintf('L4=%0.4f,',rms(IC)) ); end
+      cat_io_cprintf( color( rate( rms(IO) , 0.05 , 0.50 )) , sprintf('OS=%0.4f)\n',rms(IO)) ); 
     end
     res.RMSE_Ym_white  = rms(II);
     if uL4 && exist('L4','var'), res.RMSE_Ym_layer4 = rms(IC); end
@@ -1375,10 +1375,10 @@ function res = cat_surf_evalCS(CS,Tpbt,Tfs,Ym,Ypp,Pcentral,mat,verb,estSI)
     % output
     if verb
       fprintf('    Local position  RMSE (lower=better): '); 
-      cat_io_cprintf( color( rate( mean( [rms(IC),rms(II),rms(IO)]) , 0.05 , 0.30 )) ,sprintf('%0.4f ',mean( [rms(IC),rms(II),rms(IO)] )) ); 
-      cat_io_cprintf( color( rate( rms(II) , 0.05 , 0.30 )) , sprintf('(IS=%0.4f,' ,rms(II)) ); 
-      cat_io_cprintf( color( rate( rms(IC) , 0.05 , 0.30 )) , sprintf('CS=%0.4f,'  ,rms(IC)) ); 
-      cat_io_cprintf( color( rate( rms(IO) , 0.05 , 0.30 )) , sprintf('OS=%0.4f)\n',rms(IO)) ); 
+      cat_io_cprintf( color( rate( mean( [rms(IC),rms(II),rms(IO)]) , 0.05 , 0.50 )) ,sprintf('%0.4f ',mean( [rms(IC),rms(II),rms(IO)] )) ); 
+      cat_io_cprintf( color( rate( rms(II) , 0.05 , 0.50 )) , sprintf('(IS=%0.4f,' ,rms(II)) ); 
+      cat_io_cprintf( color( rate( rms(IC) , 0.05 , 0.50 )) , sprintf('CS=%0.4f,'  ,rms(IC)) ); 
+      cat_io_cprintf( color( rate( rms(IO) , 0.05 , 0.50 )) , sprintf('OS=%0.4f)\n',rms(IO)) ); 
     end
     res.RMSE_Ypp_white   = rms(II);
     res.RMSE_Ypp_pial    = rms(IO);
