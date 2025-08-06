@@ -223,7 +223,13 @@ set(fig,'MenuBar', 'none', 'Position',[100, 0, opt.winsize]);
 if iscellstr(data)
   fname_tmp = struct('s','','e','','m',num2str(1:numel(data))); 
 else
-  [tmp, fname_tmp] = spm_str_manip(data,'C');
+  if isnumeric(data) || (iscell(data) && isnumeric(data{1}))
+    % call with direct data input 
+    % (eg. from cat_surf_render2 menu > surface information > histogram)
+    fname_tmp = 'data'; 
+  else
+    [~, fname_tmp] = spm_str_manip(data,'C');
+  end
 end
 
 for j = 1:n
