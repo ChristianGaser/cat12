@@ -112,17 +112,21 @@ function str = cat_main_reportstr(job,res,qa)
   end
   % additional output for longitudinal pipeline
   if isfield(job,'lopts') && job.extopts.expertgui
-    if job.lopts.enablepriors==1, cp{1} = npara; else, cp{1} = cpara; end 
-    if job.lopts.longTPM==1,      cp{2} = npara; else, cp{2} = cpara; end 
-    str{1}(end+1).name  = 'priors / longTPM:';
-    str{1}(end).value = sprintf('%s%d / %s%d',cp{1},job.lopts.enablepriors,  cp{2},job.lopts.longTPM);
+    if isfield(job.lopts,'enablepriors') && job.lopts.enablepriors==1, cp{1} = npara; else, cp{1} = cpara; end 
+    if isfield(job.lopts,'longTPM')      && job.lopts.longTPM==1,      cp{2} = npara; else, cp{2} = cpara; end 
+    if isfield(job.lopts,'enablepriors') && isfield(job.lopts,'longTPM')
+      str{1}(end+1).name  = 'priors / longTPM:';
+      str{1}(end).value = sprintf('%s%d / %s%d',cp{1},job.lopts.enablepriors,  cp{2},job.lopts.longTPM);
+    end
     if job.extopts.expertgui > 1
-      if job.lopts.prepavg==0,    cp{3} = npara; else, cp{3} = cpara; end 
-      if job.lopts.bstr==0,       cp{4} = npara; else, cp{4} = cpara; end
-      if job.lopts.avgLASWMHC==0, cp{5} = npara; else, cp{5} = cpara; end
-      str{1}(end).name  = [ str{1}(end).name(1:end-1)  ' / prepavg / bstr / avgLASWMHC:' ]; 
-      str{1}(end).value = sprintf('%s / %s%d / %s%d / %s%d',str{1}(end).value, ...
-        cp{3}, job.lopts.prepavg, cp{4}, job.lopts.bstr, cp{5}, job.lopts.avgLASWMHC);
+      if isfield(job.lopts,'prepavg')    && job.lopts.prepavg==0,    cp{3} = npara; else, cp{3} = cpara; end 
+      if isfield(job.lopts,'bstr')       && job.lopts.bstr==0,       cp{4} = npara; else, cp{4} = cpara; end
+      if isfield(job.lopts,'avgLASWMHC') && job.lopts.avgLASWMHC==0, cp{5} = npara; else, cp{5} = cpara; end
+      if isfield(job.lopts,'prepavg') && isfield(job.lopts,'bstr') &&  isfield(job.lopts,'avgLASWMHC')
+        str{1}(end).name  = [ str{1}(end).name(1:end-1)  ' / prepavg / bstr / avgLASWMHC:' ]; 
+        str{1}(end).value = sprintf('%s / %s%d / %s%d / %s%d',str{1}(end).value, ...
+          cp{3}, job.lopts.prepavg, cp{4}, job.lopts.bstr, cp{5}, job.lopts.avgLASWMHC);
+      end
     end
   end
     if isfield(job.extopts,'BIDSfolder') && ~isempty(job.extopts.BIDSfolder)
@@ -163,13 +167,15 @@ function str = cat_main_reportstr(job,res,qa)
 
   % 1 line 1: Affreg
   if ~isfield(res,'spmpp') || ~res.spmpp
-    if strcmp(job.opts.affreg,catdef.opts.affreg), cp{1} = npara; else, cp{1} = cpara; end
-    if isfield(job,'useprior') && ~isempty(job.useprior) && exist(char(job.useprior),'file')
-      affstr = 'AVGprior';
-    else
-      affstr = job.opts.affreg; 
+    if isfield(job.opts,'affreg')
+      if strcmp(job.opts.affreg,catdef.opts.affreg), cp{1} = npara; else, cp{1} = cpara; end
+      if isfield(job,'useprior') && ~isempty(job.useprior) && exist(char(job.useprior),'file')
+        affstr = 'AVGprior';
+      else
+        affstr = job.opts.affreg; 
+      end
+      str{1} = [str{1} struct('name', 'affreg:','value',sprintf('%s{%s}',cp{1},affstr))];
     end
-    str{1} = [str{1} struct('name', 'affreg:','value',sprintf('%s{%s}',cp{1},affstr))];
 
     % 1 line 2: APP
     if job.extopts.APP == catdef.extopts.APP, cp{1} = npara; else, cp{1} = cpara; end
@@ -235,7 +241,7 @@ function str = cat_main_reportstr(job,res,qa)
       if job.extopts.expertgui % add the value,job.opts.biasstr
         str{1}(end).value = [str{1}(end).value sprintf('(%0.2f,reg:%0.0e;fwhm:%0.0f)',job.opts.biasacc,job.opts.biasreg,job.opts.biasfwhm)]; 
       end
-    else
+    elseif isfield(job.opts,'biasreg')
       if job.opts.biasreg  == catdef.opts.biasreg,  cp{1} = npara; else, cp{1} = cpara; end
       if job.opts.biasfwhm == catdef.opts.biasfwhm, cp{2} = npara; else, cp{2} = cpara; end
       str{1}(end).name  = [str{1}(end).name(1:end-1) 'biasreg / biasfwhm'];
@@ -256,7 +262,7 @@ function str = cat_main_reportstr(job,res,qa)
         str{1}(end).value = [str{1}(end).value sprintf('%s|%0.2f} (%s{%0.2f}/%s{%0.0e})',cp{3},job.opts.acc,cp{1},job.opts.samp,cp{2},job.opts.tol)]; 
       end
     else
-      if job.extopts.expertgui
+      if job.extopts.expertgui && isfield(job.opts,'samp')
         %str{1} = [str{1} struct('name', '','value','')];
         if job.opts.samp == catdef.opts.samp, cp{1} = npara; else, cp{1} = cpara; end
         if job.opts.tol  == catdef.opts.tol,  cp{2} = npara; else, cp{2} = cpara; end
