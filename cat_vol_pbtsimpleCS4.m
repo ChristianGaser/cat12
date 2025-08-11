@@ -129,7 +129,7 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
                              % extended LAS correction (cat_main_correctmyelination) (RD202503)
                              %
   def.gyrusrecon       = 1;  % use PBT also to reconstruct gyri  
-  def.PVErefinement    = 1;  % 
+  %def.PVErefinement    = 1;  % NOT USE YET - uses cat_vol_PVEdist for thickness estimation 
   def.verb             = 0;  % be verbose
 
   opt = cat_io_checkinopt(opt,def);
@@ -293,7 +293,8 @@ end
   Ygmt = Ygmt0 * mean(vx_vol); 
 
   % (*) EXTRA: magic sharpending function - enhancement of fine structures
-  if opt.sharpening, [Ypp, Ygmt] = sharpening(Ypp, Ygmt, vx_vol, 0); end
+  % ##### possible to avoid this ?
+  if opt.sharpening, [Ypp, Ygmt] = sharpening(Ypp, Ygmt, vx_vol); end
 
   % evaluation
   if opt.verb
@@ -344,17 +345,36 @@ function Ypp = Yppsmooth(Ypp,Ygmt,vx_vol,th)
 end
 % ======================================================================
 function Ygmtc = cleanupPBT(Ygmt,lim,lim2)
-% need resolution to handle filter size better !
+%cleanupPBT. Upper limit for thickness outliers. 
+%  Remove higher outliers (eg. blood vessels & meninges). No filtering of 
+%  low values as these also represent small sulci. 
+%  
+%  Ygmtc = cleanupPBT(Ygmt,lim,lim2)
+% 
+%  lim1 .. main threshhold
+%  lim2 .. additional prefiltering
+%
+
+% possible extention:  need resolution to handle filter size better !
+  
   if ~exist('lim','var'), lim = .05; end
   if ~exist('lim2','var'), lim2 = 1; end
-  Ygmta = cat_vol_approx(Ygmt,'rec') ; 
+  
+  % basic approximation & filtering
+  Ygmta = cat_vol_approx(Ygmt,'rec'); 
+
+  % prelimitation to avoid more noisy data with stronger outliers
   if lim2 > 0
     Ygmtc = cat_vol_approx(Ygmt .* ((Ygmt - Ygmta .* (Ygmt>0))<=lim  &  (Ygmt - Ygmta .* (Ygmt>0))<=lim*4  &  Ygmt>0), 'rec'); 
     Ygmt  = Ygmt .* (Ygmt>0 & abs( Ygmt - Ygmtc ) < 1); 
     Ygmta = cat_vol_smooth3X( Ygmta .* (Ygmt==0) + Ygmt , .5);
   end
+
+  % main limitation 
   if lim > 0
+    % #### the masking looks more complicated then necessary >> test simplification 
     Ygmtc  = cat_vol_approx(Ygmt .* ((Ygmt - Ygmta .* (Ygmt>0))<=lim  &  (Ygmt - Ygmta .* (Ygmt>0))<=lim*4  &  Ygmt>0), 'rec'); 
+    % #### maybe the filtering is here still a bit too strong >> .25 ? 
     Ygmtc  = cat_vol_smooth3X( min(Ygmta,Ygmtc),.5); % better
   else
     Ygmtc  = Ygmta; 
@@ -362,6 +382,8 @@ function Ygmtc = cleanupPBT(Ygmt,lim,lim2)
 end
 % ======================================================================
 function Yp0 = oneObject(Yp0, vx_vol, n)
+% oneObject. Remove addition objects for multiple threshold levels.
+
   if ~exist('n','var'), n = 10; end 
 
   for i = 1:n
@@ -403,17 +425,19 @@ function Yp0 = NBVC(Yp0,vx_vol)
   %Yp0    = max( min(1.5,Yp0) , Yp0 - max(0,Yd/10000 .* (Ymsk)) );
 end
 % ======================================================================
-function [Ypp, Ygmt] = sharpening(Ypp, Ygmt, vx_vol, extended)
-% sharpening. Reduce  
+function [Ypp, Ygmt] = sharpening(Ypp, Ygmt, vx_vol)
+% Sharpening. Enhance edge that would be lost in smoothing/reduction. 
+% In case of downsample enhancement of values was helping to reduce loss
+% of details in the downsampling process. 
 %
 %  [Ypp, Ygmt] = sharpening(Ypp, Ygmt, vx_vol)
 %
 
   Ypp0 = Ypp; 
  
-  smoothfactor = .02; 
-  smoothoffset = 1; 
-  modthickness = 2; 
+  smoothfactor = .02; % basic weighing 
+  smoothoffset = 1;   % correction for light understimation in the smoothing process
+  modthickness = 2;   % adaptation of the thickness map (region that are blurring should be thinner)
 
   % create a sharpend version of the Ypps that enphalize regions that were smoothed 
   Ypps = Ypp + smoothfactor*1*(Ypp - cat_vol_smooth3X(Ypp,1/mean(vx_vol)) + smoothoffset * 0.000) + ...
@@ -422,9 +446,6 @@ function [Ypp, Ygmt] = sharpening(Ypp, Ygmt, vx_vol, extended)
 
   % final smoothing to prepare surface reconstruction that also correct for WM topology issues 
   spm_smooth(Ypps,Ypps,.5/mean(vx_vol)); 
-  %if ~extended
-  %  Ypps = min(Ypp>0, max(0,Ypps)); % remove background artifacts  
-  %end
 
   % New version that only change mid-position values relevant for surface
   % creation. Although this avoid the old binary-like better thickness 
@@ -432,7 +453,7 @@ function [Ypp, Ygmt] = sharpening(Ypp, Ygmt, vx_vol, extended)
   Ypp  = min(Ypp,max(0.49,Ypps));
   Ypp  = max(Ypp,min(0.51,Ypps)); 
 
-  % adopt thicnkess
+  % adopt thickness
   Ymt  = smooth3(Ypp - Ypp0) * modthickness; 
   Ygmt = Ygmt + Ymt;  
 end
@@ -792,6 +813,7 @@ function Yp0 = myelincorrection(Yp0,vx_vol,opt)
     opt.verb   = 0; 
     opt.levels = 1; 
     opt.eidist = 0; 
+
     [Ycd, Ywd] = cat_vol_cwdist(Yp0, opt, vx_vol);
   
     % projection-based thickness mapping
