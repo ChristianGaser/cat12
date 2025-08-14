@@ -87,18 +87,10 @@ end
 %cmdspaces = strfind(cmd,' ');
 %[STT,RST] = system(fullfile(CATDir,cmd(1:cmdspaces(1)))); % just try the basic call
 if ismac && (ST == 137 || ST == 127)
-  web('https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)#Troubleshooting');
-  cat_io_cmd(sprintf('\nThe following commands will be executed as administrator to allow execution of CAT12 binaries and mex-files. \nPlease now type admin password to call sudo:\n'),'warning');
-  cat_io_cmd(sprintf('(You can also break that command here and run the commands that are listed on the open website under Troubleshooting manually.)\n'),'warning');
-  cmd = ['sudo xattr -r -d com.apple.quarantine ' CATDir];
+  cmd = ['xattr -r -d com.apple.quarantine ' CATDir];
   system(cmd); fprintf([cmd '\n']);
-  cmd = ['sudo find ' CATDir ' -name "*.mexmac*" -exec spctl --add {} \;'];
-  system(cmd); fprintf([strrep(cmd,'\','\\') '\n']);
-  cmd = ['sudo chmod a+x ' CATDir '/CAT*'];
+  cmd = ['chmod a+x ' CATDir '/CAT.mac*/CAT*'];
   system(cmd); fprintf([cmd '\n']);
-  cmd = ['sudo find ' CATDir ' -name "*.mexmac*" -exec xattr -d com.apple.quarantine {} \;'];
-  system(cmd); fprintf([strrep(cmd,'\','\\') '\n']);
-  [ST, RS] = system(cmd); % rerund command again
   return
 end
 

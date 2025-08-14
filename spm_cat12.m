@@ -81,15 +81,12 @@ catch
   elseif ismac 
     CATDir = fullfile(catdir);
     web('https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)#Troubleshooting');
-    cat_io_cmd(sprintf('\nThe following commands will be executed as administrator to allow execution of CAT12 binaries and mex-files.\n Please now type admin password to call sudo\n'),'warning');
+    cat_io_cmd(sprintf('\nThe following commands might be executed as administrator to allow execution of CAT12 binaries and mex-files.'),'warning');
     cat_io_cmd(sprintf('You can also break that command here and run the commands that are listed on the open website under Troubleshooting manually.\n'),'warning');
-    cmd = ['sudo xattr -r -d com.apple.quarantine ' CATDir];
+    cmd = ['xattr -r -d com.apple.quarantine ' CATDir];
     system(cmd); fprintf([cmd '\n']);
-    cmd = ['sudo find ' CATDir ' -name *.mexmac* -exec spctl --add {} \;'];
+    cmd = ['chmod a+x ' CATDir '/CAT.mac*/CAT*'];
     system(cmd); fprintf([cmd '\n']);
-    cmd = ['sudo chmod a+x ' CATDir '/CAT.mac*/CAT*'];
-    system(cmd); fprintf([cmd '\n']);
-    cmd = ['sudo find ' CATDir ' -name *.mexmac* -exec xattr -d com.apple.quarantine {} \;'];
   end
 end
 
@@ -303,7 +300,7 @@ if cat_io_matlabversion > 20212
   F = spm_figure('GetWin'); 
   spm_figure('clear',F); 
   Fpos = get(F,'Position'); 
-  h = imshow(imread(Pposter)); 
+  h = image(imread(Pposter)); 
   set(get(h,'Parent'),'Position',[0 0 1 1]);
   set(F,'Position',Fpos);
   
