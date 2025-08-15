@@ -619,7 +619,8 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
     else
       xmlavg.S = xml(1); 
     end
-    ppjob.opts    = xmlavg.S.parameter.opts;     
+    ppjob.opts    = xmlavg.S.parameter.opts;    
+    ppjob.extopts = xmlavg.S.parameter.opts;   
     
     % get catlong parameter setting 
     try
@@ -631,7 +632,7 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
         xmllong.S = xml(1); 
       end
       ppjob.lopts = xmllong.S.parameter;  
-      
+
       % update model
       longmodels = {'LC','LP','LA','LD','LPA'};
       %longmodels = {'LongCrossDevelopment','LongPlasticity','LongAging','LongDevelopment','LongPlasticityAging'};
