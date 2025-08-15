@@ -848,7 +848,7 @@ function long_report = conf_long_report(data_vol,data_xml,expert)
   if expert
     long_report.val     = {data_vol avg_vol data_surf avg_surf xmls timepoints opts output printlong};
   else
-    long_report.val     = {data_vol data_surf};
+    long_report.val     = {data_vol data_surf printlong};
   end  
   long_report.prog      = @cat_long_report;
   %long_report.vout      = @vout_long_report; 
