@@ -221,10 +221,11 @@ end
 
 
 nlevels = numel(pyramid);
+mp2rage = 0; 
 brainmask = [];
 
 % check whether reduce option is enabled for non-linear registration
-if all(isfinite(w_settings(:))) & reduce
+if all(isfinite(w_settings(:))) && reduce
   reduce = 0;
   use_brainmask = 0; 
   fprintf('Reducing bounding box is not supported for non-linear registration and will be disabled.\n');
@@ -354,9 +355,8 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
                 msk = smooth3(msk)>0.05; 
                 msk = cat_vol_morph(msk,'do',2,vx_vol); 
                 msk = cat_vol_morph(msk,'l',[10 0.1]); 
-                [msk,redB] = cat_vol_resize(mu,'reduceBrain',vx_vol,2,msk); 
-                clear msk
-            
+                [~,redB] = cat_vol_resize(mu,'reduceBrain',vx_vol,2,msk); 
+                
                 % correct mat information and dimensions
                 mati  = spm_imatrix(pyramid(level).mat); matio = mati; 
                 mati(1:3) = mati(1:3) + mati(7:9).*(redB.BB(1:2:end) - 1);
@@ -392,11 +392,49 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
                 PF = nam;
 
                 try
-                  [Ym, brainmask] = cat_long_APP(PF,PG,PB);
+                  % map brainmask or use brainsmask in cases of skull-stripped data
+                  [~, brainmask, ~, ~, ~, mp2rage] = cat_long_APP(PF,PG,PB);
                   brainmask(~isfinite(brainmask)) = 0;
                 catch
                   fprintf('Creation of brainmask failed. No brainmask will be used for final registration.\n');
-                  use_brainmask = 0;
+                  use_brainmask = 0; 
+                end
+
+                if mp2rage
+                % In case of MP2RAGE data we apply our MP2RAGE background 
+                % correction on the input data (that is a copy of the RAW)
+                % and finally recall this function.
+
+                  % mp2rage preprocessing options
+                  fprintf('Run MP2Rage preprocessing.\n\n')
+                  mp2job.ofiles            = {Nii(:).dat.fname}';
+                  mp2job.files             = {Nii(:).dat.fname}'; % list of MP2Rage images
+                  mp2job.headtrimming      = 0;        % trimming to brain or head (*0-none*,1-brain,2-head)
+                  mp2job.biascorrection    = 1;        % biascorrection (0-no,1-light(SPM60mm),2-average(SPM60mm+X,3-strong(SPM30+X)) #######
+                  mp2job.skullstripping    = 3;        % skull-stripping (0-no, 1-SPM, 2-optimized, 3-*background-removal*)
+                  mp2job.logscale          = 0;        % use log/exp scaling for more equally distributed
+                                                       % tissues (0-none, 1-log, -1-exp, inf-*auto*);
+                  mp2job.intnorm           = 0;        % contrast normalization using the tan of GM normed
+                                                       % values with values between 1.0 - 2.0 for light to 
+                                                       % strong adaptiong (0-none, 1..2-manuel, -0..-2-*auto*)
+                  mp2job.restoreLCSFnoise  = 1;        % restore values below zero (lower CSF noise)    
+                  mp2job.prefix            = '';       % filename prefix (strong with PARA for parameter
+                                                       % depending naming, e.g. ... ) 
+                  mp2job.spm_preprocessing = 2;        % do SPM preprocessing (0-no, 1-yes (if required), 2-always)
+                  mp2job.spm_cleanupfiles  = 1;        % remove temporary files
+                  mp2job.report            = 0;        % create a report
+                  mp2job.verb              = 1;        % be verbose (0-no,1-yes,2-details)
+                  
+                  % call mp2rage preprocessing
+                  cat_vol_mp2rage(mp2job);
+
+                  % load the corrected images 
+                  Nii = nifti({Nii(:).dat.fname}');
+
+                  % recalc this batch with the background corrected data and return 
+                  out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask, reduce, setCOM, isores); 
+                  return
+
                 end
 
                 % re-estimate mu using new dimensions
@@ -414,7 +452,7 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
                   M_avg     = pyramid(level).mat;
                   d         = pyramid(level).d;
   
-                  [mu,ss,nvox,D] = compute_mean(pyramid(level), param, ord);
+                  [mu,ss,~,D] = compute_mean(pyramid(level), param, ord);
                 end
                 
                 clear Ym
@@ -815,27 +853,45 @@ if any(strcmp('rigid',output))
     end
 end
 
+
+%% final processing and creation of the output  
 mu  = compute_mean(pyramid(1), param, ord);
 vol = get_transformed_images(pyramid(1), param, ord);
 
 % do some final bias correction between scans which is more effective and also masked
-bias_nits = 8;
-bias_fwhm = 60;
-bias_reg = 1e-6;
+bias_nits  = 8;
+bias_fwhm  = 60;
+bias_reg   = 1e-6;
 bias_lmreg = 1e-6;
 for i=1:numel(param)
   tmp_vol = vol(:,:,:,i);
-  ind0 = tmp_vol == 0;
-    
-  [tmp_vol th99] = cat_stat_histth(tmp_vol,[0.99 0.999]);
+  ind0 = tmp_vol == 0; % keep defacing/masking
+
+  % RD202508: remove extrem outliers in thickness phantom (Rusak et al., 2021)
+  %           there are still issues in the Rusak resuls 
+  if 1
+    minmax = [prctile(tmp_vol(:),0.1),prctile(tmp_vol(:),99.9)]; 
+    tmp_vol( tmp_vol < minmax(1) ) = minmax(1); 
+    tmp_vol( tmp_vol > minmax(2) ) = minmax(2); 
+    % median fitler to remove extrem outliers (in Rusak)
+    % simple scaling by mean and filtering 
+    avgint = cat_stat_nanmean(tmp_vol(:)) * 10; 
+    tmp_vol = cat_vol_median3(tmp_vol / avgint, ...
+      true(size(tmp_vol)), true(size(tmp_vol)), 1) * avgint;
+  end
+
+  % RD202508: old outlier removal try to avoid this as this may have side effects with the bias correction
+  [tmp_vol th99] = cat_stat_histth(tmp_vol,[0.999 0.999]);
   tmp_vol = tmp_vol - th99(1);
 
   % if > 0.5% of values are zero then set these areas back to zero
   if 100*sum(ind0(:))/numel(tmp_vol) > 0.5
-    tmp_vol(ind0) = 0;
+    tmp_vol(ind0) = 0; 
   end
-  vol(:,:,:,i) = tmp_vol;
-  vol(:,:,:,i) = bias_correction(mu,vol(:,:,:,i),[],pyramid(1),bias_nits,bias_fwhm,bias_reg,bias_lmreg);
+
+  % RD202508: Without BC the values in Rusak are extremly high scaled 
+  %           The bias correction therefore create similar intensities for each time points
+  vol(:,:,:,i) = bias_correction(mu,tmp_vol,[], pyramid(1), bias_nits, bias_fwhm, bias_reg, bias_lmreg);
 end
 
 % correct if minimum is < 0
@@ -843,7 +899,7 @@ min_vol = min(vol(:));
 if min_vol < 0
   for i=1:numel(param)
     tmp_vol = vol(:,:,:,i);
-    ind0 = tmp_vol == 0;
+    ind0 = tmp_vol == 0; % keep defacing/masking
     
     tmp_vol = tmp_vol - min_vol;
     
@@ -853,10 +909,22 @@ if min_vol < 0
     end
 
     vol(:,:,:,i) = tmp_vol;
-    
+
   end
 else
   if min_vol < 0, vol = vol - min_vol; end
+end
+
+% RD202508: Apply brainmask in case of skull-stripping
+%           Although this seems to be more correct an the images looks
+%           fine, the processing of the individual cases showed problems
+%           wheres just leaving it works fine, ie., the skull-stripping
+%           is detected in the average and the background masking just 
+%           applied. 
+if 0 %skullstripped % DO NOT USE !!! ... if then test with thickness phantom (Rusak et al. 2021)
+  for i=1:numel(param) 
+    vol(:,:,:,i) = vol(:,:,:,i) .* brainmask;    
+  end
 end
 
 if need_wimg
