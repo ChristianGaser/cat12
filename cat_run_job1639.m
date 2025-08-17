@@ -384,7 +384,7 @@ function cat_run_job1639(job,tpm,subj)
         YF    = spm_read_vols(VFn); 
         Oth   = cat_stat_nanmean(YF(YF(:)~=0 & YF(:)>cat_stat_nanmean(YF(:)))); 
         BGth  = median(YF(YF(:) < Oth/2)); 
-        YBG   = ~cat_vol_morph(~cat_vol_morph(YF==BGth,'lc',1),'lc',1); 
+        YBG   = ~cat_vol_morph(~cat_vol_morph(YF<=BGth,'lc',1),'lc',1); 
         Oth   = cat_stat_nanmean(YF(~YBG(:) & YF(:)>cat_stat_nanmean(YF(:)))); 
         F0vol = cat_stat_nansum(~YBG(:)) * prod(vx_vol) / 1000; 
         F0std = cat_stat_nanstd(YF(YF(:)>0.5*Oth & ~YBG(:))/Oth);
@@ -892,7 +892,7 @@ function cat_run_job1639(job,tpm,subj)
       %  of inoptimal settings (e.g. no SLC but possible large lesions).
       obj.image0 = spm_vol(job.channel(1).vols0{subj});
       Ysrc0      = spm_read_vols(obj.image0); 
-      Ylesion    = single(Ysrc0==0 | isnan(Ysrc0) | isinf(Ysrc0)); clear Ysrc0; 
+      Ylesion    = single(Ysrc0==0 | isnan(Ysrc0) | isinf(Ysrc0)); 
       Ylesion(smooth3(Ylesion)<0.5)=0; % general denoising 
       if any( obj.image0.dim ~= obj.image.dim )
         mat      = obj.image0.mat \ obj.image.mat;
@@ -909,9 +909,9 @@ function cat_run_job1639(job,tpm,subj)
       if ~ppe.affreg.skullstripped 
         [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0,'mask',-1)); clear Vmsk;  %#ok<ASGLU>
       else
-        Yb = smooth3(Ysrc~=ppe.affreg.skullstrippedBGth);
+        Yb = smooth3(Ysrc0~=ppe.affreg.skullstrippedBGth);
       end
-      Ylesion = Ylesion & ~cat_vol_morph(Yb<0.9,'dd',5); clear Yb; 
+      Ylesion = Ylesion & ~cat_vol_morph(Yb<0.9,'dd',5); clear Yb Ysrc0; 
       % check settings 
       % RD202105: in primates the data, template and affreg is often inoptimal so we skip this test  
       if sum(Ylesion(:))/prod(vx_vol)/1000 > 1 && ~(ppe.affreg.highBG || ppe.affreg.skullstripped) && strcmp('human',job.extopts.species)
@@ -1428,11 +1428,11 @@ function cat_run_job1639(job,tpm,subj)
        'PIPELINE is used! If it is was a high-resolution T1 image, \\\\n' ...
        'the initial segmentation might have failed, probably due \\\\n' ...
        'to alignment problems (please check the image orientation). \\\\n' ...
-       'In case of registration issues, try to change the following \\\\n ...' ...
+       'In case of registration issues, try to change the following \\\\n' ...
        'parameter indepently: \\\\n' ...
-       ' * "Affine Regularisation"             = "No regularisation" \\\\n ...' ...
-       ' * "Use center-of-mass to set origin"  = "No" \\\\n ... ' ...
-       ' * "Affine Preprocessing (APP)"        = "none" ']),1,[0 1],Tth);
+       ' * "Affine Regularisation"             = "No regularisation"; \\\\n' ...
+       ' * "Use center-of-mass to set origin"  = "No"; \\\\n ' ...
+       ' * "Affine Preprocessing (APP)"        = "none". ']),1,[0 1],Tth);
     cat_main(res,obj.tpm,job);
   else
     cat_main1639(res,obj.tpm,job);

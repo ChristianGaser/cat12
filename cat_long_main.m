@@ -173,7 +173,7 @@ catch
   avgLASWMHC  = 0; % 0-classical approach with LAS (0.5) and WMHC=2 (too WM) in both the avg as well as each timepoint
                    % (>> overcorrection)
                    % 1-new approach with 
-  printlong  = cat_get_defaults('extopts.print'); % create longitudinal subject report                  
+  printlong   = cat_get_defaults('extopts.print'); % create longitudinal subject report                  
 end
 
 if ~useprior && longTPM && ~( ~longmodel && longTPM )
@@ -936,19 +936,20 @@ if printlong % write at least long XML ... printlong %&& spm_get_defaults('job.e
           matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.smoothvol   = 3;
           matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.smoothsurf  = 12;
           matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.plotGMWM    = 1; 
-          matlabbatch{mbi}.spm.tools.cat.tools.long_report.opts.printlong   = printlong; 
           matlabbatch{mbi}.spm.tools.cat.tools.long_report.output.vols      = ~delete_temp;
           matlabbatch{mbi}.spm.tools.cat.tools.long_report.output.surfs     = ~delete_temp;
           matlabbatch{mbi}.spm.tools.cat.tools.long_report.output.xml       = ~delete_temp;
         end
+        matlabbatch{mbi}.spm.tools.cat.tools.long_report.printlong        = printlong; 
       end
     end
   end
 end
 
-%{
-if any(longreport) %&& spm_get_defaults('job.extopts.expertgui')>1  
-  for ci = 1:2 + write_CSF
+
+
+if any(longreport) % && spm_get_defaults('job.extopts.expertgui') > 1  
+  for ci = 1:2 % + write_CSF
     for modi = 1:2
       if longreport(ci) && mbfdef(modi,ci)>0
         if ( modi == 1 ) ||  ( modi == 2 && (longmodel==2 || longmodel==3) ) % allways print in modi 1 ! ... && (longmodel==1 || longmodel==3) )
@@ -977,7 +978,6 @@ if any(longreport) %&& spm_get_defaults('job.extopts.expertgui')>1
     end
   end
 end
-%}
 
 
 

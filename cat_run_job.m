@@ -914,7 +914,7 @@ end
       %  of inoptimal settings (e.g. no SLC but possible large lesions).
       obj.image0 = spm_vol(job.channel(1).vols0{subj});
       Ysrc0      = spm_read_vols(obj.image0); 
-      Ylesion    = single(Ysrc0==0 | isnan(Ysrc0) | isinf(Ysrc0)); clear Ysrc0; 
+      Ylesion    = single(Ysrc0==0 | isnan(Ysrc0) | isinf(Ysrc0)); 
       Ylesion(smooth3(Ylesion)<0.5)=0; % general denoising 
       if any( obj.image0.dim ~= obj.image.dim )
         mat      = obj.image0.mat \ obj.image.mat;
@@ -926,6 +926,17 @@ end
         Ylesion = Ylesionr>0.5; clear Ylesionr;
       end
       if exist('Ybg','var'), Ylesion(Ybg)=0; end % denoising in background
+      % use brainmask
+      VFa = VF; VFa.mat = Affine * VF.mat; %Fa.mat = res0(2).Affine * VF.mat;
+      if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
+      if ~ppe.affreg.skullstripped 
+        [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0,'mask',-1)); clear Vmsk;  %#ok<ASGLU>
+      else
+        Yb = smooth3(Ysrc0~=ppe.affreg.skullstrippedBGth);
+      end
+      Ylesion = Ylesion & ~cat_vol_morph(Yb<0.9,'dd',5); clear Yb Ysrc0; 
+      % check settings 
+      % RD202105: in primates the data, template and affreg is often inoptimal so we skip this test  
       if sum(Ylesion(:))/prod(vx_vol)/1000 > 1 && ~(ppe.affreg.highBG || ppe.affreg.skullstripped) && strcmp('human',job.extopts.species)
         fprintf('%5.0fs\n',etime(clock,stime)); stime = []; 
         if ~job.extopts.SLC
