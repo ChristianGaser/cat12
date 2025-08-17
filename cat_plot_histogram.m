@@ -344,6 +344,8 @@ if ~isempty(opt.ylim) && numel(opt.ylim) == 2
   xlim(opt.ylim)
 end
 
+grid minor
+
 if nargout
   varargout{1} = HP;
 

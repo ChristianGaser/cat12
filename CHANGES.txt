@@ -1,4 +1,48 @@
 ------------------------------------------------------------------------
+r2874 | gaser | 2025-08-17 20:52:31
+
+Changed paths:
+ M CAT.glnx86/CAT_Surf2Sphere
+ M CAT.glnx86/CAT_SurfCentral2Pial
+ M CAT.glnx86/CAT_SurfCorrectThicknessFolding
+ M CAT.glnx86/CAT_SurfDeform
+ M CAT.glnx86/CAT_SurfDistance
+ M CAT.glnx86/CAT_SurfReduce
+ M CAT.glnx86/CAT_SurfWarp
+ M CAT.glnx86/CAT_VolMarchingCubes
+ M CAT.glnx86/CAT_VolThicknessPbt
+ M CAT.maca64/CAT_Surf2Sphere
+ M CAT.maca64/CAT_SurfCentral2Pial
+ M CAT.maca64/CAT_SurfCorrectThicknessFolding
+ M CAT.maca64/CAT_SurfDeform
+ M CAT.maca64/CAT_SurfDistance
+ M CAT.maca64/CAT_SurfReduce
+ M CAT.maca64/CAT_SurfWarp
+ M CAT.maca64/CAT_VolMarchingCubes
+ M CAT.maca64/CAT_VolThicknessPbt
+ M CAT.maci64/CAT_Surf2Sphere
+ M CAT.maci64/CAT_SurfCentral2Pial
+ M CAT.maci64/CAT_SurfCorrectThicknessFolding
+ M CAT.maci64/CAT_SurfDeform
+ M CAT.maci64/CAT_SurfDistance
+ M CAT.maci64/CAT_SurfReduce
+ M CAT.maci64/CAT_VolMarchingCubes
+ M CAT.maci64/CAT_VolThicknessPbt
+ M CAT.w32/CAT_Surf2Sphere.exe
+ M CAT.w32/CAT_SurfCentral2Pial.exe
+ M CAT.w32/CAT_SurfCorrectThicknessFolding.exe
+ M CAT.w32/CAT_SurfDeform.exe
+ M CAT.w32/CAT_SurfDistance.exe
+ M CAT.w32/CAT_SurfReduce.exe
+ M CAT.w32/CAT_SurfWarp.exe
+ M CAT.w32/CAT_VolMarchingCubes.exe
+ M CAT.w32/CAT_VolThicknessPbt.exe
+ M CHANGES.txt
+ M cat_defaults.m
+ M cat_plot_histogram.m
+
+Changed: Compiled all CAT-Binaries.
+------------------------------------------------------------------------
 r2857 | gaser | 2025-07-30 13:17:28
 
 Changed paths:

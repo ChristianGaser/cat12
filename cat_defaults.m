@@ -253,7 +253,7 @@ cat.extopts.cat12atlas    = {fullfile(cat.extopts.pth_templates,'cat.nii')};    
 
 % surface options
 cat.extopts.pbtres         = 0.5; % internal resolution for thickness estimation in mm (default 0.5) 
-cat.extopts.SRP            = 42;  % surface reconstruction pipeline & self-intersection correction:
+cat.extopts.SRP            = 24;  % surface reconstruction pipeline & self-intersection correction:
                                   %           0/1 - CS1 without/with/with-optimized SIC
                                   %           20/21/22 - CS2 without/with/with-optimized SIC
                                   %           30 - CS3
