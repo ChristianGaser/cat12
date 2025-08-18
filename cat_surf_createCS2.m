@@ -73,8 +73,8 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
   def.LAB                 = cat_get_defaults('extopts.LAB');  % brain regions 
   def.pbtmethod           = 'pbtsimple';                      % projection-based thickness (PBT) estimation ('pbt2x' (with minimum setting), 'pbt2', or 'pbtsimple')
   def.sharpenCB           = 1;                                % sharpening function for the cerebellum (in development, RD2017-2019)
-  def.thick_measure       = 1;                                % 0-PBT; 1-Tfs (Freesurfer method using mean(TnearIS,TnearOS))
-  def.foldingcorrection   = 1;                                % tickness correction that is influence by folding
+  def.thick_measure       = 0;                                % 0-PBT; 1-Tfs (Freesurfer method using mean(TnearIS,TnearOS))
+  def.foldingcorrection   = 0;                                % tickness correction that is influence by folding
   def.thick_limit         = 5;                                % 5mm upper limit for thickness (same limit as used in Freesurfer)
   def.SRP                 = 2;                                % correction of surface collisions: 0 - none; 1 - SI, 2 - SIC with optimization
   def.surf_measures       = 1;                                % 0 - none, 1 - only thickness, 2 - expert maps (myelin,defects), 3 - developer (WM & CSF thicknes, ...),
@@ -1118,60 +1118,7 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
     % Test without surface registration - just a shortcut for manual tests! 
     if isscalar(opt.surf)
       cat_surf_createCS_fun('quickeval',V0,Vpp,Ymfs,Yppi,CS,P,Smat,res,opt,EC0,si,time_sr,2);
-
-      %{
-      %% only for test visualization
-      fprintf('\n');
- 
-      if 0 % opt.thick_measure == 1 % allways here 
-        cmd = sprintf('CAT_SurfDistance -mean -thickness "%s" "%s" "%s"',P(si).Ppbt,P(si).Pcentral,P(si).Pthick);
-        cat_system(cmd,opt.verb-3);
-        % apply upper thickness limit
-        facevertexcdata = cat_io_FreeSurfer('read_surf_data',P(si).Pthick);  
-        facevertexcdata(facevertexcdata > opt.thick_limit) = opt.thick_limit;
-        cat_io_FreeSurfer('write_surf_data',P(si).Pthick,facevertexcdata);  
-      end
- 
-      cat_surf_fun('white',P(si).Pcentral);
-      cat_surf_fun('pial',P(si).Pcentral);
-  
-      FSthick = cat_io_FreeSurfer('read_surf_data',P(si).Pthick); 
-      res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS', ...
-        loadSurf(P(si).Pcentral), cat_io_FreeSurfer('read_surf_data',P(si).Ppbt), cat_io_FreeSurfer('read_surf_data',P(si).Pthick), ...
-        Ymfs,Yppi,P(si).Pcentral,Smat.matlabIBB_mm,2,0);
-      CS2 = CS; CS2.cdata = facevertexcdata; H = cat_surf_render2(CS2);
-      cat_surf_render2('clim',H,[0 6]); 
-      cat_surf_render2('view',H,cat_io_strrep(opt.surf{si},{'lh','rh','ch'},{'right','left','back'})); 
-      cat_surf_render2('ColourBar',H,'on');
-      title(sprintf('CS2%d, nF=%0.0fk, EC=%d, Tpbt=%0.3f±%0.3f, Tfs=%0.3f±%0.3f, \n IE=%0.3f, PE=%0.3f, ptime=%0.0fs, time=%s', ...
-        opt.SRP, size(CS.faces,1)/1000, EC0, ...
-        mean( facevertexcdata ), std(facevertexcdata), mean( FSthick ), std(FSthick), ...
-        mean( [ res.(opt.surf{si}).createCS_final.RMSE_Ym_white,  res.(opt.surf{si}).createCS_final.RMSE_Ym_layer4,   res.(opt.surf{si}).createCS_final.RMSE_Ym_pial ] ) , ...
-        mean( [ res.(opt.surf{si}).createCS_final.RMSE_Ypp_white, res.(opt.surf{si}).createCS_final.RMSE_Ypp_central, res.(opt.surf{si}).createCS_final.RMSE_Ypp_pial ] ) , ...
-        etime(clock,time_sr), datetime))
-      fprintf('    Runtime:                             %0.0fs\n',etime(clock,time_sr)); 
-
-      % surfaces in spm_orthview
-      Po = P(si).Pm; if ~exist(Po,'file'); Po = V0.fname; end
-      if ~exist(Po,'file')  && exist([V0.fname '.gz'],'file'), Po = [V0.fname '.gz']; end
-      Porthfiles = ['{', sprintf('''%s'',''%s''', P(si).Ppial, P(si).Pwhite ) '}'];
-      Porthcolor = '{''-g'',''-r''}';  
-      Porthnames = '{''white'',''pial''}'; 
-      fprintf('  Show surfaces in orthview:  %s\n',spm_file(Po ,'link',...
-        sprintf('cat_surf_fun(''show_orthview'',%s,''%s'',%s,%s)',Porthfiles,Po,Porthcolor,Porthnames))) ;
-      fprintf('  Show surfaces in orthview:   %s | %s | %s | (%s) | %s \n', ...
-        spm_file([opt.surf{si} '.pbt'],'link', sprintf('H=cat_surf_display(''%s'');',P(si).Ppbt)), ...
-        spm_file([opt.surf{si} '.thick'],'link', sprintf('H=cat_surf_display(''%s'');',P(si).Pthick)), ...
-        spm_file('segmentation' ,'link', sprintf('cat_surf_fun(''show_orthview'',%s,''%s'',%s,%s)',Porthfiles,P(si).Pp0, Porthcolor,Porthnames)), ...
-        spm_file('ppmap'        ,'link', sprintf('cat_surf_fun(''show_orthview'',%s,''%s'',%s,%s)',Porthfiles,Vpp.fname, Porthcolor,Porthnames)), ...
-        spm_file('original'     ,'link', sprintf('cat_surf_fun(''show_orthview'',%s,''%s'',%s,%s)',Porthfiles,Po,        Porthcolor,Porthnames)));
-      
-
-      subtitle( strrep( spm_str_manip(P(si).Pcentral,'a90') ,'_','\_'))
-      fprintf('    Runtime:                             %0.0fs\n',etime(clock,time_sr)); 
-   %}
-      
-      %return
+      return
     end
     
     
@@ -1234,8 +1181,9 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
       end
       res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',loadSurf(P(si).Pcentral),cat_io_FreeSurfer('read_surf_data',P(si).Ppbt),facevertexcdata,Ymfs,Yppi,P(si).Pcentral,Smat.matlabIBB_mm,debug + (cat_get_defaults('extopts.expertgui')>1),cat_get_defaults('extopts.expertgui')>1);
     else % otherwise simply copy ?h.pbt.* to ?h.thickness.*
-      copyfile(P(si).Ppbt,P(si).Pthick,'f');
-  
+      facevertexcdata = cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm); 
+      cat_io_FreeSurfer('write_surf_data',P(si).Pthick,facevertexcdata);
+
       % final surface evaluation 
       res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',loadSurf(P(si).Pcentral),cat_io_FreeSurfer('read_surf_data',P(si).Ppbt),[],Ymfs,Yppi,P(si).Pcentral,Smat.matlabIBB_mm,debug,cat_get_defaults('extopts.expertgui')>1);
     
