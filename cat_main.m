@@ -497,7 +497,7 @@ if ~isfield(res,'spmpp')
   %  RD202101: There are differences by using only the new brainmask
   %  -------------------------------------------------------------------
   job.extopts.AMAPframing   = 1;
-  if 0
+  if 0 % ## AMAPsharpening ##
     % RD202509: EXPERIMENTAL: sharpening for AMAP to improve gyral structures in surface reconstruction 
     Ymi = Ymi + (Ymi - smooth3(Ymi)) / 2; 
   end

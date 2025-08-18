@@ -516,9 +516,35 @@ if ~isfield(res,'spmpp')
   %  ds('d2sm','',1,Ym,single(prob(:,:,:,1))/255/3 + single(prob(:,:,:,2))/255*2/3 + single(prob(:,:,:,3))/255,50);
   %  -------------------------------------------------------------------
   job.extopts.AMAPframing = 1;
-  if 0
-    % RD202509: EXPERIMENTAL: sharpening for AMAP to improve gyral structures in surface reconstruction 
-    Ymi = Ymi + (Ymi - smooth3(Ymi)) / 2; 
+  if 0 && T3th(2) < T3th(3) % ## AMAPsharpening in T1 ##
+    %% RD202509: EXPERIMENTAL: sharpening for AMAP to improve gyral structures in surface reconstruction 
+    % - improves some case but is worse for others 
+    %   maybe helpful in regions that too thick and if the quality is ok
+    %   difficult in thin regions 
+    % - correct only thick(er) regions
+    % - correct only cortical regions 
+    Yp0  = (single(Ycls{1})/255*2 + single(Ycls{2})/255*3 + single(Ycls{3})/255); % label map
+    Yct  = NS(Yl1,1) | NS(Yl1,3); 
+  
+    Ywd0 = cat_vbdist(single(Yp0>2.25),Yp0>1.25)/2 + cat_vbdist(single(Yp0>2.75),Yp0>1.25)/2; 
+    Ycd0 = cat_vbdist(single(Yp0<1.25),Yp0<2.75)/2 + cat_vbdist(single(Yp0<1.75),Yp0<2.75)/2; 
+  
+    % raw thickness maps
+    Ygmtw0 = cat_vol_pbtp( round(Yp0)   , Ywd0, Ycd0); Ygmtw0(Ygmtw0>1000) = 0; 
+    Ygmtc0 = cat_vol_pbtp( 4-round(Yp0) , Ycd0, Ywd0); Ygmtc0(Ygmtc0>1000) = 0; 
+    
+    Ygmtmin = min(Ygmtw0,Ygmtc0); Ygmtmin = cat_vol_approx(Ygmtmin); 
+    Ygmtmax = max(Ygmtw0,Ygmtc0); Ygmtmax = cat_vol_approx(Ygmtmax); 
+
+    Ywd0 = Ywd0 .* mean(vx_vol); Ygmtmin = Ygmtmin .* mean(vx_vol);
+    Ycd0 = Ycd0 .* mean(vx_vol); Ygmtmax = Ygmtmax .* mean(vx_vol);
+    
+    %% refine WM 
+    Ysc = max(2/3,Ymi) - smooth3(max(2/3,Ymi)); % WM focus
+    Ymi = Ymi.*(1-Yb) + min(Yb,Ymi + max(0,Ysc) .* (smooth3(Ymi)<2.75) .* max(0,min(4,Ygmtmax - Ygmtmin)*4) .* max(0,Ycd0-Ygmtmin/2) .* Yct); % only enhance gyri and only correct in regions that would become GM, ie. thicker) 
+  
+    %Ysc = min(2/3,Ymi) - smooth3(min(2/3,Ymi)); % CSF focus
+    %Ymi = Ymi + min(0,Ysc) .* (smooth3(Ymi)<2.1 & smooth3(Ymi)>1.5) .* max(0,Ygmtmax - Ygmtmin) .* max(0,Ywd0-1.5) .* Yct; % only enhance gyri and only correct in regions that would become GM, ie. thicker) 
   end
   [prob,indx,indy,indz] = cat_main_amap1639(Ymi,Yb,Yb0,Ycls,job,res);
   
