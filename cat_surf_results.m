@@ -774,7 +774,14 @@ switch lower(action)
     end
     
     if nargout, varargout{1} = y; end
-    
+  
+
+  case {'select_results','results_sel'}
+    try
+      select_results(varargin{1}); 
+    end
+
+
   %-ColourBar
   %======================================================================
   case {'colourbar', 'colorbar'}
@@ -1363,19 +1370,32 @@ switch lower(action)
       fparts.suffix = '';
     end
     
-    if iscell(fparts.outdir), fparts.outdir = fparts.outdir{1}; end
-    [pp,ff] = spm_fileparts( H.S1.name );
-    if isempty(fparts.outdir)
-      fparts.outdir = pp; 
+    %% loop over mulitple entries (automatic mode)? .. or just the current one (GUI mode)?
+    for rsi = 1:size(H.S1.name,1)
+      if rsi > 1
+        try
+          error('te')
+        catch e
+        end
+        %%
+        H.fixscl = 1; 
+        cat_surf_results('results_sel',rsi);
+      end
+      if iscell(fparts.outdir), fparts.outdir = fparts.outdir{1}; end
+      [pp,ff] = spm_fileparts( H.S1.name(rsi,:) );
+      if isempty(fparts.outdir)
+        fparts.outdir = pp; 
+      end
+      [tmp, pathname, ext] = spm_fileparts(pp);
+      filename = fullfile(fparts.outdir,[fparts.prefix pathname ext '_' ff fparts.suffix '.png']); %#ok<AGROW>
+      if ~exist(fparts.outdir,'dir')
+        mkdir(fparts.outdir)
+      end
+      save_image(1,1,filename);
+      varargout{1}{1} = filename; 
     end
-    [tmp, pathname, ext] = spm_fileparts(pp);
-    filename = fullfile(fparts.outdir,[fparts.prefix pathname ext '_' ff fparts.suffix '.png']); %#ok<AGROW>
-    if ~exist(fparts.outdir,'dir')
-      mkdir(fparts.outdir)
-    end
-    save_image(1,1,filename);
+    varargout{1} = char(varargout{1}); 
     
-    varargout{1} = filename; 
     
   otherwise   
     error('Unknown action "%s"!\n',action); 
