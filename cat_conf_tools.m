@@ -459,6 +459,7 @@ function imcalc = conf_vol_imcalc(prefix,expert)
   
   % remove old image field
   try
+    imcalc.val = imcalc.val(); 
     imcalc.val{1}     = images; 
     imcalc.val{2}     = prefix;
     imcalc.val{3}.help = {[...
@@ -848,7 +849,7 @@ function long_report = conf_long_report(data_vol,data_xml,expert)
   if expert
     long_report.val     = {data_vol avg_vol data_surf avg_surf xmls timepoints opts output printlong};
   else
-    long_report.val     = {data_vol data_surf printlong};
+    long_report.val     = {data_vol data_surf};
   end  
   long_report.prog      = @cat_long_report;
   %long_report.vout      = @vout_long_report; 
@@ -4527,7 +4528,7 @@ return;
 function dep = vout_mimcalc(varargin)
   dep            = cfg_dep;
   dep.sname      = 'Multi-subject Image Calculator';
-  dep.src_output = substruct('.','Pname');
+  dep.src_output = substruct('.','Pname'); 
   dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 return
 
