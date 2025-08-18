@@ -503,18 +503,26 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
             %%
             cati = find(cellfun('isempty',strfind(txt,'GM thickness (GMT): '))==0,1,'last');
             if ~isempty(cati) 
-              cathd   = textscan( txt{cati} ,'%s','Delimiter',':'); 
-              cathd   = textscan( cathd{1}{2} ,'%s','Delimiter',' ');
-              catgmt  = [cathd{1}(1) cathd{1}(3)]; 
+              try
+                cathd   = textscan( txt{cati} ,'%s','Delimiter',':'); 
+                cathd   = textscan( cathd{1}{2} ,'%s','Delimiter',' ');
+                catgmt  = [cathd{1}(1) cathd{1}(3)];
+              catch
+                catgmt  = {'unknown'};
+              end                
             else 
               catgmt  = {'unknown'};
             end
             %% surface intensity / position RMSE
             cati = find(cellfun('isempty',strfind(txt,'Surface intensity / position RMSE: '))==0,1,'last');
             if ~isempty(cati) 
-              cathd   = textscan( txt{cati}  ,'%s','Delimiter',':'); 
-              cathd   = textscan( cathd{1}{2},'%s','Delimiter',' ');
-              catSRMSE   = [cathd{1}(1) cathd{1}(3)]; 
+              try
+                cathd   = textscan( txt{cati}  ,'%s','Delimiter',':'); 
+                cathd   = textscan( cathd{1}{2},'%s','Delimiter',' ');
+                catSRMSE = [cathd{1}(1) cathd{1}(3)]; 
+              catch
+                catSRMSE = {'unknown'};
+              end
             else 
               catSRMSE  = {'unknown'};
             end
