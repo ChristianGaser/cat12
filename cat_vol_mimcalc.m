@@ -1,4 +1,4 @@
-function varagout = cat_vol_mimcalc(job)
+function out = cat_vol_mimcalc(job)
 % Just a small batch to run imcalc for multiple subject in the same,
 % e.g., to apply some function or general correction. 
 % ______________________________________________________________________
@@ -18,7 +18,7 @@ function varagout = cat_vol_mimcalc(job)
   job = cat_io_checkinopt(job,def);
 
   BIDSdirname = ['derivatives' filesep 'mimcalc'];
-  varagout = {};
+  out = struct();
   
   % spm banner
   if job.verb
@@ -64,10 +64,10 @@ function varagout = cat_vol_mimcalc(job)
     job2.outdir{1} = outdir{si}{ri}; 
     
     % call
-    out = my_spm_imcalc(job2);
+    out1 = my_spm_imcalc(job2);
     
     % display progress file 
-    vararout{1}.Pname{si} = out;
+    out.Pname{si,1} = out1.files{1};
   end
   
   % remove temporary files in case of BIDS
@@ -77,7 +77,7 @@ function varagout = cat_vol_mimcalc(job)
     end
   end
 
-  vararout{1}.Pname(cellfun('isempty',vararout{1}.Pname)==1) = [];  
+  out.Pname(cellfun('isempty',out.Pname)==1) = [];  
   
   
   % spm banner
