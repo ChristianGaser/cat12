@@ -1144,9 +1144,8 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
       cmd = sprintf('CAT_WarpSurf -steps 2 -avg -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"', ...
         P(si).Pcentral,P(si).Psphere,P(si).Pfsavg,P(si).Pfsavgsph,P(si).Pspherereg);
       cat_system(cmd,opt.verb-3);
+      fprintf('%5.0fs\n',etime(clock,stime));
     end  
-    fprintf('%5.0fs\n',etime(clock,stime));
-
     
     % create white and central surfaces
     stime = cat_io_cmd('  Create pial and white surface','g5','',opt.verb,stime); 
