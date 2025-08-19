@@ -120,6 +120,9 @@ function varargout = cat_io_xml2csv(job)
   
   % get fieldnames
   xfieldnames = getFN(xml,job.dimlim);
+  
+  % remove some critical fieldnames 
+  xfieldnames(contains(xfieldnames,{'.catlog','.software','.ratings_help','.atlas','.satlas','.LAB'})) = []; 
 
   % detect special XML cases 
   % - in case of the catROI(s)-files, we do not want to output the name/id
@@ -224,20 +227,34 @@ function varargout = cat_io_xml2csv(job)
   if job.conclusion
     avg = cell(1,size(tab,2)); 
     for ci = 1:size(tab,2) % for each column
-      if isnumeric(cell2mat(tab(existxml>0,ci))) % for all numberic fields
-        avg{1,ci} = mean( cell2mat(tab(existxml>0,ci)) ); % average existing 
-      else
-        % try to use spm_str_manip to extract similar starts/endings
-        try
-          txt =  unique( tab(existxml>0,ci) ); 
-          if numel(txt) > 1
-            [avg{1,ci},C] = spm_str_manip( avg{1,ci} ,'C');
-            if all(cellfun('isempty',C.m)); avg{1,ci}(strfind(avg{1,ci},'{,'):end) = []; end
-          else 
-            avg{1,ci} = char(txt);
+      try
+        if isnumeric(cell2mat(tab(existxml>0,ci))) % for all numberic fields
+          try
+            avg{1,ci} = cat_stat_mean( cell2mat(tab(existxml>0,ci)) ); % average existing
+          catch
+            avg{1,ci} = nan;
           end
-        catch
-          avg{1,ci} = ''; 
+        else
+          % try to use spm_str_manip to extract similar starts/endings
+          try
+            txt =  unique( tab(existxml>0,ci) ); 
+            if numel(txt) > 1
+              [avg{1,ci},C] = spm_str_manip( avg{1,ci} ,'C');
+              if all(cellfun('isempty',C.m)); avg{1,ci}(strfind(avg{1,ci},'{,'):end) = []; end
+            else 
+              avg{1,ci} = char(txt);
+            end
+          catch
+            avg{1,ci} = ''; 
+          end
+        end
+      catch
+        try
+          if isnumeric(tab{2,ci})
+            avg{1,ci} = nan;
+          else
+            avg{1,ci} = ''; 
+          end
         end
       end
     end
