@@ -390,53 +390,47 @@ function str = cat_main_reportstr(job,res,qa)
   % Image Quality measures:
   % --------------------------------------------------------------------
   str{2} =       struct('name', '\bfImage and Preprocessing Quality:','value',''); 
-  str{2} = [str{2} struct('name',' Resolution:','value',marks2str(qa.qualityratings.res_RMS,...
-    sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.res_RMS),mark2grad(qa.qualityratings.res_RMS))))];
-  str{2} = [str{2} struct('name',' Noise:','value',marks2str(qa.qualityratings.NCR,...
-    sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.NCR),mark2grad(qa.qualityratings.NCR))))];
-  str{2} = [str{2} struct('name',' Bias:','value',marks2str(qa.qualityratings.ICR,...
-    sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.ICR),mark2grad(qa.qualityratings.ICR))))]; % not important and more confusing 
-  str{2} = [str{2} struct('name','\bf Weighted average (IQR):','value',marks2str(qa.qualityratings.IQR,...
-    sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.IQR),mark2grad(qa.qualityratings.IQR))))];
-  if isfield(qa.qualitymeasures,'SurfaceEulerNumber') && ~isempty(qa.qualitymeasures.SurfaceEulerNumber)  && isfinite(qa.qualitymeasures.SurfaceEulerNumber)
-    if job.extopts.expertgui
-      if isfield(qa.qualitymeasures,'SurfaceDefectNumber') && ~isempty(qa.qualitymeasures.SurfaceDefectNumber) 
-        str{2} = [str{2} struct('name',' Surface Euler / defect number:','value',marks2str(qa.qualityratings.SurfaceEulerNumber,...
-                sprintf('%g / %0.2f', qa.qualitymeasures.SurfaceEulerNumber, qa.qualitymeasures.SurfaceDefectNumber)))]; 
-      else
-        str{2} = [str{2} struct('name',' Surface Euler number:','value',marks2str(qa.qualityratings.SurfaceEulerNumber,...
-                sprintf('%g', qa.qualitymeasures.SurfaceEulerNumber)))]; 
-      end        
-      
-            
-    else
-      str{2} = [str{2} struct('name',' Mean surface Euler number:','value',sprintf('%g', qa.qualitymeasures.SurfaceEulerNumber))]; 
-    end
-  end
-  
-  if isfield(qa.qualitymeasures,'SurfaceDefectArea') && ~isempty(qa.qualitymeasures.SurfaceDefectArea)  && isfinite(qa.qualitymeasures.SurfaceDefectArea)
-    if job.extopts.expertgui
-      str{2} = [str{2} struct('name',' Defect area:','value',marks2str(qa.qualityratings.SurfaceDefectArea,...
-                sprintf('%0.2f%%', qa.qualitymeasures.SurfaceDefectArea)))];
+  if job.extopts.expertgui >= 0 % RD202508: could maybe be shorter but lets start with this
+    % single ratings
+    str{2} = [str{2} struct('name',' Resolution (RMS):','value',marks2str(qa.qualityratings.res_RMS,...
+      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.res_RMS),mark2grad(qa.qualityratings.res_RMS))))];
+    str{2} = [str{2} struct('name',' Edge contrast rating (ECR):','value',marks2str(qa.qualityratings.res_ECR,...
+      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.res_ECR),mark2grad(qa.qualityratings.res_ECR))))];
+    str{2} = [str{2} struct('name',' Noise contrast rating (NCR):','value',marks2str(qa.qualityratings.NCR,...
+      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.NCR),mark2grad(qa.qualityratings.NCR))))];
+    str{2} = [str{2} struct('name',' Inhomogenity contrast rating (ICR):','value',marks2str(qa.qualityratings.ICR,...
+      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.ICR),mark2grad(qa.qualityratings.ICR))))]; % not important and more confusing
+    str{2} = [str{2} struct('name',' Fast Euler Characteristic (FEC):','value',marks2str(qa.qualityratings.FEC,...
+      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.FEC),mark2grad(qa.qualityratings.FEC))))]; 
+    % average rating
+    str{2} = [str{2} struct('name','\bf Weighted average (SIQR):','value',marks2str(qa.qualityratings.SIQR,...
+      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.SIQR),mark2grad(qa.qualityratings.SIQR))))];
+  else
+    % only average rating
+    str{2} = [str{2} struct('name','Weighted average (SIQR):','value',marks2str(qa.qualityratings.SIQR,...
+      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.SIQR),mark2grad(qa.qualityratings.SIQR))))];
+  end 
 
-      if isfield(qa.qualitymeasures,'SurfaceSelfIntersections') && ~isempty(qa.qualitymeasures.SurfaceSelfIntersections) && ...
-        ~isnan(qa.qualitymeasures.SurfaceSelfIntersections)
-        str{2}(end).name  = [str{2}(end).name(1:end-6)  ' / self-inters. size:'];
-        str{2}(end).value = [str{2}(end).value ' / ' marks2str(qa.qualityratings.SurfaceSelfIntersections,...
-                sprintf('%0.2f%%', qa.qualitymeasures.SurfaceSelfIntersections)) ];
-      end
-   
-    else
-      str{2} = [str{2} struct('name',' Defect area:','value',sprintf('%0.2f%%', qa.qualitymeasures.SurfaceDefectArea))];
-    end
-    
+  % additional surface measures
+  % Euler/defect number (all pipelines? - not in CS4)
+  if isfield(qa.qualitymeasures,'SurfaceEulerNumber') && ~isempty(qa.qualitymeasures.SurfaceEulerNumber)  && isfinite(qa.qualitymeasures.SurfaceEulerNumber)
+    str{2} = [str{2} struct('name',' Surface Euler number:','value',marks2str(qa.qualityratings.SurfaceEulerNumber,...
+            sprintf('%g', qa.qualitymeasures.SurfaceEulerNumber)))]; 
   end
-  
+  % self intersections (all pipelines?)
+  if job.extopts.expertgui && isfield(qa.qualitymeasures,'SurfaceSelfIntersections') && ~isempty(qa.qualitymeasures.SurfaceSelfIntersections) && ...
+    ~isnan(qa.qualitymeasures.SurfaceSelfIntersections)
+    str{2}(end).name  = [str{2}(end).name(1:end-6)  ' / self-inters. size:'];
+    str{2}(end).value = [str{2}(end).value ' / ' marks2str(qa.qualityratings.SurfaceSelfIntersections,...
+            sprintf('%0.2f%%', qa.qualitymeasures.SurfaceSelfIntersections)) ];
+  end
+  % Surface Intensity/Position
   if job.extopts.expertgui && isfield(qa.qualityratings,'SurfaceIntensityRMSE')
       str{2} = [str{2} struct('name',' Surface intensity / position RMSE:','value',[ marks2str( qa.qualityratings.SurfaceIntensityRMSE ,...
         sprintf('%0.3f', qa.qualitymeasures.SurfaceIntensityRMSE)) ' / ' ...
         marks2str( qa.qualityratings.SurfacePositionRMSE ,sprintf('%0.3f', qa.qualitymeasures.SurfacePositionRMSE) ) ] ) ];
   end
+
 
   % Subject Measures
   % --------------------------------------------------------------------
