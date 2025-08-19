@@ -1,4 +1,4 @@
-function cat_tst_BWP(Pmethod,Presdir0,fast)
+function cat_tst_BWP(Pmethod,Presdir0,datas,fast)
 % 
 % cat_tst_BWP(Pmethod,Presdir)
 %
@@ -18,47 +18,55 @@ function cat_tst_BWP(Pmethod,Presdir0,fast)
 %#ok<*SAGROW
 Presdir = fullfile(Presdir0,'BWP'); 
 if ~exist(Presdir,'dir'), mkdir(Presdir); end
+if ~exist('datas','var'), datas = {'thickness','pbt'}; end
      
-% find data
-datas = {'thickness','pbt'};
-tcase = {'100mm','mm'}; ti = 2-fast;  
+% find surface data (texture) for analysis
+tcase = {'100mm','mm'}; fasti = 2-fast;  
 for datasi = 1:numel(datas)
+  % get files from the Bestoff or Phantom (multiple resolutions) directoy 
   Pdata = cell(size(Pmethod,1),1); 
   for pi = 1:size(Pmethod,1)
-    if ti == 2  &&  exist( fullfile(Pmethod{pi,2},'07_Phantoms') ,'dir') 
-      Pdata{pi} = cat_vol_findfiles( fullfile(Pmethod{pi,2},'07_Phantoms') , sprintf( 'lh.%s.BWPT*%s' ,datas{datasi},tcase{ti}) );
+    if fasti == 2  &&  exist( fullfile(Pmethod{pi,2},'07_Phantoms') ,'dir') 
+      Pdata{pi} = cat_vol_findfiles( fullfile(Pmethod{pi,2},'07_Phantoms') , sprintf( 'lh.%s.BWPT*%s' ,datas{datasi},tcase{fasti}) );
     elseif exist( fullfile(Pmethod{pi,2},'01_Bestoff') ,'dir') 
-      Pdata{pi} = cat_vol_findfiles( fullfile(Pmethod{pi,2},'01_Bestoff') , sprintf( 'lh.%s.BWPT*%s' ,datas{datasi},tcase{ti}) );
+      Pdata{pi} = cat_vol_findfiles( fullfile(Pmethod{pi,2},'01_Bestoff') , sprintf( 'lh.%s.BWPT*%s' ,datas{datasi},tcase{fasti}) );
     elseif exist( Pmethod{pi,2} ,'dir')
-      Pdata{pi} = cat_vol_findfiles( Pmethod{pi,2} , sprintf( 'lh.%s.BWPT*%s',datas{datasi},tcase{ti}) );
+      Pdata{pi} = cat_vol_findfiles( Pmethod{pi,2} , sprintf( 'lh.%s.BWPT*%s',datas{datasi},tcase{fasti}) );
     else
       error('ERROR: Miss startfolder: %s\n',Pmethod{pi,2} );
     end
   end
   
+
   %% plot histogram
-  if ti == 1
+  if fasti == 1
+  % just one case
     Pdata = cellfun(@(x) char(x), Pdata, 'UniformOutput', false); 
     cph = cat_plot_histogram(char(Pdata), struct('color',cell2mat(Pmethod(:,3))));  
     yrange = round( get(get(cph(1),'Parent'),'YLim')*1.5 / 2,2)*2; 
   else
-    % extend version for multiple intput datasets per method (resolution levels)
+  % extend version for multiple intput datasets per method (resolution levels)
+
+    % get main plot to set up range
     Pdatatmp = [Pdata{:}]; Pdatatmp = Pdatatmp(1:6:end); 
     cph = cat_plot_histogram(char(Pdatatmp), struct('color',cell2mat(Pmethod(:,3))));  
+    ax0 = cph.Parent; fg0 = ax0(1).Parent; fg0.Visible = false;
     %yrange = round( get(get(cph(1),'Parent'),'YLim')/2,2); 
     yrange = [0. .03]; 
   
     for pi = 1:size(Pmethod,1)
-      %%
-      cphpi = cat_plot_histogram(char(Pdata{pi}), struct('color',jet(numel(Pdata{pi}))));
-   
-      orgax = get(cphpi(1),'parent'); 
+      %% get basic plot
+      cphpi{pi} = cat_plot_histogram(char(Pdata{pi}), struct('color',jet(numel(Pdata{pi}))));
+      ax1 = cphpi{pi}.Parent; fg1 = ax1(1).Parent; fg1.Visible = false;
+
+      % optimize plot
+      orgax = get(cphpi{pi}(1),'parent'); 
       delete(findobj(orgax.Children,'DisplayName',''))
       orgax.FontSize = 13;
-      hdata   = reshape( [cphpi(:).YData], numel( cphpi(1).YData ), numel(cphpi) )'; 
+      hdata   = reshape( [cphpi{pi}(:).YData], numel( cphpi{pi}(1).YData ), numel(cphpi{pi}) )'; 
       hdatamn = mean( hdata ); 
       hold on
-      pmn = plot( cphpi(1).XData , hdatamn,'-'); pmn.Color = [0 0 0]; pmn.LineWidth = 2;
+      pmn = plot( cphpi{pi}(1).XData , hdatamn,'-'); pmn.Color = [0 0 0]; pmn.LineWidth = 2;
       orgfig  = get(orgax(1),'parent'); 
       xlim(orgax,[0,4]); ylim(orgax,yrange); 
       orgax.XTick = .5:.5:3.5; 
@@ -66,28 +74,31 @@ for datasi = 1:numel(datas)
       ylabel(datas{datasi}); 
       xlabel('thickness (mm)'); 
       title(orgax,Pmethod(pi,1));
-      legend({'0.75 mm','1.00 mm','1.25 mm','1.50 mm','1.75 mm','2.00 mm','average'});
-      ff = sprintf('cat_tst_BWP_multires%d_plot3_%s_%s',ti-1,datas{datasi},Pmethod{pi,1});
+      legend({'0.7 mm','1.00 mm','1.25 mm','1.50 mm','1.75 mm','2.00 mm','average'});
+      ff = sprintf('cat_tst_BWP_multires%d_plot3_%s_%s',fasti-1,datas{datasi},Pmethod{pi,1});
       print(orgfig(1),fullfile(Presdir,ff),'-r300','-dpng');
 
-      cph(pi).XData = cphpi(:).XData;
+      cph(pi).XData = cphpi{pi}(:).XData;
       cph(pi).YData = mean( hdata );
       cph(pi).Color = Pmethod{pi,3};
 
-      close(get(get(cphpi(1),'parent'),'parent')); 
     end
 
   end  
 
 
 
-  %%
-  for fi = 1:2
+  %% create two figures:
+  %  fi==1 with subplots for all figures
+  %  fi==2 with all methods in one figure (not so usefull)
+  fi=1; si = 1; %#ok<NASGU>
+  for fi = 1 % :2
     %%
-    fh = figure(394); clf(fh)
+    fh = figure(394); clf(fh); set(fh,'Visible',false); 
     if fi==1 
       subplots = size(Pmethod,1); 
-      xt = ceil(size(Pmethod,1) / 4); 
+      xt = ceil(size(Pmethod,1) .^ .5 * 2/3); 
+      if size(Pmethod,1)>6 & size(Pmethod,1)<13, xt = 2; end
       tiledlayout(xt, ceil(size(Pmethod,1) /  xt),   ...
         'TileSpacing', 'compact', 'Padding', 'compact'); 
     else
@@ -99,7 +110,13 @@ for datasi = 1:numel(datas)
       if fi==1
         ax    = nexttile; hold on; 
         spi   = si;
-        copyobj( cph(si), ax); 
+        copyobj( cphpi{si}, ax); 
+        lh = ax.Children; 
+        mh = copyobj( cph(si), ax); 
+        set(lh,'Color',min(1,.85 + cph(si).Color*0.15))
+        set(mh,'LineWidth',1.5); 
+
+        close(get(get(cphpi{si}(1),'parent'),'parent')); 
       else
         % single print on one figure
         ax    = axes; 
@@ -119,6 +136,7 @@ for datasi = 1:numel(datas)
           plx.MarkerEdgeColor = plx.Color;
           plx.MarkerFaceColor = plx.Color;
         end
+
       end
   
      
@@ -139,7 +157,7 @@ for datasi = 1:numel(datas)
   
       %% estimate some numbers
       for pi = spi
-        if ti == 1
+        if fasti == 1
           cdata{pi}  = [
             cat_io_FreeSurfer('read_surf_data',Pdata{pi}); 
             cat_io_FreeSurfer('read_surf_data',strrep(Pdata{pi},[filesep 'lh'],[filesep 'rh']))]; %#ok<AGROW>
@@ -193,7 +211,7 @@ for datasi = 1:numel(datas)
               Pmethod(:,1),  cellstr(num2str(px(:,1),'%0.4f')),  cellstr(num2str(px(:,2),'%0.4f')),  cellstr(num2str(px(:,3),'%0.4f')), cellstr(num2str(mean(pk,2),'%0.4f')), ...
                              cellstr(num2str(pk(:,1),'%0.4f')),  cellstr(num2str(pk(:,2),'%0.4f')),  cellstr(num2str(pk(:,3),'%0.4f')),   ...
                              cellstr(num2str(mean(pkx,2),'%0.4f')), cellstr(num2str(pkx(:,1),'%0.4f')), cellstr(num2str(pkx(:,2),'%0.4f')), cellstr(num2str(pkx(:,3),'%0.4f'))  ];
-      ff = sprintf('cat_tst_BWP_multires%d_%s',ti-1,datas{datasi});
+      ff = sprintf('cat_tst_BWP_multires%d_%s',fasti-1,datas{datasi});
       cat_io_csv(fullfile(Presdir, sprintf('%s.csv',ff)),tab); 
   
       % print table
@@ -201,7 +219,7 @@ for datasi = 1:numel(datas)
       cell2table( tab(3:end,:) ,'VariableNames',strcat( strcat( tab(1,:)',tab(2,:)')') )
     end
 
-    ff = sprintf('cat_tst_BWP_multires%d_plot%d_%s',ti-1,fi,datas{datasi});
+    ff = sprintf('cat_tst_BWP_multires%d_plot%d_%s',fasti-1,fi,datas{datasi});
     print(fh,fullfile(Presdir,ff),'-r300','-dpng');
 
   end
