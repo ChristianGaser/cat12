@@ -43,12 +43,13 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   if isfield(res,'spmP0'), res = rmfield(res,'spmP0'); end
   for ti = 1:size(P,4)
     Pti = P(:,:,:,ti); 
+    pth = 0.05; 
     res.spmP0.hstbuckets    = 256/(hbuckets*2):256/hbuckets:256; 
-    res.spmP0.hst(ti,:)     = hist(Pti(Pti(:)>0),256/(hbuckets*2):256/hbuckets:256) / sum(Pti(:)>0); %#ok<HIST> 
+    res.spmP0.hst(ti,:)     = hist(Pti(Pti(:)>pth),256/(hbuckets*2):256/hbuckets:256) / sum(Pti(:)>pth); %#ok<HIST> 
     res.spmP0.hstsumi(ti,:) = 1 - cumsum(res.spmP0.hst(ti,:)); 
-    res.spmP0.mn(ti)        = cat_stat_nanmean(   single(Pti(Pti(:)>0)) / 255 ); 
-    res.spmP0.sd(ti)        = cat_stat_nanstd(    single(Pti(Pti(:)>0)) / 255 ); 
-    res.spmP0.md(ti)        = cat_stat_nanmedian( single(Pti(Pti(:)>0)) / 255 ); 
+    res.spmP0.mn(ti)        = cat_stat_nanmean(   single(Pti(Pti(:)>pth)) / 255 ); 
+    res.spmP0.sd(ti)        = cat_stat_nanstd(    single(Pti(Pti(:)>pth)) / 255 ); 
+    res.spmP0.md(ti)        = cat_stat_nanmedian( single(Pti(Pti(:)>pth)) / 255 ); 
     %res.spmP0.Q1(ti)       = cat_stat_nanmedian( single(Pti( Pti(:)<res.spmP0.md(ti)*255 ) ) / 255); 
     %res.spmP0.Q2(ti)       = cat_stat_nanmedian( single(Pti( Pti(:)>res.spmP0.md(ti)*255 ) ) / 255); 
   end
@@ -84,9 +85,9 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   %  HR075   Mean:   GM=0.54, WM=0.79, CSF=0.20  
   % 		         		   <0.5     <0.6      <0.13
 
-  if job.extopts.expertgui>1 && ...
-    ( any( res.spmP0.md(1:3) < [.4 .4 .02],2) || ...
-      any( res.spmP0.mn(1:3) < [.4 .5 .10],2) || ...
+  if job.extopts.expertgui > 1 && ...
+    ( any( res.spmP0.md(1:3) < [.5 .5 .01],2) || ...
+      any( res.spmP0.mn(1:3) < [.5 .5 .10],2) || ...
       any( any( res.spmP0.hstsumi(1:3,round(hbuckets*[.25,.50,.75])) < [0.6 0.5 0.4; 0.8 0.7 0.6; 0.5 0.2 0.05 ] )) )
       cat_io_addwarning('cat_main_updateSPM1639:lowSPMseg',...
         sprintf(['Low SPM segmentation quality with larger areas of mixed tissues (smaller=worse). \\\\n' ...
