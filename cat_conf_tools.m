@@ -1667,8 +1667,8 @@ function qa = conf_vol_qa(expert,outdir)
   data.tag        = 'images';
   data.name       = 'Images';
   data.help       = {'Select images that should be evaluated.'};
-  data.filter     = 'image';
-  data.ufilter    = '.*';
+  data.filter     = 'any'; 
+  data.ufilter    = '.*.nii';
   data.num        = [1 Inf];  
   
   catlab          = data; 
@@ -1677,7 +1677,10 @@ function qa = conf_vol_qa(expert,outdir)
   catlab.name     = 'Default with CAT label map';
   catlab.help     = {['Select CAT label map with brain tissues (p0*.nii).  Also label maps created by other tissue segmentations can be used, ' ...
     'as long the following labeling is used: CSF=1, GM=2, and WM=3 with optinal intermediate PVE values (e.g., 2.32 for 68% GM and 32% WM).  ']};
-  
+  catlab.num      = [0 Inf]; 
+  catlab.filter   = 'any'; 
+  catlab.ufilter  = '.*.nii';
+
   catsegp         = data; 
   catsegp.ufilter = '^p1.*';
   catsegp.tag     = 'catp1'; 
