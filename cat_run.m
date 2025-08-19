@@ -479,16 +479,16 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
             end
             
             % search for the end entry "Image Quality Rating (IQR): ... " to get IQR 
-            cati = find(cellfun('isempty',strfind(txt,'Image Quality Rating (IQR): '))==0,1,'last');
+            cati = find(cellfun('isempty',strfind(txt,'Structural Image Quality Rating (SIQR): '))==0,1,'last');
             if ~isempty(cati) 
-              cathd   = textscan( txt{cati} ,'%s%s%s%s%s%s%s','Delimiter',' ');
-              catiqr  = [cathd{6} cathd{7}]; 
+              cathd   = textscan( txt{cati} ,'%s%s%s%s%s%s%s%s','Delimiter',' ');
+              catiqr  = [cathd{7} cathd{8}]; 
             else 
               catiqr = {'unknown'};
             end
           
             %% search for GMV and GMT
-            cati = find(cellfun('isempty',strfind(txt,'GM volume (GMV): '))==0,1,'last');
+            cati = find(cellfun('isempty',strfind(txt,'Relative gray matter volume (GMV/TIV): '))==0,1,'last');
             if ~isempty(cati) 
               cathd   = textscan( txt{cati} ,'%s','Delimiter',':'); 
               cathd   = textscan( cathd{1}{2} ,'%s','Delimiter',' ');
@@ -501,7 +501,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
               catrgmv = {'unknown'};
             end
             %%
-            cati = find(cellfun('isempty',strfind(txt,'GM thickness (GMT): '))==0,1,'last');
+            cati = find(cellfun('isempty',strfind(txt,'Gray matter thickness (GMT): '))==0,1,'last');
             if ~isempty(cati) 
               try
                 cathd   = textscan( txt{cati} ,'%s','Delimiter',':'); 
@@ -679,12 +679,12 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
                 cat_io_cprintf(col,sprintf('IQR=%s',strrep(catiqr{1},'%','%%')));  
               
                 % add GMV - colors only for developer
-                if job.extopts.expertgui > 1 && ~strcmp(catgmt{1},'unknown')
+                if job.extopts.expertgui >= 1 && ~strcmp(catgmt{1},'unknown')
                   col = colorgmt(GMC,str2double(catrgmv{3}) / 1200 * 2.5); 
                 else
                   col = [0 0 0];
                 end
-                if job.extopts.expertgui > 0 
+                if job.extopts.expertgui >= 0 
                   try 
                     cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('TIV=%4.0fcm%s',...
                       str2double(catrgmv{3}),'3'));  
@@ -703,10 +703,10 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
                   col = [0 0 0];
                 end
                 kcol = [0.5 0.5 0.5]; % color for comma
-                if job.extopts.expertgui > 0 && ~strcmp(catgmt{1},'unknown')
+                if job.extopts.expertgui >= 0 && ~strcmp(catgmt{1},'unknown')
                   cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('rGMV=%s',strrep(catrgmv{1},'%','%%')));  
                 end
-                if job.extopts.expertgui > 0 && ~strcmp(catgmt{1},'unknown')
+                if job.extopts.expertgui >= 0 && ~strcmp(catgmt{1},'unknown')
                   cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('GMT=%s',strrep(catgmt{1},'%','%%')));  
                 end
 

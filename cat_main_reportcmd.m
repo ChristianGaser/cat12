@@ -52,7 +52,7 @@ function cat_main_reportcmd(job,res,qa)
     floor(round(etime(clock,res.stime))/60),mod(round(etime(clock,res.stime)),60));
   
   % image quality (just use real to avoid some rare problems with irrational values that should not occur anymore)
-  cat_io_cprintf(color(QMC,real(qa.qualityratings.IQR)), sprintf('Image Quality Rating (IQR):  %5.2f%%%% (%s)\n',...
+  cat_io_cprintf(color(QMC,real(qa.qualityratings.SIQR)), sprintf('Structural Image Quality Rating (SIQR):  %5.2f%%%% (%s)\n',...
     mark2rps(real(qa.qualityratings.IQR)),mark2grad(real(qa.qualityratings.IQR))));
   
   % processing quality
@@ -67,10 +67,10 @@ function cat_main_reportcmd(job,res,qa)
     else
       col = [0 0 0];
     end
-    cat_io_cprintf(col, sprintf('GM volume (GMV):             %5.2f%%%% (%5.2f / %5.2f ml)\n',...
+    cat_io_cprintf(col, sprintf('Relative gray matter volume (GMV/TIV):   %5.2f%%%% (%5.2f / %5.2f ml)\n',...
       qa.subjectmeasures.vol_rel_CGW(2)*100 , qa.subjectmeasures.vol_abs_CGW(2) , qa.subjectmeasures.vol_TIV ));
     if isfield(qa.subjectmeasures,'dist_thickness')
-      cat_io_cprintf(col, sprintf('GM thickness (GMT):          %5.2f %s %4.2f mm\n',...
+      cat_io_cprintf(col, sprintf('Gray matter thickness (GMT):           %5.2f %s %4.2f mm\n',...
          qa.subjectmeasures.dist_thickness{1}(1), native2unicode(177, 'latin1'), qa.subjectmeasures.dist_thickness{1}(2) ) );
     end
   end
