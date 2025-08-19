@@ -273,8 +273,13 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
       
       % SIQR is the successor of IQR and also uses the new edge-based resolution rating 
       try
-        QAM.qualityratings.SIQR = rms([QAM.qualityratings.NCR  QAM.qualityratings.ICR  ...
-          QAM.qualityratings.res_RMS  QAM.qualityratings.res_ECR  QAM.qualityratings.FEC],4);   
+        if isfield(QAM.qualityratings,'FEC')
+          QAM.qualityratings.SIQR = rms([QAM.qualityratings.NCR  QAM.qualityratings.ICR  ...
+            QAM.qualityratings.res_RMS  QAM.qualityratings.res_ECR  QAM.qualityratings.FEC],4);   
+        else
+          QAM.qualityratings.SIQR = rms([QAM.qualityratings.NCR  QAM.qualityratings.ICR  ...
+            QAM.qualityratings.res_RMS  QAM.qualityratings.res_ECR],4);   
+        end
         % further test cases
       catch
         QAM.qualityratings.SIQR = nan; 
