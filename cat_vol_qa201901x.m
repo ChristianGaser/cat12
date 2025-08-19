@@ -247,7 +247,18 @@ function varargout = cat_vol_qa201901x(action,varargin)
         Vo  = spm_vol(varargin{2});
 %        if strcmpi(spm_check_version,'octave'), warning on; end
         evalc('Yo  = single(spm_read_vols(Vo))');    
-        Ym  = varargin{3}; 
+        if 0
+        % this can cause problems by the intensity normalisation
+        % it would also be different to processing via the QC batch
+          Ym  = varargin{3};
+        else
+          Ym = Yo;
+          Ym(isnan(Yp0) | isinf(Yp0)) = 0; 
+          Yw  = Yp0>2.95 | cat_vol_morph( Yp0>2.25 , 'e'); 
+          Yb  = cat_vol_approx( Ym .* Yw + Yw .* min(Ym(:)) ) - min(Ym(:)); 
+          %Yb  = Yb / mean(Ym(Yw(:)));
+          Ym  = Ym ./ max(eps,Yb); 
+        end
         res = varargin{4};
         V   = res.image;
         species = varargin{5};
@@ -784,7 +795,7 @@ function varargout = cat_vol_qa201901x(action,varargin)
               cat_stat_nanmedian(Ym(Yp0toC(Yp0(:),2)>0.9)) ...
               cat_stat_nanmedian(Ym(Yp0toC(Yp0(:),3)>0.9))];
       
-      newNC = 1; 
+      newNC = 1;
       if newNC
         %% new more accurate approach
         noise  = max(0,min(1,cat_stat_nanstd(Ym(Yp0(:)>2.9)) / min(abs(diff(T1th)))));
@@ -851,11 +862,13 @@ function varargout = cat_vol_qa201901x(action,varargin)
       QAS.qualitymeasures.FEC = estimateFEC(Yp0, vx_vol, Ymm, V);
 
       
-      % bias correction of the original input image 
-      Yi  = Yo ./ cat_stat_nanmedian(Yo(Ywm(:))) ./ Ym; 
-      Yic = cat_vol_localstat(Yi,Yi>0,1,4); Yi(Yic>.2) = 0; 
+      % bias correction of the original input image
+      Yi  = Yo ./ cat_stat_nanmedian(Yo(Ywm(:))) ./ Ym;
+      Yi(isnan(Yi) | Yi > 10 | Yi < 0) = 0; % no neg. values to avoid problems in MP2Rage
+      Yic = cat_vol_localstat(Yi,Yi>0,1,4); Yi(Yic>.2) = 0;
       Yw  = cat_vol_approx(Yi,'rec'); 
-      Ymx = Yo ./ Yw; 
+      Ymx = Yo ./ Yw;
+      Ymx = Ymx ./ cat_stat_nanmedian(Ymx(Ywm(:))); % final normalisation 
 
 
       %% low resolution tissue intensity maps (smoothing)
