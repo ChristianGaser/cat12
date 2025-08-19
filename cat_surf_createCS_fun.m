@@ -28,6 +28,8 @@ function varargout = cat_surf_createCS_fun(action,varargin)
     case 'fillVentricle'
       [varargout{1},varargout{2}] = fillVentricle(varargin{:});
    
+    case 'setupprior'
+      varargout{1} = setupprior(varargin{:});
   end
 end
 %=======================================================================
@@ -310,7 +312,36 @@ function evalProcessing(res,opt,P,V0)
 
   end
 end
+%=======================================================================
+function useprior = setupprior(opt,surffolder,P,si)
+%setupprior. prepare longitidunal files
 
+  % use surface of given (average) data as prior for longitudinal mode
+  if isfield(opt,'useprior') && ~isempty(opt.useprior) 
+    % RD20200729: delete later ... && exist(char(opt.useprior),'file') 
+    % if it not exist than filecopy has to print the error
+    [pp1,ff1] = spm_fileparts(opt.useprior);
+    % correct '../' parts in directory for BIDS structure
+    [stat, val] = fileattrib(fullfile(pp1,surffolder));
+    if stat, pp1_surffolder = val.Name; else, pp1_surffolder = fullfile(pp1,surffolder);  end
+    
+    % try to copy surface files from prior to individual surface data 
+    useprior = 1;
+    useprior = useprior & copyfile(fullfile(pp1_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff1)),P(si).Pcentral,'f');
+    useprior = useprior & copyfile(fullfile(pp1_surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff1)),P(si).Psphere,'f');
+    useprior = useprior & copyfile(fullfile(pp1_surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff1)),P(si).Pspherereg,'f');
+    
+    if ~useprior
+      warn_str = sprintf('Surface files for %s not found. Move on with individual surface extraction.\n',pp1_surffolder);
+      fprintf('\nWARNING: %s',warn_str);
+      cat_io_addwarning('cat_surf_createCS4:noPiorSurface', warn_str);
+    else
+      fprintf('\n  Use existing average surface as prior and thus skip unnecessary processing steps:\n    %s\n',pp1_surffolder);
+    end      
+  else
+    useprior = 0;
+  end
+end
 
 
 

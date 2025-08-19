@@ -221,6 +221,10 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
   % main loop for each surface structure 
   for si=1:numel(opt.surf)
 
+    % prepare longitudinal case if required 
+    useprior = cat_surf_createCS_fun('setupprior',opt,surfdir,P,si);
+
+    %{
     % use surface of given (average) data as prior for longitudinal mode
     if isfield(opt,'useprior') && ~isempty(opt.useprior) 
       % RD20200729: delete later ... && exist(char(opt.useprior),'file') 
@@ -251,6 +255,7 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
     else
       useprior = 0;
     end
+    %}
     
 
     %% reduce for object area
@@ -414,6 +419,7 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
     if useprior 
       fprintf('\n');
       stime = cat_io_cmd('  Load and refine subject average surface','g5','',opt.verb); %if opt.verb>2, fprintf('\n'); end
+      CS  = loadSurf(P(si).Pcentral); 
     else
       stime = cat_io_cmd('  Create initial surface','g5','',opt.verb); %if opt.verb>2, fprintf('\n'); end
     
@@ -1139,8 +1145,7 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
         P(si).Pcentral,P(si).Psphere,P(si).Pfsavg,P(si).Pfsavgsph,P(si).Pspherereg);
       cat_system(cmd,opt.verb-3);
     end  
-    
-    if ~useprior, fprintf('%5.0fs\n',etime(clock,stime)); end
+    fprintf('%5.0fs\n',etime(clock,stime));
 
     
     % create white and central surfaces
