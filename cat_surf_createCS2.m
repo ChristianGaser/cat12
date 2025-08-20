@@ -221,41 +221,12 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
   % main loop for each surface structure 
   for si=1:numel(opt.surf)
 
+    % print something
+    if si==1, fprintf('\n'); end
+    fprintf('%s:\n',opt.surf{si});
+    
     % prepare longitudinal case if required 
     useprior = cat_surf_createCS_fun('setupprior',opt,surfdir,P,si);
-
-    %{
-    % use surface of given (average) data as prior for longitudinal mode
-    if isfield(opt,'useprior') && ~isempty(opt.useprior) 
-      % RD20200729: delete later ... && exist(char(opt.useprior),'file') 
-      % if it not exist than filecopy has to print the error
-      priorname = opt.useprior;
-      [pp1,ff1] = spm_fileparts(priorname);
-      % correct '../' parts in directory for BIDS structure
-      [stat, val] = fileattrib(fullfile(pp1,surffolder));
-      if stat
-        pp1_surffolder = val.Name;
-      else
-        pp1_surffolder = fullfile(pp1,surffolder);
-      end
-      
-      % try to copy surface files from prior to indivudal surface data 
-      useprior = 1;
-      useprior = useprior & copyfile(fullfile(pp1_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff1)),P(si).Pcentral,'f');
-      useprior = useprior & copyfile(fullfile(pp1_surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff1)),P(si).Psphere,'f');
-      useprior = useprior & copyfile(fullfile(pp1_surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff1)),P(si).Pspherereg,'f');
-      
-      if ~useprior
-        warn_str = sprintf('Surface files for %s not found. Move on with individual surface extraction.\n',pp1_surffolder);
-        fprintf('\nWARNING: %s',warn_str);
-        cat_io_addwarning('cat_surf_createCS2:noPiorSurface', warn_str);
-      else
-        fprintf('\nUse existing surface as prior and thus skip many processing steps:\n%s\n',pp1_surffolder);
-      end      
-    else
-      useprior = 0;
-    end
-    %}
     
 
     %% reduce for object area
@@ -265,9 +236,6 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
       case {'cb'},  Ymfs = Ymf .* (Ya>0) .*   NS(Ya,opt.LAB.CB); Yside = true(size(Ymfs)); % new full cerebellum reconstruction
     end 
    
-    % print something
-    if si==1, fprintf('\n'); end
-    fprintf('%s:\n',opt.surf{si});
     
     % check for cerebellar processing  
     iscerebellum = strcmp(opt.surf{si},'cb');
