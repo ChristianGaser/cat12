@@ -252,6 +252,13 @@ function varargout = cat_vol_qa201901x(action,varargin)
         % it would also be different to processing via the QC batch
           Ym  = varargin{3};
         else
+          if any( size(Yo) ~= size(varargin{1}) )
+          %% back to orginal resolution 
+            Vp0i = varargin{4}.image; Vp0i.fname = 'tmp'; 
+            Vp0i.dat = varargin{1}; 
+            Vp0 = Vo; Vp0.fname = ''; Vp0.dat = zeros(Vp0.dim); 
+            [~,Yp0] = cat_vol_imcalc(Vp0i,Vp0,'i1',struct('interp',2,'verb',0));
+          end
           Ym = Yo;
           Ym(isnan(Yp0) | isinf(Yp0)) = 0; 
           Yw  = Yp0>2.95 | cat_vol_morph( Yp0>2.25 , 'e'); 
