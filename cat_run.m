@@ -676,7 +676,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
 
                 % add IQR
                 col = color(QMC,rps2mark( str2double( catiqr{1}(1:end-1) )));
-                cat_io_cprintf(col,sprintf('IQR=%s',strrep(catiqr{1},'%','%%')));  
+                cat_io_cprintf(col,sprintf('SIQR=%s',strrep(catiqr{1},'%','%%')));  
               
                 % add GMV - colors only for developer
                 if job.extopts.expertgui >= 1 && ~strcmp(catgmt{1},'unknown')
