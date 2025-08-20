@@ -197,9 +197,12 @@ function cat_io_report(job,qa,subj,createerr)
       qa.qualitymeasures.res_vx_voli = nan(1,3);
     end
     qa.qualityratings.res_RMS      = mean(qa.qualitymeasures.res_vx_vol.^2).^0.5;
+    qa.qualityratings.res_ECR      = nan; 
     qa.qualityratings.NCR          = nan; 
+    qa.qualityratings.FEC          = nan; 
     qa.qualityratings.ICR          = nan; 
     qa.qualityratings.IQR          = nan;
+    qa.qualityratings.SIQR         = nan;
     qa.subjectmeasures.EC_abs      = nan;
     qa.subjectmeasures.vol_abs_CGW = nan(1,4);
     qa.subjectmeasures.vol_rel_CGW = nan(1,4);

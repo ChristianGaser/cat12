@@ -252,7 +252,7 @@ function varargout = cat_vol_qa201901x(action,varargin)
         % it would also be different to processing via the QC batch
           Ym  = varargin{3};
         else
-          if any( size(Yo) ~= size(varargin{1}) )
+          if any( size(Yo) ~= size(Yp0) )
           %% back to orginal resolution 
             Vp0i = varargin{4}.image; Vp0i.fname = 'tmp'; 
             Vp0i.dat = varargin{1}; 
