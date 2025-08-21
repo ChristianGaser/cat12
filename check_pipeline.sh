@@ -277,7 +277,8 @@ get_release ()
 run_pipeline ()
 {
   
-  echo PID is $$
+  PID=$$
+  echo PID is $PID
   
   # set ROI output and surface output
   if [ $volumes_only -eq 0 ]; then
@@ -308,7 +309,7 @@ run_pipeline ()
       ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh -m ${matlab} ${str_surf} ${bg_flag_long} ${calc_tmp}/long/*.[in][mi][gi] 
     fi
   fi
-  
+    
 }
 
 ########################################################
@@ -430,10 +431,10 @@ postprocess ()
   fi
   
   # prepare renderview if tool is found and surface processing is enabled
-  if ([ ! -z `which render_surf.sh` ] && [ ! -z `which CAT_View` ]) && [ $volumes_only -eq 0 ]; then
+  if ([ ! -z `which CAT_View_Thickness_ui` ]) && [ $volumes_only -eq 0 ]; then
     mkdir -p ${proc_dir}/check_r${revision_cat}/surf
     ln -s ${proc_dir}/check_r${revision_cat}/long/surf/* ${proc_dir}/check_r${revision_cat}/surf/ >/dev/null 2>&1
-    render_surf.sh -range 0 6 ${proc_dir}/check_r${revision_cat}/surf
+    CAT_View_Thickness_ui -output -range 1 5 ${proc_dir}/check_r${revision_cat}/surf/lh.central.*
     mv check_r${revision_cat}*.png ${proc_dir}/ >/dev/null 2>&1
     scp -q -P $PORT ${proc_dir}/check_r${revision_cat}*.png $scp_target
   else
@@ -515,8 +516,7 @@ EXAMPLE:
 USED FUNCTIONS:
    CAT12 toolbox
    SPM12
-   render_surf.sh
-   image_matrix.sh
+   CAT_View_Thickness_ui
 
 This script was written by Christian Gaser (christian.gaser@uni-jena.de).
 
