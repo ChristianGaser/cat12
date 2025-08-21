@@ -116,7 +116,7 @@ for i = 1:n
 end
 
 if n == 2
-  if length(cdata{1}(:)) == length(cdata{2}(:))
+  if (length(cdata{1}(:)) == length(cdata{2}(:)) && (size(cdata{1},1) == size(cdata{2},1)) && (size(cdata{1},2) == size(cdata{2},2)))
     
     fig = figure(11);
     set(fig,'MenuBar', 'none', 'Position',[100,0,500,500]);
