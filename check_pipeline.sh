@@ -20,6 +20,7 @@ proc_dir=$PWD
 bg_flag=" -fg -p 1"
 bg_flag_long=" -fg"
 bg=0
+do_scp=1
 postprocess_only=0
 volumes_only=0
 scp_target="dbm.neuro.uni-jena.de:/volume1/web/check_pipeline/"
@@ -117,6 +118,10 @@ parse_args ()
       --no-surf* | -ns*)
           exit_if_empty "$optname" "$optarg"
           volumes_only=1
+          ;;
+      --no-scp* | -np*)
+          exit_if_empty "$optname" "$optarg"
+          do_scp=0
           ;;
       -h | --help | -v | --version | -V)
           help
@@ -364,7 +369,9 @@ postprocess ()
         echo Finalize $subj with revision $revision_cat
         
         # get current csv files from dbm server
-        scp -q -P $PORT ${scp_target}/${subj}*csv .
+        if [ $do_scp -eq 1 ]
+          scp -q -P $PORT ${scp_target}/${subj}*csv .
+        fi
   
         # grep for vol_TIV and vol_abs_CGW and update csv file
         # check first for keywords and print next 5 lines
@@ -409,7 +416,9 @@ postprocess ()
         fi
   
         # scp updated csv files to dbm server
-        scp -q -P $PORT *.csv ${scp_target}
+        if [ $do_scp -eq 1 ]
+          scp -q -P $PORT *.csv ${scp_target}
+        fi
   
       done
     fi
@@ -436,7 +445,9 @@ postprocess ()
     ln -s ${proc_dir}/check_r${revision_cat}/long/surf/* ${proc_dir}/check_r${revision_cat}/surf/ >/dev/null 2>&1
     CAT_View_Thickness_ui -output -range 1 5 ${proc_dir}/check_r${revision_cat}/surf/lh.central.*
     mv check_r${revision_cat}*.png ${proc_dir}/ >/dev/null 2>&1
-    scp -q -P $PORT ${proc_dir}/check_r${revision_cat}*.png $scp_target
+    if [ $do_scp -eq 1 ]
+      scp -q -P $PORT ${proc_dir}/check_r${revision_cat}*.png $scp_target
+    fi
   else
     echo "You need render_surf.sh and image_matrix.sh for preparing render view."
   fi
@@ -454,7 +465,9 @@ postprocess ()
     fi
     
     zip -q ${proc_dir}/check_r${revision_cat}.zip -r ${proc_dir}/check_r${revision_cat}
-    scp -q -P $PORT ${proc_dir}/check_r${revision_cat}.zip $scp_target
+    if [ $do_scp -eq 1 ]
+      scp -q -P $PORT ${proc_dir}/check_r${revision_cat}.zip $scp_target
+    fi
   fi
   
 }
@@ -478,6 +491,7 @@ USAGE:
    --post <STRING>      | -p <STRING>   post-process given pid
    --bg                 | -b            run check_pipeline.sh in the background
    --no-surf            | -ns           run check_pipeline.sh without surface processing
+   --no-scp             | -np           skip scp transfer
 
    All given files will be processed using either the current CAT12 version or the defined CAT12 release with the "-r" flag.
    For the latter case the zip-file can be defined as local file or as url-address. During processing temporary folder are 
