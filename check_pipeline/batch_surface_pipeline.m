@@ -38,8 +38,7 @@ matlabbatch{5}.spm.tools.cat.tools.T2x_surf.data_T2x = {fullfile(pth,'analysis/s
 matlabbatch{5}.spm.tools.cat.tools.T2x_surf.conversion.sel = 2;
 matlabbatch{5}.spm.tools.cat.tools.T2x_surf.conversion.threshdesc.uncorr.thresh001 = 0.001;
 matlabbatch{5}.spm.tools.cat.tools.T2x_surf.conversion.inverse = 0;
-matlabbatch{5}.spm.tools.cat.tools.T2x_surf.conversion.cluster.fwe2.thresh05 = 0.05;
-matlabbatch{5}.spm.tools.cat.tools.T2x_surf.conversion.cluster.fwe2.noniso = 1;
+matlabbatch{1}.spm.tools.cat.tools.T2x_surf.conversion.cluster.none = 1;
 %__________________________________________________________________________
 matlabbatch{6}.spm.tools.cat.tools.F2x_surf.data_F2x = {fullfile(pth,'analysis/surface/spmF_0001.gii')};
 matlabbatch{6}.spm.tools.cat.tools.F2x_surf.conversion.sel = 2;
@@ -88,9 +87,7 @@ matlabbatch{10}.cfg_basicio.file_dir.file_ops.file_move.files(4) = cfg_dep('Thre
 matlabbatch{10}.cfg_basicio.file_dir.file_ops.file_move.files(5) = cfg_dep('Threshold and transform spmF surfaces: Transform & Threshold spm surfaces', substruct('.','val', '{}',{6}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','Pname'));
 matlabbatch{10}.cfg_basicio.file_dir.file_ops.file_move.files(6) = cfg_dep('Map Volume (Native Space) to Individual Surface: Left mapped values', substruct('.','val', '{}',{8}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','lh'));
 matlabbatch{10}.cfg_basicio.file_dir.file_ops.file_move.files(7) = cfg_dep('Map Volume (Native Space) to Individual Surface: Right mapped values', substruct('.','val', '{}',{8}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','rh'));
-matlabbatch{10}.cfg_basicio.file_dir.file_ops.file_move.files(8) = cfg_dep('Render result data: Rendered surface data', substruct('.','val', '{}',{9}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','png', '()',{':'}));
 matlabbatch{10}.cfg_basicio.file_dir.file_ops.file_move.action.delete = false;
-
 %__________________________________________________________________________
 spm_jobman('run',matlabbatch);
 %__________________________________________________________________________
