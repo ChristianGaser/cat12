@@ -679,7 +679,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
                 cat_io_cprintf(col,sprintf('SIQR=%s',strrep(catiqr{1},'%','%%')));  
               
                 % add GMV - colors only for developer
-                if job.extopts.expertgui >= 1 && ~strcmp(catgmt{1},'unknown')
+                if job.extopts.expertgui >= 1 && ~strcmp(catrgmv{1},'unknown')
                   col = colorgmt(GMC,str2double(catrgmv{3}) / 1200 * 2.5); 
                 else
                   col = [0 0 0];
@@ -703,7 +703,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
                   col = [0 0 0];
                 end
                 kcol = [0.5 0.5 0.5]; % color for comma
-                if job.extopts.expertgui >= 0 && ~strcmp(catgmt{1},'unknown')
+                if job.extopts.expertgui >= 0 && ~strcmp(catrgmv{1},'unknown')
                   cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('rGMV=%s',strrep(catrgmv{1},'%','%%')));  
                 end
                 if job.extopts.expertgui >= 0 && ~strcmp(catgmt{1},'unknown')
