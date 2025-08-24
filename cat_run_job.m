@@ -933,6 +933,15 @@ end
         [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0,'mask',-1)); clear Vmsk;  %#ok<ASGLU>
       else
         Yb = smooth3(Ysrc0~=ppe.affreg.skullstrippedBGth);
+        if any( obj.image0.dim ~= obj.image.dim )
+          mat      = obj.image0.mat \ obj.image.mat;
+          Yb  = smooth3(Yb); 
+          Ybr = zeros(obj.image.dim,'single'); 
+          for i=1:obj.image.dim(3)
+            Ybr(:,:,i) = single(spm_slice_vol(Yb,mat*spm_matrix([0 0 i]),obj.image.dim(1:2),[1,NaN]));
+          end
+          Yb = Ybr>0.5; clear Ybr;
+        end
       end
       Ylesion = Ylesion & ~cat_vol_morph(Yb<0.9,'dd',5); clear Yb Ysrc0; 
       % check settings 
