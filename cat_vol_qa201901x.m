@@ -115,8 +115,11 @@ function varargout = cat_vol_qa201901x(action,varargin)
     end
     action = 'p0';
   end
-  if nargin>1 && isstruct(varargin{end}) && isstruct(varargin{end})
-    opt  = cat_check('checkinopt',varargin{end},defaults);
+  if nargin==3 && isstruct(varargin{2}) && isstruct(varargin{2})
+    opt  = cat_check('checkinopt',varargin{2},defaults);
+    nopt = 1; 
+  elseif nargin==8 && isstruct(varargin{6}) && isstruct(varargin{6})
+    opt  = cat_check('checkinopt',varargin{6},defaults);
     nopt = 1; 
   else
     if isstruct(action2)
@@ -264,7 +267,7 @@ function varargout = cat_vol_qa201901x(action,varargin)
           Yw  = Yp0>2.95 | cat_vol_morph( Yp0>2.25 , 'e'); 
           Yb  = cat_vol_approx( Ym .* Yw + Yw .* min(Ym(:)) ) - min(Ym(:)); 
           %Yb  = Yb / mean(Ym(Yw(:)));
-          Ym  = Ym ./ max(eps,Yb); 
+          Ym  = Ym ./ max(eps,Yb);  
         end
         res = varargin{4};
         V   = res.image;
@@ -274,6 +277,7 @@ function varargout = cat_vol_qa201901x(action,varargin)
           if isfield(varargin{6}.qa,'qualitymeasures'), QAS.qualitymeasures = cat_io_updateStruct(QAS,varargin{6}.qa.qualitymeasures); end
           if isfield(varargin{6}.qa,'subjectmeasures'), QAS.subjectmeasures = cat_io_updateStruct(QAS,varargin{6}.qa.subjectmeasures); end
         end
+        if nargin>7, Pp0 = varargin{7}; end % nargin count also parameter
         % opt = varargin{end} in line 96)
         %opt.verb = 0;
         
@@ -424,7 +428,7 @@ function varargout = cat_vol_qa201901x(action,varargin)
           end
           
           evalc('res.image = spm_vol(Pp0{fi});');  
-          [QASfi,QAMfi] = cat_vol_qa201901x('cat12',Yp0,Vo,Ym,res,species,opt);
+          [QASfi,QAMfi] = cat_vol_qa201901x('cat12',Yp0,Vo,Ym,res,species,opt,Pp0{fi});
 
           if isnan(QASfi.qualitymeasures.NCR)
             fprintf('');
@@ -591,16 +595,18 @@ function varargout = cat_vol_qa201901x(action,varargin)
       
       % file information
       % ----------------------------------------------------------------
-      [pp,ff,ee] = spm_fileparts(opt.job.channel.vols{opt.subj});
-      [QAS.filedata.path,QAS.filedata.file] = spm_fileparts(opt.job.channel.vols{opt.subj});
-      QAS.filedata.fname  = opt.job.data{opt.subj};
-      QAS.filedata.F      = opt.job.data{opt.subj}; 
-      QAS.filedata.Fm     = fullfile(pp,mrifolder,['m'  ff ee]);
-      QAS.filedata.Fp0    = fullfile(pp,mrifolder,['p0' ff ee]);
+      [pp,ff,ee] = spm_fileparts(Vo.fname);
+      if strcmp(ee,'.gz'), [~,ff] = spm_fileparts(ff); ee = '.nii.gz'; end 
+      [pp0,ff0,ee0] = spm_fileparts(Pp0);
+      [QAS.filedata.path,QAS.filedata.file] = spm_fileparts(Vo.fname);
+      QAS.filedata.fname  = Vo.fname;
+      QAS.filedata.F      = Vo.fname; 
+      QAS.filedata.Fm     = fullfile(pp0,['m'  ff ee0]);
+      QAS.filedata.Fp0    = fullfile(pp0,['p0' ff ee0]);
       QAS.filedata.fnames = [spm_str_manip(pp,sprintf('k%d',...
-                         floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
-                       spm_str_manip(ff,sprintf('k%d',...
-                         (opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
+        floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
+        spm_str_manip(ff,sprintf('k%d',...
+          (opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
     
 
       % software, parameter and job information
@@ -648,7 +654,7 @@ function varargout = cat_vol_qa201901x(action,varargin)
       
       % export 
       if opt.write_xml
-        cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAS,'write');
+        cat_io_xml(fullfile(pp0,[opt.prefix ff '.xml']),QAS,'write'); 
       end
           
     case 'cat12'
@@ -658,15 +664,17 @@ function varargout = cat_vol_qa201901x(action,varargin)
       % file information
       % ----------------------------------------------------------------
       [pp,ff,ee] = spm_fileparts(Vo.fname);
+      if strcmp(ee,'.gz'), [~,ff] = spm_fileparts(ff); ee = '.nii.gz'; end 
+      [pp0,ff0,ee0] = spm_fileparts(Pp0);
       [QAS.filedata.path,QAS.filedata.file] = spm_fileparts(Vo.fname);
       QAS.filedata.fname  = Vo.fname;
       QAS.filedata.F      = Vo.fname; 
-      QAS.filedata.Fm     = fullfile(pp,mrifolder,['m'  ff ee]);
-      QAS.filedata.Fp0    = fullfile(pp,mrifolder,['p0' ff ee]);
+      QAS.filedata.Fm     = fullfile(pp0,['m'  ff ee0]);
+      QAS.filedata.Fp0    = fullfile(pp0,['p0' ff ee0]);
       QAS.filedata.fnames = [spm_str_manip(pp,sprintf('k%d',...
-                         floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
-                       spm_str_manip(ff,sprintf('k%d',...
-                         (opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
+        floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
+        spm_str_manip(ff,sprintf('k%d',...
+          (opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
     
 
       % software, parameter and job information
@@ -992,7 +1000,7 @@ function varargout = cat_vol_qa201901x(action,varargin)
         QAS.subjectratings = QAR.subjectratings;
         QAS.ratings_help   = QAR.help;
         
-        cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAS,'write'); %struct('QAS',QAS,'QAM',QAM)
+        cat_io_xml(fullfile(pp0,[opt.prefix ff '.xml']),QAS,'write'); 
       end
 
       clear Yi Ym Yo Yos Ybc

@@ -975,7 +975,8 @@ Yp0   = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)/255*5; Yp0(Yp0>3.1
 % in case of SPM input segmentation we have to add the name here to have a clearly different naming of the CAT output 
 if isfield(res,'spmpp') && res.spmpp, namspm = 'c1'; else, namspm = ''; end
 qa    = cat_vol_qa('cat12',Yp0,VT0.fname,Ym,res,job.extopts.species, ...
-          struct('write_csv',0,'write_xml',1,'method','cat12','job',job,'qa',qa,'prefix',['cat_' namspm]));
+          struct('write_csv',0,'write_xml',1,'method','cat12','job',job,'qa',qa,'prefix',['cat_' namspm]),... 
+          fullfile(spm_file(VT.fname,'fpath'),['p0' nam '.nii']));
 clear Yp0;
     
 % surface data update

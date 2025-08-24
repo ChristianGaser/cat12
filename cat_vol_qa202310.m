@@ -1,8 +1,6 @@
 function varargout = cat_vol_qa202310(action,varargin)
 % CAT Preprocessing T1 Quality Control
 % ______________________________________________________________________
-% 
-% From cat_vol_qa202310dd.
 %
 % Estimation of image quality measures like noise, inhomogeneity,
 % contrast, resolution, etc. and scaling for school marks. 
@@ -42,7 +40,9 @@ function varargout = cat_vol_qa202310(action,varargin)
 %#ok<*ASGLU>
   
   % default parameter
-  opt = cat_check('checkinopt',varargin{end},defaults);
+  if isstruct(varargin{6})
+    opt = cat_check('checkinopt',varargin{6},defaults);
+  end
 
   % check input by action
   switch action
@@ -69,6 +69,7 @@ function varargout = cat_vol_qa202310(action,varargin)
             if isfield(varargin{6}.qa,'subjectmeasures'), QAS.subjectmeasures = varargin{6}.qa.subjectmeasures; end
           end
         end
+        if nargin>7, Pp0 = varargin{7}; end % nargin count also parameter
         
         % reduce to original native space if it was interpolated
         sz = size(Yp0);
@@ -121,16 +122,18 @@ function varargout = cat_vol_qa202310(action,varargin)
     [mrifolder, reportfolder] = cat_io_subfolders(Vo.fname,cat_get_defaults);
   end
   [pp,ff,ee] = spm_fileparts(Vo.fname);
+  if strcmp(ee,'.gz'), [~,ff] = spm_fileparts(ff); ee = '.nii.gz'; end 
+  [pp0,ff0,ee0] = spm_fileparts(Pp0);
   [QAS.filedata.path,QAS.filedata.file] = spm_fileparts(Vo.fname);
   QAS.filedata.fname  = Vo.fname;
   QAS.filedata.F      = Vo.fname; 
-  QAS.filedata.Fm     = fullfile(pp,mrifolder,['m'  ff ee]);
-  QAS.filedata.Fp0    = fullfile(pp,mrifolder,['p0' ff ee]);
+  QAS.filedata.Fm     = fullfile(pp0,['m'  ff ee0]);
+  QAS.filedata.Fp0    = fullfile(pp0,['p0' ff ee0]);
   QAS.filedata.fnames = [spm_str_manip(pp,sprintf('k%d',...
-                     floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
-                   spm_str_manip(ff,sprintf('k%d',...
-                     (opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
-  
+    floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
+    spm_str_manip(ff,sprintf('k%d',... 
+      (opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
+
 
   % software, parameter and job information
   % ----------------------------------------------------------------
@@ -162,7 +165,7 @@ function varargout = cat_vol_qa202310(action,varargin)
     QAS.software.version_segment = rev_cat;
   end
   QAS.software.revision_cat = rev_cat;
-  QAS.software.function     = which('cat_vol_qa202205');
+  QAS.software.function     = which('cat_vol_qa202310');
   QAS.software.markdefs     = which('cat_stat_marks');
   QAS.software.qamethod     = action; 
   QAS.software.date         = datestr(clock,'yyyymmdd-HHMMSS');
@@ -502,7 +505,7 @@ end
     QAS.subjectratings = QAR.subjectratings;
     QAS.ratings_help   = QAR.help;
     
-    cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAS,'write'); %struct('QAS',QAS,'QAM',QAM)
+    cat_io_xml(fullfile(pp0,[opt.prefix ff '.xml']),QAS,'write'); 
   end
 
   clear Yi Ym Yo Yos Ybc

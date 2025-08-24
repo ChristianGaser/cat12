@@ -109,8 +109,11 @@ function varargout = cat_vol_qa202110x(action,varargin)
     Pp0 = action.data;
     action = 'p0';
   end
-  if nargin>1 && isstruct(varargin{end}) && isstruct(varargin{end})
-    opt  = cat_check('checkinopt',varargin{end},defaults);
+  if nargin==3 && isstruct(varargin{2}) && isstruct(varargin{2})
+    opt  = cat_check('checkinopt',varargin{2},defaults);
+    nopt = 1; 
+  elseif nargin==8 && isstruct(varargin{6}) && isstruct(varargin{6})
+    opt  = cat_check('checkinopt',varargin{6},defaults);
     nopt = 1; 
   else
     opt  = defaults;
@@ -234,6 +237,7 @@ function varargout = cat_vol_qa202110x(action,varargin)
           if isfield(varargin{6}.qa,'qualitymeasures'), QAS.qualitymeasures = cat_io_updateStruct(QAS,varargin{6}.qa.qualitymeasures); end
           if isfield(varargin{6}.qa,'subjectmeasures'), QAS.subjectmeasures = cat_io_updateStruct(QAS,varargin{6}.qa.subjectmeasures); end
         end
+        if nargin>7, Pp0 = varargin{7}; end % nargin count also parameter
         % opt = varargin{end} in line 96)
         opt.verb = 0;
         
@@ -362,7 +366,7 @@ function varargout = cat_vol_qa202110x(action,varargin)
           end
   
           res.image = spm_vol(Pp0{fi}); 
-          [QASfi,QAMfi] = cat_vol_qa202110x('cat12',Yp0,Vo,Ym,res,species,opt);
+          [QASfi,QAMfi] = cat_vol_qa202110x('cat12',Yp0,Vo,Ym,res,species,opt,Pp0{fi});
 
           if isnan(QASfi.qualitymeasures.NCR)
             fprintf('');
@@ -517,16 +521,18 @@ function varargout = cat_vol_qa202110x(action,varargin)
       
       % file information
       % ----------------------------------------------------------------
-      [pp,ff,ee] = spm_fileparts(opt.job.channel.vols{opt.subj});
-      [QAS.filedata.path,QAS.filedata.file] = spm_fileparts(opt.job.channel.vols{opt.subj});
-      QAS.filedata.fname  = opt.job.data{opt.subj};
-      QAS.filedata.F      = opt.job.data{opt.subj}; 
-      QAS.filedata.Fm     = fullfile(pp,mrifolder,['m'  ff ee]);
-      QAS.filedata.Fp0    = fullfile(pp,mrifolder,['p0' ff ee]);
+      [pp,ff,ee] = spm_fileparts(Vo.fname);
+      if strcmp(ee,'.gz'), [~,ff] = spm_fileparts(ff); ee = '.nii.gz'; end 
+      [pp0,ff0,ee0] = spm_fileparts(Pp0);
+      [QAS.filedata.path,QAS.filedata.file] = spm_fileparts(Vo.fname);
+      QAS.filedata.fname  = Vo.fname;
+      QAS.filedata.F      = Vo.fname; 
+      QAS.filedata.Fm     = fullfile(pp0,['m'  ff ee0]);
+      QAS.filedata.Fp0    = fullfile(pp0,['p0' ff ee0]);
       QAS.filedata.fnames = [spm_str_manip(pp,sprintf('k%d',...
-                         floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
-                       spm_str_manip(ff,sprintf('k%d',...
-                         (opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
+        floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
+        spm_str_manip(ff,sprintf('k%d',...
+          (opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
     
 
       % software, parameter and job information
@@ -570,25 +576,26 @@ function varargout = cat_vol_qa202110x(action,varargin)
       
       % export 
       if opt.write_xml
-        cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAS,'write');
+        cat_io_xml(fullfile(pp0,[opt.prefix ff '.xml']),QAS,'write'); 
       end
       
     case 'cat12'
     % estimation of the measures for the single case    
     
-    
       % file information
       % ----------------------------------------------------------------
       [pp,ff,ee] = spm_fileparts(Vo.fname);
+      if strcmp(ee,'.gz'), [~,ff] = spm_fileparts(ff); ee = '.nii.gz'; end 
+      [pp0,ff0,ee0] = spm_fileparts(Pp0);
       [QAS.filedata.path,QAS.filedata.file] = spm_fileparts(Vo.fname);
       QAS.filedata.fname  = Vo.fname;
       QAS.filedata.F      = Vo.fname; 
-      QAS.filedata.Fm     = fullfile(pp,mrifolder,['m'  ff ee]);
-      QAS.filedata.Fp0    = fullfile(pp,mrifolder,['p0' ff ee]);
+      QAS.filedata.Fm     = fullfile(pp0,['m'  ff ee0]);
+      QAS.filedata.Fp0    = fullfile(pp0,['p0' ff ee0]);
       QAS.filedata.fnames = [spm_str_manip(pp,sprintf('k%d',...
-                         floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
-                       spm_str_manip(ff,sprintf('k%d',...
-                         (opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
+        floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
+        spm_str_manip(ff,sprintf('k%d',...
+          (opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
     
 
       % software, parameter and job information
@@ -762,6 +769,9 @@ function varargout = cat_vol_qa202110x(action,varargin)
       res_ECR0 = estimateECR0( Ymm , Yp0, 1/3:1/3:1, vx_vol.^.5 );
       QAS.qualitymeasures.res_ECR  = max(-1, 2.5 - res_ECR0 * 10 ); 
 
+
+      %% Fast Euler Characteristic (FEC) 
+      QAS.qualitymeasures.FEC = estimateFEC(Yp0, vx_vol, Ymm, V);
 
       
       %% low resolution tissue intensity maps (smoothing)
@@ -955,7 +965,7 @@ function varargout = cat_vol_qa202110x(action,varargin)
         QAS.subjectratings = QAR.subjectratings;
         QAS.ratings_help   = QAR.help;
         
-        cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAS,'write'); %struct('QAS',QAS,'QAM',QAM)
+        cat_io_xml(fullfile(pp0,[opt.prefix ff '.xml']),QAS,'write'); 
       end
 
       clear Yi Ym Yo Yos Ybc
@@ -1025,5 +1035,93 @@ function res_ECR = estimateECR0(Ym,Yp0,Tth,vx_vol)
   res_ECR = cat_stat_nanmedian(Ygrad(Yp0(:)>2.05 & Yp0(:)<2.95)); % & Yb(:))
 
 end  
+%=======================================================================
+%=======================================================================
+function [FEC,WMarea] = estimateFEC(Yp0,vx_vol,Ymm,V,machingcubes)
+%estimateFEC. Fast Euler Characteristic (FEC) 
+
+  if ~exist('machingcubes','var'), machingcubes = 1; end
+  Ymsr = (Ymm*3); 
+  %spm_smooth(Ymsr,Ymsr,max(0.3,1.7 - 0.7*vx_vol)); %1.6 - 0.6.*vx_vol ... 1.8 - 0.7.*vx_vol
+  spm_smooth(Ymsr,Ymsr,max(0.2,1.4 - 0.6*vx_vol)); 
+  
+  app = 1; 
+  if app == 1
+     sth  = 0.25:0.125/2:0.5; % two levels for 5 class AMAP 
+     if all(vx_vol<1.5)
+       Ymsr = max(0,max(Ymsr,cat_vol_localstat(Ymsr,Yp0>2,1,3)) - 2); % ########
+     else
+       Ymsr = max(0,Ymsr - 2); 
+     end
+    % Ymsr = max(0,cat_vol_localstat(Ymsr,Yp0>0.5,1,3) - 2); 
+  elseif app == 2
+    sth = .5; 
+    Ymsr = cat_vol_median3(Yp0,Yp0>=2,Yp0>1); 
+    [Ygmt,Ymsr] = cat_vol_pbtsimple(Ymsr,vx_vol,...
+      struct('levels',1,'extendedrange',0,'gyrusrecon',0,'keepdetails',0,'sharpening',0));
+  else
+    % FEC by creating of the WM like brain tissue of the full brain.
+    if isempty(Ymm)  % use the segmentation works very well
+      sth  = 0.25:0.5:0.75; % two levels for 5 class AMAP 
+      Ymsr = Ymsr - 2; 
+    else    % using raw data not realy
+      sth  = 0.25:0.25:0.75; 
+      Ymsr = max(-2,(Ymm .* (smooth3(Ymsr)>1) * 3) - 2); 
+    end
+  end
+
+  % light denoising of maximum filter
+  %spm_smooth(Ymsr,Ymsr,.4./vx_vol);
+  Ymsr(Yp0==0) = nan; 
+  
+  % use 2 mm is more robust (accurate in a sample)
+  smeth = 1;
+  if smeth==1
+    [Ymsr0,resYp0] = cat_vol_resize(Ymsr,'reduceV',vx_vol,2,32,'max');
+    Ymsr          = Ymsr0 + cat_vol_resize(Ymsr,'reduceV',vx_vol,2,32,'meanm');
+  elseif smeth==2
+    spm_smooth(Ymsr , Ymsr , 2 - vx_vol); V.dim = size(Ymsr); 
+    Ymsr  = single(cat_vol_resize(Ymsr,'interphdr',V,2,1));
+    resYp0.vx_volr = [2 2 2]; 
+  else
+    % this is 
+    spm_smooth(Ymsr,Ymsr,2 ./ vx_vol); % not required
+    resYp0.vx_volr = vx_vol; 
+  end
+ 
+
+  EC = zeros(size(sth)); area = EC; 
+  for sthi = 1:numel(sth) 
+    % remove other objects and holes
+    if app == 2
+      Ymsr(Ymsr> sth(sthi) & ~cat_vol_morph(Ymsr> sth(sthi),'lo',1,vx_vol)) = sth(sthi) - 0.01; % avoid BVs (eg. in ABIDE2)
+    else
+      Ymsr(Ymsr> sth(sthi) & ~cat_vol_morph(Ymsr> sth(sthi),'l')) = sth(sthi) - 0.01; % avoid BVs (eg. in ABIDE2)
+    end
+    Ymsr(Ymsr<=sth(sthi) & ~cat_vol_morph(Ymsr<=sth(sthi),'l')) = sth(sthi) + 0.01;
+    
+    if machingcubes
+      % faster binary approach on the default resolution, quite similar result
+      txt = evalc('[~,faces,vertices] = cat_vol_genus0(Ymsr,sth(sthi),1);'); 
+      CS = struct('faces',faces,'vertices',vertices);
+    else
+      % slower but finer matlab isosurface
+      CS  = isosurface(Ymsr,sth(sthi));
+    end
+    if numel(CS.vertices)>0
+      CS.vertices = CS.vertices .* repmat(resYp0.vx_volr,size(CS.vertices,1),1); 
+      EC(sthi)    = ( size(CS.vertices,1) + size(CS.faces,1) - size(spm_mesh_edges(CS),1) - 2) + 2;
+      area(sthi)  = spm_mesh_area(CS) / 100; % cm2
+      EC(sthi)    = EC(sthi); 
+    else
+      area(sthi)  = nan; 
+      EC(sthi)    = nan; 
+    end
+  end
+
+  FEC = cat_stat_nanmean(abs(EC - 2) + 2) / log(area(1)/2500 + 1);  % defined on the seg-error phantom
+  FEC = (FEC.^.5)*10; 
+  WMarea = area(1); 
+end
 %=======================================================================
 

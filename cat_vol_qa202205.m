@@ -116,8 +116,11 @@ function varargout = cat_vol_qa202205(action,varargin)
     end
     action = 'p0';
   end
-  if nargin>1 && isstruct(varargin{end}) && isstruct(varargin{end})
-    opt  = cat_check('checkinopt',varargin{end},defaults);
+  if nargin==3 && isstruct(varargin{2}) && isstruct(varargin{2})
+    opt  = cat_check('checkinopt',varargin{2},defaults);
+    nopt = 1; 
+  elseif nargin==8 && isstruct(varargin{6}) && isstruct(varargin{6})
+    opt  = cat_check('checkinopt',varargin{6},defaults);
     nopt = 1; 
   else
     if isstruct(action2)
@@ -248,6 +251,7 @@ function varargout = cat_vol_qa202205(action,varargin)
           if isfield(varargin{6}.qa,'qualitymeasures'), QAS.qualitymeasures = cat_io_updateStruct(QAS,varargin{6}.qa.qualitymeasures); end
           if isfield(varargin{6}.qa,'subjectmeasures'), QAS.subjectmeasures = cat_io_updateStruct(QAS,varargin{6}.qa.subjectmeasures); end
         end
+        if nargin>7, Pp0 = varargin{7}; end % nargin count also parameter
         % opt = varargin{end} in line 96)
         opt.verb = 0;
         
@@ -548,16 +552,18 @@ function varargout = cat_vol_qa202205(action,varargin)
       
       % file information
       % ----------------------------------------------------------------
-      [pp,ff,ee] = spm_fileparts(opt.job.channel.vols{opt.subj});
-      [QAS.filedata.path,QAS.filedata.file] = spm_fileparts(opt.job.channel.vols{opt.subj});
-      QAS.filedata.fname  = opt.job.data{opt.subj};
-      QAS.filedata.F      = opt.job.data{opt.subj}; 
-      QAS.filedata.Fm     = fullfile(pp,mrifolder,['m'  ff ee]);
-      QAS.filedata.Fp0    = fullfile(pp,mrifolder,['p0' ff ee]);
+      [pp,ff,ee] = spm_fileparts(Vo.fname);
+      if strcmp(ee,'.gz'), [~,ff] = spm_fileparts(ff); ee = '.nii.gz'; end 
+      [pp0,ff0,ee0] = spm_fileparts(Pp0);
+      [QAS.filedata.path,QAS.filedata.file] = spm_fileparts(Vo.fname);
+      QAS.filedata.fname  = Vo.fname;
+      QAS.filedata.F      = Vo.fname; 
+      QAS.filedata.Fm     = fullfile(pp0,['m'  ff ee0]);
+      QAS.filedata.Fp0    = fullfile(pp0,['p0' ff ee0]);
       QAS.filedata.fnames = [spm_str_manip(pp,sprintf('k%d',...
-                         floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
-                       spm_str_manip(ff,sprintf('k%d',...
-                         (opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
+        floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
+        spm_str_manip(ff,sprintf('k%d',...
+          (opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
     
 
       % software, parameter and job information
@@ -618,19 +624,17 @@ if opt.rerun || cat_io_rerun(Vo.fname, fullfile(pp,reportfolder,[opt.prefix ff '
       % file information
       % ----------------------------------------------------------------
       [pp,ff,ee] = spm_fileparts(Vo.fname);
-%      if strcmpi(spm_check_version,'octave'), warning off; end
+      if strcmp(ee,'.gz'), [~,ff] = spm_fileparts(ff); ee = '.nii.gz'; end 
+      [pp0,ff0,ee0] = spm_fileparts(Pp0);
       [QAS.filedata.path,QAS.filedata.file] = spm_fileparts(Vo.fname);
-      QAS.filedata.fname  = char(Vo.fname);
-      QAS.filedata.F      = char(Vo.fname); 
-%      if strcmpi(spm_check_version,'octave'), warning on; end
-%      if strcmpi(spm_check_version,'octave'), warning off; end
-      QAS.filedata.Fm     = fullfile(pp,mrifolder,['m'  ff ee]);
-      QAS.filedata.Fp0    = fullfile(pp,mrifolder,['p0' ff ee]);
-%      if strcmpi(spm_check_version,'octave'), warning on; end
+      QAS.filedata.fname  = Vo.fname;
+      QAS.filedata.F      = Vo.fname; 
+      QAS.filedata.Fm     = fullfile(pp0,['m'  ff ee0]);
+      QAS.filedata.Fp0    = fullfile(pp0,['p0' ff ee0]);
       QAS.filedata.fnames = [spm_str_manip(pp,sprintf('k%d',...
-                         floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
-                       spm_str_manip(ff,sprintf('k%d',...
-                         (opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
+        floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
+        spm_str_manip(ff,sprintf('k%d',...
+          (opt.snspace(1)-19) - floor((opt.snspace(1)-14)/3)))];
     
 
       % software, parameter and job information

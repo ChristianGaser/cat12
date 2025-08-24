@@ -185,9 +185,12 @@ function varargout = cat_vol_qa(action,varargin)
     end
     action = 'p0';
   end
-  if nargin>1 && isstruct(varargin{end}) && isstruct(varargin{end})
-    opt  = cat_check('checkinopt',varargin{end},defaults);
+  if nargin==3 && isstruct(varargin{2}) && isstruct(varargin{2})
+    opt  = cat_check('checkinopt',varargin{2},defaults);
     nopt = 1; 
+  elseif nargin>6 && isstruct(varargin{6}) && isstruct(varargin{6})
+    opt  = cat_check('checkinopt',varargin{6},defaults);
+    nopt = 1;   
   else
     if isstruct(action2)
       opt = cat_check('checkinopt',action2.opts,defaults);
@@ -253,7 +256,7 @@ function varargout = cat_vol_qa(action,varargin)
               end
             end
             Pm{fi} = fullfile(pp,['m'  ff(3:end) ee]);
-
+            if ~exist(Pm{fi},'file'), Pm{fi}=[Pm{fi} '.gz']; end
             if ~exist(Pm{fi},'file'), Pm{fi}=''; end
           end
         else
@@ -278,7 +281,7 @@ function varargout = cat_vol_qa(action,varargin)
 
     case 'cat12err'
       % again ?
-      %opt  = cat_check('checkinopt',varargin{end},defaults);  
+      %opt  = cat_check('checkinopt',varargin{6},defaults);  
 
     otherwise
 
@@ -294,6 +297,10 @@ function varargout = cat_vol_qa(action,varargin)
   % remove res_ECR in case of given older versions 
   if any( strcmp(opt.version, opt.versions0) )
     QMAfn( cat_io_contains(QMAfn,'res_ECR'))   = [];
+  end
+  % remove FEC in case of given older versions 
+  if any( strcmp(opt.version, opt.versions1) )
+    QMAfn( cat_io_contains(QMAfn,'FEC'))   = [];
   end
   stime       = clock;
   
@@ -338,9 +345,10 @@ function varargout = cat_vol_qa(action,varargin)
     % Direct call of the specific QC version with input images given by the 
     % varargin structure used in the CAT12 pipeline (processing of one case)
 %sprintf('[QAS,QAR] = %s(''cat12'',varargin{:});', opt.version)
-if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
+if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
 
       eval(sprintf('[QAS,QAR] = %s(''cat12'',varargin{:});', opt.version));
+      QAR  = upate_rating(QAS,opt.version);
 
     case 'p0'    
     % Default case of multiple input files where we have to load the images
@@ -352,7 +360,12 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
         cat_io_cprintf('com','No images for QA!\n'); 
         return
       end
-    
+      
+      % if files are zipped
+      Poe = cellfun(@(x) exist(x,'file'), Po); 
+      Po(Poe==0) = spm_file(Po(Poe==0),'ext','.nii.gz'); clear Poe 
+
+
       % name segmentation if possible
       if isempty(Pp0{1})
         Pp0 = Po; 
@@ -395,8 +408,10 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
         stime1 = clock; 
         
         % setup the XML file name
-        [pp,ff,ee] = spm_fileparts( strrep(Po{fi},'.nii.gz','.nii') ); 
-        sfile   = fullfile(pp,reportfolder,[opt.prefix ff '.xml']); 
+        [pp,ff,ee] = spm_fileparts( strrep(Pp0{fi},'.nii.gz','.nii') ); ff(1:2) = []; 
+        [ppa,ppb] = spm_fileparts(pp); 
+        if strcmp(ppb,'mri'), ppo = fullfile(ppa,reportfolder); else, ppo = pp; end 
+        sfile   = fullfile(ppo,[opt.prefix ff '.xml']); 
         
         if ~exist( sfile ,'file') 
         % not processed (eg. no additional comment)
@@ -472,18 +487,23 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
           end
 
           % general function called from CAT12
-          evalc('res.image     = spm_vol(Po{fi});'); 
+          if ~exist( Po{fi} ,'file')
+            continue
+          end
+
+          evalc('res.image = spm_vol(Po{fi});'); 
 
           if ~isempty(Yp0)
             try
-              [QASfi,QARfi] = cat_vol_qa('cat12ver',Yp0,Vo,Ym,res,species,opt);
+              [QASfi,QARfi] = cat_vol_qa('cat12ver',Yp0,Vo,Ym,res,species,opt,Pp0{fi});
             catch
+              cat_io_cprintf('warn',sprintf('Failed ...run cat_vol_qa202412')); 
               opt2 = opt; opt2.version = 'cat_vol_qa202412';
-              [QASfi,QARfi] = cat_vol_qa('cat12ver',Yp0,Vo,Ym,res,species,opt2);
+              [QASfi,QARfi] = cat_vol_qa('cat12ver',Yp0,Vo,Ym,res,species,opt2,Pp0{fi});
             end
           else
             opt2 = opt; opt2.version = 'cat_vol_qa202412';
-            [QASfi,QARfi] = cat_vol_qa('cat12ver',Yp0,Vo,Ym,res,species,opt2);
+            [QASfi,QARfi] = cat_vol_qa('cat12ver',Yp0,Vo,Ym,res,species,opt2,Pp0{fi});
           end
           try
             % try to update the QC structure
@@ -638,13 +658,13 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
 
 
     case 'cat12err'
-      opt = cat_check('checkinopt',varargin{end},defaults);
+      opt = cat_check('checkinopt',varargin{6},defaults);
       QAS = cat12err(opt,mrifolder,reportfolder);
 
 
     case 'cat12ver'
       % main processing with subversions 
-      [pp,ff,ee] = spm_fileparts(varargin{2}.fname);    
+      [pp,ff,ee] = spm_fileparts(strrep(varargin{2}.fname,'.nii.gz','.nii'));   
       
       % Call of different versions of the QC:
       % -------------------------------------------------------------------
@@ -675,7 +695,7 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
               end
               varargin2 = varargin; 
               varargin2{6}.job.extopts.subfolders = ~isempty(reportfolder); 
-              eval(sprintf('[QAS,QAR] = %s(''cat12'',varargin2{1:4},struct(),varargin2{5:end-1},struct(''qa'',qa));',opt.version));
+              eval(sprintf('[QAS,QAR] = %s(''cat12'',varargin2{1:4},struct(),varargin2{5:end});',opt.version));
             otherwise
               varargin2 = varargin; 
               varargin2{6}.job.extopts.subfolders = ~isempty(reportfolder); 
@@ -696,12 +716,32 @@ if isstruct(varargin{end}), varargin{end}.write_xml = 0; end
       QAS.qualityratings = QAR.qualityratings; 
       
 
-      sfile = fullfile(pp,reportfolder,[opt.prefix ff '.xml']); 
+      if nargin>6
+        pp0     = spm_fileparts(varargin{7}); 
+        [ppx,ffx] = spm_fileparts(pp0); 
+        if strcmp(ffx,'mri')
+          sfile   = fullfile(ppx,reportfolder,[opt.prefix ff '.xml']); 
+          catfile = fullfile(ppx,reportfolder,['cat_' ff '.xml']); 
+        else
+          sfile   = fullfile(pp0,[opt.prefix ff '.xml']); 
+          catfile = fullfile(pp0,['cat_' ff '.xml']); 
+        end
+      else
+        sfile   = fullfile(pp,reportfolder,[opt.prefix ff '.xml']); 
+        catfile = fullfile(pp,reportfolder,['cat_'  ff '.xml']); 
+      end  
       if exist(sfile,'file')
         S  = cat_io_xml( sfile ); 
         SN = cat_io_mergeStruct( S , QAS , [], 1); 
+      elseif exist(catfile,'file')
+        S  = cat_io_xml( catfile ); 
+        SN = cat_io_mergeStruct( S , QAS , [], 1); 
+      else
+        SN = QAS;
       end
+      
       cat_io_xml( sfile, SN );
+
       
     otherwise
       % catched before
@@ -794,9 +834,13 @@ function [Yp0,Ym,Vo,p0rmse] = getImages(Pp0,Po,Pm,fi)
     end
   elseif (isempty(Pm{fi}) || ~exist(Pm{fi},'file')) && ...
          ~isempty(Po{fi}) && exist(Po{fi},'file')
-    Pm{fi} = Po{fi}; 
-    if cat_get_defaults('extopts.expertgui') 
-      cat_io_cprintf('warn','Cannot find/open bias corrected image use original:   %80s\n',Po{fi}) 
+    if exist( [Pm{fi} '.gz'] , 'file')
+      Pm{fi} = [Pm{fi} '.gz']; 
+    else
+      Pm{fi} = Po{fi}; 
+      if cat_get_defaults('extopts.expertgui') 
+        cat_io_cprintf('warn','Cannot find/open bias corrected image use original:   %80s\n',Po{fi}) 
+      end
     end
   end
   if 0 %isempty(Pp0{fi}) || ~exist(Pp0{fi},'file')
@@ -985,7 +1029,8 @@ function def = defaults
   def.rerun      = 1;         % 0-load if exist, 1-reprocess if "necessary", 2-reprocess 
   def.version    = 'cat_vol_qa201901x';
   def.MarkColor  = cat_io_colormaps('marks+',40); 
-  def.versions0  = {'cat_vol_qa201602','cat_vol_qa20180207'};  % no ECR
+  def.versions0  = {'cat_vol_qa201602'};  % no ECR
+  def.versions1  = {'cat_vol_qa201602','cat_vol_qa201901','cat_vol_qa202110','cat_vol_qa202205'};  % no FEC
 end
 %==========================================================================
 function QARfi = upate_rating(QASfi,version,getdef)
