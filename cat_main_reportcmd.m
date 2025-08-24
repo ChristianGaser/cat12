@@ -53,7 +53,7 @@ function cat_main_reportcmd(job,res,qa)
   
   % image quality (just use real to avoid some rare problems with irrational values that should not occur anymore)
   cat_io_cprintf(color(QMC,real(qa.qualityratings.SIQR)), sprintf('Structural Image Quality Rating (SIQR):  %5.2f%%%% (%s)\n',...
-    mark2rps(real(qa.qualityratings.IQR)),mark2grad(real(qa.qualityratings.IQR))));
+    mark2rps(real(qa.qualityratings.SIQR)),mark2grad(real(qa.qualityratings.SIQR))));
   
   % processing quality
   % coming soon
