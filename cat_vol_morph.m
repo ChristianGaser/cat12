@@ -129,6 +129,7 @@ function varargout = cat_vol_morph(vol,action,n,vx_vol,verb)
     error('MATLAB:cat_vol_morph:Empty','Only nonempty 3D volumes!\n'); 
   end
   
+  % RD202508: need further test
   switch lower(action)
     case {'gdilate','graydilate','gd','gerode','grayerode','ge', ...
           'grayopen','gopen','go','grayclose','gclose','gc', ...
@@ -330,15 +331,18 @@ function varargout = cat_vol_morph(vol,action,n,vx_vol,verb)
     % results.
     case {'distdilate','dd'}
       % remove the background volume that is outside the dilation region
-      [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,nn+1,vol>0);
+      [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,n+1,vol>0); % RD202508: nn should be better but was not 
     
+      % RD202508: caused differences in affine registration and would need further tests
+      %{
       if nn / mean(vx_vol) > 3 
         [vol,resYp0] = cat_vol_resize(vol,'reduceV', 1, nn/5, 32, 'meanm'); 
         vol = vol > .5;
         nn  = nn * resYp0.vx_red(1); 
       end
+      %}
 
-      if n>3 %|| (sum(vol(:)>0)/numel(vol))>0.8
+      if n>5 %|| (sum(vol(:)>0)/numel(vol))>0.8
         % faster for large distances and smaller objects 
         vol = cat_vbdist(single(vol), true(size(vol)), vx_vol) <= nn;
       else
@@ -363,13 +367,16 @@ function varargout = cat_vol_morph(vol,action,n,vx_vol,verb)
 
     case {'distclose','dc'}
       % remove the background volume that is outside the dilation region
-      [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,nn+1,vol>0);
+      [vol,BB] = cat_vol_resize(vol,'reduceBrain',vx_vol,n+1,vol>0); % RD202508: nn should be better but was not 
     
+      % RD202508: caused differences in affine registration and would need further tests
+      %{
       if nn / mean(vx_vol) > 3 
         [vol,resYp0] = cat_vol_resize(single(vol),'reduceV', 1, max(2,nn/5), 32, 'meanm'); 
         vol = vol > .5;
         nn  = nn / resYp0.vx_red(1); 
       end
+      %}
 
       sz   = size(vol);
       vol2 = zeros(sz(1)+(2*nv(1)),sz(2)+(2*nv(2)),sz(3)+(2*nv(3)),'single');

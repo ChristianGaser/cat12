@@ -11,7 +11,7 @@ function Ydiv = cat_vol_div(Ym,vx_vol,vx_volr,norm,sm)
 %   vx_volr   .. lower voxel resolution for faster processing 
 %                and smoother results
 %   norm      .. normalize gradients (default = 0)
-%   sm        .. smooth (default = 1)
+%   sm        .. smooth (default = 0)
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -24,10 +24,10 @@ function Ydiv = cat_vol_div(Ym,vx_vol,vx_volr,norm,sm)
   if nargin==0, help cat_vol_div; return; end
   if ~exist('vx_vol','var'), vx_vol = repmat(1.5,1,3); end % no reduction
   if isscalar(vx_vol), vx_vol = repmat(vx_vol,1,3); end
-  if ~exist('vx_volr','var'), vx_volr = min(1.5,vx_vol*3); end
+  if ~exist('vx_volr','var'), vx_volr = min(1.5,vx_vol*3); end % only reduction in extrem cases
   if isscalar(vx_volr), vx_volr = repmat(vx_volr,1,3); end
   if ~exist('norm','var'), norm = 0; end
-  if ~exist('sm','var'), sm = 1; end
+  if ~exist('sm','var'), sm = 0; end
   
   Ym   = single(Ym); 
   Ynan = isnan(Ym); 
