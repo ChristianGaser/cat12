@@ -369,7 +369,7 @@ postprocess ()
         echo Finalize $subj with revision $revision_cat
         
         # get current csv files from dbm server
-        if [ $do_scp -eq 1 ]
+        if [ $do_scp -eq 1 ]; then
           scp -q -P $PORT ${scp_target}/${subj}*csv .
         fi
   
@@ -416,7 +416,7 @@ postprocess ()
         fi
   
         # scp updated csv files to dbm server
-        if [ $do_scp -eq 1 ]
+        if [ $do_scp -eq 1 ]; then
           scp -q -P $PORT *.csv ${scp_target}
         fi
   
@@ -445,7 +445,7 @@ postprocess ()
     ln -s ${proc_dir}/check_r${revision_cat}/long/surf/* ${proc_dir}/check_r${revision_cat}/surf/ >/dev/null 2>&1
     CAT_View_Thickness_ui -output -range 1 5 ${proc_dir}/check_r${revision_cat}/surf/lh.central.*
     mv check_r${revision_cat}*.png ${proc_dir}/ >/dev/null 2>&1
-    if [ $do_scp -eq 1 ]
+    if [ $do_scp -eq 1 ]; then
       scp -q -P $PORT ${proc_dir}/check_r${revision_cat}*.png $scp_target
     fi
   else
@@ -465,7 +465,7 @@ postprocess ()
     fi
     
     zip -q ${proc_dir}/check_r${revision_cat}.zip -r ${proc_dir}/check_r${revision_cat}
-    if [ $do_scp -eq 1 ]
+    if [ $do_scp -eq 1 ]; then
       scp -q -P $PORT ${proc_dir}/check_r${revision_cat}.zip $scp_target
     fi
   fi
