@@ -153,7 +153,7 @@ function C=readcsv(filename,sheet,pos,opt)
  
 
   % es gibt hier ein problem mit 
-  % - sonderzeichen wie ���
+  % - sonderzeichen wie äöü
   % - anderen sonderzeichen 
   
   if strcmpi(spm_check_version,'octave') 
@@ -165,9 +165,9 @@ function C=readcsv(filename,sheet,pos,opt)
       C1  = char( min(255, max(0, double( C1 ))));
     end
   else
-    C1  = strrep(C1,'ä','�');
-    C1  = strrep(C1,'ü','�');
-    C1  = strrep(C1,'ö','�');
+    C1  = strrep(C1,'Ã¤','ä');
+    C1  = strrep(C1,'Ã¼','ü');
+    C1  = strrep(C1,'Ã¶','ö');
   end
 
   for i=1:size(C1,1)
@@ -249,7 +249,7 @@ function writecsv(filename,C,sheet,pos,opt)
     for j=1:size(C,2)
       if ~isstruct(C{i,j}) && ~iscell(C{i,j})
         if C{i,j}==round(C{i,j})
-          M{i}=[M{i} num2str(C{i,j},'%d') opt.delimiter];
+          M{i}=[M{i} num2str(strrep(num2str(C{i,j}), '\', '\\'),'%d') opt.delimiter];
         else
           switch opt.komma
             case '.',   M{i}=[M{i} num2str(C{i,j},opt.format) opt.delimiter];
