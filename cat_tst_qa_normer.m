@@ -281,7 +281,7 @@ function varargout = cat_tst_qa_normer(data,opt)
   %  of 3.33 rps (1/3 mark points) that gives some kind of upper limit.
   %  -------------------------------------------------------------------
     mn = nan(1); sd = nan(1); 
-  
+    
     if opt.train > 0 
       if opt.train < 1
       
@@ -294,10 +294,14 @@ function varargout = cat_tst_qa_normer(data,opt)
       case 0
         % very simple median of median model:
         % - quite simple but quite good 
-        % - limitation is that the median pick just one element resulting
+        % - limitation is that the median picks just one element resulting
         %   in some random peak that depend stronger on the specific data
          
-        mn = median( d( d<median(d) ) );
+        if max(d)<10.5 % lower values should be marks ...
+          mn = median( d( d<median(d) ) );
+        else % higher values are percentage ratings 
+          mn = median( d( d>median(d) ) );
+        end
         sd = std( d );
         sd = sd * 2; % two times because we only use half ^.5
       case 10

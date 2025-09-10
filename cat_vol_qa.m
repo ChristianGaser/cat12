@@ -143,17 +143,19 @@ function varargout = cat_vol_qa(action,varargin)
           mjob.prefix      = 'c0'; 
           mjob.verb        = 0; 
           mjob.cleanup     = 0;
+          mjob.ignoreBIDS  = 1; 
           cat_vol_mimcalc(mjob);
         end
 
         %% run QC
-         action2 = rmfield(action,'model'); 
-         action2.model.spmc0 = action.model.spmp0;
-         action2.reportfolder = ''; 
+        action2 = rmfield(action,'model'); 
+        action2.model.spmc0  = action.model.spmp0;
+        action2.reportfolder = ''; 
        
-        varargout{:} = cat_vol_qa(action2,varargin); 
+        out = cat_vol_qa(action2,varargin); 
 
         varargout{1}.data = action2.images;
+        varargout{2} = out; 
         for pi = 1:numel(action2.images)
           [pp,ff,ee] = spm_fileparts(action2.images{pi});
           varargout{1}.xmls{pi} = fullfile(pp,reportfolder,[action2.opts.prefix ff '.xml']);
@@ -375,6 +377,7 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
         [pp,ff,ee] = spm_fileparts(Pp0{1});
         switch ff(1:2)
           case 'sy',  segment = 'synthseg'; 
+          case 'c0',  segment = 'SPM12'; 
           case 'c1',  segment = 'SPM12'; 
           case 'p0',  segment = 'CAT12'; 
           otherwise,  segment = 'internal'; 
@@ -412,6 +415,20 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
         [ppa,ppb] = spm_fileparts(pp); 
         if strcmp(ppb,'mri'), ppo = fullfile(ppa,reportfolder); else, ppo = pp; end 
         sfile   = fullfile(ppo,[opt.prefix ff '.xml']); 
+
+        if ~exist( sfile ,'file') 
+        % test if file may exist in raw directory 
+          ppo    = spm_fileparts( strrep(Po{fi},'.nii.gz','.nii') );
+          sfileo = spm_file(Po{fi},'path',ppo,'prefix',opt.prefix,'ext','.xml'); 
+          if exist(sfileo,'file')
+            sfile = sfileo; 
+          else
+            sfileo = spm_file(Po{fi},'path',fullfile(ppo,'report'),'prefix',opt.prefix,'ext','.xml'); 
+            if exist(sfileo,'file')
+              sfile = sfileo; 
+            end
+          end
+        end
         
         if ~exist( sfile ,'file') 
         % not processed (eg. no additional comment)
@@ -829,7 +846,7 @@ function [Yp0,Ym,Vo,p0rmse] = getImages(Pp0,Po,Pm,fi)
   if (isempty(Po{fi}) || ~exist(Po{fi},'file')) && ...
       ~isempty(Pm{fi}) && exist(Pm{fi},'file')
     Po{fi} = Pm{fi}; 
-    if cat_get_defaults('extopts.expertgui') 
+    if 0 %cat_get_defaults('extopts.expertgui') % RD202508: deactived as we only use the original now
       cat_io_cprintf('warn','Cannot find/open original image use bias corrected:   %80s\n',Pm{fi}) 
     end
   elseif (isempty(Pm{fi}) || ~exist(Pm{fi},'file')) && ...
@@ -838,13 +855,13 @@ function [Yp0,Ym,Vo,p0rmse] = getImages(Pp0,Po,Pm,fi)
       Pm{fi} = [Pm{fi} '.gz']; 
     else
       Pm{fi} = Po{fi}; 
-      if cat_get_defaults('extopts.expertgui') 
+      if 0 %cat_get_defaults('extopts.expertgui') % RD202508: deactived as we only use the original now
         cat_io_cprintf('warn','Cannot find/open bias corrected image use original:   %80s\n',Po{fi}) 
       end
     end
   end
   if 0 %isempty(Pp0{fi}) || ~exist(Pp0{fi},'file')
-    % segment?
+    % RD202508: deactived as we run a simple segmentation + warning elsewhere  
     cat_io_cprintf('err','Cannot find/open segmentation: \n  %s\n',Pp0{fi}) 
   end
   
@@ -868,7 +885,7 @@ function [Yp0,Ym,Vo,p0rmse] = getImages(Pp0,Po,Pm,fi)
     Yp0 = []; 
   else
     switch ff0(1:2) 
-      case {'p0','sy'} % cat
+      case {'p0','sy','c0'} % cat and other label map (use c0 for SPM)
         evalc('Vp0 = spm_vol(Pp0{fi});');
         if ~isempty(Vm) && any(Vp0.dim ~= Vm.dim)
           [Vx,Yp0] = cat_vol_imcalc(Vp0,Vm,'i1',struct('interp',2,'verb',0)); % linear interp
@@ -895,11 +912,13 @@ function [Yp0,Ym,Vo,p0rmse] = getImages(Pp0,Po,Pm,fi)
   % bias corrected image in CAT is also intensity normalized and endoised.
   vx_vol  = sqrt(sum(Vo.mat(1:3,1:3).^2));
   evalc('Ym  = single(spm_read_vols(spm_vol(Po{fi})))');
+  %WMth = cat_stat_nanmedian(Ym(Yp0>2.9)); 
   if ~isempty(Yp0)
     Ym(isnan(Yp0) | isinf(Yp0)) = 0; 
-    Yw  = cat_vol_morph( Yp0>2.95 , 'e',1,vx_vol)  & cat_vol_morph( Yp0>2.25 , 'e',2,vx_vol); 
+    %Yw = cat_vol_morph( Yp0>2.95 , 'e',0,vx_vol)  &  cat_vol_morph( Yp0>2.25 , 'e',1,vx_vol); RD20250907: erode to hard for SPM 
+    Yw  = Yp0>2.9; % ### RD20250910: however this is a bit too simple in case of segmentation bugs and a check for local outliers would be good
     Yb  = cat_vol_approx( Ym .* Yw + Yw .* min(Ym(:)) ,'rec') - min(Ym(:)); 
-    Ym  = Ym ./ max(eps,Yb); 
+    Ym  = Ym ./ max(eps,Yb);
   end
   
   % Detection of possible preprocessing issues in case the segmentation 
@@ -1047,10 +1066,10 @@ function QARfi = upate_rating(QASfi,version,getdef)
       ndef.bias  = [0.338721 2.082731];
     case 'cat_vol_qa201901x'  
       % final refined version of robust version 201901 ###############
-      ndef.noise = [  0.0130,   0.0682]; %[  0.0172,   0.1234];
-      ndef.bias  = [  0.1432,   1.0300]; %[  0.1668,   1.0234];
-      ndef.ECR   = [  0.2780,   1.6843]; %[  0.4141,   1.5532]; %-0.0364 1.1497];
-      ndef.FEC   = [140.0000, 410.0000]; %[100.0000, 630.0000];
+      ndef.noise = [  0.0183,   0.0868]; 
+      ndef.bias  = [  0.2270,   1.3949];
+      ndef.ECR   = [  0.0202,   0.1003]; 
+      ndef.FEC   = [130.0000, 470.0000]; 
     case {'cat_vol_qa202110'}
       % changes between 2019/01 and 2021/10 result a bit different version 
       % partial better, partially worse (regular successor of version 201901) 
