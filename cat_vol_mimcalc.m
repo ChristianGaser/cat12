@@ -15,9 +15,14 @@ function out = cat_vol_mimcalc(job)
   def.var     = {};
   def.verb    = 1;
   def.cleanup = 0;
+  def.ignoreBIDS = 0; 
   job = cat_io_checkinopt(job,def);
 
-  BIDSdirname = ['derivatives' filesep 'mimcalc'];
+  if job.ignoreBIDS
+    BIDSdirname = ''; 
+  else
+    BIDSdirname = ['derivatives' filesep 'mimcalc'];
+  end
   out = struct();
   
   % spm banner
@@ -29,6 +34,7 @@ function out = cat_vol_mimcalc(job)
     for si = 1:numel(job.images{ri})
       [a,b,c,d] = checkBIDS(job.images{ri}(si),BIDSdirname);
       sfiles{si}{ri}=a; sfilesBIDS{si}(ri)=b; BIDSsub{si}{ri}=c; outdir{si}{ri} = d{1};
+      if ~exist(outdir{si}{ri},'dir'), mkdir(outdir{si}{ri}); end
     end
   end
   %%
@@ -45,18 +51,23 @@ function out = cat_vol_mimcalc(job)
     % handle zipped BIDS 
     for ri = 1:numel(job.images)
       [~,ff,ee] = spm_fileparts(job.images{ri}{si});
+      nocleanup = 0;
       if strcmp(ee,'.gz')
         if ~exist(fullfile( outdir{si}{ri} , ff),'file')
           gunzip(job.images{ri}{si},outdir{si}{ri});
         end
         job2.input{ri} = fullfile( outdir{si}{ri} , ff);  
       else
-        if ~strcmp( spm_fileparts(job.images{ri}{si}) , outdir{si}{ri} )
-          copyfile(job.images{ri}{si},outdir{si}{ri});
+        if ~strcmp( spm_fileparts(job.images{ri}{si}) , outdir{si}{ri} ) && ...
+          ~exist( spm_file( job.images{ri}{si},'path',outdir{si}{ri}) ,'file')
+          copyfile(job.images{ri}{si},outdir{si}{ri}); 
+          nocleanup = 1; 
         end
         job2.input{ri} = fullfile( outdir{si}{ri} , [ff ee]); 
       end
-      Pcleanup{ri} = job2.input{ri};
+      if ~nocleanup
+        Pcleanup{ri} = job2.input{ri};
+      end
     end
     
     [~,ff,ee]      = spm_fileparts(job2.input{1});
