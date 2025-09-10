@@ -46,7 +46,7 @@ end
 if ~exist( 'fasttest', 'var'), fasttest = 0; end 
 fast = {'full','fast'};
   
-resdir     = fullfile( fileparts( fileparts(datadir) ), '+results', ['ATLAS_' fast{fasttest+1} '_' datestr(clock,'YYYYmm')]); 
+resdir     = fullfile( fileparts( fileparts(datadir) ), '+results', ['ATLAS_' fast{fasttest+1} '_202508']); %' datestr(clock,'YYYYmm')]); 
 if ~exist(resdir,'dir'), mkdir(resdir); end
 
 % directories
@@ -228,7 +228,7 @@ for si = 1:numel(segment)
         end
       end
     end
-    dIQR = diff(IQR,1,2); % msk - org
+    dIQR = diff(SIQR,1,2); % msk - org
     rmse = @(x) mean(x.^2).^.5;  
   
     % store for later
@@ -249,7 +249,7 @@ for si = 1:numel(segment)
   
     
     %% create figure
-    if 0
+    if 1
       for sm = 0
         if ~exist('fh','var') || ~isvalid(fh), fh = figure(39); end 
         fh.Interruptible = 'off'; fh.Visible = 'off'; 

@@ -94,6 +94,7 @@
 % specify the main QC test directory
 datadir   = '/Volumes/SG5TB/MRData/202503_QA'; 
 datadir   = '/Volumes/WDE18TB/MRData/Dahnke2025_QC'; 
+datadir   = '/Volumes/WDE18TB/MRData/Dahnke2025_QCr1'; 
 
 % specify the CAT QC version
 % Over time we tried to improve the estimation in some specific cases that 
@@ -115,7 +116,7 @@ qaversions = {'cat_vol_qa201901x'}; % lets start with one
 % specify the used prerprocessing: {'SPM','CAT'}, where qcseg requires cat_vol_qa2024012
 % some test cases (cat_tst_qa_simerrBWP, cat_tst_qa_resizeBWP) do not support other imput segmentations than CAT 
 segment  = {'CAT','SPM'};
-segment  = {'CAT'}; % lets start with one
+segment  = {'CAT'}; % lets start with one (SPM is prepared for the BWP and MRART)
 fasttest = 0; % run test just on a subset
 recalcQC = 0; % re-estimate QC values 
 
@@ -127,20 +128,34 @@ set(0,'DefaultFigureVisible','off');
 % extend BWP test data (if required)
 cat_tst_qa_resampleBWP( datadir )
 % gunzip all files for SPM
-gzfiles = cat_vol_findfiles( datadir , '*.nii.gz' ); 
-gzfiles( cellfun( @(x) any( contains(x,{'20211122-SyntheticDataset','Testing'})),  gzfiles )) = []; % don't unzip files from these dirs
-for fi = 1:numel(gzfiles)
-  fprintf('  Gunzip %s\n',gzfiles{fi});  
-  system(sprintf('gunzip %s',gzfiles{fi})); 
+if any(contains(segment,'SPM'))
+  excludedirs =  {'20211122-SyntheticDataset','Testing','ds000256-ChildrenHeadMotionN24','ADHD200'};
+  gzfiles = cat_vol_findfiles( datadir , '*.nii.gz' ); 
+  gzfiles( cellfun( @(x) any( contains(x,excludedirs)),  gzfiles )) = []; % don't unzip files from these dirs
+  for fi = 1:numel(gzfiles)
+    fprintf('  Gunzip %s\n',gzfiles{fi});  
+    system(sprintf('gunzip %s',gzfiles{fi})); 
+  end
 end
 
+% try to avoid popup figure ... 
+set(0, 'DefaultFigureVisible', 'off'); %,'DefaultFigureInterruptible', 'off')
 
-% run tests us (un)commenting to run/avoid specific tests
+%% run tests us (un)commenting to run/avoid specific tests
 cat_tst_qa_bwpmaintest( datadir, qaversions, segment, fasttest, recalcQC )        % test/scaling setup of the QMs on the brain web phantom 
 cat_tst_qa_simerrBWP( datadir, qaversions, fasttest, recalcQC )                   % effects of segmentation problems on QM (CAT only)
 cat_tst_qa_resizeBWP( datadir, qaversions, recalcQC )                             % test of the resolution QM (CAT only)
 cat_tst_qa_Rusak_aging( datadir, qaversions, segment, fasttest, recalcQC )        % test of the QM in simulated atrophy data based on real ADNI scans
 
-cat_tst_qa_IXI( datadir, qaversions, segment, fasttest, recalcQC )                % aging/sex/site effects in healty population 
+cat_tst_qa_IXI( datadir, qaversions, segment, fasttest, recalcQC, 'IXI')          % aging/sex/site effects in healty adult population 
+cat_tst_qa_IXI( datadir, qaversions, segment, fasttest, recalcQC, 'ds000256')     % aging/sex/site effects in healty children population 
+%cat_tst_qa_IXI( datadir, qaversions, segment, fasttest, recalcQC, 'ABIDE')        % aging/sex/site effects in healty children population (many sites)
+cat_tst_qa_IXI( datadir, qaversions, segment, fasttest, recalcQC, 'ADHD200')      % aging/sex/site effects in healty children population (many sites)
 cat_tst_qa_ATLAS2( datadir, qaversions, segment, fasttest, recalcQC )             % differences between original and masked stroke lesions 
-cat_tst_qa_MRART_expertgroups( datadir, qaversions, segment, fasttest, recalcQC ) % real data with movement artifacts
+
+%cat_tst_qa_MRART_expertgroups( datadir, qaversions, segment, fasttest, recalcQC ) % real data with movement artifacts
+cat_tst_qa_iqrRMS( datadir, qaversions, segment, fasttest)                        % evaluation of the power function to average QMs into SIQR
+cat_tst_qa_Tohoku( datadir, qaversions, segment, fasttest)                        % test retest dataset with ground truth average
+
+%
+set(0, 'DefaultFigureVisible', 'on'); %,'DefaultFigureInterruptible', 'on')

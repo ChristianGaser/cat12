@@ -46,15 +46,17 @@ end
 if ~exist( 'fasttest', 'var'), fasttest = 0; end
 if ~exist( 'rerun', 'var'), rerun = 0; end
 fast            = {'full','fast'}; 
-
+corrtype        = 'Spearman'; 
 opt.type        = '-depsc';
 opt.res         = '-r300'; 
 opt.dpi         = 90; 
 opt.closefig    = 0; 
+%opt.resdir      = fullfile(opt.maindir,'+results', ...
+%  sprintf('%s_%s_%s', 'BWPmain', fast{fasttest+1}, datestr(clock,'YYYYmm')) );
 opt.resdir      = fullfile(opt.maindir,'+results', ...
-  sprintf('%s_%s_%s', 'BWPmain', fast{fasttest+1}, datestr(clock,'YYYYmm')) );
+  sprintf('%s_%s_%s', 'BWPmain', fast{fasttest+1}, '202508' ));
 recalc.qa       = 2 * rerun; 
-recalc.kappa    = 2 * rerun;
+recalc.kappa    = 0*2 * rerun;
 recalc.runPP    = 1; 
 if ~exist(opt.resdir,'dir'),   mkdir(opt.resdir); end
 
@@ -105,7 +107,7 @@ qai  = 1; %#ok<NASGU>
 
 for qai = qais 
   % prepare things and print
-  qafile = qaversions{qai}; stime = clock; 
+  qafile = qaversions{qai}; 
   cat_io_cprintf('b',sprintf('\n%s:\n\n',qafile)); 
   if ~exist(opt.resdir,'dir'), mkdir(opt.resdir); end
   
@@ -129,7 +131,6 @@ for qai = qais
     P.bwp = P.bwpx(si,:); 
   
     %  -- find p0-files --------------------------------------------------
-    %stime = cat_io_cmd('  Find files:','g5','',1); 
     rsdir = 'r';
     % find specific BWP segmentations
     if strcmp(P.bwp(1,1),'qcseg') && ~strcmp( qaversions{qai} , 'cat_vol_qa202412' )
@@ -232,13 +233,13 @@ for qai = qais
     for mi = method
       % -- do QA ---------------------------------------------------------
       % xml-filenames  
-      P.p0a{mi}{pi,1} = P.p0{mi}{pi,1};
+      P.p0a{mi} = P.p0{mi};
       for pi=1:numel(P.p0{mi})
         [pp,ff] = fileparts(P.p0{mi}{pi});
         if strcmp(P.bwp(mi,1),'CAT12')
           P.xml{mi}{pi,1} = fullfile(fileparts(pp),'report',[qafile '_' ff(3:end) '.xml']);
         elseif strcmp(P.bwp(mi,1),'SPM12')
-          P.xml{mi}{pi,1} = fullfile(pp,'report',[qafile '_spm_' ff(3:end) '.xml']);
+          P.xml{mi}{pi,1} = fullfile(pp,[qafile '_spm_' ff(3:end) '.xml']); %'report',
           P.p0a{mi}{pi,1} = fullfile(pp,['c1' ff(3:end) '.nii']); % for kappa
         elseif strcmp(P.bwp(mi,1),'synthseg')
           P.xml{mi}{pi,1} = fullfile(pp,'report',[qafile '_' strrep(ff,'synthseg_p0','synthseg_') '.xml']);
@@ -246,7 +247,7 @@ for qai = qais
           P.xml{mi}{pi,1} = fullfile(pp,'report',[qafile '_qcseg_' ff '.xml']);
           P.p0a{mi}{pi,1} = fullfile(pp,['p0_qcseg_' ff '.nii']); % for kappa
         end
-        P.p0e{mi}(pi) = exist(P.xml{mi}{pi},'file') | strcmp(P.bwp(mi,1),'qcseg');
+        P.p0e{mi}(pi) = exist(P.xml{mi}{pi},'file') | strcmp(P.bwp(mi,1),'qcseg') && (recalc.qa(1)<2);
         % check data
         if P.p0e{mi}(pi)
           if ~exist(P.xml{mi}{pi},'file')
@@ -334,7 +335,7 @@ for qai = qais
     
     
     %% -- prepare QA data ------------------------------------------------
-    stime = cat_io_cmd('  Prepare quality measurements:','g5','',1,stime); 
+    cat_io_cmd('  Prepare quality measurements:','g5','',1); 
     nx = 4; 
   
     % create a new, simpler structure based on the xml-files
@@ -450,7 +451,7 @@ for qai = qais
     %  -- fit for rating -------------------------------------------------- 
     rmse = @(a,b) cat_stat_nanmean( (a-b).^2 ).^(1/.5);
     % NCR
-    cat_io_cmd(sprintf('  Mark range of %s (N_train=%d/%d):',qafile,sum(M),sum(Q.train)),'n','',1,stime); 
+    cat_io_cmd(sprintf('  Mark range of %s (N_train=%d/%d):',qafile,sum(M),sum(Q.train)),'n','',1); 
     [Q.fit.noiseNCR, Q.fit.noiseNCRstat] = robustfit(Q.NCRgt(M,1),Q.NCRo(M,1));
     default.QS{contains(default.QS(:,2),'NCR'),4} = ...
       [Q.fit.noiseNCR(1) + Q.fit.noiseNCR(2),Q.fit.noiseNCR(1) + Q.fit.noiseNCR(2) * 6];  %#ok<*FNDSB> 
@@ -480,14 +481,14 @@ for qai = qais
       Q.fit.FEC = [nan nan]; Q.fit.FECstat = struct('coeffcorr',nan(2,2),'p',nan(2,2)); 
       default.QS{find(cellfun('isempty',strfind(default.QS(:,2),'FEC'))==0),4} = [100 850];
     end
-    
+
+   
     %  -- remarks -------------------------------------------------------- 
-    stime = cat_io_cmd('  Remark:','g5','',1); 
+    cat_io_cmd('  Remark:','g5','',1); 
     for mi = method
       for pi=1:numel(P.xml{mi})
         try
           X(mi).xml2(pi)   = cat_stat_marks('eval',0,X(mi).xml(pi),default);
-  
           Q.NCR(pi,mi)     = X(mi).xml2(pi).qualityratings.NCR;
           Q.ICR(pi,mi)     = X(mi).xml2(pi).qualityratings.ICR;
           if isfield(  X(mi).xml2(pi).qualityratings,'res_ECR')
@@ -538,7 +539,6 @@ for qai = qais
     
     % -- results -------------------------------------------------------- 
     % table for IQR values by method ...
-    %stime = cat_io_cmd('  Result tables:','g5','',1,stime); 
     def.bstm    = 1;          % best mark
     def.wstm    = 6;          % worst mark
     def.wstmn   = 8.624;      % worst mark to get a 4 for values with std 
@@ -555,7 +555,7 @@ for qai = qais
     
     %% -- create figure --------------------------------------------------
   
-    stime = cat_io_cmd('  Create figure:','g5','',1,stime); 
+    cat_io_cmd('  Create figure:','g5','',1); 
     testmethods = [1 0]; testmethods(numel(method)+1:end) = [];
   
     % BWP main figure
@@ -781,9 +781,14 @@ for qai = qais
      fprintf('Measure: %s\n', sprintf(repmat('%10s',1,6),'NCR','ICR','RES','ECR','FEC','SIQR') ); 
      fprintf('RMSE:    %s\n', sprintf('%10.4f',rmseval) );
      fprintf('\n')
+     tabRMSE = [{'Measure:','NCR','ICR','RES','ECR','FEC','SIQR'}; 
+          {'RMSE:'}, num2cell(rmseval) ]; 
+     fname = fullfile(opt.resdir,sprintf('tst_bwpmaintest_%s_RMSEtable_%s.csv',qafile,segment{mi})); 
+     cat_io_csv(fname, tabRMSE); 
+     cat_io_cprintf('blue',sprintf('    Write %s\n',fname)); 
      %if ~rps, set(gca,'YDir','reverse'); end
   
-  
+
   %
   % ----------------------------------------------------------------------
   % B) relation between different BWP aspects and the QM
@@ -919,7 +924,7 @@ for qai = qais
     kcol   = [0.2 0.5 0; 0 0.2 .8; .8 0 0]; 
   
     % (S)IQR
-    if 0 % optimized
+    if 1
       if strcmp(P.bwp(mi,1),'CAT12')
         ktx = {'kappa','SIQR',[0.725 0.975],[0 6]        ,[40 100];
                'kappa','GMV' ,[0.725 0.975],[0.425 0.485],[0.425 0.485];
@@ -981,7 +986,7 @@ for qai = qais
     
     
     % -- correlations ---------------------------------------------------
-    stime = cat_io_cmd('  Estimate correlations:','g5','',1,stime); 
+    cat_io_cmd('  Estimate correlations:','g5','',1); 
     %M  = Q.noise>0 & Q.bias>0; 
     M2 = repmat(M,1,size(Q.kappa,2)) & repmat(method,size(Q.noise,1),1);
     QMnames = {'noise','bias','resRMS','NCR','ICR','RES','ECR','FEC','IQR','SIQR','Kappa','rCSFV','rGMV','rWMV'};
@@ -993,14 +998,14 @@ for qai = qais
       Q.kappa(M2) , ...
       Q.CMV(M2),Q.GMV(M2),Q.WMV(M2)];
   
-    [C.QM.r, C.QM.p] = corr(QMcorrs,'type','Spearman');
+    [C.QM.r, C.QM.p] = corr(QMcorrs,'type',corrtype);
     C.QM.rtab = [ [{''} QMnames]; [QMnames',num2cell(round(C.QM.r*10000)/10000)] ];
     C.QM.ptab = [ [{''} QMnames]; [QMnames',num2cell(C.QM.p)] ];
     C.QM.etab = cell(1,size(C.QM.rtab,2)); C.QM.xtab =  C.QM.etab;
-    C.QM.xtab{1} = sprintf('PCC (r/p-value)'); 
+    C.QM.xtab{1} = sprintf('%s (r/p-value)',corrtype); 
     
     if isfield(C.QM,'txt'), C.QM = rmfield(C.QM,'txt'); end
-    T.ixiPPC = sprintf('\nPCC on BWP:\n%s\n',...
+    T.ixiPPC = sprintf('\n%s correlation on BWP:\n%s\n',corrtype,...
       '------------------------------------------------------------------------------');
     for di=2:size(C.QM.rtab,2)
       T.ixiPPC = sprintf('%s%8s   ',T.ixiPPC,C.QM.rtab{1,di}); 
@@ -1024,11 +1029,16 @@ for qai = qais
         end
       end
     end
-    cat_io_csv(fullfile(opt.resdir,sprintf('tst_%s_rptable.csv',ff)), C.QM.xtab); 
+    fname = fullfile(opt.resdir,sprintf('tst_bwpmaintest_%s_rptable_%s.csv',qafile,segment{mi})); 
+    cat_io_csv(fname, C.QM.xtab); 
+    cat_io_cprintf('blue',sprintf('\n    Write %s\n',fname)); 
+    
+
     C.QM.txt = T.ixiPPC;
     C.QM.txt = [C.QM.txt '\n\n\n'];
-    f  = fopen(fullfile(opt.resdir,sprintf('tst_%s.txt',ff)),'a'); if f~=-1, fprintf(f,C.QM.txt); fclose(f); end
-  
+    fc = fullfile(opt.resdir,sprintf('tst_bwpmaintest_%s_%s.txt',qafile,segment{mi})); 
+    f  = fopen(fc,'w'); if f~=-1, fprintf(f,C.QM.txt); fclose(f); end
+    cat_io_cprintf('blue','    Write %s\n',fc); 
   
     
     
@@ -1044,7 +1054,7 @@ for qai = qais
       QMcorrs = mark2rps([ Q.NCR(M2(:,1),method(mi)) , Q.ICR(M2(:,1),method(mi)) , ...
         Q.res_RMS(M2(:,1),method(mi)) , Q.ECR(M2(:,1),method(mi)) , Q.FEC(M2(:,1),method(mi)) , ...
         Q.IQR(M2(:,1),method(mi)) , Q.SIQR(M2(:,1),method(mi)) ]);
-      [C.QM.r, C.QM.p] = corr(QMcorrs,Q.kappa(M2(:,1),method(mi)),'type','Spearman');
+      [C.QM.r, C.QM.p] = corr(QMcorrs,Q.kappa(M2(:,1),method(mi)),'type',corrtype);
       for fi=1:numel(QMfields)
         T.Kappa.rtab{mi+1,fi+1} = C.QM.r(fi); 
         T.Kappa.ptab{mi+1,fi+1} = C.QM.p(fi);
@@ -1062,7 +1072,7 @@ for qai = qais
     mi=mi+3;
     T.Kappa.rtab{mi,1}    = 'Kappa all';
      QMcorrs = mark2rps([ Q.NCR(M2) , Q.ICR(M2) , Q.res_RMS(M2) , Q.ECR(M2) , Q.FEC(M2) , Q.IQR(M2) , Q.SIQR(M2) ]);
-    [C.QM.r, C.QM.p] = corr(QMcorrs,Q.kappa(M2),'type','Spearman');
+    [C.QM.r, C.QM.p] = corr(QMcorrs,Q.kappa(M2),'type',corrtype);
     for fi=1:numel(QMfields)
       T.Kappa.rtab{mi+1,fi+1} = C.QM.r(fi); 
       T.Kappa.ptab{mi+1,fi+1} = C.QM.p(fi);
@@ -1070,7 +1080,7 @@ for qai = qais
    
     
     if isfield(C.QM,'txt'), C.QM = rmfield(C.QM,'txt'); end
-    T.ixiPPC = sprintf('\nPCC on IXI database:\n%s\n',...
+    T.ixiPPC = sprintf('\n%s on BWP:\n%s\n',corrtype,...
       '------------------------------------------------------------------------------');
     for di=1:size(T.Kappa.rtab,2), T.ixiPPC = sprintf('%s%8s   ',T.ixiPPC,T.Kappa.rtab{1,di}); end 
     for dj=2:size(T.Kappa.rtab,1)
@@ -1086,7 +1096,10 @@ for qai = qais
     end
     C.QM.txt = T.ixiPPC;
     C.QM.txt = [C.QM.txt sprintf('\n\n\n')];
-    f  = fopen(fullfile(opt.resdir,sprintf('tst_%s.csv',ff)),'a'); if f~=-1, fprintf(f,C.QM.txt); fclose(f); end
+    mi = 1; 
+    fc = fullfile(opt.resdir,sprintf('tst_bwpmaintest_%s_corr_%s.csv',qafile,segment{mi})); 
+    f  = fopen(fc,'w'); if f~=-1, fprintf(f,C.QM.txt); fclose(f); end
+    cat_io_cprintf('blue','    Write %s\n',fc); 
   
     
     
@@ -1135,18 +1148,123 @@ for qai = qais
     T.RMS(mi+numel(method)+(numel(method)>1)*2+0,:) = [sprintf('RMSE HQ (N=%d)',sum(MH)), num2cell(mean(cell2mat(T.RMShq(2:end,2:end)),1))];
     T.RMS(mi+numel(method)+(numel(method)>1)*2+1,:) = [sprintf('RMSE LQ (N=%d)',sum(ML)), num2cell(mean(cell2mat(T.RMSlq(2:end,2:end)),1))];
     T.RMS(mi+numel(method)+(numel(method)>1)*2+2,:) = [sprintf('RMSE ALL(N=%d)',sum(MZ)), num2cell(mean(cell2mat(T.RMS(2:end,2:end)),1))];
-    cat_io_csv(fullfile(opt.resdir,sprintf('tst_%s_rms.csv',ff)),T.RMS)
-    
+    fc = fullfile(opt.resdir,sprintf('tst_bwpmaintest_%s_rms_%s.csv',qafile,segment{mi}));
+    cat_io_csv(fc,T.RMS)
+    cat_io_cprintf('blue','    Write %s\n',fc); 
     
   
     % -- save images ---------------------------------------------------  
-    stime = cat_io_cmd('  Print figures:','g5','',1,stime);
-    %fprintf(C.QM.txt);
-    ff = sprintf('qa_bwpmaintest_set%d_%s_meth%d%d%d%d%d',opt.bwptestset,qafile,rps);
-    f  = fopen(fullfile(opt.resdir,sprintf('tst_%s.csv',ff)),'w'); if f~=-1, fprintf(f,C.QM.txt); fclose(f); end
-    print(fh1,fullfile(opt.resdir,sprintf('fig_%s_%s',ff,P.bwpx{si,1})),opt.res,'-dpng');
+    mi = 1; 
+    cat_io_cmd('  Print figures:','g5','',1);
+    fc = fullfile(opt.resdir,sprintf('tst_bwpmaintest_%s_%s.csv',qafile,segment{mi}));
+    f  = fopen(fc,'w'); if f~=-1, fprintf(f,C.QM.txt); fclose(f); end
+    cat_io_cprintf('blue','\n    Write %s\n',fc); 
+  
+    fc = fullfile(opt.resdir,sprintf('fig1_bwpmaintest_%s_%s',qafile,segment{mi}));
+    print(fh1,fc,opt.res,'-dpng');
+    cat_io_cprintf('blue','    Save  %s.png\n',fc); 
     if opt.closefig, close(fh1); end
-    cat_io_cmd('','g5','',1,stime);
+
+
+    
+
+    %% -- NCR vs. CNR  --------------------------------------------------- 
+    % Based on a reviewer request here the comparison between the NCR vs. 
+    % CNR definition. 
+    % The NCR support a more linear scaling with lower/higher variance for 
+    % good/bad ratings (lower values for good quality), whereas the CNR shows 
+    % the oposit pattern, ie, higher/lower variance for good/bad values with
+    % higher values for good quality.
+    % The NCR focuses therefore more on finer separation of low quality data
+    % whereas the CNR focuses more on further separation of high quality data. 
+    % The relevance becomes more clear together with the Kappa ratings, 
+    % where the CNR presents a clear linear relation.
+    % However, the NCR is maybe more helpful in separating ultra-high
+    % resolution data and is less depening on the RMS rating concept. 
+
+    cat_io_cmd('  Print NCR vs. CNR figure:','g5','',1); fprintf('\n'); 
+    
+    % get raw measures for NCR and CNR
+    for mi = 1
+      for pi = 1:numel(X(mi).xml)
+        Q2.NCR(pi,mi) = X(mi).xml(pi).qualityratings.NCR;
+        Q2.CNR(pi,mi) = X(mi).xml(pi).qualitymeasures.contrast ./ ...
+          (X(mi).xml(pi).qualitymeasures.NCR*X(mi).xml(pi).qualitymeasures.contrast);
+   
+        Q2.ICR(pi,mi) = X(mi).xml(pi).qualityratings.ICR;
+        Q2.CIR(pi,mi) = X(mi).xml(pi).qualitymeasures.contrast ./ ...
+          (X(mi).xml(pi).qualitymeasures.ICR*X(mi).xml(pi).qualitymeasures.contrast);
+      end
+    end
+    
+    corrNCR = [ corr(Q2.NCR,Q2.CNR,'Type','Spearman'), corr(Q2.NCR,Q2.CNR,'Type','Pearson') ];
+    corrICR = [ corr(Q2.ICR,Q2.CIR,'Type','Spearman'), corr(Q2.ICR,Q2.CIR,'Type','Pearson') ];
+    
+    corrNCRkappa = [ corr(Q2.NCR,Q.kappa,'Type','Spearman'), corr(Q2.NCR,Q.kappa,'Type','Pearson') ]; 
+    corrCNRkappa = [ corr(Q2.CNR,Q.kappa,'Type','Spearman'), corr(Q2.CNR,Q.kappa,'Type','Pearson') ]; 
+    
+
+    for figSize = 2%1:2
+      fh1 = figure(333);
+      if figSize==1, fh1.Position(3:4) = [1200 400]; else fh1.Position(3:4) = [750 250]; end
+      clf(fh1); fh1.Visible = 'on'; 
+
+      MM = Q.RESgt==2; % take only 1 mm to make it easier
+      biases = unique(Q.bias); biascolors = cool(numel(biases)); 
+      noises = unique(Q.noise); noisemarker = 'o<>^v'; lg = {}; 
+      tiledlayout(1, 3, 'TileSpacing', 'compact', 'Padding', 'compact'); 
+      for ti = 1:3
+        nexttile; hold on; 
+              
+        for nf = 1:numel(noises)
+          for bf = 1:numel(biases)
+            MMM = MM & Q.bias == biases(bf) & Q.noise == noises(nf); 
+            switch ti
+              case 1, sc(bf) = scatter(Q2.NCR(MMM),Q2.CNR(MMM),'filled');
+              case 2, sc(bf) = scatter(Q2.NCR(MMM),Q.kappa(MMM),'filled');
+              case 3, sc(bf) = scatter(Q2.CNR(MMM),Q.kappa(MMM),'filled');
+            end
+            sc(bf).Marker          = noisemarker(nf);
+            sc(bf).MarkerFaceAlpha = .8; 
+            sc(bf).MarkerEdgeAlpha = .0; 
+            sc(bf).SizeData        = 50; 
+            sc(bf).MarkerEdgeColor = biascolors(bf,:); 
+            sc(bf).MarkerFaceColor = sc(bf).MarkerEdgeColor;
+            lg = [lg; sprintf('nf=%0.0f%% bf=%0.0f%%',noises(nf),biases(bf))]; 
+          end
+        end
+        box on; grid on; 
+  
+        switch ti
+          case 1 
+            title('CNR vs. NCR')
+            ylabel('worse  << \bf NCR \rm >>  better')
+            xlabel('better  << \bf CNR (mark) \rm >>  worse'); 
+            if figSize==2, set(gca,'XTick',1:5); xlim([.5 5.5]); end 
+            if figSize==1 || fasttest, legend(lg,'Location','Northeast','FontSize',7); end
+          case 2 
+            title('CNR vs. Kappa')
+            ylabel('worse  << \bf Kappa \rm >>  better')
+            xlabel('better  << \bf CNR (mark) \rm >>  worse'); 
+            if figSize==2, set(gca,'XTick',1:5); xlim([.5 5.5]); end
+            ylim([.84 .94]+0.01*(figSize==1)); 
+          case 3 
+            title('NCR vs. Kappa')
+            ylabel('worse  << \bf Kappa \rm >>  better')
+            xlabel('worse  << \bf NCR \rm >>  better'); 
+            ylim([.84 .94]+0.01*(figSize==1));
+            set(gca,'XTick',0:20:80);
+        end
+        %subtitle('(1 mm resolution with 3 bias fields per group)'); 
+        %ax = gca; ax.YScale = 'log';
+      end
+      fc = fullfile(opt.resdir,sprintf('fig2_bwpmaintest_%s_rps%0.0f_CNRvsNCR%d_%s',qafile,rps,figSize,segment{mi})); 
+      print(fh1,fc,opt.res,'-dpng');
+      cat_io_cprintf('blue','    Save  %s.png\n',fc); 
+      if opt.closefig, close(fh1); end
+    end
+    if opt.closefig, close(fh1); end
+
   end
     
   end  

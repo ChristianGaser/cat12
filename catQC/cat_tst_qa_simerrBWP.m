@@ -110,9 +110,9 @@ Pcolor1   = cat_io_colormaps('cold',4);
 Pcolor2   = flip( cat_io_colormaps('hot',4) ,1);
 Pcolor    = [Pcolor1(2:end-1,:); mean([Pcolor1(2:end-1,:);Pcolor2(2:end-1,:)]); Pcolor2(2:end-1,:)];
 Pcolor    = repmat( Pcolor , max(1,numel(Pt{1}) / 5) , 1);
-QR        = {'NCR','ICR','res_ECR','contrastr','IQR','SIQR'};
-QRname    = {'NCR','ICR','ECR','CON','IQR','SIQR'};
-markrange = [-.5 .5] * 2;
+QR        = {'NCR','ICR','res_ECR','FEC','contrastr','SIQR'};
+QRname    = {'NCR','ICR','ECR','FEC','CON','SIQR'};
+markrange = [-.5 .5] * 2 * 3;
 fastname  = {'full','fast'};
 rerunqc    = rerun; 
 rerunkappa = rerun; 
@@ -124,12 +124,12 @@ if fasttest && numel(Pt{1})>=15
 else
   Pt{1} = Pt{1}(1:end);
 end
-printdir  = fullfile(fileparts(Pddir),'+results',['BWPE_' fastname{fasttest+1} '_' datestr(clock,'YYYYmm')]);
+printdir  = fullfile(fileparts(Pddir),'+results',['BWPE_' fastname{fasttest+1} '_' '202508']); %datestr(clock,'YYYYmm')]);
 
 f29 = figure(3235);  
 f29.Visible = 'off';
-f29.Interruptible = 'off';
-set(f29,'Position',[0 0 1440 200],'Name','Skull-Stripping','color',[1 1 1]); 
+%f29.Interruptible = 'off';
+set(f29,'Position',[0 0 1600 200],'Name','Skull-Stripping','color',[1 1 1]); 
 clear valr2;
 
 qais   = 1:numel(qaversions);
@@ -240,7 +240,7 @@ for qai = qais
 
 
     %% Evaluation 
-    set(f29,'Position',[0 0 1440 200],'Name','Skull-Stripping','color',[1 1 1]); 
+    set(f29,'Position',[0 0 1800 200],'Name','Skull-Stripping','color',[1 1 1]); 
     clf(f29); hold on; clear tab; 
     qav2r = reshape(qav,numel(bstr),numel(Pt{pi})); 
     RMSE  = @(x) mean(x.^2).^0.5; 
@@ -264,31 +264,31 @@ for qai = qais
       xlim([0.25,1]), ylim(markrange); grid on; box on; 
       title(strrep(QRname{qri},'_','\_'));
       xlabel('Kappa'); ylabel('mark error');
-      set(sp29,'ytick',markrange(1):0.5:markrange(2),'yticklabel',num2str((markrange(1):0.5:markrange(2))','%0.2f '), ...
+      set(sp29,'ytick',markrange(1):1:markrange(2),'yticklabel',num2str((markrange(1):1:markrange(2))','%0.2f '), ...
                'xtick',0:0.25:1,'xticklabel',num2str((0:0.25:1)','%0.2f ') );
     end
 
     % absolute error
     subplot('Position',[ (numel(QR)) / (numel(QR) + 2) + 0.035 ,  0.17 , 0.72 / (numel(QR) + 2) , 0.73]);  
-    cat_plot_boxplot([ tab.NCR(:) , tab.ICR(:) , tab.res_ECR(:) , tab.contrastr(:) , ...
-      tab.IQR(:) , tab.SIQR(:) ],struct('names',{QRname},'ygrid',0,'ylim',markrange,'style',4,'datasymbol','o','usescatter',1))
+    cat_plot_boxplot([ tab.NCR(:) , tab.ICR(:) , tab.res_ECR(:) , tab.FEC(:) , tab.contrastr(:) , ...
+      tab.SIQR(:) ],struct('names',{QRname},'ygrid',0,'ylim',markrange,'style',4,'datasymbol','o','usescatter',1))
     ax=gca; ax.XTickLabelRotation = 0; ax.YGrid = 'on'; ax.FontSize = 9.5;
-    set(ax,'ytick',markrange(1):0.5:markrange(2),'yticklabel',num2str((markrange(1):0.5:markrange(2))','%0.2f '));
+    set(ax,'ytick',markrange(1):1:markrange(2),'yticklabel',num2str((markrange(1):1:markrange(2))','%0.2f '));
     title('Absolute error'); xlabel('measure'); ylabel('mark error');
 
     % RMSE
     subplot('Position',[ (numel(QR) + 1) / (numel(QR) + 2) + 0.032 ,  0.17 , 0.72 / (numel(QR) + 2) , 0.73]);  
     rms     = @(a)   max(0,cat_stat_nanmean(a.^2).^(1/2));
-    rmseval = [ rms(tab.NCR(:)) , rms(tab.ICR(:)) , rms(tab.res_ECR(:)) , rms(tab.contrastr(:)) , ...
-      rms(tab.IQR(:)) , rms(tab.SIQR(:)) ]; 
+    rmseval = [ rms(tab.NCR(:)) , rms(tab.ICR(:)) , rms(tab.res_ECR(:)) , rms(tab.FEC(:)) , rms(tab.contrastr(:)) , ...
+      rms(tab.SIQR(:)) ]; 
     bar(rmseval(1:end)); 
-    ylim([0,1]); xlim([.4 6.6]); xticklabels(QRname); 
+    ylim([0,markrange(2)]); xlim([.4 6.6]); xticklabels(QRname); 
     h = gca; h.YGrid = 'on'; h.XTickLabelRotation = 0; 
     for fi = 1:numel(rmseval)
-      text(fi-.38, rmseval(fi) + .03, sprintf('%0.2f',rmseval(fi)),'FontSize',8,'Color',[.0 .2 .4]);
+      text(fi-.38, rmseval(fi) + .05, sprintf('%0.3f',rmseval(fi)),'FontSize',7,'Color',[.0 .2 .4]);
     end  
     ax=gca; ax.XTickLabelRotation = 0; ax.YGrid = 'on'; ax.FontSize = 9.5;
-    set(ax,'ytick',markrange(1):0.25:markrange(2),'yticklabel',num2str((markrange(1):0.25:markrange(2))','%0.2f '));
+    set(ax,'ytick',markrange(1):0.5:markrange(2),'yticklabel',num2str((markrange(1):0.5:markrange(2))','%0.2f '));
     title(sprintf('RMSE (%0.3f)',mean(rmseval))); xlabel('measure'); ylabel('mark error');
   
     % caption
@@ -310,10 +310,16 @@ for qai = qais
   
     subdir = fullfile(printdir,'Fig2-skullstripping');
     if ~exist(subdir,'dir'), mkdir(subdir); end
-    print(f29, '-djpeg', '-r300', fullfile(subdir,sprintf('%s_skullstrippingphantom_%s',printname,qafile))); 
+    fname = fullfile(subdir,sprintf('%s_skullstrippingphantom_%s.jpg',printname,qafile)); 
+    cat_io_cprintf('blue',sprintf('    Write %s\n',fname)); 
+    print(f29, '-djpeg', '-r300', fname); 
     %delete(an);
     
-    
+    fname = fullfile(subdir,sprintf('%s_skullstrippingphantom_%s_RMSE.csv',printname,qafile)); 
+    tableRMSE = [{'measure:'}, QR;
+                 {'RMSE-skull-stripping'}, num2cell(rmseval)];
+    cat_io_csv(fname,tableRMSE);
+
     
      
     %% (2) Tissue Segment Modification  
@@ -419,7 +425,7 @@ for qai = qais
       %  but also other factors. ICR is quite stable (does this support some 
       %  further use?)
       clf(f29); hold on
-      set(f29,'Position',[0 0 1440 200],'color',[1 1 1],'Name',sprintf('segmentation L%d',levels(li)));
+      set(f29,'Position',[0 0 1800 200],'color',[1 1 1],'Name',sprintf('segmentation L%d',levels(li)));
       qav2r = reshape(qav2{li},numel(tcase),numel(Pt{pi})); 
       RMSE = @(x) mean(x.^2).^0.5; 
       for qri = 1:numel(QR) 
@@ -447,24 +453,24 @@ for qai = qais
     
       % absolute error
       subplot('Position',[ numel(QR) / (numel(QR) + 2) + 0.035 ,  0.17 , 0.73 / (numel(QR) + 2) , 0.73],'replace'); 
-      cat_plot_boxplot([ tabsegt{li}.NCR(:) , tabsegt{li}.ICR(:) , tabsegt{li}.res_ECR(:) , ...
-        tabsegt{li}.contrastr(:) , tabsegt{li}.IQR(:) , tabsegt{li}.SIQR(:) ], ...
+      cat_plot_boxplot([ tabsegt{li}.NCR(:) , tabsegt{li}.ICR(:) , tabsegt{li}.res_ECR(:) , tabsegt{li}.FEC(:) , ...
+        tabsegt{li}.contrastr(:) , tabsegt{li}.SIQR(:) ], ...
         struct('names',{QRname},'ygrid',1,'ylim',markrange,'style',4,'datasymbol','o','usescatter',1))
       ax=gca; ax.XTickLabelRotation = 0; ax.YGrid = 'on'; ax.FontSize = 9.5;
       title('Absolute error'); xlabel('measure'); ylabel('mark error')
   
       % RMSE
       subplot('Position',[ (numel(QR) + 1) / (numel(QR) + 2) + 0.032 ,  0.17 , 0.72 / (numel(QR) + 2) , 0.73]);  
-      rmseval = [ rms(tabsegt{li}.NCR(:)) , rms(tabsegt{li}.ICR(:)) , rms(tabsegt{li}.res_ECR(:)) , ...
-        rms(tabsegt{li}.contrastr(:)) , rms(tabsegt{li}.IQR(:)) , rms(tabsegt{li}.SIQR(:)) ]; 
+      rmseval = [ rms(tabsegt{li}.NCR(:)) , rms(tabsegt{li}.ICR(:)) , rms(tabsegt{li}.res_ECR(:)) , rms(tabsegt{li}.FEC(:)) ,...
+        rms(tabsegt{li}.contrastr(:)) ,  rms(tabsegt{li}.SIQR(:)) ]; 
       bar(rmseval(1:end)); 
-      ylim([0,1]); xlim([.4 6.6]); xticklabels(QRname); 
+      ylim([0,markrange(2)]); xlim([.4 6.6]); xticklabels(QRname); 
       h = gca; h.YGrid = 'on'; h.XTickLabelRotation = 0; 
       for fi = 1:numel(rmseval)
-        text(fi-.38, rmseval(fi) + .03, sprintf('%0.2f',rmseval(fi)),'FontSize',8,'Color',[.0 .2 .4]);
+        text(fi-.38, rmseval(fi) + .05, sprintf('%0.2f',rmseval(fi)),'FontSize',8,'Color',[.0 .2 .4]);
       end  
       ax=gca; ax.XTickLabelRotation = 0; ax.YGrid = 'on'; ax.FontSize = 9.5;
-      set(ax,'ytick',markrange(1):0.25:markrange(2),'yticklabel',num2str((markrange(1):0.25:markrange(2))','%0.2f '));
+      set(ax,'ytick',markrange(1):0.5:markrange(2),'yticklabel',num2str((markrange(1):0.5:markrange(2))','%0.2f '));
       title(sprintf('RMSE (%0.3f)',mean(rmseval))); xlabel('measure'); ylabel('mark error');
 
 
@@ -493,7 +499,15 @@ for qai = qais
   
       subdir = fullfile(printdir,'Fig3-classissues');
       if ~exist(subdir,'dir'), mkdir(subdir); end
-      print(f29, '-djpeg', '-r300', fullfile(subdir,sprintf('%s_segmentationphantomL%d_%s',printname,li,qafile))); 
+      fname = fullfile(subdir,sprintf('%s_segmentationphantomL%d_%s.jpg',printname,li,qafile));
+      print(f29, '-djpeg', '-r300', fname); 
+
+
+      tableRMSE = [{'measure:'}, QR;
+                 {'RMSE-segmentation'}, num2cell(rmseval)];
+      fname = fullfile(subdir,sprintf('%s_segmentationphantomL%d_%s.csv',printname,li,qafile));
+      cat_io_csv(fname,tableRMSE);
+      
     end
      
    
@@ -514,8 +528,8 @@ for qai = qais
     %  ----------------------------------------------------------------------
     marker = 'o^v><sp+x'; clear msknoise mskkappa kappa data
     clf(f29); hold on
-    set(f29,'Position',[0 800 1440 220],'color',[1 1 1],'name','conclusion'); 
-    QRsubset = [1 2 3 5 6]; QRP = QR(QRsubset); QRPname = QRname(QRsubset); % without contrast and old IQR  
+    set(f29,'Position',[0 800 1800 220],'color',[1 1 1],'name','conclusion'); 
+    QRsubset = [1 2 3 4 6]; QRP = QR(QRsubset); QRPname = QRname(QRsubset); % without contrast and old IQR  
     dcolor = lines; dcolor = dcolor([1 3 2],:); 
     for qri = 1:numel(QRP) 
       sp32 = subplot('Position',[ (qri-1) * 1 / (numel(QRP) + 3) + 0.035 , 0.17 , 0.7 / (numel(QRP) + 3) , 0.73],'replace');  
@@ -560,7 +574,7 @@ for qai = qais
 
       xlim([0.25,1]), ylim(sp32,markrange); grid(sp32); box on; 
       title(sp32,strrep(QRPname{qri},'_','\_')); xlabel(sp32,'Kappa'); ylabel(sp32,'mark error')
-      set(sp32,'ytick',markrange(1):0.5:markrange(2),'yticklabel',num2str((markrange(1):0.5:markrange(2))','%0.2f '), ...
+      set(sp32,'ytick',markrange(1):1:markrange(2),'yticklabel',num2str((markrange(1):1:markrange(2))','%0.2f '), ...
                'xtick',0:0.25:1,'xticklabel',num2str((0:0.25:1)','%0.2f ') );
     end
     
@@ -571,7 +585,7 @@ for qai = qais
     cat_plot_boxplot( pdata , struct('names',{[{'BE'},seg]},'ygrid',0,'ylim',markrange,...
       'groupcolor',dcolor,'style',4,'datasymbol','o','usescatter',1));
     ax=gca; ax.XTickLabelRotation = 0; ax.YGrid = 'on';
-    set(ax,'ytick',markrange(1):0.5:markrange(2),'yticklabel',num2str((markrange(1):0.5:markrange(2))','%0.2f '));
+    set(ax,'ytick',markrange(1):1:markrange(2),'yticklabel',num2str((markrange(1):1:markrange(2))','%0.2f '));
     title('Phantoms (all measures)'); xlabel('phantom'); ylabel('mark error')
     hold on, pl=plot([0 10],[0 0]); pl.Color = [0.3 0.3 0.3];
     
@@ -581,7 +595,7 @@ for qai = qais
     for qri = 1:numel(QRP), fdata{qri} = [fdata{qri}; cell2mat(data{qri}(:)) ]; end 
     cat_plot_boxplot( fdata , struct('names',{QRPname},'ygrid',0,'ylim',markrange,'box',1,'style',4,'datasymbol','o','usescatter',1));
     ax=gca; ax.XTickLabelRotation = 0; ax.YGrid = 'on';
-    set(ax,'ytick',markrange(1):0.5:markrange(2),'yticklabel',num2str((markrange(1):0.5:markrange(2))','%0.2f '));
+    set(ax,'ytick',markrange(1):1:markrange(2),'yticklabel',num2str((markrange(1):1:markrange(2))','%0.2f '));
     title('Measures (all phantoms)'); xlabel('measure'); ylabel('mark error')
     hold on, pl=plot([0 10],[0 0]); pl.Color = [0.3 0.3 0.3];
     
@@ -589,13 +603,13 @@ for qai = qais
     sp30 = subplot('Position',[ (numel(QRP) + 2) / (numel(QRP) + 3) + 0.035 ,  0.17 , 0.7 / (numel(QRP) + 3) , 0.73]);  
     rmseval = [ rms(fdata{1}(:)) , rms(fdata{2}(:)) , rms(fdata{3}(:)) , rms(fdata{4}(:)) , rms(fdata{5}(:)) ]; 
     bh = bar(rmseval(1:end)); 
-    ylim([0,1]); xlim([.4 5.6]); xticklabels(QRPname); 
+    ylim([0,markrange(2)]); xlim([.4 5.6]); xticklabels(QRPname); 
     h = gca; h.YGrid = 'on'; h.XTickLabelRotation = 0; 
     for fi = 1:numel(rmseval)
-      text(fi-.38, rmseval(fi) + .03, sprintf('%0.2f',rmseval(fi)),'FontSize',8,'Color',[.0 .2 .4]);
+      text(fi-.38, rmseval(fi) + .05, sprintf('%0.2f',rmseval(fi)),'FontSize',8,'Color',[.0 .2 .4]);
     end  
     ax=gca; ax.XTickLabelRotation = 0; ax.YGrid = 'on'; ax.FontSize = 9.5;
-    set(ax,'ytick',markrange(1):0.25:markrange(2),'yticklabel',num2str((markrange(1):0.25:markrange(2))','%0.2f '));
+    set(ax,'ytick',markrange(1):0.5:markrange(2),'yticklabel',num2str((markrange(1):0.5:markrange(2))','%0.2f '));
     title(sprintf('RMSE (%0.3f)',mean(rmseval))); xlabel('measure'); ylabel('mark error');
 
 
@@ -621,8 +635,15 @@ for qai = qais
     % save image
     subdir = fullfile(printdir,'Fig1-overview');
     if ~exist(subdir,'dir'), mkdir(subdir); end
-    print(f29, '-djpeg', '-r300', fullfile(subdir,sprintf('%s_conclusion_%s',printname,qafile))); 
+    fname = fullfile(subdir,sprintf('%s_conclusion_%s.jpg',printname,qafile)); 
+    print(f29, '-djpeg', '-r300', fname); 
     
+    %%
+    tableRMSE = [{'measure:'}, QRP;
+                 {'RMSE-conclusion'}, num2cell(rmseval)];
+    fname = fullfile(subdir,sprintf('%s_segmentationphantom_%s_conclusion.csv',printname,qafile));
+    cat_io_csv(fname,tableRMSE);
+
   end
 end
 fprintf('BWPE done.\n')

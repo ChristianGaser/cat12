@@ -46,18 +46,18 @@ if ~exist( 'segment' , 'var')
 end
 
 if ~exist( 'fasttest', 'var'), fasttest = 0; end
-if ~exist( 'rerun', 'var'), rerun = 0; end
+if ~exist( 'rerun', 'var'), rerun = 0; else, rerun = min(1,rerun); end
 fast = {'full','fast'}; 
 
 warning off
-
+printslices = 0; % ######
 
 [cv,rn]   = cat_version;
 catppdir  = fullfile(maindir,'derivatives',sprintf('%s',cv)); %sprintf('%s_R%s',cv,rn)); 
 [~,CATver,ext] = fileparts(catppdir); CATver = [CATver ext]; clear ext
 mriqcdir  = fullfile(maindir,'derivatives','mriqc-0.16.1');
 resultdir = fullfile(maindir,'derivatives',['results_' CATver]);
-printdir  = fullfile(fileparts(maindir),'+results',sprintf('MR-ART_%s_%s',fast{fasttest+1},datestr(clock,'YYYYmm')));
+printdir  = fullfile(fileparts(maindir),'+results',sprintf('MR-ART_%s_%s',fast{fasttest+1},'202508')); %datestr(clock,'YYYYmm')));
 exprating = fullfile(maindir,'derivatives','scores.tsv');
 partis    = fullfile(maindir,'participants.tsv');
 FS        = [10 10];
@@ -142,7 +142,7 @@ for si = 1:numel(segment)
   for qai = qais
     fprintf('MRART %s:\n',qaversions{qai})
   
-    resultdirqai = [resultdir '_'  fast{fasttest+1} '_' datestr(clock,'YYYYmm') ]; 
+    resultdirqai = [resultdir '_'  fast{fasttest+1} '_202508' ]; % datestr(clock,'YYYYmm') ]; 
   
     if ~exist(resultdirqai,'dir'), mkdir(resultdirqai); end
     if ~exist(printdir    ,'dir'), mkdir(printdir); end
@@ -162,7 +162,8 @@ for si = 1:numel(segment)
           [pp,ff] = fileparts(Pqs{qai}{pi});
           Pxml{pi,1} = fullfile(pp,'report',[qaversions{qai} '_qcseg_' ff '.xml']); % spm_c1
         else
-          Pxml{pi,1} = fullfile(maindir,spm_str_manip(pp,'ht'),spm_str_manip(pp,'t'),'report',[qaversions{qai} '_' ff(3:end) '.xml']);
+          %Pxml{pi,1} = fullfile(maindir,spm_str_manip(pp,'ht'),spm_str_manip(pp,'t'),[qaversions{qai} '_' ff(3:end) '.xml']);
+          Pxml{pi,1} = fullfile(pp,[qaversions{qai} '_' ff(3:end) '.xml']);
           if ~exist(Pxml{pi},'file')
             Pxml{pi,1} = fullfile(maindir,spm_str_manip(pp,'ht'),[qaversions{qai} '_' ff(3:end) '.xml']);
           end
@@ -190,7 +191,7 @@ for si = 1:numel(segment)
       % get json and other files
       if any( contains(segment{si},'CAT' ) )
         [pp,ff,ee]     = fileparts(strrep(Pxml{xi},[qaversions{qai} '_'],''));
-        SID{xi}        = spm_str_manip(Pxml{xi},'hhht');
+        SID{xi}        = spm_str_manip(Pxml{xi},'hht');
       elseif any( contains(segment{si},'SPM' ) )
         [pp,ff,ee]     = fileparts(strrep(strrep(Pxml{xi},[qaversions{qai} '_'],''),'spm_',''));
         SID{xi}        = spm_str_manip(Pxml{xi},'hht');
@@ -325,7 +326,7 @@ for si = 1:numel(segment)
       'qualityratings'   'SIQR'         1 1 [1 6]         'SIQR'      1
      ... 'qualityratings'   'contrastr'    1 1 [1 6]         'CON'       1
       'subjectmeasures'  'vol_rel_CGW'  2 0 [0 1]         'rGMV'      1 %-fasttest
-      'subjectmeasures'  'vol_rel_CGW'  1 0 [0 1]         'rCSFV'      1-fasttest
+      'subjectmeasures'  'vol_rel_CGW'  1 0 [0 1]         'rCSFV'     1-fasttest
       'subjectmeasures'  'vol_rel_CGW'  3 0 [0 1]         'rWMV'      1-fasttest
       ...'subjectmeasures'  'SPMrGMV'      1 0 [0 1]         'SPMrGMV'      1-fasttest
       ...'subjectmeasures'  'SPMrWMV'      1 0 [0 1]         'SPMrCSFV'      1-fasttest
@@ -357,13 +358,7 @@ for si = 1:numel(segment)
         end
     end
     
-  if 0
-    Q = QS; 
-  %  switch segment{si}
-   %   case 'SPM', qaversions{ qai } = [qaversions{ qai } '_spm'];
-    %qaversions{ qai } = [qaversions{ qai } '_synthseg'];
-  end
-  Q.site  = ones(size(Q.NCR));
+    Q.site  = ones(size(Q.NCR));
     
   
     
@@ -409,7 +404,10 @@ for si = 1:numel(segment)
       set(gca,'ygrid','on','ylim',[-3 3],'XTickLabelRotation',0);
       title(sprintf('MAE (%s)',segment{si})), xlabel('measures'); ylabel('error')
       if ~exist(fullfile(printdir,'boxplot'),'dir'), mkdir(fullfile(printdir,'boxplot')); end
-      print(fh,fullfile(printdir,'boxplot',['MRART_boxplot_MAE_' qaversions{ qai } '_' segment{si} '.png']),'-dpng',pres)
+      fname = fullfile(printdir,'boxplot',['MRART_boxplot_MAE_' qaversions{ qai } '_' segment{si} '.png']); 
+      print(fh,fname,'-dpng',pres)
+      cat_io_cprintf('blue',sprintf('    Print %s\n',fname)); 
+
       %%   
       bh = bar(QSD.RMSE); bh.CData = cl; bh.FaceColor = 'flat';
       ylim([0 3]); xlim([.4 6.6]); xticklabels({'NCR','ICR','RES','ECR','FEC','SIQR'}); 
@@ -420,7 +418,9 @@ for si = 1:numel(segment)
       end  
       set(gca,'ygrid','on','ylim',[0 3],'XTickLabelRotation',0);
       if ~exist(fullfile(printdir,'boxplot'),'dir'), mkdir(fullfile(printdir,'boxplot')); end
-      print(fh,fullfile(printdir,'boxplot',['MRART_boxplot_RMSE_' qaversions{ qai } '_' segment{si} '.png']),'-dpng',pres)
+      fname = fullfile(printdir,'boxplot',['MRART_boxplot_RMSE_' qaversions{ qai } '_' segment{si} '.png']); 
+      print(fh,fname,'-dpng',pres)
+      cat_io_cprintf('blue',sprintf('    Print %s\n',fname)); 
     end
   
   
@@ -447,10 +447,6 @@ for si = 1:numel(segment)
           end
       end
       
-      %if all(cell2mat(cellfun(@isnan,data,'UniformOutput',false)))
-      %  continue
-      %end
-      
   
       %%
       if QFN{fni1,7}
@@ -474,7 +470,7 @@ for si = 1:numel(segment)
         fig.Interruptible = 'off'; 
         fig.Position(3:4) = [130 200]; 
         fig.Name = sprintf('MR-ART - Boxplot - %s %s',qaversions{qai},strrep(QFN{fni1,6},'_','\_'));  
-        if ~verb, fig.Visible = 'off'; else, fig.Visible = 'on'; end
+        if verb, fig.Visible = 'on'; else, fig.Visible = 'off'; end
   
         if strcmp(QFN{fni1,1},'qualityratings')
           cat_plot_boxplot(data,struct('ygrid',0,'style',4,'names',{{'no','light','strong'}},'datasymbol','o', ...
@@ -495,7 +491,9 @@ for si = 1:numel(segment)
         end
         xlabel('groups'); ylabel(sprintf('%s (grades)',strrep(QFN{fni1,6},'_','\_'))); 
         if ~exist(fullfile(printdir,'boxplot'),'dir'), mkdir(fullfile(printdir,'boxplot')); end
-        print(fig,fullfile(printdir,'boxplot',['MRART_boxplot_' strrep(QFN{fni1,6},'res_','') '_' qaversions{ qai } '_' segment{si} '.png']),'-dpng',pres)
+        fname = fullfile(printdir,'boxplot',['MRART_boxplot_' strrep(QFN{fni1,6},'res_','') '_' qaversions{ qai } '_' segment{si} '.png']);
+        print(fig,fname,'-dpng',pres)
+        cat_io_cprintf('blue',sprintf('    Print %s\n',fname)); 
         if ~verb, close(fig); end
       end
     
@@ -514,21 +512,24 @@ for si = 1:numel(segment)
       else
         fni2 = fni1; 
       end
+      warning off; 
       for gi = 1:max(Q.group)
         if strcmp(QFN{fni2,1},'qualityratings')
           sc = scatter(Q.age(Q.group==gi), mark2rps(Q.(QFN{fni2,6})(Q.group==gi)), 20); 
-          [curve1{gi}, goodness, output] = fit( Q.age(Q.group==gi)', mark2rps(Q.(QFN{fni2,6})(Q.group==gi)),'poly1','robust','LAR');
+          [curve1{gi}, goodness, output] = fit( double(Q.age(Q.group==gi))', ...
+            double(mark2rps(Q.(QFN{fni2,6})(Q.group==gi))),'poly1','robust','LAR');
         else
           if strcmp(QFN{fni2,6},'rWMV'), deg = 'poly2'; else, deg = 'poly1'; end
           sc = scatter(Q.age(Q.group==gi), Q.(QFN{fni2,6})(Q.group==gi), 20); 
-          [curve1{gi}, goodness, output] = fit( Q.age(Q.group==gi & ~isnan(Q.(QFN{fni2,6}) ))', ...
-            Q.(QFN{fni2,6})(Q.group==gi & ~isnan(Q.(QFN{fni2,6}))) , deg,'robust','LAR');
+          [curve1{gi}, goodness, output] = fit( double(Q.age(Q.group==gi & ~isnan(Q.(QFN{fni2,6}) )))', ...
+            double(Q.(QFN{fni2,6})(Q.group==gi & ~isnan(Q.(QFN{fni2,6})))) , deg,'robust','LAR');
         end
         set(sc,'MarkerFaceColor',gcol(gi,:),'MarkerEdgeColor',gcol(gi,:), ...
           'MarkerFaceAlpha',0.3,'MarkerEdgeAlpha',0.3); 
         mylegend{gi} = sprintf('%s (b=%0.3f/100a)',gnam{gi},curve1{gi}.p1 * 100); 
         Q.agefit.p1(gi) = curve1{gi}.p1; 
       end
+      warning on; 
       xlim([15 85]); 
       for gi = 1:max(Q.group)
         ph = plot(curve1{gi});
@@ -538,6 +539,7 @@ for si = 1:numel(segment)
       title(sprintf('MA groups %s (diff(good/bad)=%0.3f)', strrep(QFN{fni2,6},'_','\_'),...
         abs(diff([mean(Q.(QFN{fni2,6})(Q.group==1)),mean(Q.(QFN{fni2,6})(Q.group==3))])))); 
       xlabel('age (years)'); 
+      warning off; 
       if strcmp(QFN{fni2,1},'qualityratings')
         ylabel(sprintf('%s (rps)',strrep(QFN{fni2,6},'_','\_'))); 
         ylim(gradlim - 10*(1-strcmp(QFN{fni2,2},'ICR'))); %set(gca,'YTick',45:10:95);
@@ -549,12 +551,13 @@ for si = 1:numel(segment)
         else
           legend(mylegend,'Location','NorthEast');
         end
-        
       end
+      warning on; 
       set(gca,'XTick',20:10:80);
       tdir = fullfile(printdir,'aging'); if ~exist(tdir,'dir'), mkdir(tdir); end
-      print(fig, fullfile(tdir, sprintf('MRART_aging_%s_%s_%s.png', strrep(QFN{fni2,6},'res_','') , qaversions{qai} , segment{si})) , '-dpng',pres);
-     
+      fname = fullfile(tdir, sprintf('MRART_aging_%s_%s_%s.png', strrep(QFN{fni2,6},'res_','') , qaversions{qai} , segment{si})); 
+      print(fig, fname, '-dpng',pres);
+      cat_io_cprintf('blue',sprintf('    Print %s\n',fname)); 
       
       
   
@@ -583,10 +586,10 @@ for si = 1:numel(segment)
           rps       = 1; 
                 
           if contains( QFN{fni1,2},  mriqcQFN)
-            th      = min( Q.(QFN{fni1,2}) ):tss/10 * (max( Q.(QFN{fni1,2}) ) - min( Q.(QFN{fni1,2}) )):max( Q.(QFN{fni1,2}) );
+            th        = min( Q.(QFN{fni1,2}) ):tss/10 * (max( Q.(QFN{fni1,2}) ) - min( Q.(QFN{fni1,2}) )):max( Q.(QFN{fni1,2}) );
             cf{erthi} = th; 
           else
-            th      = 0.5:tss:6.5;   % global IQR threshold test range (school grades)
+            th        = 0.5:tss:6.5;   % global IQR threshold test range (school grades)
             cf{erthi} = -10:tss*10:30;     % protocoll-specific dIQR threshold test range (school grad range) 
           end
              
@@ -596,6 +599,9 @@ for si = 1:numel(segment)
           spec2{erthi}  = sens2{erthi}; acc2{erthi} = sens2{erthi}; auc2{erthi} = sens2{erthi};
           Q.Nmn  = nan(size(Q.SIQR)); Q.Nsd = Q.Nmn;  Q.NXIQR = Q.Nmn;
           for i = 1:numel(cf{erthi}) % apply global IQR tresholds for ROC statistic 
+            TPFN{erthi}{i} = nan([size(Q.SIQR,1),4]);
+            NXIQR{erthi}{i} = nan([size(Q.SIQR,1),1]);
+            traingroup{erthi}{i} = nan([size(Q.SIQR,1),1]);
             for ti = 1:2      % train vs. test
               M = Q.train == ti-1; nM = ~M; 
               switch erthi
@@ -621,7 +627,7 @@ for si = 1:numel(segment)
                 end
                 if cmodel == 1
                   if rps
-                    Q.NXIQR = mark2rps(Q.(IQRfield)) - Q.Nmn;
+                    Q.NXIQR = -(mark2rps(Q.(IQRfield)) - Q.Nmn);
                   else
                     Q.NXIQR = Q.(IQRfield) - Q.Nmn;
                   end
@@ -634,26 +640,124 @@ for si = 1:numel(segment)
                 end
               end
         
-              TP = Q.group(M)> erth & Q.NXIQR(M) <  cf{erthi}(i); TPs = sum(TP);
-              FP = Q.group(M)<=erth & Q.NXIQR(M) <  cf{erthi}(i); FPs = sum(FP);
-              TN = Q.group(M)<=erth & Q.NXIQR(M) >= cf{erthi}(i); TNs = sum(TN);
-              FN = Q.group(M)> erth & Q.NXIQR(M) >= cf{erthi}(i); FNs = sum(FN);
+              % T = motion, F = no motion, P = 
+              TP = Q.group(M)> erth & Q.NXIQR(M) >  cf{erthi}(i); TPs = sum(TP);
+              FP = Q.group(M)< erth & Q.NXIQR(M) >  cf{erthi}(i); FPs = sum(FP);
+              TN = Q.group(M)< erth & Q.NXIQR(M) <  cf{erthi}(i); TNs = sum(TN);
+              FN = Q.group(M)> erth & Q.NXIQR(M) <  cf{erthi}(i); FNs = sum(FN);
         
+              traingroup{erthi}{i} = M+1; 
+              TPFN{erthi}{i}(M,:)  = [TP FP TN FN]; 
+              NXIQR{erthi}{i}(M,:) = Q.NXIQR(M);
+
               sens2{erthi}{ti}(i) = TPs ./ max(1,TPs + FNs);
               spec2{erthi}{ti}(i) = TNs ./ max(1,TNs + FPs);
               acc2{erthi}{ti}(i)  = (TPs + TNs) / max(1,TPs + FNs + TNs + FPs);
         
-              [~,~,~,auc2{erthi}{ti}(i)] = perfcurve( (Q.group(nM)>erth), cf{erthi}(i) - Q.NXIQR(nM), 'true');
+              [~,~,~,auc2{erthi}{ti}(i)] = perfcurve( (Q.group(nM)>erth), Q.NXIQR(nM) - cf{erthi}(i), 'true');
             end
           end
+
           
           % get best value
           [~,mxcci1] = max( cat_stat_nanmean([ spec2{erthi}{1} , sens2{erthi}{1} ] , 2) ); % train
           [~,mxcci2] = max( cat_stat_nanmean([ spec2{erthi}{2} , sens2{erthi}{2} ] , 2) ); % test
           
-  
-          % figure
+          % prepare and write table 
+          % ---------------------------------------------------------------
+          % select thresholds used for the opposite group
+          cfth = nan(size(Q.SIQR,1),1); 
+          cfth(traingroup{erthi}{i}==1,1) = cf{erthi}(mxcci2); 
+          cfth(traingroup{erthi}{i}==2,1) = cf{erthi}(mxcci1); 
+          
+          % select TPFN group for the opposite group
+          TPFNth = nan(size(Q.SIQR,1),4); 
+          TPFNth(traingroup{erthi}{i}==1,:) = TPFN{erthi}{mxcci2}(traingroup{erthi}{i}==1,:);
+          TPFNth(traingroup{erthi}{i}==2,:) = TPFN{erthi}{mxcci1}(traingroup{erthi}{i}==2,:);
+
+          % select normalized QM for the factor defined on the opposite group
+          NXIQRth = nan(size(Q.SIQR,1),1); 
+          NXIQRth(traingroup{erthi}{i}==1,:) = NXIQR{erthi}{mxcci2}(traingroup{erthi}{i}==1,:);
+          NXIQRth(traingroup{erthi}{i}==2,:) = NXIQR{erthi}{mxcci1}(traingroup{erthi}{i}==2,:);
+          
+          % create a table with most relevant measures
+          csvtable = [{ 
+            'Filename', 'age', 'sex', 'group', 'exgroup', 'rGMV', IQRfield, ['N' IQRfield], ...
+            'traingroup', ['N' IQRfield ' threshold'], 'TP', 'FP', 'TN', 'FN'}; 
+              spm_file( Pp0{1},'path',''), ...
+              num2cell(Q.age'), num2cell(Q.sex'), num2cell(Q.group0), num2cell(Q.group), num2cell(Q.rGMV), ...
+              num2cell(mark2rps(Q.(IQRfield))), num2cell(NXIQRth), ...
+              num2cell(traingroup{erthi}{i}), num2cell(cfth), ...
+              num2cell(TPFNth(:,1)), num2cell(TPFNth(:,2)), num2cell(TPFNth(:,3)), num2cell(TPFNth(:,4)) ;
+            ];
+          if ~exist(fullfile(printdir,'tables'),'dir'); mkdir(fullfile(printdir,'tables')); end
+          fname = fullfile(printdir,'tables',sprintf('MRART_TPFN_%s_%s_%s.csv',segment{si},qaversions{qai},IQRfield)); 
+          cat_io_csv(fname, csvtable); 
+          cat_io_cprintf('blue',sprintf('    Save  %s\n',fname)); 
+
+          % write FP and FN tables
+          Pm{si} = strrep( Pp0{si} , [filesep 'p0'] , [filesep 'm'] ); 
+          TPstr = {'TP', 'FP', 'TN', 'FN'};
+          EGname = {'noMA','lMA','sMA'}; 
+          rig = {'noLight-severe','no-severe','no-lightSevere','average'}; 
+          %%
+           
+          tdir  = fullfile(printdir,'TP-FP-TN-FN',IQRfield); if ~exist(tdir,'dir'), mkdir(tdir); end
+          for tpi = 1:4 %[2 4] %1:numel(TPstr)
+            %%
+            subs = 35;  % 24, 35, 
+            subtable = csvtable([false; TPFNth(:,tpi)>0],:);
+            fname = fullfile(printdir,'TP-FP-TN-FN',IQRfield, ...
+              sprintf('MRART_%s_%s_%s_%s_%s.csv',segment{si},qaversions{qai}, IQRfield,rig{erthi},TPstr{tpi}));
+            cat_io_csv(fname,  csvtable( [true; TPFNth(:,tpi)>0], : ) );
+            cat_io_cprintf('blue',sprintf('    Save  %s\n',fname));
+          
+            if printslices
+              printimg = Pm{si}(TPFNth(:,tpi)>0);
+              if ~isempty(printimg)
+                for imgi = 1:ceil(numel(printimg)/subs)
+                  drange = ( (imgi-1)*subs + 1):min(numel(printimg),(imgi)*subs); 
+                  txt = evalc('cat_stat_showslice_all(struct(''data_vol'',printimg(drange),''scale'',0,''slice'',30,''orient'',1))'); 
+                  fspm = spm_figure('GetWin'); fspm.Color = [0 0 0];
+                  fspm.Visible = 'off'; fspm.Interruptible = 'off';
+                  ax = gca; 
+                  % upate text
+                  axis(ax,'equal')
+                  axfnames = get(ax,'Children');
+                  for axfi = 1:min(numel(axfnames)-1,subs)
+                    switch tpi
+                      case 1, axfnames(axfi).Color = [1  0 0];  
+                      case 2, axfnames(axfi).Color = [.7 1 0]; 
+                      case 3, axfnames(axfi).Color = [0  1 0]; 
+                      case 4, axfnames(axfi).Color = [1 .7 0];
+                    end
+                    axfnames(axfi).FontSize = 6 / (sqrt(subs)/sqrt(24)); % need to be smaller for print
+                    axfnames(axfi).String   = [{ [spm_file(axfnames(axfi).String,'path','') ... 
+                      sprintf(' (EG=%0.0f, %s)', subtable{ axfi, 5}, EGname{subtable{ axfi, 5}})] }, ...
+                     {sprintf('%s=%0.1f, N%s=%0.1f, TH=%0.1f, %s', ...
+                      IQRfield, subtable{ axfi, 7}, ...
+                      IQRfield, subtable{ axfi, 8}, ...
+                      subtable{ axfi, 10}, TPstr{tpi} ...
+                      )}]; 
+                  end
+                
+                  % print result
+                  fname = fullfile(printdir,'TP-FP-TN-FN',IQRfield,sprintf('MRART_%s_%s_%s_%s_%s%0.0f.png',...
+                    segment{si},qaversions{qai}, IQRfield,rig{erthi},TPstr{tpi},imgi));
+                  print(fspm, fname, '-dpng',pres);
+                  cat_io_cprintf('blue',sprintf('    Print %s\n',fname)); 
+                end
+              end
+            end
+          end
+          %% 
+          
+          
+
+
+          %% figure
           % -----------------------------------------------------------------
+          figure(fig);
           subplot('Position',[.06 + 0.33 * ppos(erthi) 0.12 0.27 0.77],'box','on'); cla; hold on; grid on;
           plot(1-spec2{erthi}{1} ,sens2{erthi}{1} ,'color',[0.8 0.0 0.6],'linewidth',0.5); 
           plot(1-spec2{erthi}{2} ,sens2{erthi}{2} ,'color',[0.0 0.4 0.8],'linewidth',0.5);
@@ -678,15 +782,20 @@ for si = 1:numel(segment)
                  },'Location','southeast','Fontsize',FS(2)*.8); lg.Box = 'off';
           yticks(0:0.2:1);
           xticks(0:0.2:1);   
-      
+
         end
-       
+      
        
         % print 
         tdir = fullfile(printdir,'ROC'); if ~exist(tdir,'dir'), mkdir(tdir); end
-        print(fig, fullfile(tdir, sprintf('MRART_ROC_%s_%s_%s.png', strrep(IQRfield,'res_','') , qaversions{qai} , segment{si})) , '-dpng',pres);
+        fname = fullfile(tdir, sprintf('MRART_ROC_%s_%s_%s.png', strrep(IQRfield,'res_','') , qaversions{qai} , segment{si})); 
+        print(fig, fname, '-dpng',pres);
+        cat_io_cprintf('blue',sprintf('    Print %s\n',fname)); 
         if ~verb, close(fig); end 
   
+        
+        %PTPFN{1}{1}{mxcci2}( TPFN{2}{1}{mxcci2}(:,2) ) %TN
+        %PTPFN{1}{2}{mxcci1}( TPFN{2}{1}{mxcci1}(:,3) ) %FP
   
   
         % age dependency in normalized data
@@ -715,8 +824,9 @@ for si = 1:numel(segment)
         legend(mylegend,'Location','SouthEast');
         
         tdir = fullfile(printdir,'aging_n'); if ~exist(tdir,'dir'), mkdir(tdir); end
-        print(fig, fullfile(tdir, sprintf('MRART_aging_%s_%s_%s.png', strrep(QFN{fni1,6},'res_','') , qaversions{qai} , segment{si})) , '-dpng',pres);
-     
+        fname =  fullfile(tdir, sprintf('MRART_aging_%s_%s_%s.png', strrep(QFN{fni1,6},'res_','') , qaversions{qai} , segment{si})); 
+        print(fig, fname, '-dpng',pres);
+        cat_io_cprintf('blue',sprintf('    Print %s\n',fname)); 
   
   
   
@@ -778,7 +888,9 @@ for si = 1:numel(segment)
     
         % print 
         tdir = fullfile(printdir,'ROC4_only-for-fast-evaluation'); if ~exist(tdir,'dir'), mkdir(tdir); end
-        print(fig, fullfile(tdir, sprintf('MRART_ROC4_%s_%s_%s.png', strrep(IQRfield,'res_','') , qaversions{qai} , segment{si})) , '-dpng',pres);
+        fname = fullfile(tdir, sprintf('MRART_ROC4_%s_%s_%s.png', strrep(IQRfield,'res_','') , qaversions{qai} , segment{si})); 
+        print(fig, fname, '-dpng',pres);
+        cat_io_cprintf('blue',sprintf('    Print %s\n',fname)); 
         close(fig); 
       end
   
@@ -808,9 +920,10 @@ for si = 1:numel(segment)
         if ~verb, fig.Visible = 'off'; else, fig.Visible = 'on'; end
   
         QM2 = find( contains( QFN(:,1) ,'qualityratings') );
+        %QM2 = [QM2 QM1];
         for fni2 = 1:numel(QM2)
-          dfield1     = ['d' QFN{QM1(fni1),2}];
-          dfield2     = ['d' QFN{QM2(fni2),2}];
+          dfield1     = ['d' QFN{QM1(fni1),6}];
+          dfield2     = ['d' QFN{QM2(fni2),6}];
           dfield      = [dfield1 '_' dfield2]; 
           Q.(dfield)  = zeros(numel(Q.sub),1);
           Q.(dfield1) = zeros(numel(Q.sub),1);
@@ -825,7 +938,8 @@ for si = 1:numel(segment)
             Q.(dfield1)(sxi,1) = Q.(QFN{QM1(fni1),6})(sxi) - val1;
             Q.(dfield2)(sxi,1) = Q.(QFN{QM2(fni2),6})(sxi) - val2;
           end
-        
+          
+
           %% robustfit
           subplot('Position',[0.07 + 0.90*(fni2-1)/numel(QM2) 0.15, 0.85/numel(QM2) .7]);
   
@@ -855,8 +969,10 @@ for si = 1:numel(segment)
           title(sprintf('%s change',strrep(QFN{QM2(fni2),2},'_','\_')))
         end
    
-        tdir = fullfile(printdir,'rGMVchanges'); if ~exist(tdir,'dir'), mkdir(tdir); end
-        print(fig, fullfile(tdir, sprintf('MRART_%s_%s_%s.png', ['d' QFN{QM1(fni1),6}] , qaversions{qai}, segment{si} )) , '-dpng',pres);
+        tdir  = fullfile(printdir,'rGMVchanges'); if ~exist(tdir,'dir'), mkdir(tdir); end
+        fname = fullfile(tdir, sprintf('MRART_%s_%s_%s.png', ['d' QFN{QM1(fni1),6}] , qaversions{qai}, segment{si} )); 
+        print(fig, fname, '-dpng',pres);
+        cat_io_cprintf('blue',sprintf('    Print %s\n',fname)); 
         if ~verb, close(fig); end
       end
     end
@@ -864,11 +980,187 @@ for si = 1:numel(segment)
     %%
     rig = {'no-lightSevere','noLight-severe','no-severe','average'}; 
     for ri = 1:4
-      cat_io_csv( fullfile( printdir , sprintf('MRART_ROC%d%s_%s_%s_%s.csv', ri, rig{ri}, strrep(IQRfield,'res_','') , qaversions{qai} , segment{si})), mytable.ROC{ri} ) ; 
+      fname = fullfile( printdir , sprintf('MRART_ROC%d%s_%s_%s_%s.csv', ri, rig{ri}, strrep(IQRfield,'res_','') , qaversions{qai} , segment{si})); 
+      cat_io_csv( fname , mytable.ROC{ri} ) ; 
+      cat_io_cprintf('blue',sprintf('    Save  %s\n',fname));
     end
-    cat_io_csv( fullfile( printdir , sprintf('MRART_ANOVA_%s_%s_%s.csv', strrep(IQRfield,'res_','') , qaversions{qai}, segment{si})) ,  mytable.ANOVA ); 
-  
+    fname = fullfile( printdir , sprintf('MRART_ANOVA_%s_%s_%s.csv', strrep(IQRfield,'res_','') , qaversions{qai}, segment{si})); 
+    cat_io_csv( fname ,  mytable.ANOVA ); 
+    cat_io_cprintf('blue',sprintf('    Save  %s\n',fname));
+
     fprintf('%s done.\n',segment{si})
+  end
+
+
+
+
+  %% MRART kappa
+  %  ======================================================================
+  if ~fasttest
+    opt.resdirART   = fullfile(datadir,'+results', ...
+      sprintf('%s_%s_%s', 'MR-ART', fast{fasttest+1}, '202508' )); %f datestr(clock,'YYYYmm')) );
+    for ssi = 1:numel(xml)
+      subID{ssi} = xml(ssi).filedata.file(5:10);
+      BL(ssi)    = contains(xml(ssi).filedata.file,'standard'); 
+      P.ARTfilesp0{ssi} = cat_io_strrep( xml(ssi).filedata.Fp0, ...
+        {'ds004173-download','mri'}, ...
+        {fullfile('ds004173-download','derivatives','CAT12.9'),''}); 
+    end
+  
+    segmentname  = cat_io_strrep(segment{si},{'CAT','SPM'},{'','spm_'}); 
+    BWPkappaname = cat_io_strrep(segment{si},{'CAT','SPM'},{'CAT12','SPM12'});  
+    P.ARTfilesX = spm_file( strrep(P.ARTfilesp0,{['mri' filesep 'p0']},{['report' filesep qaversions{qai},'_' segmentname]}) ,'ext','xml');
+    tmp = cat_vol_findfiles(fullfile(opt.resdirART,sprintf('mrart_kappa_NIR%d_%s.mat',numel(P.ARTfilesX),BWPkappaname))); 
+    if ~isempty(tmp), P.ARTkappamat = tmp{1}; else, P.ARTkappamat = ''; end
+    if ~exist(P.ARTkappamat,'file')
+      P.ARTkappamat = fullfile(opt.resdirART,sprintf('mrart_kappa_NIR%d_%s.mat',numel(P.ARTfilesX),BWPkappaname)); 
+      for ssi = 1:numel( P.ARTfilesp0) % only first dim!
+        BLsiID(ssi) = find( contains( subID , subID{ssi}) & BL == 1);
+      end
+  
+      [~,val] = eva_vol_calcKappa(P.ARTfilesp0 ,P.ARTfilesp0(BLsiID) ,struct('recalc',0,'realign',2,'realignres',2));
+      if ~exist(opt.resdirART,'dir'), mkdir(opt.resdirART); end
+      save(P.ARTkappamat,'val'); 
+      Q.kappa = cat_stat_nanmean(real(cell2mat(val(2:end-2,2:4))),2);
+    else
+      S = load(P.ARTkappamat); 
+      Q.kappa = cat_stat_nanmean(real(cell2mat(S.val(2:end-2,2:4))),2);
+    end
+  end
+
+
+
+
+  %% correlation plot of all my measures to mriqc measures
+  %  ======================================================================
+  fprintf('Correlation table.\n'); 
+  fh = figure(33); fh.Visible = 'on'; 
+  corrtype = {'Spearman','Pearson'}; 
+  subsetname = {'allQM', 'selectQM',  'selectQM2'}; 
+  for ci = 1:numel(corrtype)
+    for subset = 1:3
+      clear R RP; clf(fh)
+      switch subset
+        case 1
+          base = {'age', 'sex','group0','group'}; 
+          bcat = {'rCSFV','rGMV','rWMV','drCSFV','drGMV','drWMV','kappa'}; 
+          FLDs = [base, bcat, QFN(1:5,2)', mriqcQFN]; 
+          fh.Position(3:4) = [1050 1000];
+        case 2 % smaller subset with QC MA focus
+          base = {'age','sex','group0','group'};
+          bcat = {'rCSFV','rGMV','rWMV','drGMV','drGMV','drWMV','kappa'}; 
+          FLDs = [base, bcat, QFN(1:5,2)', mriqcQFN([1 2 3 4,  5:7,  22 23 ,34 35, 60:62]), ]; 
+          fh.Position(3:4) = [550 500];
+        case 3 % smaller subset with QC side effects on individual data
+          base = {'group'}; 
+          bcat = {'drGMV','kappa'}; 
+          FLDs = [base, bcat, QFN(1:5,2)', mriqcQFN([1 2 22 23 34 35]), ]; 
+          fh.Position(3:4) = [450 400];
+      end
+      fh.Name = sprintf('MRART_ANOVA_%s_%s_%s_%s', ...
+         qaversions{qai}, segment{si}, subsetname{subset}, corrtype{ci} ); 
+     
+      for mriqci = 1:numel(FLDs)
+        for mriqcj = 1:numel(FLDs)
+          if isfield( Q, FLDs{mriqcj})
+            if size(Q.(FLDs{mriqcj}),1) > 1 
+              if size(Q.(FLDs{mriqci}),1) > 1 
+                 [R(mriqci,mriqcj),RP(mriqci,mriqcj)] = corr( Q.(FLDs{mriqci}) , Q.(FLDs{mriqcj}) , 'Type', corrtype{ci});
+              else
+                 [R(mriqci,mriqcj),RP(mriqci,mriqcj)] = corr( Q.(FLDs{mriqci})' , Q.(FLDs{mriqcj}) , 'Type', corrtype{ci});
+              end
+            else
+              if size(Q.(FLDs{mriqci}),1) > 1 
+                 [R(mriqci,mriqcj),RP(mriqci,mriqcj)] = corr( Q.(FLDs{mriqci}) , Q.(FLDs{mriqcj})' , 'Type', corrtype{ci});
+              else
+                 [R(mriqci,mriqcj),RP(mriqci,mriqcj)] = corr( Q.(FLDs{mriqci})' , Q.(FLDs{mriqcj})' , 'Type', corrtype{ci});
+              end
+            end
+          end
+        end
+      end
+      imagesc(abs(R)); box off; hold on; % .^2
+
+      if ~exist(fullfile(printdir,'corrs'),'dir'), mkdir(fullfile(printdir,'corrs')); end
+      mytable.corrR{ci,subset} = [ {''} FLDs; FLDs', num2cell(R)];
+      fname = fullfile( printdir , 'corrs', sprintf('MRART_CORR_%s_set%0.0f_%s_%s.csv', corrtype{ci}, subset  , qaversions{qai}, segment{si})); 
+      cat_io_csv( fname ,  mytable.corrR{ci,subset} ); 
+      cat_io_cprintf('blue',sprintf('    Save  %s\n',fname));
+      mytable.corrR{ci,subset} = [ {''} FLDs; FLDs', num2cell(RP)];
+      fname = fullfile( printdir , 'corrs', sprintf('MRART_CORRp_%s_set%0.0f_%s_%s.csv', corrtype{ci}, subset  , qaversions{qai}, segment{si})); 
+      cat_io_csv( fname ,  mytable.corrR{ci,subset} ); 
+      cat_io_cprintf('blue',sprintf('    Save  %s\n',fname));
+
+      % set axis and labels
+      ax = gca; 
+      ax.TickLabelInterpreter = 'none';
+      ax.TickLength = [0 0];
+      ax.XTick = 1:numel(R); ax.XTickLabel = FLDs; ax.XTickLabelRotation = 90; 
+      ax.YTick = 1:numel(R); ax.YTickLabel = FLDs;
+
+      % lines
+      px = [numel(base) + [0.5;0.5], ...
+            numel(base) + numel(bcat) + [0.5;0.5], ...
+            numel(base) + numel(bcat) + 5 + [0.5;0.5] 
+            ]; 
+      py = [0 0 0; size(R,1)+1 size(R,1)+1 size(R,1)+1];
+      plot(px,py,'w','LineWidth',3); plot(py,px,'w','LineWidth',3); 
+
+      % smaller lines
+      px = [2 + [0.5;0.5], ...
+            numel(base) + 3 + [0.5;0.5], ...
+            numel(base) + 6 + [0.5;0.5], ...
+            numel(base) + numel(bcat) + 5 + [0.5;0.5], ...
+            find(contains(FLDs,'icvs_csf')) - [0.5;0.5], ...
+            find(contains(FLDs,'wm2max')) + [0.5;0.5], ...
+            find(contains(FLDs,'fwhm_avg')) - [0.5;0.5], ...
+            find(contains(FLDs,'icvs_csf')) - [0.5;0.5], ...
+            find(contains(FLDs,'inu_med')) - [0.5;0.5], ...
+            find(contains(FLDs,'rpve_csf')) - [0.5;0.5], ...
+            find(contains(FLDs,'snr_csf')) - [0.5;0.5], ...
+            find(contains(FLDs,'snrd_csf')) - [0.5;0.5], ...
+            find(contains(FLDs,'summary_bg_k')) - [0.5;0.5], ...
+            find(contains(FLDs,'summary_gm_k')) - [0.5;0.5], ...
+            find(contains(FLDs,'summary_csf_k')) - [0.5;0.5], ...
+            find(contains(FLDs,'summary_gm_k')) - [0.5;0.5], ...
+            find(contains(FLDs,'summary_wm_k')) - [0.5;0.5], ...
+            find(contains(FLDs,'tpm_overlap_csf')) - [0.5;0.5], ...
+            ]; 
+      py = [zeros(1,size(px,2)); repmat( size(R,1)+1, 1, size(px,2))];
+      plot(px,py,'w','LineWidth',.5); plot(py,px,'w','LineWidth',.5); 
+
+      % title and axis names
+      title('CAT12 quality ratings and MRIQC quality measures'); 
+      subtitle(sprintf('%s correlation',corrtype{ci})); 
+      xlabel('measures'); ylabel('measures');  
+      colorbar
+      colormap jet
+      
+      ffh = fullfile(fullfile(printdir,'corrs'),[fh.Name '.jpg']); 
+      print(fh, '-djpeg', '-r300', ffh);
+      cat_io_cprintf('blue','    Write %s\n',ffh); 
+    end
+  end
+
+  %% EFC plot for reviewer 3
+  fh = figure(33); %fh.Visible = 'on'; 
+  for QMX = {'ECR','ICR'}
+    clf(fh)
+    sc = scatter(Q.(strrep(QMX{1},'ECR','res_ECR')),Q.efc,'filled','MarkerFaceAlpha',.5);
+    title(sprintf('Spearman correlation between %s and EFC = %0.4f',QMX{1},corr(Q.(strrep(QMX{1},'ECR','res_ECR')),Q.efc,'Type','Spearman')));
+    fh.Name = sprintf('rho_%s_EFC',QMX{1}); 
+    box on; grid on; 
+    xlabel('ECR'); ylabel('EFC');
+    ffh = fullfile(fullfile(printdir,'corrs'),[fh.Name '.jpg']); 
+    print(fh, '-djpeg', '-r300',ffh);
+    cat_io_cprintf('blue','  Write %s\n',ffh); 
+  end
+
+  %%
+  if 0
+    fh = figure(33); fh.Visible = 'on'; clf(fh)
+    sc = scatter(Q.res_ECR,Q.kappa,'filled','MarkerFaceAlpha',.5); 
+    box on; grid on; 
   end
 end
 fprintf('all done.\n')

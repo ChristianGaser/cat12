@@ -29,7 +29,7 @@ else
 end
 % ### segmention ###
 if ~exist( 'segment' , 'var')
-  segment = {'SPM'}; % {'SPM','CAT','qcseg'}; % qcseg requires cat_vol_qa2024012
+  segment = {'CAT'}; % {'SPM','CAT','qcseg'}; % qcseg requires cat_vol_qa2024012
 end
 % ### QC version ### 
 if ~exist( 'qaversions' , 'var')
@@ -47,7 +47,7 @@ if ~exist( 'fasttest', 'var'), fasttest = 0; end
 if ~exist( 'rerun', 'var'), rerun = 0; end
 fast = {'full','fast'};
 
-resdir     = fullfile(fileparts(datadir), '+results',['Rusak2021_' fast{fasttest+1} '_' datestr(clock,'YYYYmm')]); 
+resdir     = fullfile(fileparts(datadir), '+results',['Rusak2021_' fast{fasttest+1} '_202508']); %' datestr(clock,'YYYYmm')]); 
 if ~exist(resdir,'dir'), mkdir(resdir); end
 
 

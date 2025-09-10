@@ -81,7 +81,7 @@ function cat_tst_qa_resizeBWP( datadir0, qaversions, rerun )
   if ~exist( 'rerun', 'var'), rerun = 0; end
   
   outdir   = fullfile(datadir,'BWPrestest');
-  resdir   = fullfile(datadir, '+results',['BWPrestest_' char(datetime('now','format','yyyyMM'))]); 
+  resdir   = fullfile(datadir, '+results',['BWPrestest_202508']); % char(datetime('now','format','yyyyMM'))]); 
   if ~exist(fullfile(outdir,'mri'),'dir'), mkdir(fullfile(outdir,'mri')); end  
   
   % testdata from BWP
@@ -409,7 +409,7 @@ function cat_tst_qa_resizeBWP( datadir0, qaversions, rerun )
         
         % save figures
         % update this here to have up to date value in case of batch mode 
-        printoutdir   = fullfile(resdir,'results',datestr(clock,'YYYYmm')); 
+        printoutdir   = resdir; 
         if ~exist(printoutdir,'dir'), mkdir(printoutdir); end
         [~,ff]        = spm_fileparts(P{pi}); 
         printname     = sprintf('testcase%d_%s',testcase,ff);
@@ -463,13 +463,13 @@ function cat_tst_qa_resizeBWP( datadir0, qaversions, rerun )
         end
     
         % add legend
-        hold off; box on; grid on;  ylim([0.795 1.005]); xlim([0.9 8.1]); 
+        hold off; box on; grid on;  ylim([0.795 1.005]); xlim([0 10]); 
         ylabel('Kappa'); xlabel(strrep([measure ' (grade)'],'_','\_')); 
         ax = gca; ax.XTick = [1:8]; ax.YTick = [.8:0.02:1.0]; ax.Position(3) = .83;
         if plotGT
           leg = {'ResamplingGT','SmoothingGT','Resampling','Smoothing'};
         else
-          leg = {sprintf('Resicampling (\\it{}rho\\rm{}=%0.3f, \\it{}p\\rm{}=%0.0e)',rhor,pvalr), ...
+          leg = {sprintf('Resampling (\\it{}rho\\rm{}=%0.3f, \\it{}p\\rm{}=%0.0e)',rhor,pvalr), ...
                  sprintf('Smoothing (\\it{}rho\\rm{}=%0.3f, \\it{}p\\rm{}=%0.0e)',rhos,pvals)};
         end
         if plotIdeal
@@ -502,16 +502,16 @@ function cat_tst_qa_resizeBWP( datadir0, qaversions, rerun )
         end
         if numel(Xr2.(measure))==9 
           % resolution data labels
-          text(Xr2.(measure)(1)   , valr{2,5}     , sprintf('%s\\rightarrow','1 mm') , 'Color', colors(1,:),'HorizontalAlignment','right');
-          text(Xr2.(measure)(5)   , valr{6,5}     , sprintf('%s\\rightarrow','2 mm') , 'Color', colors(1,:),'HorizontalAlignment','right');
-          text(Xr2.(measure)(end) , valr{end-2,5} , sprintf('%s\\rightarrow','3 mm') , 'Color', colors(1,:),'HorizontalAlignment','right');
+          text(Xr2.(measure)(1)   , valr{2,5}     , sprintf('\\leftarrow %s','1 mm') , 'Color', colors(1,:),'HorizontalAlignment','left');
+          text(Xr2.(measure)(5)   , valr{6,5}     , sprintf('\\leftarrow %s','2 mm') , 'Color', colors(1,:),'HorizontalAlignment','left');
+          text(Xr2.(measure)(end) , valr{end-2,5} , sprintf('\\leftarrow %s','3 mm') , 'Color', colors(1,:),'HorizontalAlignment','left');
         end
         if numel(Xs2.(measure))==13
           % smoothing data labels 
-          text(Xs2.(measure)(1)   , vals{2,5}     , sprintf('\\leftarrow %s','0 mm') , 'Color', colors(2,:));
-          text(Xs2.(measure)(5)   , vals{6,5}     , sprintf('\\leftarrow %s','1 mm') , 'Color', colors(2,:));
-          text(Xs2.(measure)(9)   , vals{10,5}    , sprintf('\\leftarrow %s','2 mm') , 'Color', colors(2,:));
-          text(Xs2.(measure)(13)  , vals{end-2,5} , sprintf('\\leftarrow %s','3 mm') , 'Color', colors(2,:));
+          text(Xs2.(measure)(1)   , vals{2,5}     , sprintf('%s \\rightarrow','0 mm') , 'Color', colors(2,:),'HorizontalAlignment','right');
+          text(Xs2.(measure)(5)   , vals{6,5}     , sprintf('%s \\rightarrow','1 mm') , 'Color', colors(2,:),'HorizontalAlignment','right');
+          text(Xs2.(measure)(9)   , vals{10,5}    , sprintf('%s \\rightarrow','2 mm') , 'Color', colors(2,:),'HorizontalAlignment','right');
+          text(Xs2.(measure)(13)  , vals{end-2,5} , sprintf('%s \\rightarrow','3 mm') , 'Color', colors(2,:),'HorizontalAlignment','right');
         end
       
         % final print of the figure
