@@ -271,20 +271,30 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
 %       BWP.NCRm = evallinear(QA.qualitymeasures.NCR    ,0.05,0.35,6);
 %       BWP.MVRm = evallinear(QA.qualitymeasures.res_RMS,0.50,3.00,6);    
       
-      % SIQR is the successor of IQR and also uses the new edge-based resolution rating 
+      % SIQR is the successor of IQR that also includes a edge-based
+      % resolution rating (res_ECR) and fast Euler characteristic (FEC)
+      % The inhomogeneity (bias) contrast rating (ICR) is again not included
+      % as it is not really connect to processing quality.
+      % We use here a power of 8 for the old image quality rating (IQR) and
+      % 4 for the new structural image quality rating (SIQR) to focus 
+      % stronger on outliers. 
       try
         if isfield(QAM.qualityratings,'FEC')
-          QAM.qualityratings.SIQR = rms([QAM.qualityratings.NCR  QAM.qualityratings.ICR  ...
+          QAM.qualityratings.SIQR = rms([QAM.qualityratings.NCR ...
             QAM.qualityratings.res_RMS  QAM.qualityratings.res_ECR  QAM.qualityratings.FEC],4);   
+        elseif isfield(QAM.qualityratings,'res_ECR')
+          QAM.qualityratings.SIQR = rms([QAM.qualityratings.NCR ...
+            QAM.qualityratings.res_RMS  QAM.qualityratings.res_ECR],4);
         else
-          QAM.qualityratings.SIQR = rms([QAM.qualityratings.NCR  QAM.qualityratings.ICR  ...
-            QAM.qualityratings.res_RMS  QAM.qualityratings.res_ECR],4);   
+          % we use here 8 to compensate the mising ECR/FEC ratings and to
+          % be compatibel to the old ICR rating
+          QAM.qualityratings.SIQR = rms([QAM.qualityratings.NCR ...
+            QAM.qualityratings.res_RMS],8);  
         end
-        % further test cases
       catch
         QAM.qualityratings.SIQR = nan; 
       end
-      QAM.qualityratings.IQR  = rms([QAM.qualityratings.NCR  QAM.qualityratings.res_RMS ],4); %QAM.qualityratings.ICR;
+      QAM.qualityratings.IQR  = rms([QAM.qualityratings.NCR  QAM.qualityratings.res_RMS ],8);
       QAM.subjectratings.SQR  = rms([QAM.subjectratings.vol_rel_CGW],2);
       
       varargout{1} = QAM;
