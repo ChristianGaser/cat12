@@ -122,7 +122,8 @@ if n>20, fs = FS(8); end
 if n>60, fs = FS(6);  end
 
 [tmp, names] = spm_str_manip(char(V.fname),'C');
-if isempty(names), names = struct('s',tmp,'m','','e',''); end % case of one images or identical names
+% case of one images or identical names just use the filename
+if isempty(names), names = struct('s',spm_str_manip(tmp,'h'),'m',{{spm_str_manip(tmp,'t')}},'e',''); end 
 
 fprintf('Compressed filenames: %s\n',tmp);
 
