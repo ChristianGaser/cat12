@@ -660,9 +660,10 @@ switch lower(action)
             % - there is at least no space for the legend 
             % - use of own atlas maps? 
             satlas = {
-                'Desikan'     'aparc_DK40';
-                'Destrieux'   'aparc_a2009s';
-                'HCP'         'aparc_HCP_MMP1';};
+                'Desikan'       'aparc_DK40';
+                'Destrieux'     'aparc_a2009s';
+                'HCP'           'aparc_HCP_MMP1';
+                'JuluchBrain3'  'JulichBrainAtlas_3.1';};
             if ~isempty(strfind(fileparts(sinfo1(1).Pmesh),'_32k'))
               str32k = '_32k';
             else

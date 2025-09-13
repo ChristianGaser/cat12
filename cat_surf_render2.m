@@ -595,6 +595,7 @@ switch lower(action)
               'DK40'               'aparc_DK40';
               'Destrieux'          'aparc_a2009s';
               'HCP multi-modal parcellation' 'aparc_HCP_MMP1';
+              'JuluchBrain3' 'JulichBrainAtlas_3.1';
               ...'Destrieux2005'      'aparc_a2005s';
               ...'Bordmann'           'PALS_B12_Brodmann';
               ...'FreeSurfer'         'aparc_freesurfer';
@@ -612,6 +613,7 @@ switch lower(action)
               'DK40'               'aparc_DK40';
               'Destrieux'          'aparc_a2009s';
               'HCP multi-modal parcellation' 'aparc_HCP_MMP1';
+              'JuluchBrain3' 'JulichBrainAtlas_3.1';
               ...'Bordmann'           'PALS_B12_Brodmann';
               ...'Lobes'              'PALS_B12_Lobes';
               };
@@ -625,6 +627,7 @@ switch lower(action)
               'DK40'               'aparc_DK40';
               'Destrieux'          'aparc_a2009s';
              'HCP multi-modal parcellation' 'aparc_HCP_MMP1';
+             'JuluchBrain3' 'JulichBrainAtlas_3.1';
               };
           end
           H.atlas.vatlas = vatlas; 

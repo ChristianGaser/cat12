@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JulichBrainAtlas version="31.0">
+ <Structures numStructures="207">
+  <Structure num="0" id="127" grayvalue="1">Area 3b (PostCG)</Structure>
+  <Structure num="1" id="206" grayvalue="3">Area PF (IPL)</Structure>
+  <Structure num="2" id="118" grayvalue="2">Area hOc4la (LOC)</Structure>
+  <Structure num="3" id="358" grayvalue="4">Area CoS1 (CoS)</Structure>
+  <Structure num="4" id="18" grayvalue="5">Astr (Amygdala)</Structure>
+  <Structure num="5" id="376" grayvalue="6">Area Id8 (Insula)</Structure>
+  <Structure num="6" id="522" grayvalue="7">Area SFG4 (SFG)</Structure>
+  <Structure num="7" id="125" grayvalue="8">Area 1 (PostCG)</Structure>
+  <Structure num="8" id="84" grayvalue="9">Po (Thalamus, posterior Nucleus)</Structure>
+  <Structure num="9" id="27" grayvalue="10">Area Te 1.0 (HESCHL)</Structure>
+  <Structure num="10" id="272" grayvalue="11">Area STS2 (STS)</Structure>
+  <Structure num="11" id="95" grayvalue="12">LD (Thalamus, lateral dorsal Nucleus)</Structure>
+  <Structure num="12" id="298" grayvalue="13">Area 6mp (SMA, mesial SFG)</Structure>
+  <Structure num="13" id="57" grayvalue="14">Area Id3 (Insula)</Structure>
+  <Structure num="14" id="517" grayvalue="15">ZI (Thalamus, zona incerta)</Structure>
+  <Structure num="15" id="368" grayvalue="16">CGM (Metathalamus)</Structure>
+  <Structure num="16" id="451" grayvalue="17">Area PirTB (PiriformCortexMesial, temporobasal)</Structure>
+  <Structure num="17" id="454" grayvalue="18">NRp (Midbrain, Nucleus Ruber, parvocellular part)</Structure>
+  <Structure num="18" id="243" grayvalue="21">Area TI (STG)</Structure>
+  <Structure num="19" id="231" grayvalue="20">Area p24ab (pACC)</Structure>
+  <Structure num="20" id="109" grayvalue="19">Area PFt (IPL)</Structure>
+  <Structure num="21" id="395" grayvalue="22">Area FG5 (FusG)</Structure>
+  <Structure num="22" id="89" grayvalue="24">PUi (Thalamus, inferior pulvinar)</Structure>
+  <Structure num="23" id="151" grayvalue="23">PUm (Thalamus, medial pulvinar)</Structure>
+  <Structure num="24" id="31" grayvalue="25">Area Te 3 (STG)</Structure>
+  <Structure num="25" id="504" grayvalue="27">Frontal-to-Occipital (GapMap)</Structure>
+  <Structure num="26" id="343" grayvalue="26">Area MFG1 (MFG)</Structure>
+  <Structure num="27" id="208" grayvalue="28">Area 7P (SPL)</Structure>
+  <Structure num="28" id="347" grayvalue="29">Area 6r1 (PreCG)</Structure>
+  <Structure num="29" id="287" grayvalue="30">Area 6d1 (PreCG)</Structure>
+  <Structure num="30" id="78" grayvalue="31">VA (Thalamus, ventral anterior Nucleus (ventral))</Structure>
+  <Structure num="31" id="294" grayvalue="32">Area hIP4 (IPS)</Structure>
+  <Structure num="32" id="349" grayvalue="33">Area Op6 (Frontal Operculum)</Structure>
+  <Structure num="33" id="106" grayvalue="34">Area FG2 (FusG)</Structure>
+  <Structure num="34" id="292" grayvalue="35">Area hIP6 (IPS)</Structure>
+  <Structure num="35" id="378" grayvalue="38">BST (Basal Forebrain, Bed Nucleus)</Structure>
+  <Structure num="36" id="29" grayvalue="37">Area TPJ (STG, SMG)</Structure>
+  <Structure num="37" id="325" grayvalue="36">Area Fo5 (OFC)</Structure>
+  <Structure num="38" id="515" grayvalue="39">AM (Thalamus, anteromedial Nucleus)</Structure>
+  <Structure num="39" id="350" grayvalue="40">Area Op7 (Frontal Operculum)</Structure>
+  <Structure num="40" id="291" grayvalue="41">Area hOc6 (POS)</Structure>
+  <Structure num="41" id="374" grayvalue="42">Area Ia3 (Insula)</Structure>
+  <Structure num="42" id="114" grayvalue="43">Area Ig2 (Insula)</Structure>
+  <Structure num="43" id="58" grayvalue="44">CA2 (Hippocampus)</Structure>
+  <Structure num="44" id="211" grayvalue="46">Area Fp2 (FPole)</Structure>
+  <Structure num="45" id="153" grayvalue="45">VLP (Thalamus, ventral lateral posterior Nucleus)</Structure>
+  <Structure num="46" id="81" grayvalue="47">Li (Thalamus, limitans Nucleus)</Structure>
+  <Structure num="47" id="60" grayvalue="48">Area EC (Hippocampal Region, Entorhinal Cortex)</Structure>
+  <Structure num="48" id="337" grayvalue="49">Area Id4 (Insula)</Structure>
+  <Structure num="49" id="321" grayvalue="51">Tu (Basal Forebrain, Tuberculum)</Structure>
+  <Structure num="50" id="73" grayvalue="50">Area Op1 (POperc)</Structure>
+  <Structure num="51" id="340" grayvalue="53">Area Id6 (Insula)</Structure>
+  <Structure num="52" id="86" grayvalue="52">Rt (Thalamus, reticular Nucleus)</Structure>
+  <Structure num="53" id="247" grayvalue="54">Area IFS4 (IFS)</Structure>
+  <Structure num="54" id="289" grayvalue="55">Area 6d3 (SFS)</Structure>
+  <Structure num="55" id="241" grayvalue="56">Ndentv (Cerebellum, Ventral Dentate Nucleus)</Structure>
+  <Structure num="56" id="346" grayvalue="57">Area 6v1 (PreCG)</Structure>
+  <Structure num="57" id="129" grayvalue="58">Area hIP2 (IPS)</Structure>
+  <Structure num="58" id="2" grayvalue="59">Area 44 (IFG)</Structure>
+  <Structure num="59" id="327" grayvalue="60">Area Fo7 (OFC)</Structure>
+  <Structure num="60" id="82" grayvalue="61">Pv (Thalamus, paraventricular Nucleus)</Structure>
+  <Structure num="61" id="110" grayvalue="62">Area PGa (IPL)</Structure>
+  <Structure num="62" id="147" grayvalue="63">PUa (Thalamus, anterior pulvinar)</Structure>
+  <Structure num="63" id="333" grayvalue="64">Area 8d2 (SFG)</Structure>
+  <Structure num="64" id="339" grayvalue="65">Area Ia1 (Insula)</Structure>
+  <Structure num="65" id="228" grayvalue="66">VTM (Amygdala)</Structure>
+  <Structure num="66" id="273" grayvalue="67">Area Op8 (Frontal Operculum)</Structure>
+  <Structure num="67" id="249" grayvalue="69">Area IFJ2 (IFS, PreCS)</Structure>
+  <Structure num="68" id="361" grayvalue="68">FuP (Ventral Striatum, Fundus of Putamen)</Structure>
+  <Structure num="69" id="184" grayvalue="71">Area 25 (sACC)</Structure>
+  <Structure num="70" id="135" grayvalue="70">Area 7M (SPL)</Structure>
+  <Structure num="71" id="112" grayvalue="73">Area PFm (IPL)</Structure>
+  <Structure num="72" id="348" grayvalue="72">Area Op5 (Frontal Operculum)</Structure>
+  <Structure num="73" id="145" grayvalue="74">MD (Thalamus, mediodorsal Nucleus)</Structure>
+  <Structure num="74" id="187" grayvalue="75">LB (Amygdala)</Structure>
+  <Structure num="75" id="124" grayvalue="76">Area 4a (PreCG)</Structure>
+  <Structure num="76" id="131" grayvalue="77">Area 5M (SPL)</Structure>
+  <Structure num="77" id="385" grayvalue="78">Area Op10 (Frontal Operculum)</Structure>
+  <Structure num="78" id="79" grayvalue="79">Pf (Thalamus, parafascicular Nucleus)</Structure>
+  <Structure num="79" id="212" grayvalue="80">Area Fp1 (FPole)</Structure>
+  <Structure num="80" id="154" grayvalue="81">PUl (Thalamus, lateral pulvinar)</Structure>
+  <Structure num="81" id="344" grayvalue="82">Area MFG2 (MFG)</Structure>
+  <Structure num="82" id="126" grayvalue="84">Area 3a (PostCG)</Structure>
+  <Structure num="83" id="355" grayvalue="83">Area Ph1 (PhG)</Structure>
+  <Structure num="84" id="159" grayvalue="86">Area Id7 (Insula)</Structure>
+  <Structure num="85" id="238" grayvalue="85">Area FG4 (FusG)</Structure>
+  <Structure num="86" id="251" grayvalue="87">Ninterp (Cerebellum, Interposed Nucleus)</Structure>
+  <Structure num="87" id="369" grayvalue="88">STN (Subthalamus)</Structure>
+  <Structure num="88" id="326" grayvalue="89">Area Fo6 (OFC)</Structure>
+  <Structure num="89" id="47" grayvalue="90">Area p32 (pACC)</Structure>
+  <Structure num="90" id="367" grayvalue="92">CGL (Metathalamus)</Structure>
+  <Structure num="91" id="8" grayvalue="91">Area hOc1 (V1, 17, CalcS)</Structure>
+  <Structure num="92" id="335" grayvalue="95">Area 8v1 (MFG)</Structure>
+  <Structure num="93" id="357" grayvalue="94">Area Ph3 (PhG)</Structure>
+  <Structure num="94" id="216" grayvalue="93">SNC (Midbrain, Substantia Nigra pars compacta)</Structure>
+  <Structure num="95" id="372" grayvalue="97">Area SFG2 (SFG)</Structure>
+  <Structure num="96" id="117" grayvalue="96">Area hOc4lp (LOC)</Structure>
+  <Structure num="97" id="5" grayvalue="98">Area Fo3 (OFC)</Structure>
+  <Structure num="98" id="33" grayvalue="99">Area Te 1.1 (HESCHL)</Structure>
+  <Structure num="99" id="524" grayvalue="100">Area MFG5 (MFG, IFG)</Structure>
+  <Structure num="100" id="7" grayvalue="101">Area hOc2 (V2, 18)</Structure>
+  <Structure num="101" id="523" grayvalue="102">Area MFG4 (MFG)</Structure>
+  <Structure num="102" id="80" grayvalue="103">LP (Thalamus, lateral posterior Nucleus)</Structure>
+  <Structure num="103" id="288" grayvalue="104">Area 6d2 (PreCG)</Structure>
+  <Structure num="104" id="336" grayvalue="105">Area Ig3 (Insula)</Structure>
+  <Structure num="105" id="119" grayvalue="106">Area hOc4d (Cuneus)</Structure>
+  <Structure num="106" id="521" grayvalue="107">Area SFG3 (SFG)</Structure>
+  <Structure num="107" id="457" grayvalue="108">Area 6v3 (PreCG)</Structure>
+  <Structure num="108" id="453" grayvalue="109">NRm (Midbrain, Nucleus Ruber, magnocellular part)</Structure>
+  <Structure num="109" id="324" grayvalue="110">Area Fo4 (OFC)</Structure>
+  <Structure num="110" id="244" grayvalue="111">Area IFS1 (IFS)</Structure>
+  <Structure num="111" id="72" grayvalue="112">Area Op4 (POperc)</Structure>
+  <Structure num="112" id="264" grayvalue="113">Ch 4 (Basal Forebrain)</Structure>
+  <Structure num="113" id="297" grayvalue="114">Area hPO1 (POS)</Structure>
+  <Structure num="114" id="240" grayvalue="115">Ndentd (Cerebellum, Dorsal Dentate Nucleus)</Structure>
+  <Structure num="115" id="246" grayvalue="116">Area IFS3 (IFS)</Structure>
+  <Structure num="116" id="74" grayvalue="117">Area Op2 (POperc)</Structure>
+  <Structure num="117" id="334" grayvalue="118">Area 8v2 (MFG)</Structure>
+  <Structure num="118" id="359" grayvalue="119">AcbM (Ventral Striatum, Medial Accumbens)</Structure>
+  <Structure num="119" id="61" grayvalue="120">DG (Hippocampus)</Structure>
+  <Structure num="120" id="108" grayvalue="121">Area PGp (IPL)</Structure>
+  <Structure num="121" id="299" grayvalue="122">Area 6ma (preSMA, mesial SFG)</Structure>
+  <Structure num="122" id="115" grayvalue="123">Area Ig1 (Insula)</Structure>
+  <Structure num="123" id="377" grayvalue="124">Area Id10 (Insula)</Structure>
+  <Structure num="124" id="92" grayvalue="125">VM (Thalamus, ventral medial Nucleus)</Structure>
+  <Structure num="125" id="232" grayvalue="126">Area p24c (pACC)</Structure>
+  <Structure num="126" id="10" grayvalue="127">Area hOc3v (LingG)</Structure>
+  <Structure num="127" id="113" grayvalue="128">Area PFcm (IPL)</Structure>
+  <Structure num="128" id="452" grayvalue="130">Area PirT (PiriformCortexMesial, temporal)</Structure>
+  <Structure num="129" id="342" grayvalue="129">Area SFS2 (SFS)</Structure>
+  <Structure num="130" id="295" grayvalue="132">Area hIP5 (IPS)</Structure>
+  <Structure num="131" id="91" grayvalue="131">CM (Thalamus, centromedian Nucleus)</Structure>
+  <Structure num="132" id="341" grayvalue="133">Area SFS1 (SFS)</Structure>
+  <Structure num="133" id="505" grayvalue="135">Frontal-to-Temporal-I (GapMap)</Structure>
+  <Structure num="134" id="107" grayvalue="134">Area FG1 (FusG)</Structure>
+  <Structure num="135" id="360" grayvalue="136">FuCd (Ventral Striatum, Fundus of Caudate Nucleus)</Structure>
+  <Structure num="136" id="514" grayvalue="138">MV (Thalamus, medioventral Nucleus)</Structure>
+  <Structure num="137" id="77" grayvalue="137">VAmc (Thalamus, ventral anterior Nucleus, magnocellular part)</Structure>
+  <Structure num="138" id="508" grayvalue="140">Frontal-I.2 (GapMap)</Structure>
+  <Structure num="139" id="133" grayvalue="139">Area hIP3 (IPS)</Structure>
+  <Structure num="140" id="290" grayvalue="141">CM (Amygdala)</Structure>
+  <Structure num="141" id="123" grayvalue="142">Area 4p (PreCG)</Structure>
+  <Structure num="142" id="39" grayvalue="143">Area 33 (ACC)</Structure>
+  <Structure num="143" id="396" grayvalue="144">Area OTS1 (OTS)</Structure>
+  <Structure num="144" id="56" grayvalue="145">Area Id2 (Insula)</Structure>
+  <Structure num="145" id="66" grayvalue="146">CA1 (Hippocampus)</Structure>
+  <Structure num="146" id="507" grayvalue="147">Frontal-I.1 (GapMap)</Structure>
+  <Structure num="147" id="293" grayvalue="148">Area hIP8 (IPS)</Structure>
+  <Structure num="148" id="274" grayvalue="150">Area Op9 (Frontal Operculum)</Structure>
+  <Structure num="149" id="237" grayvalue="149">IF (Amygdala)</Structure>
+  <Structure num="150" id="503" grayvalue="152">Temporal-to-Parietal (GapMap)</Structure>
+  <Structure num="151" id="370" grayvalue="151">VIM (Thalamus, ventral intermediate Nucleus)</Structure>
+  <Structure num="152" id="68" grayvalue="153">HATA (Hippocampus)</Structure>
+  <Structure num="153" id="322" grayvalue="154">TuTi (Basal Forebrain, Terminal islands)</Structure>
+  <Structure num="154" id="1" grayvalue="155">Area 45 (IFG)</Structure>
+  <Structure num="155" id="116" grayvalue="160">Area Id1 (Insula)</Structure>
+  <Structure num="156" id="375" grayvalue="159">Area Ia2 (Insula)</Structure>
+  <Structure num="157" id="506" grayvalue="158">Frontal-to-Temporal-II (GapMap)</Structure>
+  <Structure num="158" id="136" grayvalue="157">Area 5Ci (SPL)</Structure>
+  <Structure num="159" id="88" grayvalue="156">CL (Thalamus, anterior intralaminar nuclei)</Structure>
+  <Structure num="160" id="338" grayvalue="162">Area Id5 (Insula)</Structure>
+  <Structure num="161" id="30" grayvalue="161">Area Te 1.2 (HESCHL)</Structure>
+  <Structure num="162" id="128" grayvalue="163">Area hIP1 (IPS)</Structure>
+  <Structure num="163" id="252" grayvalue="164">Area 2 (PostCS)</Structure>
+  <Structure num="164" id="28" grayvalue="167">Area Te 2.1 (STG)</Structure>
+  <Structure num="165" id="286" grayvalue="166">Ch 123 (Basal Forebrain)</Structure>
+  <Structure num="166" id="120" grayvalue="165">Area hOc3d (Cuneus)</Structure>
+  <Structure num="167" id="75" grayvalue="171">Area Op3 (POperc)</Structure>
+  <Structure num="168" id="134" grayvalue="170">Area 7A (SPL)</Structure>
+  <Structure num="169" id="83" grayvalue="169">Sg (Thalamus, suprageniculate Nucleus)</Structure>
+  <Structure num="170" id="156" grayvalue="168">VPL (Thalamus, ventral posterior lateral Nucleus)</Structure>
+  <Structure num="171" id="192" grayvalue="172">Subc (Hippocampus, Subicular complex)</Structure>
+  <Structure num="172" id="305" grayvalue="173">TrS (Hippocampus, Transsubiculum)</Structure>
+  <Structure num="173" id="59" grayvalue="174">CA3 (Hippocampus)</Structure>
+  <Structure num="174" id="501" grayvalue="175">Frontal-II (GapMap)</Structure>
+  <Structure num="175" id="150" grayvalue="176">VLA (Thalamus, ventral lateral anterior Nucleus)</Structure>
+  <Structure num="176" id="271" grayvalue="177">Area STS1 (STS)</Structure>
+  <Structure num="177" id="373" grayvalue="180">Area Id9 (Insula)</Structure>
+  <Structure num="178" id="130" grayvalue="179">Area 5L (SPL)</Structure>
+  <Structure num="179" id="155" grayvalue="178">VPM (Thalamus, ventral posterior medial Nucleus)</Structure>
+  <Structure num="180" id="217" grayvalue="181">SNR (Midbrain, Substantia Nigra pars reticulata)</Structure>
+  <Structure num="181" id="245" grayvalue="183">Area IFS2 (IFS)</Structure>
+  <Structure num="182" id="239" grayvalue="182">Area FG3 (FusG)</Structure>
+  <Structure num="183" id="158" grayvalue="184">AV (Thalamus, anteroventral Nucleus)</Structure>
+  <Structure num="184" id="363" grayvalue="185">VP (Ventral Pallidum)</Structure>
+  <Structure num="185" id="219" grayvalue="187">Nfast (Cerebellum, Fastigial Nucleus)</Structure>
+  <Structure num="186" id="46" grayvalue="186">Area s32 (sACC)</Structure>
+  <Structure num="187" id="235" grayvalue="188">MF (Amygdala)</Structure>
+  <Structure num="188" id="6" grayvalue="189">Area hOc5 (LOC)</Structure>
+  <Structure num="189" id="85" grayvalue="190">sPf (Thalamus, subparafascicular Nucleus)</Structure>
+  <Structure num="190" id="3" grayvalue="192">Area Fo1 (OFC)</Structure>
+  <Structure num="191" id="185" grayvalue="191">SF (Amygdala)</Structure>
+  <Structure num="192" id="183" grayvalue="197">Area s24 (sACC)</Structure>
+  <Structure num="193" id="248" grayvalue="196">Area IFJ1 (IFS, PreCS)</Structure>
+  <Structure num="194" id="332" grayvalue="195">Area 8d1 (SFG)</Structure>
+  <Structure num="195" id="518" grayvalue="194">VPi (Thalamus, ventroposterior inferior Nucleus)</Structure>
+  <Structure num="196" id="94" grayvalue="193">VPMpc (Thalamus, ventral posterior medial Nucleus, parvocellular part)</Structure>
+  <Structure num="197" id="111" grayvalue="199">Area PFop (IPL)</Structure>
+  <Structure num="198" id="9" grayvalue="198">Area hOc4v (LingG)</Structure>
+  <Structure num="199" id="356" grayvalue="201">Area Ph2 (PhG)</Structure>
+  <Structure num="200" id="456" grayvalue="200">Area 6v2 (PreCG)</Structure>
+  <Structure num="201" id="4" grayvalue="203">Area Fo2 (OFC)</Structure>
+  <Structure num="202" id="362" grayvalue="202">AcbL (Ventral Striatum, Lateral Accumbens)</Structure>
+  <Structure num="203" id="296" grayvalue="205">Area hIP7 (IPS)</Structure>
+  <Structure num="204" id="34" grayvalue="204">Area Te 2.2 (STG)</Structure>
+  <Structure num="205" id="132" grayvalue="206">Area 7PC (SPL)</Structure>
+  <Structure num="206" id="242" grayvalue="207">Area TeI (STG)</Structure>
+ </Structures>
+</JulichBrainAtlas>

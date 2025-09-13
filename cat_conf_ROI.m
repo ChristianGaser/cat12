@@ -193,9 +193,9 @@ for ali=1:numel(atlaslist)
         '    Eickhoff SB, Stephan KE, Mohlberg H, Grefkes C, Fink GR, Amunts K, Zilles K. A new SPM toolbox for combining probabilistic cytoarchitectonic maps and functional imaging data. NeuroImage 25(4), 1325-1335, 2005'
         ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
   end
-  if any(~cellfun('isempty',strfind(atlaslist(ali),'julichbrain')))
+  if any(~cellfun('isempty',strfind(atlaslist(ali),'julichbrain3')))
     ROI.help = [ROI.help; strrep({
-        '(MAI) Whole-brain parcellation of the Julich-Brain Cytoarchitectonic Atlas (v2.0):'
+        '(MAI) Whole-brain parcellation of the Julich-Brain Cytoarchitectonic Atlas (v3.1):'
         '    Amunts K, Mohlberg H, Bludau S, Zilles K (2020). Julich-Brain – A 3D probabilistic atlas of human brains cytoarchitecture. Science 369, 988-99'
         ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
   end

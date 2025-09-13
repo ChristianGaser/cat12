@@ -1,12 +1,19 @@
-JulichBrain atlas (v2.6):
+JulichBrain atlas (v3.1):
 --------------------------------------------------------------------------------
-Whole-brain parcellation of the Julich-Brain Cytoarchitectonic Atlas (v2.6)
+Whole-brain parcellation of the Julich-Brain Cytoarchitectonic Atlas (v3.1)
 
 The atlas was slightly modified and remaining holes were filled with the median value.
-Furthermore, the left and right hemisphere coding was changed.
+Furthermore, the left and right hemisphere coding was modified to fit into one volume:
+
+	newleft  = (oldleft  * 2) - 1
+	newright = (oldright * 2) 
+
+However, the surface version uses the original coding. 
 
 If you use these atlases, please cite the references below.
 
+License:
+Creative Commons Attribution Non Commercial Share Alike 4.0 International
 
 Websites:    
 A) https://search.kg.ebrains.eu/instances/Dataset/2eaa3dc6-a21b-41c1-b703-bf06f82adf25

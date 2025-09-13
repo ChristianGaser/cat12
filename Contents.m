@@ -157,11 +157,11 @@
 %   Template_T1.nii                  - average of 555 T1 images of IXI database in MNI152 space after 
 %                                      Geodesic Shooting
 %   aal3.*                           - AAL3 atlas
-%   anatomy2.*                       - Anatomy2 atlas
+%   anatomy3.*                       - Anatomy2 atlas
 %   cobra.*                          - CoBra atlas
 %   hammers.*                        - Hammers atlas
 %   ibsr.*                           - IBSR atlas
-%   julichbrain.*                    _ JulichBrain atlas
+%   julichbrain3.*                   _ JulichBrain3 atlas
 %   mori.*                           - Mori atlas
 %   thalamus.*                       - Thalamic Nuclei atlas
 %   neuromorphometrics.*             - Neuromorphometrics atlas

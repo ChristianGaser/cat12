@@ -563,7 +563,7 @@ matlabbatch{mi}.spm.tools.cat.estwrite_spm.output.ROImenu.atlases.ibsr          
 matlabbatch{mi}.spm.tools.cat.estwrite_spm.output.ROImenu.atlases.aal3               = 0;
 matlabbatch{mi}.spm.tools.cat.estwrite_spm.output.ROImenu.atlases.mori               = 0;
 matlabbatch{mi}.spm.tools.cat.estwrite_spm.output.ROImenu.atlases.anatomy3           = 0;
-matlabbatch{mi}.spm.tools.cat.estwrite_spm.output.ROImenu.atlases.julichbrain        = 0;
+matlabbatch{mi}.spm.tools.cat.estwrite_spm.output.ROImenu.atlases.julichbrain3       = 0;
 matlabbatch{mi}.spm.tools.cat.estwrite_spm.output.ROImenu.atlases.Schaefer2018_100Parcels_17Networks_order = 0;
 matlabbatch{mi}.spm.tools.cat.estwrite_spm.output.ROImenu.atlases.Schaefer2018_200Parcels_17Networks_order = 0;
 matlabbatch{mi}.spm.tools.cat.estwrite_spm.output.ROImenu.atlases.Schaefer2018_400Parcels_17Networks_order = 0;
