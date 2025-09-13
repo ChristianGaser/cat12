@@ -230,9 +230,11 @@ function varargout = cat_io_xml2csv(job)
       try
         if isnumeric(cell2mat(tab(existxml>0,ci))) % for all numberic fields
           try
-            avg{1,ci} = cat_stat_mean( cell2mat(tab(existxml>0,ci)) ); % average existing
+            avg{1,ci} = cat_stat_nanmean( cell2mat(tab(existxml>0,ci)) ); % average existing
+            avg{2,ci} = cat_stat_nanstd(  cell2mat(tab(existxml>0,ci)) ); % average existing
           catch
             avg{1,ci} = nan;
+            avg{2,ci} = nan; 
           end
         else
           % try to use spm_str_manip to extract similar starts/endings
@@ -244,16 +246,20 @@ function varargout = cat_io_xml2csv(job)
             else 
               avg{1,ci} = char(txt);
             end
+            avg{2,ci} = '';
           catch
             avg{1,ci} = ''; 
+            avg{2,ci} = ''; 
           end
         end
       catch
         try
           if isnumeric(tab{2,ci})
             avg{1,ci} = nan;
+            avg{2,ci} = nan; 
           else
             avg{1,ci} = ''; 
+            avg{2,ci} = ''; 
           end
         end
       end
@@ -265,7 +271,8 @@ function varargout = cat_io_xml2csv(job)
   hdr = [{'filename'} hdr];
   tab = [job.files(existxml>0) tab];
   if job.conclusion
-    avg = [{sprintf('average (%d of %d)',sum(existxml>0),numel(existxml))} avg]; 
+    avg = [{sprintf('mean (%d of %d)',sum(existxml>0),numel(existxml)); ...
+            sprintf('std  (%d of %d)',sum(existxml>0),numel(existxml))} avg]; 
   end
 
   % cleanup some fields

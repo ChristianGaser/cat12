@@ -137,7 +137,7 @@ switch lower(deffile)
     if isempty(deffile) 
       return
     end
-  case {'default','human'}
+  case {'default','human',lower(catdef)}
     mycat  = cat_get_defaults; 
     mycat.extopts.expertgui = 0;
     restartspm = 1;
@@ -301,7 +301,7 @@ if cat_io_matlabversion > 20212
   spm_figure('clear',F); 
   Fpos = get(F,'Position'); 
   h = image(imread(Pposter)); 
-  set(get(h,'Parent'),'Position',[0 0 1 1]);
+  set(get(h,'Parent'),'Position',[0 0 1 1],'Visible','off');
   set(F,'Position',Fpos);
   
   % CAT help 

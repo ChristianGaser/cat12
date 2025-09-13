@@ -94,7 +94,7 @@ function C=readcsv(filename,sheet,pos,opt)
 % __________________________________________________________________________________________________
   
   % set filename and load if it exist
-  if ~exist(filename,'file'), fprintf('File "%s" does not exist./n',filename); C={}; return; end
+  if ~exist(filename,'file'), fprintf('File "%s" does not exist.\n',filename); C={}; return; end
 
   % auto detection
   if isempty( opt.delimiter ) 
@@ -152,10 +152,7 @@ function C=readcsv(filename,sheet,pos,opt)
 
  
 
-  % es gibt hier ein problem mit 
-  % - sonderzeichen wie äöü
-  % - anderen sonderzeichen 
-  
+  % issue with special characters 
   if strcmpi(spm_check_version,'octave') 
     if iscell( C1 )
       for i = 1:numel( C1 )
@@ -164,10 +161,11 @@ function C=readcsv(filename,sheet,pos,opt)
     elseif ischar( C1 )
       C1  = char( min(255, max(0, double( C1 ))));
     end
-  else
-    C1  = strrep(C1,'Ã¤','ä');
-    C1  = strrep(C1,'Ã¼','ü');
-    C1  = strrep(C1,'Ã¶','ö');
+  %else 
+  % RD202509: The special characters are not working and were replace in GitHub again 
+  %  C1  = strrep(C1,'ä','�');
+  %  C1  = strrep(C1,'ü','�');
+  %  C1  = strrep(C1,'ö','�');
   end
 
   for i=1:size(C1,1)

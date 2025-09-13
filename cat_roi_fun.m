@@ -48,7 +48,7 @@ function varargout = cat_roi_fun(action,varargin)
     case 'csvtab2xmlroi'
       varargout{1} = cat_roi_csvtab2xmlroi(varargin{1});
     case 'xmlroi2csvtabtest'
-      varargout = cat_roi_xmlroi2csvtabtest;
+      varargout{1} = cat_roi_xmlroi2csvtabtest;
     otherwise
       help cat_roi_fun;
   end
@@ -163,7 +163,13 @@ function mcsvtab = cat_roi_exportSample(job)
           
           for si=1:numel(catROI)
             [pp,ff] = spm_fileparts(job.(FN{fni}){si});
-            if ~job.folder, pp=''; end
+            if isnumeric(job.folder)
+              if job.folder
+                [~,~,~,pp] = cat_io_subfolders(job.(FN{fni}){si});
+              else
+                pp = '';
+              end
+            end
             sname   = fullfile(pp,cat_io_strrep(ff,{'catROIs_','catROI_'},'')); 
 
             if si==1 
