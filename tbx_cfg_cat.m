@@ -143,7 +143,7 @@ estwrite_spm.prog   = @cat_run;
 estwrite_spm.vout   = @vout;
 %estwrite_spm.hidden = expert<1;
 estwrite_spm.help   = {
-'Thickness estimation and surface creation for SPM segmentation which is using the input of CSF, GM, and WM of the SPM segmentation (instead of CAT12 segmentation) and also integrates Dartel or Geodesic Shoothing registration into the toolbox by an already existing Dartel template in MNI space. This template was derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org) and provides the several Dartel or Shooting iterations. Thus, for the majority of studies the creation of sample-specific Dartel templates is not necessary anymore.'};
+'Thickness estimation and surface creation for SPM segmentation, which is using the input of CSF, GM, and WM of the SPM segmentation (instead of CAT12 segmentation) and also integrates Dartel or Geodesic Shoothing registration to an already existing Dartel template in MNI space. The default template was derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org).'};
   
 %------------------------------------------------------------------------
 cat        = cfg_choice;
