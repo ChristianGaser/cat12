@@ -3095,7 +3095,7 @@ function [check_homogeneity, check_cov] = conf_check_cov(data_xml,outdir,fname,s
   c                 = cfg_entry;
   c.tag             = 'c';
   c.name            = 'Vector/Matrix';
-  c.help            = {'Vector or matrix of nuisance values'};
+  c.help            = {'Vector or matrix of nuisance values.'};
   c.strtype         = 'r';
   c.num             = [Inf Inf];
 
@@ -3105,6 +3105,20 @@ function [check_homogeneity, check_cov] = conf_check_cov(data_xml,outdir,fname,s
   nuisance.values   = {c};
   nuisance.num      = [0 Inf];
   nuisance.help     = {'This option allows for the specification of nuisance effects to be removed from the data. A potential nuisance parameter can be TIV if you check segmented data with the default modulation. In this case the variance explained by TIV will be removed prior to the calculation of the correlation. Another meaningful nuisance effect is age. This parameter should be defined for all samples as one variable and may also contain several columns.'};
+
+  s                 = cfg_entry;
+  s.tag             = 'sites';
+  s.name            = 'Sites';
+  s.help            = {'Vector of site/protocol identifier.'};
+  s.strtype         = 'c';
+  s.num             = [1 Inf];
+
+  sites             = cfg_repeat;
+  sites.tag         = 'sites';
+  sites.name        = 'Site variable';
+  sites.values      = {s};
+  sites.num         = [0 1];
+  sites.help        = {'Definition of scan sites to normalize quality ratings per site to identify outliers with motion artefacts. If no site is give the image resolution is used to identify sites.'};
 
   gap               = cfg_entry;
   gap.tag           = 'gap';
@@ -3129,6 +3143,29 @@ function [check_homogeneity, check_cov] = conf_check_cov(data_xml,outdir,fname,s
   sample.num        = [1 Inf];
   sample.help       = {'Specify data for each sample. If you specify different samples the mean correlation is displayed in separate boxplots (or violin plots) for each sample.'};
 
+  rps          = cfg_menu;
+  rps.tag      = 'userps';
+  rps.name     = 'Rating sytem';
+  rps.labels   = {'School marks','Percentage score'};
+  rps.values   = {-1 1};
+  rps.val      = {-1};
+  rps.help     = {
+    'Rating system selection between school grads (range good-bad: 0.5-10.5) and percentage score (range good-bad: 100-0) for quality metrics: ';
+    '';
+    '  Definition:           excellent   good   satisfactory  sufficent  critical  unacceptable';
+    '  Nominal Letter:         A         B         C            D          E         ...';
+    '  School grad:             1         2         3            4          5         ...';
+    '  Percentage (rps*):    95%       85%       75%          65%        55%        ...';
+    '';
+    'The normalised SIQR (nSIQR) is lineary corrected for the "better" quantil of each site (see site variable): ';  
+    '  Definition:          excellent     average     slight artifacts    severe artifacts    ';
+    '  School grad:            -0.5          0.0             0.5                1.0      '; 
+    '  Percentage (rps*):       5             0               -5                -10       '; 
+    ''
+    '* .. rating points';
+    '';
+  };
+
 
   check_cov       = cfg_exbranch;
   check_cov.tag   = 'check_cov';
@@ -3143,7 +3180,9 @@ function [check_homogeneity, check_cov] = conf_check_cov(data_xml,outdir,fname,s
     'In order to identify data with poor data quality or even artefacts you can use this function. 3D images have to be in the same orientation with same voxel size and dimension (e.g. normalized images without smoothing) while surfaces have to be resampled and smoothed using the same parameters. The idea of this tool is to check the correlation of all data across the sample.'
     ''
     'The correlation is calculated between all data and the mean for each data is plotted using a boxplot and the indicated filenames. The smaller the mean correlation the more deviant is this data from the sample mean. In the plot, outliers from the sample are usually isolated from the majority of data which are clustered around the sample mean. The mean correlation is plotted at the y-axis and the x-axis reflects the data order.'
-    'If you have loaded quality measures, you can also display the ratio between weighted overall image quality (IQR) and mean correlation. These two are the most important measures for assessing data quality.'
+    'If you have loaded quality measures, you can also display the ratio between weighted overall structural image quality (SIQR) and mean correlation. These two are the most important measures for assessing data quality.'
+    ''
+    'SIQR is further used to estimate a (site-specific if specified) normalizes score nSIQR that allows detection of outliers from the typical quality of the protocol, where a deviating ratings of about 5/10 rps indicate cases with slight/severe (motion) artifacts. ' 
   };
 
   data          = data_vol;
@@ -3174,7 +3213,7 @@ function [check_homogeneity, check_cov] = conf_check_cov(data_xml,outdir,fname,s
   
   % --- main ---
   check_homogeneity        = cfg_exbranch;
-  check_homogeneity.val    = {sample,sel_xml,globals,nuisance};
+  check_homogeneity.val    = {sample,sel_xml,globals,rps,sites,nuisance};
   check_homogeneity.tag    = 'check_homogeneity';
   check_homogeneity.name   = 'Check Sample Homogeneity';
   check_homogeneity.prog   = @cat_stat_homogeneity;

@@ -203,10 +203,13 @@ else
   end
 end
 
+% select school marks (range best-low = 0.5 - 10.5) or percentage system (range low-best: 0-100%) 
+if isfield(job,'userps'), H.userps = job.userps; else, H.userps = -1; end
+
 H.xml.QM = ones(n_subjects,3);
-H.xml.QM_names = char('Noise','Bias','Weighted overall image quality (IQR)');
-H.xml.QM_names_multi = char('Noise & Quartic Mean Z-score','Bias & Quartic Mean Z-score','Weighted IQR & Quartic Mean Z-score');
-H.xml.QM_order = -ones(1,3);
+H.xml.QM_names = char('Noise','Bias','Structural image quality rating (SIQR)');
+H.xml.QM_names_multi = char('Noise & Quartic Mean Z-score','Bias & Quartic Mean Z-score','SIQR & Quartic Mean Z-score');
+H.xml.QM_order = H.userps .* ones(1,3);
 
 % add some more entries for surfaces
 if H.mesh_detected
@@ -278,7 +281,7 @@ end
 
 n_xml_files = 0;
 if job.verb, cat_progress_bar('Init',n_subjects,'Load xml-files'); end
-
+res_RMS = nan(n_subjects,1); 
 for i=1:n_subjects
   % get basename for data files
   [pth, data_name, ee] = fileparts(H.files.fname{i});
@@ -422,21 +425,27 @@ for i=1:n_subjects
     if isfield(xml.qualityratings,'NCR')
     % check for newer available surface measures
       if isfield(xml.subjectmeasures,'EC_abs') && isfinite(xml.subjectmeasures.EC_abs) && isfinite(xml.subjectmeasures.defect_size)
-        H.xml.QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR xml.subjectmeasures.EC_abs xml.subjectmeasures.defect_size];
+        H.xml.QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.SIQR xml.subjectmeasures.EC_abs xml.subjectmeasures.defect_size];
       else
-        H.xml.QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR NaN NaN];
+        H.xml.QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.SIQR NaN NaN];
       end
     else % also try to use old version
       H.xml.QM(i,:) = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
     end
   else
     if isfield(xml.qualityratings,'NCR')
-      H.xml.QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR];
+      H.xml.QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.SIQR];
     else % also try to use old version
       H.xml.QM(i,:) = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
     end
   end
+
+  res_RMS(i,:) = xml.qualityratings.res_RMS; 
   if job.verb, cat_progress_bar('Set',i); end
+end
+if H.userps > 0
+  mark2rps = @(mark) min(100,max(0,105 - mark*10));
+  H.xml.QM = mark2rps( H.xml.QM ); 
 end
 if job.verb, cat_progress_bar('Clear'); end
 
@@ -628,6 +637,67 @@ end
 
 if job.verb, cat_progress_bar('Clear'); end
 
+if isfield(job,'sites') && ~isempty(job.sites)
+  if numel(job.sites{1}) == numel(H.files.fname)
+    sites = job.sites{1}';
+  else
+    cat_io_cprintf('err', ...
+      sprintf('  Warning number of site enties does not fit to the number of scans (%d/=%d).\n', ...
+        numel(job.sites{1}), numel(H.files.fname) ) ); 
+    sites = [];
+  end
+else
+  sites = []; 
+end
+
+if H.isxml
+% RD20250913: added normalized SIQR measure
+% -------------------------------------------------------------------------
+  if isfield(xml.qualityratings,'NCR'), SIQR = H.xml.QM(:,3); else, SIQR = H.xml.QM(:,1); end  % use SIQR or NCR
+  if isempty(sites)
+    % use site or resolution measures as approximation
+    [nsites,~,sites] = unique(round(res_RMS,3)); 
+    % in case of too many sites focus on one
+    if numel(sites) / numel(nsites) < 5, sites = ones(size(res_RMS)); end
+  end
+
+  % estimate rating (use the "better" quantil for linear normalization for each site)
+  NSIQR = cat_tst_qa_normer( SIQR , struct( 'sites' , sites , 'figure' , 0, 'model' , 0, 'cmodel' , 1));   
+
+  % extend 
+  H.xml.QM(:,end+1)     = NSIQR; 
+  H.xml.QM_names        = char( [ cellstr(H.xml.QM_names); {'Normalized SIQR (nSIQR)'} ] );
+  H.xml.QM_names_multi  = char( [ cellstr(H.xml.QM_names_multi); {'nSIQR & Quartic Mean Z-score'} ]);
+  H.xml.QM_order(end+1) = H.userps; 
+else
+  if isempty(sites)
+    sites = ones(size(H.files.fname));
+  end
+end
+H.sites = sites; 
+
+
+% save the rating
+Pcsv = fullfile(pwd, sprintf('CheckSampleHomogeneity_%0.0fsubjects_%0.0fsites_%s.csv', ...
+  numel(H.files.fname), numel(unique(sites)), char(datetime('now','format','yyyyMMdd-HHmm')) )); 
+if H.isxml
+  tab = [ 
+    {'fname', 'site', 'res_RMS', 'SIQR','nSIQR','zscore'};
+    H.files.fname, num2cell(sites), num2cell(res_RMS), num2cell(SIQR), num2cell(NSIQR), num2cell(H.data.avg_abs_zscore);
+    ];
+else
+  tab = [ 
+    {'fname', 'site', 'zscore'};
+    H.files.fname, num2cell(sites), num2cell(H.data.avg_abs_zscore);
+  ];
+end
+cat_io_csv(Pcsv,tab);
+fprintf('Write csv-table:\n'); 
+cat_io_cprintf('blue',sprintf('  %s\n',Pcsv)); 
+
+
+
+
 % get data for each subject in longitudinal designs
 if H.repeated_anova
   if isfield(job.factorial_design,'des')
@@ -800,10 +870,10 @@ if ~isempty(n_thresholded) && job.verb
   fprintf('\nThese data have a quartic mean Z-score above 2 standard deviations.\n');
   fprintf('This does not necessarily mean that you have to exclude these data. However, these data have to be carefully checked:\n');
   
-  fprintf('IQR / Quartic mean Z-score / filename\n');
+  fprintf('SIQR / nSIQR / Quartic mean Z-score / filename\n');
   for i = n_thresholded:n_subjects % just switch this improve readability in case of different fname length
     if isfield(H.xml,'QM') && ~isempty(H.xml.QM)
-      cat_io_cprintf([0.5 0 0.5],'  %3.3f:', H.xml.QM(i,end) );
+      cat_io_cprintf([0.5 0 0.5],'  %3.3f:', H.xml.QM(i,end-1:end) );
     end
     cat_io_cprintf([0.5 0 0.5],'  %3.3f: %s \n', H.data.avg_abs_zscore_sorted(i) ,H.files.fname{H.ind_sorted(i)});
   end
@@ -917,7 +987,7 @@ if isempty(H.xml.QM)
   str  = { 'Boxplot','Quartic Mean Z-score'};
   % average quartic Z-score vs. file order
   H.X = [H.data.avg_abs_zscore (1:numel(H.data.avg_abs_zscore))'];
-  show_QMzscore(H.X,0); % show file order on x-axis
+  show_QMzscore(H.X,0, H.userps); % show file order on x-axis
 else
   % average quartic Z-score vs. QM measures
   H.X = [H.data.avg_abs_zscore H.xml.QM];
@@ -928,12 +998,12 @@ else
   end
     
   if H.isxml
-    % estimate product between weighted overall quality (IQR) and quartic mean Z-score 
+    % estimate product between structural quality rating (SIQR) and quartic mean Z-score 
     H.xml.QMzscore = H.X(:,1).*H.X(:,2);
-    str{i+3} = 'Weighted IQR x Quartic Mean Z-score';
-    show_QMzscore(H.X,4); % show IQR on x-axis
+    str{i+3} = 'SIQR (grad) x Quartic Mean Z-score';
+    show_QMzscore(H.X,4, H.userps); % show SIQR on x-axis
   else
-    show_QMzscore(H.X,0); % show file order on x-axis
+    show_QMzscore(H.X,0, H.userps); % show file order on x-axis
   end
 end
 
@@ -943,7 +1013,7 @@ for i = 1:size(H.xml.QM,2)
 end
 
 if H.isxml
-  tmp{i+2} = {@show_boxplot, H.xml.QMzscore, 'Weighted IQR x Quartic Mean Z-score  ', -1};
+  tmp{i+2} = {@show_boxplot, H.xml.QMzscore, 'SIQR x Quartic Mean Z-score  ', -1};
 end
 
 H.ui.boxp = uicontrol(H.mainfig,...
@@ -956,13 +1026,13 @@ H.ui.boxp = uicontrol(H.mainfig,...
 
 %% create popoup menu for scatterplot
 
-% if QM values are available allow IQR and surface parameters, but skip
+% if QM values are available allow SIQR and surface parameters, but skip
 % noise and bias as first 2 entries
 str  = { 'Scatterplot','Quartic Mean Z-score'};
 if isempty(H.xml.QM)
-  tmp  = {{@show_QMzscore, H.X, 0}}; % just quartic mean Z-score with file order
+  tmp  = {{@show_QMzscore, H.X, 0, H.userps}}; % just quartic mean Z-score with file order
 else
-  tmp  = {{@show_QMzscore, H.X, 0}}; % file order
+  tmp  = {{@show_QMzscore, H.X, 0, H.userps}}; % file order
   if H.isxml
     for i = 1:size(H.xml.QM,2)-2
       str{i+2} = deblank(H.xml.QM_names_multi(i+2,:));
@@ -1213,7 +1283,7 @@ else
   for i=1:number
     txt = {{spm_str_manip(list2(i,:),'k30'),sprintf('Mean abs Z-score: %g',H.data.avg_abs_zscore(ind_sorted_decreased(i)))}};
     if H.isxml
-      txt{1}{3} = sprintf('IQR: %g',H.X(ind_sorted_decreased(i),4));
+      txt{1}{3} = sprintf('SIQR: %g',H.X(ind_sorted_decreased(i),4));
     end
     spm_orthviews('Caption',i,txt);
   end
@@ -1246,7 +1316,7 @@ function show_QMzscore(X, sel, quality_order)
 global H
 
 if nargin < 3
-  quality_order = -1;
+  quality_order = -1; 
 end
 
 % delete old data tip
@@ -1285,21 +1355,36 @@ grid on
 
 % estimate product between QM-value and quartic mean Z-score
 if sel
-  H.xml.QMzscore = X(:,1).*X(:,sel);
+  if H.userps > 0
+    % in case of the percentage scoring, we first have to go back to marks
+    % in case of the normalized percentage scoring, no tranthe order changes the default is zero
+    if sel == 5
+      rps2mark = @(rps)  quality_order * (0 - rps/10); 
+    else
+      rps2mark = @(rps)  quality_order * (10.5 - rps/10); 
+    end
+  else
+    rps2mark = @(rps)  -quality_order * rps; 
+  end
+  H.xml.QMzscore = X(:,1) .* max(0,rps2mark( X(:,sel) ));
 else
   H.xml.QMzscore = X(:,1);
 end
 
 % get min/max in 0.25 steps
-min_QMzscore = min(H.xml.QMzscore(H.ind)); min_QMzscore = floor(4*min_QMzscore)/4;
-max_QMzscore = max(H.xml.QMzscore(H.ind)); max_QMzscore = ceil(4*max_QMzscore)/4;
+min_QMzscore = min(H.xml.QMzscore(H.ind)); min_QMzscore = floor(4*min_QMzscore)/4; 
+max_QMzscore = max(H.xml.QMzscore(H.ind)); max_QMzscore = ceil(4*max_QMzscore)/4;  
 if min_QMzscore == max_QMzscore
-  max_QMzscore = max_QMzscore + 0.25;
+  max_QMzscore = max_QMzscore + 0.5;
+end
+if sel==5
+  % RD202509: in principle the QMs are scaled with .5 for light and 1.0 for clear motion artifacts
+  max_QMzscore = max_QMzscore + max(0,min_QMzscore + 1 - max_QMzscore); % grad system
 end
 
 % because we use a splitted colormap we have to set the color
 % values explicitely
-QMzscore_scaled = 63*(H.xml.QMzscore-min_QMzscore)/(max_QMzscore-min_QMzscore); % scale min..max
+QMzscore_scaled = 63*(H.xml.QMzscore-min_QMzscore) / (max_QMzscore - min_QMzscore); % scale min..max
 
 H.C = zeros(length(H.xml.QMzscore),3);
 for i=1:length(H.xml.QMzscore)
@@ -1314,9 +1399,10 @@ while max(H.sample) > numel(marker), marker = [marker; marker]; end
 if sel % show QM measure on x-axis
   xx = X(:,sel);
   yy = X(:,1);
-  if quality_order < 0
+  if H.userps > 0, set(gca, 'XDir','reverse'); end
+  if quality_order > 0 % reverse xdir !
     xstr = sprintf('<----- Best ---      %s      --- Worst ------>  ',deblank(H.xml.QM_names(sel-1,:)));
-  elseif quality_order > 0
+  elseif quality_order < 0 % reverse xdir !
     xstr = sprintf('<----- Worst ---      %s      --- Best ------>  ',deblank(H.xml.QM_names(sel-1,:)));
   else
     xstr = sprintf('%s',deblank(H.xml.QM_names(sel-1,:)));
@@ -1340,7 +1426,7 @@ end
 % connect points of each subject for long. designs
 if H.repeated_anova
   
-  % use IQR*zscore if available
+  % use SIQR*zscore if available
   if sel == 4
     measure = H.X(:,sel).*H.data.avg_abs_zscore;
   else
@@ -1384,7 +1470,7 @@ if sel
   if ~quality_order
     xstr = sprintf('%s x quartic mean Z-score',deblank(H.xml.QM_names(sel-1,:)));
   else
-    xstr = sprintf('<----- Best ---      %s x quartic mean Z-score     --- Worst ------>  ',deblank(H.xml.QM_names(sel-1,:)));
+    xstr = sprintf('<----- Best ---      %s (grad) x quartic mean Z-score     --- Worst ------>  ',deblank(H.xml.QM_names(sel-1,:)));
   end
 else
   xstr = sprintf('<----- Best ---      quartic mean Z-score     --- Worst ------>  ');
@@ -1808,7 +1894,7 @@ if (~isempty(raw_file) && ~isempty(raw_file{1})) ||  ...
   for i=1:numel(raw_file)
     txt = {{spm_str_manip(raw_file{i},'k30'),sprintf('Mean abs Z-score: %g',H.data.avg_abs_zscore(x_sort(i)))}};
     if H.isxml
-      txt{1}{3} = sprintf('IQR: %g',H.X(x_sort(i),4));
+      txt{1}{3} = sprintf('SIQR: %g',H.X(x_sort(i),4));
     end
     spm_orthviews('Caption',i,txt);
   end
@@ -2444,10 +2530,11 @@ end
 % text info for textbox
 txt2 = {[],sprintf('%s',spm_file(H.filename.m{H.mouse.x(1)},'short25'))};
 if max(H.sample) > 1, txt2{end+1} = sprintf('Sample %d',H.sample(H.mouse.x(1))); end
+if max(H.sites)>1, txt2{end} = sprintf('%s / Site %d', txt2{end}, H.sites(H.mouse.x(1))); end % just add the site variable if useful
 txt2{end+1} = sprintf('Mean abs Z-score: %g',H.data.avg_abs_zscore(H.mouse.x(1)));
 
 if H.isxml
-  txt2{end+1} = sprintf('IQR: %g',H.X(H.mouse.x(1),4));
+  txt2{end+1} = sprintf('SIQR / nSIQR: %g / %g', H.X(H.mouse.x(1),4), H.X(H.mouse.x(1),5) );
 end
 
 if ~H.mesh_detected

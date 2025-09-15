@@ -53,7 +53,7 @@ function varargout = cat_tst_qa_normer(data,opt)
   clear th; 
   if ~exist('opt','var'), opt = struct(); end
   def.rnd       = 33;                   % random number
-  def.model     = 2;                    % model used for rating
+  def.model     = 1;                    % model used for rating
   def.cmodel    = 1;                    % correction only shift (1) or shift and scale (2);  
   def.figure    = 2;                    % figure=2 for new/own figure
   def.siterf    = 1000000;              % round factor to identify similar resolution level 
