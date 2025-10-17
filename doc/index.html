@@ -16,6 +16,7 @@
 
   </head>
   <body class="is-preload">
+    <a href="#content" class="skip-link" aria-label="Skip to main content">Skip to content</a>
 
     <!-- Wrapper -->
     <div id="wrapper">
@@ -30,7 +31,7 @@
           <!-- Introduction -->
           <div id="content">
             
-            <h1>Manual Computational Anatomy Toolbox CAT12</h1>
+            <h1 id="top">Manual Computational Anatomy Toolbox CAT12</h1>
             
             <!-- Local Table of Contents for quick navigation -->
             <nav aria-label="Table of contents" class="box">
@@ -50,6 +51,8 @@
                 <li><a href="#add_info">Additional information</a></li>
                 <li><a href="#methods">Methods</a></li>
                 <li><a href="#faq">FAQ</a></li>
+                <li><a href="#cite">Citing CAT</a></li>
+                <li><a href="#refs">References</a></li>
               </ul>
             </nav>
                           
@@ -60,14 +63,14 @@
             <h4 id="intro_cat12">Introduction</h4>
             <p class="image right"><img width=100% alt="Human Brain" src="images/human_brain.png"></p>
             <p>
-              The brain is the most complex organ of the human body, and no two brains are alike. The study of the human brain is still in its infancy, but rapid technical advances in image acquisition and image processing have allowed for ever more refined characterizations of its micro- and macro-structure. Enormous efforts, for example, have been made to map differences between groups (e.g., young vs. old, diseased vs. healthy, male vs. female), to capture changes over time (e.g., from infancy to old age, or in the framework of neuroplasticity, as a result of a clinical intervention), or to assess correlations of brain attributes (e.g., measures of length, volume, shape) with behavioral, cognitive, or clinical parameters.
+              The brain is the most complex organ of the human body, and no two brains are alike. The study of the human brain is still in its infancy, but rapid technical advances in image acquisition and image processing have allowed for ever more refined characterisations of its micro- and macro-structure. Enormous efforts, for example, have been made to map differences between groups (e.g., young vs. old, diseased vs. healthy, male vs. female), to capture changes over time (e.g., from infancy to old age, or in the framework of neuroplasticity, as a result of a clinical intervention), or to assess correlations of brain attributes (e.g., measures of length, volume, shape) with behavioural, cognitive, or clinical parameters.
             </p>
             <div class="image left"><img width=60% alt="Logo" src="images/cat_logo.png"></div>
             <p>
               CAT12 is a powerful suite of tools for morphometric analyses with an intuitive graphical user interface, but also usable as a shell script. CAT is suitable for beginners, casual users, experts, and developers alike, providing a comprehensive set of analysis options, workflows, and integrated pipelines.
             </p>
             <p>
-              The available analysis streams allow for voxel-based, surface-based, as well as region-based morphometric analyses. Importantly, CAT includes various quality control options and covers the entire analysis workflow, from cross-sectional or longitudinal data processing, to the statistical analysis, and visualization of results.
+              The available analysis streams allow for voxel-based, surface-based, as well as region-based morphometric analyses. Importantly, CAT includes various quality control options and covers the entire analysis workflow, from cross-sectional or longitudinal data processing, to the statistical analysis, and visualisation of results.
             </p>
 
             <!-- ############################# -->
@@ -77,10 +80,11 @@
             The manual can be divided into four main sections:<br>              
             <ul>
               <li>Naturally, a quick guide of how to <a href="#get_started">get started</a> is given at the beginning. This section provides information about <a href="#download">downloading and installing</a> the software and <a href="#starting">starting</a> the Toolbox. Also, a <a href="#basic_vbm">brief overview</a> of the steps of a VBM analysis is given.</li>
-              <li>This is followed by a <a href="#process_data">detailed description of a basic VBM analysis</a> that guides the user step-by-step through the entire process - from preprocessing to contrast selection. This description should provide all the information necessary to successfully analyze most studies.</li>
+              <li>This is followed by a <a href="#process_data">detailed description of a basic VBM analysis</a> that guides the user step-by-step through the entire process - from preprocessing to contrast selection. This description should provide all the information necessary to successfully analyse most studies.</li>
               <li>There are some specific cases of VBM analyses, for which the basic analysis workflow has to be adapted. These cases are <a href="#long">longitudinal studies</a> and studies in <a href="#children">children or special patient populations</a>. Relevant changes to a basic VBM analysis are described here and how these changes can be applied. Only the changes are described here - steps such as quality control or smoothing are the same as those described in the basic analysis and are not repeated a second time.</li>
               <li>The guide concludes with <a href="#add_info">additional information</a> about spaces after registration, naming conventions used and other hints.</li>
             </ul>
+            <p><a href="#top" aria-label="Back to top">Back to top</a></p>
             
             <!-- ################################################################################# -->
             <h2 id="quick">Quick start guide</h2>
@@ -90,14 +94,14 @@
             
             <ul>
               <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data using defaults (use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.long');">Segment Longitudinal Data</a> for longitudinal data).<br>
-              The resulting segmentations that can now be used for VBM are saved in the "mri" folder and are named "mwp1" for gray matter and "mwp2" for white matter. If you have used the longitudinal pipeline, the default segmentations for gray matter are named "mwp1r" or "mwmwp1r" if the  longitudinal model for detecting larger changes was selected.</li>
+                The resulting segmentations that can now be used for VBM are saved in the "mri" folder and are named "mwp1" for grey matter and "mwp2" for white matter. If you have used the longitudinal pipeline, the default segmentations for grey matter are named "mwp1r" or "mwmwp1r" if the  longitudinal model for detecting larger changes was selected.</li>
               <li>Get total intracranial volume<a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.calcvol');"> (TIV)</a> to correct for different brain sizes and volumes.<br>
               Select the xml-files that are saved in the "report" folder.</li>
               <li>Check the data quality with <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_homogeneity');">Sample Homogeneity</a> for VBM data (optionally consider TIV and age as nuisance variables).<br>
-              Select the gray or white matter segmentations from the first step.</li>
+                Select the grey or white matter segmentations from the first step.</li>
               <li><a class="function" href="matlab:spm_jobman('interactive','','spm.spatial.smooth');">Smooth</a> data (recommended start value 6 mm<sup>1</sup>).<br>
-              Select the gray or white matter segmentations from the first step.</li>
-              <li>Specify the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">Basic Models</a> with the smoothed gray or white matter segmentations and check for design orthogonality and sample homogeneity:
+                Select the grey or white matter segmentations from the first step.</li>
+              <li>Specify the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">Basic Models</a> with the smoothed grey or white matter segmentations and check for design orthogonality and sample homogeneity:
               <ul>
                 <li>Select "Two-sample t-test" or "Multiple regression" or use "Full factorial" for any cross-sectional data.</li>
                 <li>Use "Flexible factorial" for longitudinal data.</li>
@@ -109,7 +113,7 @@
               <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x');">Transform and Threshold SPM-maps</a> to (log-scaled) p-maps or correlation maps.</li>
               <li>Optionally, you can try <a class="function" href="matlab:if exist('spm_TFCE'),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">Threshold-Free Cluster Enhancement</a> (TFCE) with the SPM.mat file of a previously estimated statistical design.</li>
               <li>Optionally <a class="function" href="matlab:cat_vol_slice_overlay;">Overlay Selected Slices</a>. If you are using log-p scaled maps from "Transform SPM-maps" without thresholds or the TFCE_log maps, use the following values as the lower range for the colormap for the thresholding: 1.3 (P&lt;0.05); 2 (P&lt;0.01); 3 (P&lt;0.001).</li>
-              <li>Optionally use <a class="function" href="matlab:y=cat_surf_results;">Surface Overlay</a> for visualization of your results. Select the results (preferably saved as log-p maps with "Transform SPM-maps" or the TFCE_log maps with the different methods for multiple comparison correction) to display rendering views, slice overlay, and a glassbrain of your results.</li>
+              <li>Optionally use <a class="function" href="matlab:y=cat_surf_results;">Surface Overlay</a> for visualisation of your results. Select the results (preferably saved as log-p maps with "Transform SPM-maps" or the TFCE_log maps with the different methods for multiple comparison correction) to display rendering views, slice overlay, and a glassbrain of your results.</li>
               <li>Optionally estimate results for ROI analysis using <a class="function" href="matlab:cat_stat_analyze_ROIs;">Analyze ROIs</a>. Here, the SPM.mat file of the already estimated statistical design will be used. For more information, see <a href="#atlas">Atlas creation and ROI-based analysis</a>.</li>
             </ul>
         
@@ -134,7 +138,7 @@
               <li><a class="function" href="matlab:cat_stat_spm;">Estimate</a> the surface model and finally call <a class="function" href="matlab:[hReg xSPM SPM] = cat_spm_results_ui('Setup');">Results</a>.</li>
               <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x_surf');">Transform and Threshold SPM-maps</a> to (log-scaled) p-maps or correlation maps.</li>
               <li>Optionally, you can try <a class="function" href="matlab:if exist('spm_TFCE'),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">Threshold-Free Cluster Enhancement</a> (TFCE) with the SPM.mat file of a previously estimated statistical design.</li>
-              <li>Optionally use <a class="function" href="matlab:y=cat_surf_results;">Surface Overlay</a> for visualization of your results. Select the results (preferably saved as log-p maps with "Transform SPM-maps" or the TFCE_log maps with the different methods for multiple comparison correction) for the merged hemispheres to display rendering views of your results.</li>
+              <li>Optionally use <a class="function" href="matlab:y=cat_surf_results;">Surface Overlay</a> for visualisation of your results. Select the results (preferably saved as log-p maps with "Transform SPM-maps" or the TFCE_log maps with the different methods for multiple comparison correction) for the merged hemispheres to display rendering views of your results.</li>
               <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surf2roi');">Extract ROI-based Surface Values</a> such as gyrification or fractal dimension to provide ROI analysis. Since version 12.7 extraction of ROI-based thickness is not necessary anymore because this is now included in the segmentation pipeline.</li>
               <li>Optionally estimate results for ROI analysis using <a class="function" href="matlab:cat_stat_analyze_ROIs;">Analyze ROIs</a>. Here, the SPM.mat file of the already estimated statistical design will be used. For more information, see <a href="#atlas">Atlas creation and ROI-based analysis</a>.</li>
             </ul>
@@ -151,6 +155,7 @@
             <h5><sup>1</sup>Note to filter sizes for Gaussian smoothing</h5>
             <p>Smoothing increases the signal-to-noise ratio. The matched filter theorem states that the filter that matches your signal maximizes the signal-to-noise ratio. If we expect signal with a Gaussian shape and a FWHM of, say 6 mm in our images, then this signal will be best detected after we smooth our images with a 6 mm FWHM Gaussian filter. If you are trying to study small areas like the amygdala, we can use smaller filter sizes because of the small size of these regions. For larger regions like the cerebellum, the effects are better detected with larger filters.<br>
             Please also note that for the analysis of cortical folding measures such as gyrification or cortical complexity the filter sizes have to be larger (i.e. in the range of 15–25 mm). This is due to the underlying nature of this measure that reflects contributions from both sulci as well as gyri. Therefore, the filter size should exceed the distance between a gyral crown and a sulcal fundus.</p>
+            <p><a href="#top" aria-label="Back to top">Back to top</a></p>
 
           
             <!-- ################################################################################# -->
@@ -159,6 +164,7 @@
             <p>
               Preprocessing should remain unaffected until the next minor version number (12.x). New processing of your data is not necessary if the minor version number of CAT12 remains unchanged.
             </p>
+            <p><a href="#top" aria-label="Back to top">Back to top</a></p>
             
             <!-- ###################################### -->
             <h3>Changes in version CAT12.9 (2550)</h3>
@@ -199,7 +205,7 @@
                 <li>The longitudinal pipeline has been largely updated and is no longer compatible with preprocessing with version 12.8:
                 <ul>
                   <li>The estimate of subject-specific TPM should now be more stable and less sensitive to changes between time points.</li>
-                  <li>For data where the brain/head is still growing between time points and major changes are expected, a new longitudinal development model was added. For this type of data, an adapted pipeline was created that is very similar to the longitudinal aging model, but uses a time point-independent affine registration to adjust for brain/head growth. In addition, this model uses a subject-specific TPM based on the average image.</li>
+                  <li>For data where the brain/head is still growing between time points and major changes are expected, a new longitudinal development model was added. For this type of data, an adapted pipeline was created that is very similar to the longitudinal ageing model, but uses a time point-independent affine registration to adjust for brain/head growth. In addition, this model uses a subject-specific TPM based on the average image.</li>
                   <li>An additional longitudinal report is now provided to better assess differences between time points.</li>
                 </ul></li>
               </ul>        
@@ -416,7 +422,7 @@
             <u>(a) Preprocessing:</u><br><br>
             
             <ol>
-              <li>T1 images are <b>normalized</b> to a template space and <b>segmented</b> into gray matter (GM), white matter (WM), and cerebrospinal fluid (CSF). The preprocessing parameters can be adjusted via the module &quot;Segment Data&quot;.</li>
+              <li>T1 images are <b>normalized</b> to a template space and <b>segmented</b> into grey matter (GM), white matter (WM), and cerebrospinal fluid (CSF). The preprocessing parameters can be adjusted via the module &quot;Segment Data&quot;.</li>
               <li>After the preprocessing is finished, a <b>quality check</b> is highly recommended. This can be achieved via the modules &quot;Display slices&quot; and &quot;Check sample&quot;. Both options are located in the CAT12 window under &quot;Check Data Quality&quot;. Furthermore, quality parameters are estimated and saved in xml-files for each data set during preprocessing. These quality parameters are also printed on the report PDF-page and can be additionally used in the module &quot;Check sample&quot;.</li>
               <li>Before entering the GM images into a statistical model, image data needs to be <b>smoothed</b>. Of note, this step is not implemented into the CAT12 Toolbox but achieved via the standard SPM module &quot;Smooth&quot;.</li>
             </ol>
@@ -433,7 +439,7 @@
             <b>A few words about the Batch Editor...</b><br>
             <ul>
               <li>As soon as you select a module from the CAT12 Toolbox menu, a new window (the Batch Editor) will open. The Batch Editor is the environment where you will set up your analysis (see <a href="#figure3">Figure 3</a>). For example, an &quot;&lt;-X&quot; indicates where you need to select files (e.g. your image files, the template, etc.). Other parameters have either default settings (which can be modified) or require input (e.g. choosing between different options, providing text or numeric values, etc.).</li>
-              <li>Once all missing parameters are set, a green arrow will appear on the top of the window (the current snapshots in <a href="#figure3">Figure 3</a> show the arrow still in gray). Click this arrow to run the module or select &quot;File &rarr; Run Batch&quot;. It is very useful to save the settings before you run the batch (click on the disk symbol or select &quot;File &rarr; Save Batch&quot;).
+              <li>Once all missing parameters are set, a green arrow will appear on the top of the window (the current snapshots in <a href="#figure3">Figure 3</a> show the arrow still in grey). Click this arrow to run the module or select &quot;File &rarr; Run Batch&quot;. It is very useful to save the settings before you run the batch (click on the disk symbol or select &quot;File &rarr; Save Batch&quot;).
   
               <div class="box right"><sup>*</sup> Additional CAT12-related information can be found by selecting &quot;VBM Website&quot; in the CAT12 window (Tools &rarr; Internet &rarr; VBM Website). This will open a website. Here, look for &quot;VBM subpages&quot; on the right.</div></li>
             
@@ -467,7 +473,7 @@
 
             <p>The <em>&quot;initial voxel-based processing&quot;</em> begins with a spatial adaptive non-local means (SANLM) denoising filter (<a href="https://doi.org/10.1002/jmri.22003">Manjon et al., 2010</a>), which is followed by internal resampling to properly accommodate low-resolution images and anisotropic spatial resolutions. The data are then bias-corrected and affine-registered (to further improve the outcomes of the following steps) followed by the standard SPM &quot;unified segmentation&quot; (<a href="https://doi.org/10.1016/j.neuroimage.2005.02.018">Ashburner and Friston, 2005</a>). The outcomes of the latter step will provide the starting estimates for the subsequent refined voxel-based processing.</p>
 
-            <p>The <em>&quot;refined voxel-based processing&quot;</em> uses the output from the unified segmentation and proceeds with skull-stripping of the brain. The brain is then parcellated into the left and right hemisphere, subcortical areas, and the cerebellum. Furthermore, local white matter hyperintensities are detected (to be later accounted for during the spatial normalization and cortical thickness estimation). Subsequently, a local intensity transformation of all tissue classes is performed, which is particularly helpful to reduce the effects of higher gray matter intensities in the motor cortex, basal ganglia, or occipital lobe before the final adaptive maximum a posteriori (AMAP) segmentation. This final AMAP segmentation step (<a href="https://doi.org/10.1109/42.563663">Rajapakse et al., 1997</a>), which does not rely on a priori information of the tissue probabilities, is then refined by applying a partial volume estimation (<a href="https://doi.org/10.1016/j.neuroimage.2004.05.007">Tohka et al., 2004</a>), which effectively estimates the fractional content for each tissue type per voxel. As a last default step, the tissue segments are spatially normalized to a common reference space using Geodesic Shooting (<a href="https://doi.org/10.1016/j.neuroimage.2010.12.049">Ashburner and Friston, 2011</a>) registrations.</p>
+            <p>The <em>&quot;refined voxel-based processing&quot;</em> uses the output from the unified segmentation and proceeds with skull-stripping of the brain. The brain is then parcellated into the left and right hemisphere, subcortical areas, and the cerebellum. Furthermore, local white matter hyperintensities are detected (to be later accounted for during the spatial normalization and cortical thickness estimation). Subsequently, a local intensity transformation of all tissue classes is performed, which is particularly helpful to reduce the effects of higher grey matter intensities in the motor cortex, basal ganglia, or occipital lobe before the final adaptive maximum a posteriori (AMAP) segmentation. This final AMAP segmentation step (<a href="https://doi.org/10.1109/42.563663">Rajapakse et al., 1997</a>), which does not rely on a priori information of the tissue probabilities, is then refined by applying a partial volume estimation (<a href="https://doi.org/10.1016/j.neuroimage.2004.05.007">Tohka et al., 2004</a>), which effectively estimates the fractional content for each tissue type per voxel. As a last default step, the tissue segments are spatially normalized to a common reference space using Geodesic Shooting (<a href="https://doi.org/10.1016/j.neuroimage.2010.12.049">Ashburner and Friston, 2011</a>) registrations.</p>
 
             <div class="box right"><sup>*</sup> Topology defects are holes and handles that prevent the surface from being homeomorphic with a sphere.</div>
 
@@ -582,7 +588,7 @@
             Parameters:<br>
 
             <ul>
-              <li>Data &rarr; New: Sample data &lt;-X &rarr; Select Files &rarr; <em>[select gray matter volumes]</em> &rarr; Done
+              <li>Data &rarr; New: Sample data &lt;-X &rarr; Select Files &rarr; <em>[select grey matter volumes]</em> &rarr; Done
               <ul>
                 <li>Select the newly written data [e.g. the &quot;mwp1*&quot; files, which are the modulated (m) normalized (w) GM segments (p1)]. It is recommended to use the unsmoothed segmentations that provide more anatomical details. This tool visualizes the correlation between the volumes using a boxplot and correlation matrices. Thus, it will help to identify outliers. Any outlier should be carefully inspected for artifacts or pre-processing errors using &quot;Check worst data&quot; in the GUI. If you specify different samples the mean correlation is displayed in separate boxplots for each sample.</li>
               </ul></li>
@@ -761,7 +767,7 @@
             <p>In addition, an interaction can be modeled to examine whether the regression between functional and structural data differs between two groups.<br>
             Please note that the saved vSPM.mat file can only be analyzed with the TFCE toolbox r221 or newer.</p>
 
-            <u>Visualization of results</u><br>
+            <u>Visualisation of results</u><br>
             There exist different options to call results after statistical analysis:<br><br>
             <ol>
               <li>General function to <a class="function" href="matlab:[hReg xSPM SPM] = cat_spm_results_ui('Setup');">call results</a></li>
@@ -1076,7 +1082,7 @@
               </tr>
               <tr>
                 <td colspan="1" rowspan="1">
-                <figcaption><b>Figure 6:</b> Gray boxes between the parameters point to a co-linearity (correlation): the darker the box the larger the correlation (which also holds for inverse correlations). If you click in the box the co-linearity between the parameters is displayed.</figcaption>
+                <figcaption><b>Figure 6:</b> Grey boxes between the parameters point to a co-linearity (correlation): the darker the box the larger the correlation (which also holds for inverse correlations). If you click in the box the co-linearity between the parameters is displayed.</figcaption>
                 </td>
               </tr>
             </table>
@@ -1730,14 +1736,14 @@
             <!-- ############################# -->
             <h4>Background</h4>
 
-            <p>The majority of morphometric studies are based on cross-sectional data in which one image is acquired for each subject. However, to map structural changes over time (e.g., in the framework of use-dependent plasticity, neurodevelopment, or aging), longitudinal designs that consider additional time points for each subject are necessary. The handling of these longitudinal data requires a customized processing, as a voxel- or point-wise comparability needs to be assured not only across subjects, but also across time points within subjects. This requires an inverse-consistent (or &quot;symmetric&quot;) realignment as well as an intra-subject bias field correction (<a href="https://doi.org/10.3389/fnins.2012.00197">Ashburner and Ridgway, 2012</a>; <a href="https://doi.org/10.1016/j.neuroimage.2010.07.020">Reuter et al., 2010</a>; <a href="https://doi.org/10.1016/j.neuroimage.2011.02.076">Reuter and Fischl, 2011</a>). Thus, CAT first realigns the images from all time points using inverse-consistent rigid-body registrations and applies intra-subject bias-field corrections. Subsequently, the resulting images are processed individually (see Figure <a href="#figure4">4</a>, <a href="#figure5">5</a>) using the standard pipeline.</p>
+            <p>The majority of morphometric studies are based on cross-sectional data in which one image is acquired for each subject. However, to map structural changes over time (e.g., in the framework of use-dependent plasticity, neurodevelopment, or ageing), longitudinal designs that consider additional time points for each subject are necessary. The handling of these longitudinal data requires a customized processing, as a voxel- or point-wise comparability needs to be assured not only across subjects, but also across time points within subjects. This requires an inverse-consistent (or &quot;symmetric&quot;) realignment as well as an intra-subject bias field correction (<a href="https://doi.org/10.3389/fnins.2012.00197">Ashburner and Ridgway, 2012</a>; <a href="https://doi.org/10.1016/j.neuroimage.2010.07.020">Reuter et al., 2010</a>; <a href="https://doi.org/10.1016/j.neuroimage.2011.02.076">Reuter and Fischl, 2011</a>). Thus, CAT first realigns the images from all time points using inverse-consistent rigid-body registrations and applies intra-subject bias-field corrections. Subsequently, the resulting images are processed individually (see Figure <a href="#figure4">4</a>, <a href="#figure5">5</a>) using the standard pipeline.</p>
             <p>That is, images are tissue-classified and the necessary deformations for spatial registration to the standard template are estimated. However, instead of applying the individual spatial transformations (as done in a cross-sectional analysis), a mean transformation for all time points is calculated and applied to all individual images (<a href="#figure7">Figure 7</a>). The resulting normalized tissue segments can then be used for voxel-based analyses. Optionally, the processed images for all time points can be used to additionally extract the cortical surfaces and to calculate surface parameters, such as cortical thickness or diverse folding measures using the surface-based processing pipeline. Furthermore, the processing of the individual time points is initialized by the processed results from the (unbiased) average image. This reduces random variations in the processing procedure and improves the robustness and sensitivity of the overall longitudinal analysis. This latter processing stream of surface data is similar to the longitudinal approach employed in FreeSurfer (<a href="https://doi.org/10.1016/j.neuroimage.2010.07.020">Reuter et al., 2010</a>; <a href="https://doi.org/10.1016/j.neuroimage.2011.02.076">Reuter and Fischl, 2011</a>).</p>
             <p>Please note that three different longitudinal models are offered. The first longitudinal model is optimized for processing and capturing smaller changes over time in response to short-term plasticity effects (e.g. from learning and training). This model will probably not be as sensitive for larger longitudinal changes where large parts of the brain change over time (e.g. atrophy due to Alzheimer&quot;s disease or aging). This is due to the effect of estimating the parameters of spatial registration from the deformations of all time points and then applying them to all time points. If a large atrophy occurs between the time points, this can lead to a displacement of tissue boundaries and might result in areas with reduced volumes over time, which are surrounded by areas with increased volume due to these displacement problems. For data with larger volume changes over time, you should choose the longitudinal model, which is optimized to detect larger changes (e.g. due to ageing). This model also takes into account the deformations between time points and prevents the problems mentioned above. Finally, there also exists a longitudinal processing pipeline for neurodevelopmental data where we can also see changes in head size which should be taken into account.</p>
             <p>Additional attention is then required for the setup of the statistical model. The following section therefore describes the data preprocessing and model setup for longitudinal data.</p>
             <p><img id="figure7" width=100% alt="cat_long_pipeline" src="images/cat_long_pipelines.png"></p>
-            <figcaption><b>Figure 7:</b> CAT’s longitudinal processing workflows to examine (a) neuroplasticity, (b) aging, and (c) neurodevelopment<br>
-            The first step in all three workflows is the creation of a high-quality average image over all time points. For this purpose, CAT realigns the images from all time points for each participant using inverse-consistent (or symmetric) rigid-body registrations and intra-subject bias field correction. While this is sufficient to create the required average image for the neuroplasticity and aging workflows, the neurodevelopmental workflow requires non-linear registrations in addition. In either case, the resulting average image is segmented using CAT’s regular processing workflow to create a subject-specific tissue probability map (TPM). This TPM is used to enhance the time point-specific processing to create the final segmentations. The final tissue segments are then registered to MNI space to obtain a voxel-comparability across time points and subjects, which differs between all three workflows. In the neuroplasticity workflow, an average of the time point-specific registrations is created to register the tissue segments of all time points to MNI space. The aging workflow does the same in principle but adds additional (very smooth) deformations between the individual images across time points to account for inevitable age-related changes over time (e.g., enlargements of the ventricles). In contrast, the neurodevelopmental workflow needs to account for major changes, such as overall head and brain growth, which requires independent non-linear registrations to MNI space of all images across time points (which are obtained using the default cross-sectional registration model).<br>
-            For surface-based processing, the neuroplasticity and aging models use the processing of the time point average image to create an average surface. The average is then adapted (deformed) to time point specific maps used in the surface creation, whereas the neurodevelopment workflow has to run the independent cross-sectional surface pipeline for each time point.</figcaption>
+            <figcaption><b>Figure 7:</b> CAT’s longitudinal processing workflows to examine (a) neuroplasticity, (b) ageing, and (c) neurodevelopment<br>
+            The first step in all three workflows is the creation of a high-quality average image over all time points. For this purpose, CAT realigns the images from all time points for each participant using inverse-consistent (or symmetric) rigid-body registrations and intra-subject bias field correction. While this is sufficient to create the required average image for the neuroplasticity and ageing workflows, the neurodevelopmental workflow requires non-linear registrations in addition. In either case, the resulting average image is segmented using CAT’s regular processing workflow to create a subject-specific tissue probability map (TPM). This TPM is used to enhance the time point-specific processing to create the final segmentations. The final tissue segments are then registered to MNI space to obtain a voxel-comparability across time points and subjects, which differs between all three workflows. In the neuroplasticity workflow, an average of the time point-specific registrations is created to register the tissue segments of all time points to MNI space. The ageing workflow does the same in principle but adds additional (very smooth) deformations between the individual images across time points to account for inevitable age-related changes over time (e.g., enlargements of the ventricles). In contrast, the neurodevelopmental workflow needs to account for major changes, such as overall head and brain growth, which requires independent non-linear registrations to MNI space of all images across time points (which are obtained using the default cross-sectional registration model).<br>
+            For surface-based processing, the neuroplasticity and ageing models use the processing of the time point average image to create an average surface. The average is then adapted (deformed) to time point specific maps used in the surface creation, whereas the neurodevelopment workflow has to run the independent cross-sectional surface pipeline for each time point.</figcaption>
             
             <!-- ############################# -->
             <h4>Preprocessing of longitudinal data - overview</h4>
@@ -2452,6 +2458,7 @@
             <p>For pediatric MRI data, it is a good idea to create customized TPMs, which reflect age and gender of the population. The <a href="https://neuro-jena.github.io/software.html#tom">TOM8 Toolbox</a> provides the necessary parameters to customize these TPMs.<br>
             You can also try the <a href="https://www.medizin.uni-tuebingen.de/de/das-klinikum/einrichtungen/kliniken/kinderklinik/kinderheilkunde-iii/forschung-iii/software">CerebroMatic Toolbox</a> by Marko Wilke that uses a more flexible template creation approach and additionally allows for the creation of customized Shooting templates.<br>
             Please note that these TPMs should contain 6 classes: GM/WM/CSF and 3 background classes.</p>
+            <p><a href="#top" aria-label="Back to top">Back to top</a></p>
             
             <!-- ############################# -->
             <h4 id="tpm">Customized Tissue Probability Maps</h4>
@@ -2649,10 +2656,10 @@
             <p>Surface-based morphometry has several advantages over the sole use of volumetric data. For example, it has been shown that using brain surface meshes for spatial registration increases the accuracy of brain registration compared to volume-based registration (<a href="https://doi.org/10.1016/j.neuroimage.2005.03.024">Desai et al., 2005</a>). Brain surface meshes also permit new forms of analyses, such as gyrification which measure surface complexity in 3D (<a href="https://doi.org/10.1016/j.neuroimage.2011.02.007">Yotter et al., 2011b</a>) or cortical thickness (<a href="https://doi.org/10.1016/j.neuroimage.2012.09.050">Dahnke et al., 2013</a>). In addition, inflation or spherical mapping of the cortical surface mesh raises the buried sulci to the surface so that mapped functional activity in these regions can be made easily visible.</p>
             
             <i>Local adaptive segmentation</i>
-            <p>Gray matter regions with high iron concentration, such as the motor cortex and occipital regions, often have an increased intensity leading to misclassifications. In addition to our adaptive MAP approach for partial volume segmentation, we use an approach that allows us to adapt local intensity changes to deal with varying tissue contrasts (<a href="https://doi.org/10.1016/j.neuroimage.2012.09.050">Dahnke et al., 2012a</a>).</p>
+            <p>Grey matter regions with high iron concentration, such as the motor cortex and occipital regions, often have an increased intensity leading to misclassifications. In addition to our adaptive MAP approach for partial volume segmentation, we use an approach that allows us to adapt local intensity changes to deal with varying tissue contrasts (<a href="https://doi.org/10.1016/j.neuroimage.2012.09.050">Dahnke et al., 2012a</a>).</p>
             
             <i>Cortical thickness and central surface estimation</i>
-            <p>We use a fully automated method that allows the measurement of cortical thickness and reconstruction of the central surface in one step. It uses a tissue segmentation to estimate the white matter (WM) distance and then projects the local maxima (which is equal to the cortical thickness) onto other gray matter voxels using a neighboring relationship described by the WM distance. This projection-based thickness (PBT) allows the handling of partial volume information, sulcal blurring, and sulcal asymmetries without explicit sulcus reconstruction (<a href="http://www.neuro.uni-jena.de/hbm2012/HBM2012-Dahnke02.pdf">Dahnke et al., 2012b</a>).</p>
+            <p>We use a fully automated method that allows the measurement of cortical thickness and reconstruction of the central surface in one step. It uses a tissue segmentation to estimate the white matter (WM) distance and then projects the local maxima (which is equal to the cortical thickness) onto other grey matter voxels using a neighbouring relationship described by the WM distance. This projection-based thickness (PBT) allows the handling of partial volume information, sulcal blurring, and sulcal asymmetries without explicit sulcus reconstruction (<a href="http://www.neuro.uni-jena.de/hbm2012/HBM2012-Dahnke02.pdf">Dahnke et al., 2012b</a>).</p>
             
             <i>Topological correction</i>
             <p>To repair topological defects, we use a novel method based on spherical harmonics (<a href="https://doi.org/10.1002/hbm.21095">Yotter et al., 2011a</a>). First of all, the original MRI intensity values are used to select either a &quot;fill&quot; or &quot;cut&quot; operation for each topological defect. We modify the spherical map of the uncorrected brain surface mesh in such a way that certain triangles are preferred when searching for the bounding triangle during reparameterization. Subsequently, a low-pass filtered alternative reconstruction based on spherical harmonics is patched into the reconstructed surface in areas where defects were previously present. </p>
@@ -2771,10 +2778,10 @@
 
             <ul>
               <li>XML files &lt;-X &rarr; Select xml files for each subject that are saved in the label folder.</li>
-              <li>Output file &rarr; Define output name for csv file. This name is extended by the atlas name and the name of the measure (e.g. &quot;Vgm&quot; for gray matter volume)</li>
+              <li>Output file &rarr; Define output name for csv file. This name is extended by the atlas name and the name of the measure (e.g. &quot;Vgm&quot; for grey matter volume)</li>
             </ul>
 
-            <p>For each measurement (e.g. &quot;Vgm&quot; for gray matter volume) and each atlas a separate CSV file is written. This works for both volume and surface data, but volume and surface data has to be processed separately with this function (surface-based ROI values are indicated by an additional &quot;s&quot;, e.g. &quot;&quot;catROIs_&quot;&quot;). You can use external software such as Excel or SPSS to import the resulting CSV files (volumes are defined in mL) for further analysis. Also pay attention to the different interpretations between &quot;.&quot; and &quot;,&quot; depending on your region and language settings on your system.</p>
+            <p>For each measurement (e.g. &quot;Vgm&quot; for grey matter volume) and each atlas a separate CSV file is written. This works for both volume and surface data, but volume and surface data has to be processed separately with this function (surface-based ROI values are indicated by an additional &quot;s&quot;, e.g. &quot;&quot;catROIs_&quot;&quot;). You can use external software such as Excel or SPSS to import the resulting CSV files (volumes are defined in mL) for further analysis. Also pay attention to the different interpretations between &quot;.&quot; and &quot;,&quot; depending on your region and language settings on your system.</p>
             
             <!-- ############################# -->
             <h4>Use of atlas functions in SPM12</h4>
@@ -2791,10 +2798,10 @@
             
             <p>&quot;Native space&quot; creates tissue class images in spatial correspondence to the original data. Although this may be useful for estimating global tissue volumes (e.g. GM+WM+CSF=TIV) it is not suitable for performing VBM analyses due to the lack of voxel-wise correspondence in the brain). If one is interested in these global tissue volumes in the native space (&quot;raw values&quot;), it is not necessary to actually output the tissue class images in native space. The &quot;Segment Data&quot;-function automatically generates an xml file for each subject (cat_*.xml), which contains the raw values for GM, WM, and CSF. The subject-specific values can be calculated (i.e., integrated into a single text file) using the function: CAT12 &rarr; Statistical Analysis &rarr; Estimate TIV.</p>
             
-            <p>&quot;Normalized&quot; creates tissue class images in spatial correspondence to the template in MNI152NLin2009cAsym space. This is useful for VBM analyses (e.g. &quot;concentration&quot; of gray matter; <a href="https://doi.org/10.1006/nimg.2001.0786">Good et al., 2001</a>).<br>
+            <p>&quot;Normalized&quot; creates tissue class images in spatial correspondence to the template in MNI152NLin2009cAsym space. This is useful for VBM analyses (e.g. &quot;concentration&quot; of grey matter; <a href="https://doi.org/10.1006/nimg.2001.0786">Good et al., 2001</a>).<br>
             An excellent overview about the <a href="https://www.lead-dbs.org/about-the-mni-spaces/">different MNI spaces</a> can be found on the DBS site from Andreas Horn.</p>
             
-            <p>&quot;Modulated normalized&quot; creates tissue class images in alignment with the template, but multiplies (&quot;modulates&quot;) the voxel values with the Jacobian determinant (i.e., linear and non-linear components) derived from the spatial normalization. This is useful for VBM analyses and allows the comparison of the absolute amount of tissue (e.g. &quot;volume&quot; of gray matter; <a href="https://doi.org/10.1006/nimg.2001.0786">Good et al., 2001</a>). Please note that in this type of modulation you must use TIV as covariate to correct different brain sizes. An alternative approach is to use global scaling with TIV if TIV is too strongly correlated with your covariates of interest. For more information, see the section &quot;Checking for Design Orthogonality&quot;.</p>
+            <p>&quot;Modulated normalized&quot; creates tissue class images in alignment with the template, but multiplies (&quot;modulates&quot;) the voxel values with the Jacobian determinant (i.e., linear and non-linear components) derived from the spatial normalization. This is useful for VBM analyses and allows the comparison of the absolute amount of tissue (e.g. &quot;volume&quot; of grey matter; <a href="https://doi.org/10.1006/nimg.2001.0786">Good et al., 2001</a>). Please note that in this type of modulation you must use TIV as covariate to correct different brain sizes. An alternative approach is to use global scaling with TIV if TIV is too strongly correlated with your covariates of interest. For more information, see the section &quot;Checking for Design Orthogonality&quot;.</p>
             <p>If you use the expert mode, you can optionally choose whether you want to modulate your data for non-linear terms only, which was the default for previous VBM-toolbox versions. This produces tissue class images in alignment with the template, but the voxel values are only multiplied by the non-linear components. This is useful for VBM analyses and allows comparison of the absolute amount of tissue corrected for individual brain sizes. This option is similar to using &quot;Affine+non-linear&quot; (see above) in combination with &quot;global normalization&quot; (when building the statistical model with the traditional PET design late one). Although this type of modulation was used in as default previous VBM-toolbox versions it is no longer recommended as the use of standard modulation in combination with TIV as covariate provides more reliable results (<a href="https://doi.org/10.1016/j.neuroimage.2014.09.034">Malone et al., 2015</a>).</p>
             
             <!-- ###################################### -->
@@ -3081,8 +3088,8 @@
             <p>Furthermore, if you select the longitudinal model for detecting larger changes (e.g. ageing or developmental effects) the segmented images are additionally indicated by a leading &quot;mw&quot; due to the additional warping and modulation steps.</p>
             
             <u>Example:</u><br>
-            mwp1r * - gray matter (plasticity model)<br>
-            mwmwp1r* - gray matter (aging model for detecting larger changes)<br>
+            mwp1r * - grey matter (plasticity model)<br>
+            mwmwp1r* - grey matter (ageing model for detecting larger changes)<br>
 
             <!-- ############################# -->
             <h4>Reports (saved in subfolder &quot;report&quot;)</h4>
@@ -3178,7 +3185,7 @@
             <p>The segmentation approach is based on an Adaptive Maximum A Posterior (AMAP) technique without the need for a priori information on the tissue probabilities. This means that the Tissue Probability Maps (TPM) are not constantly used in the sense of the classical Unified Segmentation approach (<a href="https://doi.org/10.1016/j.neuroimage.2005.02.018">Ashburner and Friston, 2005</a>), but only for spatial normalization, initial skull-stripping, and as initial segmentation estimate. The subsequent AMAP estimation is adaptive in the sense that local variations of the parameters (i.e., means and variance) are modelled as slowly varying spatial functions (<a href="https://doi.org/10.1109/42.563663">Rajapakse et al., 1997</a>). This accounts not only for intensity inhomogeneities, but also for other local intensity variations.</p>
             
             <i>Partial Volume Segmentation</i>
-            <p>In addition, the segmentation approach uses a Partial Volume Estimation (PVE) with a simplified mixed model of a maximum of two tissue types (<a href="https://doi.org/10.1016/j.neuroimage.2004.05.007">Tohka et al., 2004</a>). We begin with an initial segmentation into three pure classes: gray matter (GM), white matter (WM), and cerebrospinal fluid (CSF) based on the AMAP estimation described above. The initial segmentation is followed by a PVE consisting of two additional mixed classes: GM-WM and GM-CSF. This results in an estimate of the amount (or fraction) of each pure tissue type that is present in each voxel (since single voxels - given their size - probably contain more than one tissue type) and thus allows for more precise segmentation.</p>
+            <p>In addition, the segmentation approach uses a Partial Volume Estimation (PVE) with a simplified mixed model of a maximum of two tissue types (<a href="https://doi.org/10.1016/j.neuroimage.2004.05.007">Tohka et al., 2004</a>). We begin with an initial segmentation into three pure classes: grey matter (GM), white matter (WM), and cerebrospinal fluid (CSF) based on the AMAP estimation described above. The initial segmentation is followed by a PVE consisting of two additional mixed classes: GM-WM and GM-CSF. This results in an estimate of the amount (or fraction) of each pure tissue type that is present in each voxel (since single voxels - given their size - probably contain more than one tissue type) and thus allows for more precise segmentation.</p>
             
             <i>Skull-Stripping</i>
             <p>CAT12 provides different approaches for skull-stripping. Currently, the method with the most accurate and reliable results is an adaptive probability region-growing (APRG) method. It refines the probability maps of the SPM approach by region-growing techniques of the GCUT approach with a final surface-based optimization strategy.</p>
@@ -3198,7 +3205,7 @@
             An excellent overview about the <a href="https://www.lead-dbs.org/about-the-mni-spaces/">different MNI spaces</a> can be found on the DBS site from Andreas Horn.</p>
             
             <i>White Matter Hyperintensity Correction (WMHC)</i>
-            <p>The accurate detection of <i>White Matter Hyperintensities</i> (WMHs) is crucial to prevent registration errors, such as the inappropriate mapping of WMHs to typical gray matter locations. Additionally, WMHs in close proximity to the cortex can lead to surface reconstruction issues by being misinterpreted as gray matter.<br>
+            <p>The accurate detection of <i>White Matter Hyperintensities</i> (WMHs) is crucial to prevent registration errors, such as the inappropriate mapping of WMHs to typical grey matter locations. Additionally, WMHs in close proximity to the cortex can lead to surface reconstruction issues by being misinterpreted as grey matter.<br>
             To address this issue, CAT12 initially employs a low-resolution shooting registration technique (<a href="https://doi.org/10.1016/j.neuroimage.2010.12.049">Ashburner and Friston, 2011</a>) on the preliminary SPM segments to align the tissue probability map and the CAT12 atlas with the individual image space. Subsequently, local tissue and region corrections are conducted using region-growing and bottleneck algorithms (<a href="https://doi.org/10.1109/MMBIA.1996.534084">Mangin et al., 1996</a>; <a href="https://neuro-jena.github.io/pdf/Dahnke-NI12.pdf">Dahnke et al. 2012</a>).<br>
             Within the individual segmentation map, isolated GM islands within the white matter (WM) and voxels adjacent to the lateral ventricles that have high WM probability but GM-like intensity are classified as WMHs. These areas with GM-like intensity but a WMH label are either temporarily aligned with WM or treated as a separate tissue class, depending on the WMH correction (WMHC) processing parameters.</p>
             
@@ -3218,7 +3225,7 @@
                         
             <i>Cortical thickness and central surface estimation</i>
             <p>
-              We use a fully automated method that allows for measurement of cortical thickness and reconstructions of the central surface in one step. It uses a tissue segmentation to estimate the white matter (WM) distance, then projects the local maxima (which is equal to the cortical thickness) to other gray matter voxels by using a neighbor relationship described by the WM distance. This projection-based thickness (PBT) allows the handling of partial volume information, sulcal blurring, and sulcal asymmetries without explicit sulcus reconstruction <a href="https://neuro-jena.github.io/pdf/Dahnke-NI12.pdf">(Dahnke et al. 2012)</a></p> 
+              We use a fully automated method that allows for measurement of cortical thickness and reconstructions of the central surface in one step. It uses a tissue segmentation to estimate the white matter (WM) distance, then projects the local maxima (which is equal to the cortical thickness) to other grey matter voxels by using a neighbour relationship described by the WM distance. This projection-based thickness (PBT) allows the handling of partial volume information, sulcal blurring, and sulcal asymmetries without explicit sulcus reconstruction <a href="https://neuro-jena.github.io/pdf/Dahnke-NI12.pdf">(Dahnke et al. 2012)</a></p> 
               
             <i>Topology Correction</i>
             <p>
@@ -3252,7 +3259,7 @@
             <h4 id="atlas">Atlas creation and ROI-based analysis</h4>
             <p>
               CAT12 allows estimation of tissue volumes (and additional surface parameters such as cortical thickness, gyrification or fractal dimension) for different volume and surface-based atlas maps.
-              The mean values within a ROI for volume data (e.g. gray matter volume) are given im mL, while surface ROI values represent the mean value of the surface measures (e.g. thickness).
+              The mean values within a ROI for volume data (e.g. grey matter volume) are given in mL, while surface ROI values represent the mean value of the surface measures (e.g. thickness).
               The results are stored as XML files in the <em>label</em> directory. 
               The XML file <em>catROI[s]_*.xml</em> contains information of all atlases as data structure for one dataset and the optional <em>s</em> indicates surface atlases. 
               If the option "cat.output.ROI" in <a href="matlab:edit('cat_defaults');">cat_defaults.m</a> is set to "0" no ROI XML files are saved and you have to set this parameter to "1" and preprocess the data again if you are interested in ROI analysis of volume data (for surface data these XML files are always extracted after preprocessing, thus it is not necessary to do this for surface data). If this option is enabled you can select the different atlases in the batch GUI.
@@ -3285,9 +3292,9 @@
             <h5 id="Extraction">Optional extraction of ROI data</h5>
             <p>
               Optionally, the XML files of several subjects can also be combined and saved for further analysis as a CSV file using the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.calcroi');">Estimate Mean Values inside ROI</a> function. 
-              For each measure (e.g. ''Vgm'' for gray matter volume) and each atlas a separate CSV file is written. This works for both volume as well as surface data, but volume and surface data has to be processed separately using this function (surface-based ROI values are indicated by an additional <em>s</em>, e.g. ''catROIs_'').    
+              For each measure (e.g. ''Vgm'' for grey matter volume) and each atlas a separate CSV file is written. This works for both volume as well as surface data, but volume and surface data has to be processed separately using this function (surface-based ROI values are indicated by an additional <em>s</em>, e.g. ''catROIs_'').    
               You can use external software such as Excel or SPSS to read the resulting CSV files for further analysis. Take also care of the different interpretation between "." and "," depending on your region and language settings on your system.
-              The mean values within a ROI for volume data (e.g. gray matter volume) are given im mL, while surface ROI values represent the mean value of the surface measures (e.g. thickness).
+              The mean values within a ROI for volume data (e.g. grey matter volume) are given in mL, while surface ROI values represent the mean value of the surface measures (e.g. thickness).
             </p>
             
             <!-- ############################# -->
