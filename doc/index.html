@@ -31,6 +31,27 @@
           <div id="content">
             
             <h1>Manual Computational Anatomy Toolbox CAT12</h1>
+            
+            <!-- Local Table of Contents for quick navigation -->
+            <nav aria-label="Table of contents" class="box">
+              <b>On this page</b>
+              <ul>
+                <li><a href="#intro">Introduction and overview</a></li>
+                <li><a href="#quick">Quick start guide</a></li>
+                <li><a href="#version">Version information</a></li>
+                <li><a href="#get_started">Getting started</a></li>
+                <li><a href="#overview_process">Overview of CAT12 processing</a></li>
+                <li><a href="#process_data">Preprocessing data</a></li>
+                <li><a href="#build_stats">Building the statistical model</a></li>
+                
+                <li><a href="#long">CAT12 for longitudinal data</a></li>
+                <li><a href="#children">Processing of data such as children</a></li>
+                <li><a href="#variants">Other variants of computational morphometry</a></li>
+                <li><a href="#add_info">Additional information</a></li>
+                <li><a href="#methods">Methods</a></li>
+                <li><a href="#faq">FAQ</a></li>
+              </ul>
+            </nav>
                           
             <!-- ################################################################################# -->
             <h2 id="intro">Introduction and overview</h2>
@@ -43,11 +64,14 @@
             </p>
             <div class="image left"><img width=60% alt="Logo" src="images/cat_logo.png"></div>
             <p>
-              CAT12 is a powerful suite of tools for morphometric analyses with an intuitive graphical user interface, but also usable as a shell script. CAT is suitable for beginners, casual users, experts, and developers alike providing a comprehensive set of analysis options, workflows, and integrated pipelines. The available analysis streams allow for voxel-based, surface-based, as well as region-based morphometric analyses. Importantly, CAT includes various quality control options and covers the entire analysis workflow, from cross-sectional or longitudinal data processing, to the statistical analysis, and visualization of results. 
+              CAT12 is a powerful suite of tools for morphometric analyses with an intuitive graphical user interface, but also usable as a shell script. CAT is suitable for beginners, casual users, experts, and developers alike, providing a comprehensive set of analysis options, workflows, and integrated pipelines.
+            </p>
+            <p>
+              The available analysis streams allow for voxel-based, surface-based, as well as region-based morphometric analyses. Importantly, CAT includes various quality control options and covers the entire analysis workflow, from cross-sectional or longitudinal data processing, to the statistical analysis, and visualization of results.
             </p>
 
             <!-- ############################# -->
-            <h4 id="overview">Overview about the manual</h4>
+            <h4 id="overview">Overview of the manual</h4>
             <p>This manual is intended to help any user to perform a computational anatomy analysis using the CAT12 Toolbox. Although it mainly focuses on voxel-based morphometry (VBM) other variants of computational analysis such as deformation-based morphometry (DBM), surface-based morphometry (SBM), and region of interest (ROI) morphometric analysis are also presented and can be applied with few changes.</p>
 
             The manual can be divided into four main sections:<br>              
@@ -230,7 +254,7 @@
               <summary><u>Changes in preprocessing pipeline (which affect your results compared to CAT12.6)</u></summary>
               <ul>
                 <li>Geodesic shooting registration and surface estimation are now used by default.</li>
-                <li>The surface pipeline is largely updated: (1) Parameters for surface reconstruction were optimized. (2) Freesurfer distance method Tfs is now implemented, which is computed as the average of  the closest distances from the pial to the white matter surface and from the white matter to the pial surface. This reduces the occurrence of larger thickness values and results in more reliable thickness measures. For mapping of 3D data the old thickness metric from PBT is more appropriate and is still used.</li>
+                <li>The surface pipeline is largely updated: (1) Parameters for surface reconstruction were optimized. (2) FreeSurfer distance method Tfs is now implemented, which is computed as the average of  the closest distances from the pial to the white matter surface and from the white matter to the pial surface. This reduces the occurrence of larger thickness values and results in more reliable thickness measures. For mapping of 3D data the old thickness metric from PBT is more appropriate and is still used.</li>
                 <li>An additional longitudinal model is implemented that also takes into account deformations between time points. The use of deformations between the time points makes it possible to estimate and detect larger changes, while subtle effects over shorter periods of time in the range of weeks or a few months can be better detected with the model for small changes.</li>
                 <li>Minor changes were made to the segmentation approach to improve accuracy and reliability.</li>
                 <li>Internal resampling is now using a new ''optimal'' resolution setting to better support high-resolution data.</li>
@@ -431,7 +455,7 @@
 
             <p><u>Voxel-based processing:</u> While the final tissue segmentation in CAT is independent of tissue priors, the segmentation procedure is initialized using Tissue Probability Maps (TPMs). The standard TPMs (as provided in SPM) suffice for the vast majority of applications, and customized TPMs are only recommended for data obtained in young children. Please note that these TPMs should contain 6 classes: GM/WM/CSF and 3 background classes. For spatial registration, CAT uses Geodesic Shooting (<a href="https://doi.org/10.1016/j.neuroimage.2010.12.049">Ashburner and Friston, 2011</a>) or the older DARTEL approach (<a href="https://doi.org/10.1016/j.neuroimage.2007.07.007">Ashburner, 2007</a>) with predefined templates. Those templates are an appropriate choice for most studies and, again, sample-specific Shooting templates may only be advantageous for young children. For the voxel-based ROI analyses, CAT offers a selection of volume-based atlases in the predefined template space. Thus, any atlas-based ROI analysis requires a normalization of the individual scans to CAT's default Shooting template. On that note, the aforementioned creation and selection of a customized (rather than the predefined) DARTEL or Geodesic Shooting template will disable the third module for the voxel-based ROI analysis. </p>
 
-            <p><u>Surface-based processing:</u> During the surface registration, the cortical surfaces of the two hemispheres are registered to the Freesurfer <a href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsAverage">&quot;FsAverage&quot; template</a> (as provided with CAT). For surface-based ROI analyses, CAT provides a selection of surface-based atlases. As the surface registration module uses the Freesurfer &quot;FsAverage&quot; template, surface-based ROI analyses are not impacted by any template modification during voxel-based processing. In contrast to voxel-based ROI analyses, surface-based ROI analyses can, therefore, be applied regardless of whether the predefined or customized versions of the DARTEL or Geodesic Shooting template have been used.</p>
+            <p><u>Surface-based processing:</u> During the surface registration, the cortical surfaces of the two hemispheres are registered to the FreeSurfer <a href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsAverage">&quot;FsAverage&quot; template</a> (as provided with CAT). For surface-based ROI analyses, CAT provides a selection of surface-based atlases. As the surface registration module uses the FreeSurfer &quot;FsAverage&quot; template, surface-based ROI analyses are not impacted by any template modification during voxel-based processing. In contrast to voxel-based ROI analyses, surface-based ROI analyses can, therefore, be applied regardless of whether the predefined or customized versions of the DARTEL or Geodesic Shooting template have been used.</p>
 
             <p><img id="figure4" width=80% alt="cat_processing_steps" src="images/cat_processing_steps.png"></p>
             <figcaption><b>Figure 4:</b> Overview of CAT's major processing steps.</figcaption>
@@ -447,7 +471,7 @@
 
             <div class="box right"><sup>*</sup> Topology defects are holes and handles that prevent the surface from being homeomorphic with a sphere.</div>
 
-            <p>Optionally, the <em>&quot;surface-based processing&quot;</em> will be run following the completion of the voxel-based processing steps. Here, the cortical thickness estimation and reconstruction of the central surface occur in one step using a projection-based thickness (PBT) method (<a href="https://doi.org/10.1016/j.neuroimage.2012.09.050">Dahnke et al., 2013</a>). Importantly, this PBT allows the appropriate handling of partial volume information, sulcal blurring, and sulcal asymmetries without explicit sulcus reconstruction (<a href="https://doi.org/10.1016/j.neuroimage.2012.09.050">Dahnke et al., 2013</a>). After the initial surface reconstruction, topological defects<b><sup>*</sup></b> are repaired using spherical harmonics (<a href="https://doi.org/10.1002/hbm.21095">Yotter et al., 2011a</a>). The topological correction is followed by a surface refinement, which results in the final central surface mesh. This mesh provides the basis to extract folding patterns (i.e., based on the position of mesh nodes relative to each other), where the resulting local values (e.g., absolute mean curvature) are projected onto each node. Subsequently, the individual central surfaces are spatially registered to the Freesurfer &quot;FsAverage&quot; template using a spherical mapping with minimal distortions (<a href="https://doi.org/10.1016/j.neuroimage.2011.02.007">Yotter et al., 2011b</a>). In the last step, the local thickness values are transferred onto the Freesurfer &quot;FsAverage&quot; template. While this last step is performed by default during the surface-based processing, it can be repeated to also transfer measurements of cortical folding (e.g., gyrification) as well as other measurements or data (e.g., functional or quantitative MRI) to the Freesurfer &quot;FsAverage&quot; template. Note that the spatial registration of cortical measurements is combined with a spatial smoothing step in CAT to prepare the data for statistical analysis.</p>
+            <p>Optionally, the <em>&quot;surface-based processing&quot;</em> will be run following the completion of the voxel-based processing steps. Here, the cortical thickness estimation and reconstruction of the central surface occur in one step using a projection-based thickness (PBT) method (<a href="https://doi.org/10.1016/j.neuroimage.2012.09.050">Dahnke et al., 2013</a>). Importantly, this PBT allows the appropriate handling of partial volume information, sulcal blurring, and sulcal asymmetries without explicit sulcus reconstruction (<a href="https://doi.org/10.1016/j.neuroimage.2012.09.050">Dahnke et al., 2013</a>). After the initial surface reconstruction, topological defects<b><sup>*</sup></b> are repaired using spherical harmonics (<a href="https://doi.org/10.1002/hbm.21095">Yotter et al., 2011a</a>). The topological correction is followed by a surface refinement, which results in the final central surface mesh. This mesh provides the basis to extract folding patterns (i.e., based on the position of mesh nodes relative to each other), where the resulting local values (e.g., absolute mean curvature) are projected onto each node. Subsequently, the individual central surfaces are spatially registered to the FreeSurfer &quot;FsAverage&quot; template using a spherical mapping with minimal distortions (<a href="https://doi.org/10.1016/j.neuroimage.2011.02.007">Yotter et al., 2011b</a>). In the last step, the local thickness values are transferred onto the FreeSurfer &quot;FsAverage&quot; template. While this last step is performed by default during the surface-based processing, it can be repeated to also transfer measurements of cortical folding (e.g., gyrification) as well as other measurements or data (e.g., functional or quantitative MRI) to the FreeSurfer &quot;FsAverage&quot; template. Note that the spatial registration of cortical measurements is combined with a spatial smoothing step in CAT to prepare the data for statistical analysis.</p>
             
             <p><img id="figure5" width=80% alt="cat_processing_pipeline" src="images/cat_processing_pipeline.png"></p>
             <figcaption><b>Figure 5:</b> Schematic flowchart of CAT's processing pipeline.</figcaption>
@@ -1707,7 +1731,7 @@
             <h4>Background</h4>
 
             <p>The majority of morphometric studies are based on cross-sectional data in which one image is acquired for each subject. However, to map structural changes over time (e.g., in the framework of use-dependent plasticity, neurodevelopment, or aging), longitudinal designs that consider additional time points for each subject are necessary. The handling of these longitudinal data requires a customized processing, as a voxel- or point-wise comparability needs to be assured not only across subjects, but also across time points within subjects. This requires an inverse-consistent (or &quot;symmetric&quot;) realignment as well as an intra-subject bias field correction (<a href="https://doi.org/10.3389/fnins.2012.00197">Ashburner and Ridgway, 2012</a>; <a href="https://doi.org/10.1016/j.neuroimage.2010.07.020">Reuter et al., 2010</a>; <a href="https://doi.org/10.1016/j.neuroimage.2011.02.076">Reuter and Fischl, 2011</a>). Thus, CAT first realigns the images from all time points using inverse-consistent rigid-body registrations and applies intra-subject bias-field corrections. Subsequently, the resulting images are processed individually (see Figure <a href="#figure4">4</a>, <a href="#figure5">5</a>) using the standard pipeline.</p>
-            <p>That is, images are tissue-classified and the necessary deformations for spatial registration to the standard template are estimated. However, instead of applying the individual spatial transformations (as done in a cross-sectional analysis), a mean transformation for all time points is calculated and applied to all individual images (<a href="#figure7">Figure 7</a>). The resulting normalized tissue segments can then be used for voxel-based analyses. Optionally, the processed images for all time points can be used to additionally extract the cortical surfaces and to calculate surface parameters, such as cortical thickness or diverse folding measures using the surface-based processing pipeline. Furthermore, the processing of the individual time points is initialized by the processed results from the (unbiased) average image. This reduces random variations in the processing procedure and improves the robustness and sensitivity of the overall longitudinal analysis. This latter processing stream of surface data is similar to the longitudinal approach employed in Freesurfer (<a href="https://doi.org/10.1016/j.neuroimage.2010.07.020">Reuter et al., 2010</a>; <a href="https://doi.org/10.1016/j.neuroimage.2011.02.076">Reuter and Fischl, 2011</a>).</p>
+            <p>That is, images are tissue-classified and the necessary deformations for spatial registration to the standard template are estimated. However, instead of applying the individual spatial transformations (as done in a cross-sectional analysis), a mean transformation for all time points is calculated and applied to all individual images (<a href="#figure7">Figure 7</a>). The resulting normalized tissue segments can then be used for voxel-based analyses. Optionally, the processed images for all time points can be used to additionally extract the cortical surfaces and to calculate surface parameters, such as cortical thickness or diverse folding measures using the surface-based processing pipeline. Furthermore, the processing of the individual time points is initialized by the processed results from the (unbiased) average image. This reduces random variations in the processing procedure and improves the robustness and sensitivity of the overall longitudinal analysis. This latter processing stream of surface data is similar to the longitudinal approach employed in FreeSurfer (<a href="https://doi.org/10.1016/j.neuroimage.2010.07.020">Reuter et al., 2010</a>; <a href="https://doi.org/10.1016/j.neuroimage.2011.02.076">Reuter and Fischl, 2011</a>).</p>
             <p>Please note that three different longitudinal models are offered. The first longitudinal model is optimized for processing and capturing smaller changes over time in response to short-term plasticity effects (e.g. from learning and training). This model will probably not be as sensitive for larger longitudinal changes where large parts of the brain change over time (e.g. atrophy due to Alzheimer&quot;s disease or aging). This is due to the effect of estimating the parameters of spatial registration from the deformations of all time points and then applying them to all time points. If a large atrophy occurs between the time points, this can lead to a displacement of tissue boundaries and might result in areas with reduced volumes over time, which are surrounded by areas with increased volume due to these displacement problems. For data with larger volume changes over time, you should choose the longitudinal model, which is optimized to detect larger changes (e.g. due to ageing). This model also takes into account the deformations between time points and prevents the problems mentioned above. Finally, there also exists a longitudinal processing pipeline for neurodeveopmental data where we can also see changes in head size which should be taken into account.</p>
             <p>Additional attention is then required for the setup of the statistical model. The following section therefore describes the data preprocessing and model setup for longitudinal data.</p>
             <p><img id="figure7" width=100% alt="cat_long_pipeline" src="images/cat_long_pipelines.png"></p>
@@ -2580,7 +2604,7 @@
             <p>Optionally you can also use either the externally-made or your newly created, customized Shooting templates directly in the CAT12 Toolbox for new data that should be processed with this template.</p>
             
             <!-- ################################################################################# -->
-            <h2 id="oCA">Other variants of computational morphometry</h2>
+            <h2 id="variants">Other variants of computational morphometry</h2>
             
             <!-- ###################################### -->
             <h4 id="dbm">Deformation-based morphometry (DBM)</h4>
@@ -2703,7 +2727,7 @@
             </p>
             
             where &quot;name&quot; is the original filename without extension. Please note that these files are saved in the surf-folder as default.<br>
-            <p>Do not use the &quot;Estimate&quot; function in the SPM window, but the corresponding function in CAT12. This allows you to automatically overlay the results on the Freesurfer average surface:<br>
+            <p>Do not use the &quot;Estimate&quot; function in the SPM window, but the corresponding function in CAT12. This allows you to automatically overlay the results on the FreeSurfer average surface:<br>
             CAT12 &rarr; Statistical Analysis &rarr; Estimate Surface Models</p>
             
             <!-- ###################################### -->
@@ -3044,7 +3068,7 @@
                 <p>RESAMP</p>
                 </td>
                 <td colspan="1" rowspan="1">
-                <p>resampling to 164k (Freesurfer) or 32k (HCP) mesh [ resampled | resampled_32k ]</p>
+                <p>resampling to 164k (FreeSurfer) or 32k (HCP) mesh [ resampled | resampled_32k ]</p>
                 </td>
               </tr>
             </table>
@@ -3293,7 +3317,7 @@
                 <li><a href="#SUIT">SUIT</a></li>
                 <li><a href="#Subcortex">Melbourne Subcortex Atlas</a></li>
               </ul></li>
-              <li><a href="#surfrois">List of Freesurfer surface-based atlas maps (located in atlases_surfaces or atlases_surfaces_32k)</a>
+              <li><a href="#surfrois">List of FreeSurfer surface-based atlas maps (located in atlases_surfaces or atlases_surfaces_32k)</a>
               <ul>
                 <li><a href="#FS_DK40">DK40</a></li>
                 <li><a href="#FS_Destrieux2009">Destrieux</a></li>
@@ -3469,11 +3493,11 @@
             <!-- ###################################### -->
             <h5 id="surfrois">List of surface-based atlas maps (FreeSurfer)</h5>
             <p>
-              We also prepared different surface atlas maps for the Freesurfer and HCP (32k) space that are stored in the <em>atlases_surfaces(_32k)</em> directories. 
+              We also prepared different surface atlas maps for the FreeSurfer and HCP (32k) space that are stored in the <em>atlases_surfaces(_32k)</em> directories. 
               You can find more information about the atlases in <a href="matlab:edit(fullfile(fileparts(which('cat12')),'atlases_surfaces','atlases_surfaces.man'));">atlases_surfaces.man</a>.
             </p>
             <p>
-              See <a href="https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation">Freesurfer WIKI</a> for further information.
+              See <a href="https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation">FreeSurfer WIKI</a> for further information.
             </p>
         
             <h6 id="FS_DK40">Desikan-Killiany (DK40) Atlas</h6>
