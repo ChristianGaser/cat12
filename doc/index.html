@@ -95,7 +95,7 @@
               Select the xml-files that are saved in the "report" folder.</li>
               <li>Check the data quality with <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_homogeneity');">Sample Homogeneity</a> for VBM data (optionally consider TIV and age as nuisance variables).<br>
               Select the gray or white matter segmentations from the first step.</li>
-              <li><a class="function" href="matlab:spm_jobman('interactive','','spm.spatial.smooth');">Smooth</a> data (recommended start value 6mm<sup>1</sup>).<br>
+              <li><a class="function" href="matlab:spm_jobman('interactive','','spm.spatial.smooth');">Smooth</a> data (recommended start value 6 mm<sup>1</sup>).<br>
               Select the gray or white matter segmentations from the first step.</li>
               <li>Specify the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">Basic Models</a> with the smoothed gray or white matter segmentations and check for design orthogonality and sample homogeneity:
               <ul>
@@ -110,7 +110,7 @@
               <li>Optionally, you can try <a class="function" href="matlab:if exist('spm_TFCE'),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">Threshold-Free Cluster Enhancement</a> (TFCE) with the SPM.mat file of a previously estimated statistical design.</li>
               <li>Optionally <a class="function" href="matlab:cat_vol_slice_overlay;">Overlay Selected Slices</a>. If you are using log-p scaled maps from "Transform SPM-maps" without thresholds or the TFCE_log maps, use the following values as the lower range for the colormap for the thresholding: 1.3 (P&lt;0.05); 2 (P&lt;0.01); 3 (P&lt;0.001).</li>
               <li>Optionally use <a class="function" href="matlab:y=cat_surf_results;">Surface Overlay</a> for visualization of your results. Select the results (preferably saved as log-p maps with "Transform SPM-maps" or the TFCE_log maps with the different methods for multiple comparison correction) to display rendering views, slice overlay, and a glassbrain of your results.</li>
-              <li>Optionally estimate results for ROI analysis using <a class="function" href="matlab:cat_stat_analyze_ROIs;">Analyze ROIs</a>. Here, the SPM.mat file of the already estimated statistical design will be used. For more information, see <a href="#atlas">Atlas Creation and ROI based Analysis</a>.</li>
+              <li>Optionally estimate results for ROI analysis using <a class="function" href="matlab:cat_stat_analyze_ROIs;">Analyze ROIs</a>. Here, the SPM.mat file of the already estimated statistical design will be used. For more information, see <a href="#atlas">Atlas creation and ROI-based analysis</a>.</li>
             </ul>
         
             <!-- ############################# -->
@@ -120,8 +120,8 @@
               <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data and also select "Surface and thickness estimation" under "Writing options" (for longitudinal data use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.long');">Segment Longitudinal Data</a>).<br>
               The surfaces data are saved in the folder "surf" and are named "?h.thickness.*" for cortical thickness.</li>
               <li>Optionally, <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfextract');">Extract Additional Surface Parameters</a> (e.g. sulcal depth, gyrification, cortical complexity).</li>
-              <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfresamp');">Resample & smooth</a> surface data (suggested starting value 12mm for cortical thickness and sulcal depth and 20-25mm for folding measures<b><sup>1</sup></b>, use the default merging of hemispheres).<br>
-              Select the "lh.thickness.*" data in the folder "surf". The resampled data are named "s12.mesh.resampled_32k.thickness.*" for 12mm smoothed, merged hemispheres that were resampled to 32k template space.</li>
+              <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfresamp');">Resample & smooth</a> surface data (suggested starting value 12 mm for cortical thickness and sulcal depth and 20–25 mm for folding measures<b><sup>1</sup></b>, use the default merging of hemispheres).<br>
+              Select the "lh.thickness.*" data in the folder "surf". The resampled data are named "s12.mesh.resampled_32k.thickness.*" for 12 mm smoothed, merged hemispheres that were resampled to 32k template space.</li>
               <li>Check data quality of the resampled data using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_homogeneity');">Sample Homogeneity</a>.</li>
               <li>Build <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">Basic Models</a> for the resampled data and check for design orthogonality and sample homogeneity.
               <ul>
@@ -136,7 +136,7 @@
               <li>Optionally, you can try <a class="function" href="matlab:if exist('spm_TFCE'),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">Threshold-Free Cluster Enhancement</a> (TFCE) with the SPM.mat file of a previously estimated statistical design.</li>
               <li>Optionally use <a class="function" href="matlab:y=cat_surf_results;">Surface Overlay</a> for visualization of your results. Select the results (preferably saved as log-p maps with "Transform SPM-maps" or the TFCE_log maps with the different methods for multiple comparison correction) for the merged hemispheres to display rendering views of your results.</li>
               <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surf2roi');">Extract ROI-based Surface Values</a> such as gyrification or fractal dimension to provide ROI analysis. Since version 12.7 extraction of ROI-based thickness is not necessary anymore because this is now included in the segmentation pipeline.</li>
-              <li>Optionally estimate results for ROI analysis using <a class="function" href="matlab:cat_stat_analyze_ROIs;">Analyze ROIs</a>. Here, the SPM.mat file of the already estimated statistical design will be used. For more information, see <a href="#atlas">Atlas Creation and ROI based Analysis</a>.</li>
+              <li>Optionally estimate results for ROI analysis using <a class="function" href="matlab:cat_stat_analyze_ROIs;">Analyze ROIs</a>. Here, the SPM.mat file of the already estimated statistical design will be used. For more information, see <a href="#atlas">Atlas creation and ROI-based analysis</a>.</li>
             </ul>
         
             <!-- ############################# -->
@@ -149,8 +149,8 @@
         
             <!-- ############################# -->
             <h5><sup>1</sup>Note to filter sizes for Gaussian smoothing</h5>
-            <p>Smoothing increases the signal-to-noise ratio. The matched filter theorem states that the filter that matches your signal maximizes the signal-to-noise ratio. If we expect signal with a Gaussian shape and a FWHM of, say 6mm in our images, then this signal will be best detected after we smooth our images with a 6mm FWHM Gaussian filter. If you are trying to study small areas like the amygdala, we can use smaller filter sizes because of the small size of these regions. For larger regions like the cerebellum, the effects are better detected with larger filters.<br>
-            Please also note that for the analysis of cortical folding measures such as gyrification or cortical complexity the filter sizes have to be larger (i.e. in the range of 15-25mm). This is due to the underlying nature of this measure that reflects contributions from both sulci as well as gyri. Therefore, the filter size should exceed the distance between a gyral crown and a sulcal fundus.</p>
+            <p>Smoothing increases the signal-to-noise ratio. The matched filter theorem states that the filter that matches your signal maximizes the signal-to-noise ratio. If we expect signal with a Gaussian shape and a FWHM of, say 6 mm in our images, then this signal will be best detected after we smooth our images with a 6 mm FWHM Gaussian filter. If you are trying to study small areas like the amygdala, we can use smaller filter sizes because of the small size of these regions. For larger regions like the cerebellum, the effects are better detected with larger filters.<br>
+            Please also note that for the analysis of cortical folding measures such as gyrification or cortical complexity the filter sizes have to be larger (i.e. in the range of 15–25 mm). This is due to the underlying nature of this measure that reflects contributions from both sulci as well as gyri. Therefore, the filter size should exceed the distance between a gyral crown and a sulcal fundus.</p>
 
           
             <!-- ################################################################################# -->
@@ -622,7 +622,7 @@
               </ul></li>
               <li>FWHM &rarr; <em>[use defaults or modify]</em>
               <ul>
-                <li>6-8mm kernels are widely used for VBM. To use this setting select &quot;edit value&quot; and type &quot;6 6 6&quot; for a kernel with 6mm FWHM.</li>
+                <li>6–8 mm kernels are widely used for VBM. To use this setting select &quot;edit value&quot; and type &quot;6 6 6&quot; for a kernel with 6 mm FWHM.</li>
               </ul></li>
               <li>Data Type &rarr; <em>[use defaults or modify]</em></li>
               <li>Filename Prefix &rarr; <em>[use defaults or modify]</em></li>
@@ -1732,7 +1732,7 @@
 
             <p>The majority of morphometric studies are based on cross-sectional data in which one image is acquired for each subject. However, to map structural changes over time (e.g., in the framework of use-dependent plasticity, neurodevelopment, or aging), longitudinal designs that consider additional time points for each subject are necessary. The handling of these longitudinal data requires a customized processing, as a voxel- or point-wise comparability needs to be assured not only across subjects, but also across time points within subjects. This requires an inverse-consistent (or &quot;symmetric&quot;) realignment as well as an intra-subject bias field correction (<a href="https://doi.org/10.3389/fnins.2012.00197">Ashburner and Ridgway, 2012</a>; <a href="https://doi.org/10.1016/j.neuroimage.2010.07.020">Reuter et al., 2010</a>; <a href="https://doi.org/10.1016/j.neuroimage.2011.02.076">Reuter and Fischl, 2011</a>). Thus, CAT first realigns the images from all time points using inverse-consistent rigid-body registrations and applies intra-subject bias-field corrections. Subsequently, the resulting images are processed individually (see Figure <a href="#figure4">4</a>, <a href="#figure5">5</a>) using the standard pipeline.</p>
             <p>That is, images are tissue-classified and the necessary deformations for spatial registration to the standard template are estimated. However, instead of applying the individual spatial transformations (as done in a cross-sectional analysis), a mean transformation for all time points is calculated and applied to all individual images (<a href="#figure7">Figure 7</a>). The resulting normalized tissue segments can then be used for voxel-based analyses. Optionally, the processed images for all time points can be used to additionally extract the cortical surfaces and to calculate surface parameters, such as cortical thickness or diverse folding measures using the surface-based processing pipeline. Furthermore, the processing of the individual time points is initialized by the processed results from the (unbiased) average image. This reduces random variations in the processing procedure and improves the robustness and sensitivity of the overall longitudinal analysis. This latter processing stream of surface data is similar to the longitudinal approach employed in FreeSurfer (<a href="https://doi.org/10.1016/j.neuroimage.2010.07.020">Reuter et al., 2010</a>; <a href="https://doi.org/10.1016/j.neuroimage.2011.02.076">Reuter and Fischl, 2011</a>).</p>
-            <p>Please note that three different longitudinal models are offered. The first longitudinal model is optimized for processing and capturing smaller changes over time in response to short-term plasticity effects (e.g. from learning and training). This model will probably not be as sensitive for larger longitudinal changes where large parts of the brain change over time (e.g. atrophy due to Alzheimer&quot;s disease or aging). This is due to the effect of estimating the parameters of spatial registration from the deformations of all time points and then applying them to all time points. If a large atrophy occurs between the time points, this can lead to a displacement of tissue boundaries and might result in areas with reduced volumes over time, which are surrounded by areas with increased volume due to these displacement problems. For data with larger volume changes over time, you should choose the longitudinal model, which is optimized to detect larger changes (e.g. due to ageing). This model also takes into account the deformations between time points and prevents the problems mentioned above. Finally, there also exists a longitudinal processing pipeline for neurodeveopmental data where we can also see changes in head size which should be taken into account.</p>
+            <p>Please note that three different longitudinal models are offered. The first longitudinal model is optimized for processing and capturing smaller changes over time in response to short-term plasticity effects (e.g. from learning and training). This model will probably not be as sensitive for larger longitudinal changes where large parts of the brain change over time (e.g. atrophy due to Alzheimer&quot;s disease or aging). This is due to the effect of estimating the parameters of spatial registration from the deformations of all time points and then applying them to all time points. If a large atrophy occurs between the time points, this can lead to a displacement of tissue boundaries and might result in areas with reduced volumes over time, which are surrounded by areas with increased volume due to these displacement problems. For data with larger volume changes over time, you should choose the longitudinal model, which is optimized to detect larger changes (e.g. due to ageing). This model also takes into account the deformations between time points and prevents the problems mentioned above. Finally, there also exists a longitudinal processing pipeline for neurodevelopmental data where we can also see changes in head size which should be taken into account.</p>
             <p>Additional attention is then required for the setup of the statistical model. The following section therefore describes the data preprocessing and model setup for longitudinal data.</p>
             <p><img id="figure7" width=100% alt="cat_long_pipeline" src="images/cat_long_pipelines.png"></p>
             <figcaption><b>Figure 7:</b> CAT’s longitudinal processing workflows to examine (a) neuroplasticity, (b) aging, and (c) neurodevelopment<br>
@@ -2681,7 +2681,7 @@
             <ul>
               <li>Surface Data &lt;-X &rarr; Select the surface data (e.g. [lr]h.thickness.*)</li>
               <li>Smoothing Filter Size in FWHM <em>[use defaults or modify]<br>
-              12-15mm kernels are widely used for SBM and I recommend to start with a value of 15mm for thickness data and 20mm for folding data (e.g. gyrification, complexity).</em></li>
+              12–15 mm kernels are widely used for SBM and I recommend starting with 15 mm for thickness data and 20 mm for folding data (e.g., gyrification, complexity).</em></li>
               <li>Split job into separate processes<br>
               <em>To use multi-threading the CAT12 segmentation job with multiple subjects can be split into separate processes that run in the background. You can even close Matlab, which will not affect the processes that will run in the background without GUI. If you don't not want to run processes in the background then set this value to 0.<br>
               Keep in mind that each process needs about 1.5..2GB of RAM, which should be considered to choose the right number of processes.<br>
@@ -2721,7 +2721,7 @@
               </ul>
             </ul>
 
-            <p>As input you have to select the resampled and smoothed files (see above). A thickness file of the merged left and right hemispheres that was resampled and smoothed with the default FWHM of 15mm is named as:
+            <p>As input you have to select the resampled and smoothed files (see above). A thickness file of the merged left and right hemispheres that was resampled and smoothed with the default FWHM of 15 mm is named as:
             <p style="text-indent: 2em;">
               S15.mesh.thickness.resampled.name.gii
             </p>
@@ -2735,7 +2735,7 @@
 
             <p>CAT12 enables the estimation of mean tissue volumes (and additional surface parameters such as cortical thickness) for different volume and surface-based atlas maps (Gaser et al., 2016). All of these results are estimated in the native space before any spatial normalization and the mean value inside the ROI is estimated. The results for each dataset are stored as XML files in the label directory. The XML file catROI[s]_*.xml contains information of all atlases as data structure for one dataset and the optional &quot;s&quot; indicates surface atlases. You can use the CAT function &quot;cat_io_xml&quot; to read the XML data as a structure.</p>
             
-            <p>Please also check <a href="#atlas">Atlas creation and ROI based analysis</a> for more detailed information and a description of the available atlases.</p>
+            <p>Please also check <a href="#atlas">Atlas creation and ROI-based analysis</a> for more detailed information and a description of the available atlases.</p>
 
             <!-- ############################# -->
             <h5>Additional steps for surface data</h5>
@@ -3249,7 +3249,7 @@
             </p>
 
             <!-- ################################################################################# -->
-            <h4 id="atlas">Atlas creation and ROI based analysis</h4>
+            <h4 id="atlas">Atlas creation and ROI-based analysis</h4>
             <p>
               CAT12 allows estimation of tissue volumes (and additional surface parameters such as cortical thickness, gyrification or fractal dimension) for different volume and surface-based atlas maps.
               The mean values within a ROI for volume data (e.g. gray matter volume) are given im mL, while surface ROI values represent the mean value of the surface measures (e.g. thickness).
@@ -4155,7 +4155,7 @@
                   <ul>
                     <li><a href="#vox_proc">Voxel-based processing</a></li>
                     <li><a href="#surf_proc">Surface-based processing</a></li>
-                    <li><a href="#atlas">Atlas creation and ROI based analysis</a></li>
+                    <li><a href="#atlas">Atlas creation and ROI-based analysis</a></li>
                     <li><a href="#qc">Quality control</a></li>
                   </ul>
                 </li>
