@@ -3,20 +3,26 @@ function cat_tst_qa_IXI( datadir0 , qaversions , segment, fasttest, rerun, datas
 %  ------------------------------------------------------------------------
 %
 %  Requirements: 
-%   0. Download and install SPM and CAT
-%   1. Download IXI T1 data from: 
-%      https://brain-development.org/ixi-dataset/
-%      http://biomedic.doc.ic.ac.uk/brain-development/downloads/IXI/IXI-T1.tar
+%   1. Matlab with curve fitting toolbox (fit)
+%   2. Download and install SPM and CAT
+%   3. Download IXI T1 data from: 
+%        https://brain-development.org/ixi-dataset/
+%        http://biomedic.doc.ic.ac.uk/brain-development/downloads/IXI/IXI-T1.tar
 %
-%   2. Specify in this script: 
+%   4. Specify in this script: 
 %      1) the data directory "datadir" 
 %      2) the QC version you would like to tests (the file has to exist in the cat directory) 
 %      3) the segmentation you would like to use
 %
+%  See also cat_tst_qa_main.
 %  ------------------------------------------------------------------------
 
   cat_io_cprintf([0 0.5 0],'\n\n== Run cat_tst_qa_IXI ==\n') 
   if ~exist('dataset','var'), dataset = 'IXI'; end
+
+  if license('test', 'Curve_Fitting_Toolbox')
+    error('This function requires the "Curve Fitting Toolbox" of MATLAB.\n')
+  end
 
   % ### datadir ###
   if ~exist( 'datadir0' , 'var' )

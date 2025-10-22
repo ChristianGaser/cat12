@@ -5,11 +5,12 @@ function cat_tst_qa_MRART_expertgroups( datadir, qaversions, segment, fasttest, 
 %  affected groups (1 - no MA, 2 - light MA, and 3 - strong MA).
 %
 %  Requirements: 
-%   0. Download and install SPM and CAT
-%   1. Download MR-ART data from: 
-%        
+%   1. Matlab with curve fitting toolbox (fit)
+%   2. Download and install SPM and CAT
+%   3. Download MR-ART data from OpenNeuro: 
+%       https://openneuro.org/datasets/ds004173/versions/1.0.2 
 %
-%   2. Specify in this script: 
+%   4. Specify in this script: 
 %      1) the data directory "datadir" 
 %      2) the QC version you would like to tests (the file has to exist in the cat directory) 
 %      3) the segmentation you would like to use
@@ -17,6 +18,10 @@ function cat_tst_qa_MRART_expertgroups( datadir, qaversions, segment, fasttest, 
 %  ------------------------------------------------------------------------
 
 cat_io_cprintf([0 0.5 0],'\n\n== Run cat_tst_qa_MRART_expertgroups ==\n') 
+
+if license('test', 'Curve_Fitting_Toolbox')
+    error('This function requires the "Curve Fitting Toolbox" of MATLAB.\n')
+end
 
 % ### datadir ###
 if ~exist( 'datadir' , 'var' )

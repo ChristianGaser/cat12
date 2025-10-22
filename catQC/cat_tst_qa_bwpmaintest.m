@@ -1,16 +1,20 @@
 function cat_tst_qa_bwpmaintest( datadir, qaversions, segment, fasttest, rerun ) 
-% -- BWP test skript --------------------------------------------------
+% -- BWP test script --------------------------------------------------
 %
 %  Requirements: 
-%   0. Download and install SPM and CAT
-%   1. Download IXI T1 data from: 
+%   1. Matlab with statistics and machine learning toolbox (robustfit).
+%   2. Download and install SPM and CAT
+%   3. Download IXI T1 data from: 
 %      http://biomedic.doc.ic.ac.uk/brain-development/downloads/IXI/IXI-T1.tar
 %
-%   2. Specify in this script: 
+%   4. Specify in this script: 
 %      1) the data directory "datadir" 
-%      2) the QC version you would like to tests (the file has to exist in the cat directory) 
+%      2) the QC version you would like to test (the file has to exist in the cat directory) 
 %      3) the segmentation you would like to use
 %
+%  See also cat_tst_qa_main.
+%  ------------------------------------------------------------------------
+
 
 %#ok<*SAGROW,*AGROW,*UNRCH>
 
@@ -18,14 +22,29 @@ function cat_tst_qa_bwpmaintest( datadir, qaversions, segment, fasttest, rerun )
 
 cat_io_cprintf([0 0.5 0],'\n\n== Run cat_tst_qa_bwpmaintest ==\n') 
 
-% ### datadir ###
-if ~exist( 'datadir' , 'var' )
-  opt.maindir   = '/Volumes/SG5TB/MRData/202503_QA'; 
-else
-  opt.maindir   = datadir; 
+if ~license('test', 'Statistics_Toolbox')
+  error('This function requires the "Statistics and Machine Learning Toolbox" of MATLAB.\n')
 end
 
-% ### segmention ###
+% ### datadir ###
+if ~exist( 'datadir' , 'var' )
+  opt.maindir = pwd; 
+else
+  opt.maindir = datadir; 
+end
+
+if ~exist( fullfile( opt.maindir, 'BWP') , 'dir')
+  error('Cannot find the required "BWP" directory in "%s".', opt.maindir)
+end  
+if ~exist( fullfile( opt.maindir, 'BWPr') , 'dir')
+  error('Cannot find the required "BWP" directory in "%s".', opt.maindir)
+end
+if ~exist( fullfile( opt.maindir, 'BWPgt') , 'dir')
+  error('Cannot find the required "BWPgt" directory in "%s".', opt.maindir)
+end
+
+
+%% ### segmention ###
 if ~exist( 'segment' , 'var')
   segment = {'CAT'}; % {'SPM','CAT','qcseg'}; % qcseg requires cat_vol_qa2024012
 end
@@ -63,7 +82,7 @@ if ~exist(opt.resdir,'dir'),   mkdir(opt.resdir); end
 % preprocessing 
 if recalc.runPP
   BWPfiles = [
-    cat_vol_findfiles( fullfile(opt.maindir , 'BWP'),   'BWP*.nii'  ,struct('depth',0));
+    cat_vol_findfiles( fullfile( opt.maindir, 'BWP'),   'BWP*.nii'  ,struct('depth',0));
     cat_vol_findfiles( fullfile( opt.maindir, 'BWPr' ), 'rBWP*.nii' ,struct('depth',0));
     cat_vol_findfiles( fullfile( opt.maindir, 'BWPr' ), 'irBWP*.nii',struct('depth',0))];
 
@@ -97,7 +116,7 @@ if recalc.runPP
 end
 
 %
-% * prepare figure for SPM comparision under simple conditions
+% * prepare figure for SPM comparison under simple conditions
 %   - plot noise estimation (1-9%, 20-40 ABC bias, full res) for CAT vs SPM vs. GT
 %   - MR-ART for SPM!
 
@@ -196,7 +215,7 @@ for qai = qais
         end  
       end
     end
-    % remove old p0 files and create a new list that only include test cases that are available for all methods 
+    % remove old p0 files and create a new list that only includes test cases that are available for all methods 
     %P = rmfield(P,'p0');
     for mi = method
       for fi = 1:numel(FF{1})
@@ -431,8 +450,8 @@ for qai = qais
     %  -- fit marks ------------------------------------------------------ 
     % * 0% noise and 0% bias are excluded because they are instable in SPM pp 
     %   and also smaller datasets (no fields) 
-    % * more problematic is the decition about using low resolution data also
-    %   for the general evaluation becuase the data is (i) no real standard,
+    % * more problematic is the detection of using low resolution data also
+    %   for the general evaluation because the data is (i) no real standard,
     %   (ii) not representing the majority of data, and (iii) less accurate/robust
   for tstseti = 4  
     default = cat_stat_marks('default');
