@@ -46,7 +46,7 @@ end
 
 % Read essentials from tpm (it will be cleared later)
 tpm = res.tpm;
-if ~isstruct(tpm) || ~isfield(tpm, 'bg1'),
+if ~isstruct(tpm) || ~isfield(tpm, 'bg1')
     tpm = spm_load_priors8(tpm);
 end
 d1        = size(tpm.dat{1});
@@ -125,7 +125,7 @@ for n=1:N
         create(chan(n).Nc);
     end
 
-    if bf(n,1),
+    if bf(n,1)
         chan(n).Nf      = nifti;
         chan(n).Nf.dat  = file_array(fullfile(pth1,['BiasField_', nam1, '.nii']),...
                                      res.image(n).dim(1:3),...
@@ -141,10 +141,10 @@ end
 do_cls   = any(tc(:)) || nargout>=1;
 tiss(Kb) = struct('Nt',[]);
 for k1=1:Kb
-    if tc(k1,4) || any(tc(:,3)) || tc(k1,2) || nargout>=1,
+    if tc(k1,4) || any(tc(:,3)) || tc(k1,2) || nargout>=1
         do_cls  = true;
     end
-    if tc(k1,1),
+    if tc(k1,1)
         tiss(k1).Nt      = nifti;
         tiss(k1).Nt.dat  = file_array(fullfile(pth,['c', num2str(k1), nam, '.nii']),...
                                       res.image(n).dim(1:3),...
@@ -179,7 +179,7 @@ if do_defs
         Ndef.descrip = 'Inverse Deformation';
         create(Ndef);
     end
-    if df(2) || any(any(tc(:,[2,3,4]))) || nargout>1,
+    if df(2) || any(any(tc(:,[2,3,4]))) || nargout>1
         y = zeros([res.image(1).dim(1:3),3],'single');
     end
 end
@@ -191,7 +191,7 @@ if do_cls
     Q = zeros([d(1:3),Kb],'single');
 end
 
-Ym   = zeros(d(1:3),'single');
+Ym   = zeros([d(1:3) N],'single');
 for z=1:length(x3)
 
     % Bias corrected image
@@ -200,12 +200,12 @@ for z=1:length(x3)
         f          = spm_sample_vol(res.image(n),x1,x2,o*x3(z),0);
         bf         = exp(transf(chan(n).B1,chan(n).B2,chan(n).B3(z,:),chan(n).T));
         cr{n}      = bf.*f;
-        Ym(:,:,z)  = cr{n};
-        if ~isempty(chan(n).Nc),
+        Ym(:,:,z,n)  = cr{n};
+        if ~isempty(chan(n).Nc)
             % Write a plane of bias corrected data
             chan(n).Nc.dat(:,:,z,chan(n).ind(1),chan(n).ind(2)) = cr{n};
         end
-        if ~isempty(chan(n).Nf),
+        if ~isempty(chan(n).Nf)
             % Write a plane of bias field
             chan(n).Nf.dat(:,:,z,chan(n).ind(1),chan(n).ind(2)) = bf;
         end
@@ -320,7 +320,7 @@ if do_cls
     end
 
     % Write tissues if necessary
-    if nargout>1 || any(tc(:,1));
+    if nargout>1 || any(tc(:,1))
         Ycls = cell(1,Kb); 
         for k1=1:Kb
            if Yclsout(k1), Ycls{k1}(:,:,:) = P(:,:,:,k1); end
@@ -613,7 +613,7 @@ niter  = 32;
 niter2 = 32;
 spm_progress_bar('Init',niter+niter2,'Extracting Brain','Iterations completed');
 for j=1:niter
-    if j>2, th=th1; else th=0.6; end  % Dilate after two its of erosion
+    if j>2, th=th1; else, th=0.6; end  % Dilate after two its of erosion
     for i=1:size(b,3)
         gp       = double(P(:,:,i,1));
         wp       = double(P(:,:,i,2));
