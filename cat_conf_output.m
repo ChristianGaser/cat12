@@ -26,19 +26,21 @@ function [output,output_spm] = cat_conf_output(expert)
   try
     bids_folder = cat_get_defaults('extopts.bids_folder');
   catch
-    bids_folder = fullfile('..','derivatives',cat_version);
+    bids_folder = fullfile('derivatives',cat_version);
   end
   
   BIDSfolder         = cfg_entry;
   BIDSfolder.tag     = 'BIDSfolder';
-  BIDSfolder.name    = 'Relative BIDS folder';
+  BIDSfolder.name    = 'BIDS folder (relative to dataset root)';
   BIDSfolder.strtype = 's';
   BIDSfolder.num     = [1 Inf];
   BIDSfolder.val     = {bids_folder};
-  BIDSfolder.help    = {'This is the BIDS path relative to the participant level directory (i.e. sub-*). Please note that only relative, but no absolute paths can be defined here.'};
+  BIDSfolder.help    = {'Path to derivatives relative to the dataset root (the parent directory of the subject folders, i.e., the folder that contains sub-*).', ...
+                        'Example: "derivatives/CAT12.x_rxxxx" will save results to <dataset>/derivatives/CAT12.x_rxxxx/<sub-*>/... regardless of the depth of the input files.', ...
+                        'Absolute paths are not allowed here.'};
 
   BIDSfolder2        = BIDSfolder; 
-  BIDSfolder2.name   = 'Relative folder';
+  BIDSfolder2.name   = 'Relative folder (advanced)';
 
   BIDSyes2       = cfg_branch;
   BIDSyes2.tag   = 'BIDSyes2';

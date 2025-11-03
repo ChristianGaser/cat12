@@ -30,15 +30,6 @@ function [mrifolder, reportfolder, surffolder, labelfolder, errfolder, BIDSfolde
       else
         BIDSfolder = job.extopts.BIDSfolder2;
       end
-            
-      % check whether upper directory is writable
-      ind = strfind(BIDSfolder,'derivatives');
-      if ~isempty(ind)
-        [stat, val] = fileattrib(BIDSfolder(1:ind-1));
-        if stat && ~val.UserWrite
-          error('\nPlease check writing permissions of directory %s\n\n',val.Name);
-        end
-      end
     end
   else
     subfolders = cat_get_defaults('extopts.subfolders');
@@ -66,43 +57,45 @@ function [mrifolder, reportfolder, surffolder, labelfolder, errfolder, BIDSfolde
   % check whether sub-name is found and "anat" and "ses-" subfolder
   if ~isempty(fname)
     fname = char(fname);
-    % to indicate BIDS structure the last subfolder has to be named "anat"
-    % and "sub-" folders should exist
-    if exist('job','var') && isfield(job,'extopts') && isfield(job.extopts,'BIDSfolder')
-      ind = max(strfind(spm_fileparts(fname),[filesep 'sub-']));
-      if ~isempty(ind) % && strcmp(spm_file(spm_file(fname,'fpath'),'basename'),'anat')
-      % RD202303: I think it better to fosing only on the sub- directory 
-        sub_ses_anat = fileparts(fname(ind+1:end));  
-      end
-    else
-      % RD202403:
-      % alternative definion based on the depth of the file and is keeping 
-      % subdirectories to be more robust in case of a regular but non-BIDS
-      % structure wihtout anat directory or with similar filenames, e.g. 
-      % for ../derivatives/CAT##.#_#
-      %   testdir/subtestdir1/f1.nii
-      %   testdir/subtestdir2/f1.nii
-      % it result in 
-      %   testdir/derivatives/CAT##.#_#/subtestdir1/f1.nii
-      %   testdir/derivatives/CAT##.#_#/subtestdir1/f1.nii
-      % rather than
-      %   testdir/derivatives/CAT##.#_#/f1.nii
-      %   testdir/derivatives/CAT##.#_#/f1.nii
-      % what would cause conflicts
+    % to indicate BIDS structure rely on presence of a folder named "sub-*" in the path
+    if exist('job','var') && isfield(job,'extopts') && (isfield(job.extopts,'BIDSfolder') || isfield(job.extopts,'BIDSfolder2'))
+      ppath = spm_fileparts(fname);
+      ind = max(strfind(ppath,[filesep 'sub-']));
+      if ~isempty(ind)
+        % Found a subject folder; derive dataset root and relative subject/session/anat path
+        sub_ses_anat = fileparts(fname(ind+1:end));
+        % Anchor derivatives at dataset root (one level above the subject folders)
+        BIDShome = ppath(1:ind-1);
 
-      subdirs = strfind(BIDSfolder,'../');  
-      fname2  = spm_file(fname,'path'); 
+        % sanitize BIDSfolder by removing any leading ../ levels in both modes
+        bf = BIDSfolder;
+        if ~isempty(bf)
+          while strncmp(bf, ['..' filesep], 3)
+            bf = bf(4:end);
+          end
+          if ~isempty(bf) && (bf(1) == filesep)
+            bf = bf(2:end);
+          end
+        end
 
-      for si = 1:numel(subdirs)
-        [fname2,ff,ee] = spm_fileparts(fname2);
-        sub_ses_anat = fullfile([ff ee], sub_ses_anat);
+        % build absolute derivatives folder under dataset root
+        BIDSfolder = fullfile(BIDShome, bf);
+      else
+        % RD202403: No BIDS subject folder detected -> use depth-based fallback for non-BIDS structures
+        % alternative definition based on the depth of the file to keep subdirectories
+        subdirs = strfind(BIDSfolder,'../');  
+        fname2  = spm_file(fname,'path'); 
+        for si = 1:numel(subdirs)
+          [fname2,ff,ee] = spm_fileparts(fname2);
+          sub_ses_anat = fullfile([ff ee], sub_ses_anat);
+        end
       end
     end
   end
-  BIDSdir = sub_ses_anat;
+  % (kept for backward compatibility if needed) sub_ses_anat holds the relative path from sub-* to the acquisition folder
 
   % add BIDS structure if defined
-  if exist('BIDSfolder','var')
+  if exist('BIDSfolder','var') && ~isempty(BIDSfolder)
         
     % don't use common subfolder names if BIDS structure
     % was found in filename
@@ -129,6 +122,15 @@ function [mrifolder, reportfolder, surffolder, labelfolder, errfolder, BIDSfolde
       surffolder   = fullfile(BIDSfolder,surffolder);
       reportfolder = fullfile(BIDSfolder,reportfolder);
       errfolder    = fullfile(BIDSfolder,errfolder);
+    end
+    
+    % Optional: check whether upper derivatives directory is writable (now using absolute base)
+    indD = strfind(BIDSfolder,['derivatives' filesep]);
+    if ~isempty(indD)
+      [stat, val] = fileattrib(BIDSfolder(1:indD-1));
+      if stat && ~val.UserWrite
+        error('\nPlease check writing permissions of directory %s\n\n',val.Name);
+      end
     end
     
   % if BIDS structure was found but not defined leave subfolder names empty

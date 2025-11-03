@@ -554,7 +554,7 @@ USAGE:
   -c  <STRING>| --command <STRING>      alternative matlab function that can be called such as the SANLM-filter
   -t          | --test                  do not call command, but print files to be processed
   -fg         | --fg                    do not run matlab process in background
-  -b          | --bids                  use default BIDS path (i.e. '../derivatives/CAT12.x_rxxxx')
+  -b          | --bids                  use default BIDS path (i.e. 'derivatives/CAT12.x_rxxxx' at dataset root)
   -bf <STRING>| --bids_folder <STRING>  define BIDS path
   -nj         | --nojvm                 supress call of jvm using the -nojvm flag
  
@@ -593,10 +593,10 @@ EXAMPLE
    the additional option for handling WMHs as separate class. No surfaces and modulated and warped segmentations
    are estimated. Only the affine registered segmentations are saved.
  
- cat_batch_cat.sh -bids_folder ../derivatives/CAT12.8 sub*/anat/sub*T1w.nii.gz
+ cat_batch_cat.sh -bids_folder derivatives/CAT12.8 sub*/anat/sub*T1w.nii.gz
    This command will process all *.nii.gz files in the BIDS subfolders sub* with the defaults in cat_defaults.m and
-   will save the results as BIDS structure in '../derivatives/CAT12.8'. If the option for bids_folder is not given the
-   default BIDS path is '../derivatives/CAT12.x_rxxxx' where the CAT12 version is used in the path.
+  will save the results as BIDS structure in 'derivatives/CAT12.8' at the dataset root (one level above the subject folders). If the option for bids_folder is not given the
+  default BIDS path is 'derivatives/CAT12.x_rxxxx' where the CAT12 version is used in the path.
 
  cat_batch_cat.sh -tpm ${cat12_dir}/templates_MNI152NLin2009cAsym/TPM_Age11.5.nii ${spm12}/canonical/single_subj_T1.nii
    This command will process only the single file single_subj_T1.nii with the defaults in cat_defaults.m
