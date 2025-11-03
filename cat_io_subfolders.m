@@ -19,6 +19,7 @@ function [mrifolder, reportfolder, surffolder, labelfolder, errfolder, BIDSfolde
 % $Id$
     
   BIDSfolder = ''; 
+  BIDSfolder_rel = ''; % Store the relative BIDS folder path from config
   if nargin > 1 && isfield(job,'extopts')
     if ~isfield(job.extopts,'subfolders')
       job.extopts.subfolders = cat_get_defaults('extopts.subfolders');
@@ -26,9 +27,9 @@ function [mrifolder, reportfolder, surffolder, labelfolder, errfolder, BIDSfolde
     subfolders = job.extopts.subfolders;
     if isfield(job.extopts,'BIDSfolder') || isfield(job.extopts,'BIDSfolder2')
       if isfield(job.extopts,'BIDSfolder')
-        BIDSfolder = job.extopts.BIDSfolder;
+        BIDSfolder_rel = job.extopts.BIDSfolder;
       else
-        BIDSfolder = job.extopts.BIDSfolder2;
+        BIDSfolder_rel = job.extopts.BIDSfolder2;
       end
     end
   else
@@ -58,17 +59,32 @@ function [mrifolder, reportfolder, surffolder, labelfolder, errfolder, BIDSfolde
   if ~isempty(fname)
     fname = char(fname);
     % to indicate BIDS structure rely on presence of a folder named "sub-*" in the path
+    % Support both BIDS standard (sub-) and common variant (sub_)
     if exist('job','var') && isfield(job,'extopts') && (isfield(job.extopts,'BIDSfolder') || isfield(job.extopts,'BIDSfolder2'))
       ppath = spm_fileparts(fname);
-      ind = max(strfind(ppath,[filesep 'sub-']));
+      % Split path into parts and find the last folder starting with 'sub-' or 'sub_'
+      parts = strsplit(ppath, filesep);
+      ind = [];
+      for pi = length(parts):-1:1
+        if ~isempty(parts{pi}) && (strncmp(parts{pi}, 'sub-', 4) || strncmp(parts{pi}, 'sub_', 4))
+          % Found a subject folder, reconstruct the position in the original path
+          ind = strfind(ppath, [filesep parts{pi}]);
+          if ~isempty(ind)
+            ind = ind(end); % Use the last occurrence
+            break;
+          end
+        end
+      end
+      
       if ~isempty(ind)
         % Found a subject folder; derive dataset root and relative subject/session/anat path
-        sub_ses_anat = fileparts(fname(ind+1:end));
+        % Use the directory path (ppath) consistently to avoid including the filename
+        sub_ses_anat = ppath(ind+1:end);
         % Anchor derivatives at dataset root (one level above the subject folders)
         BIDShome = ppath(1:ind-1);
 
-        % sanitize BIDSfolder by removing any leading ../ levels in both modes
-        bf = BIDSfolder;
+        % sanitize BIDSfolder_rel by removing any leading ../ levels in both modes
+        bf = BIDSfolder_rel;
         if ~isempty(bf)
           while strncmp(bf, ['..' filesep], 3)
             bf = bf(4:end);
@@ -78,12 +94,23 @@ function [mrifolder, reportfolder, surffolder, labelfolder, errfolder, BIDSfolde
           end
         end
 
-        % build absolute derivatives folder under dataset root
-        BIDSfolder = fullfile(BIDShome, bf);
+        % Compute relative path from current file location (ppath) to derivatives folder
+        % Count directory levels from ppath to dataset root
+        parts_ppath = strsplit(ppath, filesep);
+        parts_root = strsplit(BIDShome, filesep);
+        % Find how many levels up we need to go from ppath to reach dataset root
+        levels_up = length(parts_ppath) - length(parts_root);
+        
+        % Build relative path: ../../../derivatives/CAT.../sub-.../ses-.../anat
+        rel_path = '';
+        for i = 1:levels_up
+          rel_path = [rel_path '..' filesep];
+        end
+        BIDSfolder = [rel_path bf];
       else
         % RD202403: No BIDS subject folder detected -> use depth-based fallback for non-BIDS structures
         % alternative definition based on the depth of the file to keep subdirectories
-        subdirs = strfind(BIDSfolder,'../');  
+        subdirs = strfind(BIDSfolder_rel,'../');  
         fname2  = spm_file(fname,'path'); 
         for si = 1:numel(subdirs)
           [fname2,ff,ee] = spm_fileparts(fname2);
@@ -122,15 +149,6 @@ function [mrifolder, reportfolder, surffolder, labelfolder, errfolder, BIDSfolde
       surffolder   = fullfile(BIDSfolder,surffolder);
       reportfolder = fullfile(BIDSfolder,reportfolder);
       errfolder    = fullfile(BIDSfolder,errfolder);
-    end
-    
-    % Optional: check whether upper derivatives directory is writable (now using absolute base)
-    indD = strfind(BIDSfolder,['derivatives' filesep]);
-    if ~isempty(indD)
-      [stat, val] = fileattrib(BIDSfolder(1:indD-1));
-      if stat && ~val.UserWrite
-        error('\nPlease check writing permissions of directory %s\n\n',val.Name);
-      end
     end
     
   % if BIDS structure was found but not defined leave subfolder names empty

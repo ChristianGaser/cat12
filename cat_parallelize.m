@@ -90,12 +90,32 @@ function varargout = cat_parallelize(job,func,datafield)
   % somewhere. A try catch block is used in case of untested input (e.g.,
   % structures). See also for a similar block in cat_run.
   try
-    BIDSdir  = spm_str_manip(data,'h');
-    BIDSdire = strfind(BIDSdir,fullfile('derivatives','CAT12.'));
-    BIDSdiri = find(~cellfun('isempty',BIDSdir),1);
-    if ~isempty(BIDSdiri)
-      dCATdir = strfind( BIDSdir{BIDSdiri}(BIDSdire{BIDSdiri} + numel(fullfile('derivatives','CAT12.')):end) ,filesep);
-      BIDSdir = BIDSdir{BIDSdiri}(1:BIDSdire{BIDSdiri} + numel(fullfile('derivatives','CAT12.')) + dCATdir - 2); 
+    % Get the first input file path
+    BIDSdir_candidates  = spm_str_manip(data,'h');
+    BIDSdir = [];
+    
+    % Try to find dataset root by looking for subject folders (sub- or sub_)
+    for bdi = 1:numel(BIDSdir_candidates)
+      if isempty(BIDSdir_candidates{bdi}), continue; end
+      
+      ppath = BIDSdir_candidates{bdi};
+      % Split path and find last folder starting with 'sub-' or 'sub_'
+      parts = strsplit(ppath, filesep);
+      for pi = length(parts):-1:1
+        if ~isempty(parts{pi}) && (strncmp(parts{pi}, 'sub-', 4) || strncmp(parts{pi}, 'sub_', 4))
+          % Found subject folder - reconstruct dataset root (parent of sub-* folder)
+          ind = strfind(ppath, [filesep parts{pi}]);
+          if ~isempty(ind)
+            ind = ind(end);
+            dataset_root = ppath(1:ind-1);
+            % Build derivatives path using CAT12 version
+            [cat_ver, cat_rel] = cat_version;
+            BIDSdir = fullfile(dataset_root, 'derivatives', [cat_ver '_' cat_rel]);
+            break;
+          end
+        end
+      end
+      if ~isempty(BIDSdir), break; end
     end
   catch
     BIDSdir = [];  

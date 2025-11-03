@@ -92,15 +92,40 @@ end
 % If one of the input directories is a BIDS directory and multipe jobs are 
 % running than create a subfolder logs to save the log-files there and 
 % not in the current directory. See also for a similar block in cat_parallelize.
-% .. the first BIDSdir block is a bit different ... ???
-if isfield(job.extopts,'BIDSfolder')
-  if job.nproc > 0
-    BIDSdir = fullfile(name1,strrep(BIDSfolder,['..' filesep],''));
-  else
-    BIDSdir = fullfile(name1,BIDSfolder); %strrep(BIDSfolder,['..' filesep],''));
+% Use the same logic as cat_io_subfolders to find the dataset root
+BIDSdir = [];
+if isfield(job.extopts,'BIDSfolder') || isfield(job.extopts,'BIDSfolder2')
+  try
+    % Find dataset root by looking for subject folders (sub- or sub_)
+    ppath = name1;
+    % Split path and find last folder starting with 'sub-' or 'sub_'
+    parts = strsplit(ppath, filesep);
+    for pi = length(parts):-1:1
+      if ~isempty(parts{pi}) && (strncmp(parts{pi}, 'sub-', 4) || strncmp(parts{pi}, 'sub_', 4))
+        % Found subject folder - reconstruct dataset root (parent of sub-* folder)
+        ind = strfind(ppath, [filesep parts{pi}]);
+        if ~isempty(ind)
+          ind = ind(end);
+          dataset_root = ppath(1:ind-1);
+          % Get the relative BIDSfolder config
+          if isfield(job.extopts,'BIDSfolder')
+            bids_rel = job.extopts.BIDSfolder;
+          else
+            bids_rel = job.extopts.BIDSfolder2;
+          end
+          % Remove any leading ../
+          while strncmp(bids_rel, ['..' filesep], 3)
+            bids_rel = bids_rel(4:end);
+          end
+          % Build derivatives path at dataset root
+          BIDSdir = fullfile(dataset_root, bids_rel);
+          break;
+        end
+      end
+    end
+  catch
+    BIDSdir = [];
   end
-else
-  BIDSdir = [];  
 end
 if ~isempty(BIDSdir)
   logdir  = fullfile(BIDSdir,'log');
