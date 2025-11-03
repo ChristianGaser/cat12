@@ -40,6 +40,7 @@ function cat_tst_qa_resizeBWP( datadir0, qaversions, rerun )
 %                   (not suitable now, would need deforamtions)
 %   (5) Buchert   - similar to Falk7T (need deformations)
 %
+%  See also cat_tst_qa_main.
 %  ------------------------------------------------------------------------
 
 

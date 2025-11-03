@@ -31,12 +31,17 @@ function cat_tst_qa_simerrBWP( datadir, qaversions, fasttest, rerun )
 %    - dist in mm, e.g., 0:5:20 or 0,5,10,20,40;
 %    - Kappa value as final outcome, e.g., range 0.5 - 1.0 
 %
+%  See also cat_tst_qa_main.
 %  ------------------------------------------------------------------------
 
 %#ok<*UNRCH>
 %#ok<*SAGROW>  
 
 cat_io_cprintf([0 0.5 0],'\n\n== Run cat_tst_qa_simerrBWP ==\n') 
+
+if ~license('test', 'Statistics_Toolbox')
+  error('This function requires the "Statistics and Machine Learning Toolbox" of MATLAB.\n')
+end
 
 % ### datadir ### 
 if ~exist( 'datadir' , 'var' )

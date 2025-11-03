@@ -1,10 +1,13 @@
 function cat_tst_qa_Tohoku( datadir, qaversions, segment, fasttest)    
 %cat_tst_qa_Tohoku. Plot Tohoku dataset properties 
 
-
   rerunqa = 0; 
   fasttest = 1; 
-  
+
+  if ~license('test', 'Statistics_Toolbox')
+    error('This function requires the "Statistics and Machine Learning Toolbox" of MATLAB.\n')
+  end
+
   %% setup
   Pgt = fullfile(datadir,'TRT_Tohoku','rmean_p0_R0500my_Tohoku_VBM12bo.nii'); 
   if fasttest

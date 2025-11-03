@@ -438,6 +438,13 @@ function imcalc = conf_vol_imcalc(prefix,expert)
 
   imcalc            = spm_cfg_imcalc;
 
+  suffix            = prefix; 
+  suffix.tag        = 'suffix';
+  suffix.name       = 'Filename suffix';
+  suffix.val        = {''};
+  suffix.help       = {'You can use "\b" to remove the a letter at the end of the filename, e.g., "srMyImage_segX1" with "\b\b0" would replace the last two letters by 0, i.e., "srMyImage_seg0".'};
+  prefix.help       = {'You can use "\f" to remove the a letter at the beginning of the filename, e.g., "srMyImage_seg1" with "\f\fx" would replace the first two letters by x, i.e., "xMyImage_seg1".'};
+
   data              = cfg_files;
   data.tag          = 'subjects';
   data.name         = 'Volumes';
@@ -457,20 +464,41 @@ function imcalc = conf_vol_imcalc(prefix,expert)
   images.num        = [1 Inf];
   images.help       = {'Specify input images class, e.g., the T1 image of a subject. '};
   
+  coreg             = cfg_menu;
+  coreg.tag         = 'coreg';
+  coreg.name        = 'Coregistration';
+  coreg.labels      = {'No'; 'Yes'};
+  coreg.values      = {0 1};
+  coreg.val         = {0};
+  coreg.help        = {
+    'Apply coregistration to the first image of each subject.' 
+    'E.g. to combine T1w (i1) and T2w (i2) of the same subject with the expression: '
+    ''
+    '  min( 5 , (i1./max(eps,i2)) .* log10(i1+i2+1) ) .* ~isnan(i2) '
+    ''
+    'with a general limit of 5, the eps to avoid division by 0, the log10 term to mask the background, and the isnan to avoid reslicing issues from the T2w.'
+    ''
+    };
+%min( 10 , (i1./max(eps,1+i2)) .* log10(1+log10(  (i1.*i2) ./ (1+i1+i2).^2 + 1 ) )) .* ~isnan(i2) .* (i1./i2<100)
+%min( 10 , (i1./i2) .* (1 - i1./max(i1,i1+i2.^2))  ) .* ~isnan(i2) .* (i1./i2<100)
+%min( 10 , max(0, i1./max(0,i1/2+i2)).^2 .* min(1,max(0,1 - 100*max(0, i1 ./ (i1+i2).^2 ) ))) .* ~isnan(i2)
   % remove old image field
   try
     imcalc.val = imcalc.val(); 
     imcalc.val{1}     = images; 
     imcalc.val{2}     = prefix;
-    imcalc.val{3}.help = {[...
+    imcalc.val(4:end+1) = imcalc.val(3:end); % move all fields
+    imcalc.val{3}     = suffix; % add suffix optioin
+    imcalc.val{4}.help = {[...
       'Files produced by this function will be written into this output directory. ' ...
       'If no directory is given, images will be written to the home of the first input image i1. ' ...
       'A relative path (e.g., "../output") can be used. ']};
+    imcalc.val{end+1} = coreg; 
   end
   imcalc.tag        = 'mimcalc';
   imcalc.vout       = @vout_mimcalc;
   imcalc.prog       = @cat_vol_mimcalc;
-  imcalc.hidden     = expert < 1; 
+  %imcalc.hidden     = expert < 1; 
   imcalc.name       = 'Multi-subject Image Calculator';
 return
 %_______________________________________________________________________

@@ -210,7 +210,7 @@ cdep(end).tgt_spec   = cfg_findspec({{'filter','pdf','strtype','e'}});
 
 % CAT report JPG file
 cdep(end+1) = cfg_dep;
-cdep(end).sname      = 'CAT Report JGP';
+cdep(end).sname      = 'CAT Report JPG';
 cdep(end).src_output = substruct('.','catreportjpg','()',{':'});
 cdep(end).tgt_spec   = cfg_findspec({{'filter','jpg','strtype','e'}});
 

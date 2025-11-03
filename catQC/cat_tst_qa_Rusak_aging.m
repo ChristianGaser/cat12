@@ -3,30 +3,40 @@ function cat_tst_qa_Rusak_aging( datadir0, qaversions, segment, fasttest, rerun 
 %  ------------------------------------------------------------------------
 %
 %  Requirements: 
-%   0. Download and install SPM and CAT
-%   1. Download Rusak T1 data from: 
+%   1. Matlab with statistic toolbox (corr,robustfit)
+%   2. Download and install SPM and CAT
+%   3. Download Rusak T1 data from: 
 %        https://doi.org/10.25919/4ycc-fc11
 %
-%   2. Specify in this script: 
+%   4. Specify in this script: 
 %      1) the data directory "datadir" 
 %      2) the QC version you would like to tests (the file has to exist in the cat directory) 
 %      3) the segmentation you would like to use
 %
+%  See also cat_tst_qa_main.
 %  ------------------------------------------------------------------------
 
 %#ok<*AGROW>
 
 cat_io_cprintf([0 0.5 0],'\n\n== Run cat_tst_qa_Rusak_aging ==\n') 
 
+if ~license('test', 'Statistics_Toolbox')
+  error('This function requires the "Statistics and Machine Learning Toolbox" of MATLAB.\n')
+end
+
 % directories
 runPP      = 1; 
 
 % ### datadir ###
 if ~exist( 'datadir0' , 'var' )
-  datadir   = '/Volumes/WDE18TB/MRData/Dahnke2025_QC/Rusak2021';
+  datadir  = fullfile(pwd,'Rusak2021');
 else
-  datadir    = fullfile(datadir0,'Rusak2021');
+  datadir = fullfile(datadir0,'Rusak2021');
 end
+if ~exist( datadir , 'dir' )
+  error('Cannot find the "Rusak2021" directory in "%s".', fileparts(datadir))
+end
+%%
 % ### segmention ###
 if ~exist( 'segment' , 'var')
   segment = {'CAT'}; % {'SPM','CAT','qcseg'}; % qcseg requires cat_vol_qa2024012

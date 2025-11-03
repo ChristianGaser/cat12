@@ -1,6 +1,7 @@
 function out = cat_vol_mimcalc(job)
 % Just a small batch to run imcalc for multiple subject in the same,
 % e.g., to apply some function or general correction. 
+% Extended by coregistrations option.
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -12,10 +13,13 @@ function out = cat_vol_mimcalc(job)
 
   SVNid = '$Rev: 1901 $';
   
-  def.var     = {};
-  def.verb    = 1;
-  def.cleanup = 0;
+  def.var        = {};
+  def.verb       = 1;
+  def.cleanup    = 1;
   def.ignoreBIDS = 0; 
+  def.coreg      = 0; 
+  def.prefix     = ''; 
+  def.suffix     = '';
   job = cat_io_checkinopt(job,def);
 
   if job.ignoreBIDS
@@ -45,35 +49,57 @@ function out = cat_vol_mimcalc(job)
   % end
    
   for si = 1:numel(job.images{1})    
-    job2 = rmfield(job,{'prefix','images'}); 
+    job2 = rmfield(job,{'prefix','images','suffix'}); 
     Pcleanup = {};
    
     % handle zipped BIDS 
     for ri = 1:numel(job.images)
       [~,ff,ee] = spm_fileparts(job.images{ri}{si});
-      nocleanup = 0;
+      cleanup = 0;
       if strcmp(ee,'.gz')
         if ~exist(fullfile( outdir{si}{ri} , ff),'file')
           gunzip(job.images{ri}{si},outdir{si}{ri});
+          cleanup = 1; 
         end
         job2.input{ri} = fullfile( outdir{si}{ri} , ff);  
       else
         if ~strcmp( spm_fileparts(job.images{ri}{si}) , outdir{si}{ri} ) && ...
           ~exist( spm_file( job.images{ri}{si},'path',outdir{si}{ri}) ,'file')
           copyfile(job.images{ri}{si},outdir{si}{ri}); 
-          nocleanup = 1; 
         end
         job2.input{ri} = fullfile( outdir{si}{ri} , [ff ee]); 
       end
-      if ~nocleanup
+      if cleanup
         Pcleanup{ri} = job2.input{ri};
       end
     end
     
+    % filenameparts
     [~,ff,ee]      = spm_fileparts(job2.input{1});
-    job2.output    = [job.prefix,ff,ee];
-    job2.outdir{1} = outdir{si}{ri}; 
-    
+
+    % update prefix
+    if ~isempty( strfind(job.prefix,'\f') )
+      ff = ff(1:end - numel(strfind(job.prefix,'\f'))); 
+      prefix = strrep(job.prefix,'\f',''); 
+    else
+      prefix = job.prefix; 
+    end
+
+    % update suffix
+    if ~isempty( strfind(job.suffix,'\b') )
+      ff = ff(1:end - numel(strfind(job.suffix,'\b'))); 
+      suffix = strrep(job.suffix,'\b',''); 
+    else 
+      suffix = job.suffix; 
+    end
+
+    job2.output    = [prefix,ff,suffix,ee];
+    if isempty(job.outdir{1})
+      job2.outdir{1} = outdir{si}{ri}; 
+    else
+      job2.outdir = job.outdir; 
+    end
+
     % call
     out1 = my_spm_imcalc(job2);
     
@@ -123,6 +149,21 @@ function out = my_spm_imcalc(job)
     options = job.options; 
   end
 
+  if job.coreg
+  % coregistration to support simple processing of T1w./T2w 
+  V  = spm_vol(char(job.input)); Vr = V; 
+    for vi = 2:numel(V) 
+      evalc( sprintf(['cormats{vi} = spm_coreg( V(1) , V(vi) , ' ...
+                 'struct( ''sep'' , [4 2] , ''fwhm'' , [7 7] , ' ...
+                '''graphics'' , 0 ) );']) ); 
+      Y = spm_read_vols(Vr(vi)); 
+      Vr(vi).fname = spm_file( Vr(vi).fname , 'path', job.outdir,'prefix','r'); 
+      Vr(vi).mat   = spm_matrix(cormats{vi}) \ eval(sprintf('V(vi).mat')); 
+      spm_write_vol(Vr(vi), Y); 
+      job.input{vi} = Vr(vi).fname;
+    end
+  end
+
   switch lower(job.expression)
     case 'approx'
       if numel(job.input)>1
@@ -168,6 +209,14 @@ function out = my_spm_imcalc(job)
           cat_io_cprintf('err',sprintf('ImCalc Image: %s failed \n',out.files{1}));
           out.files{1} = '';
       end    
+  end
+
+  if job.coreg
+    for vi = 2:numel(V) 
+      if exist(Vr(vi).fname,'file')
+        delete(Vr(vi).fname)
+      end
+    end
   end
 end
 function [sfiles,sfilesBIDS,BIDSsub,devdir] = checkBIDS(sfiles,BIDsdirname) 
