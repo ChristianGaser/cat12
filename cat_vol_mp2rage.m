@@ -1,6 +1,6 @@
 function [out,outs] = cat_vol_mp2rage(job)
 %cat_vol_mp2rage. Optimization of MP2Rage weighted scans for CAT12. 
-% The function uses the unified segmenation of SPM to further optimize a 
+% The function uses the unified segmentation of SPM to further optimize a 
 % set of input images (MP2RAGE but also other T1-weighteds scans).
 %
 %  out = cat_vol_mp2rage(job)
@@ -451,11 +451,11 @@ function [out,outs] = cat_vol_mp2rage(job)
     res.isMP2R = Tth(6) > min(Tth(2)/2,Tth(3)*2);                  % MP2Rage
     res.isT1   = Tth(3) < Tth(1) & Tth(1) < Tth(2);  % T1 defintion  
     if 0 % ~res.isT1
-      cat_io_cprintf('err','No T1w contrast or bad segmenation!\n')
+      cat_io_cprintf('err','No T1w contrast or bad segmentation!\n')
       %continue
     end
     if any( isnan(Tth) )
-      cat_io_cprintf('err','Bad contrast or segmenation!\n')
+      cat_io_cprintf('err','Bad contrast or segmentation!\n')
     end
 
    

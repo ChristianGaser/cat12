@@ -835,7 +835,7 @@ function [Yp0,Ym,Vo,p0rmse] = getImages(Pp0,Po,Pm,fi)
 %
 %  [Yp0,Ym,Vo] = getImages(Pp0,Po,Pm,fi)
 %
-%  Yp0 .. (resampled) segmenation as labelmap (0-BG, 1-CSF, 2-GM, 3-WM)
+%  Yp0 .. (resampled) segmentation as labelmap (0-BG, 1-CSF, 2-GM, 3-WM)
 %  Ym  .. bias-corrected image
 %  Vo  .. original image
 

@@ -6,7 +6,7 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th,cutstr)
 %  [Yb,Ym0,Yg,Ydiv] = cat_main_updateSPM(Ysrc,P,res,T3th,cutstr)
 %
 %   Ysrc   .. original input images
-%   P      .. tissue segmenation (4D)
+%   P      .. tissue segmentation (4D)
 %   res    .. SPM preprocessing structure
 %   T3th   .. tissue thresholds
 %   cutstr .. wider (0) or tider (0.99) masks (1 - auto; default: 0.5) 

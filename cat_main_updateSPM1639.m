@@ -36,7 +36,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   %  Analyse and store basic information of the SPM segmentation to improve
   %  handling of different protocols such as MP2rage. In general SPM gives 
   %  some clear sharp tissue output but in some cases (e.g., registration/
-  %  segmenation errors) the tissues are quite smooth. See also help entry.
+  %  segmentation errors) the tissues are quite smooth. See also help entry.
   %  I use 20 buckets to get the number of voxels below 25%, 50%, and 75%, 
   %  but also get 90% etc. 
   hbuckets = 20; 

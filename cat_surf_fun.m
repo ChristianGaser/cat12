@@ -3670,7 +3670,7 @@ function [Yp,Yt,vmat1,vmat1i] = cat_surf_surf2vol(S,Y,T,type,opt)
       Yd(Yd>0) = Yd(Yd>0) - 0.5;
       Yd  = Yd * opt.interpBB.interpV; 
 
-      % create final segmenation 
+      % create final segmentation 
       Yp  = max(0,min(1,(Yd + Yt/2) ./ Yt));
       
       Yp  = cat_vol_median3(Yp,smooth3(Yp>0 & Yp<1)>0.2,Yp>0,0.05);

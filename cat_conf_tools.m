@@ -3802,7 +3802,7 @@ function boxplot = conf_io_boxplot(outdir,subdir,name,expert)
   SMfield.help          = {'CAT preprocessing surface quality measures (not normalized). ' ''};
   
   
-  % segmenation measures
+  % segmentation measures
   USMfield               = cfg_menu;
   USMfield.tag           = 'xmlfields';
   USMfield.name          = 'Unified segmentation validation measures';

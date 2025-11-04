@@ -489,7 +489,7 @@ if ~isfield(res,'spmpp')
   %  a low level of iterations and no further bias correction, because
   %  some images get tile artifacts. 
   %
-  %    prob .. new AMAP segmenation (4D)
+  %    prob .. new AMAP segmentation (4D)
   %    ind* .. index elements to asign a subvolume
   %
   %  RD202006: Updated ignoreErrors pipeline that try to use AMAP if 

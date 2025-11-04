@@ -510,7 +510,7 @@ if ~isfield(res,'spmpp')
   %  a low level of iterations and no further bias correction, because
   %  some images get tile artifacts. 
   %
-  %    prob .. new AMAP segmenation (4D)
+  %    prob .. new AMAP segmentation (4D)
   %    ind* .. index elements to asign a subvolume
   % 
   %  ds('d2sm','',1,Ym,single(prob(:,:,:,1))/255/3 + single(prob(:,:,:,2))/255*2/3 + single(prob(:,:,:,3))/255,50);

@@ -30,7 +30,7 @@ function out = cat_main_report(job)
 
   def.files     = {};   % cat_ (or catlong_) XML input files
   def.Pm        = {};   % bias corrected images to replace default setting
-  def.Pp0       = {};   % segmenation label maps to replace default setting
+  def.Pp0       = {};   % segmentation label maps to replace default setting
                         % surfaces? 
   def.print     = 2;    % render options for develpers?
   def.outdir    = {};
