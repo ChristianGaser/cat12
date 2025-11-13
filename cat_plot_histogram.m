@@ -86,9 +86,12 @@ for i = 1:n
   
     fname = deblank(data(i,:));
     [pth,nam,ext] = spm_fileparts(fname);
+    [pth2,nam2,ext2] = spm_fileparts(nam);
 
-    % 1 - txt; 2 - volume; 3 - mesh; 4 - Freesurfer
-    if strcmp(ext,'.txt')
+    % 0 - nii.gz; 1 - txt; 2 - volume; 3 - mesh; 4 - Freesurfer
+    if strcmp(ext,'.gz') && strcmp(ext2,'.nii')
+      filetype = 0;
+    elseif strcmp(ext,'.txt')
       filetype = 1;
     elseif strcmp(ext,'.nii') || strcmp(ext,'.img')
       filetype = 2;
@@ -99,6 +102,8 @@ for i = 1:n
     end
 
     switch filetype
+    case 0
+      [cdata{i}, mn(i), mx(i)] = loadsingle(spm_vol(fname));
     case 1
       [cdata{i}, mn(i), mx(i)] = loadsingle_txt(fname);
     case 2
@@ -361,6 +366,8 @@ function [udat, mn, mx] = loadsingle(V)
 % use fast method for file reading for nifti files
 if isa(V,'nifti')
   udat(:,:,:) = V.dat(:,:,:);
+elseif isstruct(V)
+  udat = spm_read_vols(V);
 else
   udat = V.cdata(:);
 end

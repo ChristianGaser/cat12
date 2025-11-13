@@ -1,10 +1,10 @@
 function varargout=cat_tst_calc_kappa(P,Pref,opt)
 % ______________________________________________________________________
 % Estimates Kappa for a set of input images P to one or an equal number of
-% reference image(s) Pref. Use realgignment if image properties does not 
+% reference image(s) Pref. Use realignment if image properties does not 
 % match.
 %
-%??[txt,val] = cat_tst_calc_kappa(P,Pref,opt)
+% [txt,val] = cat_tst_calc_kappa(P,Pref,opt)
 % 
 % P             .. list of images
 % Pref          .. ground truth segmentation
@@ -14,7 +14,7 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
 %  .realign     .. force realignment          (default = 0)
 %  .realignres  .. resolution of realignment  (default = 1.5)
 %  .diffimg     .. write difference image     (default = 0)
-%  .testcase    .. evalution of specific label maps (default = 'auto')
+%  .testcase    .. evaluation of specific label maps (default = 'auto')
 %  .finishsound .. bong                       (default = 0)
 %                   ...
 %  .spaces      .. length of filename field   (default = 50)               
