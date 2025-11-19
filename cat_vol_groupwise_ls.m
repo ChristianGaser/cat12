@@ -65,7 +65,7 @@ if nargin<7,  ord        = [3 3 3 0 0 0]; end
 if nargin<8,  use_brainmask = 1; end
 if nargin<9,  reduce     = 1; end
 if nargin<10, setCOM     = 1; end
-if nargin<11, isores     = 0; end % force isotropic average resolution (0-default,1-best,2-worst,3-optimal)
+if nargin<11, isores     = 0; end % force isotropic average resolution (<0-res,0-default,1-best,2-worst,3-optimal)
 
 % If settings are not subject-specific, then generate
 %-----------------------------------------------------------------------
@@ -116,8 +116,8 @@ B = se3_basis;
 
 % Set boundary conditions 
 %-----------------------------------------------------------------------
-spm_field('boundary',1); % Bias correction - Neumann
-spm_diffeo('boundary',0);     % Diffeomorphism  - circulant
+spm_field('boundary',1);  % Bias correction - Neumann
+spm_diffeo('boundary',0); % Diffeomorphism  - circulant
 
 % Computations for figuring out how many grid levels are likely to work
 %-----------------------------------------------------------------------
@@ -126,9 +126,7 @@ for i=1:numel(Nii)
     dm = [size(Nii(i).dat) 1];
     d  = max(d, dm(1:3));
 end
-if isores
-  d = max(d);
-elseif isores<0
+if isores<0
   d = -isores;
 else
   d = min(d);
@@ -177,18 +175,14 @@ if isores ~= 0
   %% RD20220217: use best resolution and create an isotropic output 
   mati      = spm_imatrix(Mat0); 
   vx_vol    = mati(7:9); 
-  switch isores 
+  switch isores
     case 1
       vx_vol = min(vx_vol); 
     case 2 % need at least something like 2 mm
-      vx_vol = min(2,max(vx_vol));
+      vx_vol = min(1.5,max(vx_vol));
     case 3 
       % optimal - keep the volume similar but move it a bit torwards one
       %   eg. 1.0x1.0x3.0 > 1.2, 0.5x0.5x1.0 > 0.7
-      vx_vol  = floor( (prod(abs(vx_vol)).^(1/3) ).^0.5  * 10 ) / 10;
-    case 4 % similar volume and between 1 and 2 mm
-      vx_vol  = min(2,max(1,min(vx_vol)));
-    case 5 % get higher resolution
       vx_vol  = floor( (prod(abs(vx_vol)).^(1/3) ).^0.5  * 10 ) / 10;
     otherwise
       vx_vol  = repmat(-isores,1,3);
