@@ -44,6 +44,10 @@ function varargout = cat_vol_resize(Y, action, varargin)
 % ______________________________________________________________________
 % $Id$ 
   
+  if ~license('test', 'Statistics_Toolbox')
+    error('This function requires the "Statistics and Machine Learning Toolbox" of MATLAB.\n')
+  end
+
   if nargin == 0, help cat_vol_resize; return; end
   if isempty(Y), varargout{1} = Y; return; end
   
@@ -214,7 +218,7 @@ function varargout = resize_job(job)
       % higher dimension data requires different reading
       if isfield(V,'private') 
         dims = ndims(V.private.dat);
-        if dims>3
+        if dims>4 %##########
           Nii = nifti(V.fname);
           Y   = single(Nii.dat(:,:,:,:,:));
         else
@@ -814,11 +818,11 @@ function varargout = interhdr(Y,varargin)
 
   varargout = cell(1,nargout); 
 
-  if nargin > 2, V      = varargin{1}; end
-  if nargin > 3, res    = varargin{2}; end
-  if nargin > 4, interp = varargin{3}; end
-  if nargin > 5, V2     = varargin{4}; end
-  if nargin > 5, nonan  = varargin{4}; else, nonan = 0; end
+  if nargin > 1, V      = varargin{1}; end
+  if nargin > 2, res    = varargin{2}; end
+  if nargin > 3, interp = varargin{3}; end
+  if nargin > 4, V2     = varargin{4}; end
+  if nargin > 5, nonan  = varargin{5}; else, nonan = 0; end
   
   if ~exist('V','var') || isempty(V)
     V.mat = [1 0 0 1;0 1 0 1; 0 0 1 1; 0 0 0 1]; 
@@ -841,7 +845,7 @@ function varargout = interhdr(Y,varargin)
   vmat      = spm_imatrix(Vi.mat);
   sizeO     = size(Y);
   sizeO3    = sizeO(1:3);
-  if nargin < 6 && all(res > 0)
+  if nargin < 5 && all(res > 0) 
     %% Updated 20220805 to avoid unbalance and boundary problems in low resolution cases (e.g., 16mm)
     vmat(7:9) = sign(vmat(7:9)) .* res; % this is the goal res
     Vi.dim    = ceil(sizeO3 ./ (res./resV) / 2)*2 + mod(sizeO3,2); % here we _add_ a voxel to keep a even or odd resolution

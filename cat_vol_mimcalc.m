@@ -1,7 +1,7 @@
 function out = cat_vol_mimcalc(job)
 % Just a small batch to run imcalc for multiple subject in the same,
 % e.g., to apply some function or general correction. 
-% Extended by coregistrations option.
+% Extended by coregistrations and BIDS options.
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -16,17 +16,14 @@ function out = cat_vol_mimcalc(job)
   def.var        = {};
   def.verb       = 1;
   def.cleanup    = 1;
-  def.ignoreBIDS = 0; 
-  def.coreg      = 0; 
+  def.outdir     = {};
+  def.BIDSdir    = 'derivatives/mimcalc';
   def.prefix     = ''; 
   def.suffix     = '';
+  def.options.coreg = 0; 
+  
   job = cat_io_checkinopt(job,def);
 
-  if job.ignoreBIDS
-    BIDSdirname = ''; 
-  else
-    BIDSdirname = ['derivatives' filesep 'mimcalc'];
-  end
   out = struct();
   
   % spm banner
@@ -34,23 +31,29 @@ function out = cat_vol_mimcalc(job)
     spm('FnBanner',mfilename,SVNid);
   end
 
+  % prepare file and directory handling
+  outdir = cell(size(job.images)); 
   for ri = 1:numel(job.images)
     for si = 1:numel(job.images{ri})
-      [a,b,c,d] = checkBIDS(job.images{ri}(si),BIDSdirname);
-      sfiles{si}{ri}=a; sfilesBIDS{si}(ri)=b; BIDSsub{si}{ri}=c; outdir{si}{ri} = d{1};
+      [~,~,~,d] = checkBIDS(job.images{ri}(si),job.BIDSdir);
+      outdir{si}{ri} = d{1};
+      if ~isempty(job.outdir) && iscell( job.outdir ) && ~isempty( job.outdir{1} )
+        fx = strfind(outdir{si}{ri},job.BIDSdir); 
+        if ~isempty(fx) && cat_io_contains(job.BIDSdir,'derivatives') % combine out and BIDsdir
+          outdir{si}{ri} = fullfile( job.outdir{1} , outdir{si}{ri}(fx(end):end) ); 
+        elseif ~cat_io_contains(job.BIDSdir,'derivatives') % do not add subdirs
+          outdir{si}{ri} = fullfile(job.outdir{1},job.BIDSdir); 
+        else
+          outdir{si}{ri} = job.outdir{1}; 
+        end
+      end
       if ~exist(outdir{si}{ri},'dir'), mkdir(outdir{si}{ri}); end
     end
   end
-  %%
-    
-  % if isempty(job.outdir)
-  %   outdir = spm_fileparts(job.images{si}{1}); % home of the first image type
-  % else
-  % end
-   
+       
   for si = 1:numel(job.images{1})    
-    job2 = rmfield(job,{'prefix','images','suffix'}); 
-    Pcleanup = {};
+    job2 = rmfield(job,{'prefix','images','suffix','outdir'}); 
+    Pcleanup = cell(size(job.images));
    
     % handle zipped BIDS 
     for ri = 1:numel(job.images)
@@ -94,42 +97,38 @@ function out = cat_vol_mimcalc(job)
     end
 
     job2.output    = [prefix,ff,suffix,ee];
-    if isempty(job.outdir{1})
-      job2.outdir{1} = outdir{si}{ri}; 
-    else
-      job2.outdir = job.outdir; 
-    end
-
+    job2.outdir{1} = outdir{si}{1}; 
+    
     % call
     out1 = my_spm_imcalc(job2);
     
     % display progress file 
     out.Pname{si,1} = out1.files{1};
-  end
   
-  % remove temporary files in case of BIDS
-  if job.cleanup
-    for fi = 1:numel(Pcleanup)
-      if exist(Pcleanup{fi},'file'), delete(Pcleanup{fi}); end
+    % remove temporary files in case of BIDS
+    if job.cleanup
+      for ri = 1:numel(Pcleanup)
+        if ~isempty(Pcleanup{ri}) && exist(Pcleanup{ri},'file'), delete(Pcleanup{ri}); end
+      end
     end
   end
 
   out.Pname(cellfun('isempty',out.Pname)==1) = [];  
   
-  
   % spm banner
   if job.verb
-    fprintf('done.\n');
     spm_progress_bar('Clear')
   end
 end
 function out = my_spm_imcalc(job)
   [p,nam,ext] = spm_fileparts(job.output);
   if isempty(p)
-      if isempty(job.outdir{1})
+      if isempty(job.outdir) || (iscell(job.outdir) && isempty(job.outdir{1}))
           p = pwd;
-      else
+      elseif iscell(job.outdir)
           p = job.outdir{1};
+      else
+          p = job.outdir;
       end
   end
   if isempty(nam)
@@ -149,16 +148,16 @@ function out = my_spm_imcalc(job)
     options = job.options; 
   end
 
-  if job.coreg
+  if job.options.coreg
   % coregistration to support simple processing of T1w./T2w 
-  V  = spm_vol(char(job.input)); Vr = V; 
+    V  = spm_vol(char(job.input)); Vr = V; 
     for vi = 2:numel(V) 
       evalc( sprintf(['cormats{vi} = spm_coreg( V(1) , V(vi) , ' ...
-                 'struct( ''sep'' , [4 2] , ''fwhm'' , [7 7] , ' ...
+                 'struct( ''sep'' , [8 4 2 1] , ''fwhm'' , [7 7] , ' ...
                 '''graphics'' , 0 ) );']) ); 
       Y = spm_read_vols(Vr(vi)); 
       Vr(vi).fname = spm_file( Vr(vi).fname , 'path', job.outdir,'prefix','r'); 
-      Vr(vi).mat   = spm_matrix(cormats{vi}) \ eval(sprintf('V(vi).mat')); 
+      Vr(vi).mat   = spm_matrix(cormats{vi}) \ eval(sprintf('V(vi).mat')); %#ok<USENS>
       spm_write_vol(Vr(vi), Y); 
       job.input{vi} = Vr(vi).fname;
     end
@@ -184,11 +183,11 @@ function out = my_spm_imcalc(job)
         error('cat_vol_mimcalc:msk:filenumber','Only one file per subject allowed')
       end
 
-      if ~isempty(strfind(lower(job.expression),'gm') )
+      if cat_io_contains( lower(job.expression),'gm')
         Pmsk = cellstr([char(cat_get_defaults('extopts.shootingtpm')),',1']);
-      elseif ~isempty(strfind(lower(job.expression),'wm') )
+      elseif cat_io_contains( lower(job.expression),'wm')
         Pmsk = cellstr([char(cat_get_defaults('extopts.shootingtpm')),',2']);
-      elseif ~isempty(strfind(lower(job.expression),'brain') )
+      elseif cat_io_contains( lower(job.expression),'brain')
         Pmsk = cat_get_defaults('extopts.brainmask');
       else
         error('cat_vol_mimcalc:msk:case','Unknown masking case (use "msk-gm","msk-wm","msk-brain").')
@@ -211,7 +210,7 @@ function out = my_spm_imcalc(job)
       end    
   end
 
-  if job.coreg
+  if job.options.coreg
     for vi = 2:numel(V) 
       if exist(Vr(vi).fname,'file')
         delete(Vr(vi).fname)

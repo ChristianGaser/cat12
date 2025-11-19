@@ -178,7 +178,8 @@ function tools = cat_conf_tools(expert)
   [~,~,ROIsum]                = cat_conf_ROI(expert);
   resize                      = conf_vol_resize(data,prefix,expert,outdir);
   avg_img                     = conf_vol_average(data,outdir);
-  realign                     = conf_vol_series_align(data);
+  savg                        = conf_vol_savg(prefix,verb,expert);
+  realign                     = conf_vol_series_align(data,expert);
   shootlong                   = conf_shoot(expert); 
   [sanlm,sanlm2]              = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert);
   biascorrlong                = conf_longBiasCorr(data,expert,prefix);
@@ -192,8 +193,7 @@ function tools = cat_conf_tools(expert)
   iqr                         = conf_stat_IQR(data_xml);
   qa                          = conf_vol_qa(expert,outdir);
   catreport                   = conf_main_report(data_xml,outdir,expert);
-  multi_subject_imcalc        = conf_vol_imcalc(prefix,expert);
-  
+  multi_subject_imcalc        = conf_vol_imcalc(prefix);
   
 % create main batch 
 % -------------------------------------------------------------------------
@@ -237,6 +237,7 @@ function tools = cat_conf_tools(expert)
     defs, ...                             cat.pre.vtools.
     defs2, ...                            cat.pre.vtools.
     avg_img, ...                          cat.pre.vtoolsexp.
+    savg, ...                             cat.pre.vtools.
     data2mat, ...                         cat.pre.vtools.
     ...
     catreport, ...
@@ -253,6 +254,248 @@ function tools = cat_conf_tools(expert)
   %if expert 
   %  tools.values = [tools.values,{urqio}]; 
   %end
+return
+%_______________________________________________________________________
+function savg = conf_vol_savg(prefix,verb,expert)
+%conf_vol_savg. GUI setup for subject-session average tool
+
+  prefix.hidden       = expert<1;
+
+  suffix              = prefix;
+  suffix.tag          = 'suffix';
+  suffix.name         = 'Filename suffix';
+
+  % files per subject 
+  subjectdirs         = cfg_files;
+  subjectdirs.tag     = 'subjectdirs';
+  subjectdirs.name    = 'Directories';
+  subjectdirs.help    = {'Select directories of subjects or session that contain NIFTI files (in subdirectories) for averaging.' ''};
+  subjectdirs.filter  = 'dir';
+  
+  sessiondirs         = cfg_files;
+  sessiondirs.tag     = 'sessiondirs';
+  sessiondirs.name    = 'Session directories';
+  sessiondirs.help    = {'Select directories of subjects or session that contain NIFTI files (in subdirectories) for averaging.' ''};
+  sessiondirs.filter  = 'dir';
+  
+  session           = cfg_files;
+  session.num       = [1 Inf];
+  session.tag       = 'subjects';
+  session.name      = 'Session files';
+  session.ufilter   = '.*.nii'; 
+  session.filter    = 'any'; % also want nii.gz
+  session.help      = {'Select all (GZ) NIFTI images for this session that should be averaged. '};
+
+  subject           = cfg_repeat;
+  subject.tag       = 'subject';
+  subject.name      = 'Subject';
+  subject.values    = {session,sessiondirs};
+  subject.val       = {session}; 
+  subject.num       = [1 Inf];
+  subject.help      = {'Define sessions of a subject.'};
+  
+  scans             = session;
+  scans.name        = 'Subject files';
+  scans.help        = {'Select all (GZ) NIFTI images for this Subject that should be averaged. '};
+
+  subjects          = cfg_repeat;
+  subjects.tag      = 'subjects';
+  subjects.name     = 'Subjects/Sessions';
+  subjects.values   = {subjectdirs,subject,scans};
+  subjects.val      = {subjectdirs}; 
+  subjects.num      = [1 Inf];
+  subjects.help     = {
+   ['Specify a set of files for a number of subjects or select a set of directories each with subject-specific scans (in subdirs). ' ...
+    'I.e., if you have images in a BIDS structure you can select the subjects by choosing the subject or session directory and ' ...
+    'only the "anat" dir is use (if available). ']
+    ''
+    };
+
+
+  % data selectors
+  % -----------------------------------------------------------------------
+
+  % file limitations (DEVELOPER)
+  filelim                = cfg_entry;
+  filelim.tag            = 'filelim';
+  filelim.name           = 'File number limit (DEVELOPER)';
+  filelim.strtype        = 'n';
+  filelim.num            = [1 1];
+  filelim.val            = {inf}; 
+  %filelim.hidden         = expert<1; 
+  filelim.help           = {'Just to limit tests in general. '}; 
+  
+  % seplist
+  seplist                = cfg_entry;
+  seplist.tag            = 'seplist';
+  seplist.name           = 'Data speration list';
+  seplist.strtype        = 's';
+  seplist.num            = [0 Inf];
+  seplist.val            = {'T1w T2w PD inv1 inv2'};
+  seplist.help           = {'Enter keywords to separate files in the averaging process, e.g., to separate protocols (T1w,T2w etc.). ' ''};
+  
+  % blacklist
+  blacklist              = cfg_entry;
+  blacklist.tag          = 'blacklist';
+  blacklist.name         = 'Blacklist';
+  blacklist.strtype      = 's';
+  blacklist.num          = [0 Inf];
+  blacklist.val          = {''};
+  blacklist.help         = {'Enter strings to excluded files, e.g., protocols you don''t want to include. ' ''};
+
+  % reqlist (EXPERT)
+  reqlist                = cfg_entry;
+  reqlist.tag            = 'reqlist';
+  reqlist.name           = 'Path selector (EXPERT)';
+  reqlist.strtype        = 's';
+  reqlist.num            = [0 Inf];
+  reqlist.hidden         = expert<1; 
+  reqlist.val            = {[filesep 'anat' filesep]};
+  reqlist.help           = {'Enter strings that have to be in the path. ' ''};
+
+  % resolution limitation (EXPERT) 
+  reslim                 = cfg_entry;
+  reslim.tag             = 'reslim';
+  reslim.name            = 'Resolution limitation (EXPERT)';
+  reslim.strtype         = 'r';
+  reslim.num             = [1 3];
+  reslim.val             = {[2 3 8]}; 
+  reslim.hidden          = expert<1; 
+  reslim.help            = {
+   ['The first value specify the standard deviation from the median voxel volume to remove scans with lower values. ' ...
+    'It avoids to include low resolution scans if high resolution data is avaiable. ']
+   ['The second value describes the lower limit of inslice resolution ' ...
+    '(at least one dimension should have higher resolution) whereas the ' ...
+    'second value defines the lower limit of slice thickness (worst resolution limit). ']
+   ['E.g., for [1 2 8] a resolution of [ 0.6 0.6 4] or [ 2  2  8] is ok but not' ...
+    '[0.5 0.5 10] (too thick slices) or [ 3  3  3] (to low slice resolution). ']
+    'Keep in mind that there is also a general limiation to high resolution data within this subject. ' 
+    }; 
+ 
+
+  % main field
+  limits           = cfg_exbranch;
+  limits.tag       = 'limits';
+  limits.name      = 'Data selectors';
+  limits.val       = {seplist,blacklist,reqlist,reslim,filelim};
+  limits.help      = {'Parameters to control the selection of input files. '}; 
+  
+
+  % processing options
+  % -----------------------------------------------------------------------
+
+  % intensity normalization bias correction (EXPERT)
+  bias                  = cfg_menu;
+  bias.tag              = 'bias';
+  bias.name             = 'Bias correction'; % intensity normalization is done by the the long pipeline anyway
+  bias.labels           = {'no','yes'}; 
+  bias.values           = {0 2};
+  bias.val              = {2}; 
+  bias.help             = {'Use soft bias correction. '};
+
+  % denoising
+  sanlm                 = cfg_menu;
+  sanlm.tag             = 'sanlm';
+  sanlm.name            = 'Spatial Non Local Means (SANLM) denoising'; 
+  sanlm.labels          = {'no','yes'};
+  sanlm.values          = {0 1};
+  sanlm.val             = {1}; 
+  sanlm.help            = {'Use SANLM denoising filter before reslicing.' ''};
+
+  % sharpen (EXPERT - this is experimental)
+  sharpen               = cfg_menu;
+  sharpen.tag           = 'sharpen';
+  sharpen.name          = 'Sharpening before resampling (EXPERT)'; 
+  sharpen.labels        = {'no','light','strong'};
+  sharpen.values        = {0 1 2};
+  sharpen.val           = {1}; 
+  sharpen.hidden        = expert<1; % we hide as this is connected to the resolution
+  sharpen.help          = {'Apply sharpening filter before averaging.' ''};
+
+  % resolution (EXPERT - typically, we use the rescans only to improve SNR and reduce the influence of motion artifacts) 
+  res                   = cfg_entry;
+  res.tag               = 'res';
+  res.name              = 'Spatial resolution';
+  res.strtype           = 'r'; 
+  res.num               = [1 1];
+  res.val               = {0}; 
+  %res.hidden            = expert<1; 
+  res.help              = {
+    'Output resolution of the average file. The default "0" uses the minimum resolution per subject/session. '
+    ''
+    };
+
+  % average method selector 1 - anyavg, 2 - spm/cat long, 3 - SPM-long
+  avgmethod              = cfg_menu;
+  avgmethod.tag          = 'avgmethod';
+  avgmethod.name         = 'Average method (EXPERT)';
+  avgmethod.labels       = {'SPMavg','CATavg','savg'}; 
+  avgmethod.values       = {3,2,1};
+  avgmethod.val          = {2}; 
+  avgmethod.hidden       = expert<1; 
+  avgmethod.help         = {
+    'Select averaging method. '
+    };
+
+  % opts field
+  opts             = cfg_exbranch;
+  opts.tag         = 'opts';
+  opts.name        = 'Options';
+  opts.val         = {bias,sanlm,sharpen,res,avgmethod};
+  opts.help        = {'Processing parameters'}; 
+  
+
+  % Output options:
+  % -----------------------------------------------------------------------
+
+  % cleanup temporary files (EXPERT - normal people are not expected to need the resliced files)
+  cleanup                 = cfg_menu;
+  cleanup.tag             = 'cleanup';
+  cleanup.name            = 'Remove temporary files (EXPERT)'; 
+  cleanup.labels          = {'no','yes'}; 
+  cleanup.values          = {0,1};
+  cleanup.val             = {1}; 
+  cleanup.hidden          = expert<1; 
+  cleanup.help            = {'Remove temporary files from processing. ' ''}; 
+  
+  % udpate of default fields
+  prefix.val              = {''};
+  verb.val                = {1};
+  
+  BIDSdir                 = cfg_entry;
+  BIDSdir.tag             = 'BIDSdir';
+  BIDSdir.name            = 'Output directory';
+  BIDSdir.strtype         = 's'; 
+  BIDSdir.num             = [0 inf];
+  BIDSdir.val             = {['derivatives' filesep 'catavg'];}; 
+  BIDSdir.hidden          = expert<1; 
+  BIDSdir.help            = {
+    'Output directory. '
+    ''
+    };
+
+  % opts field
+  output             = cfg_exbranch;
+  output.tag         = 'output';
+  output.name        = 'Output';
+  output.val         = {BIDSdir,prefix,suffix,verb,cleanup};
+  output.help        = {'Output parameters'}; 
+  
+  % main field
+  savg           = cfg_exbranch;
+  savg.tag       = 'savg';
+  savg.name      = 'Subject-session average';
+  if expert
+    savg.val       = {subjects, limits, opts, output};
+  else
+    savg.val       = {subjects, limits, opts};
+  end
+  savg.prog      = @cat_vol_savg;
+  savg.vout      = @vout_vol_savg;
+  savg.help      = {
+    ['Creation of a subject-session-wise average image of varying protocols.  ' ...
+     '']
+     ''};
 return
 %_______________________________________________________________________
 function mp2rage = conf_vol_mp2rage(prefix,verb,expert)
@@ -433,11 +676,13 @@ function report = conf_main_report(data_xml,outdir,expert)
   report.name       = 'Retrospective CAT Report';
 return
 %_______________________________________________________________________
-function imcalc = conf_vol_imcalc(prefix,expert)
+function imcalc = conf_vol_imcalc(prefix)
 %conf_vol_imcalc. Like spm_imcalc but to run the same operation for many subjects. 
 
+  % get original SPM imcalc function 
   imcalc            = spm_cfg_imcalc;
 
+  % update prefix and suffix fileds
   suffix            = prefix; 
   suffix.tag        = 'suffix';
   suffix.name       = 'Filename suffix';
@@ -445,6 +690,7 @@ function imcalc = conf_vol_imcalc(prefix,expert)
   suffix.help       = {'You can use "\b" to remove the a letter at the end of the filename, e.g., "srMyImage_segX1" with "\b\b0" would replace the last two letters by 0, i.e., "srMyImage_seg0".'};
   prefix.help       = {'You can use "\f" to remove the a letter at the beginning of the filename, e.g., "srMyImage_seg1" with "\f\fx" would replace the first two letters by x, i.e., "xMyImage_seg1".'};
 
+  % allow also gzipped
   data              = cfg_files;
   data.tag          = 'subjects';
   data.name         = 'Volumes';
@@ -476,29 +722,45 @@ function imcalc = conf_vol_imcalc(prefix,expert)
     ''
     '  min( 5 , (i1./max(eps,i2)) .* log10(i1+i2+1) ) .* ~isnan(i2) '
     ''
+    'or'
+    ''
+    '  min( 10 , max(0, i1./max(0,i1/2+i2)).^2 .* min(1,max(0,1 - 100*max(0, i1 ./ (i1+i2).^2 ) ))) .* ~isnan(i2)'
+    ''
     'with a general limit of 5, the eps to avoid division by 0, the log10 term to mask the background, and the isnan to avoid reslicing issues from the T2w.'
     ''
     };
 %min( 10 , (i1./max(eps,1+i2)) .* log10(1+log10(  (i1.*i2) ./ (1+i1+i2).^2 + 1 ) )) .* ~isnan(i2) .* (i1./i2<100)
 %min( 10 , (i1./i2) .* (1 - i1./max(i1,i1+i2.^2))  ) .* ~isnan(i2) .* (i1./i2<100)
 %min( 10 , max(0, i1./max(0,i1/2+i2)).^2 .* min(1,max(0,1 - 100*max(0, i1 ./ (i1+i2).^2 ) ))) .* ~isnan(i2)
+
+
+  BIDsdir                   = cfg_entry;
+  BIDsdir.tag               = 'BIDSdir';
+  BIDsdir.name              = 'Output Subdirectory';
+  BIDsdir.strtype           = 's'; 
+  BIDsdir.num               = [0 inf];
+  BIDsdir.val               = {['derivatives' filesep 'mimcalc'];}; 
+  BIDsdir.help              = {[...
+    'Files produced by this function will be written into this subdirectory. ' ...
+    'If no subdirectory is given, images will be written to the home of the first input image i1 within the output directory. ' ...
+    'The name "derivatives" is used to keep the BIDS subdirectory list. ' ...
+    'A relative path (e.g., "../output") can be used. ']
+    ''
+    };
+
+  
   % remove old image field
-  try
-    imcalc.val = imcalc.val(); 
-    imcalc.val{1}     = images; 
-    imcalc.val{2}     = prefix;
-    imcalc.val(4:end+1) = imcalc.val(3:end); % move all fields
-    imcalc.val{3}     = suffix; % add suffix optioin
-    imcalc.val{4}.help = {[...
-      'Files produced by this function will be written into this output directory. ' ...
-      'If no directory is given, images will be written to the home of the first input image i1. ' ...
-      'A relative path (e.g., "../output") can be used. ']};
-    imcalc.val{end+1} = coreg; 
-  end
+  imcalc.val        = imcalc.val(); 
+  imcalc.val{1}     = images; 
+  imcalc.val{2}     = prefix;
+  imcalc.val(4:end+1) = imcalc.val(3:end); % move all fields
+  imcalc.val{3}     = suffix; % add suffix option
+  imcalc.val(6:end+1) = imcalc.val(5:end); % move all fields
+  imcalc.val{5}     = BIDsdir; % 
+  imcalc.val{end}.val{end+1} = coreg; 
   imcalc.tag        = 'mimcalc';
   imcalc.vout       = @vout_mimcalc;
   imcalc.prog       = @cat_vol_mimcalc;
-  %imcalc.hidden     = expert < 1; 
   imcalc.name       = 'Multi-subject Image Calculator';
 return
 %_______________________________________________________________________
@@ -2564,7 +2826,7 @@ function [defs,defs2] = conf_vol_defs()
 return
 
 %_______________________________________________________________________
-function realign  = conf_vol_series_align(data)
+function realign  = conf_vol_series_align(data,expert)
   
   data.help       = {
   'Select all images for this subject'};
@@ -2695,17 +2957,37 @@ function realign  = conf_vol_series_align(data)
   noise                 = cfg_entry;
   noise.tag             = 'noise';
   noise.name            = 'Noise Estimate';
-  noise.help            = {'.'};
   noise.strtype         = 'e';
   noise.num             = [Inf Inf];
   noise.val             = {NaN};
   noise.help            = {'Specify the standard deviation of the noise in the images.  If a scalar is entered, all images will be assumed to have the same level of noise.  For any non-finite values, the algorithm will try to estimate the noise from fitting a mixture of two Rician distributions to the intensity histogram of each of the images, and assuming that the Rician with the smaller overall intensity models the intensity distribution of air in the background. This works reasonably well for simple MRI scans, but less well for derived images (such as averages) and it fails badly for scans that are skull-stripped.  The assumption used by the registration is that the residuals, after fitting the model, are i.i.d. Gaussian. The assumed standard deviation of the residuals is derived from the estimated Rician distribution of the air.'
   };
 
+  % parameter for other batches (eg. for averageing)
+  sharpen               = cfg_menu;
+  sharpen.tag           = 'sharpen';
+  sharpen.name          = 'Sharping (DEVELOPER)';
+  sharpen.labels        = {'None','Light','Strong'};
+  sharpen.values        = { 0 1 2 };
+  sharpen.val           = { 0 };
+  sharpen.hidden        = expert<2;
+  sharpen.help          = {'Enhancement of local details for averaging.'
+  };
+
+  % parameter for other batches (eg. for averageing)
+  isores                = cfg_entry;
+  isores.tag            = 'isores';
+  isores.name           = 'Isotropic Resolution (EXPERT)';
+  isores.help           = {'Voxel sizes of the written images. Default 0 will use the minimum of the maximum resolution of all images. '};
+  isores.strtype        = 'r';
+  isores.num            = [1 1];
+  isores.hidden         = expert<1;
+  isores.val            = {0};
+
   realign               = cfg_exbranch;
   realign.tag           = 'series';
   realign.name          = 'Longitudinal Registration';
-  realign.val           = {data noise setCOM bparam use_brainmask reduce reg write_rimg write_avg};
+  realign.val           = {data noise setCOM bparam use_brainmask reduce reg write_rimg write_avg isores sharpen};
   realign.help          = {
     'Longitudinal registration of series of anatomical MRI scans for a single subject.  It is based on inverse-consistent alignment among each of the subject''s scans, and incorporates a bias field correction.  Prior to running the registration, the scans should already be in very rough alignment, although because the model incorporates a rigid-body transform, this need not be extremely precise.  Note that there are a bunch of hyper-parameters to be specified.  If you are unsure what values to take, then the defaults should be a reasonable guess of what works.  Note that changes to these hyper-parameters will impact the results obtained.'
     ''
@@ -4820,4 +5102,27 @@ if ~isfield(job.action,'delete')
 else
     dep = [];
 end
+return 
+function dep = vout_vol_savg(job)
+% list of average images
+% list of correced images ?
+
+  cdep = cfg_dep;
+
+  cdep(end).sname      = 'AnyAvg Average Map';
+  cdep(end).src_output = substruct('.','avg','()',{':'});
+  cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+
+  if isfield(job,'writeLabelmap') && job.writeLabelmap
+    cdep(end).sname      = 'AnyAvg Label Map';
+    cdep(end).src_output = substruct('.','Yp0','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end
+  if isfield(job,'writeLabelmap') && job.writeBrainmask
+    cdep(end).sname      = 'AnyAvg Brain Mask';
+    cdep(end).src_output = substruct('.','Yb','()',{':'});
+    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end
+  
+  dep = cdep;
 return
