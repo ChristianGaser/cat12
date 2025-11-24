@@ -312,11 +312,11 @@ function savg = conf_vol_savg(prefix,verb,expert)
   % file limitations (DEVELOPER)
   filelim                = cfg_entry;
   filelim.tag            = 'filelim';
-  filelim.name           = 'File number limit (DEVELOPER)';
+  filelim.name           = 'File number limit (Expert)';
   filelim.strtype        = 'n';
   filelim.num            = [1 1];
   filelim.val            = {inf}; 
-  %filelim.hidden         = expert<1; 
+  filelim.hidden         = expert<1; 
   filelim.help           = {'Just to support quick tests. '}; 
   
   % seplist
@@ -343,6 +343,7 @@ function savg = conf_vol_savg(prefix,verb,expert)
   reqlist.name           = 'Path selector (EXPERT)';
   reqlist.strtype        = 's';
   reqlist.num            = [0 Inf];
+  reqlist.hidden         = expert<1;
   reqlist.val            = {[filesep 'anat' filesep]};
   reqlist.help           = {'Enter strings that have to be in the path to force on specific directories, eg. with anatomical data. ' ''};
 
@@ -511,7 +512,7 @@ function savg = conf_vol_savg(prefix,verb,expert)
   % main field
   savg                = cfg_exbranch;
   savg.tag            = 'savg';
-  savg.name           = 'Subject-session average';
+  savg.name           = 'Rescan average';
   savg.val            = {subjects, limits, opts, output};
   savg.prog           = @cat_vol_savg;
   savg.vout           = @vout_vol_savg;
