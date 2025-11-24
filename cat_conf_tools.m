@@ -259,32 +259,27 @@ return
 function savg = conf_vol_savg(prefix,verb,expert)
 %conf_vol_savg. GUI setup for subject-session average tool
 
-  prefix.hidden       = expert<1;
-
-  suffix              = prefix;
-  suffix.tag          = 'suffix';
-  suffix.name         = 'Filename suffix';
-
+  
   % files per subject 
   subjectdirs         = cfg_files;
   subjectdirs.tag     = 'subjectdirs';
   subjectdirs.name    = 'Directories';
-  subjectdirs.help    = {'Select directories of subjects or session that contain NIFTI files (in subdirectories) for averaging.' ''};
+  subjectdirs.help    = {'Select directories of subjects or sessions that contain (gzipped) NIFTI files (in subdirectories) for averaging.' ''};
   subjectdirs.filter  = 'dir';
   
   sessiondirs         = cfg_files;
   sessiondirs.tag     = 'sessiondirs';
   sessiondirs.name    = 'Session directories';
-  sessiondirs.help    = {'Select directories of subjects or session that contain NIFTI files (in subdirectories) for averaging.' ''};
+  sessiondirs.help    = {'Select session directories that contain (gzipped)NIFTI files (in subdirectories) for averaging.' ''};
   sessiondirs.filter  = 'dir';
   
   session           = cfg_files;
   session.num       = [1 Inf];
-  session.tag       = 'subjects';
+  session.tag       = 'session';
   session.name      = 'Session files';
   session.ufilter   = '.*.nii'; 
   session.filter    = 'any'; % also want nii.gz
-  session.help      = {'Select all (GZ) NIFTI images for this session that should be averaged. '};
+  session.help      = {'Select all (gzipped) NIFTI images of this session that should be averaged. '};
 
   subject           = cfg_repeat;
   subject.tag       = 'subject';
@@ -296,7 +291,7 @@ function savg = conf_vol_savg(prefix,verb,expert)
   
   scans             = session;
   scans.name        = 'Subject files';
-  scans.help        = {'Select all (GZ) NIFTI images for this Subject that should be averaged. '};
+  scans.help        = {'Select all (gzipped) NIFTI images for this subject that should be averaged. '};
 
   subjects          = cfg_repeat;
   subjects.tag      = 'subjects';
@@ -305,9 +300,8 @@ function savg = conf_vol_savg(prefix,verb,expert)
   subjects.val      = {subjectdirs}; 
   subjects.num      = [1 Inf];
   subjects.help     = {
-   ['Specify a set of files for a number of subjects or select a set of directories each with subject-specific scans (in subdirs). ' ...
-    'I.e., if you have images in a BIDS structure you can select the subjects by choosing the subject or session directory and ' ...
-    'only the "anat" dir is use (if available). ']
+   ['Specify a set of files for a number of subjects or select a set of directories, each with subject-specific scans (in subdirs). ' ...
+    'For example, if you have images in a BIDS structure you can select the subjects by choosing the subject or session directory. ']
     ''
     };
 
@@ -323,12 +317,12 @@ function savg = conf_vol_savg(prefix,verb,expert)
   filelim.num            = [1 1];
   filelim.val            = {inf}; 
   %filelim.hidden         = expert<1; 
-  filelim.help           = {'Just to limit tests in general. '}; 
+  filelim.help           = {'Just to support quick tests. '}; 
   
   % seplist
   seplist                = cfg_entry;
   seplist.tag            = 'seplist';
-  seplist.name           = 'Data speration list';
+  seplist.name           = 'Data separation list';
   seplist.strtype        = 's';
   seplist.num            = [0 Inf];
   seplist.val            = {'T1w T2w PD inv1 inv2'};
@@ -343,15 +337,14 @@ function savg = conf_vol_savg(prefix,verb,expert)
   blacklist.val          = {''};
   blacklist.help         = {'Enter strings to excluded files, e.g., protocols you don''t want to include. ' ''};
 
-  % reqlist (EXPERT)
+  % reqlist 
   reqlist                = cfg_entry;
   reqlist.tag            = 'reqlist';
   reqlist.name           = 'Path selector (EXPERT)';
   reqlist.strtype        = 's';
   reqlist.num            = [0 Inf];
-  reqlist.hidden         = expert<1; 
   reqlist.val            = {[filesep 'anat' filesep]};
-  reqlist.help           = {'Enter strings that have to be in the path. ' ''};
+  reqlist.help           = {'Enter strings that have to be in the path to force on specific directories, eg. with anatomical data. ' ''};
 
   % resolution limitation (EXPERT) 
   reslim                 = cfg_entry;
@@ -363,13 +356,13 @@ function savg = conf_vol_savg(prefix,verb,expert)
   reslim.hidden          = expert<1; 
   reslim.help            = {
    ['The first value specify the standard deviation from the median voxel volume to remove scans with lower values. ' ...
-    'It avoids to include low resolution scans if high resolution data is avaiable. ']
+    'It avoids to include low resolution scans if high resolution data is available. ']
    ['The second value describes the lower limit of inslice resolution ' ...
     '(at least one dimension should have higher resolution) whereas the ' ...
     'second value defines the lower limit of slice thickness (worst resolution limit). ']
    ['E.g., for [1 2 8] a resolution of [ 0.6 0.6 4] or [ 2  2  8] is ok but not' ...
     '[0.5 0.5 10] (too thick slices) or [ 3  3  3] (to low slice resolution). ']
-    'Keep in mind that there is also a general limiation to high resolution data within this subject. ' 
+    'Keep in mind that there is also a general limitation to high resolution data within this subject. ' 
     }; 
  
 
@@ -400,30 +393,53 @@ function savg = conf_vol_savg(prefix,verb,expert)
   sanlm.labels          = {'no','yes'};
   sanlm.values          = {0 1};
   sanlm.val             = {1}; 
-  sanlm.help            = {'Use SANLM denoising filter before reslicing.' ''};
+  sanlm.help            = {'Use SANLM denoising filter before reslicing. The amount of denoising is reduce with growing number of scans. ' ''};
 
   % sharpen (EXPERT - this is experimental)
   sharpen               = cfg_menu;
   sharpen.tag           = 'sharpen';
   sharpen.name          = 'Sharpening before resampling (EXPERT)'; 
-  sharpen.labels        = {'no','light','strong'};
-  sharpen.values        = {0 1 2};
+  if expert > 1
+    sharpen.labels        = {'no','light','strong','heavy','insane'};
+    sharpen.values        = {0 1 2 4 8};
+  else
+    sharpen.labels        = {'no','light','strong'};
+    sharpen.values        = {0 1 2};
+  end
   sharpen.val           = {1}; 
   sharpen.hidden        = expert<1; % we hide as this is connected to the resolution
-  sharpen.help          = {'Apply sharpening filter before averaging.' ''};
+  sharpen.help          = {'Apply sharpening filter before averaging to improve appearance of edges. ' ''};
 
-  % resolution (EXPERT - typically, we use the rescans only to improve SNR and reduce the influence of motion artifacts) 
+  % resolution 
   res                   = cfg_entry;
   res.tag               = 'res';
   res.name              = 'Spatial resolution';
   res.strtype           = 'r'; 
   res.num               = [1 1];
   res.val               = {0}; 
-  %res.hidden            = expert<1; 
   res.help              = {
-    'Output resolution of the average file. The default "0" uses the minimum resolution per subject/session. '
+   ['Output resolution of the average file. The default "0" uses the minimum resolution per subject/session. ' ...
+    'Additional interpolation is only useful in case of many high-quality images. ']
     ''
     };
+
+  % Trimming option for CAT (one might need the full head)
+  reduce                = cfg_menu;
+  reduce.name           = 'Reduce Bounding Box';
+  reduce.tag            = 'reduce';
+  reduce.labels         = {'Yes','No'};
+  reduce.values         = {1,0};
+  reduce.val            = {1};
+  reduce.hidden         = expert<1;
+  reduce.help           = {
+    'Reduce bounding box at final resolution level because usually there is a lot of air around the head after registration of multiple scans. This helps to save memory and time for later use of these registered images.'
+    ''
+    'Please note that this option can only be used for rigid registration and will be disabled for non-linear registration.'
+  };
+
+  % Non-linear option for SPM
+
+  % MNI alignment and coregistration of separated scans
 
   % average method selector 1 - anyavg, 2 - spm/cat long, 3 - SPM-long
   avgmethod              = cfg_menu;
@@ -441,7 +457,7 @@ function savg = conf_vol_savg(prefix,verb,expert)
   opts             = cfg_exbranch;
   opts.tag         = 'opts';
   opts.name        = 'Options';
-  opts.val         = {bias,sanlm,sharpen,res,avgmethod};
+  opts.val         = {bias,sanlm,sharpen,reduce,res,avgmethod};
   opts.help        = {'Processing parameters'}; 
   
 
@@ -459,8 +475,12 @@ function savg = conf_vol_savg(prefix,verb,expert)
   cleanup.help            = {'Remove temporary files from processing. ' ''}; 
   
   % udpate of default fields
-  prefix.val              = {''};
-  verb.val                = {1};
+  prefix.val              = {''}; 
+  prefix.hidden           = expert<2; % automatic defined .. need further implementation and test
+
+  suffix                  = prefix;
+  suffix.tag              = 'suffix';
+  suffix.name             = 'Filename suffix';
   
   BIDSdir                 = cfg_entry;
   BIDSdir.tag             = 'BIDSdir';
@@ -468,33 +488,45 @@ function savg = conf_vol_savg(prefix,verb,expert)
   BIDSdir.strtype         = 's'; 
   BIDSdir.num             = [0 inf];
   BIDSdir.val             = {['derivatives' filesep 'catavg'];}; 
-  BIDSdir.hidden          = expert<1; 
   BIDSdir.help            = {
     'Output directory. '
     ''
     };
 
+  verb.tag             = 'verb';
+  verb.name            = 'Verbose output'; 
+  verb.labels          = {'no','yes','yes (details)'}; 
+  verb.values          = {0,1,2};
+  verb.val             = {1}; 
+  verb.hidden          = false; 
+  verb.help            = {'Remove temporary files from processing. ' ''}; 
+  
   % opts field
-  output             = cfg_exbranch;
-  output.tag         = 'output';
-  output.name        = 'Output';
-  output.val         = {BIDSdir,prefix,suffix,verb,cleanup};
-  output.help        = {'Output parameters'}; 
+  output              = cfg_exbranch;
+  output.tag          = 'output';
+  output.name         = 'Output';
+  output.val          = {BIDSdir,prefix,suffix,verb,cleanup};
+  output.help         = {'Output parameters'}; 
   
   % main field
-  savg           = cfg_exbranch;
-  savg.tag       = 'savg';
-  savg.name      = 'Subject-session average';
-  if expert
-    savg.val       = {subjects, limits, opts, output};
-  else
-    savg.val       = {subjects, limits, opts};
-  end
-  savg.prog      = @cat_vol_savg;
-  savg.vout      = @vout_vol_savg;
-  savg.help      = {
-    ['Creation of a subject-session-wise average image of varying protocols.  ' ...
-     '']
+  savg                = cfg_exbranch;
+  savg.tag            = 'savg';
+  savg.name           = 'Subject-session average';
+  savg.val            = {subjects, limits, opts, output};
+  savg.prog           = @cat_vol_savg;
+  savg.vout           = @vout_vol_savg;
+  savg.help           = {
+    ['Creation of a subject- and session-wise average image of varying protocols, i.e., averaging of rescans to improve SNR. ' ...
+     'The batch considers BIDS and allows the selection of the subject directories (sub-*). ' ...
+     'It looks for session-directories (ses-*) and the anatomical data (anat directory). ' ...
+     'The weightings are handled by the "Data separation list" and unwanted files can be excluded by the "Blacklist". ']
+     ''
+    ['It is assumed that rescans are within the same ses-*/anat/ directory (e.g. specified by a run-* entry). ' ...
+     'Otherwise, it is possible to define subjects with sessions directly.']     
+     ''
+    ['The processing includes a quick bias-correction and denoising before the data is averaged per session. ' ...
+     'In the case of many high-quality rescans, it is also possible to slightly increase the output resolution. ' ...
+     'Moreover, a subject average of the session average is created in an additional ses-avg directory. ']
      ''};
 return
 %_______________________________________________________________________
@@ -572,7 +604,7 @@ function mp2rage = conf_vol_mp2rage(prefix,verb,expert)
   if expert > 1
     bet.labels      = {'No (0)';'SPM (1)';'Optimized (2)';'Remove noisy background (only MP2Rage; 3)'};
     bet.values      = {0,1,2,3};
-    bet.help          = {'Apply skull-stripping to the image. The "SPM" version may miss some brain regions (e.g., motorcortex/occiptial). The optimized version try to add some tissue arround in without running too much into the skull. Alternativelly only the noisy regions of the background and skull can be removed/reduced.' ''};
+    bet.help          = {'Apply skull-stripping to the image. The "SPM" version may miss some brain regions (e.g., motorcortex/occiptial). The optimized version try to add some tissue around in without running too much into the skull. Alternatively only the noisy regions of the background and skull can be removed/reduced.' ''};
   else
     bet.labels      = {'No';'Yes';'Remove noisy background'};
     bet.values      = {0,2,3};

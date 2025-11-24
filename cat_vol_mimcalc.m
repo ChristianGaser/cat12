@@ -57,7 +57,8 @@ function out = cat_vol_mimcalc(job)
    
     % handle zipped BIDS 
     for ri = 1:numel(job.images)
-      [~,ff,ee] = spm_fileparts(job.images{ri}{si});
+      [pp,ff,ee] = spm_fileparts(job.images{ri}{si});
+      job.images{ri}{si} = fullfile(pp,[ff ee]); 
       cleanup = 0;
       if strcmp(ee,'.gz')
         if ~exist(fullfile( outdir{si}{ri} , ff),'file')

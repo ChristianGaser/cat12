@@ -70,7 +70,7 @@ function out = cat_vol_savg(job)
   SVNid = '$Rev: 1901 $';
   
   % get defaults
-  job = cat_vol_savg_get_defaults(job); 
+  job = get_defaults(job); 
 
 
   % for each subject
@@ -115,12 +115,17 @@ function out = cat_vol_savg(job)
   if isfield(job,'process_index'), spm('FnBanner',mfilename,SVNid); end
 
   methodstr = {'CATavg','CATlong','SPMlong','Brudfors'};
+  out.savg = {}; 
   %% main loop for all subjects
   %  ======================================================================
   for si = 1:numel( subjects ) 
     stime = clock;   
-    cat_io_cprintf([0.2 0.2 .5],'=== Subject %d %s ===\n', si, sname{si} );
-    
+    if job.opts.verb > 1
+      cat_io_cprintf([0.2 0.2 .5],'=== Subject %d %s ===\n', si, sname{si} );
+    else
+      cat_io_cprintf([0.2 0.2 .5],'Subject %d: %s\n',si, sname{si} );
+    end
+
     % =====================================================================
     % Average per sequence 
     % =====================================================================
@@ -152,11 +157,11 @@ function out = cat_vol_savg(job)
         end
 
         if job.opts.verb > 1
-          cat_io_cprintf([0.2 0.2 .5],'===  Subject %d: Average %4d %s rescans ===', ...
-            si, numel( subjects{si}{seqi}{sesi} ), job.limits.seplist{seqi} );
-        else
-          cat_io_cprintf([0.2 0.2 .5],'  Average %4d %s-rescans. ', ...
-            si, numel( subjects{si}{seqi}{sesi} ), job.limits.seplist{seqi} );
+          cat_io_cprintf([0.2 0.2 .5],'=== Subject %d - session %d: Average %d %s rescans ===\n', ...
+            si, sesi, numel( subjects{si}{seqi}{sesi} ), job.limits.seplist{seqi} );
+        elseif job.opts.verb
+          cat_io_cprintf([0.2 0.2 .5],'  Average %d %s-rescans in session %d.\n', ...
+            numel( subjects{si}{seqi}{sesi} ), job.limits.seplist{seqi} , sesi );
         end
     
         switch job.opts.avgmethod
@@ -179,11 +184,19 @@ function out = cat_vol_savg(job)
 
       % (2) average per subject
       % ===================================================================
-      if isempty( out.savg{si}{seqi} )  ||  isempty( out.savg{si}{seqi}{1} )  ||  numel(  out.savg{si}{seqi} ) < 2
+      if numel( out.savg ) < si || numel( out.savg{si} ) < seqi, continue; end
+      if isempty( out.savg{si}(seqi) ) || isempty( out.savg{si}{seqi} )  ||  ...
+         isempty( out.savg{si}{seqi}{1} )  ||  isscalar(  out.savg{si}{seqi} ) 
         out.subavg{si}{seqi,1} = ''; continue;
       end
 
-      cat_io_cprintf([0 0 1],'  Subject %d: Average %d %s-sessions. ', si, numel(out.savg{si}{seqi}), job.limits.seplist{seqi}), 
+      if job.opts.verb > 1
+        cat_io_cprintf([0 0 1],'  Subject %d: Average %d %s-sessions.\n\n', ...
+          si, numel(out.savg{si}{seqi}), job.limits.seplist{seqi}), 
+      else
+        cat_io_cprintf([0 0 1],'  Average %d %s-sessions.\n', ...
+          numel(out.savg{si}{seqi}), job.limits.seplist{seqi}), 
+      end
 
       switch job.opts.avgmethod
         case 1
@@ -224,51 +237,88 @@ function biascorrection(subject,job)
 
   for vi = 1:numel(subject)
     V  = spm_vol( subject{vi} );
-    Y  = spm_read_vols( V );
+    Y  = single(spm_read_vols( V ));
     
     vx_vol = sqrt(sum(V.mat(1:3,1:3).^2)); 
     if job.opts.bias > 1
       Yo = Y; 
       
-      % iteration
+      
+      %% iteration
       Y = Yo; 
-      for i=1:3
-        % use lower resolution to denoise and for speedup 
-        [Yr,redR] = cat_vol_resize(Y,'reduceV',vx_vol,max(1.5,min(4, vx_vol*2 )),32,'meanm'); 
-        % use the gradient to e
-        Ygr = cat_vol_grad(Yr) ./ Yr;
-        Yt  = (Yr ./ prctile(Yr(:),90)) > .2; 
-        Yt2 = Yt & smooth3(Ygr < prctile(Ygr( Yt(:) ),20)) > .5; 
+      for i = 0:(job.opts.bias-1)
+        %% use lower resolution to denoise and for speedup 
+        [Yr,redR] = cat_vol_resize(Y,'reduceV',vx_vol,max(1.5,min(3, vx_vol*2 )),32,'meanm'); 
+
+        % use the gradient to estimate main tissues such as the WM
+        Ygr = cat_vol_grad(Yr,vx_vol) ./ Yr;
+        % avoid edges of the image
+        Ybb = false(size(Ygr)); Ybb(2:end-1,2:end-1,2:end-1) = true; 
+        
+        % object = brain/head
+        Yr  = Yr ./ prctile(Yr(Ygr(:)~=0 & Ygr(:)<.3),90); % 80-90
+       % Yr  = cat_vol_median3(Yr,Yr>.1); % quick denoising
+        Yt  = cat_vol_morph(Yr > .2 & Ybb,'ldc'); 
+        Ytd = cat_vbdist( single(~Yt) ); Ytd = Ytd ./ max(Ytd(:));
+        
+        % brain tissue
+        Yt2 = Yr>.3 & Yt & (Ygr./Ytd.^1.2 < prctile(Ygr( Yt(:) ),50)) & Ytd>.3 & (Ygr < prctile(Ygr( Yt(:) ),80)); 
         Yt2 = cat_vol_morph(Yt2,'l'); 
         Ygg = Yt .* (Yt - Ygr); 
-        gth = prctile(Ygg(Yt2(:)),50); 
-        Ygg = cat_vol_resize(Ygg,'dereduceV',redR);
+        gth = prctile(Ygg(Yt2(:)>0 & Ygg(:)>0),50); 
+
+        % intial bias field to remove inproper values
+        Ywr  = cat_vol_approx( Yr .* (Yt2 & Ygg>gth)); 
+        Ywr  = spm_smooth3(Ywr,60 / 2^i ./ vx_vol); 
+        Ygg(Yr ./ Ywr < 0.95 |  Yr ./ Ywr > max(1.2,1.5 - .05*i)) = 0;
+
+        % estimate and apply final interative bias field 
+        Ywr = cat_vol_approx( Yr .* (Yt2 & Ygg>gth & Ygr<max(.05,1-gth))); 
+        Ywr = spm_smooth3(Ywr,60 / 2^i ./ vx_vol); 
+        
+        % go back to native resolution and apply bias field
         Yt2 = cat_vol_resize(Yt2,'dereduceV',redR) > .5;
-        Yw  = cat_vol_smooth3X( cat_vol_approx(Y .* (Yt2 & Ygg>gth)) , 16);
-        Ygg(Y ./ Yw < 0.95  &  Y ./ Yw > 1.2) = 0;
-        Yw  = cat_vol_smooth3X( cat_vol_approx(Y .* (Yt2 & Ygg>gth)) , 16);
-        Y  = Y ./ Yw;
-        Y  = Y / prctile(Y(Yt2(:)),80); 
+        Yw  = cat_vol_resize(Ywr,'dereduceV',redR);
+        Yw  = Yw ./ prctile(Yw(Yt2(:)),90) * prctile(Y(Yt2(:)),90);  
+        Y   = Y ./ Yw;
       end
       
-      % final correction
-      Yw = cat_vol_smooth3X( Yo ./ Y , 4);
-      Yw = Yw / prctile(Y(Yt2(:)),80); 
+      %% final correction
+      Yw = ( Yo/prctile(Yo(Yt2(:)),90) ) ./ ( Y/prctile(Y(Yt2(:)),90));  
+      Ywa = cat_vol_approx( Yw ); Yw(Yw>10 | Yw<.01) = Ywa(Yw>10 | Yw<.01);
+      Yw = spm_smooth3(Yw,60 / (job.opts.bias-1) ./ vx_vol); 
+      Yw = Yw / prctile(Yw(Yt2(:)),90) * prctile(Yo(Yt2(:)),90); 
       Ym = Yo ./ Yw;
      
     else
     % only intensity normalization
-      Ym = Y / prctile(Y(:),80); 
+      Ym = Y / prctile(Y(:),90); 
     end
     
     %% write
     V.dt(1)    = 4; 
     V.pinfo(1) = 1e-4;
+    V.pinfo(2) = 0; 
     spm_write_vol(V,Ym);
   end
   
   if job.opts.verb>1
     fprintf('%5.0fs\n',etime(clock,stime)); 
+  end
+end
+function Y = spm_smooth3(Y,sx) 
+%spm_smooth3. Avoid zeros in spm_smooth
+  if sx > 8
+    [Yr,redR] = cat_vol_resize(Y,'reduceV',1,2,32,'meanm'); 
+    Yr = spm_smooth3(Yr,sx/2);
+    Y  = cat_vol_resize(Yr,'dereduceV',redR);
+  else
+ %   vrY = var(Y(:));
+    mdY = mean(Y(:)); 
+    Y   = Y - mdY; 
+    spm_smooth(Y,Y,sx); 
+  % Y   = Y / var(Y(:)) * vrY; 
+    Y   = Y +  mdY; 
   end
 end
 %--------------------------------------------------------------------------
@@ -324,7 +374,11 @@ function [subjects,sname,sBIDS,devdir] = checksubjectfiles(sfiles,jobblacklist,j
   blacklist = false(size(sfiles)); 
   if ~isempty(jobblacklist)
     for sni = 1:numel(sfiles)
-      blacklist(sni) = any( cellfun( 'isempty' , strfind(sfiles, jobblacklist ))==0 ); 
+      for ji = 1:numel(jobblacklist)
+        if any( cellfun( 'isempty' , strfind(sfiles, jobblacklist{ji} ))==0 )
+          blacklist(sni) = 0; 
+        end
+      end
     end
   end
 
@@ -346,12 +400,20 @@ function [subjects,sname,sBIDS,devdir] = checksubjectfiles(sfiles,jobblacklist,j
   devdir = devdir(seplist | ~blacklist); 
 end
 %--------------------------------------------------------------------------
-function job = cat_vol_savg_get_defaults(job)
+function job = get_defaults(job)
 %cat_vol_savg_get_defaults. Default settings
 
   % update this field from char to cell
-  if isfield(job,'limits') && isfield(job.limits,'seplist')
-    job.limits.seplist = strsplit(job.limits.seplist); 
+  if isfield(job,'limits') 
+    if isfield(job.limits,'seplist')
+      job.limits.seplist = strsplit(job.limits.seplist); 
+    end
+    if isfield(job.limits,'blacklist')
+      job.limits.blacklist = strsplit(job.limits.blacklist); 
+    end
+    if isfield(job.limits,'reqlist') 
+      job.limits.reqlist = strsplit(job.limits.reqlist); 
+    end
   end
 
   %
@@ -371,7 +433,6 @@ function job = cat_vol_savg_get_defaults(job)
     def.opts.nproc            = 0; % run multiple MATLAB processes
   def.opts.sanlm            = 0; % all 
   def.opts.trimming         = 1; 
-  def.opts.verb             = 1; % all  
   def.opts.cleanup          = 1; % remove temporary files
   
   % == anyavg / CAT
@@ -407,11 +468,15 @@ function job = cat_vol_savg_get_defaults(job)
     def.output.writeBrainmask = 0; 
     def.output.writeSDmap     = 0; 
   def.output.cleanup          = 1; 
+  def.output.verb             = 1; % all  
   def.output.copySingleFiles  = 1; 
   def.CATDir                  = fullfile(spm('dir'),'toolbox','cat12');
 
   % update job variable
   job = cat_io_checkinopt(job,def); 
+
+  % inner field
+  job.opts.verb = job.output.verb;
 
   % add system dependent extension to CAT folder
   if ispc
@@ -593,16 +658,35 @@ function [subjects,sBIDS,sname,devdir] = getFiles(job)
               end
             end
           end  
-        elseif strcmp(FN{fni},'session') % 'subjects') 
+        elseif strcmp(FN{fni},'subject') % 'subjects') 
           subi = subi + 1; 
-          if iscell( job.subjects{si}.(FN{fni}){1} ) 
+          if iscell( job.subjects{si}.(FN{fni}) ) 
             for sesi = 1:numel( job.subjects{si}.(FN{fni}) ) 
               for seqi = 1:numel(job.limits.seplist)
-                sfiles = job.subjects{si}.(FN{fni}){sesi};
+                %%
+                if isfield( job.subjects{si}.(FN{fni}){sesi} , 'session')
+                  sfiles = job.subjects{si}.(FN{fni}){sesi}.session;
+                else
+                  anyAVGfiles = cat_vol_findfiles( job.subjects{si}.(FN{fni}){sesi}.sessiondirs{sesi} , ['*' job.output.prefix '*' job.limits.seplist{seqi} '.nii']); 
+                  sfiles      = cat_vol_findfiles( job.subjects{si}.(FN{fni}){sesi}.sessiondirs{sesi} , ['*' job.limits.seplist{seqi} '.nii']); 
+                  sfiles      = [sfiles; cat_vol_findfiles( job.subjects{si}.(FN{fni}){sesi}.sessiondirs{sesi} , ['*' job.limits.seplist{seqi} '.nii.gz'])];  %#ok<AGROW>  
+                  sfiles      = setdiff(sfiles,anyAVGfiles);
+                  
+                end
+
                 for sii = numel(sfiles):-1:1
                   [pp,ff,ee] = spm_fileparts(sfiles{sii});
                   sfiles{sii} = fullfile(pp,[ff ee]); 
                 end
+          
+                if isfield(job.limits,'blacklist') && ~isempty(job.limits.blacklist)
+                  sfiles( cat_io_contains( sfiles , job.limits.blacklist ) ) = []; 
+                end
+        
+                if isfield(job.limits,'reqlist') && ~isempty(job.limits.reqlist)
+                  sfiles( ~cat_io_contains( sfiles , job.limits.reqlist ) ) = []; 
+                end
+
                 sfiles( ~cat_io_contains( sfiles , job.limits.seplist{seqi}) ) = []; 
                 [subjects{subi}{seqi}{sesi}, sname{subi}, sBIDS(subi), devdir{subi}{seqi}{sesi}] = ...
                   checksubjectfiles(sfiles, job.limits.blacklist, job.limits.seplist, job.output.BIDSdir); %#ok<AGROW>  
@@ -616,6 +700,15 @@ function [subjects,sBIDS,sname,devdir] = getFiles(job)
                 [pp,ff,ee] = spm_fileparts(sfiles{sii});
                 sfiles{sii} = fullfile(pp,[ff ee]); 
               end
+
+              if isfield(job.limits,'blacklist') && ~isempty(job.limits.blacklist)
+                sfiles( cat_io_contains( sfiles , job.limits.blacklist ) ) = []; 
+              end
+      
+              if isfield(job.limits,'reqlist') && ~isempty(job.limits.reqlist)
+                sfiles( ~cat_io_contains( sfiles , job.limits.reqlist ) ) = []; 
+              end
+              
               sfiles( ~cat_io_contains( sfiles , job.limits.seplist{seqi}) ) = []; 
               [subjects{si}{seqi}{sesi}, sname{si}, sBIDS(si), devdir{si}{seqi}{sesi}] = ...
                 checksubjectfiles(sfiles, job.limits.blacklist, job.limits.seplist, job.output.BIDSdir); %#ok<AGROW>  
@@ -625,13 +718,38 @@ function [subjects,sBIDS,sname,devdir] = getFiles(job)
           subi = subi + 1; 
           sesi = 1; 
           for seqi = 1:numel(job.limits.seplist)
-            sfiles = job.subjects{si}; 
+            sfiles = job.subjects{si}.session; 
+
+            if isfield(job.limits,'blacklist') && ~isempty(job.limits.blacklist)
+              sfiles( cat_io_contains( sfiles , job.limits.blacklist ) ) = []; 
+            end
+    
+            if isfield(job.limits,'reqlist') && ~isempty(job.limits.reqlist)
+              sfiles( ~cat_io_contains( sfiles , job.limits.reqlist ) ) = []; 
+            end
+
             sfiles( ~cat_io_contains( sfiles , job.limits.seplist{seqi}) ) = []; 
             [subjects{subi}{seqi}{sesi}, sname{subi}, sBIDS(subi), devdir{subi}{seqi}{sesi}] = ...
               checksubjectfiles(sfiles, job.limits.blacklist, job.limits.seplist, job.output.BIDSdir); %#ok<AGROW>  
           end
         end
       end
+    end
+  end
+
+  % remove empty run and subjects but not sessions!
+  for si = numel( subjects ):-1:1
+    for seqi = numel( subjects{si} ):-1:1
+      for runi = numel( subjects{si}{seqi} ):-1:1
+        if isempty(subjects{si}{seqi}{runi})
+          devdir{si}{seqi}(runi)   = []; 
+          subjects{si}{seqi}(runi) = [];
+        end
+      end
+    end
+    if isempty(subjects{si})
+      devdir(si)   = []; 
+      subjects(si) = [];
     end
   end
 
@@ -683,10 +801,11 @@ function [catlong,outcatra] = catlong(subject,methodstr,job,seqi,subavg)
   % matlabbatch
   matlabbatch{1}.spm.tools.cat.tools.series.bparam            = 1e6; % 1e4 created biased high-res images
   matlabbatch{1}.spm.tools.cat.tools.series.use_brainmask     = 1;
-  matlabbatch{1}.spm.tools.cat.tools.series.reduce            = job.opts.trimming; % trimming
+  matlabbatch{1}.spm.tools.cat.tools.series.reduce            = job.opts.reduce; % trimming
   matlabbatch{1}.spm.tools.cat.tools.series.setCOM            = job.opts.setCOM; % COM 
   matlabbatch{1}.spm.tools.cat.tools.series.noise             = 0; % not here
   matlabbatch{1}.spm.tools.cat.tools.series.write_avg         = 1; 
+  matlabbatch{1}.spm.tools.cat.tools.series.sharpen           = job.opts.sharpen; 
   matlabbatch{1}.spm.tools.cat.tools.series.write_rimg        = 1 - job.output.writeRescans;
   matlabbatch{1}.spm.tools.cat.tools.series.data              = subject;
   matlabbatch{1}.spm.tools.cat.tools.series.isores            = job.opts.res;
