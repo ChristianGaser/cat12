@@ -4,6 +4,11 @@ function out = cat_vol_avg(job)
 %
 % FORMAT out = cat_vol_avg(job)
 % job.data      - data array of input files
+% job.weighting - weighting vector for input files
+%                 If you want to use weighting maps checkto mimcalc.
+% job.write_var - Write also the variance map with suffix '_var'.
+%                 We use the suffix as it is connected to the avg map
+%                 and both represent single maps in a dataset.
 % job.output    - output name
 % job.outdir    - output directory
 %
@@ -21,8 +26,8 @@ function out = cat_vol_avg(job)
 % interactive call function
 if ~nargin
   job.outdir{1} = '';
-  job.data = cellstr(spm_select(Inf,'image','Select (spatially registered) images for average'));
-  [tmp, name]=spm_str_manip(spm_str_manip(job.data,'t'),'C');
+  job.data  = cellstr(spm_select(Inf,'image','Select (spatially registered) images for average'));
+  [~, name] = spm_str_manip(spm_str_manip(job.data,'t'),'C');
   pos = strfind(name.e,',1');
   if ~isempty(pos)
     name.e = name.e(1:pos-1);
@@ -58,26 +63,61 @@ if max(max(max(abs(diff(cat(3,N.mat),1,3))))) > 1e-8
 end
 
 d = N(1).dat.dim;
-
 % extend dimensions if necessary
 d = [d ones(1, 5-length(d))];
 
+
+if isfield(job,'weighting') && ~isempty(job.weighting)
+  if numel(job.weighting)~=length(N)
+    error('number of weights has to be identical to the number of images')
+  end
+  weighting = job.weighting ./ sum(job.weighting); 
+else
+  weighting = repmat( 1/length(N) , 1, length(N));
+end 
+
+
+% write average map
 avg = zeros(d);
 
 for i = 1:length(N)
   for j = 1:d(4)
     for k = 1:d(5)
-      avg(:,:,:,j,k) = avg(:,:,:,j,k) + N(i).dat(:,:,:,j,k);
+      avg(:,:,:,j,k) = avg(:,:,:,j,k) + N(i).dat(:,:,:,j,k) * weighting(i) ;
     end
   end
 end
-
-avg = avg/length(N);
 
 Nout = N(1);
 Nout.dat.fname = out.files{1};
 create(Nout);
 Nout.dat(:,:,:,:,:) = avg;
+
+% cmd line output
+cmd = 'spm_image(''display'',''%s'')';
+fprintf('Average Image:  %s\n', spm_file(out.files{1}, 'link', cmd) );
+
+
+% write variance map
+if isfield(job,'write_var') && job.write_var
+  var = zeros(d);
+  for i = 1:length(N)
+    for j = 1:d(4)
+      for k = 1:d(5)
+        var(:,:,:,j,k) = var(:,:,:,j,k)  +  (avg(:,:,:,j,k) - N(i).dat(:,:,:,j,k)).^2 * weighting(i) ;
+      end
+    end
+  end
+  
+  Nout = N(1);
+  Nout.dat.fname = spm_file( out.files{1}, 'suffix', '_var');
+  create(Nout);
+  Nout.dat(:,:,:,:,:) = var; % ./ max(eps,avg);
+
+  % cmd line output
+  cmd = 'spm_image(''display'',''%s'')';
+  fprintf('Variance Image: %s\n', spm_file(Nout.dat.fname, 'link', cmd) );
+end
 
 if ~nargout
   clear out

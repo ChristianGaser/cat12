@@ -4600,11 +4600,27 @@ function avg_img = conf_vol_average(data,outdir)
   output.num      = [0 Inf];
   output.val      = {'avg.nii'};
 
+  weighting         = cfg_entry;
+  weighting.tag     = 'weighting';
+  weighting.name    = 'Weighting';
+  weighting.strtype = 'r';
+  weighting.val     = {[]};
+  weighting.num     = [0 Inf];
+  weighting.help    = {'Weighting vector for input files that has to have the same number of entries as selected images. The weighing is normalized, e.g., a weighting [1 2 3] for 3 images means that the last image three counts 50%, image two 33.33% and image one 16.67%. If you want to use weighting maps see mimcalc batch.'};
+
+  write_var         = cfg_menu;
+  write_var.tag     = 'write_var';
+  write_var.name    = 'Save variance map';
+  write_var.labels  = {'No','Yes'};
+  write_var.values  = {0 1};
+  write_var.def     = @(val) 0;
+  write_var.help    = {'Save (weighted) variance map with suffix "_var".' ''};
+  
   % main
   avg_img         = cfg_exbranch;
   avg_img.tag     = 'avg_img';
   avg_img.name    = 'Image Average';
-  avg_img.val     = {data output outdir};
+  avg_img.val     = {data weighting write_var output outdir};
   avg_img.help    = {'This function is for calculating the average of a set of images, which should be of same dimension and voxel size (i.e. after spatial registration).'};
   avg_img.prog    = @cat_vol_avg;
   avg_img.vout    = @vout_avg;
