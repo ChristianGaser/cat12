@@ -362,7 +362,12 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
         cat_io_cprintf('com','No images for QA!\n'); 
         return
       end
-      
+ 
+      % remove num entry from SPM GUI input
+      Po  = cat_io_strrep(Po, {'.nii.gz,1','.nii,1'},{'.nii.gz','.nii'}); 
+      Pm  = cat_io_strrep(Pm, {'.nii.gz,1','.nii,1'},{'.nii.gz','.nii'}); 
+      Pp0 = cat_io_strrep(Pp0,{'.nii.gz,1','.nii,1'},{'.nii.gz','.nii'}); 
+
       % if files are zipped
       Poe = cellfun(@(x) exist(x,'file'), Po); 
       Po(Poe==0) = spm_file(Po(Poe==0),'ext','.nii.gz'); clear Poe 
