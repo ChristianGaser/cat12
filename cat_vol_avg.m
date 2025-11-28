@@ -100,6 +100,7 @@ fprintf('Average Image:  %s\n', spm_file(out.files{1}, 'link', cmd) );
 
 % write variance map
 if isfield(job,'write_var') && job.write_var
+  % estimate variance
   var = zeros(d);
   for i = 1:length(N)
     for j = 1:d(4)
@@ -109,14 +110,24 @@ if isfield(job,'write_var') && job.write_var
     end
   end
   
-  Nout = N(1);
-  Nout.dat.fname = spm_file( out.files{1}, 'suffix', '_var');
-  create(Nout);
-  Nout.dat(:,:,:,:,:) = var; % ./ max(eps,avg);
-
-  % cmd line output
-  cmd = 'spm_image(''display'',''%s'')';
-  fprintf('Variance Image: %s\n', spm_file(Nout.dat.fname, 'link', cmd) );
+  for i=1:min(2,job.write_var)
+    % write output
+    Nout = N(1);
+    if i==1
+      out.files{i+1} = spm_file( out.files{1}, 'suffix', '_var');
+      var2 = var;
+    else
+      out.files{i+1} = spm_file( out.files{1}, 'suffix', '_vardivavg');
+      var2 = var ./ max(eps,abs(avg));
+    end
+    Nout.dat.fname = out.files{i+1};
+    create(Nout);
+    Nout.dat(:,:,:,:,:) = var2;
+    
+    % cmd line output
+    cmd = 'spm_image(''display'',''%s'')';
+    fprintf('Variance Image: %s\n', spm_file( out.files{i+1} , 'link', cmd) );
+  end
 end
 
 if ~nargout
