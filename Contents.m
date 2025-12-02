@@ -1,5 +1,5 @@
 % Computational Anatomy Toolbox
-% Version 2916 (CAT12.9) 2025-08-25
+% Version 2946 (CAT12.9) 2025-11-13
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -157,7 +157,7 @@
 %   Template_T1.nii                  - average of 555 T1 images of IXI database in MNI152 space after 
 %                                      Geodesic Shooting
 %   aal3.*                           - AAL3 atlas
-%   anatomy3.*                       - Anatomy2 atlas
+%   anatomy3.*                       - Anatomy3 atlas
 %   cobra.*                          - CoBra atlas
 %   hammers.*                        - Hammers atlas
 %   ibsr.*                           - IBSR atlas

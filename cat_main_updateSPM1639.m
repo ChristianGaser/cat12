@@ -639,8 +639,9 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   end
  
   stime2 = cat_io_cmd(' ','g5','',job.extopts.verb-1,stime2); 
-  fprintf('%5.0fs\n',etime(clock,stime));
-
+  if job.extopts.verb
+    fprintf('%5.0fs\n',etime(clock,stime));
+  end
   
   % some reports 
   for i=1:numel(Ycls), res.ppe.SPMvols1(i) = cat_stat_nansum(single(Ycls{i}(:)))/255 .* prod(vx_vol) / 1000; end
