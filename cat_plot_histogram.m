@@ -237,6 +237,7 @@ else
   end
 end
 
+y_all = [];
 for j = 1:n
   y = dropNaNs(cdata{j});
   if ~isempty(opt.dist)
@@ -251,6 +252,7 @@ for j = 1:n
   else
     H0 = hist(y,X0);
     Hfit(j,:) = H0;
+    y_all = [y_all; y];
   end
 
   if opt.norm_frequency
@@ -346,10 +348,18 @@ if ~isempty(opt.xlim) && numel(opt.xlim) == 2
 end
 
 if ~isempty(opt.ylim) && numel(opt.ylim) == 2
-  xlim(opt.ylim)
+  ylim(opt.ylim)
 end
 
 grid minor
+
+if isempty(opt.dist)
+  figure
+  hist(y_all, X0)
+  if ~isempty(opt.xlim) && numel(opt.xlim) == 2
+    xlim(opt.xlim)
+  end
+end
 
 if nargout
   varargout{1} = HP;
