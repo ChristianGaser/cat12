@@ -15,6 +15,7 @@ function out = cat_io_data2mat(opt,par,scaling)
 % additional parameters for volume data only:
 % opt.resolution - resampling spatial resolution for volume data
 % opt.mask       - optional brainmask for volume data
+% opt.mask_th    - optional threshold for brainmask for volume data
 % opt.fwhm       - optional Gaussian smoothing kernel size in FWHM
 %
 % additional parameters to be saved with mat file:
@@ -75,6 +76,11 @@ if isfield(opt,'data') % use simpler field structure for call as script
   end
   if isfield(opt,'mask')
     brainmask = opt.mask;
+  end
+  if isfield(opt,'mask_th')
+    mask_th = opt.mask_th;
+  else
+    mask_th = 0.5;
   end
   if isfield(opt,'resolution')
     resolution = opt.resolution;
@@ -227,6 +233,10 @@ C = zeros(n_all_subjects);
 
 % 3D data
 if ~spm_mesh_detect(V{1}(1))
+
+  if ~exist('mask_th') || isempty(mask_th)
+    mask_th = 0.5;
+  end
   M1     = cell(Vres.dim(3),1);
   
   if isempty(brainmask)
@@ -243,7 +253,7 @@ if ~spm_mesh_detect(V{1}(1))
     if ~isempty(brainmask)
       Mm  = Vres.mat\Vm.mat\M;
       mask_slice = spm_slice_vol(Vm,Mm,Vres.dim(1:2),1);
-      mask_ind(:,:,sl) = mask_slice > 0.5;
+      mask_ind(:,:,sl) = mask_slice > mask_th;
     end
     M1{sl} = Vres.mat\V{1}(1).mat\M;
   end
