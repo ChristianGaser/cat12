@@ -50,7 +50,7 @@ install: copy_longmode
 	-@test ! -d ${TARGET} || rm -rf ${TARGET}/*
 	-@mkdir -p ${TARGET}
 	-@cp -R ${FILES} ${TARGET}/
-	-@gzip -d ${TARGET}/*/*.nii.gz
+	-@gzip -df ${TARGET}/*/*.nii.gz
 
 #install on UltraMax
 install2: copy_longmode
