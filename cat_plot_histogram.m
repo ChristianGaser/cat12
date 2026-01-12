@@ -14,6 +14,7 @@ function varargout = cat_plot_histogram(data,opt)
 % ylim           = [];
 % dist           = 'kernel' (normal, gamma, rician, rayleigh, poisson, weibull)
 %                  see fitdist for all distributions
+% mean           = plot average histogram of all data
 % out            = histogram values
 % out2           = statistic of histogram values
 % ______________________________________________________________________
@@ -61,6 +62,7 @@ def.xrange         = [];
 def.xlim           = [];
 def.ylim           = [];
 def.dist           = 'kernel';
+def.mean           = n > 12;
 
 opt = cat_io_checkinopt(opt,def);
 
@@ -304,14 +306,6 @@ for j = 1:n
   end
 end
 
-% check whether there are (almost) identical data
-Hcorr = corrcoef(H');
-Hcorr = Hcorr - triu(Hcorr);
-[xc,yc] = find(Hcorr > 0.99999);
-for i = 1:numel(xc)
-%  fprintf('File %s and %s are (almost) identical\n',deblank(data(xc(i),:)),deblank(data(yc(i),:)));
-end
-
 if ~isempty(opt.dist)
   HP  = plot(X(:,2:end-1)', Hfit(:,2:end-1)');
   hold on
@@ -360,6 +354,22 @@ if isempty(opt.dist)
     xlim(opt.xlim)
   end
 end
+
+if opt.mean
+  figure(11)
+  HP = plot(X(1,2:end-1)', mean(H(:,2:end-1))');  
+  legend('Average histogram')
+  if ~isempty(opt.xlim) && numel(opt.xlim) == 2
+    xlim(opt.xlim)
+  end
+  
+  if ~isempty(opt.ylim) && numel(opt.ylim) == 2
+    ylim(opt.ylim)
+  end
+end
+
+
+grid minor
 
 if nargout
   varargout{1} = HP;
