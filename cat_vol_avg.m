@@ -9,6 +9,7 @@ function out = cat_vol_avg(job)
 % job.write_var - Write also the variance map with suffix '_var'.
 %                 We use the suffix as it is connected to the avg map
 %                 and both represent single maps in a dataset.
+% job.write_med - Write median map (for atlases). 
 % job.output    - output name
 % job.outdir    - output directory
 %
@@ -98,35 +99,88 @@ cmd = 'spm_image(''display'',''%s'')';
 fprintf('Average Image:  %s\n', spm_file(out.files{1}, 'link', cmd) );
 
 
+
 % write variance map
-if isfield(job,'write_var') && job.write_var
+if isfield(job,'write_var') && job.write_var > 0
   % estimate variance
-  var = zeros(d);
+  var = zeros(d); % as image
+  out.avgvar = zeros(1,length(N)); % as one case-specific value
   for i = 1:length(N)
     for j = 1:d(4)
       for k = 1:d(5)
-        var(:,:,:,j,k) = var(:,:,:,j,k)  +  (avg(:,:,:,j,k) - N(i).dat(:,:,:,j,k)).^2 * weighting(i) ;
+        varvol         = (avg(:,:,:,j,k) - N(i).dat(:,:,:,j,k)).^2 * weighting(i); 
+        out.avgvar(i)  = out.avgvar(i) + mean(varvol(:).^2).^.5; 
+        var(:,:,:,j,k) = var(:,:,:,j,k)  +  varvol;
       end
     end
   end
   
-  for i=1:min(2,job.write_var)
+  for xi=1:min(2,job.write_var)
     % write output
     Nout = N(1);
-    if i==1
-      out.files{i+1} = spm_file( out.files{1}, 'suffix', '_var');
+    if xi==1
+      out.files{xi+1} = spm_file( out.files{1}, 'suffix', '_var');
       var2 = var;
     else
-      out.files{i+1} = spm_file( out.files{1}, 'suffix', '_vardivavg');
+      out.files{xi+1} = spm_file( out.files{1}, 'suffix', '_vardivavg');
       var2 = var ./ max(eps,abs(avg));
     end
-    Nout.dat.fname = out.files{i+1};
+    Nout.dat.fname = out.files{xi+1};
     create(Nout);
     Nout.dat(:,:,:,:,:) = var2;
     
     % cmd line output
     cmd = 'spm_image(''display'',''%s'')';
-    fprintf('Variance Image: %s\n', spm_file( out.files{i+1} , 'link', cmd) );
+    fprintf('Variance Image: %s\n', spm_file( out.files{xi+1} , 'link', cmd) );
+  end
+end
+
+
+% write median map
+if isfield(job,'write_med') && job.write_med
+  % sum( N(1).dat(:) == round(N(1).dat(:)) ) / numel(N(1).dat(:)) > .5 % 
+  avg = zeros(d,'single');
+  for j = 1:d(4)
+    for k = 1:d(5)
+      avg2 = zeros([d(1:3),length(N)],'single');
+      for i = 1:length(N) 
+        avg2(:,:,:,i) = N(i).dat(:,:,:,j,k);
+      end
+      avg2(isnan(avg2)) = 0; 
+      avg(:,:,:,j,k) = mode(avg2, 4);
+      clear avg2; 
+    end
+  end
+  Nout = N(1);
+  Nout.dat.fname = spm_file( out.files{1}, 'suffix', '_md');
+  create(Nout);
+  Nout.dat(:,:,:,:,:) = avg;
+  out.files{3} = Nout.dat.fname;
+
+  % cmd line output
+  cmd = 'spm_image(''display'',''%s'')';
+  fprintf('Median Image:   %s\n', spm_file( out.files{3} , 'link', cmd) );
+
+  if isfield(job,'write_var') && job.write_var
+    var = zeros(d,'single'); % as image
+    for i = 1:length(N)
+      for j = 1:d(4)
+        for k = 1:d(5)
+          var(:,:,:,j,k) = var(:,:,:,j,k) + single(avg == N(i).dat(:,:,:,j,k)) * weighting(i);
+        end
+      end
+    end
+  
+    Nout = N(1);
+    Nout.dat = file_array(spm_file( out.files{1}, 'suffix', 'mdov'), ...
+                  Nout.dat.dim(1:3),[spm_type('FLOAT32'), spm_platform('bigend')],0,1,0);
+    create(Nout);
+    Nout.dat(:,:,:,:,:) = var;
+    out.files{4} = Nout.dat.fname;
+
+    % cmd line output
+    cmd = 'spm_image(''display'',''%s'')';
+    fprintf('Med-Diff Image: %s\n', spm_file( out.files{4} , 'link', cmd) );
   end
 end
 
