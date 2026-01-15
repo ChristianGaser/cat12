@@ -140,7 +140,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
     end
 
 
-    if job.extopts.inv_weighting  &&  cat_stat_nanmedian(Ysrc(P(:,:,:,2)>128)) > cat_stat_nanmedian(Ysrc(P(:,:,:,3)>128))
+    if isfield(job.extopts,'inv_weighting') && job.extopts.inv_weighting  &&  cat_stat_nanmedian(Ysrc(P(:,:,:,2)>128)) > cat_stat_nanmedian(Ysrc(P(:,:,:,3)>128))
     %% RD202501: added extra cleanup to avoid blood-vessel-like structures in PD/FLAIR 
       stime2 = cat_io_cmd('  Update PD input','g5','',job.extopts.verb-1,stime2);
 
