@@ -50,7 +50,8 @@ function out = cat_main_report(job)
       'The number of xml and label maps has to be equal.');
   end
 
-  
+  out.files = {}; 
+  out.filesj = {}; 
   for fi = 1:numel(job.files)
 
     % read xml; 
@@ -112,7 +113,21 @@ function out = cat_main_report(job)
     if ~isempty( Vp0 )
       Yp0 = spm_read_vols( Vp0 );
     else
-      Yp0 = []; 
+      % try to locate the segmentation file p0*.nii 
+      if isfield(xml,'filedata')
+        Pp0 = xml.filedata.Fp0;
+      end
+      if ~exist(Pp0,'file')
+        Pp0a = strrep(Pp0,[filesep 'mri' filesep],filesep); 
+        if exist(Pp0a,'file'), Pp0 = Pp0a; end
+      end
+      % if found load it otherwise keep it empty
+      if exist( Pp0 ,'file')
+        Vp0 = spm_vol( Pp0 ); 
+        Yp0 = spm_read_vols( Vp0 );
+      else
+        Yp0 = []; 
+      end
     end
 
     %% create if Yy is avaiable 
@@ -187,6 +202,9 @@ function out = cat_main_report(job)
     xmlres.stime      = clock; 
     xmlres.image      = Vmi;
     xmlres.image0     = Vmi; 
+    if isfield(xml.parameter,'vbm') && ~isfield(xml.parameter,'extopts')
+      xml.parameter.extopts = xml.parameter.vbm.extopts;
+    end
     xmlres.bb         = [-72 -108 -72; 72 72 72] + [-1 -1 -1; 1 1 1] .* xml.parameter.extopts.bb;
 
     % prepare str for parameters 

@@ -37,7 +37,8 @@ function str = cat_main_reportstr(job,res,qa)
   mark2grad   = @(mark) grades{max(1,min([numel(grades),max(max(isnan(real(mark))*numel(grades),1),round((real(mark)+2/3)*3-3))]))};
 
   catdef = cat_get_defaults; 
-  
+  job    = cat_io_checkinopt(job,catdef); 
+
 % blue for none defaults
 % orange for warning changes 
   npara  = '\color[rgb]{0  0   0}'; 
@@ -98,8 +99,12 @@ function str = cat_main_reportstr(job,res,qa)
     if job.extopts.new_release,  str{1}(end).value = [str{1}(end).value(1:end-1) '\bf\color[rgb]{0 0.2 1}n\color[rgb]{0 0 0}\sf)']; end  
     if job.extopts.experimental, str{1}(end).value = [str{1}(end).value(1:end-1) '\bf\color[rgb]{0 0.2 1}x\color[rgb]{0 0 0}\sf)']; end  
   else
-    if job.extopts.new_release,  str{1}(end).value = [str{1}(end).value(1:end-1) '\bf\color[rgb]{0 0.2 1}n\color[rgb]{0 0 0}']; end  
-    if job.extopts.experimental, str{1}(end).value = [str{1}(end).value '\bf\color[rgb]{0 0.2 1}x']; end  
+    if isfield(job.extopts,'new_release') && job.extopts.new_release
+      str{1}(end).value = [str{1}(end).value(1:end-1) '\bf\color[rgb]{0 0.2 1}n\color[rgb]{0 0 0}']; 
+    end  
+    if isfield(job.extopts,'experimental') && job.extopts.experimental
+      str{1}(end).value = [str{1}(end).value '\bf\color[rgb]{0 0.2 1}x']; 
+    end  
   end
   if job.extopts.ignoreErrors > 2, str{1}(end).value = [str{1}(end).value '    \bf\color[rgb]{0.8 0 0}Ignore Errors!']; end  
   if isfield(res,'long')
@@ -336,7 +341,12 @@ function str = cat_main_reportstr(job,res,qa)
     if job.extopts.WMHC      == catdef.extopts.WMHC,       cp{1} = npara; else, cp{1} = cpara; end 
     if job.extopts.SLC       == catdef.extopts.SLC,        cp{2} = npara; else, cp{2} = cpara; end 
     if isfield(job.extopts,'SRP') && job.extopts.SRP == catdef.extopts.SRP, cp{3} = npara; else, cp{3} = cpara; end 
-    restype = char(fieldnames(job.extopts.restypes));
+    if isfield(job.extopts,'restypes')
+      restype = char(fieldnames(job.extopts.restypes));
+    else
+      restype = job.extopts.restype;
+      job.extopts.restypes.(restype) = job.extopts.resval;
+    end
     if strcmp(restype, catdef.extopts.restype), cp{4} = npara; else, cp{4} = cpara; end 
   % ############
   % WMHC in case of SPM segmentation is SPM

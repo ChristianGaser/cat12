@@ -39,6 +39,9 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   
   global st; % global variable of spm_orthviews
   
+  catdef = cat_get_defaults; 
+  job    = cat_io_checkinopt(job,catdef); 
+
   fg  = spm_figure('FindWin','Graphics'); 
   set(0,'CurrentFigure',fg)
   
@@ -81,7 +84,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   if job.extopts.expertgui && isempty(job.extopts.report.color)
     job.extopts.report.color = [0.95 0.95 0.95]; 
   end
-  
+
   % ratings for colorful ouput of longitudinal results (see also cat_main_reportstr) 
   QMC         = cat_io_colormaps('marks+',17);
   QMCt        = [cat_io_colormaps('hotinv',30);cat_io_colormaps('cold',30)]; QMCt = QMCt([11:30,32:end-9],:); 
@@ -148,7 +151,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   end
 
   % set backgroundcolor
-  if ~isempty(job.extopts.report.color)
+  if ~isfield(job.extopts,'colormap'), job.extopts.colormap = 'BCGWHw'; end
+  if ~isempty(job.extopts.report.color) 
     set(fg,'color',job.extopts.report.color);
     if isempty(job.extopts.colormap) || strcmp(job.extopts.colormap,'BCGWHw')
       if any( job.extopts.report.color < 0.4 ) 
@@ -156,6 +160,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       elseif any( job.extopts.report.color < 0.95 ) 
         job.extopts.colormap = 'BCGWHg';
       end
+    else
     end
     if any( job.extopts.report.color < 0.4 )
       fontcolor = [1 1 1]; 
@@ -163,6 +168,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       fontcolor = [0 0 0]; 
     end
   else
+    job.extopts.colormap = 'BCGWHw';
     fontcolor = [0 0 0]; 
   end
   % check colormap name
@@ -741,7 +747,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 
       if exist('Yo','var')
 
-        if any(size(Yo)~=size(Yp0))
+        if isempty(Yp0) || any(size(Yo)~=size(Yp0))
           try Yo = single(VT.private.dat(:,:,:)); end
           if isfield(res,'spmpp')
             VT0x = spm_vol(res.image(1).fname); 
@@ -946,7 +952,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         spm_orthviews('redraw');
       %end
     else
-
+    
       VO         = res.image(1); 
       VO.fname   = ''; 
       VO.dt      = [spm_type('FLOAT32') spm_platform('bigend')];
@@ -979,9 +985,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         clear hhp0;
       end
       % create new figure
-      try 
-        hhp0 = spm_orthviews('Image',VO,pos{p0id});
-        spm_orthviews('window',hhp0,[0 1.3]);
+      if isempty( VO.fname ) && isfield(VO,'dat') && ~isempty( VO.dat )
+        try 
+          hhp0 = spm_orthviews('Image',VO,pos{p0id});
+          spm_orthviews('window',hhp0,[0 1.3]);
+        end
       end
 
       % CAT atlas labeling
@@ -1091,7 +1099,9 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
             try spm_orthviews('addtruecolourimage',hhp0,V2, [flipud(gray(16));BCGWH],1,2,0); end
         end
         % the colormap deactivation is a bit slow but I know no way to improve that 
-        if job.extopts.report.useoverlay > 1, set([st.vols{p0id}.blobs{1}.cbar,get(st.vols{p0id}.blobs{1}.cbar,'children')],'Visible','off'); end
+        if job.extopts.report.useoverlay > 1 && ~isempty(st.vols{p0id})
+          set([st.vols{p0id}.blobs{1}.cbar, get(st.vols{p0id}.blobs{1}.cbar,'children')],'Visible','off'); 
+        end
         if isfield(res,'long'), set([st.vols{1}.blobs{1}.cbar,get(st.vols{1}.blobs{1}.cbar,'children')],'Visible','off'); end
         try spm_orthviews('redraw'); end
       else
