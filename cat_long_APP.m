@@ -62,6 +62,7 @@ function [Ym,Yb,WMth,Affine,skullstripped,mp2rage] = cat_long_APP(PF,PG,PB,opt)
   
   % initial APP
   Ysrc = single(VF.private.dat(:,:,:)); 
+  opt.vx_vol  = sqrt(sum(VF.mat(1:3,1:3).^2)); % update!
 
   if cat_get_defaults('extopts.APP') == 1070
     [Ym,Yt,Ybg,WMth] = cat_run_job_APP_init1070(Ysrc,opt.vx_vol,opt.verb-1);
@@ -74,10 +75,11 @@ function [Ym,Yb,WMth,Affine,skullstripped,mp2rage] = cat_long_APP(PF,PG,PB,opt)
   %   Conduct a quick test using the main tissue output from the APP (Yt),
   %   which roughly represents the brain, and compare it with the volume of
   %   the non-background.
+  %   Issues in low-resolution data. 
   Yb   = cat_vol_morph(Yt,'dc',12); 
   BV   = nnz(Yb)   .* prod( opt.vx_vol ) / 1000; 
   NBGV = nnz(~Ybg) .* prod( opt.vx_vol ) / 1000; 
-  skullstripped  =  nnz(Yb) > nnz(~Ybg)*.8  &&  NBGV < 3000; 
+  skullstripped  =  nnz(Yb) > nnz(~Ybg)*.8  &&  NBGV < 3000  &&  mean(opt.vx_vol)<1.25; 
   if skullstripped
     cat_io_addwarning('cat_long_APP:skullstripping',...
       sprintf(['Detected skull-stripped input. Use brainmasked template! \\\\n' ...
