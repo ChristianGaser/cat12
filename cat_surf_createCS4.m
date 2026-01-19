@@ -79,6 +79,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
   def.LAB                 = cat_get_defaults('extopts.LAB');  % brain regions 
   % RD20250306: Tfs has large issues currently with some corrected defects
   def.useprior            = ''; 
+  def.reconres            = .5;                                
   def.thick_limit         = 6;                                % 6mm upper limit for thickness (similar limit as used in Freesurfer)
   def.foldingcorrection   = 1;                                % tickness correction that is influence by folding
   def.thick_measure       = 0;                                % 0-PBT; 1-Tfs (Freesurfer method using mean(TnearIS,TnearOS)) ##########
@@ -97,15 +98,12 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     case 0 % pbtsimpleC, full resolution
       use_cat_vol_pbtsimple = 0; 
       myelinCorrection      = 0; 
-      opt.reconres          = .5; 
     case 1 % myelincorrection 
       use_cat_vol_pbtsimple = 1; 
-      myelinCorrection      = 0.3; 
-      opt.reconres          = .6; 
+      myelinCorrection      = 0; 
     case 2 % default
       use_cat_vol_pbtsimple = 1; 
-      myelinCorrection      = 0; 
-      opt.reconres          = .6; 
+      myelinCorrection      = 0.5; 
   end
 
 
@@ -155,14 +153,18 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
   
 
   % prepare file and directory names
-  [P,pp0,mrifolder,surffolder,surfdir,ff] = setFileNames(V0,job,opt); 
+  [P,pp0,mrifolder,surffolder,surfdir,ff] = cat_surf_createCS_fun('setFileNames',V0,job,opt); 
   
 
   % main loop for each surface structure 
   for si = 1:numel(opt.surf)
    
+    % print something
+    if si==1, fprintf('\n'); end; fprintf('%s:\n',opt.surf{si});
+    clear Ynocerebrum
+
     % prepare longitudinal case if required 
-    useprior = setupprior(opt,surfdir,P,si);
+    useprior = cat_surf_createCS_fun('setupprior',opt,surfdir,P,si);
 
 
     %% reduce for object area
@@ -181,10 +183,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         Yp0fs  = Yp0f .* (Ya>0) .* NS(Ya,opt.LAB.CB); 
         Yside  = zeros(size(Yp0fs),'single'); % new full cerebellum reconstruction
     end 
-    % print something
-    if si==1, fprintf('\n'); end; fprintf('%s:\n',opt.surf{si});
-    clear Ynocerebrum
-
+    
     
     % RD2025: mark cutting regions to avoid cortical modelling (i.e. to avoid/reduce thickness estimates)
     Ycutregion = min(1,max(0,Yp0f - 2 + NS(Ya,opt.LAB.VT)) * 1 .* ...
@@ -237,16 +236,18 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       
       % thickness and position estimation
       [Yth1i,Yppi,Ymfsc] = cat_vol_pbtsimpleCS4(Yp0fs, opt.interpV,struct('myelinCorrection',myelinCorrection,'verb',1,'gyrusrecon',1));
-      
     else
       %% Write PP
       Vmfs.dt = [16 1];
       spm_write_vol(Vmfs, Yp0fs);
-      cmd = sprintf('CAT_VolThicknessPbt -median-filter 2 -sharpen 0.02 -fwhm 3 -downsample 0 "%s" "%s" "%s"', Vmfs.fname, P(si).Pgmt, P(si).Pppm);
+      cmd = sprintf('CAT_VolThicknessPbt -median-filter 2 -sharpen 0.02 -downsample 0 "%s" "%s" "%s"', Vmfs.fname, P(si).Pgmt, P(si).Pppm);
       cat_system(cmd,opt.verb-3);
       Vgmt = spm_vol(P(si).Pgmt); Yth1i = spm_read_vols(Vgmt); 
       Vppi = spm_vol(P(si).Pppm); Yppi  = spm_read_vols(Vppi); 
       Ymfsc = Yp0fs; 
+
+      % correction of general offset in mm 
+      Yth1i = max(0,Yth1i - 0.3); 
     end
     
 
@@ -266,13 +267,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       if opt.verb<2, fprintf('%5.0fs',etime(clock,stime)); end %#ok<*DETIM>
       continue; % ############# deactive only for tests ################
     end
-
-    %% RD20250330: The aim is to smoothing cutting regions to avoid defects there. 
-    if 0;; % just for manual tests
-      opt.reconres    = .6;  % although 1.5-2.0 mm can work in general, defects correction can result in very severe and unpredictable problems
-      opt.vdist       = 2;   % controls surface reduction (linear value >> sqare for area, (8~2 mm), 4~1.2 mm, 2~1 mm,  1~0.7, .5~0.5)
-    end
-    
+ 
     
     %  surface creation 
     %  --------------------------------------------------------------------
@@ -300,9 +295,13 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         stime = cat_io_cmd(sprintf('  Create initial surface (%0.2f mm)',opt.reconres),'g5','',opt.verb,stime); %if opt.verb>2, fprintf('\n'); end
         if exist(P(si).Pcentral,'file'), delete(P(si).Pcentral); end % have to delete it to get useful error messages in case of reprocessing/testing
         cmd  = sprintf('CAT_VolMarchingCubes "%s" "%s" -thresh "%0.4f" ', Vppmi.fname, P(si).Pcentral, .55); %5-0.05*opt.reconres);
-        Vpp = spm_write_vol(Vppm, Yppi);
         cat_system(cmd ,opt.verb-3);
-  
+        Vppm = spm_write_vol(Vppm, Yppi);
+        if 0 % minor improvement of values (IE-0.003, PE=-0.007) but not visually but 35s (50%) increased processing time >> not useful
+          cmd = sprintf('CAT_SurfDeform -iter 100 "%s" "%s" "%s"', Vppm.fname, P(si).Pcentral, P(si).Pcentral);
+          cat_system(cmd,opt.verb-3);
+        end    
+        
   
         % load and check surface
         % use 80000 as lower limit what is similar to vdist=4
@@ -311,7 +310,11 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         nCS = min( size(CS.faces,1) , max( 80000, min( 360000, round(A * 2 * 4 / opt.vdist^2) ))); 
         if opt.SRP >= 2, nCS = min(300000,nCS); end
         EC0 = size(CS.vertices,1) + size(CS.faces,1) - size(spm_mesh_edges(CS),1);  
-        if EC0 ~= 2
+        % test for box-error 
+        % in some cases (SPM preprocessing) the topology defects are so 
+        % severe that the topology correction just fill everything
+        IS  = cat_surf_fun('isocolors',Yppi,CS.vertices,Smat.matlabIBB_mm); 
+        if EC0 ~= 2 || mean(IS(:)) < .4 
           if li < reconattempts
             % try again with another resolution
             continue
@@ -329,11 +332,10 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         stimesr = clock; 
         nCS0 = size(CS.faces,1); 
         saveSurf(CS,P(si).Pcentral); 
-        cmd  = sprintf('CAT_SurfReduce -aggr "5" -ratio "%0.2f" "%s" "%s"', nCS/nCS0 , P(si).Pcentral, P(si).Pcentral); %5-0.05*opt.reconres);
-        cat_system(cmd ,opt.verb-3);
+        cmd  = sprintf('CAT_SurfReduce -aggr "7" -ratio "%0.2f" "%s" "%s"', nCS/nCS0 , P(si).Pcentral, P(si).Pcentral); %5-0.05*opt.reconres);
+        cat_system(cmd ,opt.verb-3);  
         CS = loadSurf(P(si).Pcentral); 
         nCS1 = size(CS.faces,1); 
-        saveSurf(CS,P(si).Pcentral); 
         
         if li == reconattempts  ||  nCS1 < nCS * 1.5 
           % all done
@@ -355,11 +357,11 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     % - this can maybe partially avoided by the more aggressive surface reduction
     % - although the filter reduces some artefacts in problematic cases the surface values are worse and the issue are still not fully solved
     % - tried to use it after correction of self-intersections but this made it even worse
-    % >> better not use now
-    if 0 
-      stime = cat_io_cmd('  Filter topology artifacts','g5','',opt.verb,stime);
-      CS = smoothArt(Yth1i,P,CS,Smat,Vppm,1,si,opt,1,1); % last options - method & refine
-    end
+    % - minor improvement of values (IE+.001,PE+0.002) but visually strong reduction of local outliers >> useful
+    stime = cat_io_cmd('  Filter topology artifacts','g5','',opt.verb,stime);
+    CS = smoothArt(Yth1i,P,CS,Smat,Vppm,1,si,opt,1,1); % last options - method & refine
+    saveSurf(CS,P(si).Pcentral); 
+
 
     % get PBT thickness and update cutregion
     if setcut2zero
@@ -373,30 +375,50 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     cat_io_FreeSurfer('write_surf_data',P(si).Pthick,facevertexcdata);
 
 
-    % surface deformation  
-    stime = cat_io_cmd(sprintf('  Optimize surface (nF: %0.0fk)', size(CS.faces,1)/1000),'g5','',opt.verb,stime); 
-    for li = 1:2 % ... interation 1 with additional correction, iteration 2 without ... only small improvements for multiple iterations
-      cmd = sprintf('CAT_SurfDeform -iter 100 "%s" "%s" "%s"', Vppm.fname, P(si).Pcentral, P(si).Pcentral);
-      cat_system(cmd,opt.verb-3);
-      CS = loadSurf(P(si).Pcentral);
- 
-      if opt.SRP > 0 && li == 1
-        for xi = 1:2 % interation 1 with optimization, 2 without .. 
-          % quick correction with local optimization 
-          [CS,facevertexcdatac,SIs] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata .* facevertexcdatanocut,Ymfsc,Yppi, ... 
-            struct('optimize',xi==1,'verb',isscalar(opt.surf)*2,'mat',Smat.matlabIBB_mm,'vx_vol',vx_vol,'CS4',0)); % CS4 is not working
-          if isscalar(opt.surf), fprintf('\b\b'); end
-          % accurate but slow function (especially for multiple jobs) 
-          if xi == 1 %&& ~isscalar(opt.surf) 
-            [CS,facevertexcdatac,SIs] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdatac .* facevertexcdatanocut,Yppi,...
-              struct('Pcs',P(si).Pcentral,'verb',isscalar(opt.surf)*2,'mat',Smat.matlabIBB_mm,'accuracy',1/2^2));
-            if isscalar(opt.surf), fprintf('\b\b'); end
-          end
-        end
-        facevertexcdata = max(facevertexcdata,facevertexcdatac) .* facevertexcdatanocut; 
-        cat_io_FreeSurfer('write_surf_data',P(si).Ppbt,facevertexcdata);
-        saveSurf(CS,P(si).Pcentral); 
-      end
+
+    %% surface deformation (after smoothArt) 
+    % CAT_DeformSurf in combination with smoothing correction CAT_Central2Pial 
+    % allows PP values that are closer to the central position (std 0.049 vs. 0.73)
+    % what improves also intensity and position values of the inner/outer surfaces!
+    stime = cat_io_cmd('  Optimize surface','g5','',opt.verb,stime); 
+    switch 2
+      case 1
+        cmd = sprintf('CAT_SurfDeform -iter 25 "%s" "%s" "%s"', Vppm.fname, P(si).Pcentral, P(si).Pcentral);
+        cat_system(cmd,opt.verb-3);
+      case 2
+        % further iteration allow (only) slight improvements 
+        cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none  0  1  -1  .1 ' ...           
+                  'avg  -0.1  0.1 .2  .1  5  0 "0.5"  "0.5"  n 0  0  0 %d  %g  0.0 0'], ...    
+                   Vppm.fname,P(si).Pcentral,P(si).Pcentral,25,0.001);  
+        cat_system(cmd,opt.verb-3);
+        cmd = sprintf('CAT_Central2Pial -equivolume -weight 0.5 "%s" "%s" "%s" 0',P(si).Pcentral,P(si).Ppbt,P(si).Pcentral);
+        cat_system(cmd,opt.verb-3);
+    end
+    CS = loadSurf(P(si).Pcentral);
+
+
+    %% Collision correction by Delaunay triangularization
+    %  --------------------------------------------------------------------
+    %  New self-intersection correction that uses different detections of
+    %  self-intersections (SIDs; RY vs. PBT) with/without further optimization. 
+    %  It does not fully avoid self-intersections because some are already 
+    %  in the CS and some other required strong changes that result in worse
+    %  thickness results.
+    %  RD202508: Optimization does not fully work on the simple PP map.
+    %            The optimization torwards 0.05 and 0.95 on the interpolated maps still result in light thickness overestimation. 
+    if opt.SRP > 0 
+      facevertexcdatac = facevertexcdata; 
+      % quick correction with local optimization 
+      [CS,facevertexcdatac,SIs] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdatac .* facevertexcdatanocut,Ymfsc,Yppi, ... 
+        struct('optimize',0,'verb',isscalar(opt.surf)*2,'mat',Smat.matlabIBB_mm,'vx_vol',vx_vol,'CS4',0)); % CS4 is not working
+      if isscalar(opt.surf), fprintf('\b\b'); end
+      % accurate but slow function (especially for multiple jobs) 
+      [CS,facevertexcdatac,SIs] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdatac .* facevertexcdatanocut,Yppi,...
+        struct('Pcs',P(si).Pcentral,'verb',isscalar(opt.surf)*2,'mat',Smat.matlabIBB_mm,'accuracy',1/2^2));
+      if isscalar(opt.surf), fprintf('\b\b'); end
+      facevertexcdata = max(facevertexcdata,facevertexcdatac) .* facevertexcdatanocut; 
+      cat_io_FreeSurfer('write_surf_data',P(si).Ppbt,facevertexcdata);
+      saveSurf(CS,P(si).Pcentral); 
     end
    
 
@@ -416,59 +438,12 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
 
 
     if isscalar(opt.surf)
-    %% ========= only for test visualization ========= 
-      if 1 % opt.thick_measure == 1 % allways here 
-        cmd = sprintf('CAT_SurfDistance -mean -thickness "%s" "%s" "%s"',P(si).Ppbt,P(si).Pcentral,P(si).Pthick);
-        cat_system(cmd,opt.verb-3);
-        % apply upper thickness limit
-        facevertexcdata = cat_io_FreeSurfer('read_surf_data',P(si).Pthick) .* facevertexcdatanocut;  
-        facevertexcdata(facevertexcdata > opt.thick_limit) = opt.thick_limit;
-        cat_io_FreeSurfer('write_surf_data',P(si).Pthick,facevertexcdata);  
-      end
- 
-      fprintf('\n');
-      res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS', ...
-        loadSurf(P(si).Pcentral), cat_io_FreeSurfer('read_surf_data',P(si).Ppbt), facevertexcdata, ...
-        Ymfs,Yppi,P(si).Pcentral,Smat.matlabIBB_mm,2,0);
-      CS2 = CS; CS2.cdata = facevertexcdata; H = cat_surf_render2(CS2);
-      cat_surf_render2('clim',H,[0 6]); 
-      cat_surf_render2('view',H,cat_io_strrep(opt.surf{si},{'lh','rh','ch'},{'right','left','back'})); 
-      cat_surf_render2('ColourBar',H,'on');
-      title(sprintf('CS4%d, R=%0.2f, nF=%0.0fk, EC=%d, \n TH=%0.3f±%0.3f, IE=%0.3f, PE=%0.3f, ptime=%0.0fs, time=%s', ...
-        opt.SRP, opt.reconres, size(CS.faces,1)/1000, EC0, ...
-        mean( facevertexcdata ), std(facevertexcdata), ...
-        mean( [ res.(opt.surf{si}).createCS_final.RMSE_Ym_white,  res.(opt.surf{si}).createCS_final.RMSE_Ym_layer4,   res.(opt.surf{si}).createCS_final.RMSE_Ym_pial ] ) , ...
-        mean( [ res.(opt.surf{si}).createCS_final.RMSE_Ypp_white, res.(opt.surf{si}).createCS_final.RMSE_Ypp_central, res.(opt.surf{si}).createCS_final.RMSE_Ypp_pial ] ) , ...
-        etime(clock,time_sr), datetime))
-      subtitle( strrep( spm_str_manip(P(si).Pcentral,'a90') ,'_','\_'))
-      fprintf('    Runtime:                             %0.0fs\n',etime(clock,time_sr)); 
-
-
-      % preparation for SPM orthviews links
-      Po = P(si).Pm; if ~exist(Po,'file'); Po = V0.fname; end
-      if ~exist(Po,'file')  && exist([V0.fname '.gz'],'file'), Po = [V0.fname '.gz']; end
-      Porthfiles = ['{', sprintf('''%s'',''%s''',P(si).Ppial, P(si).Pwhite ) '}'];
-      Porthcolor = '{''-g'',''-r''}';  
-      Porthnames = '{''white'',''pial''}'; 
-      fprintf('  Show surfaces in orthview:   %s | %s | %s | (%s) | %s \n', ...
-        spm_file([opt.surf{si} '.pbt'],'link', sprintf('H=cat_surf_display(''%s'');',P(si).Ppbt)), ...
-        spm_file([opt.surf{si} '.thick'],'link', sprintf('H=cat_surf_display(''%s'');',P(si).Pthick)), ...
-        spm_file('segmentation' ,'link', sprintf('cat_surf_fun(''show_orthview'',%s,''%s'',%s,%s)',Porthfiles,P(si).Pp0, Porthcolor,Porthnames)), ...
-        spm_file('ppmap'        ,'link', sprintf('cat_surf_fun(''show_orthview'',%s,''%s'',%s,%s)',Porthfiles,Vpp.fname, Porthcolor,Porthnames)), ...
-        spm_file('original'     ,'link', sprintf('cat_surf_fun(''show_orthview'',%s,''%s'',%s,%s)',Porthfiles,Po,        Porthcolor,Porthnames)));
-      
-      subtitle( strrep( spm_str_manip( P(si).Pcentral,'a90') ,'_','\_'))
-      fprintf('    Runtime:                             %0.0fs\n',etime(clock,time_sr)); 
-   
+      % only for test visualization  
+      cat_surf_createCS_fun('quickeval',V0,Vpp,Ymfs,Yppi,CS,P,Smat,res,opt,EC0,si,time_sr,4); 
       return
     end
 
-
-
-%% == TEST STOP ==
-
-
-    % skip that part if a prior image is defined
+    %% skip that part if a prior image is defined
     if ~useprior && ~skip_registration
       % spherical surface mapping of the final corrected surface with minimal areal smoothing
       stime = cat_io_cmd('  Spherical mapping with areal smoothing','g5','',opt.verb,stime); 
@@ -553,14 +528,14 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
   
 
   % calculate surface quality parameters for all surfaces
-  res = addSurfaceQualityMeasures(res,opt);
+  res = cat_surf_createCS_fun('addSurfaceQualityMeasures',res,opt);
  
-
+  
   % print final stats
-  evalProcessing(res,opt,P,V0,si)
+  cat_surf_createCS_fun('evalProcessing',res,opt,P,V0); 
+  %evalProcessing(res,opt,P,V0)
 
 end
-
 %=======================================================================
 function saveSurf(CS,P)
   save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),P,'Base64Binary');
@@ -620,119 +595,6 @@ function [Vpp,Vppr] = prepareDownsampling(Vmfs,Ypps,pp0_surffolder,ff,opt,si)
     Vppr.fname = fullfile(pp0_surffolder, sprintf('%s.pp.%s.nii',opt.surf{si},ff));  
 end            
 %==========================================================================
-function res = addSurfaceQualityMeasures(res,opt)
-%addSurfaceQualityMeasures. Measures to describe surface properties. 
-  res.mnth = []; res.sdth = []; 
-  res.mnRMSE_Ypp = []; res.mnRMSE_Ym = []; 
-  res.SIw = []; res.SIp = []; res.SIwa = []; res.SIpa = []; 
-  for si=1:numel(opt.surf)
-    if any(strcmp(opt.surf{si},{'lh','rh'}))
-      if isfield(res.(opt.surf{si}).createCS_final,'fsthickness_mn_sd_md_mx') && ... 
-        ~isnan( res.(opt.surf{si}).createCS_final.fsthickness_mn_sd_md_mx(1) )
-        res.mnth      = [ res.mnth  res.(opt.surf{si}).createCS_final.fsthickness_mn_sd_md_mx(1) ]; 
-        res.sdth      = [ res.sdth  res.(opt.surf{si}).createCS_final.fsthickness_mn_sd_md_mx(2) ]; 
-      else
-        res.mnth      = [ res.mnth  res.(opt.surf{si}).createCS_final.thickness_mn_sd_md_mx(1) ];
-        res.sdth      = [ res.sdth  res.(opt.surf{si}).createCS_final.thickness_mn_sd_md_mx(2) ]; 
-      end
-      res.mnRMSE_Ym   = [ res.mnRMSE_Ym   mean([...
-        res.(opt.surf{si}).createCS_final.RMSE_Ym_layer4 ...
-        res.(opt.surf{si}).createCS_final.RMSE_Ym_white ...
-        res.(opt.surf{si}).createCS_final.RMSE_Ym_pial ]) ];
-      res.mnRMSE_Ypp  = [ res.mnRMSE_Ypp  mean([...
-        res.(opt.surf{si}).createCS_final.RMSE_Ypp_central ...
-        res.(opt.surf{si}).createCS_final.RMSE_Ypp_white ...
-        res.(opt.surf{si}).createCS_final.RMSE_Ypp_pial ]) ];
-      if isfield(res.(opt.surf{si}).createCS_final,'white_self_interections')
-        res.SIw     = [ res.SIw  res.(opt.surf{si}).createCS_final.white_self_interections ]; 
-        res.SIp     = [ res.SIp  res.(opt.surf{si}).createCS_final.pial_self_interections  ]; 
-        res.SIwa    = [ res.SIwa res.(opt.surf{si}).createCS_final.white_self_interection_area ]; 
-        res.SIpa    = [ res.SIpa res.(opt.surf{si}).createCS_final.pial_self_interection_area  ]; 
-      end
-    end
-  end
-  
-  % final res structure
-  res.EC          = NaN; 
-  res.defect_size = NaN;
-  res.defect_area = NaN;
-  res.defects     = NaN;
-  res.mnth        = mean(res.mnth); 
-  res.sdth        = mean(res.sdth); 
-  res.RMSE_Ym     = mean(res.mnRMSE_Ym);
-  res.RMSE_Ypp    = mean(res.mnRMSE_Ypp);
-end
-%==========================================================================
-function evalProcessing(res,opt,P,V0,si)
-  if opt.verb && ~opt.vol  
-  % display some evaluation 
-  % - For normal use we limited the surface measures.  
-  % - Surface intensity would be interesting as cortical measure similar to thickness (also age dependent).
-  %   Especially the outer surface will describe the sulcal blurring in children. 
-  %   But the mixing of surface quality and anatomical features is problematic. 
-  % - The position value describes how good the transformation of the PBT map into a surface worked. 
-  %   Also the position values depend on age. Children have worse pial values due to sulcal blurring but
-  %   the white surface is may effected by aging, e.g., by WMHs.
-  % - However, for both intensity and position some (average) maps would be also interesting. 
-  %   Especially, some Kappa similar measure that describes the differences to the Ym or Ypp would be nice.
-  % - What does the Euler characteristic say?  Wouldn't the defect number more useful for users? 
-
-    if any(~cellfun('isempty',strfind(opt.surf,'cb'))), cbtxt = 'cerebral '; else, cbtxt = ''; end
-    fprintf('Final %ssurface processing results: \n', cbtxt);
-      
-    % function to estimate the number of interactions of the surface deformation: d=distance in mm and a=accuracy 
-    QMC    = cat_io_colormaps('marks+',17);
-    color  = @(m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
-    rate   = @(x,best,worst) min(6,max(1, max(0,x-best) ./ (worst-best) * 5 + 1));
-  
-    if cat_get_defaults('extopts.expertgui')
-    % color output currently only for expert ...
-      if isfield(res.(opt.surf{si}).createCS_final,'fsthickness_mn_sd_md_mx')
-        fprintf('  Average thickness (FS):                     ');
-      else
-        fprintf('  Average thickness (PBT):                    ');
-      end
-      cat_io_cprintf( color( rate( abs( res.mnth - 2.5 ) , 0 , 2.0 )) , sprintf('%0.4f'     , res.mnth ) );  fprintf(' %s ',native2unicode(177, 'latin1'));
-      cat_io_cprintf( color( rate( abs( res.sdth - 0.5 ) , 0 , 1.0 )) , sprintf('%0.4f mm\n', res.sdth ) );
-
-      fprintf('  Surface intensity / position RMSE:          ');
-      cat_io_cprintf( color( rate( mean(res.mnRMSE_Ym)  , 0.05 , 0.3 ) ) , sprintf('%0.4f / ', mean(res.mnRMSE_Ym) ) );
-      cat_io_cprintf( color( rate( mean(res.mnRMSE_Ypp) , 0.05 , 0.3 ) ) , sprintf('%0.4f\n',  mean(res.mnRMSE_Ypp) ) );
-        
-      if isfield(res.(opt.surf{si}).createCS_final,'white_self_interections')
-        fprintf('  Pial/white self-intersections:              ');
-        cat_io_cprintf( color( rate(  mean([res.SIw,res.SIp]) , 0 , 20 ) ) , sprintf('%0.2f%%%% (%0.2f mm%s)\n'  , mean([res.SIw,res.SIp]) , mean([res.SIwa,res.SIpa]) , char(178) ) );
-      end
-    else
-      fprintf('  Average thickness:                          %0.4f %s %0.4f mm\n' , res.mnth, native2unicode(177, 'latin1'), res.sdth);
-    end
-    
-    for si=1:numel(P)
-      fprintf('  Display thickness:          %s\n',spm_file(P(si).Pthick,'link','cat_surf_display(''%s'')'));
-    end
-    
-    %% surfaces in spm_orthview
-    if exist(P(si).Pm,'file'), Po = P(si).Pm; else, Po = V0.fname; end
-    if ~exist(Po,'file') && exist([V0.fname '.gz'],'file'), Po = [V0.fname '.gz']; end
-    
-    Porthfiles = '{'; Porthcolor = '{'; Porthnames = '{';
-    for si=1:numel(P)
-      Porthfiles = [ Porthfiles , sprintf('''%s'',''%s'',',P(si).Ppial, P(si).Pwhite )]; 
-      Porthcolor = [ Porthcolor , '''-g'',''-r'',' ]; 
-      Porthnames = [ Porthnames , '''pial'',''white'',' ];
-    end
-    Porthfiles = [ Porthfiles(1:end-1) '}']; 
-    Porthcolor = [ Porthcolor(1:end-1) '}']; 
-    Porthnames = [ Porthnames(1:end-1) '}']; 
-  
-    if 1 %debug 
-      fprintf('  Show surfaces in orthview:  %s\n',spm_file(Po ,'link',...
-        sprintf('cat_surf_fun(''show_orthview'',%s,''%s'',%s,%s)',Porthfiles,Po,Porthcolor,Porthnames))) ;
-    end
-
-  end
-end
-%==========================================================================
 function [Yp0f,Ymf] = fillVentricle(Yp0,Ym,Ya,YMF,vx_vol)
 %fillVentricle. Simple filling of ventricles by a closing around a mask.
 
@@ -756,69 +618,6 @@ function [Yp0f,Ymf] = fillVentricle(Yp0,Ym,Ya,YMF,vx_vol)
   Ymf   = Ymf * 3;
 end
 %==========================================================================
-function [P,pp0,mrifolder,pp0_surffolder,surffolder,ff] = setFileNames(V0,job,opt) 
-  
-  [mrifolder, ~, surffolder] = cat_io_subfolders(V0.fname,job);
-  
-  % get original filename without 'n'
-  [pp0,ff] = spm_fileparts(V0.fname);
-  
-  % correct '../' parts in directory for BIDS structure
-  [stat, val] = fileattrib(fullfile(pp0,surffolder));
-  if stat, pp0_surffolder = val.Name; else, pp0_surffolder = fullfile(pp0,surffolder); end
-  if ~exist(fullfile(pp0_surffolder),'dir'), mkdir(fullfile(pp0_surffolder)); end
-
-  % surface filenames
-  for si = 1:numel(opt.surf)
-    P(si).Pm         = fullfile(pp0,mrifolder, sprintf('m%s.nii',ff));                                 % raw
-    P(si).Pp0        = fullfile(pp0,mrifolder, sprintf('p0%s.nii',ff));                                % labelmap
-    P(si).Pdefects   = fullfile(pp0,mrifolder, sprintf('defects_%s.nii',ff));                          % defect
-    P(si).Pcentral   = fullfile(pp0_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff));          % central
-    P(si).Pcentralh  = fullfile(pp0_surffolder,sprintf('%s.centralh.%s.gii',opt.surf{si},ff));         % central
-    P(si).Pcentralr  = fullfile(pp0_surffolder,sprintf('%s.central.resampled.%s.gii',opt.surf{si},ff));% central .. used in inactive path
-    P(si).Ppial      = fullfile(pp0_surffolder,sprintf('%s.pial.%s.gii',opt.surf{si},ff));             % pial (GM/CSF)
-    P(si).Pwhite     = fullfile(pp0_surffolder,sprintf('%s.white.%s.gii',opt.surf{si},ff));            % white (WM/GM)
-    P(si).Pthick     = fullfile(pp0_surffolder,sprintf('%s.thickness.%s',opt.surf{si},ff));            % FS thickness / GM depth
-    P(si).Pmsk       = fullfile(pp0_surffolder,sprintf('%s.msk.%s',opt.surf{si},ff));                  % msk
-    P(si).Ppbt       = fullfile(pp0_surffolder,sprintf('%s.pbt.%s',opt.surf{si},ff));                  % PBT thickness / GM depth
-    P(si).Psphere    = fullfile(pp0_surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff));           % sphere
-    P(si).Pspherereg = fullfile(pp0_surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff));       % sphere.reg
-    P(si).Pgmt       = fullfile(pp0,mrifolder, sprintf('%s_thickness-%s.nii',ff,opt.surf{si}));        % temp thickness
-    P(si).Pppm       = fullfile(pp0,mrifolder, sprintf('%s_ppm-%s.nii',ff,opt.surf{si}));              % temp position map
-    P(si).Pfsavg     = fullfile(opt.fsavgDir,  sprintf('%s.central.freesurfer.gii',opt.surf{si}));     % fsaverage central
-    P(si).Pfsavgsph  = fullfile(opt.fsavgDir,  sprintf('%s.sphere.freesurfer.gii',opt.surf{si}));      % fsaverage sphere    
-  end
-end
-%==========================================================================
-function useprior = setupprior(opt,surffolder,P,si)
-%setupprior. prepare longitidunal files
-
-  % use surface of given (average) data as prior for longitudinal mode
-  if isfield(opt,'useprior') && ~isempty(opt.useprior) 
-    % RD20200729: delete later ... && exist(char(opt.useprior),'file') 
-    % if it not exist than filecopy has to print the error
-    [pp1,ff1] = spm_fileparts(opt.useprior);
-    % correct '../' parts in directory for BIDS structure
-    [stat, val] = fileattrib(fullfile(pp1,surffolder));
-    if stat, pp1_surffolder = val.Name; else, pp1_surffolder = fullfile(pp1,surffolder);  end
-    
-    % try to copy surface files from prior to individual surface data 
-    useprior = 1;
-    useprior = useprior & copyfile(fullfile(pp1_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff1)),P(si).Pcentral,'f');
-    useprior = useprior & copyfile(fullfile(pp1_surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff1)),P(si).Psphere,'f');
-    useprior = useprior & copyfile(fullfile(pp1_surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff1)),P(si).Pspherereg,'f');
-    
-    if ~useprior
-      warn_str = sprintf('Surface files for %s not found. Move on with individual surface extraction.\n',pp1_surffolder);
-      fprintf('\nWARNING: %s',warn_str);
-      cat_io_addwarning('cat_surf_createCS4:noPiorSurface', warn_str);
-    else
-      fprintf('\nUse existing surface as prior and thus skip many processing steps:\n%s\n',pp1_surffolder);
-    end      
-  else
-    useprior = 0;
-  end
-end
 function CS = smoothArt(Yth1i,P,CS,Smat,Vppm,facevertexcdatanocut,si,opt,method,refine)
 %% Topology artifact correction (after first deformation):
 %  Although the topology is fine after correction the geometry often
@@ -932,16 +731,16 @@ function [Vppm,rel] = exportPPmap( Yp0, Yp0fs, Yppi, Vmfs, Ypbs, vx_vol, si, opt
   %Ypps = cat_vol_median3(Ypps,Ypps>0 & Ypps<1);
   fs = 0; %.35; 
   if opt.interpV == opt.reconres
-    Ytx            = Ypps; % smooth3( Ypps ); % max(Ypps,max(0,min(1,Yp0fs-2)) .^ .25); % smooth3?
     Vppm           = Vmfs;
+    Ytx            = cat_vol_smooth3X( Ypps , fs );
   else
     [Vpp,Vppr]     = prepareDownsampling(Vmfs,Ypps,surffolder,ff,opt,si);
     Vpp.dat(:,:,:) = cat_vol_smooth3X( Ypps , fs ); 
     [Vppm,Yt]      = cat_vol_imcalc(Vpp,Vppr,'i1',struct('interp',5,'verb',0,'mask',-1));
-    Vpp.dat(:,:,:) = cat_vol_smooth3X( max(0,min(1,Yp0fs-2)) .^ rel, fs ); 
-    [~,Yw]         = cat_vol_imcalc(Vpp,Vppr,'i1',struct('interp',5,'verb',0,'mask',-1));   
-    Vpp.dat(:,:,:) = cat_vol_smooth3X( max(0,min(1,2-Yp0fs)) .^ rel, fs );
-    [~,Yc]         = cat_vol_imcalc(Vpp,Vppr,'i1',struct('interp',5,'verb',0,'mask',-1));
+    %Vpp.dat(:,:,:) = cat_vol_smooth3X( max(0,min(1,Yp0fs-2)) .^ rel, fs ); 
+    %[~,Yw]         = cat_vol_imcalc(Vpp,Vppr,'i1',struct('interp',5,'verb',0,'mask',-1));   
+    %Vpp.dat(:,:,:) = cat_vol_smooth3X( max(0,min(1,2-Yp0fs)) .^ rel, fs );
+    %[~,Yc]         = cat_vol_imcalc(Vpp,Vppr,'i1',struct('interp',5,'verb',0,'mask',-1));
     Vppm.pinfo     = Vmfs.pinfo;
     Ytx            = Yt; %min(max(0,1-Yc), max(Yt,Yw)); 
   end

@@ -31,7 +31,7 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
 %      Uses also the PVE range to estimate the distance there. 
 %      Important to avoid thickness underestimations.
 %
-%    .correctoffeset (0-none, 1-fixed, 2-adaptive; default=2)
+%    .correctoffset (0-none, 1-fixed, 2-adaptive; default=2)
 %      Correction for the offset of boundaries beyond the paired concept.
 %      Only minor effects. 
 %
@@ -96,33 +96,38 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
   def.supersimple     = 0;   % Refined WM distance based on CSF distance (myelination correction)
                              % This internal options is to turn of all feature functions.
                              %
-  def.levels          = 4;   % Number of dual distance estimates. 
+  def.levels          = 1;   % Number of dual distance estimates. 
                              % Larger values are more accurate but need more time (log-change).
                              % Good values are between 1 and 4.
+                             % RD202601: better in phantoms 1 means estimation for .25 and .75 boundaries
                              %  
-  def.correctoffeset  = 0;   % correct for layer intensity 
+  def.correctoffset   = 2;   % correct for layer intensity 
                              % (0-no, 1-yes-simple, 2-yes-complex; tiny improvement) 
                              %
-  def.extendedrange   = 1;   % Estimate the distance from boundary A to boundary B 
+  def.extendedrange   = 0;   % Estimate the distance from boundary A to boundary B 
                              % also for voxels beyond B with a correction of the 
                              % extra distance, to stabilize the values and avoid
                              % underestimations (0-no, 1-yes)
+                             % RD2026: difficult
                              %
-  def.range           = 0.3; % Default value for range extension (should be between 0.2-0.4)
+  def.range           = 0.45; % Default value for range extension (should be between 0.2-0.45)
+                             % RD2026: better for .45 in phantom data
                              %
-  def.keepdetails     = 1;   % enhance thin (occipital) sulci (and gyri) to avoid blurring 
+  def.keepdetails     = 2;   % enhance thin (occipital) sulci (and gyri) to avoid blurring 
                              % (0-no, 1-yes (sulci); 2-yes(sulci+gyri) 
                              % worse values but pretty important!
                              %
-  def.sharpening      = 1;   % sharpening the Ypp map to avoid blurring while 
+  def.sharpening      = 0;   % sharpening the Ypp map to avoid blurring while 
                              % resampling to lower resolution
                              % (0-no, 1-yes; reduce collisions)
+                             % RD202601: worse for thickness
                              %
   def.NBVC             = 1;  % new blood vessel correction (RD202503)
                              %
   def.eidist           = 0;  % distance metric (0-vbdist,1-eidist)
                              %  vbdist is faster but do not support to consider other thissue boundaries 
                              %  eidist is much slower but support other tissue boudaries
+                             % RD202601: slow and worse in phantom
                              %
   def.myelinCorrection = .3; % correction for large cortical myelination artefacts that 
                              % cause strong local underestimation that is similar to the 
@@ -146,18 +151,22 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
   end
   
 
-  if opt.extendedrange
+  if opt.extendedrange > 0 
     % extend hard cuts, by a low value just to have a broader estimate
     % - could be improved by a basic WMD and GMT estimate to assure a
     %   local minimum thickness related to the GMT distance
+    % - RD202601: important for small distances but less for large
+% #### test removal     
     Yp0 = max(Yp0,(Yp0==1 & cat_vol_morph(Yp0==2,'d')) * 1.2);
   end
 
   % close holes (important for SPM with unsufficient WM correction)
-if 0  
-  Yp0 = max(Yp0, 3.0 * smooth3(cat_vol_morph(Yp0>2.75,'ldc',1.5)) ); 
-  Yp0 = max(Yp0, 2.5 * smooth3(cat_vol_morph(Yp0>2.25,'ldc',1.5)) ); 
-end
+  % minor/no-effects for CAT
+  if 1
+    Yp0 = max(Yp0, 3.0 * smooth3(cat_vol_morph(Yp0>2.75,'ldc',1.5)) ); 
+    Yp0 = max(Yp0, 2.5 * smooth3(cat_vol_morph(Yp0>2.25,'ldc',1.5)) ); 
+  end
+
 
   %% RD202503: new blood vessel correction 
   if opt.NBVC, Yp0 = NBVC(Yp0,vx_vol); end
@@ -171,7 +180,9 @@ end
   %   but support assymetrical mapping  and not really worth it
   %[Ycd0,Ywd0] = cat_vol_PVEdist(Yp0, opt.PVErefinement ); % this function was designed to optimize the GM-WM PVE but is not fully working yet
   [Ycd0, Ywd0] = cat_vol_cwdist(Yp0,opt,vx_vol); 
-  
+% #####  
+opt2 = opt; opt2.extendedrange=1;   
+[~, Ywd0] = cat_vol_cwdist(Yp0,opt2,vx_vol); 
 
   % raw thickness maps
   Ygmtw0 = cat_vol_pbtp( round(Yp0)   , Ywd0, Ycd0); Ygmtw0(Ygmtw0>1000) = 0; 
@@ -181,7 +192,10 @@ end
   % correct reconstrution overestimation 
   % - important to keep small sulci open, eg. rh.BWPT central and CC sulcus 
   % - correct thinner areas stronger to improve reconstruction
-  if 1 % RD20250903: can maybe avoided ... intensity/position (Colins): 0.08/0.02 better with correction & 0.04 thicker 
+%%%%%%%%%%%%%%  
+  if 0
+    % RD20250903: can maybe avoided ... intensity/position (Colins): 0.08/0.02 better with correction & 0.04 thicker 
+    % RD20260116: slightly thinner even in a phantom  ... better avoid
     pbtsulccor = @(Ygmtx, Ycdx, Ywdx) max(0,Ygmtx - 0.125 .* (Ygmtx < (Ycdx + Ywdx))); 
     Ygmtw0 = pbtsulccor(Ygmtw0, Ycd0, Ywd0); 
     Ygmtc0 = pbtsulccor(Ygmtc0, Ycd0, Ywd0); 
@@ -190,9 +204,14 @@ end
 
   % minimum tickness map and cleanup (removal of extrem outliers and approximation) 
   % - not useful for Ygmtw0/Ygmtc0!
-  Ygmt0  = min(Ygmtw0,Ygmtc0); 
-  Ygmt0  = cleanupPBT(Ygmt0, 1, 0); % filter limits has only minor effects
-
+% ##### avoid this?  
+  Ygmtw0 = cat_vol_median3(Ygmtw0,Ygmtw0>0,Ygmtw0>0,0); % rm outliers
+  Ygmtc0 = cat_vol_median3(Ygmtc0,Ygmtc0>0,Ygmtc0>0,0); % rm outliers
+  Ygmt0  = min(Ygmtw0,Ygmtc0);
+% avoid strong corrections  
+%%%%%%%%%  Ygmt0  = cleanupPBT(Ygmt0, 1, 0); % filter limits has only minor effects ... RD20260116: issues in phantom
+  Ygmt0 = cat_vol_median3(Ygmt0,Ygmt0>0,Ygmt0>0,0); % rm outliers
+  Ygmt0 = cleanupPBT(Ygmt0, 2, 0); %Ygmt0 = min(Ygmt0,(Ygmt0>0.1) .* (2 + cleanupPBT(Ygmt0, 0, 0))); 
 
   % update distance information
   Ycd0 = min(Ygmt0,Ycd0); Ywd0 = min(Ygmt0,Ywd0); 
@@ -359,13 +378,16 @@ function Ygmtc = cleanupPBT(Ygmt,lim,lim2)
   
   if ~exist('lim','var'), lim = .05; end
   if ~exist('lim2','var'), lim2 = 1; end
+
+  % overall this causes some systematic underestimation that we try compensate
+  thoffsetcor = 0.1;
   
   % basic approximation & filtering
-  Ygmta = cat_vol_approx(Ygmt,'rec'); 
+  Ygmta = cat_vol_approx(Ygmt,'rec') + thoffsetcor; 
 
   % prelimitation to avoid more noisy data with stronger outliers
   if lim2 > 0
-    Ygmtc = cat_vol_approx(Ygmt .* ((Ygmt - Ygmta .* (Ygmt>0))<=lim  &  (Ygmt - Ygmta .* (Ygmt>0))<=lim*4  &  Ygmt>0), 'rec'); 
+    Ygmtc = cat_vol_approx(Ygmt .* ( (Ygmta .* (Ygmt>0) - Ygmt)<=lim*2 & (Ygmt - Ygmta .* (Ygmt>0))<=lim & Ygmt>0), 'rec'); 
     Ygmt  = Ygmt .* (Ygmt>0 & abs( Ygmt - Ygmtc ) < 1); 
     Ygmta = cat_vol_smooth3X( Ygmta .* (Ygmt==0) + Ygmt , .5);
   end
@@ -373,9 +395,11 @@ function Ygmtc = cleanupPBT(Ygmt,lim,lim2)
   % main limitation 
   if lim > 0
     % #### the masking looks more complicated then necessary >> test simplification 
-    Ygmtc  = cat_vol_approx(Ygmt .* ((Ygmt - Ygmta .* (Ygmt>0))<=lim  &  (Ygmt - Ygmta .* (Ygmt>0))<=lim*4  &  Ygmt>0), 'rec'); 
+    %Ygmtc  = cat_vol_approx(Ygmt .* ( (Ygmt .* (Ygmt>0) - Ygmt)<=2*lim*Ygmta & (Ygmt - Ygmta .* (Ygmt>0))<=lim*Ygmta & Ygmt>0), 'rec'); 
+    Ygmtc  = cat_vol_approx(Ygmt .* ( (Ygmta .* (Ygmt>0) - Ygmt)<=lim*2 & (Ygmt - Ygmta .* (Ygmt>0))<=lim & Ygmt>0), 'rec'); % abs
+    %Ygmtc  = cat_vol_approx(Ygmt .* ( Ygmt < .5*(Ygmta .* (Ygmt>0)) & Ygmt > 1.25*(Ygmta .* (Ygmt>0)) & Ygmt>0), 'rec'); % rel
     % #### maybe the filtering is here still a bit too strong >> .25 ? 
-    Ygmtc  = cat_vol_smooth3X( min(Ygmta,Ygmtc),.5); % better
+    Ygmtc  = cat_vol_smooth3X( min(Ygmta,Ygmtc + thoffsetcor),.25); % better
   else
     Ygmtc  = Ygmta; 
   end
@@ -608,7 +632,7 @@ function [Ycd, Ywd] = cat_vol_cwdist(Yp0,opt,vx_vol)
 %  .levels         .. number of dual distance measurements
 %  .extendedrange  .. estimate values also beyond the boundary to improve
 %                     thickness mapping
-%  .correctoffeset .. use generalized correction for the additional distance
+%  .correctoffset .. use generalized correction for the additional distance
 %                     estimations, eg., for a more WM like value of 2.75 all
 %                     distance values are assumed to be over
 %                     (0 - none, 1 - default difference, 2 - estimated difference)
@@ -625,9 +649,9 @@ function [Ycd, Ywd] = cat_vol_cwdist(Yp0,opt,vx_vol)
     % for the WMD we estimate the distance from the GM/CSF boundary to 
     % limit WMD values to the maximal thickness value
     % same idea as below
-    YMM = cat_vol_morph(Yp0 > 2.5 + opt.extendedrange,'e',1) | isnan(Yp0); 
-    YMC = cat_vol_morph(Yp0 < 1.5 - opt.extendedrange,'e',1) | isnan(Yp0); 
-  
+    YMM = cat_vol_morph(Yp0 > 2.5 + opt.extendedrange,'de',1) | isnan(Yp0); % RD202601: problem for thinn gyri
+    YMC = cat_vol_morph(Yp0 < 1.5 - opt.extendedrange,'de',1) | isnan(Yp0); 
+
     % estimation of the extend range to correct values beyond the other tissue boundary
     if opt.extendedrange > 0
       Ycdlc = Ycd; Ycdhc = Ycd; 
@@ -698,12 +722,12 @@ function [Ycd, Ywd] = cat_vol_cwdist(Yp0,opt,vx_vol)
       end
 
       if opt.extendedrange
-        Ycdl   = Ycdl - Ycdlc; 
-        Ycdh   = Ycdh - Ycdhc; 
+        Ycdl   = Ycdl - Ycdlc;
+        Ycdh   = Ycdh - Ycdhc;
       end
 
       if opt.extendedrange
-        if opt.correctoffeset==2
+        if opt.correctoffset==2
           offsetc = offset/mean(vx_vol) + (cat_stat_nanmedian(Ycdl(Ycdl>0 & Ycdh>0) - Ycdh(Ycdl>0 & Ycdh>0)))/2; 
         else
           offsetc = offset/mean(vx_vol); 
@@ -736,8 +760,8 @@ function [Ycd, Ywd] = cat_vol_cwdist(Yp0,opt,vx_vol)
         Ywdl   = Ywdl - Ywdlc; 
         Ywdh   = Ywdh - Ywdhc; 
       end
-      if opt.correctoffeset
-        if opt.correctoffeset==2
+      if opt.correctoffset
+        if opt.correctoffset==2
           offsetc = offset + (cat_stat_nanmedian(Ywdl(Ywdl>0 & Ywdh>0) - Ywdh(Ywdl>0 & Ywdh>0)))/2; 
         else
           offsetc = offset; 
@@ -750,7 +774,7 @@ function [Ycd, Ywd] = cat_vol_cwdist(Yp0,opt,vx_vol)
       Ywd = Ywd + .5/hss .* Ywdl  +  .5/hss .* Ywdh;
     end
 
-  
+    
 end
 % ======================================================================
 function [Ywd, Ycd, Ygmt] = keepdetails(Yp0, Ywd, Ycd, Ygmt, vx_vol, extendedrange,level)   
