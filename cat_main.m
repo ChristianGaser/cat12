@@ -996,9 +996,10 @@ if job.output.surface
     end
   elseif exist('Yth1','var')
     qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(Yth1(Yth1(:)>1)) cat_stat_nanstd(Yth1(Yth1(:)>1))];
-    th = Yth1(Yth1(:)>1); 
+    th = Yth1(Yth1(:)>.5); 
     % gyrus- and sulcus-width? 
   end
+  qa.subjectmeasures.dist_thickness_md{1} = [cat_stat_nanmedian(th(:)) iqr(th(~isnan(th(:))))]; 
   %% Thickness peaks 
   %  Estimation of kmean peaks to describe the thickess in a better way than
   %  by using only mean and std that are both biased strongly by outliers.

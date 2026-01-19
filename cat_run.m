@@ -709,7 +709,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
                 else
                   col = [0 0 0];
                 end
-                if job.extopts.expertgui >= 0 
+                if job.extopts.expertgui >= 0 && ~strcmp(catgmt{1},'unknown')
                   try 
                     cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('TIV=%4.0fcm%s',...
                       str2double(catrgmv{3}),'3'));  

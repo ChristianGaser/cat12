@@ -1385,7 +1385,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   if job.extopts.print>1 
     if exist('Psurf','var') && ~isempty(Psurf)
       if 1 %~strcmpi(spm_check_version,'octave') && opengl('info')
-        boxwidth = 0.1; 
+        boxwidth = 0.05; 
         if job.extopts.report.type <= 1
           %% classic top view
           %  --------------------------------------------------------------
@@ -1448,7 +1448,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
               end
               set(cc{4},'XTick',1:(surfcolors-1)/6:surfcolors,'xcolor',fontcolor,'ycolor',fontcolor,'XTickLabel',...
                  {'0','1','2','3','4','5','               6 mm'},...
-                'YTickLabel','','YTick',[],'TickLength',[0 0],'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal');
+                'YTickLabel','','YTick',[],'TickLength',[0 0],'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal','XTickLabelRotation',0);
             else
               %% histogram
 
@@ -1513,7 +1513,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
             boxwidth    = diff(srange)/40 / 2; % 0.05; 
           else
             srange      = [0 6]; 
-            boxwidth    = diff(srange)/30 / 2; % 0.1; 
+            boxwidth    = diff(srange)/60 / 2; % 0.05; 
           end
           %% hrange      = srange(1) + boxwidth/2:boxwidth:srange(2);
           if job.output.surface > 10, addcb = 1; else, addcb = 0; end
@@ -1656,7 +1656,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
             [d,h] = hist( side(~isinf(side(:)) & ~isnan(side(:)) &  side(:)<srange(2) & side(:)>srange(1)) , ...
                       srange(1)+boxwidth/2:boxwidth:srange(2)-boxwidth/2);    
           end
-          dmax  = max(d) * 1.2; % 15% extra for the line plot (use thickness phantom to set this value)
+          dmax  = max(d) * 1.4; % 15% extra for the line plot (use thickness phantom to set this value)
           % histogram line
           [dl,hl] = hist( side(~isinf(side(:)) & ~isnan(side(:)) &  side(:)<srange(2) & side(:)>srange(1)) , ...
             srange(1)+boxwidth/2:boxwidth/10:srange(2)-boxwidth/2); %hl = hl + 0.02/2; 
@@ -1711,11 +1711,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
                     sprintf('%+.2f',srange(2)/2),...
                     sprintf('                                                  %+.2f %s changes (smoothed %d times)',...
                     srange(2),res.long.measure,round(res.long.smoothsurf))},...
-                  'YTickLabel','','YTick',[],'TickLength',[0.01 0],'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal'); 
+                  'YTickLabel','','YTick',[],'TickLength',[0.01 0],'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal','XTickLabelRotation',0); 
             else
               set(cc{4},'XTick',1:(surfcolors-1)/6:surfcolors,'xcolor',fontcolor,'ycolor',fontcolor,'XTickLabel',...
                   {'0','1','2','3','4','5',[repmat(' ',1,10) '6 mm']},...
-                  'YTickLabel','','YTick',[],'TickLength',[0.01 0],'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal'); 
+                  'YTickLabel','','YTick',[],'TickLength',[0.01 0],'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal','XTickLabelRotation',0); 
             end
           
             % boxplot

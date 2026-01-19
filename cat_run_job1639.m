@@ -379,6 +379,8 @@ function cat_run_job1639(job,tpm,subj)
         %   - only one object (the masked regions)
         %   - only one background (not in every case?)
         %   - less variance of tissue intensity (only 3 brain classes)
+        %   - to ignore pure zeros (defacing/skull-stripp) is not working
+        %     in Rusak and other simulated cases
         %  ------------------------------------------------------------
         VFn   = spm_vol(nfname); 
         YF    = spm_read_vols(VFn); 
@@ -388,6 +390,30 @@ function cat_run_job1639(job,tpm,subj)
         Oth   = cat_stat_nanmean(YF(~YBG(:) & YF(:)>cat_stat_nanmean(YF(:)))); 
         F0vol = cat_stat_nansum(~YBG(:)) * prod(vx_vol) / 1000; 
         F0std = cat_stat_nanstd(YF(YF(:)>0.5*Oth & ~YBG(:))/Oth);
+        
+        %% RD:20260116: There were issues with (simulated) children data. 
+        %              So very small head volume. Hence we test in this
+        %              case if one object enclose all others.
+        if F0vol < 2500
+          Wth   = prctile(YF(YF(:)>BGth),90);
+          BO    = cat_vol_morph(cat_vol_morph( YF > Wth*.5 , 'o'), 'l', [3 .2 ]);
+          BOL   = cell(1,max(BO(:)));
+          for i=1:max(BO(:))
+            [BOi,R] = cat_vol_resize(BO==i,'reduceV',vx_vol,4,32,'max');
+            BOi     = cat_vol_morph(BOi,'ldc',60,R.vx_volr); 
+            BOL{i}  = cat_vol_resize(BOi,'dereduceV',R) > .5;
+          end
+          bol = nan(numel(BOL));
+          for i=1:numel(BOL)
+            for j=1:numel(BOL)
+              if i~=j, bol(i,j) = max(0,1 - sum( BOL{i}(:) & ~BOL{j}(:) )); end
+            end
+          end
+          enclosing = nnz(bol(:)==1) > (numel(BOL)-2); 
+        else 
+          enclosing = 0;
+        end
+
 % ######## RD202306: not adapted for MP2RAGE - check cat_run_job later        
         %%
         [YL,numo] = spm_bwlabel(double(~YBG),26); clear YL;            %#ok<ASGLU> % number of objects
@@ -398,7 +424,7 @@ function cat_run_job1639(job,tpm,subj)
           ppe.affreg.skullstrippedpara(1)>0.5 && ...                    % many zeros
           ppe.affreg.skullstrippedpara(2)<15 && ...                     % only a few objects
           ppe.affreg.skullstrippedpara(3)<10 && ...                     % only a few background regions 
-          F0vol<2500 && F0std<0.5;                                      % many zeros and not too big
+          F0vol<2500 && F0std<0.5 && ~enclosing;                         % many zeros and not too big
 % RD20220301: Need further test on trimmed data.        
         ppe.affreg.skullstripped = ppe.affreg.skullstripped || ...
           sum([ppe.affreg.skullstrippedpara(1)>0.8 F0vol<1500 F0std<0.4])>1; % or 2 extreme values

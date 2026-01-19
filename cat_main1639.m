@@ -1027,7 +1027,7 @@ if job.output.surface
   if exist('S','var')
     if isfield(S,'lh') && isfield(S.lh,'th1'), th=S.lh.th1; else, th=[]; end
     if isfield(S,'rh') && isfield(S.rh,'th1'), th=[th; S.rh.th1]; end
-    qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; 
+    qa.subjectmeasures.dist_thickness{1}    = [cat_stat_nanmean(th(:)) cat_stat_nanstd(th(:))]; 
     
     if job.extopts.expertgui>1
       if isfield(S,'lh') && isfield(S.lh,'th2'), th2=S.lh.th2; else, th2=[]; end 
@@ -1039,9 +1039,10 @@ if job.output.surface
     end
   elseif exist('Yth1','var')
     qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(Yth1(Yth1(:)>mean(vx_vol)/2)) cat_stat_nanstd(Yth1(Yth1(:)>mean(vx_vol)/2))];
-    th = Yth1(Yth1(:)>1); 
+    th = Yth1(Yth1(:)>.5); 
     % gyrus- and sulcus-width? 
   end
+  qa.subjectmeasures.dist_thickness_md{1} = [cat_stat_nanmedian(th(:)) iqr(th(~isnan(th(:))))]; 
   %% Thickness peaks 
   %  Estimation of kmean peaks to describe the thickess in a better way than
   %  by using only mean and std that are both biased strongly by outliers.

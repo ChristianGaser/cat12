@@ -59,7 +59,7 @@ function cat_main_reportcmd(job,res,qa)
   % coming soon
   
   % print GMV / GMT values (for developer in colors)
-  if job.extopts.expertgui > 0
+  if job.extopts.expertgui >= 0
     if job.extopts.expertgui > 1 && isfield(qa.subjectmeasures,'dist_thickness')
       col = colorgmt(GMC,qa.subjectmeasures.dist_thickness{1}(1)); 
     elseif job.extopts.expertgui > 1 
