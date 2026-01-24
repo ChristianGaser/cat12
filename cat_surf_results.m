@@ -1588,6 +1588,14 @@ if nargout, Ho = H; end
 function Ho = select_atlas(atlas, min_extent, min_overlap)
 global H
 
+if nargin < 3
+  min_overlap = 1;
+end
+
+if nargin < 2
+  min_extent = 1;
+end
+
 % get threshold from clipping
 thresh = [0 0];
 if ~isempty(H.clip)
