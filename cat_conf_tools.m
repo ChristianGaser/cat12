@@ -3484,7 +3484,7 @@ function [check_homogeneity, check_cov] = conf_check_cov(data_xml,outdir,fname,s
   sample.name       = 'Data';
   sample.values     = {data_vol};
   sample.num        = [1 Inf];
-  sample.help       = {'Specify data for each sample. If you specify different samples the mean correlation is displayed in separate boxplots (or violin plots) for each sample.'};
+  sample.help       = {'Specify data for each sample. If you specify different samples the mean zscore is displayed in separate boxplots (or violin plots) for each sample.'};
 
   rps          = cfg_menu;
   rps.tag      = 'userps';
