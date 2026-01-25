@@ -249,6 +249,26 @@ function resamp = get_resampled_values(P,debug,type)
   Pfsavg     = fullfile(fsavgDir,[hemi '.sphere.freesurfer.gii']);
   Pmask      = fullfile(fsavgDir,[hemi '.mask']);
 
+  % fallback for non-standard filenames and gzipped inputs
+  sinfo = cat_surf_info(P,0);
+  if ~exist(Pcentral,'file') && isfield(sinfo,'Pmesh') && exist(sinfo.Pmesh,'file')
+    Pcentral = sinfo.Pmesh;
+  end
+  if ~exist(Pcentral,'file')
+    try
+      Pcentral_alt = char(cat_surf_rename(sinfo,'dataname','central','ee','.gii'));
+      if exist(Pcentral_alt,'file'), Pcentral = Pcentral_alt; end
+    catch %#ok<CTCH>
+    end
+  end
+  if ~exist(Pspherereg,'file')
+    [ppc,ffc,exc] = spm_fileparts(Pcentral);
+    Pspherereg = fullfile(ppc,strrep([ffc exc],'.central.','.sphere.reg.'));
+  end
+  if ~exist(P,'file') && exist([P '.gz'],'file')
+    gunzip([P '.gz']);
+  end
+
   
   % check whether temporary resampled file already exists
   if ~exist(Pvalue,'file')
@@ -256,12 +276,32 @@ function resamp = get_resampled_values(P,debug,type)
     % resample values using warped sphere 
     cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,P,Pvalue);
     err = cat_system(cmd,debug,0);
-    delete(Presamp);
+    if exist(Presamp,'file'), delete(Presamp); end
 
+  end
+
+  % if resampling failed try gii output or return NaNs
+  if ~exist(Pvalue,'file') && ~exist([Pvalue '.gii'],'file') && ~exist([Pvalue '.gii.gz'],'file')
+    try
+      Sfsavg = gifti(Pfsavg);
+      resamp.cdata = nan(size(Sfsavg.vertices,1),1);
+    catch
+      resamp.cdata = nan(0,1);
+    end
+    return
   end
 
   % get surface values
   %resamp.cdata = gifti(Pvalue);
-  resamp.cdata = cat_io_FreeSurfer('read_surf_data',Pvalue);
+  if exist(Pvalue,'file')
+    resamp.cdata = cat_io_FreeSurfer('read_surf_data',Pvalue);
+  else
+    Pgii = [Pvalue '.gii'];
+    if ~exist(Pgii,'file') && exist([Pgii '.gz'],'file')
+      Pgii = [Pgii '.gz'];
+    end
+    g = gifti(Pgii);
+    resamp.cdata = g.cdata;
+  end
 
 end
