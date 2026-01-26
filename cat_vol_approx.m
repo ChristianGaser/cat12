@@ -458,7 +458,7 @@ function TA = cat_vol_approx2479(T,method,vx_vol,res,opt)
 
   T(isnan(T) | isinf(T))=0; 
   maxT = max([ eps; T(T(:)~=0 & T(:)<inf & ~isnan(T(:))) ]);
-  T = single(T/maxT);
+  T = real( single(T/maxT) );
  
   [Tr,resTr]    = cat_vol_resize(T,'reduceV',vx_vol,res,16,'meanm');
   %strcmp(method,'linear') || 0 %
@@ -479,9 +479,9 @@ function TA = cat_vol_approx2479(T,method,vx_vol,res,opt)
     else
       TASr=cat_vol_smooth3X(TAr,2); TAr(~BMr)=TASr(~BMr); clear TASr; 
       opt.lfO = min(0.49,max(0.0001,opt.lfO));
-      TAr = cat_vol_laplace3R(TAr,BMr & ~Tr,opt.lfO); TAr = cat_vol_median3(TAr); %,Tr>0,Tr>0,0.05); 
+      TAr = cat_vol_laplace3R(TAr,BMr & Tr~=0,opt.lfO); TAr = cat_vol_median3(TAr); %,Tr>0,Tr>0,0.05); 
       %TAr = cat_vol_laplace3R(TAr,Tr>0,opt.lfI); 
-      TAr = cat_vol_laplace3R(TAr,BMr & ~Tr,opt.lfO);
+      TAr = cat_vol_laplace3R(TAr,BMr & Tr~=0,opt.lfO);
     end
   else
     TAr = Tr; 
@@ -492,11 +492,11 @@ function TA = cat_vol_approx2479(T,method,vx_vol,res,opt)
   switch method
     case 'nh'
     case 'nn'
-      TAr  = TAr .* (BMr | Tr);
+      TAr  = TAr .* (BMr | Tr~=0);
       [~,MIr]  = cat_vbdist(single(TAr>0),TAr==0,double(resTr.vx_volr)); 
       TAr=TAr(MIr); TASr=cat_vol_smooth3X(TAr,4); TAr(~BMr)=TASr(~BMr);  clear TASr; 
-      TAr = cat_vol_laplace3R(TAr,~BMr,double(opt.lfO)); TAr = cat_vol_median3(TAr,~BMr);
-      TAr = cat_vol_laplace3R(TAr,~Tr,double(opt.lfO)); 
+      TAr = cat_vol_laplace3R(TAr, BMr~=0, double(opt.lfO)); TAr = cat_vol_median3(TAr,~BMr);
+      TAr = cat_vol_laplace3R(TAr, Tr~=0, double(opt.lfO)); 
     case 'linear'
       TNr = TAr;
       Tr  = TAr .* BMr;
