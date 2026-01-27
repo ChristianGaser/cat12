@@ -31,7 +31,7 @@
           <!-- Introduction -->
           <div id="content">
             
-            <h1 id="top">Manual Computational Anatomy Toolbox CAT12</h1>
+            <h1 id="top">Manual: Computational Anatomy Toolbox CAT12</h1>
             
             <!-- Local Table of Contents for quick navigation -->
             <nav aria-label="Table of contents" class="box">
@@ -75,14 +75,14 @@
 
             <!-- ############################# -->
             <h4 id="overview">Overview of the manual</h4>
-            <p>This manual is intended to help any user to perform a computational anatomy analysis using the CAT12 Toolbox. Although it mainly focuses on voxel-based morphometry (VBM) other variants of computational analysis such as deformation-based morphometry (DBM), surface-based morphometry (SBM), and region of interest (ROI) morphometric analysis are also presented and can be applied with few changes.</p>
+            <p>This manual is intended to help any user to perform a computational anatomy analysis using the CAT12 Toolbox. Although it mainly focuses on voxel-based morphometry (VBM), other variants of computational analysis such as deformation-based morphometry (DBM), surface-based morphometry (SBM), and region of interest (ROI) morphometric analyses are also presented and can be applied with few changes.</p>
 
             The manual can be divided into four main sections:<br>              
             <ul>
-              <li>Naturally, a quick guide of how to <a href="#get_started">get started</a> is given at the beginning. This section provides information about <a href="#download">downloading and installing</a> the software and <a href="#starting">starting</a> the Toolbox. Also, a <a href="#basic_vbm">brief overview</a> of the steps of a VBM analysis is given.</li>
-              <li>This is followed by a <a href="#process_data">detailed description of a basic VBM analysis</a> that guides the user step-by-step through the entire process - from preprocessing to contrast selection. This description should provide all the information necessary to successfully analyse most studies.</li>
-              <li>There are some specific cases of VBM analyses, for which the basic analysis workflow has to be adapted. These cases are <a href="#long">longitudinal studies</a> and studies in <a href="#children">children or special patient populations</a>. Relevant changes to a basic VBM analysis are described here and how these changes can be applied. Only the changes are described here - steps such as quality control or smoothing are the same as those described in the basic analysis and are not repeated a second time.</li>
-              <li>The guide concludes with <a href="#add_info">additional information</a> about spaces after registration, naming conventions used and other hints.</li>
+              <li>Naturally, a quick guide on how to <a href="#get_started">get started</a> is given at the beginning. This section provides information about <a href="#download">downloading and installing</a> the software and <a href="#starting">starting</a> the Toolbox. Also, a <a href="#basic_vbm">brief overview</a> of the steps of a VBM analysis is given.</li>
+              <li>This is followed by a <a href="#process_data">detailed description of a basic VBM analysis</a> that guides the user step-by-step through the entire process—from preprocessing to contrast selection. This description should provide all the information necessary to successfully analyse most studies.</li>
+              <li>There are some specific cases of VBM analyses for which the basic analysis workflow has to be adapted. These cases are <a href="#long">longitudinal studies</a> and studies in <a href="#children">children or special patient populations</a>. Relevant changes to a basic VBM analysis are described here, and how these changes can be applied. Only the changes are described here; steps such as quality control or smoothing are the same as those described in the basic analysis and are not repeated a second time.</li>
+              <li>The guide concludes with <a href="#add_info">additional information</a> about spaces after registration, naming conventions used, and other hints.</li>
             </ul>
             <p><a href="#top" aria-label="Back to top">Back to top</a></p>
             
@@ -94,12 +94,12 @@
             
             <ul>
               <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data using defaults (use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.long');">Segment Longitudinal Data</a> for longitudinal data).<br>
-                The resulting segmentations that can now be used for VBM are saved in the "mri" folder and are named "mwp1" for grey matter and "mwp2" for white matter. If you have used the longitudinal pipeline, the default segmentations for grey matter are named "mwp1r" or "mwmwp1r" if the  longitudinal model for detecting larger changes was selected.</li>
-              <li>Get total intracranial volume<a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.calcvol');"> (TIV)</a> to correct for different brain sizes and volumes.<br>
-              Select the xml-files that are saved in the "report" folder.</li>
+                The resulting segmentations that can now be used for VBM are saved in the "mri" folder and are named "mwp1" for grey matter and "mwp2" for white matter. If you have used the longitudinal pipeline, the default segmentations for grey matter are named "mwp1r" or "mwmwp1r" if the longitudinal model for detecting larger changes was selected.</li>
+              <li>Get total intracranial volume <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.calcvol');">(TIV)</a> to correct for different brain sizes and volumes.<br>
+              Select the XML files that are saved in the "report" folder.</li>
               <li>Check the data quality with <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_homogeneity');">Sample Homogeneity</a> for VBM data (optionally consider TIV and age as nuisance variables).<br>
                 Select the grey or white matter segmentations from the first step.</li>
-              <li><a class="function" href="matlab:spm_jobman('interactive','','spm.spatial.smooth');">Smooth</a> data (recommended start value 6 mm<sup>1</sup>).<br>
+              <li><a class="function" href="matlab:spm_jobman('interactive','','spm.spatial.smooth');">Smooth</a> data (recommended starting value of 6 mm<sup>1</sup>).<br>
                 Select the grey or white matter segmentations from the first step.</li>
               <li>Specify the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">Basic Models</a> with the smoothed grey or white matter segmentations and check for design orthogonality and sample homogeneity:
               <ul>
@@ -107,7 +107,7 @@
                 <li>Use "Flexible factorial" for longitudinal data.</li>
                 <li>Use TIV as covariate (confound) to correct different brain sizes.</li>
                 <li>Select threshold masking with an absolute value of 0.1. This threshold can ultimately be increased to 0.2 or even 0.25 if you still notice non-brain areas in your analysis.</li>
-                <li>If you find a considerable correlation between TIV and any other parameter of interest it is advisable to use global scaling with TIV. For more information, refer to <a href="index.html#ortho">Orthogonality</a>.</li>
+                <li>If you find a considerable correlation between TIV and any other parameter of interest, it is advisable to use global scaling with TIV. For more information, refer to <a href="index.html#ortho">Orthogonality</a>.</li>
               </ul></li>
               <li><a class="function" href="matlab:spm_jobman('interactive','','spm.stats.fmri_est');">Estimate</a> the model and finally call <a class="function" href="matlab:[hReg xSPM SPM] = cat_spm_results_ui('Setup');">Results</a>.</li>
               <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x');">Transform and Threshold SPM-maps</a> to (log-scaled) p-maps or correlation maps.</li>
@@ -122,7 +122,7 @@
             
             <ul>
               <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data and also select "Surface and thickness estimation" under "Writing options" (for longitudinal data use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.long');">Segment Longitudinal Data</a>).<br>
-              The surfaces data are saved in the folder "surf" and are named "?h.thickness.*" for cortical thickness.</li>
+              The surface data are saved in the folder "surf" and are named "?h.thickness.*" for cortical thickness.</li>
               <li>Optionally, <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfextract');">Extract Additional Surface Parameters</a> (e.g. sulcal depth, gyrification, cortical complexity).</li>
               <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfresamp');">Resample & smooth</a> surface data (suggested starting value 12 mm for cortical thickness and sulcal depth and 20–25 mm for folding measures<b><sup>1</sup></b>, use the default merging of hemispheres).<br>
               Select the "lh.thickness.*" data in the folder "surf". The resampled data are named "s12.mesh.resampled_32k.thickness.*" for 12 mm smoothed, merged hemispheres that were resampled to 32k template space.</li>
@@ -149,7 +149,7 @@
         
             <!-- ############################# -->
             <h5 id="errors">Errors during preprocessing</h5>
-            <p>Please use the <a class="function" href="matlab:cat_io_senderrormail;">Report Error</a> function if any errors during preprocessing occurred. You first have to select the "err" directory, which is located in the folder of the failed record, and finally, the specified zip-file should be attached manually in the mail.</p>
+            <p>Please use the <a class="function" href="matlab:cat_io_senderrormail;">Report Error</a> function if any errors occurred during preprocessing. You first have to select the "err" directory, which is located in the folder of the failed record, and finally, the specified zip file should be attached manually in the mail.</p>
         
             <!-- ############################# -->
             <h5><sup>1</sup>Note to filter sizes for Gaussian smoothing</h5>
@@ -188,12 +188,12 @@
             <details>
               <summary><u>Important new features</u></summary>
               <ul>
-                <li>The CAT12 manual is now converted to HTML and merged with the online help to a single HTML file with interactive Matlab links that can be called in Matlab.</li>
+                <li>The CAT12 manual is now converted to HTML and merged with the online help into a single HTML file with interactive MATLAB links that can be called in MATLAB.</li>
                 <li>Added new thalamic nuclei <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','thalamic_nuclei.nii')}}))">atlas</a>.</li>
                 <li>Moved some rarely used CAT12 options to expert mode.</li>
                 <li>Added many new options to <a class="function" href="matlab:y=cat_surf_results;">visualise 3D (VBM) results</a> (e.g. new glass brain).</li>
                 <li>The tool to check <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_homogeneity');">Sample Homogeneity</a> has many new options and is now based on calculation of Z-score which is much faster for larger samples.</li>
-                <li>New <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">Basic Models</a> to easier define cross-sectional and longitudinal statistical designs. Some unnecessary options have been removed compared to "Basic Models" in SPM12 and some useful options have been added.</li>
+                <li>New <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">Basic Models</a> to more easily define cross-sectional and longitudinal statistical designs. Some unnecessary options have been removed compared to "Basic Models" in SPM12 and some useful options have been added.</li>
               </ul>
             </details>            
 
@@ -382,7 +382,7 @@
               </li>
               <li><a href="https://neuro-jena.github.io/cat/index.html#DOWNLOAD">Download</a> and unzip the CAT12 Toolbox. You will get a folder named &quot;cat12&quot;, which contains various Matlab files and compiled scripts. Copy the folder &quot;cat12&quot; into the SPM12 &quot;toolbox&quot; folder.
               </li>
-              <li>On newer MAC OS systems (10.15 or higher: Catalina, Big Sur, Monterey, Ventura) you may need to follow the <a href="https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)#macOS_Catalina">SPM12 installation</a> instructions to prevent issues with MEX files.
+              <li>On newer macOS systems (10.15 or higher: Catalina, Big Sur, Monterey, Ventura) you may need to follow the <a href="https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)#macOS_Catalina">SPM12 installation</a> instructions to prevent issues with MEX files.
               </li>
               <li>Older CAT12 versions can be found <a href="http://www.neuro.uni-jena.de/cat12/">here</a>.</li>
             </ul>
@@ -424,14 +424,14 @@
             <ol>
               <li>T1 images are <b>normalized</b> to a template space and <b>segmented</b> into grey matter (GM), white matter (WM), and cerebrospinal fluid (CSF). The preprocessing parameters can be adjusted via the module &quot;Segment Data&quot;.</li>
               <li>After the preprocessing is finished, a <b>quality check</b> is highly recommended. This can be achieved via the modules &quot;Display slices&quot; and &quot;Check sample&quot;. Both options are located in the CAT12 window under &quot;Check Data Quality&quot;. Furthermore, quality parameters are estimated and saved in xml-files for each data set during preprocessing. These quality parameters are also printed on the report PDF-page and can be additionally used in the module &quot;Check sample&quot;.</li>
-              <li>Before entering the GM images into a statistical model, image data needs to be <b>smoothed</b>. Of note, this step is not implemented into the CAT12 Toolbox but achieved via the standard SPM module &quot;Smooth&quot;.</li>
+              <li>Before entering the GM images into a statistical model, image data needs to be <b>smoothed</b>. Of note, this step is not implemented in the CAT12 Toolbox but achieved via the standard SPM module &quot;Smooth&quot;.</li>
             </ol>
 
             <u>(b) Statistical analysis:</u><br><br>
             <ol>
-              <li>The smoothed GM images are entered into a statistical analysis. This requires building a statistical model (e.g. T-Tests, ANOVAs, multiple regressions). This is done by the standard SPM modules &quot;Specify 2nd Level&quot; or preferably &quot;Basic Models&quot; in the CAT12 window covering the same function but providing additional options and a simpler interface optimized for structural data.</li>
+              <li>The smoothed GM images are entered into a statistical analysis. This requires building a statistical model (e.g. t-tests, ANOVAs, multiple regressions). This is done by the standard SPM modules &quot;Specify 2nd Level&quot; or preferably &quot;Basic Models&quot; in the CAT12 window covering the same function but providing additional options and a simpler interface optimized for structural data.</li>
               <li>The statistical model is estimated. This is done with the standard SPM module &quot;Estimate&quot; (except for surface-based data where the function &quot;Estimate Surface Models&quot; should be used instead).</li>
-              <li>If you have used total intracranial volume (TIV) as a confound in your model to correct for different brain sizes it is necessary to check whether TIV reveals a considerable correlation with any other parameter of interest and rather uses global scaling as an alternative approach.</li>
+              <li>If you have used total intracranial volume (TIV) as a confound in your model to correct for different brain sizes, it is necessary to check whether TIV shows a considerable correlation with any other parameter of interest and to use global scaling as an alternative approach if needed.</li>
               <li>After estimating the statistical model, contrasts are defined to get the results of the analysis. This is done with the standard SPM module &quot;Results&quot;.</li>
             </ol>
             <p><em>The sequence of &quot;preprocessing &rarr; quality check &rarr; smoothing &rarr; statistical analysis&quot; remains the same for every VBM or SBM analysis, even when different steps are adapted (see <a href="#children">Processing of Data such as Children</a>).</em></p>
@@ -445,7 +445,7 @@
             
               <li>Of note, you can always find helpful information and parameter-specific explanations at the bottom of the Batch Editor window<b><sup>*</sup></b>.
               </li>
-              <li>All settings can be saved either as .mat file or as .m script file and reloaded for later use. The .m script file has the advantage of being editable with a text editor.</li>
+              <li>All settings can be saved either as a .mat file or as a .m script file and reloaded for later use. The .m script file has the advantage of being editable with a text editor.</li>
             </ul>
             
             <br><p><img id="figure3" width=80% alt="Batch Editor" src="images/batch_gui.jpg"></p>
@@ -471,7 +471,7 @@
 
             <p>The modules described in the previous section help understand the CAT's overall processing workflow, including its priors, templates, and atlases. Also, data processing in CAT can be separated into three main processes: (1) the initial voxel-based processing, (2) the main voxel-based processing, and (3) the surface-based processing (optional), as further detailed below and visualised in <a href="#figure5">Figure 5</a>.</p>
 
-            <p>The <em>&quot;initial voxel-based processing&quot;</em> begins with a spatial adaptive non-local means (SANLM) denoising filter (<a href="https://doi.org/10.1002/jmri.22003">Manjon et al., 2010</a>), which is followed by internal resampling to properly accommodate low-resolution images and anisotropic spatial resolutions. The data are then bias-corrected and affine-registered (to further improve the outcomes of the following steps) followed by the standard SPM &quot;unified segmentation&quot; (<a href="https://doi.org/10.1016/j.neuroimage.2005.02.018">Ashburner and Friston, 2005</a>). The outcomes of the latter step will provide the starting estimates for the subsequent refined voxel-based processing.</p>
+            <p>The <em>&quot;initial voxel-based processing&quot;</em> begins with a spatially adaptive non-local means (SANLM) denoising filter (<a href="https://doi.org/10.1002/jmri.22003">Manjon et al., 2010</a>), which is followed by internal resampling to properly accommodate low-resolution images and anisotropic spatial resolutions. The data are then bias-corrected and affine-registered (to further improve the outcomes of the following steps) followed by the standard SPM &quot;unified segmentation&quot; (<a href="https://doi.org/10.1016/j.neuroimage.2005.02.018">Ashburner and Friston, 2005</a>). The outcomes of the latter step will provide the starting estimates for the subsequent refined voxel-based processing.</p>
 
             <p>The <em>&quot;refined voxel-based processing&quot;</em> uses the output from the unified segmentation and proceeds with skull-stripping of the brain. The brain is then parcellated into the left and right hemisphere, subcortical areas, and the cerebellum. Furthermore, local white matter hyperintensities are detected (to be later accounted for during the spatial normalization and cortical thickness estimation). Subsequently, a local intensity transformation of all tissue classes is performed, which is particularly helpful to reduce the effects of higher grey matter intensities in the motor cortex, basal ganglia, or occipital lobe before the final adaptive maximum a posteriori (AMAP) segmentation. This final AMAP segmentation step (<a href="https://doi.org/10.1109/42.563663">Rajapakse et al., 1997</a>), which does not rely on a priori information of the tissue probabilities, is then refined by applying a partial volume estimation (<a href="https://doi.org/10.1016/j.neuroimage.2004.05.007">Tohka et al., 2004</a>), which effectively estimates the fractional content for each tissue type per voxel. As a last default step, the tissue segments are spatially normalized to a common reference space using Geodesic Shooting (<a href="https://doi.org/10.1016/j.neuroimage.2010.12.049">Ashburner and Friston, 2011</a>) registrations.</p>
 
@@ -498,43 +498,43 @@
               <li>Volumes &lt;-X &rarr; Select Files &rarr; <em>[select the new files]</em> &rarr; Done
               <ul>
                 <li>Select one volume for each subject. As the Toolbox does not support multispectral data (i.e., different imaging methods for the same brain, such as T1-, T2-, diffusion-weighted, or CT images), it is recommended to choose a T1-weighted image.</li>
-                <li>Importantly, the images need to be in the same orientation as the priors; you can double-check and correct them via using &quot;Display&quot; in the SPM menu. The priors are located in your SPM folder &quot;SPM12 &rarr; tpm &rarr; TPM.nii&quot;)</li>
+                <li>Importantly, the images need to be in the same orientation as the priors; you can double-check and correct them by using &quot;Display&quot; in the SPM menu. The priors are located in your SPM folder (SPM12 &rarr; tpm &rarr; TPM.nii).</li>
               </ul></li>
               <li>Split job into separate processes &rarr; <em>[use defaults or modify]</em>
               <ul>
-                <li>To use multi-threading the CAT12 segmentation job with multiple subjects can be split into separate processes that run in the background. If you don't want to run processes in the background then set this value to 0.</li>
-                <li>Keep in mind that each process needs about 1.5..2GB of RAM, which should be considered to choose the appropriate number of processes.</li>
+                <li>To use multi-threading, the CAT12 segmentation job with multiple subjects can be split into separate processes that run in the background. If you don't want to run processes in the background then set this value to 0.</li>
+                <li>Keep in mind that each process needs about 1.5–2 GB of RAM, which should be considered when choosing the appropriate number of processes.</li>
               </ul></li>
 
               <li>Options for initial SPM12 affine registration &rarr; <em>[use defaults or modify]</em>
               <ul>
-                <li>The defaults provide a solid starting point. The SPM12 tissue probability maps (TPMs) are used for the initial spatial registration and segmentation. Alternatively, customized TPMs can be chosen (e.g. for children data) that were created with the Template-O-Matic (TOM) Toolbox. Please note that these TPMs should contain 6 classes: GM/WM/CSF and 3 background classes.</li>
+                <li>The defaults provide a solid starting point. The SPM12 tissue probability maps (TPMs) are used for the initial spatial registration and segmentation. Alternatively, customized TPMs can be chosen (e.g. for pediatric data) that were created with the Template-O-Matic (TOM) Toolbox. Please note that these TPMs should contain 6 classes: GM/WM/CSF and 3 background classes.</li>
               </ul></li>
 
               <li>Extended options for CAT12 segmentation &rarr; <em>[use defaults or modify]</em>
               <ul>
-                <li>Again, the defaults provide a solid starting point. Using the extended options you can adjust specific parameters or the strength of different corrections (&quot;0&quot; means no correction and &quot;0.5&quot; is the default value that works best for a large variety of data).</li>
+                <li>Again, the defaults provide a solid starting point. Using the extended options, you can adjust specific parameters or the strength of different corrections (&quot;0&quot; means no correction and &quot;0.5&quot; is the default value that works best for a large variety of data).</li>
                 <li>CAT12 provides a template for the high-dimensional Shooting registration that should work for most data. However, a customized Shooting template can be selected (e.g. for children data) that was created using the Shooting toolbox. For more information on the necessary steps, see the section &quot;Customized Shooting Template&quot;.</li>
               </ul></li>
 
               <li>Writing options &rarr; <em>[use defaults or modify]</em>
               <ul>
-                <li>For <b>GM, and WM image volumes</b> see <a href="#reg_info">information about native, normalized, and modulated volumes</a>.
+                <li>For <b>GM and WM image volumes</b> see <a href="#reg_info">information about native, normalized, and modulated volumes</a>.
                 <br><u>Note:</u> The default option &quot;Modulated normalized&quot; results in an analysis of relative differences in regional GM volume that have to be corrected for individual brain size in the statistical analysis using total intracranial volume (TIV).</li>
                 <li>A <b>Bias, noise, and globally intensity corrected T1 image</b>, in which MRI inhomogeneities and noise are removed and intensities are globally normalized, can be written in normalized space. This is useful for quality control and also to create an average image of all normalized T1 images to display/overlay the results.
-                <br><u>Note:</u> For a basic VBM analysis use the defaults.</li>
+                <br><u>Note:</u> For a basic VBM analysis, use the defaults.</li>
                 <li>A <b>partial volume effect (PVE) label image volume</b> can also be written in normalized or native space or as a DARTEL export file. This is useful for quality control.
-                <br><u>Note:</u> For a basic VBM analysis use the defaults.</li>
+                <br><u>Note:</u> For a basic VBM analysis, use the defaults.</li>
                 <li>The <b>Jacobian determinant</b> for each voxel can be written in normalized space. This information can be used to do a Deformation-Based Morphometry (DBM) analysis. 
-                <br><u>Note:</u> For a basic VBM analysis this is not needed.</li>
+                <br><u>Note:</u> For a basic VBM analysis, this is not needed.</li>
                 <li>Finally, <b>deformation fields</b> can be written. This option is useful to re-apply normalization parameters to other co-registered images (e.g. fMRI or DTI data).
-                <br><u>Note:</u> For a basic VBM analysis this is not needed.</li>
+                <br><u>Note:</u> For a basic VBM analysis, this is not needed.</li>
               </ul></li>
             </ul><br>
 
-            <p>The resulting files are saved in the respective subfolders and are following the CAT12 <a href="#naming">naming convention</a>.</p>
+            <p>The resulting files are saved in the respective subfolders and follow the CAT12 <a href="#naming">naming convention</a>.</p>
 
-            <p><b>Note:</b> If the segmentation fails, this is often due to an unsuccessful initial spatial registration. In this case, you can try to set the origin (anterior commissure) in the Display tool. Place the cursor roughly on the anterior commissure and press &quot;Set Origin&quot; The now displayed correction in the coordinates can be applied to the image with the button &quot;Reorient&quot;. This procedure must be repeated for each data set individually.</p>
+            <p><b>Note:</b> If the segmentation fails, this is often due to an unsuccessful initial spatial registration. In this case, you can try to set the origin (anterior commissure) in the Display tool. Place the cursor roughly on the anterior commissure and press &quot;Set Origin&quot;. The now displayed correction in the coordinates can be applied to the image with the button &quot;Reorient&quot;. This procedure must be repeated for each data set individually.</p>
             
             <!-- ############################# -->
             <h5 id="module2">Second Module: Display Slices (optionally)</h5>
@@ -550,7 +550,7 @@
               </ul></li>
               <li>Proportional scaling &rarr; <em>[use defaults or modify]</em>
               <ul>
-                <li>Check &quot;yes&quot;, if you display T1 volumes.</li>
+                <li>Check &quot;yes&quot; if you display T1 volumes.</li>
               </ul></li>
               <li>Spatial orientation</li>
               <li>Show slice in mm &rarr; <em>[use defaults or modify]</em>
@@ -606,9 +606,9 @@
               </ul></li>
             </ul>
 
-            <br><p>A window opens with a plot in which the quartic mean Z-scores for all volumes is displayed. Higher quartic mean Z-scores values mean that your data are less similar to each other. The larger the quartic mean Z-score the more deviant is this data from the sample mean. The reason we apply a power of 4 to the z-score (quartic) is to give outliers a greater weight and make them more obvious in the plot. If you click in the plot, the corresponding data is displayed in the lower right corner and allow a closer look. The slider below the image changes the displayed slice. The pop-up menus in the top right-hand corner provide more options. Here you can select other measures that are displayed in the boxplot (e.g. optional quality measures such as noise, bias, weighted overall image quality if these values were loaded). Finally, most deviating data can be displayed in the SPM graphics window to check the data more closely. For surfaces, two additional measures are available (if you have loaded the xml-files ) to utilize the quality check of the surface extraction. The Euler number gives you an idea about the number of topology defects, while the defect size indicates how many vertices of the surface are affected by topology defects. Because topology defects are mainly caused by noise and other image artifacts (e.g. motion) this gives you an impression about the potential quality of your extracted surface.</p>
+            <br><p>A window opens with a plot in which the quartic mean Z-scores for all volumes are displayed. Higher quartic mean Z-score values mean that your data are less similar to each other. The larger the quartic mean Z-score, the more deviant the data are from the sample mean. The reason we apply a power of 4 to the z-score (quartic) is to give outliers a greater weight and make them more obvious in the plot. If you click in the plot, the corresponding data are displayed in the lower right corner and allows a closer look. The slider below the image changes the displayed slice. The pop-up menus in the top right-hand corner provide more options. Here you can select other measures that are displayed in the boxplot (e.g. optional quality measures such as noise, bias, weighted overall image quality if these values were loaded). Finally, the most deviant data can be displayed in the SPM graphics window to check the data more closely. For surfaces, two additional measures are available (if you have loaded the XML files) to assess the quality of the surface extraction. The Euler number gives you an idea about the number of topology defects, while the defect size indicates how many vertices of the surface are affected by topology defects. Because topology defects are mainly caused by noise and other image artifacts (e.g. motion), this gives you an impression about the potential quality of your extracted surface.</p>
 
-            <p>The boxplot in the SPM graphics window displays the quartic mean Z-score values for each subject and indicates the homogeneity of your sample. A high quartic mean Z-score in the boxplot does not always mean that this volume is an outlier or contains an artifact. If there are no artifacts in the image and if the image quality is reasonable you don't have to exclude this volume from the sample. This tool is intended to utilize the process of quality checking and there are no clear criteria defined to exclude a volume only based on the quartic mean Z-score value. However, volumes with a noticeable higher quartic mean Z-score (e.g. above two standard deviations) are indicated and should be checked more carefully. The same holds for all other measures. Data with deviating values have not necessarily to be excluded from the sample, but these data should be checked more carefully with the &quot;Check most deviating data&quot; option. The order of the most deviating data is changed for every measure separately. Thus, the check for the most deviating data will give you a different order for mean correlation and other measures which allows you to judge your data quality using different features.</p>
+            <p>The boxplot in the SPM graphics window displays the quartic mean Z-score values for each subject and indicates the homogeneity of your sample. A high quartic mean Z-score in the boxplot does not always mean that this volume is an outlier or contains an artifact. If there are no artifacts in the image and if the image quality is reasonable, you don't have to exclude this volume from the sample. This tool is intended to support the process of quality checking and there are no clear criteria defined to exclude a volume based only on the quartic mean Z-score value. However, volumes with a noticeably higher quartic mean Z-score (e.g. above two standard deviations) are indicated and should be checked more carefully. The same holds for all other measures. Data with deviating values do not necessarily have to be excluded from the sample, but these data should be checked more carefully with the &quot;Check most deviating data&quot; option. The order of the most deviating data is changed for every measure separately. Thus, the check for the most deviating data will give you a different order for mean correlation and other measures, which allows you to judge your data quality using different features.</p>
 
             <p>If you have loaded quality measures, you can also display the ratio between weighted overall image quality (IQR) and quartic mean Z-score. These two are the most important measures for assessing image quality. Mean Z-score measures the homogeneity of your data used for statistical analysis and is therefore a measure of image quality <b>after</b> pre-processing. Data that deviate from your sample increase variance and therefore minimize effect size and statistical power. The weighted overall image quality, on the other hand, combines measurements of noise and spatial resolution of the images <b>before</b> pre-processing. Although CAT12 uses effective noise-reduction approaches (e.g. spatial adaptive non-local means filter) pre-processed images are also affected and should be checked.</p>
 
@@ -637,8 +637,8 @@
             <!-- ###################################### -->
             <h2 id="build_stats">Building the statistical model</h2>
 
-            <p>Starting with CAT12.8, a new batch mode is used to create statistical models. Now, only cross-sectional and longitudinal data are distinguished and only factorial designs and a few other necessary models are offered, but covering all possible designs. The advantage of this new batch is that it provides tailored options for VBM and many of the rather confusing and unnecessary options in &quot;Basic Models&quot; or &quot;Specify 2nd-level&quot; have now been removed and some VBM-specific options such as correction for TIV are newly provided. This should make it easier to build the statistical model in CAT12. However, the &quot;Full factorial&quot; design now used for cross-sectional data is a bit more complicated to use. However, you are free to use the old statistical batch from the SPM12 GUI (&quot;Basic Models&quot; or &quot;Specify 2nd-level&quot;) as an alternative.</p>
-            <p>Here are some hints on how to relate the old models to the new factorial design. For cross-sectional VBM data, you usually have 1..n samples (which corresponds to factor levels) and optionally covariates and nuisance parameters:</p>
+            <p>Starting with CAT12.8, a new batch mode is used to create statistical models. Now, only cross-sectional and longitudinal data are distinguished and only factorial designs and a few other necessary models are offered, but they cover all possible designs. The advantage of this new batch is that it provides tailored options for VBM and many of the rather confusing and unnecessary options in &quot;Basic Models&quot; or &quot;Specify 2nd-level&quot; have now been removed and some VBM-specific options such as correction for TIV are newly provided. This should make it easier to build the statistical model in CAT12. However, the &quot;Full factorial&quot; design now used for cross-sectional data is a bit more complicated to use. Still, you are free to use the old statistical batch from the SPM12 GUI (&quot;Basic Models&quot; or &quot;Specify 2nd-level&quot;) as an alternative.</p>
+            <p>Here are some hints on how to relate the old models to the new factorial design. For cross-sectional VBM data, you usually have 1–n samples (which corresponds to factor levels) and optionally covariates and nuisance parameters:</p>
             
             <table>
               <tr style="font-weight: 600;">
@@ -704,7 +704,7 @@
                 <p> 0</p>
                 </td>
                 <td colspan="1" rowspan="1">
-                <p>Anova</p>
+                <p>ANOVA</p>
                 </td>
               </tr>
               <tr>
@@ -715,7 +715,7 @@
                 <p>&gt;0</p>
                 </td>
                 <td colspan="1" rowspan="1">
-                <p>AnCova (for nuisance parameters) or Interaction (for covariates)</p>
+                <p>ANCOVA (for nuisance parameters) or Interaction (for covariates)</p>
                 </td>
               </tr>
             </table>
@@ -726,11 +726,11 @@
             <b>Please note that when using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">"Basic Models"</a> in the CAT12 GUI, some unnecessary options have been removed compared to the "Basic Models" in SPM12, and some useful options have been added. We therefore strongly recommend preferring to use the models in CAT12, which offer some advantages especially when defining longitudinal designs.</b><br><br>
             
             <u>Covariates</u><br>
-            This option allows for the specification of covariates and nuisance variables. TIV correction should be rather defined in &quot;Correction of TIV&quot;.<br>
+            This option allows for the specification of covariates and nuisance variables. TIV correction should instead be defined in &quot;Correction of TIV&quot;.<br>
             Note that SPM does not make any distinction between effects of interest (including covariates) and nuisance effects. Covariates and nuisance parameters are handled in the same way in the GLM and differ only in the contrast used.
             <ul>
               <li>Covariates &rarr; New Covariate</li>
-              <li>Vector &lt;-X  enter the values of the covariates (e.g. age in years) in the same order as the respective file names or type “spm_load” to upload a *.txt file with the covariates in the same order as the volumes</li>
+              <li>Vector &lt;-X &rarr; enter the values of the covariates (e.g. age in years) in the same order as the respective file names or type &quot;spm_load&quot; to upload a *.txt file with the covariates in the same order as the volumes</li>
               <li>Name &lt;-X  Specify Text (e.g. “age”)</li>
               <li>Interactions &rarr; None (or optionally "With Factor 1" to account for differences between the groups)</li>
               <li>Centering &rarr; Overall mean</li>
@@ -752,11 +752,11 @@
             </ol>
 
             <u>Check design orthogonality and homogeneity</u><br>
-            In order to identify images with poor image quality or even artefacts you can use <a href="#module4">Check Sample Homogeneity</a>. The idea of this option is to check the Z-score of all files across the sample using the files that are already defined in SPM.mat.<br>
+            In order to identify images with poor image quality or even artefacts, you can use <a href="#module4">Check Sample Homogeneity</a>. The idea of this option is to check the Z-score of all files across the sample using the files that are already defined in SPM.mat.<br>
   
-            <p>The Z-score is calculated for all images and the mean for each image is plotted using a boxplot (or violin plot) and the indicated filenames. The larger the quartic mean Z-score the more deviant is this data from the sample mean. The reason we apply a power of 4 to the z-score (quartic) is to give outliers a greater weight and make them more obvious in the plot. In the plot, outliers from the sample are usually isolated from the majority of data which are clustered around the sample mean. The quartic mean Z-score is plotted at the y-axis and the x-axis reflects the data order.<br>
+            <p>The Z-score is calculated for all images and the mean for each image is plotted using a boxplot (or violin plot) and the indicated filenames. The larger the quartic mean Z-score, the more deviant the data are from the sample mean. The reason we apply a power of 4 to the z-score (quartic) is to give outliers a greater weight and make them more obvious in the plot. In the plot, outliers from the sample are usually isolated from the majority of data which are clustered around the sample mean. The quartic mean Z-score is plotted on the y-axis and the x-axis reflects the data order.<br>
             The advantage of re-checking sample homogeneity at this point is that the given statistical model (design) is used and potential nuisance parameters are taken into account. If you have longitudinal data, the time points of each data set are linked in the graph to indicate intra-subject data. Unsmoothed data (if available and in the same folder) are automatically detected and used. Finally, report files are used if present (i.e., if data has not been moved or the folders renamed) and quality parameters are loaded and displayed.<br>
-            If you have modeled TIV as a nuisance parameter, you must check whether TIV is orthogonal (in other words independent) to any other parameter of interest in your analysis (e.g. parameters you are testing for) using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.chec_SPM');">Check Design Orthogonality</a>. See <a href="#ortho">here</a> for a detailed description.<p>
+            If you have modeled TIV as a nuisance parameter, you must check whether TIV is orthogonal (in other words independent) to any other parameter of interest in your analysis (e.g. parameters you are testing for) using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.chec_SPM');">Check Design Orthogonality</a>. See <a href="#ortho">here</a> for a detailed description.</p>
 
             <u>Voxel-wise covariate (experimental!)</u><br>
             This experimental option allows the specification of a voxel-wise covariate. If you have more than one modality (i.e., functional and structural data), this can be used (depending on the contrast you define) to:
@@ -774,7 +774,7 @@
               <li><a class="function" href="matlab:cat_vol_slice_overlay;">Slice Overlay</a> to display volume results (i.e. VBM)</li>
               <li><a class="function" href="matlab:y=cat_surf_results;">Surface Overlay</a> that allows to overlay results from surfaces or volumes</li>
             </ol>
-            Please note that options 2 an 3 require that the results are already thresholded (e.g. using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x');">Transform and Threshold SPM-maps</a>) or were analyzed with the <a class="function" href="matlab:if exist('spm_TFCE'),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">TFCE</a> toolbox (preferred approach).
+            Please note that options 2 and 3 require that the results are already thresholded (e.g. using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x');">Transform and Threshold SPM-maps</a>) or were analyzed with the <a class="function" href="matlab:if exist('spm_TFCE'),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">TFCE</a> toolbox (preferred approach).
 
             <!-- ############################# -->
             <h5 id="two_sample">Two-sample T-Test</h5>
@@ -1060,7 +1060,7 @@
             <p>CAT12 &rarr; Estimate (Surface) Models</p>
 
             <p>Select SPM.mat which you just built.</p>
-            Note that for surface data you should rather use this estimation option instead of &quot;Estimate&quot; in the SPM12 GUI, otherwise the underlying surface after calling the results will be mistakenly be the surface of the first selected data set instead of the average surface.
+            Note that for surface data you should rather use this estimation option instead of &quot;Estimate&quot; in the SPM12 GUI, otherwise the underlying surface after calling the results would mistakenly be the surface of the first selected data set instead of the average surface.
                         
             <!-- ############################# -->
             <h5 id="ortho">Checking for design orthogonality</h5>
@@ -1089,7 +1089,7 @@
 
             <p>The larger the correlation between TIV and any parameter of interest, the more cautious one must be when using TIV as a nuisance parameter. In this case an alternative approach is to use global scaling with TIV. If you use <a class="function" href="matlab:spm_jobman('interactive','','spm.stats.factorial_design');">Basic models</a> in the SPM12 GUI, the settings below for this approach can be used.</p>
 
-            <b>Please note that when using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">"Basic Models"</a> in the CAT12 GUI, the global scaling option prepares that for you, which eases the process and is the recommended way and the 3 steps in the next list are not needed.</b></b><br>
+            <b>Please note that when using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">"Basic Models"</a> in the CAT12 GUI, the global scaling option prepares that for you, which eases the process and is the recommended way, and the three steps in the next list are not needed.</b><br>
 
             <ul>
               <li>Global Calculation &rarr; User &rarr; Global Values &lt;-X &rarr; Define the TIV values here</li>
@@ -1097,13 +1097,13 @@
               <li>Normalisation &rarr; Proportional</li>
             </ul>
 
-            <p>This approach is (proportionally) scaling the data according to the individual TIV values. Instead of removing variance explained by TIV all data are scaled by their TIV values. This is also similar to the approach that was used in VBM8 (&quot;modulate for non-linear effects only&quot;), where global scaling was internally used with an approximation of TIV (e.g. inverse of affine scaling factor).</p>
+            <p>This approach scales the data (proportionally) according to the individual TIV values. Instead of removing variance explained by TIV, all data are scaled by their TIV values. This is also similar to the approach that was used in VBM8 (&quot;modulate for non-linear effects only&quot;), where global scaling was internally used with an approximation of TIV (e.g. inverse of affine scaling factor).</p>
 
             <p>Please note that global normalization also affects the absolute masking threshold as your images are now scaled to the &quot;Grand mean scaled value&quot; of the Global Normalization option. If you have defined the mean TIV of your sample (or an approximate value of 1500) here, no change of the absolute threshold is required. Otherwise, you will have to correct the absolute threshold because your values are now globally scaled to the &quot;Grand mean scaled value&quot; of the Global Normalization option.</p>
 
             <p>An alternative approach for all models with more than one group should not be unmentioned. This is to use TIV as a nuisance parameter with interaction and mean centering with the factor &quot;group&quot;. This interaction is automatically taken into account when you use the TIV ANCOVA correction in CAT12 <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">Basic Models</a>. That approach will result in separate columns of TIV for each group. The values for the nuisance parameters are here mean-centered for each group. As the mean values for TIV are corrected separately for each group, it is prevented that group differences in TIV have a negative impact on the group comparison of the image data in the GLM. Variance explained by TIV is here removed separately for each group without affecting the differences between the groups.</p>
 
-            <p>Unfortunately, no clear advice for either of these two approaches can be given and the use of these approaches will also affect the interpretation of your findings.</p>
+            <p>Unfortunately, no clear advice for either of these two approaches can be given, and the use of these approaches will also affect the interpretation of your findings.</p>
             
             <!-- ############################# -->
             <h5 id="contrasts">Defining contrasts</h5>
@@ -1114,7 +1114,7 @@
 
             <p>SPM Batch Editor &rarr; SPM &rarr; Stats &rarr; Contrast Manager</p>
 
-            <p>Please note that all zeros at the end of the contrast don't have to be defined, but are sometimes remained for didactic reasons.</p>
+            <p>Please note that all zeros at the end of the contrast don't have to be defined, but are sometimes retained for didactic reasons.</p>
 
             <table class="img">
               
@@ -1750,7 +1750,7 @@
             <p>The CAT12 Toolbox supplies a batch for longitudinal study design. Here, for each subject the respective images need to be selected. Intra-subject realignment, bias correction, segmentation, and spatial registration are calculated automatically. Preprocessed images are written as mwp1r* and mwp2r* for grey and white matter respectively. By selecting the optimized pipeline to detect larger changes an additional &quot;mw&quot; is prepended to the name due to the additional warping and modulation steps. To define the segmentation and registration parameters, the defaults in cat_defaults.m are used. Optionally surfaces can be extracted in the same way as in the cross-sectional pipeline and the realigned tissue segmentations are used for this step.</p>
             
             <!-- ############################# -->
-            <h4>Choose of longitudinal model and comparison to SPM12 longitudinal registration</h4>
+            <h4>Choice of longitudinal model and comparison to SPM12 longitudinal registration</h4>
             <p>SPM12 also offers a batch for pairwise or serial longitudinal registration. In contrast to CAT12, this method relies on the deformations needed to non-linearly register the images of all time points to the mean image. Local volume changes can be calculated from these deformations, which are then multiplied (modulated) by the segmented mean image.</p>
             <p>However, not only the underlying methods differ between SPM12 and the CAT12 longitudinal, but also the focus of possible applications. SPM12 additionally regularizes the deformations with regard to the time differences between the images and has its strengths more in finding larger effects over longer periods of time (e.g. ageing effects or atrophy). The use of deformations between the time points makes it possible to estimate and detect larger changes, while subtle effects over shorter periods of time in the range of weeks or a few months are more difficult to detect. In contrast, longitudinal preprocessing in CAT12 has been initially developed and optimized to detect more subtle effects over shorter periods of time (e.g. brain plasticity or training effects after a few weeks or even shorter times), but now also offers a longitudinal model that is optimized to detect larger changes. With these two different longitudinal models, CAT12 attempts to combine the advantages of both approaches, providing flexibility for a wide range of potential data.</p>
             <p>Unfortunately, there is no clear recommendation for one method or the other method. As a rule of thumb, however, the following could apply: The shorter the time periods and the smaller the expected changes, the more likely the longitudinal model for small changes is the right choice. To find effects of ageing or atrophy due to a (neurodegenerative) disease after a longer period of time, I recommend the longitudinal model for large changes in CAT12.</p>
@@ -1796,9 +1796,9 @@
 
             <p>The main interest in longitudinal studies is in the change of tissue volume over time in a group of subjects or the difference in these changes between two or more groups. The setup of the statistical model needed to evaluate these questions is described in three examples. First, the case of only one group of 8 subjects with 2 time points each (e.g. normal ageing) is shown. Then, the case of two groups of subjects with 4 time points is described. Here, we can test for a time by group interaction if we assume that the time points are acquired at the same time and are therefore comparable between the groups. If the time points are not acquired at the same time and are therefore not comparable between the groups, we can use the third design. This design models a time by group interaction using an additional covariate (e.g. age at scanning) and offers more flexibility.</p>
             <p>These examples should cover most analyses - the number of time points / groups just needs to be adjusted. Unlike the analysis of cross-sectional data, as described above, we need to use the flexible factorial model, which takes into account that the time points for each subject are dependent data.</p>
-            <p>Please note that it's not strictly necessary to use TIV as a covariate (nuisance) because we are analyzing intra-individual effects that do not need to be corrected and TIV should not change over time.</p>
+            <p>Please note that it's not strictly necessary to use TIV as a covariate (nuisance) because we are analysing intra-individual effects that do not need to be corrected and TIV should not change over time.</p>
             
-            Again, we recommend using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">"Basic Models"</a> in CAT12 GUI, where some unnecessary options have been removed compared to "Basic Models" in SPM12 and some useful options have been added. The same <a href="#stat_options">notes and options</a> apply here as for the cross-section designs.<br>
+            Again, we recommend using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">"Basic Models"</a> in the CAT12 GUI, where some unnecessary options have been removed compared to "Basic Models" in SPM12 and some useful options have been added. The same <a href="#stat_options">notes and options</a> apply here as for the cross-sectional designs.<br>
 
             <!-- ############################# -->
             <h5 id="long_one">Longitudinal data in one group</h5>
@@ -2463,8 +2463,8 @@
             <!-- ############################# -->
             <h4 id="tpm">Customized Tissue Probability Maps</h4>
 
-            <u>Within TOM8 Toolbox or Cerebromatic toolbox</u>
-            <p>&rarr; create your own customized TPM based on the respective toolbox&quot;s instructions</p>
+            <u>Within TOM8 Toolbox or CerebroMatic toolbox</u>
+            <p>&rarr; create your own customized TPM based on the respective toolbox's instructions</p>
             
             <u>Implementation into CAT12</u>
             <p>CAT12 &rarr; Segment Data</p>
@@ -2532,7 +2532,7 @@
               </ul>
             <p>&rarr; all other options: use defaults or modify as you wish</p>
             
-            <p>Please note, that a subsequent smoothing is not necessary before statistics if you have used the option &quot;Normalise to MNI space&quot; with a defined Gaussian FWHM.</p>
+            <p>Please note that a subsequent smoothing is not necessary before statistics if you have used the option &quot;Normalise to MNI space&quot; with a defined Gaussian FWHM.</p>
             
             <u>Alternative approach</u>
             <p>Instead of creating your own customized DARTEL template as described above you can also make use of the customized DARTEL templates that are created with the <a href="https://www.medizin.uni-tuebingen.de/de/das-klinikum/einrichtungen/kliniken/kinderklinik/kinderheilkunde-iii/forschung-iii/software">CerebroMatic Toolbox</a> by Marko Wilke.</p>
@@ -2607,7 +2607,7 @@
             
             <p>&rarr; all other options: use defaults or modify as you wish</p>
             
-            <p>Please note, that a subsequent smoothing is not necessary before statistics if you have used the option &quot;Write Normalised&quot; with a defined Gaussian FWHM.</p>
+            <p>Please note that a subsequent smoothing is not necessary before statistics if you have used the option &quot;Write Normalised&quot; with a defined Gaussian FWHM.</p>
             <p>Optionally you can also use either the externally-made or your newly created, customized Shooting templates directly in the CAT12 Toolbox for new data that should be processed with this template.</p>
             
             <!-- ################################################################################# -->
@@ -2785,7 +2785,7 @@
             
             <!-- ############################# -->
             <h4>Use of atlas functions in SPM12</h4>
-            <p>You can also use the volume-based atlases delivered with CAT as atlas maps with SPM atlas functions. This is particularly useful if you have used the default VBM processing pipeline, since the CAT12 atlas maps are then in the same Shooting space as your data. If you have used the default VBM processing pipeline, it is recommended to use CAT12 atlases in the Shooting space instead of the SPM Neuromorphometrics atlas. To use CAT12 atlases, you must call the cat_install_atlases function once , which copies the atlases to SPM. By default, only Neuromorphometics, LPBA40, and Hammers atlas maps are used, which are identified by a leading &quot;&quot;dartel_&quot;&quot; in the name.</p>
+            <p>You can also use the volume-based atlases delivered with CAT as atlas maps with SPM atlas functions. This is particularly useful if you have used the default VBM processing pipeline, since the CAT12 atlas maps are then in the same Shooting space as your data. If you have used the default VBM processing pipeline, it is recommended to use CAT12 atlases in the Shooting space instead of the SPM Neuromorphometrics atlas. To use CAT12 atlases, you must call the cat_install_atlases function once, which copies the atlases to SPM. By default, only Neuromorphometrics, LPBA40, and Hammers atlas maps are used, which are identified by a leading &quot;&quot;dartel_&quot;&quot; in the name.</p>
             <p>Atlas maps for surfaces can be used with the function CAT12 &rarr; Display Results &rarr; Surface Overlay. You can use the data cursor function to display atlas regions under the cursor. In addition, you can use the &quot;&quot;Atlas labeling&quot;&quot; function to print a list of atlas regions of the resulting clusters or overlay the atlas borders on your rendered surface.</p>
             
             <!-- ################################################################################# -->
@@ -2807,7 +2807,7 @@
             <!-- ###################################### -->
             <h3 id="naming">Naming convention of output files</h3>
 
-            <p>Please note that the resulting files of CAT12 are organized in separate subfolders (e.g. mri, report, surf, label). If you don't want to use subfolders you can change the option &quot;cat12.extopts.subfolders&quot; in cat_default.m to &quot;0&quot;.</p>
+            <p>Please note that the resulting files of CAT12 are organized in separate subfolders (e.g. mri, report, surf, label). If you don't want to use subfolders you can change the option &quot;cat12.extopts.subfolders&quot; in cat_defaults.m to &quot;0&quot;.</p>
 
             <!-- ############################# -->
             <h4>Images (saved in subfolder &quot;mri&quot;)</h4>
@@ -3107,7 +3107,7 @@
             
             <!-- ############################# -->
             <h5>Standalone versions (precompiled)</h5>
-            <p>The advantage of the standalone version is that no Matlab license is needed. Only the (free) Matlab Runtime R2023b (v232) has to be downloaded. However, there are some limitations (e.g. no parallelization and no interactive help in the GUI version) and the standalone version is mainly intended to run without GUI on Unix systems. Please check the <a href="https://neuro-jena.github.io/enigma-cat12/#standalone">ENIGMA CAT12</a> site fore more information and examples to call CAT12 from shell scripts.</p>
+            <p>The advantage of the standalone version is that no Matlab license is needed. Only the (free) Matlab Runtime R2023b (v232) has to be downloaded. However, there are some limitations (e.g. no parallelization and no interactive help in the GUI version) and the standalone version is mainly intended to run without GUI on Unix systems. Please check the <a href="https://neuro-jena.github.io/enigma-cat12/#standalone">ENIGMA CAT12</a> site for more information and examples to call CAT12 from shell scripts.</p>
             <p>The MATLAB Compiler Runtime (MCR) enables you to run applications compiled within MATLAB using MATLAB Compiler. MCR does not require a MATLAB license and can be used to run the MATLAB compiled program on computers which do not have MATLAB installed. </p>
             <ul class="actions">
               <li><a href="https://www.neuro.uni-jena.de/cat12/cat12_latest_R2023b_MCR_Linux.zip" class="button">CAT12 Standalone for Linux</a></li>
@@ -3138,7 +3138,7 @@
             <p></br>Description of CAT12 statistics:</p>
             <ul>
               <li>Start: Information about Matlab version. This data is sent to our SBM server when CAT12 is started and provides the approximate number of (unique) users (see unique pageviews)</li>
-              <li>CAT12.X: Information about CAT12 version, computer platform and unsuccessful preprocessings. This data is sent to our SBM server during preprocessing to obtain information about possible errors (see pageviews).</li>
+              <li>CAT12.X: Information about CAT12 version, computer platform and unsuccessful preprocessing. This data is sent to our SBM server during preprocessing to obtain information about possible errors (see pageviews).</li>
             </ul>
               
 <!--            <div id="widgetIframe"><iframe width="100%" height="300" src="https://www.neuro.uni-jena.de/piwik/index.php?module=Widgetize&action=iframe&forceView=1&viewDataTable=graphEvolution&disableLink=0&widget=1&moduleToWidgetize=VisitsSummary&actionToWidgetize=getEvolutionGraph&idSite=1&period=day&date=today&columns=nb_uniq_visitors&disableLink=1&widget=1&language=en" scrolling="yes" frameborder="0" marginheight="0" marginwidth="0"></iframe></div>
@@ -3179,7 +3179,7 @@
             <p>To improve the initial SPM segmentation, an initial affine registration is applied to a bias-corrected image and the intensity range is limited to avoid problems in special protocols. If the preprocessing fails a more aggressive version is available that applies a rough bias correction and removes non-brain parts of the brain before the initial affine registration.</p>
             
             <i>Local Adaptive Segmentation (LAS)</i>
-            <p>GM intensity can vary for different regions such as the motor cortex, the basal ganglia, or the occipital lobe. These changes have an anatomical background (e.g. iron content, myelenization), but are dependent on the MR-protocol and often lead to GM-underestimations at higher intensities and CSF-overestimations at lower intensities. Therefore, a local intensity transformation of all tissue classes is used to reduce these effects in the image before the final AMAP segmentation. The strength of the changes is controlled by the LASstr parameter, with 0 for no LAS, small values (0.01-0.5) for small adjustments, 0.5 for medium adjustments (default), and higher values (0.5-1) for strong adjustments.</p>
+            <p>GM intensity can vary for different regions such as the motor cortex, the basal ganglia, or the occipital lobe. These changes have an anatomical background (e.g. iron content, myelination), but are dependent on the MR-protocol and often lead to GM-underestimations at higher intensities and CSF-overestimations at lower intensities. Therefore, a local intensity transformation of all tissue classes is used to reduce these effects in the image before the final AMAP segmentation. The strength of the changes is controlled by the LASstr parameter, with 0 for no LAS, small values (0.01-0.5) for small adjustments, 0.5 for medium adjustments (default), and higher values (0.5-1) for strong adjustments.</p>
             
             <i>AMAP Segmentation</i>
             <p>The segmentation approach is based on an Adaptive Maximum A Posterior (AMAP) technique without the need for a priori information on the tissue probabilities. This means that the Tissue Probability Maps (TPM) are not constantly used in the sense of the classical Unified Segmentation approach (<a href="https://doi.org/10.1016/j.neuroimage.2005.02.018">Ashburner and Friston, 2005</a>), but only for spatial normalization, initial skull-stripping, and as initial segmentation estimate. The subsequent AMAP estimation is adaptive in the sense that local variations of the parameters (i.e., means and variance) are modelled as slowly varying spatial functions (<a href="https://doi.org/10.1109/42.563663">Rajapakse et al., 1997</a>). This accounts not only for intensity inhomogeneities, but also for other local intensity variations.</p>
@@ -3230,7 +3230,7 @@
             <i>Topology Correction</i>
             <p>
               The initial central surface usually contains small topology defects (handles and holes) in problematic regions such as the medial temporal lobe that have to be removed for a correct spherical projection to the average surface. 
-              In order to repair topological defects we use a novel method that relies on spherical harmonics <a href="https://neuro-jena.github.io/pdf/Yotter-HBM10.pdf">(Yotter et al. 2011a)</a>. First, the original MRI intensity values are used as a basis to select either a "fill" or "cut" operation for each topological defect. We modify the spherical map of the uncorrected brain surface mesh, such that certain triangles are favored while searching for the bounding triangle during reparameterization. Then, a low-pass filltered alternative reconstruction based on spherical harmonics is patched into the reconstructed surface in areas that previously contained defects
+              In order to repair topological defects we use a novel method that relies on spherical harmonics <a href="https://neuro-jena.github.io/pdf/Yotter-HBM10.pdf">(Yotter et al. 2011a)</a>. First, the original MRI intensity values are used as a basis to select either a "fill" or "cut" operation for each topological defect. We modify the spherical map of the uncorrected brain surface mesh, such that certain triangles are favored while searching for the bounding triangle during reparameterization. Then, a low-pass filtered alternative reconstruction based on spherical harmonics is patched into the reconstructed surface in areas that previously contained defects
             </p>
             
             <i>Spherical Mapping</i>
@@ -3250,7 +3250,7 @@
               The <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.surfextract')">Extract Additional Surface Parameters</a>  batch allows estimation of the folding measure by the absolute mean curvature <i>(Gyrification)</i> <a href="https://neuro-jena.github.io/pdf/Luders-NI06.pdf">(Luders et al. 2006)</a>, the depth of sulci or the measurement of local surface complexity by the fractal dimension <a href="https://neuro-jena.github.io/pdf/Yotter-NI11.pdf">(Yotter et al. 2011c).</a> 
               <!-- value mapping -->
               Moreover, 3D volume data (e.g. fMRI data) can be mapped to the individual surface to benefit from enhanced surface-based smoothing and registration. 
-              The mapping can by applied to volumes from the same <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.vol2surf')">native space</a>, e.g., for cortical myelination measures, or <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.cat_surf_coregvol2surf')">nonlinear co-registered volumes,</a> such as fMRI images. This mapping can also be applied to <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.vol2surftemp')">normalized volumes</a> without individual surfaces to map results in MNI space to the template surface.
+              The mapping can be applied to volumes from the same <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.vol2surf')">native space</a>, e.g., for cortical myelination measures, or <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.cat_surf_coregvol2surf')">nonlinear co-registered volumes,</a> such as fMRI images. This mapping can also be applied to <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.vol2surftemp')">normalized volumes</a> without individual surfaces to map results in MNI space to the template surface.
               <!-- link -->
 <!--              See <a href="cat_tools_SBM.html">surface tools</a> for further information. -->
             </p>
@@ -3285,7 +3285,7 @@
               These maps can optionally be visualised using <a class="function" href="matlab:cat_vol_slice_overlay;">overlay selected slices</a> for volume maps or <a class="function" href="matlab:y=cat_surf_results;">Surface Overlay</a> for surface maps.<br>
               In order to analyse different measures (e.g. Vgm/Vwm for volumes or thickness/gyrification for surfaces) you can use any existing volume-based analysis to extract different volume measures or any existing surface-based analysis to extract different surface measures. To give an example: An existing SPM.mat file with a VBM analysis of GM allows you to analyse ROI measures for both, GM as well as WM. Thus, it is not necessary to have a SPM.mat file of a VBM analysis of WM. The same holds for surface-based analysis. If you have an existing SPM.mat for the analysis of cortical thickness you can also estimate ROI analysis for gyrification or fractal dimension. However, it is necessary to extract before ROI-based measures for each subject using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surf2roi');">Extract Additional Surface Parameters</a>.<br>    
               For ROI analysis of surfaces you can select the SPM.mat file of the analysis either for the left or right hemisphere or the merged hemispheres. The design should be the same and the ROI results will be always estimated for both hemispheres.<br>
-              Please note, that if you have moved your data after estimating your original voxel- or surfaced-based statistics the needed ROI files cannot be found.
+              Please note that if you have moved your data after estimating your original voxel- or surface-based statistics the needed ROI files cannot be found.
             </p>
             
             <!-- ############################# -->
@@ -3403,7 +3403,7 @@
 
             <h6 id="IBSR">IBSR</h6>
             <p>
-              18 subjectes of the <a href="http://www.nitrc.org/projects/ibsr">IBSR V2</a> dataset, with low quality T1 data, but good label maps. 
+              18 subjects of the <a href="http://www.nitrc.org/projects/ibsr">IBSR V2</a> dataset, with low quality T1 data, but good label maps. 
             </p>
             <p>
               Display IBSR atlas as 
@@ -3679,14 +3679,14 @@
             <h4 id="qc">CAT report and quality control</h4>
 
             <p>
-              CAT now also prints image quality measurements <a href="#Dahnke:2022">(Dahnke et al. 2022)</a> and major global subjects specific measures in addition to the used preprocessing parameters.
+              CAT now also prints image quality measurements <a href="#Dahnke:2022">(Dahnke et al. 2022)</a> and major global subject-specific measures in addition to the used preprocessing parameters.
               These data are further saved in the "cat_*.xml" files for each subject that can be read by <a class="function" href="matlab:cat_io_xml">cat_io_xml</a>.  
             </p>
             
             <h5>Image quality measures</h5>
             <p>
               Due to the wide range of rating and marking systems, the rating was defined for a percentage range and a numerical scaling that allows mapping to nominal numbers or letters with chromatic variants ("+" and "-") shown in table below. 
-              The obtained quality ratings range from 0.5 (100 rating points (rps)) to 10.5 (0 rps) with values around 1 and 2 describing (very) good image quality (grad A and B) and values around 5 (grad E) and higher (grad F, < 50 rps) indicating problematic images.
+              The obtained quality ratings range from 0.5 (100 rating points (rps)) to 10.5 (0 rps) with values around 1 and 2 describing (very) good image quality (grade A and B) and values around 5 (grade E) and higher (grade F, < 50 rps) indicating problematic images.
               The scaling of the QMs was performed on the basis of theoretical aspects and the analysis of synthetic and real MRI data, especially the BWP (Brain Web Phantom; <a href="#Collins:1998">Collins et al. 1998</a>).
             </p> 
             <p style="text-align:center;"><img src="images/cat_qa_rating-table.jpg" width=90% height=auto alt="Quality rating" ><p>
@@ -3723,8 +3723,8 @@
             </p>
             <p style="text-align:center;"><img src="images/cat_qa_rating-distribution.png" width=80% height=auto alt="Quality distribution of large projects" ><p>
             <p>
-              Low image quality can lead to underestimation of the GM in most preprocessings <a href="#Reuter:2015">(Reuter et al. 2015</a>, <a href="#Dahnke:2022">Dahnke et al. 2022)</a>.
-              The following figure shows the effect of motion artifacts on IQR and the relative GM volume rGMV of a children dataset processed by 5 different tissue segmentations.
+              Low image quality can lead to underestimation of the GM in most preprocessing <a href="#Reuter:2015">(Reuter et al. 2015</a>, <a href="#Dahnke:2022">Dahnke et al. 2022)</a>.
+              The following figure shows the effect of motion artifacts on IQR and the relative GM volume rGMV of a children's dataset processed by 5 different tissue segmentations.
             </p> 
             <p style="text-align:center;"><img src="images/cat_qa_expert.png" width=90% height=auto alt="Quality rating" ><p>
                           
@@ -3767,13 +3767,13 @@
             <details>            
               <summary><u>Can we use CAT12 for white matter volume analysis?</u></summary>
               Of course, CAT12 can examine white matter (WM). However, keep in mind that there are more sensitive methods for WM, such as DTI, and the sensitivity for WM may be lower compared to grey matter. This is because white matter regions are often quite homogeneous in T1-weighted images, making it more difficult to find differences.<br>
-              However, if you do find something, all is fine, but if you do not, it may simply be due to the lower sensitivity.</a>.
+              However, if you do find something, all is fine, but if you do not, it may simply be due to the lower sensitivity.
             </details>            
 
             <details>            
               <summary><u>The old "Check Sample Homogeneity" tool was quite useful for finding duplicate subjects in large samples. The new homogeneity tool, which uses Z-score, no longer supports this. What is the difference between these measures?</u></summary>
               Both homogeneity measures differ in their calculations and it’s difficult to say which is a better and more suitable measure. I prefer the new z-score measure over correlation since it’s quicker to estimate for larger samples and aligns with the idea that outliers are often identified by the sample standard deviation. The z-score is computed as the difference between the sample mean and the voxel value, divided by the standard deviation, and averaged across all voxels.<br>
-              Furthermore, newer CAT12 versions use the quatric mean Z-score, which gives outliers a greater weight and make them more obvious in the plot. However, the old tool is still available <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_homogeneity');">here</a>.
+              Furthermore, newer CAT12 versions use the quartic mean Z-score, which gives outliers a greater weight and makes them more obvious in the plot. However, the old tool is still available <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_homogeneity');">here</a>.
             </details>            
 
             <details>            
@@ -3911,7 +3911,7 @@
             Najdenovska E, Alemán-Gómez Y, Battistella G, Descoteaux M, Hagmann P, Jacquemont S, Maeder P, Thiran JP, Fornari E, Bach Cuadra M. <a href="https://doi.org/10.1038/sdata.2018.270">
             In-vivo probabilistic atlas of human thalamic nuclei based on diffusion- weighted magnetic resonance imaging.</a> Sci Data. 2018 Nov 27;5:180270.</p>
 
-            <p><u>Thalamic Nucei Atlas</u><br>
+            <p><u>Thalamic Nuclei Atlas</u><br>
             Saranathan M, Iglehart C, Monti M, Tourdias T, Rutt B. <a href="https://doi.org/10.1038/s41597-021-01062-y">
             In vivo high-resolution structural MRI-based atlas of human thalamic nuclei.</a> Sci Data. 2021 Oct 28;8(1):275.</p>
 
@@ -3971,7 +3971,7 @@
             Schaefer A, Kong R, Gordon EM, Laumann TO, Zuo XN, Holmes AJ, Eickhoff SB, Yeo BTT. <a href="https://doi.org/10.1093/cercor/bhx179">
             Local-Global Parcellation of the Human Cerebral Cortex from Intrinsic Functional Connectivity MRI.</a> Cereb Cortex. 2018 Sep 1;28(9):3095-3114.</p>
 
-            <p><u>Melborune Subcortical Atlas</u><br>
+            <p><u>Melbourne Subcortical Atlas</u><br>
             Tian, Y, Margulies, DS, Breakspear, M, Zalesky A. <a href="https://doi.org/10.1038/s41593-020-00711-6">Topographic organization of the human subcortex unveiled with functional connectivity gradients.</a> Nat Neurosci 23: 1421–1432.</p>
             
             
@@ -4042,7 +4042,7 @@
             Algorithms to Improve the Re-Parameterization of Spherical Mappings of Brain.</a> Journal of Neuroimaging 21(2):e134-47. </p>
             
             <p>R.A. Yotter, G. Ziegler, P.M. Thompson, C. Gaser (2011d). <a href="http://www.neuro.uni-jena.de/hbm2011/Yotter02.pdf">
-            Diffeometric Anatomical Registration on the Surface.</a> OHBM 2011</p>
+            Diffeomorphic Anatomical Registration on the Surface.</a> OHBM 2011</p>
 
  <!--             <p class="hl">04-11-2022<br>
   -->
