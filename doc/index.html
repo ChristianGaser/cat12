@@ -399,18 +399,16 @@
             <table class="img">
               <tr>
                 <td colspan="1" rowspan="1">
-                <p><img id="figure1" width=70% alt="spm_gui" src="images/spm_gui.png"></p>
+                  <figure>
+                    <img id="figure1" width=70% alt="spm_gui" src="images/spm_gui.png">
+                    <figcaption><b>Figure 1:</b> SPM12 menu</figcaption>
+                  </figure>
                 </td>
                 <td colspan="1" rowspan="1">
-                <p><img id="figure2" width=90% alt="cat_gui" src="images/cat_gui.png"></p>
-                </td>
-              </tr>
-              <tr>
-                <td colspan="1" rowspan="1">
-                <figcaption><b>Figure 1:</b> SPM12 menu</figcaption>
-                </td>
-                <td colspan="1" rowspan="1">
-                <figcaption><b>Figure 2:</b> CAT12 Window</figcaption>
+                  <figure>
+                    <img id="figure2" width=90% alt="cat_gui" src="images/cat_gui.png">
+                    <figcaption><b>Figure 2:</b> CAT12 Window</figcaption>
+                  </figure>
                 </td>
               </tr>
             </table>
@@ -448,8 +446,10 @@
               <li>All settings can be saved either as a .mat file or as a .m script file and reloaded for later use. The .m script file has the advantage of being editable with a text editor.</li>
             </ul>
             
-            <br><p><img id="figure3" width=80% alt="Batch Editor" src="images/batch_gui.jpg"></p>
-            <figcaption><b>Figure 3:</b> The Batch Editor is the environment where the analysis is set up. Left: For all settings marked with &quot;&lt;-X&quot;, files have to be selected (&quot;Select Files&quot;). Right: Parameters can be edited and adapted (&quot;Edit Value&quot;).</figcaption>
+            <br><figure>
+              <img id="figure3" width=80% alt="Batch Editor" src="images/batch_gui.jpg">
+              <figcaption><b>Figure 3:</b> The Batch Editor is the environment where the analysis is set up. Left: For all settings marked with &quot;&lt;-X&quot;, files have to be selected (&quot;Select Files&quot;). Right: Parameters can be edited and adapted (&quot;Edit Value&quot;).</figcaption>
+            </figure>
             
             <!-- ################################################################################# -->
             <h2 id="overview_process">Overview of CAT12 processing</h2>
@@ -463,8 +463,10 @@
 
             <p><u>Surface-based processing:</u> During the surface registration, the cortical surfaces of the two hemispheres are registered to the FreeSurfer <a href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsAverage">&quot;FsAverage&quot; template</a> (as provided with CAT). For surface-based ROI analyses, CAT provides a selection of surface-based atlases. As the surface registration module uses the FreeSurfer &quot;FsAverage&quot; template, surface-based ROI analyses are not impacted by any template modification during voxel-based processing. In contrast to voxel-based ROI analyses, surface-based ROI analyses can, therefore, be applied regardless of whether the predefined or customized versions of the DARTEL or Geodesic Shooting template have been used.</p>
 
-            <p><img id="figure4" width=80% alt="cat_processing_steps" src="images/cat_processing_steps.png"></p>
-            <figcaption><b>Figure 4:</b> Overview of CAT's major processing steps.</figcaption>
+            <figure>
+              <img id="figure4" width=80% alt="cat_processing_steps" src="images/cat_processing_steps.png">
+              <figcaption><b>Figure 4:</b> Overview of CAT's major processing steps.</figcaption>
+            </figure>
             
             <!-- ############################# -->
             <h4 id="process_details">CAT12 processing steps in detail</h4>
@@ -479,8 +481,10 @@
 
             <p>Optionally, the <em>&quot;surface-based processing&quot;</em> will be run following the completion of the voxel-based processing steps. Here, the cortical thickness estimation and reconstruction of the central surface occur in one step using a projection-based thickness (PBT) method (<a href="https://doi.org/10.1016/j.neuroimage.2012.09.050">Dahnke et al., 2013</a>). Importantly, this PBT allows the appropriate handling of partial volume information, sulcal blurring, and sulcal asymmetries without explicit sulcus reconstruction (<a href="https://doi.org/10.1016/j.neuroimage.2012.09.050">Dahnke et al., 2013</a>). After the initial surface reconstruction, topological defects<b><sup>*</sup></b> are repaired using spherical harmonics (<a href="https://doi.org/10.1002/hbm.21095">Yotter et al., 2011a</a>). The topological correction is followed by a surface refinement, which results in the final central surface mesh. This mesh provides the basis to extract folding patterns (i.e., based on the position of mesh nodes relative to each other), where the resulting local values (e.g., absolute mean curvature) are projected onto each node. Subsequently, the individual central surfaces are spatially registered to the FreeSurfer &quot;FsAverage&quot; template using a spherical mapping with minimal distortions (<a href="https://doi.org/10.1016/j.neuroimage.2011.02.007">Yotter et al., 2011b</a>). In the last step, the local thickness values are transferred onto the FreeSurfer &quot;FsAverage&quot; template. While this last step is performed by default during the surface-based processing, it can be repeated to also transfer measurements of cortical folding (e.g., gyrification) as well as other measurements or data (e.g., functional or quantitative MRI) to the FreeSurfer &quot;FsAverage&quot; template. Note that the spatial registration of cortical measurements is combined with a spatial smoothing step in CAT to prepare the data for statistical analysis.</p>
             
-            <p><img id="figure5" width=80% alt="cat_processing_pipeline" src="images/cat_processing_pipeline.png"></p>
-            <figcaption><b>Figure 5:</b> Schematic flowchart of CAT's processing pipeline.</figcaption>
+            <figure>
+              <img id="figure5" width=80% alt="cat_processing_pipeline" src="images/cat_processing_pipeline.png">
+              <figcaption><b>Figure 5:</b> Schematic flowchart of CAT's processing pipeline.</figcaption>
+            </figure>
             
             <!-- ################################################################################# -->
             <h2 id="process_data">Preprocessing data</h2>
@@ -1077,12 +1081,10 @@
             <table class="img">
               <tr>
                 <td colspan="1" rowspan="1">
-                <p><img id="figure6" width=60% alt="non_orthogonal" src="images/ortho.png"></p>
-                </td>
-              </tr>
-              <tr>
-                <td colspan="1" rowspan="1">
-                <figcaption><b>Figure 6:</b> Grey boxes between the parameters point to a co-linearity (correlation): the darker the box the larger the correlation (which also holds for inverse correlations). If you click in the box the co-linearity between the parameters is displayed.</figcaption>
+                  <figure>
+                    <img id="figure6" width=60% alt="non_orthogonal" src="images/ortho.png">
+                    <figcaption><b>Figure 6:</b> Grey boxes between the parameters point to a co-linearity (correlation): the darker the box the larger the correlation (which also holds for inverse correlations). If you click in the box the co-linearity between the parameters is displayed.</figcaption>
+                  </figure>
                 </td>
               </tr>
             </table>
@@ -1740,10 +1742,12 @@
             <p>That is, images are tissue-classified and the necessary deformations for spatial registration to the standard template are estimated. However, instead of applying the individual spatial transformations (as done in a cross-sectional analysis), a mean transformation for all time points is calculated and applied to all individual images (<a href="#figure7">Figure 7</a>). The resulting normalized tissue segments can then be used for voxel-based analyses. Optionally, the processed images for all time points can be used to additionally extract the cortical surfaces and to calculate surface parameters, such as cortical thickness or diverse folding measures using the surface-based processing pipeline. Furthermore, the processing of the individual time points is initialized by the processed results from the (unbiased) average image. This reduces random variations in the processing procedure and improves the robustness and sensitivity of the overall longitudinal analysis. This latter processing stream of surface data is similar to the longitudinal approach employed in FreeSurfer (<a href="https://doi.org/10.1016/j.neuroimage.2010.07.020">Reuter et al., 2010</a>; <a href="https://doi.org/10.1016/j.neuroimage.2011.02.076">Reuter and Fischl, 2011</a>).</p>
             <p>Please note that three different longitudinal models are offered. The first longitudinal model is optimized for processing and capturing smaller changes over time in response to short-term plasticity effects (e.g. from learning and training). This model will probably not be as sensitive for larger longitudinal changes where large parts of the brain change over time (e.g. atrophy due to Alzheimer&quot;s disease or ageing). This is due to the effect of estimating the parameters of spatial registration from the deformations of all time points and then applying them to all time points. If a large atrophy occurs between the time points, this can lead to a displacement of tissue boundaries and might result in areas with reduced volumes over time, which are surrounded by areas with increased volume due to these displacement problems. For data with larger volume changes over time, you should choose the longitudinal model, which is optimized to detect larger changes (e.g. due to ageing). This model also takes into account the deformations between time points and prevents the problems mentioned above. Finally, there also exists a longitudinal processing pipeline for neurodevelopmental data where we can also see changes in head size which should be taken into account.</p>
             <p>Additional attention is then required for the setup of the statistical model. The following section therefore describes the data preprocessing and model setup for longitudinal data.</p>
-            <p><img id="figure7" width=100% alt="cat_long_pipeline" src="images/cat_long_pipelines.png"></p>
-            <figcaption><b>Figure 7:</b> CAT’s longitudinal processing workflows to examine (a) neuroplasticity, (b) ageing, and (c) neurodevelopment<br>
-            The first step in all three workflows is the creation of a high-quality average image over all time points. For this purpose, CAT realigns the images from all time points for each participant using inverse-consistent (or symmetric) rigid-body registrations and intra-subject bias field correction. While this is sufficient to create the required average image for the neuroplasticity and ageing workflows, the neurodevelopmental workflow requires non-linear registrations in addition. In either case, the resulting average image is segmented using CAT’s regular processing workflow to create a subject-specific tissue probability map (TPM). This TPM is used to enhance the time point-specific processing to create the final segmentations. The final tissue segments are then registered to MNI space to obtain a voxel-comparability across time points and subjects, which differs between all three workflows. In the neuroplasticity workflow, an average of the time point-specific registrations is created to register the tissue segments of all time points to MNI space. The ageing workflow does the same in principle but adds additional (very smooth) deformations between the individual images across time points to account for inevitable age-related changes over time (e.g., enlargements of the ventricles). In contrast, the neurodevelopmental workflow needs to account for major changes, such as overall head and brain growth, which requires independent non-linear registrations to MNI space of all images across time points (which are obtained using the default cross-sectional registration model).<br>
-            For surface-based processing, the neuroplasticity and ageing models use the processing of the time point average image to create an average surface. The average is then adapted (deformed) to time point specific maps used in the surface creation, whereas the neurodevelopment workflow has to run the independent cross-sectional surface pipeline for each time point.</figcaption>
+            <figure>
+              <img id="figure7" width=100% alt="cat_long_pipeline" src="images/cat_long_pipelines.png">
+              <figcaption><b>Figure 7:</b> CAT’s longitudinal processing workflows to examine (a) neuroplasticity, (b) ageing, and (c) neurodevelopment<br>
+              The first step in all three workflows is the creation of a high-quality average image over all time points. For this purpose, CAT realigns the images from all time points for each participant using inverse-consistent (or symmetric) rigid-body registrations and intra-subject bias field correction. While this is sufficient to create the required average image for the neuroplasticity and ageing workflows, the neurodevelopmental workflow requires non-linear registrations in addition. In either case, the resulting average image is segmented using CAT’s regular processing workflow to create a subject-specific tissue probability map (TPM). This TPM is used to enhance the time point-specific processing to create the final segmentations. The final tissue segments are then registered to MNI space to obtain a voxel-comparability across time points and subjects, which differs between all three workflows. In the neuroplasticity workflow, an average of the time point-specific registrations is created to register the tissue segments of all time points to MNI space. The ageing workflow does the same in principle but adds additional (very smooth) deformations between the individual images across time points to account for inevitable age-related changes over time (e.g., enlargements of the ventricles). In contrast, the neurodevelopmental workflow needs to account for major changes, such as overall head and brain growth, which requires independent non-linear registrations to MNI space of all images across time points (which are obtained using the default cross-sectional registration model).<br>
+              For surface-based processing, the neuroplasticity and ageing models use the processing of the time point average image to create an average surface. The average is then adapted (deformed) to time point specific maps used in the surface creation, whereas the neurodevelopment workflow has to run the independent cross-sectional surface pipeline for each time point.</figcaption>
+            </figure>
             
             <!-- ############################# -->
             <h4>Preprocessing of longitudinal data - overview</h4>
@@ -3212,8 +3216,10 @@
             <i>Stroke Lesion Correction (SLC)</i>
             <p>To mitigate improper deformations during spatial registration in brains with stroke lesions, the CAT12 toolbox offers a Stroke Lesion Correction (SLC) method. This feature suppresses strong (high-frequency) deformations during the Shooting registration step, which can occur due to the presence of lesions. To utilize this method, the lesions must be set to zero. This can be achieved by employing the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.maskimg');">Manual image (lesion) masking</a>, where a lesion mask can be created. Subsequently, the SLC flag should be enabled in the <a class="function" href="matlab:cat('expert');">expert mode</a>  of CAT12. This ensures that the regions containing lesions are excluded from the spatial registration, preventing large deformations that might otherwise arise when aligning the lesioned brain with a template brain.<br>
             By implementing this correction, CAT12 facilitates more accurate spatial alignment, particularly for clinical data involving stroke patients. This approach is essential for neuroimaging studies where precise brain structure alignment is crucial for subsequent analysis.</p> 
-            <p><img id="figureSLC" width=80% alt="cat_SLC" src="images/cat_SLC_msk_c0009s0010t01A.png"></p>
-            <figcaption><b>Stroke Lesion Correction</b> Shown is the grey matter segmentation of subject <i>SLC_msk_c0009s0010t01</i> from the <a href="http://fcon_1000.projects.nitrc.org/indi/retro/atlas.html">ATLAS</a> database without (left) and with <i>Stroke Lesion Correction</i> (SLC; right)</figcaption>
+            <figure>
+              <img id="figureSLC" width=80% alt="cat_SLC" src="images/cat_SLC_msk_c0009s0010t01A.png">
+              <figcaption><b>Stroke Lesion Correction</b> Shown is the grey matter segmentation of subject <i>SLC_msk_c0009s0010t01</i> from the <a href="http://fcon_1000.projects.nitrc.org/indi/retro/atlas.html">ATLAS</a> database without (left) and with <i>Stroke Lesion Correction</i> (SLC; right)</figcaption>
+            </figure>
 
             <!-- ################################################################################# -->
             <h4 id="surf_proc">Surface-based preprocessing</h4>
