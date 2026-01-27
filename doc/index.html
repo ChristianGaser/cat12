@@ -63,26 +63,26 @@
             <h4 id="intro_cat12">Introduction</h4>
             <p class="image right"><img width=100% alt="Human Brain" src="images/human_brain.png"></p>
             <p>
-              The brain is the most complex organ of the human body, and no two brains are alike. The study of the human brain is still in its infancy, but rapid technical advances in image acquisition and image processing have allowed for ever more refined characterisations of its micro- and macro-structure. Enormous efforts, for example, have been made to map differences between groups (e.g., young vs. old, diseased vs. healthy, male vs. female), to capture changes over time (e.g., from infancy to old age, or in the framework of neuroplasticity, as a result of a clinical intervention), or to assess correlations of brain attributes (e.g., measures of length, volume, shape) with behavioural, cognitive, or clinical parameters.
+              The brain is the most complex organ of the human body, and no two brains are alike. The study of the human brain is still in its infancy, yet rapid advances in image acquisition and processing have enabled increasingly refined characterisations of its micro- and macro-structure. Major efforts focus on mapping group differences (e.g., young vs. old, diseased vs. healthy, male vs. female), capturing changes over time (e.g., from infancy to old age, or in the framework of neuroplasticity after a clinical intervention), and assessing correlations of brain attributes (e.g., measures of length, volume, shape) with behavioural, cognitive, or clinical parameters.
             </p>
             <div class="image left"><img width=60% alt="Logo" src="images/cat_logo.png"></div>
             <p>
-              CAT12 is a powerful suite of tools for morphometric analyses with an intuitive graphical user interface, but also usable as a shell script. CAT is suitable for beginners, casual users, experts, and developers alike, providing a comprehensive set of analysis options, workflows, and integrated pipelines.
+              CAT12 is a powerful suite of tools for morphometric analyses with an intuitive graphical user interface, and it can also be used as a shell script. CAT is suitable for beginners, casual users, experts, and developers alike, providing a comprehensive set of analysis options, workflows, and integrated pipelines.
             </p>
             <p>
-              The available analysis streams allow for voxel-based, surface-based, as well as region-based morphometric analyses. Importantly, CAT includes various quality control options and covers the entire analysis workflow, from cross-sectional or longitudinal data processing, to the statistical analysis, and visualisation of results.
+              The available analysis streams support voxel-, surface-, and region-based morphometric analyses. Importantly, CAT includes various quality control options and covers the entire analysis workflow, from cross-sectional or longitudinal data processing to statistical analysis and visualisation of results.
             </p>
 
             <!-- ############################# -->
             <h4 id="overview">Overview of the manual</h4>
-            <p>This manual is intended to help any user to perform a computational anatomy analysis using the CAT12 Toolbox. Although it mainly focuses on voxel-based morphometry (VBM), other variants of computational analysis such as deformation-based morphometry (DBM), surface-based morphometry (SBM), and region of interest (ROI) morphometric analyses are also presented and can be applied with few changes.</p>
+            <p>This manual is intended to help users perform a computational anatomy analysis using the CAT12 Toolbox. Although it mainly focuses on voxel-based morphometry (VBM), other variants of computational analysis such as deformation-based morphometry (DBM), surface-based morphometry (SBM), and region of interest (ROI) morphometric analyses are also presented and can be applied with few changes.</p>
 
             The manual can be divided into four main sections:<br>              
             <ul>
-              <li>Naturally, a quick guide on how to <a href="#get_started">get started</a> is given at the beginning. This section provides information about <a href="#download">downloading and installing</a> the software and <a href="#starting">starting</a> the Toolbox. Also, a <a href="#basic_vbm">brief overview</a> of the steps of a VBM analysis is given.</li>
-              <li>This is followed by a <a href="#process_data">detailed description of a basic VBM analysis</a> that guides the user step-by-step through the entire process—from preprocessing to contrast selection. This description should provide all the information necessary to successfully analyse most studies.</li>
-              <li>There are some specific cases of VBM analyses for which the basic analysis workflow has to be adapted. These cases are <a href="#long">longitudinal studies</a> and studies in <a href="#children">children or special patient populations</a>. Relevant changes to a basic VBM analysis are described here, and how these changes can be applied. Only the changes are described here; steps such as quality control or smoothing are the same as those described in the basic analysis and are not repeated a second time.</li>
-              <li>The guide concludes with <a href="#add_info">additional information</a> about spaces after registration, naming conventions used, and other hints.</li>
+              <li>First, a quick guide on how to <a href="#get_started">get started</a> is provided. This section covers <a href="#download">downloading and installing</a> the software and <a href="#starting">starting</a> the Toolbox, and includes a <a href="#basic_vbm">brief overview</a> of the steps of a VBM analysis.</li>
+              <li>This is followed by a <a href="#process_data">detailed description of a basic VBM analysis</a> that guides you step by step through the entire process—from preprocessing to contrast selection. This description should provide the information needed to analyse most studies.</li>
+              <li>Specific cases of VBM analyses require adapting the basic workflow. These cases include <a href="#long">longitudinal studies</a> and studies in <a href="#children">children or special patient populations</a>. Relevant changes to a basic VBM analysis, and how to apply them, are described here. Only the changes are described; steps such as quality control or smoothing are not repeated.</li>
+              <li>The guide concludes with <a href="#add_info">additional information</a> about spaces after registration, naming conventions, and other hints.</li>
             </ul>
             <p><a href="#top" aria-label="Back to top">Back to top</a></p>
             
@@ -95,24 +95,24 @@
             <ul>
               <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data using defaults (use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.long');">Segment Longitudinal Data</a> for longitudinal data).<br>
                 The resulting segmentations that can now be used for VBM are saved in the "mri" folder and are named "mwp1" for grey matter and "mwp2" for white matter. If you have used the longitudinal pipeline, the default segmentations for grey matter are named "mwp1r" or "mwmwp1r" if the longitudinal model for detecting larger changes was selected.</li>
-              <li>Get total intracranial volume <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.calcvol');">(TIV)</a> to correct for different brain sizes and volumes.<br>
+              <li>Estimate total intracranial volume <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.calcvol');">(TIV)</a> to correct for different brain sizes and volumes.<br>
               Select the XML files that are saved in the "report" folder.</li>
-              <li>Check the data quality with <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_homogeneity');">Sample Homogeneity</a> for VBM data (optionally consider TIV and age as nuisance variables).<br>
+              <li>Check data quality with <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_homogeneity');">Sample Homogeneity</a> for VBM data (optionally include TIV and age as nuisance variables).<br>
                 Select the grey or white matter segmentations from the first step.</li>
-              <li><a class="function" href="matlab:spm_jobman('interactive','','spm.spatial.smooth');">Smooth</a> data (recommended starting value of 6 mm<sup>1</sup>).<br>
+              <li><a class="function" href="matlab:spm_jobman('interactive','','spm.spatial.smooth');">Smooth</a> data (recommended starting value: 6 mm<sup>1</sup>).<br>
                 Select the grey or white matter segmentations from the first step.</li>
-              <li>Specify the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">Basic Models</a> with the smoothed grey or white matter segmentations and check for design orthogonality and sample homogeneity:
+              <li>Specify the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">Basic Models</a> with the smoothed grey or white matter segmentations and check design orthogonality and sample homogeneity:
               <ul>
-                <li>Select "Two-sample t-test" or "Multiple regression" or use "Full factorial" for any cross-sectional data.</li>
+                <li>Select "Two-sample t-test" or "Multiple regression", or use "Full factorial" for any cross-sectional data.</li>
                 <li>Use "Flexible factorial" for longitudinal data.</li>
-                <li>Use TIV as covariate (confound) to correct different brain sizes.</li>
-                <li>Select threshold masking with an absolute value of 0.1. This threshold can ultimately be increased to 0.2 or even 0.25 if you still notice non-brain areas in your analysis.</li>
-                <li>If you find a considerable correlation between TIV and any other parameter of interest, it is advisable to use global scaling with TIV. For more information, refer to <a href="index.html#ortho">Orthogonality</a>.</li>
+                <li>Use TIV as a covariate (confound) to correct different brain sizes.</li>
+                <li>Select threshold masking with an absolute value of 0.1. You can increase this to 0.2 or even 0.25 if you still notice non-brain areas in your analysis.</li>
+                <li>If you observe a considerable correlation between TIV and any other parameter of interest, it is advisable to use global scaling with TIV. For more information, refer to <a href="index.html#ortho">Orthogonality</a>.</li>
               </ul></li>
-              <li><a class="function" href="matlab:spm_jobman('interactive','','spm.stats.fmri_est');">Estimate</a> the model and finally call <a class="function" href="matlab:[hReg xSPM SPM] = cat_spm_results_ui('Setup');">Results</a>.</li>
+              <li><a class="function" href="matlab:spm_jobman('interactive','','spm.stats.fmri_est');">Estimate</a> the model and then call <a class="function" href="matlab:[hReg xSPM SPM] = cat_spm_results_ui('Setup');">Results</a>.</li>
               <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x');">Transform and Threshold SPM-maps</a> to (log-scaled) p-maps or correlation maps.</li>
-              <li>Optionally, you can try <a class="function" href="matlab:if exist('spm_TFCE'),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">Threshold-Free Cluster Enhancement</a> (TFCE) with the SPM.mat file of a previously estimated statistical design.</li>
-              <li>Optionally <a class="function" href="matlab:cat_vol_slice_overlay;">Overlay Selected Slices</a>. If you are using log-p scaled maps from "Transform SPM-maps" without thresholds or the TFCE_log maps, use the following values as the lower range for the colormap for the thresholding: 1.3 (P&lt;0.05); 2 (P&lt;0.01); 3 (P&lt;0.001).</li>
+              <li>Optionally, try <a class="function" href="matlab:if exist('spm_TFCE'),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">Threshold-Free Cluster Enhancement</a> (TFCE) with the SPM.mat file of a previously estimated statistical design.</li>
+              <li>Optionally <a class="function" href="matlab:cat_vol_slice_overlay;">Overlay Selected Slices</a>. If you are using log-p scaled maps from "Transform SPM-maps" without thresholds or the TFCE_log maps, use the following values as the lower limit for the colormap: 1.3 (P&lt;0.05); 2 (P&lt;0.01); 3 (P&lt;0.001).</li>
               <li>Optionally use <a class="function" href="matlab:y=cat_surf_results;">Surface Overlay</a> for visualisation of your results. Select the results (preferably saved as log-p maps with "Transform SPM-maps" or the TFCE_log maps with the different methods for multiple comparison correction) to display rendering views, slice overlay, and a glassbrain of your results.</li>
               <li>Optionally estimate results for ROI analysis using <a class="function" href="matlab:cat_stat_analyze_ROIs;">Analyze ROIs</a>. Here, the SPM.mat file of the already estimated statistical design will be used. For more information, see <a href="#atlas">Atlas creation and ROI-based analysis</a>.</li>
             </ul>
@@ -121,19 +121,19 @@
             <h4 id="add_surf">Additional surface data</h4>
             
             <ul>
-              <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data and also select "Surface and thickness estimation" under "Writing options" (for longitudinal data use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.long');">Segment Longitudinal Data</a>).<br>
+              <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data and select "Surface and thickness estimation" under "Writing options" (for longitudinal data use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.long');">Segment Longitudinal Data</a>).<br>
               The surface data are saved in the folder "surf" and are named "?h.thickness.*" for cortical thickness.</li>
               <li>Optionally, <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfextract');">Extract Additional Surface Parameters</a> (e.g. sulcal depth, gyrification, cortical complexity).</li>
-              <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfresamp');">Resample & smooth</a> surface data (suggested starting value 12 mm for cortical thickness and sulcal depth and 20–25 mm for folding measures<b><sup>1</sup></b>, use the default merging of hemispheres).<br>
+              <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfresamp');">Resample and smooth</a> surface data (suggested starting value 12 mm for cortical thickness and sulcal depth and 20–25 mm for folding measures<b><sup>1</sup></b>, use the default merging of hemispheres).<br>
               Select the "lh.thickness.*" data in the folder "surf". The resampled data are named "s12.mesh.resampled_32k.thickness.*" for 12 mm smoothed, merged hemispheres that were resampled to 32k template space.</li>
               <li>Check data quality of the resampled data using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_homogeneity');">Sample Homogeneity</a>.</li>
-              <li>Build <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">Basic Models</a> for the resampled data and check for design orthogonality and sample homogeneity.
+              <li>Build <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">Basic Models</a> for the resampled data and check design orthogonality and sample homogeneity.
               <ul>
                 <li>Select "Two-sample t-test" or "Multiple regression" or use "Full factorial" for any cross-sectional data.</li>
                 <li>Use "Flexible factorial" for longitudinal data.</li>
-                <li>It is not necessary to use TIV as a covariate (confound) because cortical thickness or other surface values are usually not dependent on TIV.</li>
-                <li>It is not necessary to use any threshold masking.</li>
-                <li>If you find a considerable correlation between a nuisance parameter and any other parameter of interest it is advisable to use global scaling with that parameter. For more information, refer to <a href="index.html#ortho">Orthogonality</a>.</li>
+                <li>TIV is not necessary as a covariate (confound) because cortical thickness or other surface values are usually not dependent on TIV.</li>
+                <li>No threshold masking is needed.</li>
+                <li>If you find a considerable correlation between a nuisance parameter and any other parameter of interest, it is advisable to use global scaling with that parameter. For more information, refer to <a href="index.html#ortho">Orthogonality</a>.</li>
               </ul></li>
               <li><a class="function" href="matlab:cat_stat_spm;">Estimate</a> the surface model and finally call <a class="function" href="matlab:[hReg xSPM SPM] = cat_spm_results_ui('Setup');">Results</a>.</li>
               <li>Optionally <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.T2x_surf');">Transform and Threshold SPM-maps</a> to (log-scaled) p-maps or correlation maps.</li>
