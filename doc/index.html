@@ -750,7 +750,7 @@
             <ol>
               <li><em>ANCOVA</em>: Here, any variance that can be explained by TIV is removed from your data (i.e. in every voxel or vertex). This is the preferred option when there is no correlation between TIV and your parameter of interest. For example, a parameter of interest may be a variable in a multiple regression design that you want to relate to your structural data. If TIV is correlated with this parameter, not only will the variance explained by TIV be removed from your data, but also parts of the variance of your parameter of interest, which should be avoided.<br>
               Note that for two-sample T-tests and Anova with more than 2 groups, an interaction is modeled between TIV and group that prevents any group differences from being removed from your data, even if TIV differs between your groups.<br>
-              Use the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.chec_SPM');">Check Design Orthogonality</a> option to test for any correlations between your parameters.</li>
+              Use the <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_SPM');">Check Design Orthogonality</a> option to test for any correlations between your parameters.</li>
               <li><em>Global scaling</em>: If TIV correlates with your parameter of interest, you should rather use global scaling with TIV. The easiest way to define global scaling is to use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.factorial_design');">"Basic Models"</a> in the CAT12 GUI. If you prefer "Basic Models" in SPM12, see <a href="#ortho">here</a> for a detailed description how to define global scaling.</li>
               <li><em>No</em>: Use this option to disable TIV correction for deformation- or surface-based data where TIV correction is not necessary.</li>
             </ol>
@@ -760,7 +760,7 @@
   
             <p>The Z-score is calculated for all images and the mean for each image is plotted using a boxplot (or violin plot) and the indicated filenames. The larger the quartic mean Z-score, the more deviant the data are from the sample mean. The reason we apply a power of 4 to the z-score (quartic) is to give outliers a greater weight and make them more obvious in the plot. In the plot, outliers from the sample are usually isolated from the majority of data which are clustered around the sample mean. The quartic mean Z-score is plotted on the y-axis and the x-axis reflects the data order.<br>
             The advantage of re-checking sample homogeneity at this point is that the given statistical model (design) is used and potential nuisance parameters are taken into account. If you have longitudinal data, the time points of each data set are linked in the graph to indicate intra-subject data. Unsmoothed data (if available and in the same folder) are automatically detected and used. Finally, report files are used if present (i.e., if data has not been moved or the folders renamed) and quality parameters are loaded and displayed.<br>
-            If you have modeled TIV as a nuisance parameter, you must check whether TIV is orthogonal (in other words independent) to any other parameter of interest in your analysis (e.g. parameters you are testing for) using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.chec_SPM');">Check Design Orthogonality</a>. See <a href="#ortho">here</a> for a detailed description.</p>
+            If you have modeled TIV as a nuisance parameter, you must check whether TIV is orthogonal (in other words independent) to any other parameter of interest in your analysis (e.g. parameters you are testing for) using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_SPM');">Check Design Orthogonality</a>. See <a href="#ortho">here</a> for a detailed description.</p>
 
             <u>Voxel-wise covariate (experimental!)</u><br>
             This experimental option allows the specification of a voxel-wise covariate. If you have more than one modality (i.e., functional and structural data), this can be used (depending on the contrast you define) to:
@@ -3728,7 +3728,7 @@
             </p>
             <p style="text-align:center;"><img src="images/cat_qa_rating-distribution.png" width=80% height=auto alt="Quality distribution of large projects"></p>
             <p>
-              Low image quality can lead to underestimation of the GM in most preprocessing <a href="#Reuter:2015">(Reuter et al. 2015</a>, <a href="#Dahnke:2025">Dahnke et al. 2025)</a>.
+              Low image quality can lead to underestimation of the GM in most preprocessing (<a href="#Reuter:2015">Reuter et al. 2015</a>; <a href="#Dahnke:2025">Dahnke et al. 2025</a>).
               The following figure shows the effect of motion artifacts on IQR and the relative GM volume rGMV of a children's dataset processed by 5 different tissue segmentations.
             </p> 
             <p style="text-align:center;"><img src="images/cat_qa_expert.png" width=90% height=auto alt="Quality rating"></p>
@@ -3749,7 +3749,6 @@
               Segmentation-based quality control of structural MRI using the CAT12 toolbox.<br>
               </a>
               Gigascience 14, giaf146.</p>
-            </p>
             <b id="Reuter:2015">Reuter et al. 2015</b>
             <p>
               Reuter M, Tisdall MD, Qureshi A, Buckner RL, van der Kouwe AJW, Fischl B.<br> 
@@ -3758,7 +3757,7 @@
               </a>
               NeuroImage 2015, 107, 107-115.
             </p>
-            <b id="Winterburn:2014">Winterburn et al. 2013</b>
+            <b id="Winterburn:2013">Winterburn et al. 2013</b>
             <p>
               Winterburn JL, Pruessner JC, Chavez S, Schira, MM, Lobaugh NJ, Voineskos AN, Chakravarty MM.<br> 
               <a href="https://doi.org/10.1016/j.neuroimage.2013.02.003">
@@ -3876,7 +3875,7 @@
 
             <details>            
               <summary><u>How is the detection of white matter hyperintensities (WMHs) working in CAT12?</u></summary>
-              Detecting <i>White Matter Hyperintensities</i> (WMHs) is crucial to avoid registration errors, such as attempting to move WMHs to typical GM locations, and surface reconstruction problems, such as misinterpreting WMHs as fuzzy cortical sulci <a href="https://dx.doi.org/10.13140/RG.2.2.26753.20326">Dahnke et al. 2019)</a>.<br>
+              Detecting <i>White Matter Hyperintensities</i> (WMHs) is crucial to avoid registration errors, such as attempting to move WMHs to typical GM locations, and surface reconstruction problems, such as misinterpreting WMHs as fuzzy cortical sulci (<a href="https://dx.doi.org/10.13140/RG.2.2.26753.20326">Dahnke et al. 2019</a>).<br>
             CAT first applies an optimised low-resolution shooting registration technique (<a href="https://doi.org/10.1016/j.neuroimage.2010.12.049">Ashburner and Friston, 2011</a>) on the initial SPM segments to map the tissue probability map (TPM) and the CAT atlas to the individual space. Fine local correction of tissues and regions is then performed using region-growing and bottle-neck algorithms (<a href="https://doi.org/10.1109/MMBIA.1996.534084">Mangin et al., 1996.</a>; <a href="https://neuro-jena.github.io/pdf/Dahnke-NI12.pdf">Dahnke et al. 2012</a>). In the individual atlas map, isolated grey matter (GM) islands within the white matter (WM) and voxels surrounding the lateral ventricles with high WM probability but GM-like intensity are referred to as WM hyperintensities (WMHs).<br>
             The final segmentation of the prepared T1 image with uncorrected WMHs uses an AMAP approach (<a href="https://doi.org/10.1109/42.563663">Rajapakse et al., 1997</a>) with a partial volume estimation (PVE) model (<a href="https://doi.org/10.1016/j.neuroimage.2004.05.007">Tohka et al., 2004</a>). Voxels with GM intensity but a WMH label are either temporarily aligned to the WM or treated as a separate tissue class, depending on the WMHC processing parameters.
             </details>            
@@ -3963,7 +3962,7 @@
             Atlas-based whole brain white matter analysis using large deformation diffeomorphic metric mapping: application to normal elderly and Alzheimer&quot;s disease participants.</a> Neuroimage. 2009 Jun;46(2):486-99.</p>
             
             <p><u>Desikan-Killiany Atlas (DK40)</u><br>
-            Desikan RS, SÃ©gonne F, Fischl B, Quinn BT, Dickerson BC, Blacker D, Buckner RL, Dale AM, Maguire RP, Hyman BT, Albert MS, Killiany RJ. <a href="https://doi.org/10.1016/j.neuroimage.2006.01.021">
+            Desikan RS, Ségonne F, Fischl B, Quinn BT, Dickerson BC, Blacker D, Buckner RL, Dale AM, Maguire RP, Hyman BT, Albert MS, Killiany RJ. <a href="https://doi.org/10.1016/j.neuroimage.2006.01.021">
             An automated labeling system for subdividing the human cerebral cortex on MRI scans into gyral based regions of interest.</a> Neuroimage. 2006 Jul 1;31(3):968-80.</p>
             
             <p><u>Destrieux Atlas</u><br>
