@@ -3514,9 +3514,8 @@
         
             <h6 id="FS_DK40">Desikan-Killiany (DK40) Atlas</h6>
             <p>
-              This atlas is also known as the 'Desikan-Killiany-Tourville' (DKT) cortical atlas. 
-              It is a gyral based atlas: ie, a gyrus was defined as running between the bottoms of two adjacent sulci <a href="#DK2006">(Desikan Killiany et al. 2006)</a>. 
-              That is, a gyrus includes the part visible on the Pial view + adjacent banks of the sulci limiting this gyrus. 
+              This gyrus-based atlas <a href="#DK2006">(Desikan-Killiany et al. 2006)</a> defines each region from the depth of one sulcus to the depth of the next. 
+              This means each gyral region includes both the outer visible surface and the adjacent sulcal walls.
             </p><p>
               Display DK40 atlas on FreeSurfer average surface (
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','lh.aparc_DK40.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
@@ -3528,13 +3527,12 @@
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','lh.aparc_DK40.freesurfer.annot')}},'multisurf',1,'usefsaverage',3))">both sides</a>
               ). 
             </p>
-            <p style="text-align:center;"><img src="images/CAT_surf_atlas_DKT40.png" width=90% alt="Desikan Killiany Tourville et al. 2010"></p>
+            <p style="text-align:center;"><img src="images/CAT_surf_atlas_Desikan-Killiany.png" width=90% alt="Desikan Killiany et al. 2006"></p>
 
             <h6 id="FS_Destrieux2009">Destrieux Atlas (2009)</h6>
             <p>
-              This atlas is also known as the 'Destrieux' cortical atlas <a>(Fischl et al. 2004)</a>.
-              It is based on a parcellation scheme that first divided the cortex into gyral and sulcal regions, the limit between both being given by the curvature value of the surface. 
-              A gyrus only includes the cortex visible on the Pial view, the hidden cortex (banks of sulci) are marked sulcus.
+              This atlas <a href="#Destrieux2010">(Destrieux et al. 2010)</a> separates gyri and sulci based on surface curvature. 
+              Gyral regions include only the outer convex surface, while the sulcal walls are labeled as separate sulcal regions.
             </p><p>
               Display Destrieux atlas on FreeSurfer average surface (
               <a class="function" href="matlab:cat_surf_display(struct('expert',2,'data',{{fullfile(fileparts(which('cat12')),'atlases_surfaces','lh.aparc_a2009s.freesurfer.annot')}},'multisurf',0,'usefsaverage',1))">left</a>,  
