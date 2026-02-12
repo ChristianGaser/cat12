@@ -108,9 +108,9 @@ label = [];
 
 [pth, name, ext] = spm_fileparts(char(sample.data{1}(1,:)));
 if isempty(strcmp(ext,'.gz'))
-  is_gz = 1;
-else
   is_gz = 0;
+else
+  is_gz = 1;
 end
 
 V = cell(n_samples,1);
