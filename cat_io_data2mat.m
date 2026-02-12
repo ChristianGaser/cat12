@@ -6,6 +6,9 @@ function out = cat_io_data2mat(opt,par,scaling)
 % 
 % FORMAT cat_io_data2mat(opt,scaling)
 %
+% data format:
+% opt.use_double - optional parameter to save Y as double instead of single
+%
 % volume or surface data:
 % opt.data       - cell of char array of filenames
 % opt.c          - confounds data to be removed
@@ -66,7 +69,8 @@ if ~exist('opt','var'), opt = struct(); end
 def.c      = [];
 def.fname  = 'Data.mat';
 def.outdir = {'.'};
-opt        = cat_io_checkinopt(opt,def);
+def.use_double = 0;
+opt = cat_io_checkinopt(opt,def);
 
 if isfield(opt,'data') % use simpler field structure for call as script
   if ischar(opt.data)
@@ -102,10 +106,21 @@ n_samples = numel(sample.data);
 n_subjects = zeros(n_samples,1);
 label = []; 
 
+[pth, name, ext] = spm_fileparts(char(sample.data{1}(1,:)));
+if isempty(strcmp(ext,'.gz'))
+  is_gz = 1;
+else
+  is_gz = 0;
+end
+
 V = cell(n_samples,1);
 label = [];
 for i = 1:n_samples
-  V{i} = spm_data_hdr_read(char(sample.data{i}));
+  if is_gz
+    V{i} = spm_vol(char(sample.data{i}));
+  else
+    V{i} = spm_data_hdr_read(char(sample.data{i}));
+  end
   n_subjects(i) = size(V{i},1);
   label = [label; i*ones(n_subjects(i),1)]; 
 end
@@ -187,7 +202,6 @@ if nargin > 2
     count = 1;
     for j=1:n_samples     
       for i = 1:n_subjects(j)
-% RD20240925: I added this to create the variable "g" that was missing before. 
         % compute mean voxel value (within per image fullmean/8 mask)
         if ~spm_mesh_detect(V{1}(1))
           g = spm_global(V{j}(i));
@@ -199,7 +213,6 @@ if nargin > 2
           end
           g = mean(y(isfinite(y)));
         end
-% RD20240925: end added part.   
         V{j}(i).pinfo(1:2,:) = V{j}(i).pinfo(1:2,:)/g(count); % <<< the g is not existing otherwise!
         count = count + 1;
       end
@@ -224,7 +237,6 @@ if nargin > 2
       end
     end
   end
-  
 end
 
 Y = [];
@@ -326,6 +338,11 @@ end
 if ~isempty(confounds)
   beta = pinv(confounds)*Y;
   Y = Y - confounds*beta;
+end
+
+% convert to single if not otherwise defined
+if ~opt.use_double
+  Y = single(Y);
 end
 
 % save surface or resampled volume structure
