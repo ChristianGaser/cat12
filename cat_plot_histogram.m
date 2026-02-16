@@ -63,6 +63,7 @@ def.xlim           = [];
 def.ylim           = [];
 def.dist           = 'kernel';
 def.mean           = n > 12;
+def.bins           = 500; 
 
 opt = cat_io_checkinopt(opt,def);
 
@@ -216,9 +217,9 @@ if n == 2
 end
 
 if isempty(opt.xrange)
-  X0 = linspace(min(mn), max(mx), max(min(round(numel(dropNaNs(cdata{1}))/100),500),10));
+  X0 = linspace(min(mn), max(mx), max(min(round(numel(dropNaNs(cdata{1}))/100),opt.bins),10));
 elseif numel(opt.xrange) == 2
-  X0 = linspace(opt.xrange(1), opt.xrange(2), 500);
+  X0 = linspace(opt.xrange(1), opt.xrange(2), opt.bins);
 else
   error('Parameter xrange does not consist of two entries');
 end
