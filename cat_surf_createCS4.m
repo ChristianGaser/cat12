@@ -55,7 +55,6 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
   cstime = clock; %#ok<*CLOCK>
 
   % test-variables that should be (partially) removed later
-  use_cat_vol_pbtsimple   = 1;
   skip_registration       = isfield(opt,'surf') && isscalar(opt.surf); % skip spherical registration for quick tests
   create_white_pial       = 1; % uses only the quick WM and Pial surface estimation 
 
@@ -240,7 +239,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       %% Write PP
       Vmfs.dt = [16 1];
       spm_write_vol(Vmfs, Yp0fs);
-      cmd = sprintf('CAT_VolThicknessPbt -median-filter 2 -sharpen 0.02 -downsample 0 "%s" "%s" "%s"', Vmfs.fname, P(si).Pgmt, P(si).Pppm);
+      cmd = sprintf('CAT_VolThicknessPbt -median-filter 2 -downsample 0 "%s" "%s" "%s"', Vmfs.fname, P(si).Pgmt, P(si).Pppm);
       cat_system(cmd,opt.verb-3);
       Vgmt = spm_vol(P(si).Pgmt); Yth1i = spm_read_vols(Vgmt); 
       Vppi = spm_vol(P(si).Pppm); Yppi  = spm_read_vols(Vppi); 
@@ -394,6 +393,10 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         cmd = sprintf('CAT_Central2Pial -equivolume -weight 0.5 "%s" "%s" "%s" 0',P(si).Pcentral,P(si).Ppbt,P(si).Pcentral);
         cat_system(cmd,opt.verb-3);
     end
+    
+    % Remove self-intersections
+    cmd = sprintf('CAT_SurfRemoveIntersections "%s" "%s"',P(si).Pcentral,P(si).Pcentral);
+    cat_system(cmd,opt.verb-3);
     CS = loadSurf(P(si).Pcentral);
 
 
