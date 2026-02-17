@@ -615,11 +615,14 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
 
           
             %% search WARNINGs and ERRORs
-            cati = find(cellfun('isempty',strfind(txt(catis(end):end),'ALERT '))==0);
-            catalerts   = numel(cati); 
-            cati = find(cellfun('isempty',strfind(txt(catis(end):end),'WARNING '))==0);
-            catwarnings = numel(cati); 
-            
+            if ~isempty(cati) & numel(cati)>0
+              cati = find(cellfun('isempty',strfind(txt(catis(end):end),'ALERT '))==0);
+              catalerts   = numel(cati); 
+              cati = find(cellfun('isempty',strfind(txt(catis(end):end),'WARNING '))==0);
+              catwarnings = numel(cati); 
+            end
+
+
             
             %% search for preprocessing errors (and differentiate them)
             cati = find(cellfun('isempty',strfind(txt,'CAT Preprocessing error'))==0,1,'last');
