@@ -253,17 +253,17 @@ cat.extopts.cat12atlas    = {fullfile(cat.extopts.pth_templates,'cat.nii')};    
 
 % surface options
 cat.extopts.pbtres         = 0.5; % internal resolution for thickness estimation in mm (default 0.5) 
-cat.extopts.SRP            = 24;  % surface reconstruction pipeline & self-intersection correction:
+cat.extopts.SRP            = 40;  % surface reconstruction pipeline & self-intersection correction:
                                   %           0/1 - CS1 without/with/with-optimized SIC
                                   %           20/21/22 - CS2 without/with/with-optimized SIC
                                   %           30 - CS3
-                                  %           42 - CS4
+                                  %           40 - CS4
 cat.extopts.reduce_mesh    = 1;   % optimize surface sampling: 0 - PBT res. (slow); 1 - optimal res. (default); 2 - internal res.; 3 - SPM init; 4 - MATLAB init; 5 - SPM full; 
                                   % 6 - MATLAB full; 7 - MATLAB full ext.;
 cat.extopts.vdist          = 2;   % mesh resolution (experimental, do not change!)
 cat.extopts.pbtlas         = 0;   % reduce myelination effects (experimental, not yet working properly!)
 cat.extopts.thick_measure  = 1;   % distance method for estimating thickness:  1 - Tfs: Freesurfer method using mean(Tnear1,Tnear2) (default in 12.7+); 0 - Tlink: linked distance (used before 12.7)
-cat.extopts.thick_limit    = 5;   % upper limit for Tfs thickness measure similar to Freesurfer (only valid if cat.extopts.thick_measure is set to "1"
+cat.extopts.thick_limit    = 6;   % upper limit for Tfs thickness measure similar to Freesurfer (only valid if cat.extopts.thick_measure is set to "1"
 cat.extopts.close_parahipp = 1;   % optionally apply closing inside mask for parahippocampal gyrus to get rid of deep holes that lead to large
                                   % cuts in gyri after topology correction. However, this may also lead to poorer quality of topology 
                                   % correction for other data and should be only used if large cuts in the parahippocampal areas occur
