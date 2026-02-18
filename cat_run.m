@@ -42,207 +42,41 @@ function varargout = cat_run(job)
 % disable parallel processing for only one subject
 if isscalar(job.data), job.nproc = 0; end
 
-if 1
-  if isfield(job.output,'BIDS') && ...
-  ( isfield(job.output.BIDS,'BIDSyes') || isfield(job.output.BIDS,'BIDSyes2') )
-    if isfield(job.output.BIDS,'BIDSyes') 
-      BIDSfolder = job.output.BIDS.BIDSyes.BIDSfolder;
-    else
-      BIDSfolder = job.output.BIDS.BIDSyes2.BIDSfolder;
-    end
-    job.extopts.BIDSfolder = BIDSfolder; 
-  end
-
-  % get BIDS
-  [sfiles,sfilesBIDS,BIDSsub,devdir,rdevdir,logdir] = cat_io_checkBIDS(job.data,BIDSfolder);
-
-  % RD202403: added path and filesnames - maybe better as separate structure
-  job.filedata.help        = ['Structure directory and file names. \n' ...
-                           ' logdir      .. path for log file \n' ...
-                           ' rawdir      .. origin directory of the RAW data \n' ...
-                           ' BIDSfolder  .. relative path to the main result directory \n' ...
-                           ' BIDSsubs    .. BIDS subject name \n' ...
-                           ' BIDSdirs    .. absolution (full) path to the result directories \n' ...
-                           ' BIDSrdirs   .. relative (full) path to the result directories \n'];
-  job.filedata.rawdir      = sfiles; 
-  job.filedata.logdir      = logdir;
-  job.filedata.isBIDS      = sfilesBIDS;
-  job.filedata.BIDSsubs    = BIDSsub;
-  job.filedata.BIDSdirs    = devdir;
-  job.filedata.BIDSrdirs   = rdevdir;
-  job.filedata.BIDSfolder  = BIDSfolder; 
-
-  BIDSlogdir = logdir;
-else
-  n_subjects = numel(job.data);
-
-  name1 = spm_file(job.data{1},'fpath');
-  BIDSfolder = ''; BIDSdir = pwd; 
-
-  if isfield(job.output,'BIDS')
-    if isfield(job.output.BIDS,'BIDSyes') || isfield(job.output.BIDS,'BIDSyes2')
-      if isfield(job.output.BIDS,'BIDSyes') 
-        BIDSfolder = job.output.BIDS.BIDSyes.BIDSfolder;
-      else
-        BIDSfolder = job.output.BIDS.BIDSyes2.BIDSfolder;
-      end
-  
-      %% get path of first data set and find "sub-" BIDS part
-      name1 = spm_file(job.data{1},'fpath');
-      ind = min([strfind(name1,'sub-'),strfind(name1,'sub_')]);
-   
-      if ~isempty(strfind(job.data{1},BIDSfolder))
-        BIDSfolder = '';
-        ind = [];
-      end
-      
-      if ~isempty(ind)
-        % remove leading ".." for real BIDS structure
-        BIDSfolder = strrep(BIDSfolder,['..' filesep],'');
-        
-        length_name = length(name1);
-        
-        % Shorten path until "sub-" indicator is found and add additional
-        % relative paths to get BIDSfolder relative to "sub-" directories.
-        % This is necessary because there might be additional session 
-        % folders and more
-        while length_name > ind
-          name1 = spm_file(name1,'fpath');
-          BIDSfolder = ['..' filesep BIDSfolder];
-          length_name = length(name1);
-        end
-      end
-      
-      % we need this in job.extopts for cat_io_subfolders
-      % ... no this is only for the BIDS structure of the first subject
-      %{
-       if isfield(job.output.BIDS,'BIDSyes') 
-         job.extopts.BIDSfolder  = BIDSfolder;
-       else
-         job.extopts.BIDSfolder2 = BIDSfolder;
-       end
-      %}
-      if isfield(job.output.BIDS,'BIDSyes') 
-        job.extopts.BIDSfolder  = job.output.BIDS.BIDSyes.BIDSfolder;
-      else
-        job.extopts.BIDSfolder2 = job.output.BIDS.BIDSyes2.BIDSfolder;
-      end
-    end
-  
-    % full path in BIDS
-    if isfield(job.extopts,'BIDSfolder')
-      bids_rel = job.extopts.BIDSfolder;
-    else
-      bids_rel = job.extopts.BIDSfolder2;
-    end
-    %BIDSdir = spm_file( fullfile(spm_file(job.data{1},'fpath'), bids_rel), 'cpath');
-    BIDSdir = spm_file( fullfile(spm_file(name1,'fpath'), bids_rel), 'cpath');
-  end
-  if ~exist(BIDSdir,'dir'), mkdir(BIDSdir); end
-  
-  % If one of the input directories is a BIDS directory and multipe jobs are 
-  % running than create a subfolder logs to save the log-files there and 
-  % not in the current directory. See also for a similar block in cat_parallelize.
-  % Use the same logic as cat_io_subfolders to find the dataset root
-  BIDSlogdir = [];
-  if isfield(job.extopts,'BIDSfolder') || isfield(job.extopts,'BIDSfolder2')
-    try
-      % Find dataset root by looking for subject folders (sub- or sub_)
-      ppath = name1;
-      % If it is BIDS than we should find the subject directory.
-      if cat_io_contains( ppath, {[filesep 'sub-'], [filesep 'sub-']} )
-        %% Split path and find last folder starting with 'sub-' or 'sub_'
-        parts = strsplit(ppath, filesep);
-        for pi = length(parts):-1:1
-          if ~isempty(parts{pi}) && (strncmp(parts{pi}, 'sub-', 4) || strncmp(parts{pi}, 'sub_', 4))
-            % Found subject folder - reconstruct dataset root (parent of sub-* folder)
-            ind = strfind(ppath, [filesep parts{pi}]);
-            if ~isempty(ind)
-              ind = ind(end);
-              dataset_root = ppath(1:ind-1);
-              % Get the relative BIDSfolder config
-              if isfield(job.extopts,'BIDSfolder')
-                bids_rel = job.extopts.BIDSfolder;
-              else
-                bids_rel = job.extopts.BIDSfolder2;
-              end
-              % Remove any leading ../
-              while strncmp(bids_rel, ['..' filesep], 3)
-                bids_rel = bids_rel(4:end);
-              end
-              % Build derivatives path at dataset root
-              BIDSlogdir = fullfile(dataset_root, bids_rel);
-              break;
-            end
-          end
-        end
-      else
-        BIDSlogdir = BIDSdir;
-      end
-    catch
-      cat_io_cprintf('note','cat_run: BIDS evaluation failed. \n')
-      BIDSlogdir = [];
-    end
-  end
-  if ~isempty(BIDSlogdir)
-    logdir  = fullfile(BIDSlogdir,'log');
-    if ~exist(logdir,'dir'), try mkdir(logdir); end; end %#ok<TRYNC>
+% extract BIDS directory from GUI parameters
+if isfield(job.output,'BIDS') && ...
+( isfield(job.output.BIDS,'BIDSyes') || isfield(job.output.BIDS,'BIDSyes2') )
+  if isfield(job.output.BIDS,'BIDSyes') 
+    BIDSfolder = job.output.BIDS.BIDSyes.BIDSfolder;
   else
-    logdir  = [];  
+    BIDSfolder = job.output.BIDS.BIDSyes2.BIDSfolder;
   end
-  % Another thing that we want to avoid is to fill some of the SPM
-  % directories and just write in a ../spm12/toolbox/cat12/log subdirectory.
-  % Do not forget that this is only about the additional log files and 
-  % not real data output. 
-  % If there are no writing permissions in the directory the same is probably true 
-  % for other SPM dirs and the user has to change the working directory anyway. 
-  % So we create an error so that the user can change this. 
-  if isempty(logdir)
-    try 
-      SPMdir  = spm_str_manip(data,'h');
-      SPMdiri = find(~cellfun('isempty',SPMdir),1);
-      if ~isempty(SPMdiri)
-  %      logdir = fullfile(fileparts(mfilename('fullpath')),'logs'); % log already exist as file
-        logdir = 'logs'; % log already exist as file
-        if ~exist(logdir,'dir')
-          try
-            mkdir(logdir); 
-          catch
-            cat_io_cprintf('cat_parallelize:CATlogs',['Cannot create directory for logs. \n' ...
-              'Please choose another working directory with writing permissions to save the log-files. ']);
-          end 
-        end
-      else
-        logdir  = [];  
-      end
-    catch 
-      logdir  = [];  
-    end
-  end
-  if ~isempty(logdir)
-    if ~isempty(BIDSlogdir)
-      cat_io_cprintf('n', ['\nFound a CAT12 BIDS directory in the given ' ...
-        'pathnames and save the log file there:\n']); 
-      cat_io_cprintf('blue','%s\n\n', logdir);
-    else
-      cat_io_cprintf('n', ['\nYou working directory is in the SPM12/CAT12 ' ...
-        'path, where log files saved here:\n']); 
-      cat_io_cprintf('blue','%s\n\n', logdir);
-    end
-  end
-
-
-  % RD202403: added path and filesnames - maybe better as separate structure
-  job.filedata.help        = ['Structure directory and file names. \n' ...
-                           ' logdir      .. path for log file \n' ...
-                           ' rawdir      .. origin directory of the RAW data \n' ...
-                           ' BIDSfolder  .. relative path to the main result directory \n' ...
-                           ' BIDSdir     .. absolution (full) path to the result directory \n'];
-  job.filedata.rawdir      = name1; 
-  job.filedata.logdir      = logdir;
-  job.filedata.BIDSdir     = BIDSdir;
-  job.filedata.BIDSfolder  = BIDSfolder; 
+  job.extopts.BIDSfolder = BIDSfolder; 
+else
+  BIDSfolder = ''; 
 end
+
+% get BIDS
+[sfiles,sfilesBIDS,BIDSsub,devdir,rdevdir,logdir] = cat_io_checkBIDS(job.data,BIDSfolder);
+
+% added path and filesnames - maybe better as separate structure
+job.filedata.help        = [ 'Structure directory and file names. \n' ...
+                             ' logdir      .. path for log file \n' ...
+                             ' rawdir      .. origin directory of the RAW data \n' ...
+                             ' BIDSfolder  .. relative path to the main result directory \n' ...
+                             ' BIDSsubs    .. BIDS subject name \n' ...
+                             ' BIDSdirs    .. absolution (full) path to the result directories \n' ...
+                             ' BIDSrdirs   .. relative (full) path to the result directories \n' ];
+job.filedata.rawdir      = sfiles; 
+job.filedata.logdir      = logdir;
+job.filedata.isBIDS      = sfilesBIDS;
+job.filedata.BIDSsubs    = BIDSsub;
+job.filedata.BIDSdirs    = devdir;
+job.filedata.BIDSrdirs   = rdevdir;
+job.filedata.BIDSfolder  = BIDSfolder; 
+
+BIDSlogdir = logdir;
+
+
 
 if ( isfield(job.extopts,'lazy') && job.extopts.lazy && ~isfield(job,'process_index') ) || ...
    ( isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.extopts.admin.lazy && ~isfield(job,'process_index') )
@@ -615,11 +449,14 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
 
           
             %% search WARNINGs and ERRORs
-            if ~isempty(cati) & numel(cati)>0
+            if ~isempty(catis) 
               cati = find(cellfun('isempty',strfind(txt(catis(end):end),'ALERT '))==0);
               catalerts   = numel(cati); 
               cati = find(cellfun('isempty',strfind(txt(catis(end):end),'WARNING '))==0);
               catwarnings = numel(cati); 
+            else
+              catalerts   = 0; 
+              catwarnings = 0; 
             end
 
 
@@ -827,7 +664,11 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
                   else
                     col = [0.6 0.6 0.6]; 
                   end
-                  cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('%d alerts',catalerts));  
+                  if catalerts==1
+                    cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('%d alert',catalerts));  
+                  else
+                    cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('%d alerts',catalerts));  
+                  end
                 end
 
               else
