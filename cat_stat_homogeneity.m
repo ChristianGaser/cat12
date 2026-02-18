@@ -250,7 +250,7 @@ if ~xml_defined
 
   % we now try to find all XML files in the report folder 
   xml_files = spm_select('List',report_folder,'^cat_.*\.xml$');
-  if ~isempty(xml_files)
+  if ~isempty(xml_files) || size(xml_files,1) == 1
 
     % find part of xml-filename in data files to get the prepending string
     % (e.g. mwp1)
@@ -410,7 +410,7 @@ for i=1:n_subjects
     break
   end
 
-  if i > size(xml_files,1) 
+  if i > n_xml_files 
     cat_io_cprintf('warn','\nSkip use of xml-files for quality measures because of not enough XML files were found.\n');
     H.isxml = false;
     break
