@@ -133,10 +133,10 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   set(fg,'windowstyle','normal'); 
   try, spm_figure('Clear',fg); end
   switch computer
-    case {'PCWIN','PCWIN64'}, fontsize = 8;
-    case {'GLNXA','GLNXA64'}, fontsize = 8;
-    case {'MACI','MACI64'},   fontsize = 9.5;
-    otherwise,                fontsize = 9.5;
+    case {'PCWIN','PCWIN64'}, fontsize = 7.5;
+    case {'GLNXA','GLNXA64'}, fontsize = 8.5;
+    case {'MACI','MACI64'},   fontsize = 9;
+    otherwise,                fontsize = 9;
   end
   % the size of the figure is adapted to screen size but we must also update the font size
   PaperSize = get(fg,'PaperSize');
@@ -350,8 +350,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   % print parameters
   htext = zeros(5,2,2);
   for i=1:size(str{1},2)   % main parameter
-    htext(1,i,1) = text(0.01,0.98-(0.055*i), str{1}(i).name  ,'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','none','Parent',ax);
-    htext(1,i,2) = text(0.51,0.98-(0.055*i), str{1}(i).value ,'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
+    htext(1,i,1) = text(0.01,0.98-(0.05*i), str{1}(i).name  ,'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','none','Parent',ax);
+    htext(1,i,2) = text(0.51,0.98-(0.05*i), str{1}(i).value ,'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
   end
   if isfield(res,'long') 
     % Adaption for longitudinal reports, where we focus on changes between 
@@ -378,7 +378,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     else
       IQRE = nan; 
     end
-    htext(2,1,1) = text(0.01,0.48 - (0.055 * 1), '\bfImage and preprocessing quality changes (best to worst):', ...
+    htext(2,1,1) = text(0.01,0.52 - (0.05 * 1), '\bfImage and preprocessing quality changes (best to worst):', ...
       'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
     if isfield(res.long,'qar_IQR')
       lstr{1}(1) = struct('name','\bf\color[rgb]{.6 0  0}IQR:' , ...
@@ -415,11 +415,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
         'value2',val2); 
     end
     for i=1:size(lstr{1},2)  % qa-measurements
-      htext(2,i+1,1) = text(0.01,0.47-(0.055*(i+1)), lstr{1}(i).name  , ...
+      htext(2,i+1,1) = text(0.01,0.52-(0.05*(i+1)), lstr{1}(i).name  , ...
         'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
-      htext(2,i+1,2) = text(0.135,0.47-(0.055*(i+1)), lstr{1}(i).value , 'HorizontalAlignment','right', ......
+      htext(2,i+1,2) = text(0.135,0.52-(0.05*(i+1)), lstr{1}(i).value , 'HorizontalAlignment','right', ......
         'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
-      htext(2,i+1,3) = text(0.14,0.47-(0.055*(i+1)), lstr{1}(i).value2, 'HorizontalAlignment','left', ......
+      htext(2,i+1,3) = text(0.14,0.52-(0.05*(i+1)), lstr{1}(i).value2, 'HorizontalAlignment','left', ......
         'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
     end
     
@@ -473,7 +473,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     if isfield(res.long,'vol_rel_CGW')
       leg          = {'dGMV','dWMV','dCSFV'};
       val2f        = @(valr,vala) marks2strt(valr  * 100,sprintf('%+0.2f',vala)); 
-      htext(3,1,1) = text(0.51,0.48-(0.055), '\bfGlobal tissue volumes and their maximum change:', ...
+      htext(3,1,1) = text(0.51,0.52-(0.05), '\bfGlobal tissue volumes and their maximum change:', ...
         'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
 
       % rGMV
@@ -545,11 +545,11 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 
       mod = 0.003 * (isfield(res.long,'surf_TSA') + isfield(res.long,'dist_thickness'));
       for i=1:size(lstr{2},2)  % morphometric measurements
-        htext(3,i+1,1) = text(0.52,0.47-((0.055-mod)*(i+1)), lstr{2}(i).name  , ...
+        htext(3,i+1,1) = text(0.52,0.52-((0.05-mod)*(i+1)), lstr{2}(i).name  , ...
           'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
-        htext(3,i+1,2) = text(0.64,0.47-((0.055-mod)*(i+1)), lstr{2}(i).value , 'HorizontalAlignment','right', ...
+        htext(3,i+1,2) = text(0.64,0.52-((0.05-mod)*(i+1)), lstr{2}(i).value , 'HorizontalAlignment','right', ...
           'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
-        htext(3,i+1,3) = text(0.645,0.47-((0.055-mod)*(i+1)), lstr{2}(i).value2 ,'HorizontalAlignment','left', ...
+        htext(3,i+1,3) = text(0.645,0.52-((0.05-mod)*(i+1)), lstr{2}(i).value2 ,'HorizontalAlignment','left', ...
           'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
       end
     
@@ -606,12 +606,12 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
 
   else
     for i=1:size(str{2},2)  % qa-measurements
-      htext(2,i,1) = text(0.01,0.45-(0.055*i), str{2}(i).name  ,'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
-      htext(2,i,2) = text(0.33,0.45-(0.055*i), str{2}(i).value ,'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
+      htext(2,i,1) = text(0.01,0.50-(0.05*i), str{2}(i).name  ,'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
+      htext(2,i,2) = text(0.33,0.50-(0.05*i), str{2}(i).value ,'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
     end
     for i=1:size(str{3},2)  % subject-measurements
-      htext(3,i,1) = text(0.51,0.45-(0.055*i), str{3}(i).name  ,'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
-      htext(3,i,2) = text(0.70,0.45-(0.055*i), str{3}(i).value ,'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
+      htext(3,i,1) = text(0.51,0.50-(0.05*i), str{3}(i).name  ,'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
+      htext(3,i,2) = text(0.70,0.50-(0.05*i), str{3}(i).value ,'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
     end
   end
   

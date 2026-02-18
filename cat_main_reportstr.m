@@ -31,7 +31,7 @@ function str = cat_main_reportstr(job,res,qa)
   color = @(QMC,m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
    
   %mark2str2 = @(mark,s,val) sprintf(sprintf('\\\\bf\\\\color[rgb]{%%0.2f %%0.2f %%0.2f}%s',s),color(QMC,mark),val);
-  marks2str   = @(mark,str) sprintf('\\bf\\color[rgb]{%0.2f %0.2f %0.2f}%s',color(QMC,real(mark)),str);
+  marks2str   = @(mark,str) sprintf('\\color[rgb]{%0.2f %0.2f %0.2f}%s',color(QMC,real(mark)),str);
   mark2rps    = @(mark) min(100,max(0,105 - real(mark)*10)) + isnan(real(mark)).*real(mark);
   grades      = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
   mark2grad   = @(mark) grades{max(1,min([numel(grades),max(max(isnan(real(mark))*numel(grades),1),round((real(mark)+2/3)*3-3))]))};
@@ -416,34 +416,37 @@ function str = cat_main_reportstr(job,res,qa)
       str{2} = [str{2} struct('name',' Fast Euler Characteristic (FEC):','value',marks2str(qa.qualityratings.FEC,...
         sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.FEC),mark2grad(qa.qualityratings.FEC))))]; 
     end
+
+    % additional surface measures
+    % Euler/defect number (all pipelines? - not in CS4)
+    if isfield(qa.qualitymeasures,'SurfaceEulerNumber') && ~isempty(qa.qualitymeasures.SurfaceEulerNumber)  && isfinite(qa.qualitymeasures.SurfaceEulerNumber)
+      str{2} = [str{2} struct('name',' Surface Euler number:','value',marks2str(qa.qualityratings.SurfaceEulerNumber,...
+              sprintf('%g', qa.qualitymeasures.SurfaceEulerNumber)))]; 
+    end
+    % self intersections (all pipelines?)
+    if job.extopts.expertgui && isfield(qa.qualitymeasures,'SurfaceSelfIntersections') && ~isempty(qa.qualitymeasures.SurfaceSelfIntersections) && ...
+      ~isnan(qa.qualitymeasures.SurfaceSelfIntersections)
+      str{2}(end).name  = [str{2}(end).name(1:end-6)  ' / self-inters. size:'];
+      str{2}(end).value = [str{2}(end).value ' / ' marks2str(qa.qualityratings.SurfaceSelfIntersections,...
+              sprintf('%0.2f%%', qa.qualitymeasures.SurfaceSelfIntersections)) ];
+    end
+    % Surface Intensity/Position
+    if job.extopts.expertgui && isfield(qa.qualityratings,'SurfaceIntensityRMSE')
+        str{2} = [str{2} struct('name',' Surface intensity / position RMSE:','value',[ marks2str( qa.qualityratings.SurfaceIntensityRMSE ,...
+          sprintf('%0.3f', qa.qualitymeasures.SurfaceIntensityRMSE)) ' / ' ...
+          marks2str( qa.qualityratings.SurfacePositionRMSE ,sprintf('%0.3f', qa.qualitymeasures.SurfacePositionRMSE) ) ] ) ];
+    end
+    
     % average rating
-    str{2} = [str{2} struct('name','\bf Weighted average (SIQR):','value',marks2str(qa.qualityratings.SIQR,...
-      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.SIQR),mark2grad(qa.qualityratings.SIQR))))];
+    str{2} = [str{2} struct('name','\bf Weighted average (SIQR):','value',['\bf' marks2str(qa.qualityratings.SIQR,...
+      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.SIQR),mark2grad(qa.qualityratings.SIQR)))])];
   else
     % only average rating
-    str{2} = [str{2} struct('name','Weighted average (SIQR):','value',marks2str(qa.qualityratings.SIQR,...
-      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.SIQR),mark2grad(qa.qualityratings.SIQR))))];
+    str{2} = [str{2} struct('name','Weighted average (SIQR):','value',['\bf' marks2str(qa.qualityratings.SIQR,...
+      sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.SIQR),mark2grad(qa.qualityratings.SIQR)))])];
   end 
 
-  % additional surface measures
-  % Euler/defect number (all pipelines? - not in CS4)
-  if isfield(qa.qualitymeasures,'SurfaceEulerNumber') && ~isempty(qa.qualitymeasures.SurfaceEulerNumber)  && isfinite(qa.qualitymeasures.SurfaceEulerNumber)
-    str{2} = [str{2} struct('name',' Surface Euler number:','value',marks2str(qa.qualityratings.SurfaceEulerNumber,...
-            sprintf('%g', qa.qualitymeasures.SurfaceEulerNumber)))]; 
-  end
-  % self intersections (all pipelines?)
-  if job.extopts.expertgui && isfield(qa.qualitymeasures,'SurfaceSelfIntersections') && ~isempty(qa.qualitymeasures.SurfaceSelfIntersections) && ...
-    ~isnan(qa.qualitymeasures.SurfaceSelfIntersections)
-    str{2}(end).name  = [str{2}(end).name(1:end-6)  ' / self-inters. size:'];
-    str{2}(end).value = [str{2}(end).value ' / ' marks2str(qa.qualityratings.SurfaceSelfIntersections,...
-            sprintf('%0.2f%%', qa.qualitymeasures.SurfaceSelfIntersections)) ];
-  end
-  % Surface Intensity/Position
-  if job.extopts.expertgui && isfield(qa.qualityratings,'SurfaceIntensityRMSE')
-      str{2} = [str{2} struct('name',' Surface intensity / position RMSE:','value',[ marks2str( qa.qualityratings.SurfaceIntensityRMSE ,...
-        sprintf('%0.3f', qa.qualitymeasures.SurfaceIntensityRMSE)) ' / ' ...
-        marks2str( qa.qualityratings.SurfacePositionRMSE ,sprintf('%0.3f', qa.qualitymeasures.SurfacePositionRMSE) ) ] ) ];
-  end
+  
 
 
   % Subject Measures
