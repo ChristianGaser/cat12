@@ -203,7 +203,9 @@ function varargout = cat_surf_surf2roi(job)
               end
               
               % write xml data
-              xmlname{si} = fullfile(strrep(sinfo.pp,surffolder,labelfolder),['catROIs_' sinfo.name '.xml']);
+              roidir = get_surface_roi_dir(sinfo.pp,surffolder,labelfolder);
+              if ~exist(roidir,'dir'), mkdir(roidir); end
+              xmlname{si} = fullfile(roidir,['catROIs_' sinfo.name '.xml']);
               cat_io_xml(xmlname{si},catROI{si},'write+'); 
               
               % delete temporarily resampled files
@@ -304,4 +306,28 @@ function resamp = get_resampled_values(P,debug,type)
     resamp.cdata = g.cdata;
   end
 
+end
+
+%=======================================================================
+function roidir = get_surface_roi_dir(surfdir,surffolder,labelfolder)
+% Derive output label directory for surface ROI xml files.
+
+  roidir = surfdir;
+
+  % Fix accidental nested structure ".../mri/derivatives/..."
+  roidir = strrep(roidir,[filesep 'mri' filesep 'derivatives' filesep],...
+                         [filesep 'derivatives' filesep]);
+
+  % Use only absolute surface path transformation to avoid duplicated
+  % "derivatives/CAT.../derivatives/CAT..." insertions.
+  if numel(roidir) >= 5 && strcmp(roidir(end-4:end),[filesep 'surf'])
+    roidir = [roidir(1:end-4) 'label'];
+  else
+    roidir = strrep(roidir,[filesep 'surf' filesep],[filesep 'label' filesep]);
+  end
+
+  % keep arguments for backward compatibility
+  %#ok<NASGU>
+  surffolder = surffolder;
+  labelfolder = labelfolder;
 end

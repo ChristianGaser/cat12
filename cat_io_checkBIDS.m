@@ -35,6 +35,7 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,mdevdir] = cat_io_checkBIDS(sfile
         if any(cat_io_contains(sdirs{end-3}(1:min(4,numel(sdirs{end-3}))),{'sub-','sub_'})), sub = 1; else, sub = 0; end
       end
     end
+    sdirs_orig = sdirs;
     dev = find(strcmp('derivatives',sdirs)); 
     sdirs(dev:dev+1) = []; 
     
@@ -43,7 +44,20 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,mdevdir] = cat_io_checkBIDS(sfile
     % Here, we just use the BIDSdir directly. 
       isBIDS(sfi)  = 0; 
       BIDSsub{sfi} = sdirs{end}; 
-      devdir{sfi}  = spm_file( fullfile(fileparts(sfiles{sfi}), BIDSdir) , 'fpath' );
+      if ~isempty(dev) && ~isempty(BIDSdir)
+        % File already resides in a derivatives directory.
+        % Reconstruct base path (before 'derivatives') to avoid doubling.
+        if isempty(sdirs_orig{1})
+          basepath = fullfile(filesep, sdirs_orig{2:dev(1)-1});
+        else
+          basepath = fullfile(sdirs_orig{1:dev(1)-1});
+        end
+        devdir{sfi} = fullfile(basepath, BIDSdir);
+      elseif ~isempty(BIDSdir)
+        devdir{sfi} = fullfile(fileparts(sfiles{sfi}), BIDSdir);
+      else
+        devdir{sfi} = fileparts(sfiles{sfi});
+      end
       rdevdir{sfi} = BIDSdir;
     else
       % Evaluation of the different cases, i.e., between cross and long cases
@@ -53,8 +67,15 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,mdevdir] = cat_io_checkBIDS(sfile
       if ~ses && ~ana, BIDSsub{sfi} = sdirs{end-1}; devi = numel(sdirs)-1; end % cross
       if ~ses &&  ana, BIDSsub{sfi} = sdirs{end-2}; devi = numel(sdirs)-2; end % cross
       % setup result directory - without BIDS the default is used
-      devdir{sfi}     = '';
-      for di = 2:numel(sdirs)-1
+      % keep absolute root/drive prefix to avoid relative derivatives paths
+      if isempty(sdirs{1})
+        devdir{sfi} = filesep;
+        did = 2;
+      else
+        devdir{sfi} = sdirs{1};
+        did = 2;
+      end
+      for di = did:numel(sdirs)-1
         if sub && di == devi, devdir{sfi} = fullfile(devdir{sfi}, BIDSdir); end % add some directories inbetween
         devdir{sfi} = fullfile(devdir{sfi}, sdirs{di});
       end

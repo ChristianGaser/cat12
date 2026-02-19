@@ -76,7 +76,7 @@ function cat_io_report(job,qa,subj,createerr)
     Pm  = fullfile(pp,mrifolder,['m' ff '.nii']); 
     Pp0 = fullfile(pp,mrifolder,['p0' ff '.nii']); 
 
-    VT0 = spm_vol(job.data{subj}); % original 
+    VT0 = spm_vol(cat_io_report_resolve_nii(job.data{subj})); % original 
     if exist(Pn,'file'), VT1 = spm_vol(Pn); end %else VT0.mat = nan(4,4); end % intern
     [pth,nam] = spm_fileparts(VT0.fname); 
 
@@ -290,7 +290,7 @@ function cat_io_report(job,qa,subj,createerr)
 %% Figure
 %  ---------------------------------------------------------------------
   try
-    VT0 = spm_vol(job.data{subj}); % original 
+    VT0 = spm_vol(cat_io_report_resolve_nii(job.data{subj})); % original 
   
     nprog = ( isfield(job,'printPID') && job.printPID ) || ... PID field
           ( isempty(findobj('type','Figure','Tag','CAT') ) && ... no menus
@@ -614,7 +614,7 @@ function cat_io_report(job,qa,subj,createerr)
           try
             spm_update
           catch
-            fprintf('Update to the newest SPM12 version failed. Please update manually.\n');
+            fprintf('Update to the newest SPM version failed. Please update manually.\n');
           end
         end
     
@@ -766,4 +766,21 @@ function cat_io_report(job,qa,subj,createerr)
   
   warning('ON','MATLAB:subscripting:noSubscriptsSpecified')
   
+end
+
+%=======================================================================
+function Pnii = cat_io_report_resolve_nii(Pin)
+% Resolve readable NIfTI path for report generation (.nii preferred).
+
+  Pnii = char(Pin);
+  Pnii = regexprep(Pnii,',\d+$','');
+
+  if exist(Pnii,'file')
+    return;
+  end
+
+  [pp,ff,ee] = spm_fileparts(Pnii);
+  if strcmpi(ee,'.nii') && exist(fullfile(pp,[ff ee '.gz']),'file')
+    gunzip(fullfile(pp,[ff ee '.gz']));
+  end
 end
