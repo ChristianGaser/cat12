@@ -148,7 +148,7 @@ estwrite_spm.help   = {
 %------------------------------------------------------------------------
 cat        = cfg_choice;
 cat.name   = 'CAT';
-cat.tag    = 'cat';
+cat.tag    = 'CAT';
 
 if exist('cat_conf_catsimple','file')
   [catsimple,catsimple_long] = cat_conf_catsimple(expert);

@@ -10,7 +10,7 @@ function varargout = cat_update(update)
 % msg    - string describing outcome, that would otherwise be displayed.
 % update - allow installation of update
 % 
-% This function will connect to the SBM server, compare the
+% This function will connect to the Github server, compare the
 % version number of the updates with the one of the CAT installation 
 % currently in the MATLAB path and will display the result.
 % ______________________________________________________________________
