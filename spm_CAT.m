@@ -51,7 +51,7 @@ end
 % check that CAT is installed in the correct folder
 pth = fileparts(mfilename('fullpath'));
 [pth2, nam] = fileparts(pth);
-if ~strcmp(nam,'cat')
+if ~strcmp(nam,'CAT')
   spm('alert!',sprintf('Please check that you do not have multiple CAT installations in your path!\nYour current CAT version is installed in %s but should be installed in %s',pth,fullfile(catdir)),'WARNING');
 end
 
@@ -290,7 +290,7 @@ if expert<2
 end
 
 spm('FnBanner',mfilename,cat_version);
-[Finter,Fgraph] = spm('FnUIsetup','CAT12.10');
+[Finter,Fgraph] = spm('FnUIsetup','CAT26.0');
 url = fullfile(fileparts(mfilename('fullpath')),'doc','cat.html');
 
 % open interactive help for newer version because display of html pages does not work anymore
@@ -327,7 +327,7 @@ logo = sprintf(['\n' ...
     '   _______  ___  _______    \n' ...
     '  |  ____/ / _ \\ \\_   _/   %s\n' ...
     '  | |___  / /_\\ \\  | |     Computational Anatomy Toolbox\n' ...
-    '  |____/ /_/   \\_\\ |_|     CAT12.10 - https://neuro-jena.github.io\n\n'], expertguitext);
+    '  |____/ /_/   \\_\\ |_|     CAT26.0 - https://neuro-jena.github.io\n\n'], expertguitext);
 cat_io_cprintf([0.0 0.0 0.5],'%s',logo);
 cat_io_cprintf([0.0 0.0 0.5],'  CAT default file:\n\t%s\n\n',deffile); 
 
