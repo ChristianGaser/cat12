@@ -264,7 +264,7 @@ function str = cat_main_reportstr(job,res,qa)
         if job.opts.samp == catdef.opts.samp, cp{1} = npara; else, cp{1} = cpara; end
         if job.opts.tol  == catdef.opts.tol,  cp{2} = npara; else, cp{2} = cpara; end
         str{1}(end).name  = [str{1}(end).name(1:end-1) ' / acc (samp/tol): '];  
-        str{1}(end).value = [str{1}(end).value sprintf('%s|%0.2f} (%s{%0.2f}/%s{%0.0e})',cp{3},job.opts.acc,cp{1},job.opts.samp,cp{2},job.opts.tol)]; 
+        str{1}(end).value = [str{1}(end).value sprintf('%s|%0.2f} (%s{%0.2f} / %s{%0.0e})',cp{3},job.opts.acc,cp{1},job.opts.samp,cp{2},job.opts.tol)]; 
       end
     else
       if job.extopts.expertgui && isfield(job.opts,'samp')
