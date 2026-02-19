@@ -46,6 +46,13 @@ function cat_run_job(job,tpm,subj)
   stime  = clock; 
   stime0 = stime; % overall processing time
 
+  % ensure absolute paths for parallel processing compatibility
+  job.data{subj}             = spm_file(job.data{subj},'cpath');
+  job.channel(1).vols{subj}  = spm_file(job.channel(1).vols{subj},'cpath');
+  if isfield(job.channel(1),'vols0') && numel(job.channel(1).vols0)>=subj
+    job.channel(1).vols0{subj} = spm_file(job.channel(1).vols0{subj},'cpath');
+  end
+
   % create subfolders if not exist
   pth = spm_fileparts(job.channel(1).vols{subj}); 
   [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(job.channel(1).vols{subj},job);
