@@ -1,4 +1,4 @@
-name: Build CAT12 standalone
+name: Build CAT standalone
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ env:
 
 jobs:
   build_matlab_standalone:
-    name: Build CAT12 standalone
+    name: Build CAT standalone
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -34,7 +34,7 @@ jobs:
             standalone_os: Win
             mex_ext: mexw64
     steps:
-      - name: Checkout CAT12
+      - name: Checkout CAT
         uses: actions/checkout@v4
 
       - name: Update
@@ -50,12 +50,12 @@ jobs:
           repository: spm/spm
           path: spm
 
-      - name: Install CAT12 in SPM toolbox
+      - name: Install CAT in SPM toolbox
         shell: bash
         run: |
-          mkdir -p spm/toolbox/cat12
+          mkdir -p spm/toolbox/CAT
           rsync -a --exclude='.git' \
-            --exclude='spm/toolbox/cat12/' \
+            --exclude='spm/toolbox/CAT/' \
             --exclude='batches/' \
             --exclude='catQC/' \
             --exclude='check_pipeline/' \
@@ -66,7 +66,7 @@ jobs:
             --exclude='mexmaci/' \
             --exclude='spm/' \
             --exclude='Makefile' \
-            ./ spm/toolbox/cat12/
+            ./ spm/toolbox/CAT/
 
       - name: Cleanup (Linux/Mac)
         if: runner.os != 'Windows'
@@ -99,12 +99,12 @@ jobs:
           matlab_release=$(cat matlab_release.txt)
           echo "MATLAB_VERSION=$matlab_release" >> $GITHUB_ENV
 
-      - name: Compile CAT12 mex-files
+      - name: Compile CAT mex-files
         uses: matlab-actions/run-command@v2
         with:
           command: |
             addpath('spm');
-            cd('spm/toolbox/cat12')
+            cd('spm/toolbox/CAT')
             compile
 
       - name: Install zip on Windows
@@ -112,11 +112,11 @@ jobs:
         run: choco install zip -y
         shell: bash
 
-      - name: Release CAT12
+      - name: Release CAT
         if: runner.os == 'Linux'
         run: |
           cd spm/toolbox
-          zip -r ../../cat_${{ github.ref_name }}_${{ matrix.os_name }}.zip cat12
+          zip -r ../../CAT_${{ matrix.os_name }}.zip CAT
 
       # 1) Add SPM with subfolders to the path 2) Run spm_make_standalone in matlab
       - name: Build MATLAB standalone
@@ -131,14 +131,12 @@ jobs:
 
       - name: Compress to ZIP
         run: |
-          mv spm/toolbox/cat12/standalone standalone/
+          mv spm/toolbox/CAT/standalone standalone/
           mv standalone cat_standalone
-          zip -r CAT12_${{ env.MATLAB_VERSION }}_MCR_${{ matrix.standalone_os }}.zip cat_standalone/*
+          zip -r CAT_${{ env.MATLAB_VERSION }}_MCR_${{ matrix.standalone_os }}.zip cat_standalone/*
 
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: CAT12_${{ env.MATLAB_VERSION }}_MCR_${{ matrix.standalone_os }}
-          path: |
-            cat_*.zip
-            CAT12_*.zip
+          name: cat_${{ github.ref_name }}_${{ matrix.os_name }}_${{ env.MATLAB_VERSION }}
+          path: cat_*.zip
