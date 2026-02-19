@@ -1,6 +1,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>CAT12 - Computational Anatomy Toolbox for SPM12</title>
+    <title>CAT - Computational Anatomy Toolbox for SPM</title>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <link rel="stylesheet" type="text/css" href="spm.css" />
     <link rel="stylesheet" type="text/css" href="../spm.css" />
@@ -70,11 +70,11 @@
         <li>Optionally estimate results for ROI analysis using <a class="function" href="matlab:cat_stat_analyze_ROIs;">Analyze ROIs</a>. Here, the SPM.mat file of the already estimated statistical design will be used. For more information, see <a href="cat_methods_RBM.html">Atlas creation and ROI based analysis</a>.</li>
       </ul>
       <h4>Additional options</h4>
-      <p>Additional parameters and options are displayed in the <a class="function" href="matlab:cat12('expert');">CAT12 expert mode</a>. Please note that this mode is for experienced users only.</p>
+      <p>Additional parameters and options are displayed in the <a class="function" href="matlab:cat12('expert');">CAT expert mode</a>. Please note that this mode is for experienced users only.</p>
       <h4>Errors during preprocessing</h4>
       <p>Please use the <a class="function" href="matlab:cat_io_senderrormail;">Report Error</a> function if any errors during preprocessing occurred. You first have to select the "err" directory, which is located in the folder of the failed record, and finally, the specified zip-file should be attached manually in the mail.</p>
       <h4><sup>1</sup>Note to filter sizes for Gaussian smoothing</h4>
-      <p>Due to the high accuracy of the spatial registration approaches used in CAT12, you can also try to use smaller filter sizes of only a few millimeter. However, for very small filter sizes or even no filtering, you have to apply a non-parametric permutation test such as the <a class="function" href="matlab:if exist(fullfile(spm('dir'),'toolbox','TFCE')),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">TFCE-statistics</a>. </br>
+      <p>Due to the high accuracy of the spatial registration approaches used in CAT, you can also try to use smaller filter sizes of only a few millimeter. However, for very small filter sizes or even no filtering, you have to apply a non-parametric permutation test such as the <a class="function" href="matlab:if exist(fullfile(spm('dir'),'toolbox','TFCE')),spm_jobman('interactive','','spm.tools.tfce_estimate'), else cat_install_tfce, end;">TFCE-statistics</a>. </br>
       Please also note that for the analysis of cortical folding measures such as gyrification or cortical complexity the filter sizes have to be larger (i.e. in the range of 15-25mm). This is due to the underlying nature of this measure that reflects contributions from both sulci as well as gyri. Therefore, the filter size should exceed the distance between a gyral crown and a sulcal fundus.</p>
     </div>  
   

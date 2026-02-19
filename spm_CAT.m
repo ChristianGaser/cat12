@@ -307,7 +307,7 @@ if cat_io_matlabversion > 20212
   % CAT help 
   web(url,'-noaddressbox','-new')
 else
-  spm_help('!Disp',url,'',Fgraph,'Computational Anatomy Toolbox for SPM12 or SPM25');
+  spm_help('!Disp',url,'',Fgraph,'Computational Anatomy Toolbox for SPM');
 end
 
 % check that binaries for surface tools are running 

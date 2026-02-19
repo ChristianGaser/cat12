@@ -7,6 +7,7 @@ NEWVERSION="CAT26.0"
 REVISION=`git rev-list --count HEAD`
 DATE=`git log --date short |grep "Date:"|head -1|cut -f2 -d':'|sed -e s'/ //g'`
 VERSION=`echo ${NEWVERSION} | sed -e 's/CAT//g'`
+MAINVERSION=`echo ${VERSION} | cut -f1 -d'.'`
 
 ZIPFOLDER=/Users/gaser/matlab/cat12
 
@@ -99,6 +100,7 @@ update: docs copy_longmode
 	-@test ! -d ../tfce/ || cp cat_spm_results_ui.m ../tfce/
 	-@perl -p -i -e "s/${OLDVERSION}/${NEWVERSION}/g" spm_CAT.m
 	-@perl -p -i -e "s/${OLDVERSION}/${NEWVERSION}/g" cat_batch_bids.sh
+	-@cp cat12.m cat${MAINVERSION}.m
 	-@chmod a+x CAT.*/*
 
 # zip release

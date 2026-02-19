@@ -1,6 +1,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>CAT12 - Computational Anatomy Toolbox for SPM12</title>
+    <title>CAT - Computational Anatomy Toolbox for SPM</title>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <link rel="stylesheet" type="text/css" href="spm.css" />
     <link rel="stylesheet" type="text/css" href="../spm.css" />
@@ -11,7 +11,7 @@
     <div id="header" style="background: black url('images/research.jpg') right;">
       <h1><a href="matlab:web('https://neuro-jena.github.io/','-browser');">Structural Brain Mapping Group</a></h1>
       <div id="breadcrumbs">
-        <a href="cat.html">CAT12</a> > <a href="cat_FAQ.html">FAQ</a> 
+        <a href="cat.html">CAT</a> > <a href="cat_FAQ.html">FAQ</a> 
       </div>
     </div>
   
@@ -62,7 +62,7 @@
           <p>
             No, in general we recommend to use the original images without any preprocessing. 
             Low frequency corrections for inhomogeneity, e.g. the N3 algorithm, are unproblematic but not required for most datasets.  
-            Only for very strong inhomogeneities (ICR lower than 50, grade E or F) of high-field scanners (greater 3 Tesla) further preprocessing might be helpful if CAT12 shows any problems.  
+            Only for very strong inhomogeneities (ICR lower than 50, grade E or F) of high-field scanners (greater 3 Tesla) further preprocessing might be helpful if CAT shows any problems.  
             Try to avoid high frequency corrections or resampling of the data because this will reduce the ability of the noise filters. 
             For images with slice-artifacts try the <a href="cat_tools_VBM.html#cat_vol_correct_slice_scaling">Slice scaling correction tool</a>.
           </p>
@@ -133,7 +133,7 @@
         <li>
           <h4 id="SPM_RBM_SBM">Is it possible to use the SPM segmentation for ROI processing or thickness estimation and surface reconstruction?</h4>
           <p>
-            SPM segmentation based pipeline <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite_spm');">CAT12: SPM Segmentation</a> is available in expert mode that also implements DARTEL registration. 
+            SPM segmentation based pipeline <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite_spm');">CAT: SPM Segmentation</a> is available in expert mode that also implements DARTEL registration. 
             It requires the processed GM, WM, and, CSF tissue maps in native space, the original image, and the SPM seg8.mat file and was designed to use the original SPM segmentation without further optimization to allow processing of T2/PD images or multimodal segmentation.
             A full batch script with SANLM filter is available <a class="function" href="matlab:spm_jobman('interactive','','cat12batch_RBM_and_SBM_for_SPM.m');">here</a>. 
             The results cannot be mixed with results of the default CAT pipeline because SPM12 segmentation no PVE and can be biased by the TPM.

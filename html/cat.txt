@@ -1,6 +1,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>VERSION - Computational Anatomy Toolbox for SPM12</title>
+    <title>VERSION - Computational Anatomy Toolbox for SPM</title>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <link rel="stylesheet" type="text/css" href="spm.css" />
     <link rel="stylesheet" type="text/css" href="../spm.css" />
@@ -18,7 +18,7 @@
   
     <div id="content">
       <br />
-      <p align="center" style="text-align:center;">This is <b>VERSION (RELNUMBER) from DATE</b><br />You can update your copy of CAT12 here: <a href="matlab:cat_update(1);">Check for update</a>.<br />If you find any bug, please report them at <a href="mailto:vbmweb@gmail.com">vbmweb@gmail.com</a>.</p>
+      <p align="center" style="text-align:center;">This is <b>VERSION (RELNUMBER) from DATE</b><br />You can update your copy of CAT here: <a href="matlab:cat_update(1);">Check for update</a>.<br />If you find any bug, please report them at <a href="mailto:vbmweb@gmail.com">vbmweb@gmail.com</a>.</p>
       <h1 style="text-align:center;"><img src="images/CAT.png" width=40% height=auto alt="CAT" ></h1>
 
       <hr />
@@ -28,14 +28,14 @@
     </div>
 
       <h2>Description</h2>
-      <p>This toolbox is a an extension to <a href="matlab:web('http://www.fil.ion.ucl.ac.uk/spm/software/spm12/','-browser');">SPM12</a> (Wellcome Department of Cognitive Neurology) to provide computational anatomy. This covers diverse morphometric methods such as voxel-based morphometry (VBM), surface-based morphometry (SBM), deformation-based morphometry (DBM), and ROI- or label-based morphometry. It is developed by Christian Gaser and Robert Dahnke (Jena University Hospital, Departments of Psychiatry and Neurology) and free but copyright software, distributed under the terms of the <a href="matlab:web('http://www.gnu.org/licenses/gpl-2.0.html','-browser')">GNU General Public Licence</a> as published by the Free Software Foundation; either version 2 of the Licence, or (at your option) any later version. If you use any CAT12 code for commercial application, please send a <a href="mailto:christian.gaser@uni-jena.de">mail</a>.
+      <p>This toolbox is a an extension to <a href="matlab:web('http://www.fil.ion.ucl.ac.uk/spm/software/spm12/','-browser');">SPM</a> (Wellcome Department of Cognitive Neurology) to provide computational anatomy. This covers diverse morphometric methods such as voxel-based morphometry (VBM), surface-based morphometry (SBM), deformation-based morphometry (DBM), and ROI- or label-based morphometry. It is developed by Christian Gaser and Robert Dahnke (Jena University Hospital, Departments of Psychiatry and Neurology) and free but copyright software, distributed under the terms of the <a href="matlab:web('http://www.gnu.org/licenses/gpl-2.0.html','-browser')">GNU General Public Licence</a> as published by the Free Software Foundation; either version 2 of the Licence, or (at your option) any later version. If you use any CAT code for commercial application, please send a <a href="mailto:christian.gaser@uni-jena.de">mail</a>.
 </p>
       <p>
-        This documentation contains <a class="function">interactive MATLAB links</a>&nbsp; that open SPM and CAT tools, e.g. to display ROIs like the <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','lpba40.nii')}}))">LPBA40 volume map</a><!-- or the 
-          <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',0))">left LPBA40 surface</a>-->.
+        This documentation contains <a class="function">interactive MATLAB links</a>&nbsp; that open SPM and CAT tools, e.g. to display ROIs like the <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','CAT','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','CAT','templates_MNI152NLin2009cAsym','lpba40.nii')}}))">LPBA40 volume map</a><!-- or the 
+          <a class="function" href="matlab:cat_surf_display(struct('data',{{fullfile(spm('dir'),'toolbox','CAT','atlases_surfaces','lh.LPBA40.Template_T1_IXI555_MNI152')}},'multisurf',0))">left LPBA40 surface</a>-->.
         You can find this help (e.g. if the SPM graphic window was used by SPM/CAT) in the CAT toolbox menu at the left bottom button <em>Tools > Internet/Help....</em>
       </p><p>
-        For further instructions check also the <a class="function" href="matlab:try,open(fullfile(spm('dir'),'toolbox','cat12','CAT12-Manual.pdf'));end">CAT12-Manual</a>.  
+        For further instructions check also the <a class="function" href="matlab:try,open(fullfile(spm('dir'),'toolbox','CAT','CAT12-Manual.pdf'));end">CAT12-Manual</a>.  
       </p><p>
       Please <a href=cat_references.html>cite our papers</a> and the work of other researchers if you use this software.</p><p>
       Our main paper is:<br>
@@ -87,11 +87,11 @@
           <li><a href=cat_tools_FF.html>Other tools</a></li>
         </ul>
         <li><a href=cat_orthogonality.html>Design orthogonality</a></li>
-<!--        <li><a href=cat_shell.html>Calling CAT12 from the shell and running in headless mode without display</a></li> -->
+<!--        <li><a href=cat_shell.html>Calling CAT from the shell and running in headless mode without display</a></li> -->
         <li><a href=cat_FAQ.html>FAQ</a></li>
         <li><a href=cat_licences.html>License information</a></li>
         <li><a href=cat_references.html>Citation/References</a></li>
-        <li><a href=cat_statistics.html>CAT12 user statistics</a></li>
+        <li><a href=cat_statistics.html>CAT user statistics</a></li>
         <li><a href=cat_acknowledgement.html>Acknowledgement</a></li>
       </ol>
       
