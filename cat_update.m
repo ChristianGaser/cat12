@@ -43,7 +43,7 @@ end
 
 % get current release
 r = cat_version;
-r = str2double(strrep(r,'CAT',''));
+r = strrep(r,'CAT','');
 
 % get new release
 try
@@ -59,18 +59,19 @@ if ~sts
 end
 
 data = jsondecode(jsonStr);
-% get largest release number
-rnew = [];
+% get largest release number using proper version comparison
+rnew = '';
 for i = 1:length(data)
-  rnew = [rnew str2double(data(i).tag_name)];
+  if isempty(rnew) || compare_versions(data(i).tag_name, rnew) > 0
+    rnew = data(i).tag_name;
+  end
 end
-rnew = max(rnew);
 
-if rnew > r
-  sts = rnew;
+if compare_versions(rnew, r) > 0
+  sts = str2double(rnew);
   msg = sprintf('         A new version of CAT12 is available on:\n');
   msg = [msg sprintf('   %s\n',url_github)];
-  msg = [msg sprintf('        (Your version: %g - New version: %g)\n',r,rnew)];
+  msg = [msg sprintf('        (Your version: %s - New version: %s)\n',r,rnew)];
   if ~nargout, fprintf(msg); else varargout = {sts, msg}; end
 else
   sts = 0;
@@ -80,10 +81,10 @@ else
   return
 end
 
-url = sprintf('https://github.com/ChristianGaser/cat12/releases/download/%g/cat%g.zip',rnew,rnew);
+url = sprintf('https://github.com/ChristianGaser/cat12/releases/download/%s/cat%s.zip',rnew,rnew);
 
 if update
-  overwrite = spm_input(sprintf('Update to %g',rnew),1,'m','yes|no|download only',[1 -1 0],1);
+  overwrite = spm_input(sprintf('Update to %s',rnew),1,'m','yes|no|download only',[1 -1 0],1);
   d0 = spm('Dir');
   d  = fileparts(fileparts(which('cat12')));
   
@@ -172,8 +173,8 @@ if update
     end
     
     % open version information if difference between release numbers 
-    % is large enough
-    if rnew > r+20
+    % is large enough (more than 1 minor version)
+    if version_diff(rnew, r) > 1
       web(fullfile(fileparts(mfilename('fullpath')),'doc','index.html#version'));
     end
     
@@ -191,3 +192,56 @@ if update
     fprintf('Unzip file to %s\n',d);
   end
 end
+
+%=======================================================================
+function cmp = compare_versions(v1, v2)
+% Compare two version strings (e.g., '12.10' vs '12.9')
+% Returns: 1 if v1 > v2, -1 if v1 < v2, 0 if equal
+%=======================================================================
+
+  % Parse version strings into parts
+  parts1 = sscanf(v1, '%d.%d');
+  parts2 = sscanf(v2, '%d.%d');
+  
+  % Pad with zeros if needed
+  if length(parts1) < 2, parts1(2) = 0; end
+  if length(parts2) < 2, parts2(2) = 0; end
+  
+  % Compare major version first
+  if parts1(1) > parts2(1)
+    cmp = 1;
+  elseif parts1(1) < parts2(1)
+    cmp = -1;
+  else
+    % Major versions equal, compare minor
+    if parts1(2) > parts2(2)
+      cmp = 1;
+    elseif parts1(2) < parts2(2)
+      cmp = -1;
+    else
+      cmp = 0;
+    end
+  end
+return
+
+%=======================================================================
+function diff = version_diff(v1, v2)
+% Calculate the minor version difference between two version strings
+% Returns: difference in minor versions (assuming same major version)
+%=======================================================================
+
+  % Parse version strings into parts
+  parts1 = sscanf(v1, '%d.%d');
+  parts2 = sscanf(v2, '%d.%d');
+  
+  % Pad with zeros if needed
+  if length(parts1) < 2, parts1(2) = 0; end
+  if length(parts2) < 2, parts2(2) = 0; end
+  
+  % If major versions differ, return large diff
+  if parts1(1) ~= parts2(1)
+    diff = 100;
+  else
+    diff = abs(parts1(2) - parts2(2));
+  end
+return
