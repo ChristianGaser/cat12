@@ -199,7 +199,7 @@ if isdeployed
 end
 
 if ~exist(m_job_name,'file')
-  fprintf(mesg);
+  fprintf('%s', mesg);
   fprintf('\nIf you do not have write permissions, the administrator should copy the %s file to %s after installing the precompiled version. This prevents overwriting the read-only file.\n',job_name,m_job_name);
   return
 end
