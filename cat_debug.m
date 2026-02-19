@@ -1,5 +1,5 @@
 function cat_debug
-%cat_debug	print debug information for SPM12 and CAT
+%cat_debug	print debug information for SPM and CAT
 %
 % FORMAT cat_debug
 %

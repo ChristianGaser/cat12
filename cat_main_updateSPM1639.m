@@ -405,7 +405,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   
   
   
-  %% save brainmask using SPM12 segmentations for later use
+  %% save brainmask using SPM segmentations for later use
   if ~exist('Ym0','var')
     Ym0 = single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255;
   end

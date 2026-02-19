@@ -1528,7 +1528,7 @@ if voxel_covariate
   delete(fullfile(SPM.swd,sprintf('spm*_%04d.*',Ic0)));
   
   % print warning
-  spm('alert!',sprintf('SPM12 cannot handle such designs with voxel-wise covariate.\nYou must now call the TFCE Toolbox (r221 or newer) for statistical analysis.'));
+  spm('alert!',sprintf('SPM cannot handle such designs with voxel-wise covariate.\nYou must now call the TFCE Toolbox (r221 or newer) for statistical analysis.'));
 else
   % remove old vSPM.mat if exist
   swd = fileparts(out.spmmat{1});

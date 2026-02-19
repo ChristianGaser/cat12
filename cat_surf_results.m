@@ -2832,7 +2832,7 @@ if H.border_mode
         Cm = spm_mesh_contour(M,struct('T',T,'t',0.5));
         H.S{k}.Cm{i} = Cm;
       catch
-        fprintf('Please update SPM12 for using that function.\n');
+        fprintf('Please update SPM for using that function.\n');
         break
       end
     end

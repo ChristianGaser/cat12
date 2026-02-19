@@ -288,19 +288,19 @@ end
   % do registration
   if ~isfield( job , 'useprior' ) || isempty( job.useprior )  &&  ~isempty(job.opts.affreg)
     warning('off','MATLAB:RandStream:ActivatingLegacyGenerators')
-    % try to use the newer version that is updated in SPM12
+    % try to use the newer version that is updated in SPM
     try
       [Affine2,ll]  = spm_maff8(obj2.image, obj2.samp ,obj2.fwhm ,obj2.tpm ,Affine ,job.opts.affreg ,80);
     catch
-      fprintf('Please update SPM12!\n');
+      fprintf('Please update SPM!\n');
       [Affine2,ll]  = spm_maff8(obj2.image, obj2.samp ,obj2.fwhm ,obj2.tpm ,Affine ,job.opts.affreg);
     end
     if det(Affine \ Affine2)>1.5 || det(Affine2 \ Affine)>1.5 % || ll<0.9 % RD202007: add this maybe later
-      % try to use the newer version that is updated in SPM12
+      % try to use the newer version that is updated in SPM
       try
         Affine2  = spm_maff8(obj2.image, obj2.samp ,obj2.fwhm ,obj2.tpm ,Affine , 'none', 80);
       catch
-        fprintf('Please update SPM12!\n');
+        fprintf('Please update SPM!\n');
         Affine2  = spm_maff8(obj2.image, obj2.samp ,obj2.fwhm ,obj2.tpm ,Affine , 'none');
       end
     end

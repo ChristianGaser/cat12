@@ -43,7 +43,7 @@ tpm.def     =  @(val)cat_get_defaults('opts.tpm', val{:});
 
 % ngaus:
 %------------------------------------------------------------------------
-% The default of SPM12 [GM,WM,CSF,bone,head tissue,BG] was [1,1,2,3,4,2]
+% The default of SPM [GM,WM,CSF,bone,head tissue,BG] was [1,1,2,3,4,2]
 % and works very well for most data and the segmentation did not benefit by 
 % more classes. There are no systematic effects for interferences or 
 % special anatomical properties (e.g. WMHs)!
@@ -354,9 +354,9 @@ redspmres.help    = {'Limit SPM preprocessing resolution to improve robustness a
 %------------------------------------------------------------------------
 opts      = cfg_branch;
 opts.tag  = 'opts';
-opts.name = 'Options for initial SPM12 preprocessing';
+opts.name = 'Options for initial SPM preprocessing';
 opts.help = {
-    'CAT uses the Unified Segmentation of SPM12 for initial registration, bias correction, and segmentation.  The parameters used here were optimized for a variety of protocols and anatomies.  Only in case of strong inhomogeneity of high-field MR scanners we recommend to increase the biasstr parameter.  For children data we recommend to use customized TPMs created by the Template-O-Matic toolbox. '  
+    'CAT uses the Unified Segmentation of SPM for initial registration, bias correction, and segmentation.  The parameters used here were optimized for a variety of protocols and anatomies.  Only in case of strong inhomogeneity of high-field MR scanners we recommend to increase the biasstr parameter.  For children data we recommend to use customized TPMs created by the Template-O-Matic toolbox. '  
     ''
   };
 if expert>1

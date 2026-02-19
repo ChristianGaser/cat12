@@ -651,7 +651,7 @@ function mp2rage = conf_vol_mp2rage(prefix,verb,expert)
   mp2rage.prog      = @cat_vol_mp2rage;
   mp2rage.vout      = @vout_mp2rage; % define output files  d
   mp2rage.help      = {
-    'Batch to optimize MP2Rage (and other) images for CAT preprocessing. It utilize SPM12 to correct inhomogenities, harmonize the GM-WM contrast, and finally apply a skull-stripping or reduce the noisy background/skull values. '
+    'Batch to optimize MP2Rage (and other) images for CAT preprocessing. It utilize SPM to correct inhomogenities, harmonize the GM-WM contrast, and finally apply a skull-stripping or reduce the noisy background/skull values. '
   };
 
 return
@@ -2808,7 +2808,7 @@ function [defs,defs2] = conf_vol_defs()
   modulate        = cfg_menu;
   modulate.tag    = 'modulate';
   modulate.name   = 'Modulate image (preserve volume)';
-  modulate.labels = {'No','Affine + non-linear (SPM12 default)','Non-linear only'};
+  modulate.labels = {'No','Affine + non-linear (SPM default)','Non-linear only'};
   modulate.values = {0 1 2};
   modulate.val    = {0};
   modulate.help   = {
