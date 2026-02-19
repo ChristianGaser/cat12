@@ -32,7 +32,7 @@ MISC_FILES=README.md CHANGES.txt INSTALL.txt doc standalone templates_MNI152NLin
 
 FILES=${MATLAB_FILES} ${C_FILES} ${MISC_FILES}
 
-ZIPFILE=cat_r${REVISION}.zip
+ZIPFILE=CAT_r${REVISION}.zip
 
 # remove .DS_Store files and correct file permissions
 clean:
@@ -133,9 +133,9 @@ scp_precompile:
 	   ln -s ${PRECOMPILED}/MCR_$${i}/*spm25* ${PRECOMPILED}/MCR_$${i}/readme.txt ${PRECOMPILED}/MCR_$${i}/MCR_v232.webloc ${NEWVERSION}_R2023b_MCR_$${i}/ ;\
 	   cp -r standalone ${NEWVERSION}_R2023b_MCR_$${i}/ ;\
 	   cp -r standalone ${PRECOMPILED}/MCR_$${i}/ ;\
-	   zip ${ZIPFOLDER}/${NEWVERSION}_R2023b_MCR_$${i}.zip -r ${NEWVERSION}_R2023b_MCR_$${i} ; \
-	   scp -O -P ${PORT} ${ZIPFOLDER}/${NEWVERSION}_R2023b_MCR_$${i}.zip ${STARGET}; \
-	   bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${NEWVERSION}_R2023b_MCR_$${i}.zip ${STARGET_FOLDER}/CAT_latest_R2023b_MCR_$${i}.zip"; \
+	   zip ${ZIPFOLDER}/CAT_R2023b_MCR_$${i}.zip -r ${NEWVERSION}_R2023b_MCR_$${i} ; \
+	   scp -O -P ${PORT} ${ZIPFOLDER}/CAT_R2023b_MCR_$${i}.zip ${STARGET}; \
+	   bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/CAT_R2023b_MCR_$${i}.zip ${STARGET_FOLDER}/CAT_latest_R2023b_MCR_$${i}.zip"; \
 	done
 	-@rm -r ${NEWVERSION}_R2023b_MCR*	
 	-@echo Please keep in mind to change ../enigma-cat12/index.html

@@ -19,15 +19,19 @@ jobs:
         include: # These includes are just giving the OSs additional names
           - os: ubuntu-22.04
             os_name: Linux
+            standalone_os: Linux
             mex_ext: mexa64
           - os: macos-15-intel
             os_name: macOS_Intel
+            standalone_os: Mac
             mex_ext: mexmaci64
           - os: macos-latest
             os_name: macOS_ARM64
+            standalone_os: Mac_arm64
             mex_ext: mexmaca64
           - os: windows-latest
             os_name: Windows
+            standalone_os: Win
             mex_ext: mexw64
     steps:
       - name: Checkout CAT12
@@ -45,7 +49,7 @@ jobs:
         with:
           repository: spm/spm
           path: spm
-          
+
       - name: Install CAT12 in SPM toolbox
         shell: bash
         run: |
@@ -67,11 +71,11 @@ jobs:
       - name: Cleanup (Linux/Mac)
         if: runner.os != 'Windows'
         run: rm -rf standalone
-      
+
       - name: Cleanup (Windows)
         if: runner.os == 'Windows'
         run: Remove-Item -Recurse -Force standalone
-  
+
       - name: Set up MATLAB
         uses: matlab-actions/setup-matlab@v2
         with:
@@ -102,7 +106,7 @@ jobs:
             addpath('spm');
             cd('spm/toolbox/cat12')
             compile
-            
+
       - name: Install zip on Windows
         if: runner.os == 'Windows'
         run: choco install zip -y
@@ -129,11 +133,12 @@ jobs:
         run: |
           mv spm/toolbox/cat12/standalone standalone/
           mv standalone cat_standalone
-          zip -r cat_standalone_${{ github.ref_name }}_${{ matrix.os_name }}_${{ env.MATLAB_VERSION }}.zip cat_standalone/*
+          zip -r CAT12_${{ env.MATLAB_VERSION }}_MCR_${{ matrix.standalone_os }}.zip cat_standalone/*
 
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: cat_${{ github.ref_name }}_${{ matrix.os_name }}_${{ env.MATLAB_VERSION }}
-          path: cat_*.zip
-
+          name: CAT12_${{ env.MATLAB_VERSION }}_MCR_${{ matrix.standalone_os }}
+          path: |
+            cat_*.zip
+            CAT12_*.zip
