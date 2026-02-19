@@ -311,7 +311,7 @@ else
 end
 
 % check that binaries for surface tools are running 
-cat_system('CAT_3dVol2Surf');
+cat_system('CAT_SurfArea');
 
 %% add some directories 
 spm_select('PrevDirs',{fullfile(catdir)});
