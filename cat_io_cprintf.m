@@ -65,7 +65,7 @@ function count = cat_io_cprintf(style,format,varargin) %#ok<*JAPIMATHWORKS>
 %    cprintf('*blue',  'and *bold* (R2011b+ only)\n');
 %    cprintf('string');  % same as fprintf('string') and cprintf('text','string')
 %
-% Extended sytles in CAT12: 
+% Extended sytles in CAT: 
 %     {'t','txt','text','k'},    style=[0.0 0.0 0.0];
 %     {'e','err','error'},       style=[0.8 0.0 0.0];
 %     {'w','warn','warning'},    style=[1.0 0.3 0.0];

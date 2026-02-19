@@ -18,10 +18,10 @@ function cat_defaults
 clear global cat; 
 global cat
 
-% CAT12 installation folder
+% CAT installation folder
 catdir = fileparts(which('cat12'));
 
-% Options for inital SPM12 segmentation that is used as starting point for CAT12. 
+% Options for inital SPM12 segmentation that is used as starting point for CAT. 
 %=======================================================================
 cat.opts.tpm       = {fullfile(spm('dir'),'tpm','TPM.nii')};
 cat.opts.ngaus     = [1 1 2 3 4 2];           % Gaussians per class (SPM12 default = [1 1 2 3 4 2]) - alternative: [3 3 2 3 4 2] 
@@ -287,8 +287,8 @@ cat.extopts.print        = 2;     % display and print out pdf-file of results: 0
                                   % 2 - volume and surface (default)
 cat.extopts.fontsize     = get(0,'defaultuicontrolFontSize'); % default font size for GUI; 
 %cat.extopts.fontsize     = spm('FontSizes',7); % set default font size for GUI manually; increase value for larger fonts or set it to 
-cat.extopts.send_info    = 1;     % send Matlab and CAT12 version to SBM server for internal statistics only. If you don't want to send this 
-                                  % information set this flag to "0". See online help CAT12->CAT12 user statistics for more information
+cat.extopts.send_info    = 1;     % send Matlab and CAT version to SBM server for internal statistics only. If you don't want to send this 
+                                  % information set this flag to "0". See online help CAT->CAT user statistics for more information
 cat.extopts.gifti_dat    = 1;     % save gifti files after resampling with external dat-file, which increases speed of gifti-processing and keeps SPM.mat file small
                                   % because the cdata field is not saved with full data in SPM.mat.
                                   

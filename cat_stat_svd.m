@@ -4,7 +4,7 @@ function v = cat_stat_svd(P, mask, basename, cov, exclude_scan, scanner)
 %   This function performs SVD (PCA) on neuroimaging data, accounting for 
 %   masks, covariates, scanner batch effects, and optionally excluding scans.
 %   The principal components ("eigenvectors") and their explained variance are
-%   visualized, saved, and written to disk. Optionally, SPM or CAT12 routines
+%   visualized, saved, and written to disk. Optionally, SPM or CAT routines
 %   are used for visualization.
 %
 %   USAGE:
@@ -28,7 +28,7 @@ function v = cat_stat_svd(P, mask, basename, cov, exclude_scan, scanner)
 %
 %   DEPENDENCIES:
 %     - Requires SPM (Statistical Parametric Mapping) for data I/O and figure handling.
-%     - Optional: CAT12 toolbox for glassbrain visualization (`cat_vol_img2mip`).
+%     - Optional: CAT toolbox for glassbrain visualization (`cat_vol_img2mip`).
 %
 %   EXAMPLES:
 %       % Typical usage with a set of NIfTI images and a brain mask:
@@ -52,7 +52,7 @@ if nargin<5, exclude_scan = []; end
 if nargin<6, scanner = []; end
 
 if ~exist('cat_vol_img2mip')
-  fprintf('Please install CAT12 to visualize the effects as glassbrain\n')
+  fprintf('Please install CAT to visualize the effects as glassbrain\n')
 end
 
 % -- Select images for each variate (if no input, open GUI)
@@ -379,7 +379,7 @@ if ~isempty(basename)
           Vout = spm_data_hdr_write(Vout);
           spm_data_write(Vout,tmp);
   
-          % -- (Optional) Visualize glassbrain images if CAT12 is available
+          % -- (Optional) Visualize glassbrain images if CAT is available
           if ~mesh_detected && exist('cat_vol_img2mip')
             [H0, X0] = hist(tmp(tmp>0),100);
             TH0p = X0(find(cumsum(H0)/sum(H0) > 0.5, 1 ));

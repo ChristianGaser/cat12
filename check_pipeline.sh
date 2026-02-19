@@ -1,5 +1,5 @@
 #! /bin/bash
-# Check CAt12 pipleine
+# Check CAT pipleine
 # ______________________________________________________________________
 #
 # Christian Gaser, Robert Dahnke
@@ -254,7 +254,7 @@ get_release ()
     echo "Use current release."
   else
     # remove old cat12 folder
-    rm -r ${spm12_tmp}/toolbox/cat12
+    rm -r ${spm12_tmp}/toolbox/CAT
         
     # check whether it's a file
     if [ -f "$release" ]; then
@@ -287,21 +287,21 @@ run_pipeline ()
   
   # set ROI output and surface output
   if [ $volumes_only -eq 0 ]; then
-    echo "cat.output.surface = 1;" >> ${spm12_tmp}/toolbox/cat12/cat_defaults.m
+    echo "cat.output.surface = 1;" >> ${spm12_tmp}/toolbox/CAT/cat_defaults.m
     str_surf=""
   else
-    echo "cat.output.surface = 0;" >> ${spm12_tmp}/toolbox/cat12/cat_defaults.m
+    echo "cat.output.surface = 0;" >> ${spm12_tmp}/toolbox/CAT/cat_defaults.m
     str_surf=" -ns "
   fi
-  echo "cat.output.ROI = 1;" >> ${spm12_tmp}/toolbox/cat12/cat_defaults.m
-  echo "cat.extopts.ignoreErrors = 1;" >> ${spm12_tmp}/toolbox/cat12/cat_defaults.m
+  echo "cat.output.ROI = 1;" >> ${spm12_tmp}/toolbox/CAT/cat_defaults.m
+  echo "cat.extopts.ignoreErrors = 1;" >> ${spm12_tmp}/toolbox/CAT/cat_defaults.m
   
   # run cat12 in foreground with all files in tmp folder
   if [ "$SIZE_OF_ARRAY" -gt 0 ]; then
     if [ -f "${spm12_tmp}/toolbox/cat12/cat_batch_cat.sh" ]; then
-      ${spm12_tmp}/toolbox/cat12/cat_batch_cat.sh -m ${matlab} -l ${proc_dir} ${bg_flag} ${calc_tmp}/*.[in][mi][gi] 
+      ${spm12_tmp}/toolbox/CAT/cat_batch_cat.sh -m ${matlab} -l ${proc_dir} ${bg_flag} ${calc_tmp}/*.[in][mi][gi] 
     else
-      ${spm12_tmp}/toolbox/cat12/cat_batch_vbm.sh -m ${matlab} -l ${proc_dir} ${bg_flag} ${calc_tmp}/*.[in][mi][gi] 
+      ${spm12_tmp}/toolbox/CAT/cat_batch_vbm.sh -m ${matlab} -l ${proc_dir} ${bg_flag} ${calc_tmp}/*.[in][mi][gi] 
     fi
   fi
   

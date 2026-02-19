@@ -247,7 +247,21 @@ function varargout = cat_vol_qa201901x(action,varargin)
         Yp0 = varargin{1};
 % Octave is starting with many warning messages here ...        
 %        if strcmpi(spm_check_version,'octave'), warning off; end
-        Vo  = spm_vol(varargin{2});
+        if ischar(varargin{2}) || isstring(varargin{2})
+          Pori = char(varargin{2});
+          Pori = regexprep(Pori,',\d+$','');
+          [pp,ff,ee] = spm_fileparts(Pori);
+          if exist(Pori,'file')
+            Vo  = spm_vol(Pori);
+          elseif strcmpi(ee,'.nii') && exist(fullfile(pp,[ff ee '.gz']),'file')
+            gunzip(fullfile(pp,[ff ee '.gz']));
+            Vo  = spm_vol(Pori);
+          else
+            Vo  = spm_vol(Pori);
+          end
+        else
+          Vo  = spm_vol(varargin{2});
+        end
 %        if strcmpi(spm_check_version,'octave'), warning on; end
         evalc('Yo  = single(spm_read_vols(Vo))');    
         if 0

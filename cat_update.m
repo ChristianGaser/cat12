@@ -11,7 +11,7 @@ function varargout = cat_update(update)
 % update - allow installation of update
 % 
 % This function will connect to the SBM server, compare the
-% version number of the updates with the one of the CAT12 installation 
+% version number of the updates with the one of the CAT installation 
 % currently in the MATLAB path and will display the result.
 % ______________________________________________________________________
 %
@@ -26,7 +26,7 @@ rev = '$Rev$';
 
 if isdeployed
   sts= Inf;
-  msg = 'Update function is not working for compiled CAT12. Please check for a new compiled CAT12 version.';
+  msg = 'Update function is not working for compiled CAT. Please check for a new compiled CAT version.';
   if ~nargout, fprintf([blanks(9) msg '\n']);
   else varargout = {sts, msg}; end
   return;
@@ -69,13 +69,13 @@ end
 
 if compare_versions(rnew, r) > 0
   sts = str2double(rnew);
-  msg = sprintf('         A new version of CAT12 is available on:\n');
+  msg = sprintf('         A new version of CAT is available on:\n');
   msg = [msg sprintf('   %s\n',url_github)];
   msg = [msg sprintf('        (Your version: %s - New version: %s)\n',r,rnew)];
   if ~nargout, fprintf(msg); else varargout = {sts, msg}; end
 else
   sts = 0;
-  msg = sprintf('Your version of CAT12 is up-to-date.');
+  msg = sprintf('Your version of CAT is up-to-date.');
   if ~nargout, fprintf([blanks(9) msg '\n']);
   else varargout = {sts, msg}; end
   return
@@ -102,7 +102,7 @@ if update
       htmldir = fullfile(fileparts(mfilename('fullpath')),'html');
       if exist(htmldir,'dir'), rmdir(htmldir, 's'); end
 
-      % delete old CAT12 manual
+      % delete old CAT manual
       pdffile = fullfile(fileparts(mfilename('fullpath')),'CAT12-Manual.pdf');
       spm_unlink(pdffile);
 
@@ -150,7 +150,7 @@ if update
       lastwarn('');
       warning off
       delete(get(0,'Children')); spm('clean'); evalc('spm_rmpath'); drawnow
-      m = '          Download and install CAT12...\n';
+      m = '          Download and install CAT...\n';
       if ~nargout, fprintf(m); else varargout = {sts, [msg m]}; end
             
       s = unzip(url, d);

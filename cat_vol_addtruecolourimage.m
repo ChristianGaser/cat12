@@ -21,7 +21,7 @@ function cat_vol_addtruecolourimage(P,cmap)
   
   if nargin < 1
     P = spm_select([2 12],'image','Select anatomical image and image(s) to overlay',...
-        {fullfile(spm('dir'),'toolbox','cat12','templates_MNI152NLin2009cAsym','Template_T1.nii')});
+        {fullfile(spm('dir'),'toolbox','CAT','templates_MNI152NLin2009cAsym','Template_T1.nii')});
   elseif ~ischar(P)
     P = spm_select([2 12],'image','Select anatomical image and image(s) to overlay');
   end

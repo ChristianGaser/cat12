@@ -353,7 +353,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
     'segmentation which is followed by a prior independent AMAP approach.' ...
     'Although even the standard TPM of SPM gives robust results in general, ' ...
     'it is recommended to use a specific TPM for children data.' ...
-    'The children specific TPM in CAT12 is created using the TOM toolbox and 394 children' ...
+    'The children specific TPM in CAT is created using the TOM toolbox and 394 children' ...
     'from the NIH MRI Study of Normal Brain Development (age 5..18 years, mean age 11.5 years). '] ...
     ''
     ... further information about the SPM TPM?
@@ -424,7 +424,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   nproc.tag         = 'nproc';
   nproc.name        = 'Split job into separate processes';
   nproc.help        = { 
-   ['In order to use multi-threading, the CAT12 segmentation job with multiple ' ...
+   ['In order to use multi-threading, the CAT segmentation job with multiple ' ...
     'subjects can be split into separate processes that run in the background.  ' ...
     'If you do not want to run processes in the background then set this value to 0. ']
    ['Keep in mind that each process needs a CPU core and about 2GB of RAM, ' ...
@@ -446,7 +446,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   % main 
   catsimple         = cfg_exbranch;
   catsimple.tag     = 'cat_simple';
-  catsimple.name    = 'CAT12 Simple Preprocessing'; 
+  catsimple.name    = 'CAT Simple Preprocessing'; 
 
   if expert
     catsimple.val   = {data tpm extopts.val{2} vROI fwhm_vol surface};
@@ -484,7 +484,7 @@ function [catsimple,catsimplelong] = cat_conf_catsimple(expert)
   % main long
   catsimplelong       = cfg_exbranch;
   catsimplelong.tag   = 'cat_simple_long';
-  catsimplelong.name  = 'CAT12 Simple Longitudinal Preprocessing';
+  catsimplelong.name  = 'CAT Simple Longitudinal Preprocessing';
   catsimplelong.val   = {datalong tpm extopts.val{4} vROI fwhm_vol surface}; 
   if expert
     catsimplelong.val = [catsimplelong.val {ignoreErrors}];

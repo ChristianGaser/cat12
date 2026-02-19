@@ -2440,12 +2440,12 @@ function [sanlm,sanlm2] = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy
   nlmfilter.val         = {nlm_optimized}; 
   if expert
     nlmfilter.help      = {
-      'Selection between the classical SANLM filter and an optimized SANLM filter with predefined settings or detailed parameterization. The classic filter is often too strong in normal data that was not interpolated or resampled and the default CAT12 preprocessing uses the medium optimized version. '
+      'Selection between the classical SANLM filter and an optimized SANLM filter with predefined settings or detailed parameterization. The classic filter is often too strong in normal data that was not interpolated or resampled and the default CAT preprocessing uses the medium optimized version. '
       ''
     }; 
   else
     nlmfilter.help      = {
-      'Selection between the classical SANLM filter and an optimized SANLM filter. The classic filter is often too strong in normal data that was not interpolated or resampled and the default CAT12 preprocessing uses the medium optimized version. ' 
+      'Selection between the classical SANLM filter and an optimized SANLM filter. The classic filter is often too strong in normal data that was not interpolated or resampled and the default CAT preprocessing uses the medium optimized version. ' 
       ''
     };
   end
@@ -3180,7 +3180,7 @@ function [T2x,T2x_surf,F2x,F2x_surf] = conf_T2x
   atlas.help        = {
     'Select atlas for labeling. The prepending atlas name ''dartel_'' indicates that this atlas was created using Dartel spatial normalization with the Dartel IXI template as default.'
     ''
-    'Please note, that you can install additional atlases for CAT12 using the command ''cat_install_atlases''. '
+    'Please note, that you can install additional atlases for CAT using the command ''cat_install_atlases''. '
   };
 
 
@@ -3699,7 +3699,7 @@ function calcroi = conf_roi_fun(outdir)
   roi_xml.filter        = 'xml';
   roi_xml.ufilter       = '^catROI.*\.xml$';
   roi_xml.num           = [1 Inf];
-  roi_xml.help          = {'These are the xml-files that are saved in the label folder after CAT12 segmentation.'};
+  roi_xml.help          = {'These are the xml-files that are saved in the label folder after CAT segmentation.'};
 
   % NOT USED
   %{
@@ -3747,7 +3747,7 @@ function calcroi = conf_roi_fun(outdir)
   %calcroi.val   = {roi_xml,usefolder,point,outdir,calcroi_name}; % usefolder is never used
   calcroi.prog          = @(job)cat_roi_fun('exportSample',job);
   calcroi.help          = {
-    'This function reads values inside a ROI from different atlases (that were selected for CAT12 segmentation) and saves either the mean volume values in mL (e.g. GM volume) or the mean surface values (e.g. thickness) for all data in a csv-file. '
+    'This function reads values inside a ROI from different atlases (that were selected for CAT segmentation) and saves either the mean volume values in mL (e.g. GM volume) or the mean surface values (e.g. thickness) for all data in a csv-file. '
     'Missed values are replaced by NaN.'
   };
 

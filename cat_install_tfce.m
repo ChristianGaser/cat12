@@ -27,7 +27,7 @@ if install
     rehash
     rehash toolboxcache;
     if exist('toolbox_path_cache','file'), toolbox_path_cache; end
-    eval(['spm fmri;clear cat_version;spm_cat12']);
+    eval(['spm fmri;clear cat_version;spm_CAT']);
   catch
     le = lasterror;
     switch le.identifier

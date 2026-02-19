@@ -101,13 +101,13 @@ end
 
 cat12atlas         = cfg_files;
 cat12atlas.tag     = 'cat12atlas';
-cat12atlas.name    = 'CAT12 ROI atlas';
+cat12atlas.name    = 'CAT ROI atlas';
 cat12atlas.filter  = 'image';
 cat12atlas.ufilter = 'cat';
 cat12atlas.def     = @(val)cat_get_defaults('extopts.cat12atlas', val{:});
 cat12atlas.num     = [1 1];
 cat12atlas.help    = {
-  'CAT12 atlas file to handle major regions.'
+  'CAT atlas file to handle major regions.'
 };
 
 %------------------------------------------------------------------------
@@ -1263,21 +1263,21 @@ segmentation.tag    = 'segmentation';
 segmentation.name   = 'Segmentation Options';
 segmentation.val    = {restype,setCOM,app,affmod,NCstr,LASstr,LASmyostr,gcutstr,cleanupstr,BVCstr,wmhc,slc,mrf,WMHtpm,BVtpm,SLtpm}; % WMHCstr,
 segmentation.hidden = expert<1; 
-segmentation.help   = {'CAT12 parameter to control the tissue classification.';''};
+segmentation.help   = {'CAT parameter to control the tissue classification.';''};
 
 spmsegmentation        = cfg_branch;
 spmsegmentation.tag    = 'segmentation';
 spmsegmentation.name   = 'Segmentation Options';
 spmsegmentation.val    = {spmamap,WMHtpm,BVtpm,SLtpm}; % WMHCstr,
 spmsegmentation.hidden = expert<1; 
-spmsegmentation.help   = {'CAT12 parameter to control the tissue classification.';''};
+spmsegmentation.help   = {'CAT parameter to control the tissue classification.';''};
 
 admin         = cfg_branch;
 admin.tag     = 'admin';
 admin.name    = 'Administration Options';
 admin.val     = {experimental new_release lazy ignoreErrors verb print};
 admin.hidden  = expert<1; 
-admin.help    = {'CAT12 parameter to control the behaviour of the preprocessing pipeline.';''};
+admin.help    = {'CAT parameter to control the behaviour of the preprocessing pipeline.';''};
 
 %------------------------------------------------------------------------
 
@@ -1286,7 +1286,7 @@ surface.tag     = 'surface';
 surface.name    = 'Surface Options';
 surface.val     = {pbtres pbtver SRP vdist scale_cortex add_parahipp close_parahipp}; 
 surface.hidden  = expert<1;
-surface.help    = {'CAT12 parameter to control the surface processing.';''};
+surface.help    = {'CAT parameter to control the surface processing.';''};
 
 
 %------------------------------------------------------------------------
@@ -1295,7 +1295,7 @@ surface.help    = {'CAT12 parameter to control the surface processing.';''};
 
 extopts       = cfg_branch;
 extopts.tag   = 'extopts';
-extopts.name  = 'Extended options for CAT12 preprocessing';
+extopts.name  = 'Extended options for CAT preprocessing';
 if ~spmseg
   if expert  % expert/developer options
     extopts.val   = {segmentation,registration,surface,admin}; 

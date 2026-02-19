@@ -867,19 +867,14 @@ if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
     stime2 = cat_io_cmd('  Surface ROI estimation');  
     
     %% estimate surface ROI estimates for thickness
-    [pp,ff]   = spm_fileparts(VT.fname);
-    [stat, val] = fileattrib(pp);
-    if stat, pp = val.Name; end
-
-    [mrifolder, reportfolder, surffolder] = cat_io_subfolders(VT.fname,job);
-
-    if cat_get_defaults('extopts.subfolders') && strcmp(mrifolder,'mri')
-      pp = spm_str_manip(pp,'h'); % remove 'mri' in pathname that already exists
-    end
-    surffolder = fullfile(pp,surffolder);
-
-    % get original filename without 'n'
+    % Use VT0 (original input) to avoid doubling of derivatives paths
+    % that occurs when VT (denoised file in derivatives/mri/) is used.
     [pp0,ff]   = spm_fileparts(VT0.fname);
+    [stat, val] = fileattrib(pp0);
+    if stat, pp0 = val.Name; end
+
+    [mrifolder, reportfolder, surffolder] = cat_io_subfolders(VT0.fname,job);
+    surffolder = fullfile(pp0,surffolder);
     
     Psatlas_lh   = job.extopts.satlas(  [job.extopts.satlas{:,4}]>0 , 2);
     Pthick_lh    = cell(1,1);
@@ -1122,8 +1117,8 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
 
 
   if numel(res.image) > 1
-    warning('CAT12:noMultiChannel',...
-      'CAT12 does not support multiple channels. Only the first channel will be used.');
+    warning('CAT:noMultiChannel',...
+      'CAT does not support multiple channels. Only the first channel will be used.');
   end
 
   % use dartel (do_dartel=1) or shooting (do_dartel=2) normalization

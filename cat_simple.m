@@ -112,7 +112,7 @@ function output = cat_simple(job)
   % specification of catversion and their batch-tag and name setting
   switch job.catversion
     case 'long',              estwrite = 'Segment longitudinal data (current release):';
-    case 'estwrite',          estwrite = 'CAT12: Segmentation (current release):';
+    case 'estwrite',          estwrite = 'CAT: Segmentation (current release):';
   end
   
   

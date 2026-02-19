@@ -1,6 +1,6 @@
-function spm_cat12(varargin)
+function spm_CAT(varargin)
 % ______________________________________________________________________
-% CAT12 Toolbox wrapper to start CAT with different user modes or 
+% CAT Toolbox wrapper to start CAT with different user modes or 
 % default files.  Changing the user mode requires restarting of CAT and
 % SPM.  The expert user mode allows to control further parameters and  
 % semi-evaluated functions, whereas the developer mode contain parameter
@@ -48,11 +48,11 @@ if strcmpi(spm_check_version,'octave')
   end
 end
 
-% check that CAT12 is installed in the correct folder
+% check that CAT is installed in the correct folder
 pth = fileparts(mfilename('fullpath'));
 [pth2, nam] = fileparts(pth);
-if ~strcmp(nam,'cat12')
-  spm('alert!',sprintf('Please check that you do not have multiple CAT12 installations in your path!\nYour current CAT12 version is installed in %s but should be installed in %s',pth,fullfile(catdir)),'WARNING');
+if ~strcmp(nam,'cat')
+  spm('alert!',sprintf('Please check that you do not have multiple CAT installations in your path!\nYour current CAT version is installed in %s but should be installed in %s',pth,fullfile(catdir)),'WARNING');
 end
 
 % find all zipped nifti's and unpack if necessary
@@ -81,7 +81,7 @@ catch
   elseif ismac 
     CATDir = fullfile(catdir);
     web('https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)#Troubleshooting');
-    cat_io_cmd(sprintf('\nThe following commands might be executed as administrator to allow execution of CAT12 binaries and mex-files.'),'warning');
+    cat_io_cmd(sprintf('\nThe following commands might be executed as administrator to allow execution of CAT binaries and mex-files.'),'warning');
     cat_io_cmd(sprintf('You can also break that command here and run the commands that are listed on the open website under Troubleshooting manually.\n'),'warning');
     cmd = ['xattr -r -d com.apple.quarantine ' CATDir];
     system(cmd); fprintf([cmd '\n']);
@@ -227,7 +227,7 @@ switch lower(deffile)
     deffile = fullfile(deffile_pp,[deffile_ff,deffile_ee]); 
 
     if isempty(deffile) || ~exist(deffile,'file')
-      help spm_cat12;
+      help spm_CAT;
       error('CAT:unknownDefaultFile','Unknown action or nonexisting default file "%s".\n',deffile);
     end
 end

@@ -1,5 +1,5 @@
 % Computational Anatomy Toolbox
-% Version 2979 (CAT12.10) 2026-02-12
+% Version 3001 (CAT12.10) 2026-02-19
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -37,7 +37,7 @@
 %   cat_run_oldcatch.m
 %   cat_defaults.m                   - sets the defaults for CAT12
 %   cat_get_defaults.m               - defaults for CAT12
-%   spm_cat12.m                      - toolbox wrapper to call CAT12
+%   spm_CAT.m                      - toolbox wrapper to call CAT12
 %   
 % Utilities
 %   cat_sanlm.m                      - Spatial Adaptive Non Local Means Denoising Filter

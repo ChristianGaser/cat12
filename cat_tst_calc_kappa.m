@@ -39,7 +39,7 @@ function varargout=cat_tst_calc_kappa(P,Pref,opt)
 %  - single segment comparison with input of the first image c1 or p1
 %  - csv file export
 %  - xml file update / export
-%  - update for 4 class p0 case of CAT12
+%  - update for 4 class p0 case of CAT
 %  - interpolate to gt resolution
 %  
 %  - slicewise and tissue class based evaluation

@@ -470,7 +470,7 @@ function job = get_defaults(job)
   def.output.cleanup          = 1; 
   def.output.verb             = 1; % all  
   def.output.copySingleFiles  = 1; 
-  def.CATDir                  = fullfile(spm('dir'),'toolbox','cat12');
+  def.CATDir                  = fullfile(spm('dir'),'toolbox','CAT');
 
   % update job variable
   job = cat_io_checkinopt(job,def); 
