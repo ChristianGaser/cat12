@@ -138,5 +138,5 @@ jobs:
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: cat_${{ github.ref_name }}_${{ matrix.os_name }}_${{ env.MATLAB_VERSION }}
-          path: cat_*.zip
+          name: CAT_${{ env.MATLAB_VERSION }}_MCR_${{ matrix.standalone_os }}
+          path: CAT_*.zip
