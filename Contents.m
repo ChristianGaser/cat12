@@ -1,5 +1,5 @@
 % Computational Anatomy Toolbox
-% Version 3002 (CAT26.0) 2026-02-19
+% Version 3006 (CAT26.0) 2026-02-19
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -12,7 +12,7 @@
 % Description
 % ==========================================================================
 % This toolbox is a collection of extensions to the segmentation algorithm 
-% of SPM12 (Wellcome Department of Cognitive Neurology) to provide computational
+% of SPM (Wellcome Department of Cognitive Neurology) to provide computational
 % morphometry. It is developed by Christian Gaser and Robert Dahnke (Jena
 % University Hospital, Departments of Psychiatry and Neurology) and is available 
 % to the scientific community under the terms of the GNU General Public License as 
@@ -135,7 +135,7 @@
 %      
 % Batch mode
 %   cat_batch_long.m                 - batch mode wrapper for spm_jobman for longitudinal pipeline
-%   cat_batch_spm.m                  - batch mode wrapper for spm_jobman for SPM12
+%   cat_batch_spm.m                  - batch mode wrapper for spm_jobman for SPM
 %   cat_batch_vbm.m                  - batch mode wrapper for spm_jobman for CAT
 %   
 % Check input and files

@@ -7,7 +7,7 @@ NEWVERSION="CAT26.0"
 REVISION=`git rev-list --count HEAD`
 DATE=`git log --date short |grep "Date:"|head -1|cut -f2 -d':'|sed -e s'/ //g'`
 VERSION=`echo ${NEWVERSION} | sed -e 's/CAT//g'`
-MAINVERSION=`echo ${VERSION} | cut -f1 -d'.'`
+MAINVERSION=`echo ${NEWVERSION} | sed -e 's/CAT//g' | cut -f1 -d'.'`
 
 ZIPFOLDER=/Users/gaser/matlab/cat12
 
