@@ -91,7 +91,7 @@ docs:
 update: docs copy_longmode
 	-@git fetch
 	-@echo '% Computational Anatomy Toolbox' > Contents.m
-	-@echo '% Version' ${VERSION}' ('CAT${MAINVERSION}')' ${DATE} >> Contents.m
+	-@echo '% Version' ${REVISION}' ('${NEWVERSION}')' ${DATE} >> Contents.m
 	-@cat Contents_info.txt >> Contents.m
 	-@cp Contents.m Contents.txt
 	-@echo '% Computational Anatomy Toolbox' > INSTALL.txt
