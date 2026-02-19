@@ -3100,7 +3100,7 @@ set(H.figure, 'InvertHardcopy', 'off', 'PaperPositionMode', 'auto');
 
 % posc to correct margin of the figure [r t l b] if no dataplot is present
 hh0 = getframe(H.figure);
-sz0 = [0 0 size(hh0.cdata,[2 1])];
+sz0 = [0 0 size(hh0.cdata,2) size(hh0.cdata,1)];
 pos = round(sz0.*H.panel(1).Position);
 
 if ~(isfield(H, 'dataplot') && strcmpi(get(H.dataplot,'Visible'),'on'))
