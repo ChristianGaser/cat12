@@ -248,7 +248,7 @@ function cat_main_write(Ym,Ymi,Ycls,Yp0,Yl1,job,res,trans)
     FA  = {}; fai = 1;
     AN  = fieldnames(job.output.atlases);
     for ai = 1:numel(AN)
-      fafi = find(cellfun('isempty',strfind(FAF(:,1),[AN{ai} '.']))==0);
+      fafi = find(cellfun('isempty',strfind(FAF(:,1),[AN{ai} '.']))==0,1,'first');
       if ~isempty(fafi) && job.output.atlases.(AN{ai}), FA(fai,:) = FAF(fafi,:); fai = fai+1; end %#ok<AGROW>
     end
 

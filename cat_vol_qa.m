@@ -680,7 +680,7 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
 
 
     case 'cat12err'
-      opt = cat_check('checkinopt',varargin{6},defaults);
+      opt = cat_check('checkinopt',varargin{1},defaults);
       QAS = cat12err(opt,mrifolder,reportfolder);
 
 
