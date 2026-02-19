@@ -135,5 +135,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: CAT_${{ matrix.os_name }}_${{ env.MATLAB_VERSION }}
-          path: CAT_*.zip
+          path: cat_*.zip
 
