@@ -318,6 +318,8 @@ jobs:
         if: runner.os == 'macOS'
         shell: bash
         run: |
+          # Remove quarantine attributes to avoid Gatekeeper "app is damaged" error
+          xattr -rc cat_standalone
           chmod +x cat_standalone/run_spm25.sh
           echo "Extracting CTF archive..."
           cd cat_standalone
