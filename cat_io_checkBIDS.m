@@ -1,21 +1,28 @@
-function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,mdevdir] = cat_io_checkBIDS(sfiles,BIDSdir) 
+function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBIDS(sfiles,BIDSdir) 
 %checkBIDS. Detect BIDS input and define of suited derivate directories. 
 %
-%  [sfiles,sfilesBIDS,BIDSsub,devdir,mdevdir] = checkBIDS(sfiles,BIDSdir) 
+%  [sfiles, sfilesBIDS, BIDSsub, devdir, mdevdir] = checkBIDS(sfiles,BIDSdir) 
 % 
 %  sfiles   .. input files
 %  isBIDS   .. one if input is BIDS
-%  
+%  BIDSsub  .. subject/file name
+%  devdir   .. main data directory (parent of sub in case of BIDS)
+%  redivdir .. relative directory (e.g. sub*/ses*/anat*)
+%  logdir   .. common directory for log files
+%
 
 % * what about longitudinal 
 % * what about derivates subdir?
 
-  sfiles    = cellstr(sfiles); 
+  sfiles    = cellstr(sfiles);
+  sfiles    = spm_file( sfiles, 'number', ''); 
 
   isBIDS    = false(size(sfiles)); 
   BIDSsub   = cell(size(sfiles));
   devdir    = cell(size(sfiles));
   rdevdir   = cell(size(sfiles));
+  pdir      = cell(size(sfiles));
+  mdevdir   = cell(size(sfiles));
   
   %% if BIDS structure is detectected than use only the anat directory 
   for sfi = numel(sfiles):-1:1
@@ -35,19 +42,29 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,mdevdir] = cat_io_checkBIDS(sfile
         if any(cat_io_contains(sdirs{end-3}(1:min(4,numel(sdirs{end-3}))),{'sub-','sub_'})), sub = 1; else, sub = 0; end
       end
     end
-    dev = find(strcmp('derivatives',sdirs),1,'last');
-    if ~isempty(dev), sdirs(dev:dev+1) = []; end
-% ... delete
-% sdirs_orig = sdirs;
-% dev = find(strcmp('derivatives',sdirs));
-% sdirs(dev:dev+1) = [];
-    
-    if ~sub
+
+    sdirs_orig = sdirs;
+    % check if the input is alread a derivative
+    dev = find(strcmp('derivatives',sdirs)); 
+    if ~isempty(dev) && ~isempty(BIDSdir), sdirs(dev(1):dev(end)) = []; end
+
+    %% setup result directory - without BIDS the default is used
+    % keep absolute root/drive prefix to avoid relative derivatives paths
+    if isempty(sdirs{1})
+      devdir{sfi} = filesep;
+    else
+      devdir{sfi} = sdirs{1};
+    end
+
+    if ~sub || isempty(BIDSdir)
     % Handling of missing subject directory, i.e., this is not BIDS.
     % Here, we just use the BIDSdir directly. 
       isBIDS(sfi)  = 0; 
-      BIDSsub{sfi} = sdirs{end}; 
-      if ~isempty(dev) && ~isempty(BIDSdir)
+      BIDSsub{sfi} = spm_file( sdirs{end}, 'number', '', 'ext', '');
+      
+      if isempty(dev) 
+        devdir{sfi} = fileparts(sfiles{sfi});
+      else
         % File already resides in a derivatives directory.
         % Reconstruct base path (before 'derivatives') to avoid doubling.
         if isempty(sdirs_orig{1})
@@ -55,57 +72,87 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,mdevdir] = cat_io_checkBIDS(sfile
         else
           basepath = fullfile(sdirs_orig{1:dev(1)-1});
         end
-        devdir{sfi} = fullfile(basepath, BIDSdir);
-      elseif ~isempty(BIDSdir)
-        devdir{sfi} = fullfile(fileparts(sfiles{sfi}), BIDSdir);
-      else
-        devdir{sfi} = fileparts(sfiles{sfi});
+        devdir{sfi} = basepath;
       end
+
+      if ~isempty(BIDSdir)
+        di = numel(sdirs);
+        devdir{sfi} = fullfile(devdir{sfi}, BIDSdir);
+        extradirs = max([0,strfind(BIDSdir,['..' filesep])]);
+        for dii = 1:min( extradirs , di-1 )
+          devdir{sfi} = fullfile(devdir{sfi}, sdirs{di - dii});
+        end
+      end
+
+      devdir{sfi}  = spm_file(devdir{sfi}, 'cpath' );
+      mdevdir{sfi} = devdir{sfi};
       rdevdir{sfi} = BIDSdir;
-    else
-      % Evaluation of the different cases, i.e., between cross and long cases
-      isBIDS(sfi) = sub; 
-      if  ses && ~ana, BIDSsub{sfi} = sdirs{end-2}; devi = numel(sdirs)-2; end % (maybe) long
-      if  ses &&  ana, BIDSsub{sfi} = sdirs{end-3}; devi = numel(sdirs)-3; end % (maybe) long
-      if ~ses && ~ana, BIDSsub{sfi} = sdirs{end-1}; devi = numel(sdirs)-1; end % cross
-      if ~ses &&  ana, BIDSsub{sfi} = sdirs{end-2}; devi = numel(sdirs)-2; end % cross
-      % setup result directory - without BIDS the default is used
-      % keep absolute root/drive prefix to avoid relative derivatives paths
-      if isempty(sdirs{1})
-        devdir{sfi} = filesep;
-        did = 2;
-      else
-        devdir{sfi} = sdirs{1};
-        did = 2;
+      for dii = 1:min( extradirs , di-1 )
+        rdevdir{sfi} = fullfile(rdevdir{sfi}, sdirs{di - dii});
       end
-      for di = did:numel(sdirs)-1
-        if sub && di == devi, devdir{sfi} = fullfile(devdir{sfi}, BIDSdir); end % add some directories inbetween
+      pdir{sfi}    = fullfile(sdirs{1:end-1});
+      devi(sfi)    = numel(sdirs); 
+    else
+      %% Evaluation of the different cases, i.e., between cross and long cases
+      isBIDS(sfi) = sub; 
+      if  ses && ~ana, BIDSsub{sfi} = sdirs{end-2}; devi(sfi) = numel(sdirs)-2; end % (maybe) long
+      if  ses &&  ana, BIDSsub{sfi} = sdirs{end-3}; devi(sfi) = numel(sdirs)-3; end % (maybe) long
+      if ~ses && ~ana, BIDSsub{sfi} = sdirs{end-1}; devi(sfi) = numel(sdirs)-1; end % cross
+      if ~ses &&  ana, BIDSsub{sfi} = sdirs{end-2}; devi(sfi) = numel(sdirs)-2; end % cross
+      
+      % ../ will add another level and take this directory into the filename 
+      % for instance a group directory ( mainBIDSdir/project/sub*/.. )
+      extradirs    = max([0,strfind(BIDSdir,['..' filesep])]);
+      for di = 2:numel(sdirs)-1
+        if sub && di == devi(sfi)
+          % add BIDSdir
+          devdir{sfi} = fullfile(devdir{sfi}, BIDSdir); 
+          % add some directories inbetween for every ../ used 
+          for dii = 1:min( extradirs , di-1)
+            devdir{sfi} = fullfile(devdir{sfi}, sdirs{di - dii});
+          end
+          mdevdir{sfi} =  spm_file(spm_file(devdir{sfi}), 'cpath' );
+        end 
         devdir{sfi} = fullfile(devdir{sfi}, sdirs{di});
       end
-      devdir{sfi} = spm_file(devdir{sfi}, 'fpath' );
+      devdir{sfi} = spm_file(devdir{sfi}, 'cpath' );
+      
       % relative directory to the input data
-      rdevdir{sfi} = fullfile(repmat(['..' filesep],1,numel(sdirs) - devi), BIDSdir); % add further directories inbetween
-      for di = devi:numel(sdirs)-1, rdevdir{sfi} = fullfile(rdevdir{sfi}, sdirs{di}); end
+      rdevdir{sfi} = fullfile(repmat(['..' filesep],1,numel(sdirs) - devi(sfi)), BIDSdir); % add further directories inbetween
+      for di = max(1, devi(sfi) - extradirs) :numel(sdirs)-1
+        rdevdir{sfi} = fullfile(rdevdir{sfi}, sdirs{di}); 
+      end
+      pdir{sfi} = fullfile(sdirs{1:devi(sfi)-1});
     end
   end
 
-  % one main directory for all cases
-  if numel(sfiles) > 1
-    [~,S] = spm_str_manip(sfiles,'C'); 
-    mdevdir = fullfile(S.s,BIDSdir,'log');
-  else
-    mdevdir = fileparts(sfiles{1});
+  % log-directory setup
+  switch 2
+    case 1
+      % one main directory for all cases
+      if numel(sfiles) > 1
+        [~,S] = spm_str_manip(sfiles,'C'); 
+        logdir = fullfile(S.s, BIDSdir, 'log');
+      else
+        logdir = fullfile(pdir{1}, BIDSdir, 'log');
+      end
+    case 2
+      % write into current directory
+      logdir = fullfile(pwd, BIDSdir,'log');
+    case 3
+      % write into first subject directory
+      logdir = fullfile(pdir{1}, BIDSdir, 'log');
   end
 
   % create directories
-  if ~exist(mdevdir,'dir')
+  if ~exist(logdir,'dir')
     try
-      mkdir(mdevdir); 
+      mkdir(logdir); 
     catch
       cat_io_cprintf('note','cat_run: BIDS evaluation failed. \n')
     end
   end
-  for sfi = numel(sfiles):-1:1
+  for sfi = 1:numel(sfiles)
     if ~exist(devdir{sfi},'dir'); mkdir(devdir{sfi}); end
   end
 end
