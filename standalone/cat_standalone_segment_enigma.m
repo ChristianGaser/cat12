@@ -1,4 +1,4 @@
-% Batch file for CAT12 segmentation for SPM12/CAT12 standalone installation
+% Batch file for CAT segmentation for SPM/CAT standalone installation
 % modified parameters for ENIGMA
 %
 %_______________________________________________________________________
@@ -28,7 +28,7 @@ matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.vox = 1.5;
 % additional bounding box
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.bb = 12;
 
-% Affine regularisation (SPM12 default = mni) - '';'mni';'eastern';'subj';'none';'rigid'
+% Affine regularisation (SPM default = mni) - '';'mni';'eastern';'subj';'none';'rigid'
 matlabbatch{1}.spm.tools.cat.estwrite.opts.affreg = 'mni';    
 
 % Strength of the bias correction that controls the biasreg and biasfwhm parameter (CAT only!)
@@ -183,10 +183,10 @@ matlabbatch{1}.spm.tools.cat.estwrite.output.warps = [1 1];
 matlabbatch{1}.spm.tools.cat.estwrite.output.rmat = 1;
 
 % deface native intensity normalized images in native space
-matlabbatch{2}.spm.util.deface.images(1) = cfg_dep('CAT12: Segmentation: Native Bias Corr. Image', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','biascorr', '()',{':'}));
-matlabbatch{2}.spm.util.deface.images(2) = cfg_dep('CAT12: Segmentation: Native LAS Bias Corr. Image', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','ibiascorr', '()',{':'}));
+matlabbatch{2}.spm.util.deface.images(1) = cfg_dep('CAT: Segmentation: Native Bias Corr. Image', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','biascorr', '()',{':'}));
+matlabbatch{2}.spm.util.deface.images(2) = cfg_dep('CAT: Segmentation: Native LAS Bias Corr. Image', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','ibiascorr', '()',{':'}));
 
 % and remove images that are not defaced
-matlabbatch{3}.cfg_basicio.file_dir.file_ops.file_move.files(1) = cfg_dep('CAT12: Segmentation: Native Bias Corr. Image', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','biascorr', '()',{':'}));
-matlabbatch{3}.cfg_basicio.file_dir.file_ops.file_move.files(2) = cfg_dep('CAT12: Segmentation: Native LAS Bias Corr. Image', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','ibiascorr', '()',{':'}));
+matlabbatch{3}.cfg_basicio.file_dir.file_ops.file_move.files(1) = cfg_dep('CAT: Segmentation: Native Bias Corr. Image', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','biascorr', '()',{':'}));
+matlabbatch{3}.cfg_basicio.file_dir.file_ops.file_move.files(2) = cfg_dep('CAT: Segmentation: Native LAS Bias Corr. Image', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','ibiascorr', '()',{':'}));
 matlabbatch{3}.cfg_basicio.file_dir.file_ops.file_move.action.delete = false;

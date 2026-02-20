@@ -1,4 +1,4 @@
-% Batch file for getting weighted overall image quality for SPM12/CAT12 standalone installation
+% Batch file for getting weighted overall image quality for SPM/CAT standalone installation
 %
 %_______________________________________________________________________
 % $Id$

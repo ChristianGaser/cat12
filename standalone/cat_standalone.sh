@@ -24,7 +24,7 @@ ARCH=`uname`
 if [ "$ARCH" == "Darwin" ]; then
   cat12_dir="${SPMROOT}/spm25.app/Contents/MacOS/spm12/toolbox/cat12" 
 else
-  cat12_dir="your_folder/spm12/toolbox/cat12" 
+  cat12_dir="your_folder/spm/toolbox/CAT" 
 fi
 
 # default values
@@ -328,7 +328,7 @@ run_cat ()
     
     BATCHFILE=$(basename "${TMP}")
     BATCHFILE=$(echo "${BATCHFILE}" | cut -f1 -d'.')
-    cat12_dir="${SPMROOT}/toolbox/cat12" 
+    cat12_dir="${SPMROOT}/toolbox/CAT" 
     export MATLABPATH=${SPMROOT}:${cat12_dir}:${DIR}
     eval "COMMAND=\"$BATCHFILE\";"
     
@@ -365,8 +365,8 @@ USAGE:
                                  [-a1 additional_argument1] [-a2 additional_argument2]
                                  [-a add_to_batch] [-ns -e -fg]
    
-   -s  <DIR>   | --spm <DIR>     SPM12 folder of standalone version (can be also defined by SPMROOT)
-                                 Often you don't need to define that option because the SPM12 folder
+   -s  <DIR>   | --spm <DIR>     SPM folder of standalone version (can be also defined by SPMROOT)
+                                 Often you don't need to define that option because the SPM folder
                                  is automatically found.
    -m  <DIR>   | --mcr <DIR>     Matlab Compiler Runtime (MCR) folder (can be also defined by MCRROOT)
    -b  <FILE>  | --batch <FILE>  batch file to execute
@@ -377,14 +377,14 @@ USAGE:
    
    options for calling standard Matlab mode
    -ns         | --no-standalone call the standard Matlab version instead of the standalone version
-   -e          | --expert        call CAT12 in expert mode (needed for using standalone batches!)
+   -e          | --expert        call CAT in expert mode (needed for using standalone batches!)
    -fg         | --fg            do not run matlab process in background
    -m  <FILE>  | --m <FILE>      Matlab command (matlab version) (default $matlab)
 
    The first occurance of the parameter "<UNDEFINED>" in the batch file will be replaced by the
    list of input files. You can use the existing batch files in this folder or create your own batch 
-   file with the SPM12 batch editor and leave the data field undefined. Please note that for creating
-   your own batch file CAT12 has to be called in expert mode because the CAT12 standalone installation 
+   file with the SPM batch editor and leave the data field undefined. Please note that for creating
+   your own batch file CAT has to be called in expert mode because the CAT standalone installation 
    will only run in expert mode to allow more options.
    See cat_standalone_segment.m for an example. 
    
@@ -399,12 +399,12 @@ USAGE:
    Although this tool is mainly intended for calling scripts for the standalone version of Matlab without 
    a Matlab license, you can also use it to call the standard version of Matlab. If you have a Matlab
    license, this has the advantage that you can use the same scripts as for the standalone version, but 
-   you can run CAT12 without a GUI. Please note that standalone batches must be called in CAT12 expert
-   mode. Of course, you can also create and use your own batches that you use regulary in CAT12 or
-   SPM12. With this script you can run these batches in headless mode without any display.
+   you can run CAT without a GUI. Please note that standalone batches must be called in CAT expert
+   mode. Of course, you can also create and use your own batches that you use regulary in CAT or
+   SPM. With this script you can run these batches in headless mode without any display.
    
    PURPOSE:
-   Command line call of (CAT12) batch files for SPM12 standalone installation
+   Command line call of (CAT) batch files for SPM standalone installation
 
 EXAMPLES
    -----------------------------------------------------------------------------------------------
@@ -439,23 +439,23 @@ EXAMPLES
    -----------------------------------------------------------------------------------------------
    cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v232 \ 
        -b ${cwd}/cat_standalone_segment.m sTRIO0001.nii
-   Preprocess (segment) the single file sTRIO0001.nii using the default CAT12 preprocessing batch. 
-   SPM12 standalone version is located in $SPMROOT and Matlab Compiler Runtime in
+   Preprocess (segment) the single file sTRIO0001.nii using the default CAT preprocessing batch. 
+   SPM standalone version is located in $SPMROOT and Matlab Compiler Runtime in
    /Applications/MATLAB/MATLAB_Runtime/v232.
 
    cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v232 \ 
        -b ${cwd}/cat_standalone_segment.m sTRIO000*.nii.gz \ 
        -a1 " '${cat12_dir}/templates_MNI152NLin2009cAsym/TPM_Age11.5.nii' " \ 
        -a2 " '${cat12_dir}/templates_MNI152NLin2009cAsym/Template_0_GS1mm.nii' "
-   Unzip and preprocess (segment) the files sTRIO0001.nii.gz using the default CAT12 preprocessing 
-   batch, but use the children TPM provided with CAT12 and a 1mm Shooting template (not provided 
-   with CAT12). Please note that zipped file can only be handled with this standalone batch and also
+   Unzip and preprocess (segment) the files sTRIO0001.nii.gz using the default CAT preprocessing 
+   batch, but use the children TPM provided with CAT and a 1mm Shooting template (not provided 
+   with CAT). Please note that zipped file can only be handled with this standalone batch and also
    note the multiple quotes for parameter a1 and a2.
 
    cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v232 \ 
        -b ${cwd}/cat_standalone_segment.m sTRIO0001.nii \ 
        -a "matlabbatch{1}.spm.tools.cat.estwrite.output.surface = 0;"
-   Preprocess (segment) the single file sTRIO0001.nii using the default CAT12 preprocessing batch, 
+   Preprocess (segment) the single file sTRIO0001.nii using the default CAT preprocessing batch, 
    but skip surface estimation.
 
    -----------------------------------------------------------------------------------------------
@@ -474,7 +474,7 @@ EXAMPLES
        -b ${cwd}/cat_standalone_segment_long.m sTRIO000*.nii \ 
        -a1 "1" -a2 " '${cat12_dir}/templates_MNI152NLin2009cAsym/TPM_Age11.5.nii' "
    Preprocess (segment) the files sTRIO000*.nii with the longitudinal pipeline optimized for 
-   detecting plasticity/learning effects and use the children TPM provided with CAT12.
+   detecting plasticity/learning effects and use the children TPM provided with CAT.
    Please note the multiple quotes for parameter a2.
 
    -----------------------------------------------------------------------------------------------
@@ -575,8 +575,8 @@ EXAMPLES
    cat_standalone.sh -ns -e -m matlab_R2023b \ 
        -b ${cwd}/cat_standalone_segment.m sTRIO0001.nii \ 
        -a "matlabbatch{1}.spm.tools.cat.estwrite.output.surface = 0;"
-   Preprocess (segment) the single file sTRIO0001.nii in standard Matlab mode (using CAT12 expert
-   mode) and the default CAT12 preprocessing batch, but skip surface estimation. As Matlab command
+   Preprocess (segment) the single file sTRIO0001.nii in standard Matlab mode (using CAT expert
+   mode) and the default CAT preprocessing batch, but skip surface estimation. As Matlab command
    matlab_R2023b is used.
 
    -----------------------------------------------------------------------------------------------
@@ -584,7 +584,7 @@ EXAMPLES
    -----------------------------------------------------------------------------------------------
    cat_parallelize.sh -p 8 -l /tmp \ 
        -c "cat_standalone.sh  -m /Applications/MATLAB/MATLAB_Runtime/v232 -b ${cwd}/cat_standalone_segment.m" sTRIO*.nii
-   Parallelize CAT12 preprocessing by splitting all sTRIO*.nii files into 8 jobs 
+   Parallelize CAT preprocessing by splitting all sTRIO*.nii files into 8 jobs 
    (processes) and save log file in /tmp folder. 
 
    The parameters SPMROOT and MCRROOT have to be defined (exported) to skip the use of the flags -s -m.
@@ -597,8 +597,8 @@ OUTPUT:
 
 USED FUNCTIONS:
    cat_parallelize.sh
-   SPM12 standalone version (compiled)
-   CAT12 toolbox (compiled within SPM12 if installed)
+   SPM standalone version (compiled)
+   CAT toolbox (compiled within SPM if installed)
    MATLAB Compiler Runtime R2023b (Version 23.2)
 
 This script was written by Christian Gaser (christian.gaser@uni-jena.de).

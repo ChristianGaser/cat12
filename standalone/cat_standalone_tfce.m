@@ -1,4 +1,4 @@
-% Batch file for TFCE statistics for SPM12/CAT12 standalone installation
+% Batch file for TFCE statistics for SPM/CAT standalone installation
 %
 %_______________________________________________________________________
 % $Id$

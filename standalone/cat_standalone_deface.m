@@ -1,4 +1,4 @@
-% Batch file for defacing for SPM12/CAT12 standalone installation
+% Batch file for defacing for SPM/CAT standalone installation
 %
 %_______________________________________________________________________
 % $Id$
