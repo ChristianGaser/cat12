@@ -44,8 +44,10 @@ if exist(cat_dir_new,'dir') && exist(cat_dir_old,'dir')
   remove = spm_input('Remove old cat12 folder?','+1','yes|no',[1 0],1);
   if remove
     try
+      warning off
       rmdir(cat_dir_old, 's');
       spm fmri; clear cat_version; spm_CAT
+      warning on
       fprintf('         Removed duplicate legacy folder: %s\n', cat_dir_old);
     catch
       fprintf('         Warning: could not remove duplicate folder %s\n', cat_dir_old);
@@ -55,8 +57,10 @@ if exist(cat_dir_new,'dir') && exist(cat_dir_old,'dir')
 elseif ~exist(cat_dir_new,'dir') && exist(cat_dir_old,'dir')
   % migration from old installation layout to current CAT layout
   try
+    warning off
     movefile(cat_dir_old, cat_dir_new, 'f');
     spm fmri; clear cat_version; spm_CAT
+    warning on
     fprintf('         Renamed %s to %s\n', cat_dir_old, cat_dir_new);
   catch
     fprintf('         Warning: could not rename %s to %s\n', cat_dir_old, cat_dir_new);
