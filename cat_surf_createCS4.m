@@ -521,6 +521,8 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     
     if exist(Vppm.fname ,'file'), delete(Vppm.fname); end
     if debug && exist(Vpp.fname ,'file') && ~opt.outputpp.native, delete(Vpp.fname); end
+    if ~debug && exist(Vgmt.fname ,'file'), delete(Vgmt.fname); end
+    if ~debug && exist(Vmfs.fname ,'file'), delete(Vmfs.fname); end
   
     % processing time per side for manual tests
     if si == numel(opt.surf) && si == 1
