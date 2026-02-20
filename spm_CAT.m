@@ -78,15 +78,25 @@ catch
     if ~exist('savexml') || ~exist('fcnchk')
       error('Please update and patch SPM first')
     end
-  elseif ismac 
+  elseif ismac && ~isdeployed
     CATDir = fullfile(catdir);
-    web('https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)#Troubleshooting');
     cat_io_cmd(sprintf('\nThe following commands might be executed as administrator to allow execution of CAT binaries and mex-files.'),'warning');
-    cat_io_cmd(sprintf('You can also break that command here and run the commands that are listed on the open website under Troubleshooting manually.\n'),'warning');
-    cmd = ['xattr -r -d com.apple.quarantine ' CATDir];
-    system(cmd); fprintf([cmd '\n']);
+    cmd = ['xattr -cr -d com.apple.quarantine ' CATDir];
+    [fixStatus1, ~] = system(cmd); fprintf([cmd '\n']);
     cmd = ['chmod a+x ' CATDir '/CAT.mac*/CAT*'];
-    system(cmd); fprintf([cmd '\n']);
+    [fixStatus2, ~] = system(cmd); fprintf([cmd '\n']);
+
+   if fixStatus1 ~= 0 || fixStatus2 ~= 0
+      fprintf(2, '\n========================================================================\n');
+      fprintf(2, 'CAT: Critical Permission Error\n');
+      fprintf(2, 'macOS is blocking CAT binaries because they are quarantined.\n');
+      fprintf(2, 'Self-repair failed (likely due to permissions).\n');
+      fprintf(2, 'Please run the following command in your Terminal to fix this:\n\n');
+      fprintf(2, '     sudo xattr -cr "%s"\n\n', CATDir);
+      fprintf(2, '     sudo chmod a+x "%s"/CAT.mac*/CAT*\n\n', CATDir);
+      fprintf(2, 'Then restart MATLAB.\n');
+      fprintf(2, '========================================================================\n\n');
+    end
   end
 end
 
