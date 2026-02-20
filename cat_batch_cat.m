@@ -82,26 +82,49 @@ while i <= n
   i = i+1;
 end
 
-matlabbatch{1}.spm.tools.cat.estwrite = cat;
-matlabbatch{1}.spm.tools.cat.estwrite.data = cellstr(names);
-
-% remove fields to suppress warnings
-matlabbatch{1}.spm.tools.cat.estwrite = rmfield(matlabbatch{1}.spm.tools.cat.estwrite,'extopts');
-matlabbatch{1}.spm.tools.cat.estwrite = rmfield(matlabbatch{1}.spm.tools.cat.estwrite,'output');
-matlabbatch{1}.spm.tools.cat.estwrite = rmfield(matlabbatch{1}.spm.tools.cat.estwrite,'opts');
-
-% deselect multi-threading for batch
-matlabbatch{1}.spm.tools.cat.estwrite.nproc = 0;
-
 try
-  spm_jobman('initcfg');
-  spm_jobman('run',matlabbatch);
+  % robust direct execution without depending on SPM toolbox registration
+  job = cat;
+  job.data = cellstr(names);
+  job.nproc = 0;
+  if ~isfield(job.output,'ROImenu') || ~isfield(job.output.ROImenu,'atlases')
+    job.output.ROImenu.atlases = job.output.atlas;
+  end
+  if ~isfield(job.output.ROImenu.atlases,'ownatlas')
+    job.output.ROImenu.atlases.ownatlas = {''};
+  end
+  if ~isfield(job.output,'sROImenu') || ~isfield(job.output.sROImenu,'satlases')
+    job.output.sROImenu.satlases = struct('ownatlas',{{''}});
+  end
+  if ~isfield(job.output.ROImenu,'satlases')
+    job.output.ROImenu.satlases = job.output.sROImenu.satlases;
+  end
+  cat_run(job);
 catch %#ok<CTCH> % catch with lasterror is necessary for old matlab versions
-  caterr = lasterror;  %#ok<LERR>
-  sprintf('\n%s\nCAT Preprocessing error: %s:\n%s\n', repmat('-',1,72),caterr.identifier,caterr.message,repmat('-',1,72));
-  for si=1:numel(caterr.stack), cat_io_cprintf('err',sprintf('%5d - %s\n',caterr.stack(si).line,caterr.stack(si).name)); end;
-  cat_io_cprintf('err',sprintf('%s\\n',repmat('-',1,72)));  
-  error('Batch failed.');
+  % fallback for older setups that require classic batch execution
+  try
+    matlabbatch{1}.spm.tools.cat.estwrite = cat;
+    matlabbatch{1}.spm.tools.cat.estwrite.data = cellstr(names);
+    matlabbatch{1}.spm.tools.cat.estwrite = rmfield(matlabbatch{1}.spm.tools.cat.estwrite,'extopts');
+    matlabbatch{1}.spm.tools.cat.estwrite = rmfield(matlabbatch{1}.spm.tools.cat.estwrite,'output');
+    matlabbatch{1}.spm.tools.cat.estwrite = rmfield(matlabbatch{1}.spm.tools.cat.estwrite,'opts');
+    matlabbatch{1}.spm.tools.cat.estwrite.nproc = 0;
+    spm_jobman('initcfg');
+    if exist('tbx_cfg_cat','file')
+      try
+        cfg_util('addapp',@tbx_cfg_cat);
+      catch
+        cfg_util('addapp',tbx_cfg_cat);
+      end
+    end
+    spm_jobman('run',matlabbatch);
+  catch %#ok<CTCH>
+    caterr = lasterror;  %#ok<LERR>
+    sprintf('\n%s\nCAT Preprocessing error: %s:\n%s\n', repmat('-',1,72),caterr.identifier,caterr.message,repmat('-',1,72));
+    for si=1:numel(caterr.stack), cat_io_cprintf('err',sprintf('%5d - %s\n',caterr.stack(si).line,caterr.stack(si).name)); end;
+    cat_io_cprintf('err',sprintf('%s\\n',repmat('-',1,72)));  
+    error('Batch failed.');
+  end
 end
 
 % delete text file with filenames
