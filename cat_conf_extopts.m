@@ -380,28 +380,6 @@ registration.help   = {
 
 %---------------------------------------------------------------------
 
-% This version is not ready right now and I packed all working improvments
-% (such as the Laplace-based blood-vessel-correction) into cat_surf_createCS2. 
-pbtver         = cfg_menu;
-pbtver.tag     = 'pbtmethod';
-pbtver.name    = 'Projection-based thickness';
-pbtver.labels  = {'PBT','PBTx','PBT simple'};
-pbtver.values  = {'pbt2','pbt2x','pbtsimple'};
-pbtver.def     = @(val) 'pbtsimple';
-pbtver.hidden  = expert<2;
-pbtver.help    = {
- ['Version of the projection-based thickness (PBT) thickness and surface reconstruction approach (Dahnke et al., 2013).  ' ...
-  'Version 2 first estimates a temporary central surface by utilizing higher CSF and lower WM boundaries to utilize the partial volume effect.  ' ...
-  'This surface divides the GM into a lower and upper GM area where PBT is used with sulcal reconstruction in the lower and gyrus reconstruction in the upper part. ' ...
-  'The estimated thickness values of each part were projected over the whole GM and summed up to obtain the full thickness.  ' ...
-  'Similar to PBT, the project-based thickness and the direct thickness (of the distance maps without sulcus/gyrus reconstruction) are combined by using the minimum. '] 
-  ''
-  'PBT simple function do not refine the given map and just estimate the Euclidean distance function on the given map.'
-  ''
-  'Experimental development parameter - do not change! '
-  ''
-};
-
 spmamap        = cfg_menu;
 spmamap.tag     = 'spmAMAP';
 spmamap.name    = 'Replace SPM by AMAP segmentation (experimental)';
@@ -426,136 +404,49 @@ pbtres.help    = {
   ''
 };
 
-% replaced by general myelination function 
-%{
-pbtlas         = cfg_menu;
-pbtlas.tag     = 'pbtlas';
-pbtlas.name    = 'Use correction for cortical myelination';
-pbtlas.labels  = {'No','Yes'};
-pbtlas.values  = {0 1};
-pbtlas.def     = @(val)cat_get_defaults('extopts.pbtlas', val{:});
-pbtlas.help    = {
-  'Apply correction for cortical myelination by local intensity adaptation to improve the description of the GM/WM boundary (added in CAT12.7).'
-  'Experimental parameter, not yet working properly!'
-  ''
-};
-%}
-
 % currently only for developer and experts ... check hidden field
 % ###############################################################
 SRP         = cfg_menu;
 SRP.tag     = 'SRP';
 SRP.name    = 'Surface reconstruction pipeline';
-if ~expert
+if expert < 2
   SRP.labels  = {...
     'CS1 (legacy)',...
     'CS2 (classic)',... 
-    'CS4 (sulcus & gyrus reconstruction; IN DEVELOPMENT)',...
+    'CS3 (classic+)',... 
+    'CS4 (default)',...
   };
-  SRP.values  = {11 22 42}; 
-elseif expert >= 1
+  SRP.values  = {11 22 24 40}; 
+else
   SRP.labels  = {...
-    'CS1 (11; legacy)',...
-    'CS2 (22; classic)',... 
-    'CS2 with CS41+ gyrus reconstruction (24)',... 
-    'CS4 c-function full resolution (40; IN DEVELOPMENT)',... 
-    'CS4 sulcus+gyrus reconstuction A (41; IN DEVELOPMENT)',... 
-    'CS4 sulcus+gyrus reconstuction B (42; IN DEVELOPMENT)',... 
+    'CS1 (legacy; 11)',...
+    'CS2 (classic; 22)',... 
+    ...
+    'CS3 (classic+; 24)',... 
+    'CS3 (classic+E; 25; EXPERIMENTAL)',... 
+    ...
+    'CS4 (default; 40)',... 
+    'CS4 (defaultE; 42; EXPERIMENTAL)',... 
   };
-  SRP.values  = {11  22 24  40 41 42}; 
-elseif expert > 1
-  SRP.labels  = {...
-    'CS1 without SIC (10)',...
-    'CS1 with SIC without optimization (11)',... 
-    'CS1 with SIC with optimization (12)',... 
-    ...
-    'CS2 without SIC (20)',...
-    'CS2 with SIC without optimization (21)',... 
-    'CS2 with SIC with optimization (22)',... 
-    'CS2 with SIC with optimization with CS41+ gyrus recon. (24; IN DEVELOPMENT)',...
-    ...
-    'CS4 c-function full resolution (40; IN DEVELOPMENT)',... 
-    'CS4 sulcus+gyrus reconstuction A (41; IN DEVELOPMENT)',... 
-    'CS4 sulcus+gyrus reconstuction B (42; IN DEVELOPMENT)',... 
-    'CS4 sulcus+gyrus reconstuction B no opt. (43; IN DEVELOPMENT)',... 
-    };
-  SRP.values  = {10 11 12   20 21 22 24   40 41 42 43};
+  SRP.values  = {11 22  24 25  40 42}; 
 end
 SRP.help    = {
    'CAT uses the projection-based thickness approach (PBT; Dahnke et al., 2012) to reconstruct the central surface.  ' 
    ''
    'With CAT12.8, we extensively revised the surface reconstruction pipeline (SRP), resulting in a new reconstruction scheme (CS2) that supports better control of the mesh resolution and runtime.  '
    ''
-  ['With CAT12.10, we added a new pipeline (CS4) with a gyrus reconstruction scheme in atrophic cases and a new topology correction. ' ...
-   'The gyrus reconstruction works similar as the sulcus reconstruction and helps in cases where the CSF describe the cortex better than the WM does. ']
+  ['With CAT12.10, we added a new pipeline (CS4) with improved gyrus reconstruction scheme and a new topology correction. ' ...
+   'The gyrus reconstruction works similar as the sulcus reconstruction and helps in regions where the CSF describe the cortex better than the WM does. ']
    ''
-  ['All pipelines provide high-precision reconstruction of the central surface and estimation of cortical thickness, which allows estimation of the cortical layer by transforming the surface points along the surface normals.  ' ...
-   'In particular, this allows the estimation of white and pial surfaces by addition/subtraction of half thickness.  ' ...
-   'Because the surface normals are modelled quite simply, the interface suffers locally from self-intersections, especially in highly convoluted regions with high GM but low CSF/WM fractions (i.e. in young subjects).  ' ...
-   'Although these overlaps are usually not a problem in structural analyses, self-intersections are still suboptimal and may cause issues for mapping 3D information onto the surface.  ' ...
-   'We have therefore developed a fast self-intersection correction (SIC) to provide accurate inner and outer surfaces.  ' ...
-   'The SIC reduces SIs below 1% of the total area, which are also almost invisible and can be neglected.  '] 
+  ['All pipelines provide high-precision reconstruction of the central surface and estimation of cortical thickness. ' ...
+   'This allows the estimation of cortical layers by transforming the surface points along the surface normals.  ' ...
+   'In particular, this supports the estimation of white and pial surfaces by addition/subtraction of half thickness.  ' ...
+   'Although the transformation along surface normals can cause self-interesection these overlaps are usually not a problem in standard structural analyses. ' ...
+   'Self-interesections can be seen typically in (i) highly convoluted regions or (ii) areas with high GM but low CSF/WM fractions such as in young subjects. '] 
    ''
 };
 SRP.def     = @(val)cat_get_defaults('extopts.SRP', val{:});
 SRP.hidden  = expert < 1;
-
-
-% Control surface mesh resolution by different pipelines.
-% Major problem is that MATLAB sometimes fatally crashes in the SPM/MATLAB
-% mesh reduction function. Hence, volumetric resolution is used to control
-% the resolution of the created isosurfaces. However, topology correction
-% used a normalized mesh with oversampling the insula.
-reduce_mesh         = cfg_menu;
-reduce_mesh.tag     = 'reduce_mesh';
-reduce_mesh.name    = 'Reduce Mesh';
-if expert == 1
-  reduce_mesh.labels  = { ...
-    'No reduction, PBT resolution (0)',...  
-    'No reduction, optimal resolution (1)',...  
-    'No reduction, internal resolution (2)',...
-    'SPM approach (5)',...
-    'MATLAB approach (6)'
-  };
-  reduce_mesh.values  = {0 1 2 3 5 4 6};
-elseif expert > 1
-  reduce_mesh.labels  = { ...
-    'No reduction, PBT resolution (0)',...  
-    'No reduction, optimal resolution (1)',...  
-    'No reduction, internal resolution (2)',...
-    'SPM approach init (3)',...
-    'SPM approach full (5)',...
-    'MATLAB approach init (4)',...
-    'MATLAB approach full (6)'
-  };
-  reduce_mesh.values  = {0 1 2 3 5 4 6};
-end
-reduce_mesh.def     = @(val)cat_get_defaults('extopts.reduce_mesh', val{:});
-reduce_mesh.hidden  = expert<2;
-reduce_mesh.help    = {
-  ['Limitation of the surface resolution is essential for fast processing, accurate and equally distributed meshes. ' ...
-   'Mesh resolution depends in general on the voxel resolution used for surface creation and can be modified afterwards by refinement and reduction. ' ...
-   'However, surface mesh reduction is not trivial and we observed fatal MATLAB errors (full uncatchable crash) and freezing of the following spherical registration on some computers. ' ...
-   'This variable therefor controls multiple ways to handle mesh resolution in the surface creation process. ']
-   ''
-  ['The first setting (0) uses no reduction at all, creating the initial surface at the PBT resolution and also use no mesh reduction and is very slow. ' ...
-   'In general, PBT is processed at 0.5 mm and surface creation result in about 1.200k faces with a quadratic increase of processing time. ' ...
-   'However, this resolution is not necessary for nearly all analysis that often takes place at meshes with 164k (FreeSurfer) or 32k (HCP). ']
-   ...
-  ['Option (1) and (2) use volume reduction to created initial meshes on an optimal (1, depending on the final mesh resolution) or ' ...
-   'the internal voxel-resolution (2, depending on your image resolution). ' ...
-   'In both cases the maps are refined and further adapted to the PBT position map with a final mesh resolution of about 300k. '];    
-   ''
-  ['Surface-based reduction by SPM (3,5) or MATLAB (4,6) are used to optimize the initial surface, supporting a fast but still accurate topology correction.  ' ...
-   'Although this option support best quality, both the SPM and the MATLAB function can cause unreproducible MATLAB crash and are therefore not used yet!  ' ...
-   'After topology correction the resolution of the mesh is increased again and adapted for PBT position map.  ' ...
-   'In option 3 and 4, a supersampling with following reduction is used to obtain an optimal equally distributed sampling. ' ...
-   'However, some systems showed problems in the spherical registration (freezing) that seamed to depend on these severe modifications of the mesh. ' ...
-   'Hence, option (1) and (2) only use a normal refinement without supersampling.']  
-   ''
-   'These settings are still in development!'
-   ''
-};
 
 
 
@@ -1206,53 +1097,6 @@ new_release.hidden = expert<2;
 
 %------------------------------------------------------------------------
   
-scale_cortex         = cfg_entry;
-scale_cortex.tag     = 'scale_cortex';
-scale_cortex.name    = 'Modify cortical surface creation';
-scale_cortex.strtype = 'r';
-scale_cortex.num     = [1 1];
-if spmseg
-  scale_cortex.hidden = true; 
-  scale_cortex.val{1} = 0.5; 
-else
-  scale_cortex.def     = @(val)cat_get_defaults('extopts.scale_cortex', val{:});
-end
-scale_cortex.help    = {
-  'Scale intensity values for cortex to start with initial surface that is closer to GM/WM border to prevent that gyri/sulci are glued if you still have glued gyri/sulci (mainly in the occ. lobe).  You can try to decrease this value (start with 0.6).  Please note that decreasing this parameter also increases the risk of an interrupted parahippocampal gyrus.'
-  ''
-};
-
-add_parahipp         = cfg_entry;
-add_parahipp.tag     = 'add_parahipp';
-add_parahipp.name    = 'Modify parahippocampal surface creation';
-add_parahipp.strtype = 'r';
-scale_cortex.num     = [1 1];
-if spmseg
-  add_parahipp.hidden = true; 
-  add_parahipp.val{1} = 0; 
-else
-  add_parahipp.def   = @(val)cat_get_defaults('extopts.add_parahipp', val{:});
-end
-add_parahipp.help    = {
-  'Increase values in the parahippocampal area to prevent large cuts in the parahippocampal gyrus (initial surface in this area will be closer to GM/CSF border if the parahippocampal gyrus is still cut.  You can try to increase this value (start with 0.15).'
-  ''
-};
-
-close_parahipp         = cfg_menu;
-close_parahipp.tag     = 'close_parahipp';
-close_parahipp.name    = 'Initial morphological closing of parahippocampus';
-close_parahipp.labels  = {'No','Yes'};
-close_parahipp.values  = {0 1};
-if spmseg
-  close_parahipp.hidden = true; 
-  close_parahipp.val{1} =0;  
-else
-  close_parahipp.def   = @(val)cat_get_defaults('extopts.close_parahipp', val{:});
-end
-close_parahipp.help    = {
-  'Apply initial morphological closing inside mask for parahippocampal gyrus to minimize the risk of large cuts of parahippocampal gyrus after topology correction. However, this may also lead to poorer quality of topology correction for other data and should be only used if large cuts in the parahippocampal areas occur.'
-  ''
-};
 
 %------------------------------------------------------------------------
 % special subbranches for experts and developers to cleanup the GUI 
@@ -1284,7 +1128,7 @@ admin.help    = {'CAT parameter to control the behaviour of the preprocessing pi
 surface         = cfg_branch;
 surface.tag     = 'surface';
 surface.name    = 'Surface Options';
-surface.val     = {pbtres pbtver SRP vdist scale_cortex add_parahipp close_parahipp}; 
+surface.val     = {SRP pbtres vdist}; 
 surface.hidden  = expert<1;
 surface.help    = {'CAT parameter to control the surface processing.';''};
 
