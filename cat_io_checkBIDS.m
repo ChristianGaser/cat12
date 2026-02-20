@@ -1,4 +1,4 @@
-function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBIDS(sfiles,BIDSdir) 
+function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBIDS(sfiles,BIDSdir,resdircase) 
 %checkBIDS. Detect BIDS input and define of suited derivate directories. 
 %
 %  [sfiles, sfilesBIDS, BIDSsub, devdir, mdevdir] = checkBIDS(sfiles,BIDSdir) 
@@ -9,7 +9,14 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBID
 %  devdir   .. main data directory (parent of sub in case of BIDS)
 %  redivdir .. relative directory (e.g. sub*/ses*/anat*)
 %  logdir   .. common directory for log files
+%  mdevdir  .. main data directory 
+%  resdircase  .. 0 - BIDSdir only if BIDS, 
+%                 1 - BIDSdir allways, 
+%                 2 - BIDSdir as pure relative dir also in case of BIDS  
 %
+
+  
+  if ~exist('dirtype','var'), resdircase = 1; end
 
 % * what about longitudinal 
 % * what about derivates subdir?
@@ -57,13 +64,13 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBID
       devdir{sfi} = sdirs{1};
     end
 
-    if ~sub || isempty(BIDSdir)
+    if ~sub || isempty(BIDSdir) || resdircase>0
     % Handling of missing subject directory, i.e., this is not BIDS.
     % Here, we just use the BIDSdir directly. 
       isBIDS(sfi)  = 0; 
       BIDSsub{sfi} = spm_file( sdirs{end}, 'number', '', 'ext', '');
       
-      if isempty(dev) 
+      if isempty(dev) || resdircase>1
         devdir{sfi} = fileparts(sfiles{sfi});
       else
         % File already resides in a derivatives directory.
@@ -76,7 +83,7 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBID
         devdir{sfi} = basepath;
       end
 
-      if ~isempty(BIDSdir)
+      if ~isempty(BIDSdir) || resdircase==0
         di = numel(sdirs);
         devdir{sfi} = fullfile(devdir{sfi}, BIDSdir);
         for dii = 1:min( extradirs , di-1 )
@@ -87,8 +94,10 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBID
       devdir{sfi}  = spm_file(devdir{sfi}, 'cpath' );
       mdevdir{sfi} = devdir{sfi};
       rdevdir{sfi} = BIDSdir;
-      for dii = 1:min( extradirs , di-1 )
-        rdevdir{sfi} = fullfile(rdevdir{sfi}, sdirs{di - dii});
+      if ~isempty(BIDSdir) || resdircase==0
+        for dii = 1:min( extradirs , di-1 )
+          rdevdir{sfi} = fullfile(rdevdir{sfi}, sdirs{di - dii});
+        end
       end
       pdir{sfi}    = fullfile(sdirs{1:end-1});
       devi(sfi)    = numel(sdirs); 
