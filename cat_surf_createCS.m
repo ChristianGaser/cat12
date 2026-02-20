@@ -79,15 +79,20 @@ cstime = clock;
   def.pbtmethod = 'pbt2x';
   def.WMT       = 0; % WM/CSF width/depth/thickness
   def.sharpenCB = 0; % in development
-  def.thick_measure      = 1; % Tfs: Freesurfer method using mean(Tnear1,Tnear2)
-  def.thick_limit        = 5; % 5mm upper limit for thickness (same limit as used in Freesurfer)
-  def.SRP                = 3; % Estimate pial and white matter surface (in development and very slow!)
-  def.new_release        = 0; % developer flag to test new functionality for new release (currently not used)
-  def.pbtlas             = 0;
+  def.thick_measure      = cat_get_defaults('extopts.thick_measure');      % Tfs: Freesurfer method using mean(Tnear1,Tnear2)
+  def.thick_limit        = cat_get_defaults('extopts.thick_limit');        % 5mm upper limit for thickness (same limit as used in Freesurfer)
+  def.SRP                = 3;    % 1 - Estimate pial and white matter surface (in development and very slow!), 3 - SIC self-intersection correction
+  def.pbtlas             = 0;    % myelination correction
   def.interpV            = 0.5;
-  def.add_parahipp       = cat_get_defaults('extopts.add_parahipp');
-  def.scale_cortex       = cat_get_defaults('extopts.scale_cortex');
-  def.close_parahipp     = cat_get_defaults('extopts.close_parahipp');
+  def.add_parahipp       = 0.1;  % increase values in the parahippocampal area to prevent large cuts in the parahippocampal gyrus (initial surface in this area
+                                 % will be closer to GM/CSF border)
+                                 % if the parahippocampal gyrus is still cut you can try to increase this value (start with 0.15)
+  def.scale_cortex       = 0.7;  % scale intensity values for cortex to start with initial surface that is closer to GM/WM border to prevent that gyri/sulci are glued 
+                                 % if you still have glued gyri/sulci (mainly in the occ. lobe) you can try to decrease this value (start with 0.6)
+                                 % please note that decreasing this parameter also increases the risk of an interrupted parahippocampal gyrus
+  def.close_parahipp     = 1;    % optionally apply closing inside mask for parahippocampal gyrus to get rid of deep holes that lead to large
+                                 % cuts in gyri after topology correction. However, this may also lead to poorer quality of topology 
+                                 % correction for other data and should be only used if large cuts in the parahippocampal areas occur
   
   opt            = cat_io_updateStruct(def,opt);
   opt.vol        = any(~cellfun('isempty',strfind(opt.surf,'v')));
