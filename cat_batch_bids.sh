@@ -38,10 +38,10 @@ model=2     # 0 - detect large changes with brain/head growth (i.e. developmenta
 #no_surf=" --no-surf " # remove comment if you don't want to estimate surface
 export_dartel=" --export-dartel " # export affine registered segmentations for Dartel (longitudinal data)
 rp=" --rp " # additionally estimate affine registered segmentations (cross-sectional data)
-bids_folder_cross="derivatives/CAT26.0"     # define BIDS path for cross-sectional data (relative to dataset root)
-bids_folder_long="derivatives/CAT26.0_long" # define BIDS path for longitudinal data (relative to dataset root)
+bids_folder_cross="derivatives/CAT26.0.rc1"     # define BIDS path for cross-sectional data (relative to dataset root)
+bids_folder_long="derivatives/CAT26.0.rc1_long" # define BIDS path for longitudinal data (relative to dataset root)
 fg=" --fg " # keep process in foreground which might be neccessary for batch/queue systems
-log_folder="${dirname}/derivatives/logs_CAT26.0/${subjid}" # the directory for the log files. 
+log_folder="${dirname}/derivatives/logs_CAT26.0.rc1/${subjid}" # the directory for the log files. 
                                                              # Must contain the subject id 
 
 for i in ${@}/; do

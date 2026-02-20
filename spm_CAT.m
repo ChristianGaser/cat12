@@ -300,7 +300,7 @@ if expert<2
 end
 
 spm('FnBanner',mfilename,cat_version);
-[Finter,Fgraph] = spm('FnUIsetup','CAT26.0');
+[Finter,Fgraph] = spm('FnUIsetup','CAT26.0.rc1');
 url = fullfile(fileparts(mfilename('fullpath')),'doc','cat.html');
 
 % open interactive help for newer version because display of html pages does not work anymore
@@ -337,7 +337,7 @@ logo = sprintf(['\n' ...
     '   _______  ___  _______    \n' ...
     '  |  ____/ / _ \\ \\_   _/   %s\n' ...
     '  | |___  / /_\\ \\  | |     Computational Anatomy Toolbox\n' ...
-    '  |____/ /_/   \\_\\ |_|     CAT26.0 - https://neuro-jena.github.io\n\n'], expertguitext);
+    '  |____/ /_/   \\_\\ |_|     CAT26.0.rc1 - https://neuro-jena.github.io\n\n'], expertguitext);
 cat_io_cprintf([0.0 0.0 0.5],'%s',logo);
 cat_io_cprintf([0.0 0.0 0.5],'  CAT default file:\n\t%s\n\n',deffile); 
 
