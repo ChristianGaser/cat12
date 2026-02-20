@@ -2,6 +2,8 @@
 #
 # $Id$
 
+.PHONY: clean install zip docs update cp_binaries archive check_pipeline release standalone
+
 OLDVERSION="CAT12.10"
 NEWVERSION="CAT26.0"
 REVISION=`git rev-list --count HEAD`
@@ -16,11 +18,6 @@ TARGET2=/Volumes/UltraMax/spm12/toolbox/CAT
 TARGET4=/Users/gaser/spm/spm-octave/toolbox/CAT
 
 PRECOMPILED=/Users/gaser/matlab/Matlab_standalone
-
-STARGET_HOST=141.35.69.218
-STARGET_HTDOCS=${STARGET_HOST}:/volume1/web/
-STARGET_FOLDER=/volume1/web/cat12
-STARGET=${STARGET_HOST}:${STARGET_FOLDER}
 
 STARGET3_HOST=paris.biomag.uni-jena.de
 STARGET3_FOLDER=/home/gaser/spm12/toolbox/CAT
@@ -80,7 +77,7 @@ install4: copy_longmode
 # print available commands
 help:
 	-@echo Available commands:
-	-@echo clean install zip scp scp_precompile scp_standalone docs update cp_binaries archive check_pipeline release precompile standalone
+	-@echo clean install zip docs update cp_binaries archive check_pipeline release standalone
 
 #make html documentation
 docs:
@@ -113,38 +110,6 @@ zip: update clean
 	-@bash update_revision.sh
 	-@zip ${ZIPFOLDER}/${ZIPFILE} -rm CAT
 
-# scp release
-scp: docs zip
-	-@git tag -f ${VERSION} -m "Release version ${VERSION}"
-	-@echo scp to http://${STARGET_HOST}/CAT/${ZIPFILE}
-	-@scp -O -P ${PORT} CHANGES.txt ${ZIPFOLDER}/${ZIPFILE} ${STARGET}
-	-@bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${ZIPFILE} ${STARGET_FOLDER}/CAT_latest.zip"
-	-@open http://${STARGET_HOST}/CAT/
-
-# scp deployed versions
-scp_precompile:
-	-@echo scp_precompile
-	-@find ${PRECOMPILED} -type f -name .DS_Store -exec rm {} \;
-	-@chmod -R a+r,go-w ${PRECOMPILED}
-	-@find ${PRECOMPILED} -type f \( -name "*.sh" -o -name "spm25" \) -exec chmod a+x {} \;
-	# removed Mac_arm64 that is not working yet
-	-@for i in Mac Linux Win MAC_arm64; do \
-	   mkdir -p ${NEWVERSION}_R2023b_MCR_$${i} ;\
-	   ln -s ${PRECOMPILED}/MCR_$${i}/*spm25* ${PRECOMPILED}/MCR_$${i}/readme.txt ${PRECOMPILED}/MCR_$${i}/MCR_v232.webloc ${NEWVERSION}_R2023b_MCR_$${i}/ ;\
-	   cp -r standalone ${NEWVERSION}_R2023b_MCR_$${i}/ ;\
-	   cp -r standalone ${PRECOMPILED}/MCR_$${i}/ ;\
-	   zip ${ZIPFOLDER}/CAT_R2023b_MCR_$${i}.zip -r ${NEWVERSION}_R2023b_MCR_$${i} ; \
-	   scp -O -P ${PORT} ${ZIPFOLDER}/CAT_R2023b_MCR_$${i}.zip ${STARGET}; \
-	   bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/CAT_R2023b_MCR_$${i}.zip ${STARGET_FOLDER}/CAT_latest_R2023b_MCR_$${i}.zip"; \
-	done
-	-@rm -r ${NEWVERSION}_R2023b_MCR*	
-	-@echo Please keep in mind to change ../enigma-cat12/index.html
-	-@see ../enigma-cat12/index.html
-	
-
-# scp deployed versions
-scp_standalone: scp_precompile
-
 # copy binaries after cross-compiling
 cp_binaries: 
 	-@echo copy binaries
@@ -159,56 +124,46 @@ cp_binaries:
 # print check list for releasing
 release: checklist
 checklist:
-	-@echo    
-	-@echo Checklist for testing CAT12 in order to release
-	-@echo -----------------------------------------------
-	-@echo 1. Check Pipeline
-	-@echo    make check_pipeline
-	-@echo    check_pipeline.sh -p pid
-	-@echo    check_all_matrix.sh
-	-@echo    check_pipeline_ROIs.m	-> check render views check_r*matrix.png and histograms
-	-@echo    check_pipeline_homogeneity.m	-> check sample homogeneity
-	-@echo    
-	-@echo 2. Check Batches and Dependencies
-	-@echo    cd check_pipeline
-	-@echo    batch_volume_pipeline.m
-	-@echo    batch_surface_pipeline.m
-	-@echo    
-	-@echo 3. Check Expert Mode
-	-@echo    "cat12('expert')"
-	-@echo    CAT12 GUI Segment
-	-@echo    
-	-@echo 4. Check Simple Preprocessing
-	-@echo    SPM->Tools->CAT12->CAT12 Simple Preprocessing
-	-@echo    
-	-@echo 5. Create and Check Standalone Versions
-	-@echo    https://github.com/ChristianGaser/cat12/actions/workflows/install_test_standalone.yml 
-	-@echo    
-	-@echo 6. Check Skull-Stripping if Pipeline Changed
-	-@echo    cat12_all.m in /Volumes/UltraMax/validate_skullstripping_withT12
-	-@echo    calc_kappa_c0_SPM12_T12.m
-	-@echo    
-	-@echo 7. Make fork from new version!
-	-@echo    
-	-@echo 8. Check thickness phantom 
-
-# print help for precompiling
-precompile:
-	-@echo    
-	-@echo Checklist for precompiling CAT12
-	-@echo -----------------------------------------------
-	-@echo    spm12_R2023b
-	-@echo    spm fmri
-	-@echo    cd spm12/config
-	-@echo    spm_make_standalone
-	-@echo    "Ubuntu 18.04 (run under UTM) : mv /Users/gaser/spm/standalone/spm25.ctf ${PRECOMPILED}/MCR_Linux/"
-	-@echo    "Windows 11 ARM64(run under UTM): mv /Users/gaser/spm/standalone/spm25.[ce][tx][fe] ${PRECOMPILED}/MCR_Win/"
-	-@echo    "MacOS INTEL (use /Applications/MATLAB_R2023b_intel.app/bin/matlab): rm -rf ${PRECOMPILED}/MCR_Mac/spm25.app; mv /Users/gaser/spm/standalone/spm25.app ${PRECOMPILED}/MCR_Mac/"
-	-@echo    "MacOS ARM64: rm -rf ${PRECOMPILED}/MCR_Mac_arm64/spm25.app; mv /Users/gaser/spm/standalone/spm25.app ${PRECOMPILED}/MCR_Mac_arm64/"
-	-@echo    
+	@printf '%s\n' \
+	'' \
+	'Checklist for testing CAT12 in order to release' \
+	'-----------------------------------------------' \
+	'1. Check Pipeline' \
+	'   make check_pipeline' \
+	'   check_pipeline.sh -p pid' \
+	'   check_all_matrix.sh' \
+	'   check_pipeline_ROIs.m -> check render views check_r*matrix.png and histograms' \
+	'   check_pipeline_homogeneity.m -> check sample homogeneity' \
+	'' \
+	'2. Check Batches and Dependencies' \
+	'   cd check_pipeline' \
+	'   batch_volume_pipeline.m' \
+	'   batch_surface_pipeline.m' \
+	'' \
+	'3. Check Expert Mode' \
+	'   cat12('\''expert'\'')' \
+	'   CAT12 GUI Segment' \
+	'' \
+	'4. Check Simple Preprocessing' \
+	'   SPM->Tools->CAT12->CAT12 Simple Preprocessing' \
+	'' \
+	'5. Create and Check Standalone Versions' \
+	'   https://github.com/ChristianGaser/cat12/actions/workflows/install_test_standalone.yml' \
+	'' \
+	'6. Check Skull-Stripping if Pipeline Changed' \
+	'   cat12_all.m in /Volumes/UltraMax/validate_skullstripping_withT12' \
+	'   calc_kappa_c0_SPM12_T12.m' \
+	'' \
+	'7. Make fork from new version!' \
+	'' \
+	'8. Check thickness phantom'
 
 # print help for standalone
-standalone: precompile
+standalone:
+	@printf '%s\n' \
+	'' \
+	'Use CAT action to compile and test standalone versions' \
+	'https://github.com/ChristianGaser/cat12/actions/workflows/install_test_standalone.yml'
 
 # rescue from archives
 archive:
