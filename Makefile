@@ -80,7 +80,7 @@ install4: copy_longmode
 # print available commands
 help:
 	-@echo Available commands:
-	-@echo clean install zip scp scp_precompile scp_standalone docs update cp_binaries archive check_pipeline checklist precompile standalone
+	-@echo clean install zip scp scp_precompile scp_standalone docs update cp_binaries archive check_pipeline release precompile standalone
 
 #make html documentation
 docs:
@@ -157,50 +157,40 @@ cp_binaries:
 	-@for i in CAT.maca64/CAT*; do cp ~/Dropbox/GitHub/CAT-Surface/build-native-arm64/Progs/`basename $${i}` CAT.maca64/ ; done
 
 # print check list for releasing
+release: checklist
 checklist:
 	-@echo    
 	-@echo Checklist for testing CAT12 in order to release
 	-@echo -----------------------------------------------
-	-@echo 1. Check Test Data
-	-@echo    "cd  ~/matlab/vbm8/test/maci64 && calc_all.sh"
-	-@echo    mv surf surf_rXXXX
-	-@echo    render_surf.sh surf_rXXXX -range 0 6
-	-@echo    
-	-@echo 2. Check Pipeline
+	-@echo 1. Check Pipeline
 	-@echo    make check_pipeline
 	-@echo    check_pipeline.sh -p pid
 	-@echo    check_all_matrix.sh
 	-@echo    check_pipeline_ROIs.m	-> check render views check_r*matrix.png and histograms
 	-@echo    check_pipeline_homogeneity.m	-> check sample homogeneity
 	-@echo    
-	-@echo 3. Check Batches and Dependencies
+	-@echo 2. Check Batches and Dependencies
 	-@echo    cd check_pipeline
 	-@echo    batch_volume_pipeline.m
 	-@echo    batch_surface_pipeline.m
 	-@echo    
-	-@echo 4. Check Expert Mode
+	-@echo 3. Check Expert Mode
 	-@echo    "cat12('expert')"
 	-@echo    CAT12 GUI Segment
 	-@echo    
-	-@echo 5. Check Simple Preprocessing
+	-@echo 4. Check Simple Preprocessing
 	-@echo    SPM->Tools->CAT12->CAT12 Simple Preprocessing
 	-@echo    
-	-@echo 6. Check Precompiled Versions
-	-@echo    ${PRECOMPILED}/MCR_Mac/standalone/cat_standalone.sh 
+	-@echo 5. Create and Check Standalone Versions
+	-@echo    https://github.com/ChristianGaser/cat12/actions/workflows/install_test_standalone.yml 
 	-@echo    
-	-@echo 7. Check Skull-Stripping
+	-@echo 6. Check Skull-Stripping if Pipeline Changed
 	-@echo    cat12_all.m in /Volumes/UltraMax/validate_skullstripping_withT12
 	-@echo    calc_kappa_c0_SPM12_T12.m
 	-@echo    
-	-@echo 8. Check Windows 11 + Ubuntu 18.04
-	-@echo    UTM.app
-	-@echo    CAT12 GUI Segment
+	-@echo 7. Make fork from new version!
 	-@echo    
-	-@echo 9. Check old SPM12 version on UltraMax
-	-@echo    
-	-@echo 10.Make fork from new version!
-	-@echo    
-	-@echo 11.Check thickness phantom 
+	-@echo 8. Check thickness phantom 
 
 # print help for precompiling
 precompile:
