@@ -4,13 +4,12 @@ This toolbox is an extension to [SPM](http://www.fil.ion.ucl.ac.uk/spm/software/
 It is developed by Christian Gaser and Robert Dahnke (Jena University Hospital, Departments of Psychiatry and Neurology) and free but copyright software, distributed under the terms of the [GNU General Public License](http://www.gnu.org/licenses/gpl-2.0.html) as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
 
 ## Download
-[CAT toolbox](http://dbm.neuro.uni-jena.de/cat12/cat12_latest.zip)
+[CAT toolbox](https://github.com/ChristianGaser/cat12/releases/latest)
+Older version can be obtained [here](http://dbm.neuro.uni-jena.de/cat12/).
 
 [CAT manual](https://neuro-jena.github.io/cat12-html)
 [Getting Started](https://neuro-jena.github.io/cat12-help/#get_started)
 [Quick Start Guide](https://neuro-jena.github.io/cat12-html/cat_starting.html)
-
-Older version can be obtained [here](http://dbm.neuro.uni-jena.de/cat12/).
 
 If you intend to install CAT from Github:
 - Download ZIP CAT:
@@ -37,7 +36,7 @@ The MATLAB Compiler Runtime (MCR) enables you to run applications compiled withi
 |---|---:|
 [Linux](https://github.com/ChristianGaser/cat12/releases/latest/download/CAT_R2023b_MCR_Linux.zip) |[Linux](https://ssd.mathworks.com/supportfiles/downloads/R2023b/Release/10/deployment_files/installer/complete/glnxa64/MATLAB_Runtime_R2023b_Update_10_glnxa64.zip)|
 [Mac Intel](https://github.com/ChristianGaser/cat12/releases/latest/download/CAT_R2023b_MCR_Mac.zip) |[Mac](https://ssd.mathworks.com/supportfiles/downloads/R2023b/Release/10/deployment_files/installer/complete/maci64/MATLAB_Runtime_R2023b_Update_10_maci64.dmg.zip)|
-[Mac ARM64](https://github.com/ChristianGaser/cat12/releases/latest/download/CAT_R2023b_MCR_Mac_arm64.zip) |[Mac ARM64](https://ssd.mathworks.com/supportfiles/downloads/R2023b/Release/10/deployment_files/installer/complete/maca64/MATLAB_Runtime_R2023b_Update_10_maca64.dmg)|
+[Mac ARM64 (Silicon)](https://github.com/ChristianGaser/cat12/releases/latest/download/CAT_R2023b_MCR_Mac_arm64.zip) |[Mac ARM64](https://ssd.mathworks.com/supportfiles/downloads/R2023b/Release/10/deployment_files/installer/complete/maca64/MATLAB_Runtime_R2023b_Update_10_maca64.dmg)|
 [Windows](https://github.com/ChristianGaser/cat12/releases/latest/download/CAT_R2023b_MCR_Win.zip) |[Windows](https://ssd.mathworks.com/supportfiles/downloads/R2023b/Release/10/deployment_files/installer/complete/win64/MATLAB_Runtime_R2023b_Update_10_win64.zip)|
 
 <!--Please contact [me](mailto:christian.gaser@uni-jena.de) if you need other versions.-->
