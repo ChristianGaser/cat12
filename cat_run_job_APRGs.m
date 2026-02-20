@@ -334,7 +334,11 @@ end
     aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
     aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
     %
-    [Affine2,affscale1] = spm_affreg(VG1, VF1, aflags, Affine, 1); 
+    try
+      [Affine2,affscale1] = spm_affreg(VG1, VF1, aflags, Affine, 1);
+    catch
+      [Affine2,affscale1] = cat_spm_affreg(VG1, VF1, aflags, Affine, 1);
+    end
   end
   %%
  % imat = spm_imatrix(Affine2); imat(7:9)=imat(7:9)*1.02; Affine2 = spm_matrix(imat); 

@@ -849,7 +849,11 @@ function cat_run_job1639(job,tpm,subj)
             try 
               [Affine0, affscale]  = spm_affreg(VG1, VF1, aflags, Affine_com); Affine = Affine0;
             catch
-              affscale = 0; 
+              try
+                [Affine0, affscale]  = cat_spm_affreg(VG1, VF1, aflags, Affine_com); Affine = Affine0;
+              catch
+                affscale = 0;
+              end
             end
             if affscale>3 || affscale<0.5
               cat_io_cmd('Coarse affine registration failed. Try fine affine registration.','','',1,stime);
@@ -892,7 +896,11 @@ function cat_run_job1639(job,tpm,subj)
           end
           warning off
           if ~exist('affscale','var'), affscale = 1.0; end
-          [Affine1,affscale1] = spm_affreg(VG1, VF1, aflags, Affine, affscale);
+          try
+            [Affine1,affscale1] = spm_affreg(VG1, VF1, aflags, Affine, affscale);
+          catch
+            [Affine1,affscale1] = cat_spm_affreg(VG1, VF1, aflags, Affine, affscale);
+          end
           warning on
           if ~any(any(isnan(Affine1(1:3,:)))) && affscale1>0.5 && affscale1<3, Affine = Affine1; end
         else
