@@ -45,6 +45,7 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBID
 
     sdirs_orig = sdirs;
     % check if the input is alread a derivative
+    extradirs = max([0,strfind(BIDSdir,['..' filesep])]);
     dev = find(strcmp('derivatives',sdirs)); 
     if ~isempty(dev) && ~isempty(BIDSdir), sdirs(dev(1):dev(end)) = []; end
 
@@ -78,7 +79,6 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBID
       if ~isempty(BIDSdir)
         di = numel(sdirs);
         devdir{sfi} = fullfile(devdir{sfi}, BIDSdir);
-        extradirs = max([0,strfind(BIDSdir,['..' filesep])]);
         for dii = 1:min( extradirs , di-1 )
           devdir{sfi} = fullfile(devdir{sfi}, sdirs{di - dii});
         end
@@ -102,7 +102,6 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBID
       
       % ../ will add another level and take this directory into the filename 
       % for instance a group directory ( mainBIDSdir/project/sub*/.. )
-      extradirs    = max([0,strfind(BIDSdir,['..' filesep])]);
       for di = 2:numel(sdirs)-1
         if sub && di == devi(sfi)
           % add BIDSdir
