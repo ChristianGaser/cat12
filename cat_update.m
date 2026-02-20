@@ -160,7 +160,7 @@ if update
       rehash;
       rehash toolboxcache;
       if exist('toolbox_path_cache','file'), toolbox_path_cache; end
-      spm fmri; clear cat_version; spm_cat12
+      spm fmri; clear cat_version; spm_CAT
       warning on
     catch
       le = lasterror;
