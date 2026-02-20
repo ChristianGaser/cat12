@@ -4,15 +4,15 @@ on:
   workflow_dispatch:
     inputs:
       source:
-        description: 'Source of standalone binaries'
+        description: "Source of standalone binaries"
         required: false
-        default: 'build'
+        default: "build"
         type: choice
         options:
           - build
           - release
       release_tag:
-        description: 'Release tag (only for release source)'
+        description: "Release tag (only for release source)"
         required: false
         type: string
 
@@ -234,15 +234,15 @@ jobs:
           echo "Downloading MATLAB Runtime R2023b for Linux..."
           wget -q https://ssd.mathworks.com/supportfiles/downloads/R2023b/Release/10/deployment_files/installer/complete/glnxa64/MATLAB_Runtime_R2023b_Update_10_glnxa64.zip -O mcr.zip
           unzip -q mcr.zip -d mcr_installer
-          
+
           echo "Installing MATLAB Runtime..."
           sudo ./mcr_installer/install -agreeToLicense yes -destinationFolder /usr/local/MATLAB/MATLAB_Runtime 2>&1
-          
+
           echo "MCRROOT=/usr/local/MATLAB/MATLAB_Runtime/R2023b" >> $GITHUB_ENV
           echo "LD_LIBRARY_PATH=/usr/local/MATLAB/MATLAB_Runtime/R2023b/runtime/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/R2023b/bin/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/R2023b/sys/os/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/R2023b/sys/opengl/lib/glnxa64:/usr/local/MATLAB/MATLAB_Runtime/R2023b/extern/bin/glnxa64" >> $GITHUB_ENV
           echo "MCR_INHIBIT_CTF_LOCK=1" >> $GITHUB_ENV
           echo "SPM_HTML_BROWSER=0" >> $GITHUB_ENV
-          
+
           rm -rf mcr.zip mcr_installer
           echo "MATLAB Runtime installed at /usr/local/MATLAB/MATLAB_Runtime/R2023b"
 
@@ -261,24 +261,24 @@ jobs:
             MCR_DMG=$(ls *.dmg | head -n 1)
             mv "$MCR_DMG" mcr.dmg
           fi
-          
+
           echo "Mounting DMG..."
           hdiutil attach mcr.dmg -mountpoint /Volumes/MCR
-          
+
           echo "Installing MATLAB Runtime..."
           INSTALLER=$(find /Volumes/MCR -name "*.app" -maxdepth 1 | head -n 1)
           sudo "$INSTALLER/Contents/MacOS/setup" -agreeToLicense yes -destinationFolder "$HOME/MATLAB_Runtime" 2>&1 | tee install.log
           sleep 2
-          
+
           sudo chown -R $USER "$HOME/MATLAB_Runtime"
           sudo chown -R $USER "$HOME/.matlab" 2>/dev/null || true
-          
+
           hdiutil detach /Volumes/MCR 2>/dev/null || true
-          
+
           echo "MCRROOT=$HOME/MATLAB_Runtime/R2023b" >> $GITHUB_ENV
           echo "MCR_INHIBIT_CTF_LOCK=1" >> $GITHUB_ENV
           echo "SPM_HTML_BROWSER=0" >> $GITHUB_ENV
-          
+
           rm -f mcr.dmg mcr.dmg.zip
           echo "MATLAB Runtime installed at $HOME/MATLAB_Runtime/R2023b"
 
@@ -289,17 +289,17 @@ jobs:
           echo "Downloading MATLAB Runtime R2023b for Windows..."
           curl -sL -o mcr.zip https://ssd.mathworks.com/supportfiles/downloads/R2023b/Release/10/deployment_files/installer/complete/win64/MATLAB_Runtime_R2023b_Update_10_win64.zip
           unzip -q mcr.zip -d mcr_installer
-          
+
           echo "Installing MATLAB Runtime..."
           INSTALLER=$(find mcr_installer -name "setup.exe" | head -n 1)
           "$INSTALLER" -agreeToLicense yes -destinationFolder "C:\\MATLAB_Runtime"
           echo "Installation command completed"
-          
+
           echo "C:\\MATLAB_Runtime\\R2023b\\runtime\\win64" >> $GITHUB_PATH
           echo "MCRROOT=C:\\MATLAB_Runtime\\R2023b" >> $GITHUB_ENV
           echo "MCR_INHIBIT_CTF_LOCK=1" >> $GITHUB_ENV
           echo "SPM_HTML_BROWSER=0" >> $GITHUB_ENV
-          
+
           rm -rf mcr.zip mcr_installer
           echo "MATLAB Runtime installed at C:\\MATLAB_Runtime\\R2023b"
 
@@ -363,15 +363,15 @@ jobs:
         run: |
           SPMROOT=$(pwd)/cat_standalone
           BATCH="${SPMROOT}/spm25_mcr/spm25/toolbox/CAT/standalone/cat_standalone_segment.m"
-          
+
           # If batch not at expected location, search for it
           if [ ! -f "$BATCH" ]; then
             BATCH=$(find cat_standalone -name "cat_standalone_segment.m" -type f | head -n 1)
           fi
-          
+
           echo "Using batch file: $BATCH"
           echo "Running CAT segmentation on single_subj_T1.nii..."
-          
+
           "${SPMROOT}/run_spm25.sh" "$MCRROOT" batch "$BATCH" "$(pwd)/single_subj_T1.nii"
 
       - name: Test CAT segmentation (macOS)
@@ -381,10 +381,10 @@ jobs:
         run: |
           SPMROOT=$(pwd)/cat_standalone
           BATCH=$(find cat_standalone -name "cat_standalone_segment.m" -type f | head -n 1)
-          
+
           echo "Using batch file: $BATCH"
           echo "Running CAT segmentation on single_subj_T1.nii..."
-          
+
           "${SPMROOT}/run_spm25.sh" "$MCRROOT" batch "$BATCH" "$(pwd)/single_subj_T1.nii"
 
       - name: Test CAT segmentation (Windows)
@@ -394,10 +394,10 @@ jobs:
         run: |
           SPMROOT=$(pwd)/cat_standalone
           BATCH=$(find cat_standalone -name "cat_standalone_segment.m" -type f | head -n 1)
-          
+
           echo "Using batch file: $BATCH"
           echo "Running CAT segmentation on single_subj_T1.nii..."
-          
+
           "${SPMROOT}/spm25.exe" batch "$BATCH" "$(pwd)/single_subj_T1.nii"
 
       # ── Verify outputs ──
@@ -406,7 +406,7 @@ jobs:
         shell: bash
         run: |
           echo "Checking for segmentation output files..."
-          
+
           # Look for typical CAT output files
           found=0
           for pattern in "mri/mwp1*" "mri/p0*" "report/cat_*" "surf/lh.thickness*"; do
@@ -416,7 +416,7 @@ jobs:
               found=1
             fi
           done
-          
+
           if [ "$found" -eq 0 ]; then
             echo "WARNING: No standard CAT output files found in current directory"
             echo "Checking all nii files created:"
@@ -424,5 +424,5 @@ jobs:
             find . -name "*.gii" 2>/dev/null || echo "No .gii files"
             find . -name "*.xml" -path "*/report/*" 2>/dev/null || echo "No report XMLs"
           fi
-          
+
           echo "Test completed successfully"
