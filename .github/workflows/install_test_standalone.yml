@@ -1,4 +1,4 @@
-name: Test CAT Standalone
+name: Compile and Test CAT Standalone
 
 on:
   workflow_dispatch:
