@@ -325,7 +325,7 @@ function varargout = cat_parallelize(job,func,datafield)
     cat_io_cprintf([0 0 0],').\n_______________________________________________________________\n');
 
     % starting many large jobs can cause servere MATLAB errors
-    pause(1 + rand(1) + job.nproc + numel(job.(datafield))/100);
+    pause(0.5 + rand(1)/10)
     jobs(i).(datafield) = job.(datafield); %#ok<AGROW>
    
     job = jobo; 
