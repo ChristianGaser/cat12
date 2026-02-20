@@ -84,13 +84,11 @@ else
 end
 
 % for mac we need to enable execution because of Apple Gatekeeper
-%cmdspaces = strfind(cmd,' ');
-%[STT,RST] = system(fullfile(CATDir,cmd(1:cmdspaces(1)))); % just try the basic call
 if ismac && (ST == 137 || ST == 127)
-  cmd = ['xattr -r -d com.apple.quarantine ' CATDir];
-  system(cmd); fprintf([cmd '\n']);
+  cmd = ['xattr -cr -d com.apple.quarantine ' CATDir];
+  [fixStatus1, ~] = system(cmd); fprintf([cmd '\n']);
   cmd = ['chmod a+x ' CATDir '/CAT.mac*/CAT*'];
-  system(cmd); fprintf([cmd '\n']);
+  [fixStatus2, ~] = system(cmd); fprintf([cmd '\n']);
   return
 end
 
@@ -100,18 +98,24 @@ if ST > 1 && ST~=139 % 139: data setup error
   else
     [ST, RS] = system('uname -a');
   end
-  str = sprintf('\nWARNING: Surface processing will not work because\n(1) File permissions are not correct (for unix use chmod a+x) or\n(1) CAT binaries are not compatible to your system or\n(3) Antivirus software in Windwos or Gatekeeper in MAC OS is blocking to execute binaries\nSystem: %s\n',RS);
+  str = sprintf('\nWARNING: Surface processing will not work because\n(1) File permissions are not correct (for unix use sudo chmod a+x) or\n(1) CAT binaries are not compatible to your system or\n(3) Antivirus software in Windwos or Gatekeeper in MAC OS is blocking to execute binaries\nSystem: %s\n',RS);
   cat_io_cmd(str,'warning');
   helpdlg(str,'Error Using Surface Tools');
   
   % check Gatekeeper on MAC OS
-  if ismac
+  if ismac && ~isdeployed
     [ST, RS] = system('spctl --status');
     if ~isempty(strfind(RS,'enabled'))
-      str = 'Please disable Gatekeeper on MAC OS!';
-      fprintf('\n\n%s\n',str);
-      helpdlg(str,'Gatekeeper error');
-      web('https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)#Troubleshooting');
+      fprintf(2, '\n========================================================================\n');
+      fprintf(2, 'CAT: Critical Permission Error\n');
+      fprintf(2, 'macOS is blocking CAT binaries because they are quarantined.\n');
+      fprintf(2, 'Self-repair failed (likely due to permissions).\n');
+      fprintf(2, 'Please run the following command in your Terminal to fix this:\n\n');
+      fprintf(2, '     sudo xattr -cr "%s"\n\n', CATDir);
+      fprintf(2, '     sudo chmod a+x "%s"/CAT.mac*/CAT*\n\n', CATDir);
+      fprintf(2, 'Then restart MATLAB.\n');
+      fprintf(2, '========================================================================\n\n');
+
     end
   end
   fprintf('\n\nFor future support of your system please send this message to christian.gaser@uni-jena.de\n\n');

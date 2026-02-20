@@ -69,7 +69,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
 
   % set defaults
   % set debugging variable
-  dbs   = dbstatus; debug = 1; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
+  dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
   vx_vol                  = sqrt(sum(V.mat(1:3,1:3).^2));               % further interpolation based on internal resolution 
   def.verb                = cat_get_defaults('extopts.expertgui');      % 0-none, 1-minimal, 2-default, 3-details, 4-debug
   def.surf                = {'lh','rh'};                                % surface reconstruction setting with {'lh','rh','cb'} 
@@ -521,6 +521,8 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     
     if exist(Vppm.fname ,'file'), delete(Vppm.fname); end
     if debug && exist(Vpp.fname ,'file') && ~opt.outputpp.native, delete(Vpp.fname); end
+    if ~debug && exist(Vgmt.fname ,'file'), delete(Vgmt.fname); end
+    if ~debug && exist(Vmfs.fname ,'file'), delete(Vmfs.fname); end
   
     % processing time per side for manual tests
     if si == numel(opt.surf) && si == 1

@@ -32,6 +32,41 @@ if isdeployed
   return;
 end
 
+d0 = spm('Dir');
+d  = fileparts(fileparts(which('cat12')));
+toolbox_dir = fullfile(d0,'toolbox');
+cat_dir_new = fullfile(toolbox_dir,'CAT');
+cat_dir_old = fullfile(toolbox_dir,'cat12')
+
+% Chcek for old cat12 installations
+if exist(cat_dir_new,'dir') && exist(cat_dir_old,'dir')
+  % remove duplicate legacy installation if CAT is already present
+  remove = spm_input('Remove old cat12 folder?','+1','yes|no',[1 0],1);
+  if remove
+    try
+      warning off
+      rmdir(cat_dir_old, 's');
+      spm fmri; clear cat_version; spm_CAT
+      warning on
+      fprintf('         Removed duplicate legacy folder: %s\n', cat_dir_old);
+    catch
+      fprintf('         Warning: could not remove duplicate folder %s\n', cat_dir_old);
+    end
+    rmpath(cat_dir_old);
+  end
+elseif ~exist(cat_dir_new,'dir') && exist(cat_dir_old,'dir')
+  % migration from old installation layout to current CAT layout
+  try
+    warning off
+    movefile(cat_dir_old, cat_dir_new, 'f');
+    spm fmri; clear cat_version; spm_CAT
+    warning on
+    fprintf('         Renamed %s to %s\n', cat_dir_old, cat_dir_new);
+  catch
+    fprintf('         Warning: could not rename %s to %s\n', cat_dir_old, cat_dir_new);
+  end
+end
+
 % Github release url
 url_github = 'https://api.github.com/repos/ChristianGaser/cat12/releases';
 
@@ -85,8 +120,6 @@ url = sprintf('https://github.com/ChristianGaser/cat12/releases/download/%s/cat%
 
 if update
   overwrite = spm_input(sprintf('Update to %s',rnew),1,'m','yes|no|download only',[1 -1 0],1);
-  d0 = spm('Dir');
-  d  = fileparts(fileparts(which('cat12')));
   
   if overwrite
     try
@@ -154,6 +187,7 @@ if update
       if ~nargout, fprintf(m); else varargout = {sts, [msg m]}; end
             
       s = unzip(url, d);
+
       m = sprintf('         Success: %d files have been updated.\n',numel(s));
       if ~nargout, fprintf(m); else varargout = {sts, [msg m]}; end
       addpath(d0);

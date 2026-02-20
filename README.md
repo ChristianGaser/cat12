@@ -5,20 +5,20 @@ It is developed by Christian Gaser and Robert Dahnke (Jena University Hospital, 
 
 ## Download
 [CAT toolbox](https://github.com/ChristianGaser/cat12/releases/latest)
-Older version can be obtained [here](http://dbm.neuro.uni-jena.de/cat12/).
+Older version can be obtained or [here](https://github.com/ChristianGaser/cat12/releases/latest) or versions <= CAT12.9 [here](http://dbm.neuro.uni-jena.de/cat12/).
 
 [CAT manual](https://neuro-jena.github.io/cat12-html)
 [Getting Started](https://neuro-jena.github.io/cat12-help/#get_started)
 [Quick Start Guide](https://neuro-jena.github.io/cat12-html/cat_starting.html)
 
-If you intend to install CAT from Github:
+If you intend to install the newest developer version from Github:
 - Download ZIP CAT:
 https://github.com/ChristianGaser/cat12/archive/refs/heads/main.zip
 - Remove any old CAT installation from spm/toolbox
 - Unzip cat12-main.zip to spm/toolbox/ and rename it to spm12/toolbox/CAT
 
 ## Requirements
-CAT is designed to work with SPM and Matlab versions 7.4 (R2007a) or newer. No additional toolboxes are required.
+CAT is designed to work with SPM12 or newer and Matlab versions 7.4 (R2007a) or newer. No additional toolboxes are required.
 
 ## Installation
 - Remove the old cat12 or CAT folder in spm/toolbox if existing

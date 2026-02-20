@@ -167,6 +167,37 @@
             <p><a href="#top" aria-label="Back to top">Back to top</a></p>
             
             <!-- ###################################### -->
+            <h3>Changes in version CAT26.0 (3010)</h3>
+
+            <details>
+              <summary><u>Changes in preprocessing pipeline (which affect your results compared to CAT12.9)</u></summary>
+              <ul>
+
+                <li>
+                The cortical surface extraction pipeline has been substantially revised, resulting in faster execution and more robust cortical thickness estimation. The initial surface reconstruction now employs an improved Marching Cubes implementation that directly produces topology-correct surfaces, thereby avoiding downstream topology correction issues.
+                </li>
+                
+                <li>
+                The VBM pipeline has been comprehensively updated to improve stability and robustness, particularly for challenging acquisitions such as MP2RAGE. These improvements also enhance the accuracy and reliability of the initial affine registration.
+                </li>
+                
+                <li>
+                The quality assessment framework has been updated according to the methods described in 
+                <a href="https://doi.org/10.1093/gigascience/giaf146">Dahnke et&nbsp;al., 2024</a>. The former IQR metric has been replaced by SIQR.
+                </li>
+                
+                <li>
+                A new versioning scheme has been introduced, aligned with the year-based system adopted in recent SPM releases. In contrast to SPM, only the release year is used, followed by semantic versioning. The new series therefore starts with CAT26.0.
+                </li>
+                
+                <li>
+                Consistent with the updated naming convention, the toolbox directory within <code>spm/toolbox</code> has been renamed from <code>cat12</code> to <code>CAT</code>.
+                </li>
+
+              </ul>
+            </details>            
+
+            <!-- ###################################### -->
             <h3>Changes in version CAT12.9 (2550)</h3>
 
             <details>
