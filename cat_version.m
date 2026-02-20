@@ -18,6 +18,7 @@ function [CATrel, CATver, CATdate]  = cat_version(varargin)
 % $Id$
 
 persistent CAT_VER;
+if nargin==1 && strcmp(varargin{1},'reset'), CAT_VER = []; end 
 v = CAT_VER;
 
 if isempty(CAT_VER)
