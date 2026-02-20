@@ -83,18 +83,26 @@ function out = cat_vol_mimcalc(job)
 
     % update prefix
     if ~isempty( strfind(job.prefix,'\f') )
-      ff = ff(1:end - numel(strfind(job.prefix,'\f'))); 
+      ff = ff(1+numel(strfind(job.prefix,'\f')):end); 
       prefix = strrep(job.prefix,'\f',''); 
     else
       prefix = job.prefix; 
     end
-
+    if ~isempty( strfind(job.prefix,'\b') )
+      ff = ff(1:end - numel(strfind(prefix,'\b'))); 
+      prefix = strrep(prefix,'\b',''); 
+    end
+    
     % update suffix
     if ~isempty( strfind(job.suffix,'\b') )
       ff = ff(1:end - numel(strfind(job.suffix,'\b'))); 
       suffix = strrep(job.suffix,'\b',''); 
     else 
       suffix = job.suffix; 
+    end
+    if ~isempty( strfind(job.suffix,'\f') )
+      ff = ff(1+numel(strfind(job.suffix,'\f')):end); 
+      suffix = strrep(suffix,'\f',''); 
     end
 
     job2.output    = [prefix,ff,suffix,ee];
