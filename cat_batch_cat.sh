@@ -362,6 +362,8 @@ modifiy_defaults ()
 run_cat12 ()
 {
   pwd=$PWD
+  child_pids=()
+  pipeline_pid=""
   
   # we have to go into the toolbox folder to find matlab files
   cd $cwd
@@ -418,6 +420,12 @@ run_cat12 ()
   SIZE_OF_ARRAY="${#ARRAY2[@]}"
   BLOCK=$((10000* $SIZE_OF_ARRAY / $NUMBER_OF_JOBS ))
   ARG_LIST="" 
+
+  if [ -n "${ARRAY2[0]}" ]; then
+    if [[ "${ARRAY2[0]}" =~ /tmp/calc([0-9]+)(/|$) ]]; then
+      pipeline_pid="${BASH_REMATCH[1]}"
+    fi
+  fi
   
   # split files and prepare tmp-file with filenames
   TMP=/tmp/cat_$$
@@ -486,6 +494,7 @@ run_cat12 ()
         # do nohup in background or not
         if [ "$fg" -eq 0 ]; then
           nohup nice -n $nicelevel ${matlab} -nodisplay "$nojvm" -nosplash -r "$COMMAND" >> "${vbmlog}_${j}.log" 2>&1 &
+          child_pids+=("$!")
         else
           nohup nice -n $nicelevel ${matlab} -nodisplay "$nojvm" -nosplash -r "$COMMAND" >> "${vbmlog}_${j}.log" 2>&1
         fi
@@ -493,6 +502,7 @@ run_cat12 ()
         # do nohup in background or not
         if [ "$fg" -eq 0 ]; then
           nohup nice -n $nicelevel $SHCOMMAND >> "${vbmlog}_${j}.log" 2>&1 &
+          child_pids+=("$!")
         else
           nohup nice -n $nicelevel $SHCOMMAND >> "${vbmlog}_${j}.log" 2>&1
         fi
@@ -502,6 +512,18 @@ run_cat12 ()
     fi
     ((i++))
   done
+
+  if [ "$fg" -eq 0 ] && [ "${#child_pids[@]}" -gt 0 ]; then
+    echo "Wait for all ${#child_pids[@]} background job(s) to finish..."
+    wait "${child_pids[@]}"
+    echo "All background jobs finished."
+  fi
+
+  if [ -n "$pipeline_pid" ] && [ -f "${cwd}/check_pipeline.sh" ]; then
+    echo "Run postprocessing: ${cwd}/check_pipeline.sh -p ${pipeline_pid}"
+    "${cwd}/check_pipeline.sh" -p "${pipeline_pid}" >> "${vbmlog}_postprocess.log" 2>&1
+    echo "Check ${vbmlog}_postprocess.log for postprocessing information"
+  fi
 
   exit 0
 }

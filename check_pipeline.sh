@@ -253,7 +253,7 @@ get_release ()
   if [ ! -n "$release" ]; then
     echo "Use current release."
   else
-    # remove old cat12 folder
+    # remove old CAT folder
     rm -r ${spm12_tmp}/toolbox/CAT
         
     # check whether it's a file
@@ -296,9 +296,9 @@ run_pipeline ()
   echo "cat.output.ROI = 1;" >> ${spm12_tmp}/toolbox/CAT/cat_defaults.m
   echo "cat.extopts.ignoreErrors = 1;" >> ${spm12_tmp}/toolbox/CAT/cat_defaults.m
   
-  # run cat12 in foreground with all files in tmp folder
+  # run CAt in foreground with all files in tmp folder
   if [ "$SIZE_OF_ARRAY" -gt 0 ]; then
-    if [ -f "${spm12_tmp}/toolbox/cat12/cat_batch_cat.sh" ]; then
+    if [ -f "${spm12_tmp}/toolbox/CAT/cat_batch_cat.sh" ]; then
       ${spm12_tmp}/toolbox/CAT/cat_batch_cat.sh -m ${matlab} -l ${proc_dir} ${bg_flag} ${calc_tmp}/*.[in][mi][gi] 
     else
       ${spm12_tmp}/toolbox/CAT/cat_batch_vbm.sh -m ${matlab} -l ${proc_dir} ${bg_flag} ${calc_tmp}/*.[in][mi][gi] 
@@ -306,12 +306,12 @@ run_pipeline ()
   fi
   
   if [ "$SIZE_OF_ARRAY_LONG" -gt 0 ]; then
-    large=`grep "\-large" ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh`
+    large=`grep "\-large" ${spm12_tmp}/toolbox/CAT/cat_batch_long.sh`
     # call "-large" option only if available for that release
     if [ -n "$large" ]; then
-      ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh -m ${matlab} ${str_surf} -large ${bg_flag_long} ${calc_tmp}/long/*.[in][mi][gi]
+      ${spm12_tmp}/toolbox/CAT/cat_batch_long.sh -m ${matlab} ${str_surf} -large ${bg_flag_long} ${calc_tmp}/long/*.[in][mi][gi]
     else
-      ${spm12_tmp}/toolbox/cat12/cat_batch_long.sh -m ${matlab} ${str_surf} ${bg_flag_long} ${calc_tmp}/long/*.[in][mi][gi] 
+      ${spm12_tmp}/toolbox/CAT/cat_batch_long.sh -m ${matlab} ${str_surf} ${bg_flag_long} ${calc_tmp}/long/*.[in][mi][gi] 
     fi
   fi
     
@@ -503,7 +503,7 @@ USAGE:
     
 
 PURPOSE:
-   check_pipeline.sh a cat12 release
+   check_pipeline.sh a CAT release
 
 INPUT:
    nifti files
