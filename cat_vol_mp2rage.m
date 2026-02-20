@@ -1,5 +1,5 @@
 function [out,outs] = cat_vol_mp2rage(job)
-%cat_vol_mp2rage. Optimization of MP2Rage weighted scans for CAT12. 
+%cat_vol_mp2rage. Optimization of MP2Rage weighted scans for CAT. 
 % The function uses the unified segmentation of SPM to further optimize a 
 % set of input images (MP2RAGE but also other T1-weighteds scans).
 %

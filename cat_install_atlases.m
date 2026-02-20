@@ -1,5 +1,5 @@
 function cat_install_atlases
-% Convert CAT12 atlas files (csv) and add Dartel atlas labels to spm12 
+% Convert CAT atlas files (csv) and add Dartel atlas labels to spm12 
 % atlas folder (xml)
 %
 % ______________________________________________________________________

@@ -1,4 +1,4 @@
-% Batch file for CAT12 simple processing for SPM12/CAT12 standalone installation
+% Batch file for CAT simple processing for SPM/CAT standalone installation
 %
 %_______________________________________________________________________
 % $Id$

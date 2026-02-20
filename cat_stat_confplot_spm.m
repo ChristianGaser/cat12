@@ -8,9 +8,9 @@
 % xyz            - coordinates of local cluster maximum     
 %
 % Quick Start Guide:
-% 1. Define F-contrast "effects of interest" (check CAT12 manual for howto defining that contrast)
+% 1. Define F-contrast "effects of interest" (check CAT manual for howto defining that contrast)
 %    This contrast is only used for plotting the data! 
-% 2. Call results with CAT12|View Results|Call Results
+% 2. Call results with CAT|View Results|Call Results
 % 3. Call cat_stat_confplot_spm 
 %	VOI definition: cluster (or what you like)
 %	Boxplot:        colored (or define your own colors)

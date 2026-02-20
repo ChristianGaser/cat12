@@ -1,5 +1,5 @@
 #! /bin/bash
-# Call CAT12 standard pipeline from shell
+# Call CAT standard pipeline from shell
 # ______________________________________________________________________
 #
 # Christian Gaser, Robert Dahnke
@@ -356,7 +356,7 @@ modifiy_defaults ()
 }
 
 ########################################################
-# run cat12
+# run cat
 ########################################################
 
 run_cat12 ()
@@ -439,7 +439,7 @@ run_cat12 ()
   done
   vbmlog="${LOGDIR}/cat_${HOSTNAME}_${time}"
 
-  # if relative foldername were given we have to add the data folder because we change into cat12 folder
+  # if relative foldername were given we have to add the data folder because we change into cat folder
   if [ ! -d ${LOGDIR} ]; then
     vbmlog=${pwd}/${vbmlog}
   fi
@@ -562,7 +562,7 @@ USAGE:
  with wildcards to process multiple files. 
 
 PURPOSE:
- Command line call of CAT12 segmentation
+ Command line call of CAT segmentation
 
 EXAMPLE
  cat_batch_cat.sh ${spm12}/canonical/single_subj_T1.nii

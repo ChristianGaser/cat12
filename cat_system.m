@@ -1,6 +1,6 @@
 function [status,result] = cat_system(cmd,verb,trerr)
 % ______________________________________________________________________
-% CAT12 wrapper for system calls
+% CAT wrapper for system calls
 % This is necessary because windows does not allow spaces in system
 % calls. Thus, we have to cd into that folder and call the command
 % from this folder.

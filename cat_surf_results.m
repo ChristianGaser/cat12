@@ -2832,7 +2832,7 @@ if H.border_mode
         Cm = spm_mesh_contour(M,struct('T',T,'t',0.5));
         H.S{k}.Cm{i} = Cm;
       catch
-        fprintf('Please update SPM12 for using that function.\n');
+        fprintf('Please update SPM for using that function.\n');
         break
       end
     end
@@ -3100,7 +3100,7 @@ set(H.figure, 'InvertHardcopy', 'off', 'PaperPositionMode', 'auto');
 
 % posc to correct margin of the figure [r t l b] if no dataplot is present
 hh0 = getframe(H.figure);
-sz0 = [0 0 size(hh0.cdata,[2 1])];
+sz0 = [0 0 size(hh0.cdata,2) size(hh0.cdata,1)];
 pos = round(sz0.*H.panel(1).Position);
 
 if ~(isfield(H, 'dataplot') && strcmpi(get(H.dataplot,'Visible'),'on'))

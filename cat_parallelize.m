@@ -86,7 +86,7 @@ function varargout = cat_parallelize(job,func,datafield)
 
 
   % If one of the input directories is a BIDS directory than use create a
-  % subfolder derivatives/CAT12.#/log to save the log-files there and not
+  % subfolder derivatives/CATxx.#/log to save the log-files there and not
   % somewhere. A try catch block is used in case of untested input (e.g.,
   % structures). See also for a similar block in cat_run.
   try
@@ -108,7 +108,7 @@ function varargout = cat_parallelize(job,func,datafield)
           if ~isempty(ind)
             ind = ind(end);
             dataset_root = ppath(1:ind-1);
-            % Build derivatives path using CAT12 version
+            % Build derivatives path using CAT version
             [cat_ver, cat_rel] = cat_version;
             BIDSdir = fullfile(dataset_root, 'derivatives', [cat_ver '_' cat_rel]);
             break;
@@ -127,7 +127,7 @@ function varargout = cat_parallelize(job,func,datafield)
     logdir  = [];  
   end
   % Another thing that we want to avoid is to fill some of the SPM
-  % directories and just write in a ../spm12/toolbox/cat12/log subdirectory.
+  % directories and just write in a ../spm/toolbox/CAT/log subdirectory.
   % Do not forget that this is only about the additional log files and 
   % not real data output. If there are no writing permissions in the directory 
   % the same is probably true for other SPM dirs and the user has to change
@@ -156,11 +156,11 @@ function varargout = cat_parallelize(job,func,datafield)
   end
   if ~isempty(logdir) && job.verb 
     if ~isempty(BIDSdir)
-      cat_io_cprintf('n', ['\nFound a CAT12 BIDS directory in the given ' ...
+      cat_io_cprintf('n', ['\nFound a CAT BIDS directory in the given ' ...
         'pathnames and save the log file there:\n']); 
       cat_io_cprintf('blue','%s\n\n', logdir);
     else
-      cat_io_cprintf('n', ['\nYou working directory is in the SPM12/CAT12 ' ...
+      cat_io_cprintf('n', ['\nYour working directory is in the SPM/CAT ' ...
         'path, where log files saved here:\n']); 
       cat_io_cprintf('blue','%s\n\n', logdir);
     end
@@ -341,7 +341,7 @@ function varargout = cat_parallelize(job,func,datafield)
       cat_io_cprintf('warn',...
         ['\nWARNING: CAT was not able to detect the PIDs of the parallel CAT processes. \n' ...
          '         Please note that no additional modules in the batch can be run \n' ...
-         '         except CAT12 segmentation. Any dependencies will be broken for \n' ...
+         '         except CAT segmentation. Any dependencies will be broken for \n' ...
          '         subsequent modules if you split the job into separate processes.\n\n']);
     else
       %% conclusion without filelist
@@ -431,7 +431,7 @@ function varargout = cat_parallelize(job,func,datafield)
             end
             
             
-            %% search for the start/end entries of a subject, e.g. "CAT12.# r####: 1/14:   ./MRData/*.nii" 
+            %% search for the start/end entries of a subject, e.g. "CATxx.# r####: 1/14:   ./MRData/*.nii" 
             %  This is the dirty part that is expected to need adaptation for 
             %  each new routine that utilize cat_parallelize and has a new
             %  unique job and log structure. 
@@ -474,7 +474,7 @@ function varargout = cat_parallelize(job,func,datafield)
                         
                           if strcmp(FN{fni},'mov') % long
                             % this does not work
-                            FIN = find( ~cellfun('isempty', strfind( txt, 'Finished CAT12 longitudinal processing of '))); 
+                            FIN = find( ~cellfun('isempty', strfind( txt, 'Finished CAT longitudinal processing of '))); 
                             if ~isempty( FIN ) && numel(txt)>FIN(end)
                               SIDFIN = find( cellfun('isempty', strfind( txt( FIN(end)+1 ) , ff ))==0 ); 
                               if ~isempty( SIDFIN )
@@ -714,7 +714,7 @@ function varargout = cat_parallelize(job,func,datafield)
   else
     cat_io_cprintf('warn',...
       ['\nWARNING: Please note that no additional modules in the batch can be run \n' ...
-       '         except CAT12 segmentation. Any dependencies will be broken for \n' ...
+       '         except CAT segmentation. Any dependencies will be broken for \n' ...
        '         subsequent modules if you split the job into separate processes.\n\n']);
   end
 

@@ -448,7 +448,7 @@ switch lower(Action), case 'setup'                         %-Set up results
         % - first we have to use the Shooting Surface for the statistic to
         %   obtain more meaningful MNI coordinates 
         % - here we have to change to the used surface (FSaverage)
-        if spm_mesh_detect(xSPM.Vspm) && exist('spm_cat12') && exist('cat_get_defaults','file')
+        if spm_mesh_detect(xSPM.Vspm) && exist('spm_CAT') && exist('cat_get_defaults','file')
           FSavg = '.freesurfer.gii'; 
           GSavg = ['.' cat_get_defaults('extopts.shootingsurf') '.gii'];
           if ischar(SPM.xVol.G)
@@ -952,7 +952,7 @@ switch lower(Action), case 'setup'                         %-Set up results
         end
         
         % add average image only if cat12 exists
-        if exist('spm_cat12')
+        if exist('spm_CAT')
           ind = sort([ind 4]);
         end
 
@@ -1123,7 +1123,7 @@ switch lower(Action), case 'setup'                         %-Set up results
         
         [csv_files, n_csv] = cat_vol_findfiles(cat_get_defaults('extopts.pth_templates'), '*.csv');
         if numel(list) < n_csv
-          disp('Install CAT12 atlases');
+          disp('Install CAT atlases');
           try
             cat_install_atlases;
           catch

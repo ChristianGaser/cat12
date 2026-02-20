@@ -1,5 +1,5 @@
 #! /bin/bash
-# Tool for adding revision and date to m-files that were prepared in cat12.
+# Tool for adding revision and date to m-files that were prepared in CAT.
 # ______________________________________________________________________
 #
 # Christian Gaser, Robert Dahnke
@@ -12,5 +12,5 @@
 REVISION=`git rev-list --count HEAD`
 DATE=`git log --date short |grep "Date:"|head -1|cut -f2 -d':'|sed -e s'/ //g'`
 
-perl -p -i -e 's/\$Id\$/\$Id: '$REVISION' '$DATE' \$/g' cat12/*.m
-perl -p -i -e 's/\$Id\$/\$Id: '$REVISION' '$DATE' \$/g' cat12/*.sh
+perl -p -i -e 's/\$Id\$/\$Id: '$REVISION' '$DATE' \$/g' CAT/*.m
+perl -p -i -e 's/\$Id\$/\$Id: '$REVISION' '$DATE' \$/g' CAT/*.sh

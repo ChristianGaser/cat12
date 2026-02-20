@@ -1,6 +1,6 @@
 function varargout = cat_io_addwarning(id,mess,level,nline,data,usebox,verb)
-%cat_io_addwarning. Collect preprocessing warnings in CAT12
-% Uses the global struture cat_err_res to collect warnings in the CAT12
+%cat_io_addwarning. Collect preprocessing warnings in CAT
+% Uses the global struture cat_err_res to collect warnings in the CAT
 % preprocessing function cat_run_job, cat_run_main, etc. 
 % Structure will be exported in cat_tst
 % 

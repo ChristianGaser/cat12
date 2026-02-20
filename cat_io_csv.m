@@ -163,9 +163,9 @@ function C=readcsv(filename,sheet,pos,opt)
     end
   %else 
   % RD202509: The special characters are not working and were replace in GitHub again 
-  %  C1  = strrep(C1,'ä','�');
-  %  C1  = strrep(C1,'ü','�');
-  %  C1  = strrep(C1,'ö','�');
+  %  C1  = strrep(C1,'ä','�');
+  %  C1  = strrep(C1,'ü','�');
+  %  C1  = strrep(C1,'ö','�');
   end
 
   for i=1:size(C1,1)
@@ -202,11 +202,17 @@ function C=readcsv(filename,sheet,pos,opt)
   for i=1:numel(C), if ~isnan(str2double(C{i})) || strcmpi(C{i},'nan'), id=strfind(C{i},','); C{i}(id)='.'; C{i} = str2double(C{i}); end; end
 
 end
+
 function writecsv(filename,C,sheet,pos,opt)
 % __________________________________________________________________________________________________
 % write data as xls if matlab xlswrite works else it export cvs-files.
 % __________________________________________________________________________________________________
   % check if xlswrite could work
+  
+  % Convert escape sequences to actual characters to avoid issues with 
+  % backslashes in data (e.g., Windows paths like C:\Users\John)
+  opt.linedelimiter = sprintf(opt.linedelimiter);
+  opt.delimiter     = sprintf(opt.delimiter);
   
   % set colum and row
   if isempty(pos), else, C=readC(C,pos); end
@@ -246,12 +252,13 @@ function writecsv(filename,C,sheet,pos,opt)
   for i=1:size(C,1)
     for j=1:size(C,2)
       if ~isstruct(C{i,j}) && ~iscell(C{i,j})
-        if C{i,j}==round(C{i,j})
-          M{i}=[M{i} num2str(strrep(num2str(C{i,j}), '\', '\\'),'%d') opt.delimiter];
+        x = C{i,j};
+        if isnumeric(x) && isscalar(x) && isfinite(x) && x == round(x)
+          M{i}=[M{i} num2str(strrep(num2str(x), '\', '\\'),'%d') opt.delimiter];
         else
           switch opt.komma
-            case '.',   M{i}=[M{i} num2str(C{i,j},opt.format) opt.delimiter];
-            otherwise,  M{i}=[M{i} strrep(num2str(C{i,j},opt.format),'.',opt.komma) opt.delimiter]; 
+            case '.',   M{i}=[M{i} num2str(x,opt.format) opt.delimiter];
+            otherwise,  M{i}=[M{i} strrep(num2str(x,opt.format),'.',opt.komma) opt.delimiter]; 
           end
         end
       else
@@ -271,13 +278,14 @@ function writecsv(filename,C,sheet,pos,opt)
   
   f=fopen(filename,'w'); 
   if f~=-1
-    fprintf(f,M); 
+    fprintf(f, '%s', M);
     fclose(f);
   else
     error('cat_io_csv:writeError','Cannot write "%s" - Check writing rights!',filename); 
   end
 
 end
+
 function [Cpos,ijpos]=readC(C,pos)
   i=strfind(pos,':'); if ~isempty(i), pos(i)=[]; end                       % remove double points
   tmp=textscan(pos,'%[^1234567890]%d'); colum=tmp{1}; row=tmp{2};          % separate colum and row in pos-string
@@ -287,6 +295,7 @@ function [Cpos,ijpos]=readC(C,pos)
   CX=cell(max([size(C,1),ijpos(:,2)']),max([size(C,2),ijpos(:,1)'])); CX(1:size(C,1),1:size(C,2))=C;
   Cpos=CX(ijpos(1,end):ijpos(end,end),ijpos(1,1):ijpos(end,1));
 end
+
 function d = base27dec(s)
 % copied from xlswrite.m
 %--------------------------------------------------------------------------

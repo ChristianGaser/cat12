@@ -1,6 +1,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>CAT12 - Computational Anatomy Toolbox for SPM12</title>
+    <title>CAT - Computational Anatomy Toolbox for SPM</title>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <link rel="stylesheet" type="text/css" href="spm.css" />
     <link rel="stylesheet" type="text/css" href="../spm.css" />
@@ -16,14 +16,14 @@
     </div>
     
     <div id="content">
-      <h2>Calling CAT12 from the shell and running in headless mode without display</h2>      
+      <h2>Calling CAT from the shell and running in headless mode without display</h2>      
       <p>
-        If you do not want to use the CAT12 and SPM12 graphical user interface, you can use the cat_standalone.sh script 
+        If you do not want to use the CAT and SPM graphical user interface, you can use the cat_standalone.sh script 
         located in the cat12 standalone folder to call batch files. You can use any of the supplied batches in the standalone 
         folder, but you can also create your own batches using the batch manager in SPM12. Please note that the supplied 
-        standalone batches must be called in CAT12 expert mode.
+        standalone batches must be called in CAT expert mode.
         </br>The cat_standalone.sh script can be used with few changes with the same flags as for the standalone version. You 
-        just need to add the flags "-ns" to turn off standalone mode and "-e" to call CAT12 in expert mode. Also, the flag 
+        just need to add the flags "-ns" to turn off standalone mode and "-e" to call CAT in expert mode. Also, the flag 
         "-m" now defines the Matlab command and "-s" the SPM12 folder, but can be skipped if they are found automatically. 
         </br>For example, to preprocess (segment) files, you can call:
         your_spm12_folder/toolbox/cat12/standalone/cat_standalone.sh -ns -e -m /usr/local/bin/matlab \

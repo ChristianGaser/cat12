@@ -1,4 +1,4 @@
-% Batch file for getting ROI values for SPM12/CAT12 standalone installation
+% Batch file for getting ROI values for SPM/CAT standalone installation
 %
 %_______________________________________________________________________
 % $Id$

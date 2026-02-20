@@ -9,13 +9,13 @@ function varargout = cat_vol_qa(action,varargin)
 % 
 %  action ..
 %  1) 'caterr'    .. short version without image analysis used in the main
-%                    CAT12 preprocessing. 
+%                    CAT preprocessing. 
 %
 %  2) 'cat12ver'  .. process with an older cat_vol_qa version
 %       To use older versions, they have to be renamed (including all
 %       internal calls) and added to the update_rating subfunction here. 
 %
-%  3) 'cat12'     .. CAT12 internal preprocessing interface 
+%  3) 'cat12'     .. CAT internal preprocessing interface 
 %     (this is the processing case that is also called in all other cases)
 %
 %       [QAS,QAM] = cat_vol_qa('cat12',Yp0,Po,Ym,res[,opt])
@@ -345,7 +345,7 @@ function varargout = cat_vol_qa(action,varargin)
   switch action
     case 'cat12'
     % Direct call of the specific QC version with input images given by the 
-    % varargin structure used in the CAT12 pipeline (processing of one case)
+    % varargin structure used in the CAT pipeline (processing of one case)
 %sprintf('[QAS,QAR] = %s(''cat12'',varargin{:});', opt.version)
 if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
 
@@ -382,9 +382,9 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
         [pp,ff,ee] = spm_fileparts(Pp0{1});
         switch ff(1:2)
           case 'sy',  segment = 'synthseg'; 
-          case 'c0',  segment = 'SPM12'; 
-          case 'c1',  segment = 'SPM12'; 
-          case 'p0',  segment = 'CAT12'; 
+          case 'c0',  segment = 'SPM'; 
+          case 'c1',  segment = 'SPM'; 
+          case 'p0',  segment = 'CAT'; 
           otherwise,  segment = 'internal'; 
         end
       end
@@ -508,7 +508,7 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
             continue
           end
 
-          % general function called from CAT12
+          % general function called from CAT
           if ~exist( Po{fi} ,'file')
             continue
           end
@@ -680,7 +680,7 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
 
 
     case 'cat12err'
-      opt = cat_check('checkinopt',varargin{6},defaults);
+      opt = cat_check('checkinopt',varargin{1},defaults);
       QAS = cat12err(opt,mrifolder,reportfolder);
 
 
@@ -995,7 +995,7 @@ function [QAS,QAR] = cat12err(opt,mrifolder,reportfolder)
     clear A
   end
 
-  % 1 line: Matlab, SPM12, CAT12 version number and GUI and experimental mode 
+  % 1 line: Matlab, SPM, CAT version number and GUI and experimental mode 
   if ispc,      OSname = 'WIN';
   elseif ismac, OSname = 'MAC';
   else,         OSname = 'LINUX';

@@ -1054,9 +1054,9 @@ for qai = qais
     
 
     C.QM.txt = T.ixiPPC;
-    C.QM.txt = [C.QM.txt '\n\n\n'];
+    C.QM.txt = [C.QM.txt sprintf('\n\n\n')];
     fc = fullfile(opt.resdir,sprintf('tst_bwpmaintest_%s_%s.txt',qafile,segment{mi})); 
-    f  = fopen(fc,'w'); if f~=-1, fprintf(f,C.QM.txt); fclose(f); end
+    f  = fopen(fc,'w'); if f~=-1, fprintf(f,'%s',C.QM.txt); fclose(f); end
     cat_io_cprintf('blue','    Write %s\n',fc); 
   
     
@@ -1117,7 +1117,7 @@ for qai = qais
     C.QM.txt = [C.QM.txt sprintf('\n\n\n')];
     mi = 1; 
     fc = fullfile(opt.resdir,sprintf('tst_bwpmaintest_%s_corr_%s.csv',qafile,segment{mi})); 
-    f  = fopen(fc,'w'); if f~=-1, fprintf(f,C.QM.txt); fclose(f); end
+    f  = fopen(fc,'w'); if f~=-1, fprintf(f,'%s',C.QM.txt); fclose(f); end
     cat_io_cprintf('blue','    Write %s\n',fc); 
   
     
@@ -1176,7 +1176,7 @@ for qai = qais
     mi = 1; 
     cat_io_cmd('  Print figures:','g5','',1);
     fc = fullfile(opt.resdir,sprintf('tst_bwpmaintest_%s_%s.csv',qafile,segment{mi}));
-    f  = fopen(fc,'w'); if f~=-1, fprintf(f,C.QM.txt); fclose(f); end
+    f  = fopen(fc,'w'); if f~=-1, fprintf(f,'%s',C.QM.txt); fclose(f); end
     cat_io_cprintf('blue','\n    Write %s\n',fc); 
   
     fc = fullfile(opt.resdir,sprintf('fig1_bwpmaintest_%s_%s',qafile,segment{mi}));

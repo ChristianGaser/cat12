@@ -41,7 +41,7 @@ function varargout = cat_vol_qa202412(action,varargin)
 %     [ not implemented yet ]
 %
 %
-% 4) CAT12 internal preprocessing interface 
+% 4) CAT internal preprocessing interface 
 %    (this is the processing case that is also called in all other cases)
 %    [QAS,QAM] = cat_vol_qa201901x('cat12',Yp0,Po,Ym,res[,opt])
 %
@@ -242,7 +242,7 @@ function varargout = cat_vol_qa202412(action,varargin)
     case 'cat12err'
       opt  = cat_check('checkinopt',varargin{end},defaults);
     case 'cat12'
-      % CAT12 internal input
+      % CAT internal input
       if nargin>3 
         Yp0 = varargin{1};
 % Octave is starting with many warning messages here ...        
@@ -606,7 +606,7 @@ function varargout = cat_vol_qa202412(action,varargin)
         end
         clear A
       end
-      % 1 line: Matlab, SPM12, CAT12 version number and GUI and experimental mode 
+      % 1 line: Matlab, SPM, CAT version number and GUI and experimental mode 
       if ispc,      OSname = 'WIN';
       elseif ismac, OSname = 'MAC';
       else,         OSname = 'LINUX';
@@ -1182,7 +1182,7 @@ function [res_ECR,segCase,Yp0c,Ygrad] = estimateECR(Ym,Yp0,vx_vol)
 %% estimateECR. Quanfify anatomical details by the normalized edge strength.
 % 
 % old pure version for high quality segmentation input that works only well
-% for the CAT12 AMAP segmenation. 
+% for the CAT AMAP segmenation. 
 %
 % Extension 202309:  Tested at  eroded and dilated boundaries positions
 
@@ -1357,7 +1357,7 @@ function [res_ECR,segCase,Yp0c,Ygrad] = estimateECR0(Ym,Yp0,vx_vol)
 %% estimateECR. Quanfify anatomical details by the normalized edge strength.
 % 
 % old pure version for high quality segmentation input that works only well
-% for the CAT12 AMAP segmenation. 
+% for the CAT AMAP segmenation. 
 %
 % Extension 202309:  Tested at  eroded and dilated boundaries positions
 
@@ -1505,7 +1505,7 @@ function res_ECR = estimateECR0old(Ym,Yp0,vx_vol)
 %% estimateECR. Quanfify anatomical details by the normalized edge strength.
 % 
 % old pure version for high quality segmentation input that works only well
-% for the CAT12 AMAP segmenation 
+% for the CAT AMAP segmenation 
   Ybad     = abs(Yp0/3 - Ym) > .5 | isnan(Ym) | isnan(Yp0) | (Yp0<=0.5) | (Ym<0.5/3); 
   [YD,YI]  = cat_vbdist(single(~Ybad),Ybad & cat_vol_morph(~Ybad,'d',1,vx_vol)); Ym = Ym(YI); Yp0 = Yp0(YI); 
 

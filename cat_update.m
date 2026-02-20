@@ -10,8 +10,8 @@ function varargout = cat_update(update)
 % msg    - string describing outcome, that would otherwise be displayed.
 % update - allow installation of update
 % 
-% This function will connect to the SBM server, compare the
-% version number of the updates with the one of the CAT12 installation 
+% This function will connect to the Github server, compare the
+% version number of the updates with the one of the CAT installation 
 % currently in the MATLAB path and will display the result.
 % ______________________________________________________________________
 %
@@ -26,7 +26,7 @@ rev = '$Rev$';
 
 if isdeployed
   sts= Inf;
-  msg = 'Update function is not working for compiled CAT12. Please check for a new compiled CAT12 version.';
+  msg = 'Update function is not working for compiled CAT. Please check for a new compiled CAT version.';
   if ~nargout, fprintf([blanks(9) msg '\n']);
   else varargout = {sts, msg}; end
   return;
@@ -43,7 +43,7 @@ end
 
 % get current release
 r = cat_version;
-r = str2double(strrep(r,'CAT',''));
+r = strrep(r,'CAT','');
 
 % get new release
 try
@@ -59,31 +59,32 @@ if ~sts
 end
 
 data = jsondecode(jsonStr);
-% get largest release number
-rnew = [];
+% get largest release number using proper version comparison
+rnew = '';
 for i = 1:length(data)
-  rnew = [rnew str2double(data(i).tag_name)];
+  if isempty(rnew) || compare_versions(data(i).tag_name, rnew) > 0
+    rnew = data(i).tag_name;
+  end
 end
-rnew = max(rnew);
 
-if rnew > r
-  sts = rnew;
-  msg = sprintf('         A new version of CAT12 is available on:\n');
+if compare_versions(rnew, r) > 0
+  sts = str2double(rnew);
+  msg = sprintf('         A new version of CAT is available on:\n');
   msg = [msg sprintf('   %s\n',url_github)];
-  msg = [msg sprintf('        (Your version: %g - New version: %g)\n',r,rnew)];
+  msg = [msg sprintf('        (Your version: %s - New version: %s)\n',r,rnew)];
   if ~nargout, fprintf(msg); else varargout = {sts, msg}; end
 else
   sts = 0;
-  msg = sprintf('Your version of CAT12 is up-to-date.');
+  msg = sprintf('Your version of CAT is up-to-date.');
   if ~nargout, fprintf([blanks(9) msg '\n']);
   else varargout = {sts, msg}; end
   return
 end
 
-url = sprintf('https://github.com/ChristianGaser/cat12/releases/download/%g/cat%g.zip',rnew,rnew);
+url = sprintf('https://github.com/ChristianGaser/cat12/releases/download/%s/cat%s.zip',rnew,rnew);
 
 if update
-  overwrite = spm_input(sprintf('Update to %g',rnew),1,'m','yes|no|download only',[1 -1 0],1);
+  overwrite = spm_input(sprintf('Update to %s',rnew),1,'m','yes|no|download only',[1 -1 0],1);
   d0 = spm('Dir');
   d  = fileparts(fileparts(which('cat12')));
   
@@ -101,7 +102,7 @@ if update
       htmldir = fullfile(fileparts(mfilename('fullpath')),'html');
       if exist(htmldir,'dir'), rmdir(htmldir, 's'); end
 
-      % delete old CAT12 manual
+      % delete old CAT manual
       pdffile = fullfile(fileparts(mfilename('fullpath')),'CAT12-Manual.pdf');
       spm_unlink(pdffile);
 
@@ -149,7 +150,7 @@ if update
       lastwarn('');
       warning off
       delete(get(0,'Children')); spm('clean'); evalc('spm_rmpath'); drawnow
-      m = '          Download and install CAT12...\n';
+      m = '          Download and install CAT...\n';
       if ~nargout, fprintf(m); else varargout = {sts, [msg m]}; end
             
       s = unzip(url, d);
@@ -159,7 +160,7 @@ if update
       rehash;
       rehash toolboxcache;
       if exist('toolbox_path_cache','file'), toolbox_path_cache; end
-      spm fmri; clear cat_version; spm_cat12
+      spm fmri; clear cat_version; spm_CAT
       warning on
     catch
       le = lasterror;
@@ -172,8 +173,8 @@ if update
     end
     
     % open version information if difference between release numbers 
-    % is large enough
-    if rnew > r+20
+    % is large enough (more than 1 minor version)
+    if version_diff(rnew, r) > 1
       web(fullfile(fileparts(mfilename('fullpath')),'doc','index.html#version'));
     end
     
@@ -191,3 +192,56 @@ if update
     fprintf('Unzip file to %s\n',d);
   end
 end
+
+%=======================================================================
+function cmp = compare_versions(v1, v2)
+% Compare two version strings (e.g., '12.10' vs '12.9')
+% Returns: 1 if v1 > v2, -1 if v1 < v2, 0 if equal
+%=======================================================================
+
+  % Parse version strings into parts
+  parts1 = sscanf(v1, '%d.%d');
+  parts2 = sscanf(v2, '%d.%d');
+  
+  % Pad with zeros if needed
+  if length(parts1) < 2, parts1(2) = 0; end
+  if length(parts2) < 2, parts2(2) = 0; end
+  
+  % Compare major version first
+  if parts1(1) > parts2(1)
+    cmp = 1;
+  elseif parts1(1) < parts2(1)
+    cmp = -1;
+  else
+    % Major versions equal, compare minor
+    if parts1(2) > parts2(2)
+      cmp = 1;
+    elseif parts1(2) < parts2(2)
+      cmp = -1;
+    else
+      cmp = 0;
+    end
+  end
+return
+
+%=======================================================================
+function diff = version_diff(v1, v2)
+% Calculate the minor version difference between two version strings
+% Returns: difference in minor versions (assuming same major version)
+%=======================================================================
+
+  % Parse version strings into parts
+  parts1 = sscanf(v1, '%d.%d');
+  parts2 = sscanf(v2, '%d.%d');
+  
+  % Pad with zeros if needed
+  if length(parts1) < 2, parts1(2) = 0; end
+  if length(parts2) < 2, parts2(2) = 0; end
+  
+  % If major versions differ, return large diff
+  if parts1(1) ~= parts2(1)
+    diff = 100;
+  else
+    diff = abs(parts1(2) - parts2(2));
+  end
+return

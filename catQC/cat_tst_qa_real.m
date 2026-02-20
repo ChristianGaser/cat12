@@ -39,7 +39,7 @@
 
 
 
-  % the qafile is used to test different versions of the QC estimation [ IMPORTANT ]
+  % the qafile is used to test different versions of the QC estimation [ï¿½IMPORTANT ]
   rerun     = 2; 
   fasttest  = 0; fast = {'full7','fast7'};
   qaversions = {
@@ -62,7 +62,7 @@ segment = {'qcseg'}; si=1;
     def.res       = '-r300';  % resolution
     def.dpi       = 72; 
     def.closefig  = 1;        % close figure after printing
-    opt.maindir   = '/Volumes/SG5TB/MRData/202105_QA';          % main project directory [ IMPORTANT ]
+    opt.maindir   = '/Volumes/SG5TB/MRData/202105_QA';          % main project directory [ï¿½IMPORTANT ]
     opt.resdir    = fullfile(opt.maindir,'+results',['private_' fast{fasttest+1}]);   % directory for results 
     opt.printdir  = fullfile(opt.maindir,'+figure' ,['private_' fast{fasttest+1}]);   % directory for figures
     opt           = cat_io_checkinopt(opt,def);
@@ -594,7 +594,7 @@ segment = {'qcseg'}; si=1;
       
       %% independent QC processing test (different xml-files!)
       %  ATLAS 346, 462, 436, 486 with incorrect segmentation (incorrect setup) 
-      rerun = 2;     % FEC: 2,25,27,21 || ECR: 27,24, 20 || 
+      rerun = 2;     % FEC: 2,25,27,21 || ECR: 27,24, 20 ||ï¿½
       tside      = unique(Q.site); %1; % 1, 3, 5, 6, ... 18 23 30! 32 33 ... 41 42! 44 45 46  48 47 49 ... +11 
       slim       = 5; 
       qaversions = {'cat_vol_qa201901';  'cat_vol_qa202110'; 'cat_vol_qa'; 'cat_vol_qa202207b';'cat_vol_qa202210'}; 
@@ -780,8 +780,8 @@ segment = {'qcseg'}; si=1;
     
         legend(...
           {sprintf('threshold (%0.2f)',thp), ...
-           sprintf('passed (%0.2f±%0.2f)',-10*cat_stat_nanmedian(Q.([norm{nci} IQRfield])(Mp(:))), 10*cat_stat_nanstd(Q.([norm{nci} IQRfield])(Mp(:)))), ...
-           sprintf('failed (%0.2f±%0.2f)',-10*cat_stat_nanmedian(Q.([norm{nci} IQRfield])(Mf(:))), 10*cat_stat_nanstd(Q.([norm{nci} IQRfield])(Mf(:))))},...
+           sprintf('passed (%0.2fï¿½%0.2f)',-10*cat_stat_nanmedian(Q.([norm{nci} IQRfield])(Mp(:))), 10*cat_stat_nanstd(Q.([norm{nci} IQRfield])(Mp(:)))), ...
+           sprintf('failed (%0.2fï¿½%0.2f)',-10*cat_stat_nanmedian(Q.([norm{nci} IQRfield])(Mf(:))), 10*cat_stat_nanstd(Q.([norm{nci} IQRfield])(Mf(:))))},...
            'Location','northeast'); legend('boxoff'); 
         subplot(2,2,2);
         if nci == 1
@@ -798,8 +798,8 @@ segment = {'qcseg'}; si=1;
            
         
         fprintf('\n'); 
-        fprintf('    Passed: % 5.2f ±% 5.2f\n', -10*cat_stat_nanmedian(Q.([norm{nci} IQRfield])(Mp(:))), 10*cat_stat_nanstd(Q.([norm{nci} IQRfield])(Mp(:))) );
-        fprintf('    Failed: % 5.2f ±% 5.2f\n', -10*cat_stat_nanmedian(Q.([norm{nci} IQRfield])(Mf(:))), 10*cat_stat_nanstd(Q.([norm{nci} IQRfield])(Mf(:))) ); 
+        fprintf('    Passed: % 5.2f ï¿½% 5.2f\n', -10*cat_stat_nanmedian(Q.([norm{nci} IQRfield])(Mp(:))), 10*cat_stat_nanstd(Q.([norm{nci} IQRfield])(Mp(:))) );
+        fprintf('    Failed: % 5.2f ï¿½% 5.2f\n', -10*cat_stat_nanmedian(Q.([norm{nci} IQRfield])(Mf(:))), 10*cat_stat_nanstd(Q.([norm{nci} IQRfield])(Mf(:))) ); 
         fprintf('    Incorr: % 5.2f  % 5.2f%% (MF: %0.2f%%, MP: %0.2f%%)\n', thp , ...
           cat_stat_nansum(Q.([norm{nci} IQRfield])(Mf(:)) < th) / sum(Mf(:)) + sum(Q.([norm{nci} IQRfield])(Mp(:)) > th) / sum(Mp(:)) * 100, ...
           cat_stat_nansum(Q.([norm{nci} IQRfield])(Mf(:)) < th) / sum(Mf(:)) * 100, sum(Q.([norm{nci}  IQRfield])(Mp(:)) > th) / sum(Mp(:)) * 100); 
@@ -835,9 +835,9 @@ segment = {'qcseg'}; si=1;
         xlabel(['n' IQRfield],'FontSize',FS(2)); ylabel('number of scans','FontSize',FS(2)); 
         legend( ...
           {sprintf('threshold (%0.2f)',thp), ...
-           sprintf('passed (%0.2f±%0.2f)'      , 10*cat_stat_nanmedian(Q.([norm{nci} IQRfield])(Mp(:))), 10*cat_stat_nanstd(Q.([norm{nci} IQRfield])(Mp(:)))), ...
-           sprintf('questionable (%0.2f±%0.2f)', 10*cat_stat_nanmedian(Q.([norm{nci} IQRfield])(Mq(:))), 10*cat_stat_nanstd(Q.([norm{nci} IQRfield])(Mq(:)))), ...
-           sprintf('failed (%0.2f±%0.2f)'      , 10*cat_stat_nanmedian(Q.([norm{nci} IQRfield])(Mf(:))), 10*cat_stat_nanstd(Q.([norm{nci} IQRfield])(Mf(:))))}, ...
+           sprintf('passed (%0.2fï¿½%0.2f)'      , 10*cat_stat_nanmedian(Q.([norm{nci} IQRfield])(Mp(:))), 10*cat_stat_nanstd(Q.([norm{nci} IQRfield])(Mp(:)))), ...
+           sprintf('questionable (%0.2fï¿½%0.2f)', 10*cat_stat_nanmedian(Q.([norm{nci} IQRfield])(Mq(:))), 10*cat_stat_nanstd(Q.([norm{nci} IQRfield])(Mq(:)))), ...
+           sprintf('failed (%0.2fï¿½%0.2f)'      , 10*cat_stat_nanmedian(Q.([norm{nci} IQRfield])(Mf(:))), 10*cat_stat_nanstd(Q.([norm{nci} IQRfield])(Mf(:))))}, ...
            'Location','northeast'); legend('boxoff');
         %
         subplot(2,2,4);
@@ -855,9 +855,9 @@ segment = {'qcseg'}; si=1;
       
         if 0
           fprintf('\n'); 
-          fprintf('    Passed: % 5.2f ±% 5.2f\n', 10*median(Q.([norm{nci} IQRfield])(Mp(:))), 10*std(Q.([norm{nci} IQRfield])(Mp(:))));
-          fprintf('    Questo: % 5.2f ±% 5.2f\n', 10*median(Q.([norm{nci} IQRfield])(Mq(:))), 10*std(Q.([norm{nci} IQRfield])(Mq(:)))); 
-          fprintf('    Failed: % 5.2f ±% 5.2f\n', 10*median(Q.([norm{nci} IQRfield])(Mf(:))), 10*std(Q.([norm{nci} IQRfield])(Mf(:)))); 
+          fprintf('    Passed: % 5.2f ï¿½% 5.2f\n', 10*median(Q.([norm{nci} IQRfield])(Mp(:))), 10*std(Q.([norm{nci} IQRfield])(Mp(:))));
+          fprintf('    Questo: % 5.2f ï¿½% 5.2f\n', 10*median(Q.([norm{nci} IQRfield])(Mq(:))), 10*std(Q.([norm{nci} IQRfield])(Mq(:)))); 
+          fprintf('    Failed: % 5.2f ï¿½% 5.2f\n', 10*median(Q.([norm{nci} IQRfield])(Mf(:))), 10*std(Q.([norm{nci} IQRfield])(Mf(:)))); 
         end  
         
         % save figure
@@ -1366,11 +1366,11 @@ segment = {'qcseg'}; si=1;
         %% -- save images ----------------------------------------------------
         stime = cat_io_cmd('  Print figures:','g5','',1,stime);
       
-        fprintf(C.QM.txt);
+        fprintf('%s',C.QM.txt);
         
         ff = sprintf('qa_grouptest_%s_%s',qafile,datestr(clock,'YYYYmm'));
-        f=fopen(fullfile(opt.printdir,sprintf('tst_%s.csv',ff)),'w'); if f~=-1, fprintf(f,C.QM.txt); fclose(f); end
-        f=fopen(fullfile(opt.resdir  ,sprintf('tst_%s.csv',ff)),'w'); if f~=-1, fprintf(f,C.QM.txt); fclose(f); end
+        f=fopen(fullfile(opt.printdir,sprintf('tst_%s.csv',ff)),'w'); if f~=-1, fprintf(f,'%s',C.QM.txt); fclose(f); end
+        f=fopen(fullfile(opt.resdir  ,sprintf('tst_%s.csv',ff)),'w'); if f~=-1, fprintf(f,'%s',C.QM.txt); fclose(f); end
       
         print(fhtmp,fullfile(opt.printdir,sprintf('fig_%s_%s',ff)),opt.res,opt.type,datestr(clock,'YYYYmm'),'-dpng');
         print(fhtmp,fullfile(opt.resdir  ,sprintf('fig_%s_%s',ff)),opt.res,opt.type,datestr(clock,'YYYYmm'),'-dpng');

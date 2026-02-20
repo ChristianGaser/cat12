@@ -1,4 +1,4 @@
-% Batch file for CAT12 segmentation for SPM12/CAT12 standalone installation
+% Batch file for CAT segmentation for SPM/CAT standalone installation
 %
 %_______________________________________________________________________
 % $Id$
@@ -27,7 +27,7 @@ matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.vox = 1.5;
 % additional bounding box
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.registration.bb = 12;
 
-% Affine regularisation (SPM12 default = mni) - '';'mni';'eastern';'subj';'none';'rigid'
+% Affine regularisation (SPM default = mni) - '';'mni';'eastern';'subj';'none';'rigid'
 matlabbatch{1}.spm.tools.cat.estwrite.opts.affreg = 'mni';    
 
 % Strength of the bias correction that controls the biasreg and biasfwhm parameter (CAT only!)

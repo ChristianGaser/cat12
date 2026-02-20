@@ -165,7 +165,7 @@ function cat_run_newcatch(job,tpm,subj)
       end
     end
 
-    %% send error information, CAT12 version and computer system
+    %% send error information, CAT version and computer system
     if cat_get_defaults('extopts.send_info') && ~ignore_message && job.extopts.expertgui<2 && job.extopts.ignoreErrors<2
       [CATrel,CATver] = cat_version; expertguistr = ' ed';
       str_err = sprintf('%s%s|',['r' CATver],deblank(expertguistr(job.extopts.expertgui + 1))); % revision and guilevel

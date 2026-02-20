@@ -1,6 +1,6 @@
 function varargout = cat12(varargin)
 % ______________________________________________________________________
-% CAT12 Toolbox wrapper to start CAT with different user modes or 
+% CAT Toolbox wrapper to start CAT with different user modes or 
 % default files.  Changing the user mode requires restarting of CAT and
 % SPM.  The expert user mode allows to control further parameters and  
 % semi-evaluated functions, whereas the developer mode contain parameter
@@ -19,17 +19,17 @@ function varargout = cat12(varargin)
 %     action = 'select' 
 %     action = 'mypath/cat_defaults_mydefaults'
 %
-% CAT12 M-file for cat12.fig
-%      CAT12, by itself, creates a new CAT12 or raises the existing
+% cat12 M-file for cat12.fig
+%      cat12, by itself, creates a new cat12 or raises the existing
 %      singleton*.
 %
-%      H = CAT12 returns the handle to a new CAT12 or the handle to
+%      H = cat12 returns the handle to a new cat12 or the handle to
 %      the existing singleton*.
 %
-%      CAT12('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in CAT12.M with the given input arguments.
+%      cat12('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in cat12.M with the given input arguments.
 %
-%      CAT12('Property','Value',...) creates a new CAT12 or raises the
+%      cat12('Property','Value',...) creates a new cat12 or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
 %      applied to the GUI before DEM_demo_OpeningFunction gets called.  An
 %      unrecognized property name or invalid value makes property application
@@ -59,13 +59,13 @@ global sz sc FS catversion expert cat_bg
 warning('off','MATLAB:subscripting:noSubscriptsSpecified');
 
 if nargin==0 
-  spm_cat12;
+  spm_CAT;
   return;
 elseif nargin==1 && ~strcmp(varargin{1},'fig')
-  spm_cat12(varargin{1});
+  spm_CAT(varargin{1});
   return;
 elseif nargin==2 && ~strcmp(varargin{1},'fig')
-  spm_cat12(varargin{1},varargin{2});
+  spm_CAT(varargin{1},varargin{2});
   return;
 end
 
@@ -219,9 +219,9 @@ function pushMode_Callback(hObject, eventdata, handles)
 global expert
 
 if expert
-  spm_cat12;
+  spm_CAT;
 else
-  spm_cat12('expert');
+  spm_CAT('expert');
 end
 
 % --- Executes on button press in pushBasicModels.
@@ -340,7 +340,7 @@ h0 = figure(...
   'ToolBar',get(0,'defaultfigureToolBar'),...
   'Pointer',get(0,'defaultfigurePointer'),...
   'PointerShapeHotSpot',get(0,'defaultfigurePointerShapeHotSpot'),...
-  'Name','cat12',...
+  'Name','CAT',...
   'NumberTitle','off',...
   'CreateFcn', {@local_CreateFcn, blanks(0), appdata} ,...
   'Tag',Tag,...
@@ -1053,12 +1053,12 @@ end
 numargin = length(varargin);
 
 if numargin == 0
-    % CAT12
+    % cat12
     % create the GUI only if we are not in the process of loading it
     % already
     gui_Create = true;
 elseif local_isInvokeActiveXCallback(gui_State, varargin{:})
-    % CAT12(ACTIVEX,...)
+    % cat12(ACTIVEX,...)
     vin{1} = gui_State.gui_Name;
     vin{2} = [get(varargin{1}.Peer, 'Tag'), '_', varargin{end}];
     vin{3} = varargin{1};
@@ -1067,10 +1067,10 @@ elseif local_isInvokeActiveXCallback(gui_State, varargin{:})
     feval(vin{:});
     return;
 elseif local_isInvokeHGCallback(gui_State, varargin{:})
-    % CAT12('CALLBACK',hObject,eventData,handles,...)
+    % cat12('CALLBACK',hObject,eventData,handles,...)
     gui_Create = false;
 else
-    % CAT12(...)
+    % cat12(...)
     % create the GUI and hand varargin to the openingfcn
     gui_Create = true;
 end
@@ -1326,7 +1326,7 @@ if cat_get_defaults('extopts.send_info')
   cat_io_send_to_server(urlinfo);
 end
 
-% check for new CAT12 version
+% check for new CAT version
 if ~isdeployed
   [sts, msg] = cat_update;
   fprintf(msg);

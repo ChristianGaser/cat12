@@ -48,11 +48,11 @@ nproc.val     = {numcores};
 nproc.num     = [1 1];
 nproc.hidden  = numcores <= 1 || isdeployed;
 nproc.help    = {
-    'In order to use multi-threading the CAT12 segmentation job with multiple subjects can be split into separate processes that run in the background. You can even close Matlab, which will not affect the processes that will run in the background without GUI. If you do not want to run processes in the background then set this value to 0.'
+    'In order to use multi-threading the CAT segmentation job with multiple subjects can be split into separate processes that run in the background. You can even close Matlab, which will not affect the processes that will run in the background without GUI. If you do not want to run processes in the background then set this value to 0.'
     ''
     'Keep in mind that each process needs about 1.5..2GB of RAM, which should be considered to choose the appropriate number of processes.'
     ''
-    'Please further note that no additional modules in the batch can be run except CAT12 segmentation. Any dependencies will be broken for subsequent modules.'
+    'Please further note that no additional modules in the batch can be run except CAT segmentation. Any dependencies will be broken for subsequent modules.'
   };
 %------------------------------------------------------------------------
 % files long with two different selection schemes
@@ -125,7 +125,7 @@ if expert
   end
 end
 longmodel.help = {
-'The longitudinal pre-processing in CAT12 has been developed and optimized to detect subtle effects over shorter periods of time (e.g. brain plasticity or training effects after a few weeks or even shorter periods of time) and is less sensitive to detect larger changes over longer periods of time (e.g. ageing or developmental effects). To detect larger effects, we also offer a model that additionally takes into account deformations between time points. The use of deformations between the time points makes it possible to estimate and detect larger changes, while subtle effects over shorter periods of time in the range of weeks or a few months can be better detected with the model for small changes.'
+'The longitudinal pre-processing in CAT has been developed and optimized to detect subtle effects over shorter periods of time (e.g. brain plasticity or training effects after a few weeks or even shorter periods of time) and is less sensitive to detect larger changes over longer periods of time (e.g. ageing or developmental effects). To detect larger effects, we also offer a model that additionally takes into account deformations between time points. The use of deformations between the time points makes it possible to estimate and detect larger changes, while subtle effects over shorter periods of time in the range of weeks or a few months can be better detected with the model for small changes.'
 ''
 'Unlike the plasticity and ageing models, the developmental pipeline must include a time point-independent registration to adjust the growth of the brain/head. '
 ''
@@ -273,7 +273,7 @@ output.val{surf}.values = {0 1};
 
 
 long = cfg_exbranch;
-long.name = 'CAT12: Segment longitudinal data';
+long.name = 'CAT: Segment longitudinal data';
 long.tag  = 'long';
 if newapproach % new way - not working
   
@@ -324,10 +324,10 @@ else
   dartel.tag    = 'dartel';
   dartel.name   = 'DARTEL export';
   if expert
-    dartel.labels = {'No','Rigid (SPM12 default)','Affine','Both'};
+    dartel.labels = {'No','Rigid (SPM default)','Affine','Both'};
     dartel.values = {0 1 2 3};
   else
-    dartel.labels = {'No','Rigid (SPM12 default)','Affine'};
+    dartel.labels = {'No','Rigid (SPM default)','Affine'};
     dartel.values = {0 1 2};
   end
   dartel.val    = {0};

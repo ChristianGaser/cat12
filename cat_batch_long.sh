@@ -1,5 +1,5 @@
 #! /bin/bash
-# Call CAT12 longitudinal pipeline from shell
+# Call CAT longitudinal pipeline from shell
 # ______________________________________________________________________
 #
 # Christian Gaser, Robert Dahnke
@@ -234,7 +234,7 @@ modifiy_defaults ()
 }
 
 ########################################################
-# run cat12 long pipeline
+# run cat long pipeline
 ########################################################
 
 run_cat12 ()
@@ -286,7 +286,7 @@ run_cat12 ()
   time=`date "+%Y%b%d_%H%M"`
   vbmlog=${LOGDIR}/cat_${HOSTNAME}_${time}.log
 
-  # if relative foldername were given we have to add the data folder because we change into cat12 folder
+  # if relative foldername were given we have to add the data folder because we change into cat folder
   if [ ! -d ${LOGDIR} ]; then
     vbmlog=${pwd}/${vbmlog}
   fi
@@ -381,7 +381,7 @@ OUTPUT:
   ${LOGDIR}/spm_${HOSTNAME}_${time}.log for log information
 
 USED FUNCTIONS:
-  SPM12
+  SPM
 
 SETTINGS
   matlab command: $matlab

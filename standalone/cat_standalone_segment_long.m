@@ -1,11 +1,11 @@
-% Batch file for CAT12 longitudinal segmentation for SPM12/CAT12 standalone installation
+% Batch file for CAT longitudinal segmentation for SPM/CAT standalone installation
 %
 %_______________________________________________________________________
 % $Id$
 
 % first undefined data field, that will be dynamically replaced by cat_standalone.sh
 % The different definitions of the subjects-field are necessary to be compatible 
-% with CAT12 longitudinal batch (using "{}") and cat_standalone where the
+% with CAT longitudinal batch (using "{}") and cat_standalone where the
 % UNDEFINED field is necessary. The clear command prevents error due to different
 % datatypes and the comented out part for cat_standalone will be removed in the
 % shell script and the last definition of subjects is finally used. Looks weird,
@@ -45,7 +45,7 @@ matlabbatch{1}.spm.tools.cat.long.enablepriors = 1;
 % additional bounding box
 matlabbatch{1}.spm.tools.cat.long.extopts.registration.bb = 12;
 
-% Affine regularisation (SPM12 default = mni) - '';'mni';'eastern';'subj';'none';'rigid'
+% Affine regularisation (SPM default = mni) - '';'mni';'eastern';'subj';'none';'rigid'
 matlabbatch{1}.spm.tools.cat.long.opts.affreg = 'mni';
 
 % Strength of the bias correction that controls the biasreg and biasfwhm parameter (CAT only!)

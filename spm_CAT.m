@@ -1,6 +1,6 @@
-function spm_cat12(varargin)
+function spm_CAT(varargin)
 % ______________________________________________________________________
-% CAT12 Toolbox wrapper to start CAT with different user modes or 
+% CAT Toolbox wrapper to start CAT with different user modes or 
 % default files.  Changing the user mode requires restarting of CAT and
 % SPM.  The expert user mode allows to control further parameters and  
 % semi-evaluated functions, whereas the developer mode contain parameter
@@ -48,11 +48,11 @@ if strcmpi(spm_check_version,'octave')
   end
 end
 
-% check that CAT12 is installed in the correct folder
+% check that CAT is installed in the correct folder
 pth = fileparts(mfilename('fullpath'));
 [pth2, nam] = fileparts(pth);
-if ~strcmp(nam,'cat12')
-  spm('alert!',sprintf('Please check that you do not have multiple CAT12 installations in your path!\nYour current CAT12 version is installed in %s but should be installed in %s',pth,fullfile(catdir)),'WARNING');
+if ~strcmp(nam,'CAT')
+  spm('alert!',sprintf('Please check that you do not have multiple CAT installations in your path!\nYour current CAT version is installed in %s but should be installed in %s',pth,fullfile(catdir)),'WARNING');
 end
 
 % find all zipped nifti's and unpack if necessary
@@ -81,7 +81,7 @@ catch
   elseif ismac 
     CATDir = fullfile(catdir);
     web('https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)#Troubleshooting');
-    cat_io_cmd(sprintf('\nThe following commands might be executed as administrator to allow execution of CAT12 binaries and mex-files.'),'warning');
+    cat_io_cmd(sprintf('\nThe following commands might be executed as administrator to allow execution of CAT binaries and mex-files.'),'warning');
     cat_io_cmd(sprintf('You can also break that command here and run the commands that are listed on the open website under Troubleshooting manually.\n'),'warning');
     cmd = ['xattr -r -d com.apple.quarantine ' CATDir];
     system(cmd); fprintf([cmd '\n']);
@@ -227,7 +227,7 @@ switch lower(deffile)
     deffile = fullfile(deffile_pp,[deffile_ff,deffile_ee]); 
 
     if isempty(deffile) || ~exist(deffile,'file')
-      help spm_cat12;
+      help spm_CAT;
       error('CAT:unknownDefaultFile','Unknown action or nonexisting default file "%s".\n',deffile);
     end
 end
@@ -290,7 +290,7 @@ if expert<2
 end
 
 spm('FnBanner',mfilename,cat_version);
-[Finter,Fgraph] = spm('FnUIsetup','CAT12.10');
+[Finter,Fgraph] = spm('FnUIsetup','CAT26.0');
 url = fullfile(fileparts(mfilename('fullpath')),'doc','cat.html');
 
 % open interactive help for newer version because display of html pages does not work anymore
@@ -307,11 +307,11 @@ if cat_io_matlabversion > 20212
   % CAT help 
   web(url,'-noaddressbox','-new')
 else
-  spm_help('!Disp',url,'',Fgraph,'Computational Anatomy Toolbox for SPM12 or SPM25');
+  spm_help('!Disp',url,'',Fgraph,'Computational Anatomy Toolbox for SPM');
 end
 
 % check that binaries for surface tools are running 
-cat_system('CAT_3dVol2Surf');
+cat_system('CAT_SurfArea');
 
 %% add some directories 
 spm_select('PrevDirs',{fullfile(catdir)});
@@ -323,12 +323,12 @@ switch expert
   case 1, expertguitext = ['Expert Mode' speciesdisp];
   case 2, expertguitext = ['Developer Mode' speciesdisp];
 end
-cat_io_cprintf([0.0 0.0 0.5],sprintf([ ...
-    '\n' ...
+logo = sprintf(['\n' ...
     '   _______  ___  _______    \n' ...
-    '  |  ____/ / _ \\\\ \\\\_   _/   ' expertguitext '\n' ...
-    '  | |___  / /_\\\\ \\\\  | |     Computational Anatomy Toolbox\n' ...
-    '  |____/ /_/   \\\\_\\\\ |_|     CAT12.10 - https://neuro-jena.github.io\n\n']));
+    '  |  ____/ / _ \\ \\_   _/   %s\n' ...
+    '  | |___  / /_\\ \\  | |     Computational Anatomy Toolbox\n' ...
+    '  |____/ /_/   \\_\\ |_|     CAT26.0 - https://neuro-jena.github.io\n\n'], expertguitext);
+cat_io_cprintf([0.0 0.0 0.5],'%s',logo);
 cat_io_cprintf([0.0 0.0 0.5],'  CAT default file:\n\t%s\n\n',deffile); 
 
 % call GUI

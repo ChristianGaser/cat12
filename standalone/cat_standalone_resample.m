@@ -1,4 +1,4 @@
-% Batch file for CAT12 Resample & Smooth for SPM12/CAT12 standalone installation
+% Batch file for CAT Resample & Smooth for SPM/CAT standalone installation
 %
 %_______________________________________________________________________
 % $Id$

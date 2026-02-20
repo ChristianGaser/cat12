@@ -1,4 +1,4 @@
-% Batch file for volume smoothing for SPM12/CAT12 standalone installation
+% Batch file for volume smoothing for SPM/CAT standalone installation
 %
 %_______________________________________________________________________
 % $Id$

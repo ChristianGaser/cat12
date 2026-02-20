@@ -45,7 +45,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   fg  = spm_figure('FindWin','Graphics'); 
   set(0,'CurrentFigure',fg)
   
-  % remove CAT12 figure background image from start
+  % remove CAT figure background image from start
   try
     fgc = get(fg,'Children');
     if ~isempty(fgc)

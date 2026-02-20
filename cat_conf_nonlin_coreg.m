@@ -89,7 +89,7 @@ nonlin_coreg.vout = @vout_nonlin_coreg;
 nonlin_coreg.help = {
     'Within-subject non-linear co-registration performed via the segmentation routine.'
     ''
-    'The non-linear co-registration method used here is based on the SPM12 non-linear normalisation method that uses the segmented images to estimate deformations to match the source to the target image.'
+    'The non-linear co-registration method used here is based on the SPM non-linear normalisation method that uses the segmented images to estimate deformations to match the source to the target image.'
     ''
     'The resliced images are named the same as the originals except that they are prefixed by ''w''.'
 ''

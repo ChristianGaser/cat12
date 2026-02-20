@@ -1,5 +1,5 @@
 #! /bin/bash
-# Call SPM12 batch jobs from shell
+# Call SPM batch jobs from shell
 # ______________________________________________________________________
 #
 # Christian Gaser, Robert Dahnke
@@ -294,7 +294,7 @@ USAGE:
    display should be enabled with the option "-d".
 
 PURPOSE:
-   Command line call of SPM12 batch files
+   Command line call of SPM batch files
 
 EXAMPLE
    cat_batch_spm.sh test_batch.m -m /usr/local/bin/matlab7
@@ -314,7 +314,7 @@ OUTPUT:
    ${LOGDIR}/spm_${HOSTNAME}_${time}.log for log information
 
 USED FUNCTIONS:
-   SPM12
+   SPM
 
 SETTINGS
    matlab command: $matlab

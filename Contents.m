@@ -1,5 +1,5 @@
 % Computational Anatomy Toolbox
-% Version 2979 (CAT12.10) 2026-02-12
+% Version 3009 (CAT26.0) 2026-02-19
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -12,14 +12,14 @@
 % Description
 % ==========================================================================
 % This toolbox is a collection of extensions to the segmentation algorithm 
-% of SPM12 (Wellcome Department of Cognitive Neurology) to provide computational
+% of SPM (Wellcome Department of Cognitive Neurology) to provide computational
 % morphometry. It is developed by Christian Gaser and Robert Dahnke (Jena
 % University Hospital, Departments of Psychiatry and Neurology) and is available 
 % to the scientific community under the terms of the GNU General Public License as 
 % published by the Free Software Foundation; either version 2 of the License, 
 % or (at your option) any later version.
 %
-% If you use any CAT12 code for commercial application, please email 
+% If you use any CAT code for commercial application, please email 
 % christian.gaser@uni-jena.de.
 %
 % General files
@@ -31,18 +31,18 @@
 %   cat12.m
 %   cat_amap.m                       - compilation wrapper for cat_amap.c
 %   cat_main.m
-%   cat_run.m                        - runtime funtion for CAT12
+%   cat_run.m                        - runtime funtion for CAT
 %   cat_run_job.m
 %   cat_run_newcatch.m
 %   cat_run_oldcatch.m
-%   cat_defaults.m                   - sets the defaults for CAT12
-%   cat_get_defaults.m               - defaults for CAT12
-%   spm_cat12.m                      - toolbox wrapper to call CAT12
+%   cat_defaults.m                   - sets the defaults for CAT
+%   cat_get_defaults.m               - defaults for CAT
+%   spm_cat12.m                      - toolbox wrapper to call CAT
 %   
 % Utilities
 %   cat_sanlm.m                      - Spatial Adaptive Non Local Means Denoising Filter
 %   cat_update.m                     - check for new updates
-%   cat_debug.m                      - print debug information for SPM12 and CAT12
+%   cat_debug.m                      - print debug information for SPM and CAT
 %   cat_ornlm.m
 %   cat_plot_boxplot.m
 %   slice_overlay.m                  - overlay tool
@@ -135,8 +135,8 @@
 %      
 % Batch mode
 %   cat_batch_long.m                 - batch mode wrapper for spm_jobman for longitudinal pipeline
-%   cat_batch_spm.m                  - batch mode wrapper for spm_jobman for SPM12
-%   cat_batch_vbm.m                  - batch mode wrapper for spm_jobman for CAT12
+%   cat_batch_spm.m                  - batch mode wrapper for spm_jobman for SPM
+%   cat_batch_vbm.m                  - batch mode wrapper for spm_jobman for CAT
 %   
 % Check input and files
 %   cat_check.m
@@ -148,7 +148,7 @@
 %   cat_conf_opts.m
 %   cat_conf_stools.m
 %   cat_conf_stoolsexp.m
-%   cat_conf_tools.m                 - wrapper for calling CAT12 utilities
+%   cat_conf_tools.m                 - wrapper for calling CAT utilities
 %   tbx_cfg_cat.m
 %
 % Templates/Atlases volumes

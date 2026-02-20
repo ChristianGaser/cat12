@@ -166,10 +166,10 @@ function [output,output_spm] = cat_conf_output(expert)
   dartel.tag    = 'dartel';
   dartel.name   = 'DARTEL export';
   if expert
-    dartel.labels = {'No','Rigid (SPM12 default)','Affine','Both'};
+    dartel.labels = {'No','Rigid (SPM default)','Affine','Both'};
     dartel.values = {0 1 2 3};
   else
-    dartel.labels = {'No','Rigid (SPM12 default)','Affine'};
+    dartel.labels = {'No','Rigid (SPM default)','Affine'};
     dartel.values = {0 1 2};
   end
   dartel.help   = {
@@ -254,7 +254,7 @@ function [output,output_spm] = cat_conf_output(expert)
   modulated.tag    = 'mod';
   modulated.name   = 'Modulated normalized';
   if expert
-    modulated.labels = {'No','Affine + non-linear (SPM12 default)','Non-linear only'};
+    modulated.labels = {'No','Affine + non-linear (SPM default)','Non-linear only'};
     modulated.values = {0 1 2};
   else
     modulated.labels = {'No','Yes'};

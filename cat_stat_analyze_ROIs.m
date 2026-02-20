@@ -769,7 +769,7 @@ else % write label volume with thresholded p-values
     OV.slices_str = slices_str{1};
     OV.transform = char('axial');
     cat_vol_slice_overlay(OV);
-    fprintf('You can again call the result file %s using Slice Overlay in CAT12 with more options to select different slices and orientations.\n',OV.name);
+    fprintf('You can again call the result file %s using Slice Overlay in CAT with more options to select different slices and orientations.\n',OV.name);
   end
   
 end

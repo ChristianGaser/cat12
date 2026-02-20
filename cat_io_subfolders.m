@@ -26,20 +26,22 @@ function [mrifolder, reportfolder, surffolder, labelfolder, errfolder, BIDSfolde
     end
     subfolders = job.extopts.subfolders;
 
-    if isfield(job.extopts,'BIDSfolder') || isfield(job.extopts,'BIDSfolder2')
-      if isfield(job.extopts,'BIDSfolder')
-        BIDSfolder_rel = job.extopts.BIDSfolder;
+    BIDSfolder_rel = '';
+    if isfield(job,'output') && isfield(job.output,'BIDS') && ...
+       ( isfield(job.output.BIDS,'BIDSyes') || isfield(job.output.BIDS,'BIDSyes2') )
+      if isfield(job.output.BIDS,'BIDSyes')
+        BIDSfolder_rel = job.output.BIDS.BIDSyes.BIDSfolder;
       else
-        BIDSfolder_rel = job.extopts.BIDSfolder2;
+        BIDSfolder_rel = job.output.BIDS.BIDSyes2.BIDSfolder;
       end
-    elseif isfield(job.extopts,'bids_folder')
-      BIDSfolder_rel = job.extopts.bids_folder;
-    else
-      BIDSfolder_rel = cat_get_defaults('extopts.bids_folder');
+    elseif isfield(job.extopts,'BIDSfolder')
+      BIDSfolder_rel = job.extopts.BIDSfolder;
+    elseif isfield(job.extopts,'BIDSfolder2')
+      BIDSfolder_rel = job.extopts.BIDSfolder2;
     end
   else
     subfolders     = cat_get_defaults('extopts.subfolders');
-    BIDSfolder_rel = cat_get_defaults('extopts.bids_folder');
+    BIDSfolder_rel = '';
   end
 
   % get BIDS data

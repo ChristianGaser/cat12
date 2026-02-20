@@ -2,17 +2,18 @@
 #
 # $Id$
 
-OLDVERSION="CAT12.9"
-NEWVERSION="CAT12.10"
+OLDVERSION="CAT12.10"
+NEWVERSION="CAT26.0"
 REVISION=`git rev-list --count HEAD`
 DATE=`git log --date short |grep "Date:"|head -1|cut -f2 -d':'|sed -e s'/ //g'`
 VERSION=`echo ${NEWVERSION} | sed -e 's/CAT//g'`
+MAINVERSION=`echo ${NEWVERSION} | sed -e 's/CAT//g' | cut -f1 -d'.'`
 
 ZIPFOLDER=/Users/gaser/matlab/cat12
 
-TARGET=/Users/gaser/spm/spm12/toolbox/cat12
-TARGET2=/Volumes/UltraMax/spm12/toolbox/cat12
-TARGET4=/Users/gaser/spm/spm-octave/toolbox/cat12
+TARGET=/Users/gaser/spm/spm12/toolbox/CAT
+TARGET2=/Volumes/UltraMax/spm12/toolbox/CAT
+TARGET4=/Users/gaser/spm/spm-octave/toolbox/CAT
 
 PRECOMPILED=/Users/gaser/matlab/Matlab_standalone
 
@@ -22,16 +23,16 @@ STARGET_FOLDER=/volume1/web/cat12
 STARGET=${STARGET_HOST}:${STARGET_FOLDER}
 
 STARGET3_HOST=paris.biomag.uni-jena.de
-STARGET3_FOLDER=/home/gaser/spm12/toolbox/cat12
+STARGET3_FOLDER=/home/gaser/spm12/toolbox/CAT
 STARGET3=${STARGET3_HOST}:${STARGET3_FOLDER}
 
-MATLAB_FILES=Contents.* cat_*.m spm_cat12.m tbx_cfg_cat.m sliderPanel.m slice_overlay.m cat_run* compile.m
+MATLAB_FILES=Contents.* cat_*.m spm_CAT.m tbx_cfg_cat.m sliderPanel.m slice_overlay.m cat_run* compile.m
 C_FILES=Amap.[ch] ornlm_float.c sanlm_float.c MrfPrior.c Pve.c Kmeans.c cat_*.c* cat_*.mex* vollib.c genus0.[ch] tricases.h spm_diffeo.* tfceMex_pthread.*
 MISC_FILES=README.md CHANGES.txt INSTALL.txt doc standalone templates_MNI152NLin2009cAsym templates_surfaces templates_surfaces_32k atlases_surfaces atlases_surfaces_32k cat12.* CAT.* distribute_to_server.sh cat_*.sh  cat_long_main*txt glass_brain.mat
 
 FILES=${MATLAB_FILES} ${C_FILES} ${MISC_FILES}
 
-ZIPFILE=cat12_r${REVISION}.zip
+ZIPFILE=CAT_r${REVISION}.zip
 
 # remove .DS_Store files and correct file permissions
 clean:
@@ -97,26 +98,28 @@ update: docs copy_longmode
 	-@echo '% Version ' ${REVISION} ${NEWVERSION} ${DATE} >> INSTALL.txt
 	-@cat INSTALL_info.txt >> INSTALL.txt
 	-@test ! -d ../tfce/ || cp cat_spm_results_ui.m ../tfce/
-	-@perl -p -i -e "s/${OLDVERSION}/${NEWVERSION}/g" spm_cat12.m
+	-@perl -p -i -e "s/${OLDVERSION}/${NEWVERSION}/g" spm_CAT.m
+	-@perl -p -i -e "s/${OLDVERSION}/${NEWVERSION}/g" cat_batch_bids.sh
+	-@cp cat12.m cat${MAINVERSION}.m
 	-@chmod a+x CAT.*/*
 
 # zip release
 zip: update clean
 	-@echo zip
-	-@test ! -d cat12 || rm -r cat12
-	-@mkdir cat12
-	-@cp -rp ${FILES} cat12
-	-@gzip -d cat12/templates_MNI152NLin2009cAsym/*.nii.gz
+	-@test ! -d CAT || rm -r CAT
+	-@mkdir CAT
+	-@cp -rp ${FILES} CAT
+	-@gzip -d CAT/templates_MNI152NLin2009cAsym/*.nii.gz
 	-@bash update_revision.sh
-	-@zip ${ZIPFOLDER}/${ZIPFILE} -rm cat12
+	-@zip ${ZIPFOLDER}/${ZIPFILE} -rm CAT
 
 # scp release
 scp: docs zip
 	-@git tag -f ${VERSION} -m "Release version ${VERSION}"
-	-@echo scp to http://${STARGET_HOST}/cat12/${ZIPFILE}
+	-@echo scp to http://${STARGET_HOST}/CAT/${ZIPFILE}
 	-@scp -O -P ${PORT} CHANGES.txt ${ZIPFOLDER}/${ZIPFILE} ${STARGET}
-	-@bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${ZIPFILE} ${STARGET_FOLDER}/cat12_latest.zip"
-	-@open http://${STARGET_HOST}/cat12/
+	-@bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${ZIPFILE} ${STARGET_FOLDER}/CAT_latest.zip"
+	-@open http://${STARGET_HOST}/CAT/
 
 # scp deployed versions
 scp_precompile:
@@ -130,9 +133,9 @@ scp_precompile:
 	   ln -s ${PRECOMPILED}/MCR_$${i}/*spm25* ${PRECOMPILED}/MCR_$${i}/readme.txt ${PRECOMPILED}/MCR_$${i}/MCR_v232.webloc ${NEWVERSION}_R2023b_MCR_$${i}/ ;\
 	   cp -r standalone ${NEWVERSION}_R2023b_MCR_$${i}/ ;\
 	   cp -r standalone ${PRECOMPILED}/MCR_$${i}/ ;\
-	   zip ${ZIPFOLDER}/${NEWVERSION}_R2023b_MCR_$${i}.zip -r ${NEWVERSION}_R2023b_MCR_$${i} ; \
-	   scp -O -P ${PORT} ${ZIPFOLDER}/${NEWVERSION}_R2023b_MCR_$${i}.zip ${STARGET}; \
-	   bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/${NEWVERSION}_R2023b_MCR_$${i}.zip ${STARGET_FOLDER}/cat12_latest_R2023b_MCR_$${i}.zip"; \
+	   zip ${ZIPFOLDER}/CAT_R2023b_MCR_$${i}.zip -r ${NEWVERSION}_R2023b_MCR_$${i} ; \
+	   scp -O -P ${PORT} ${ZIPFOLDER}/CAT_R2023b_MCR_$${i}.zip ${STARGET}; \
+	   bash -c "ssh -p ${PORT} ${STARGET_HOST} ln -fs ${STARGET_FOLDER}/CAT_R2023b_MCR_$${i}.zip ${STARGET_FOLDER}/CAT_latest_R2023b_MCR_$${i}.zip"; \
 	done
 	-@rm -r ${NEWVERSION}_R2023b_MCR*	
 	-@echo Please keep in mind to change ../enigma-cat12/index.html

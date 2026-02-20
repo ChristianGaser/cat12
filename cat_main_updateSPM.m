@@ -458,7 +458,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
 
 
 
-    %% save brain mask using SPM12 segmentations for later use
+    %% save brain mask using SPM segmentations for later use
     if ~exist('Ym0','var')
       Ym0 = single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255;
     end
@@ -771,7 +771,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
       end
     end
 
-    % Yb0 - save brain mask using SPM12 segmentations for later use
+    % Yb0 - save brain mask using SPM segmentations for later use
     if ~exist('Yb0','var')
       Ym0 = single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255;
       Yb0 = (Ym0 > min(0.5,max(0.25, job.extopts.gcutstr)));

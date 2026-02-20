@@ -47,7 +47,7 @@ nproc.val     = {numcores};
 nproc.num     = [1 1];
 nproc.hidden  = numcores <= 1 || isdeployed;
 nproc.help    = {
-    'In order to use multi-threading the CAT12 segmentation job with multiple subjects can be split into separate processes that run in the background. If you do not want to run processes in the background then set this value to 0.'
+    'In order to use multi-threading the CAT segmentation job with multiple subjects can be split into separate processes that run in the background. If you do not want to run processes in the background then set this value to 0.'
     ''
     'Keep in mind that each process needs about 1.5..2GB of RAM, which should be considered to choose the appropriate  number of processes.'
     ''
@@ -118,12 +118,12 @@ factorial_design    = cat_conf_factorial(expert);
 %% ------------------------------------------------------------------------
 estwrite        = cfg_exbranch;
 estwrite.tag    = 'estwrite';
-estwrite.name   = 'CAT12: Segmentation';
+estwrite.name   = 'CAT: Segmentation';
 estwrite.val    = {data data_wmh nproc useprior opts extopts output};
 estwrite.prog   = @cat_run;
 estwrite.vout   = @vout;
 estwrite.help   = {
-'This toolbox is an extension to the default segmentation in SPM12 or SPM25, but uses a completely different segmentation approach.'
+'This toolbox is an extension to the default segmentation in SPM, but uses a completely different segmentation approach.'
 ''
 'The segmentation approach is based on an Adaptive Maximum A Posterior (MAP) technique without the need for a priori information about tissue probabilities. That is, the Tissue Probability Maps (TPM) are not used constantly in the sense of the classical Unified Segmentation approach (Ashburner et. al. 2005), but just for spatial normalization. The following AMAP estimation is adaptive in the sense that local variations of the parameters (i.e., means and variance) are modeled as slowly varying spatial functions (Rajapakse et al. 1997). This not only accounts for intensity inhomogeneities but also for other local variations of intensity.'
 ''
@@ -143,11 +143,11 @@ estwrite_spm.prog   = @cat_run;
 estwrite_spm.vout   = @vout;
 %estwrite_spm.hidden = expert<1;
 estwrite_spm.help   = {
-'Thickness estimation and surface creation for SPM segmentation, which is using the input of CSF, GM, and WM of the SPM segmentation (instead of CAT12 segmentation) and also integrates Dartel or Geodesic Shoothing registration to an already existing Dartel template in MNI space. The default template was derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org).'};
+'Thickness estimation and surface creation for SPM segmentation, which is using the input of CSF, GM, and WM of the SPM segmentation (instead of CAT segmentation) and also integrates Dartel or Geodesic Shoothing registration to an already existing Dartel template in MNI space. The default template was derived from 555 healthy control subjects of the IXI-database (http://www.brain-development.org).'};
   
 %------------------------------------------------------------------------
 cat        = cfg_choice;
-cat.name   = 'CAT12';
+cat.name   = 'cat';
 cat.tag    = 'cat';
 
 if exist('cat_conf_catsimple','file')

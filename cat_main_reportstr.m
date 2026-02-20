@@ -69,16 +69,16 @@ function str = cat_main_reportstr(job,res,qa)
   if ~isempty(isbeta), catv = [catv(1:isbeta-1) '\color[rgb]{0.8 0 0}' catv(isbeta:isbeta+3 ) '\color[rgb]{0.8 0 0}' catv(isbeta+4:end)]; end
 
 % red version in case of old version?
-  % 1 line: Matlab, SPM, CAT12 version number and GUI and experimental mode 
+  % 1 line: Matlab, SPM, CAT version number and GUI and experimental mode 
   if strcmpi(spm_check_version,'octave')
-    str{1} = [str{1} struct('name', 'Version: OS / SPM / CAT12:','value',...
+    str{1} = [str{1} struct('name', 'Version: OS / SPM / CAT:','value',...
       sprintf('%s / %s / %s (%s)',qa.software.system,...
       qa.software.version_spm,qa.software.version_cat,catv))];
     % native2unicode is working on the command line but not in the figure
     cub = '^3';
     pm  = '+/-';
   else
-    str{1} = [str{1} struct('name', 'Version: OS / Matlab / SPM / CAT12:','value',...
+    str{1} = [str{1} struct('name', 'Version: OS / Matlab / SPM / CAT:','value',...
       sprintf('%s / %s / %s / %s (%s)',qa.software.system,qa.software.version_matlab,...
       qa.software.version_spm,qa.software.version_cat,catv))];
     cub = native2unicode(179, 'latin1'); % char(179);
@@ -264,7 +264,7 @@ function str = cat_main_reportstr(job,res,qa)
         if job.opts.samp == catdef.opts.samp, cp{1} = npara; else, cp{1} = cpara; end
         if job.opts.tol  == catdef.opts.tol,  cp{2} = npara; else, cp{2} = cpara; end
         str{1}(end).name  = [str{1}(end).name(1:end-1) ' / acc (samp/tol): '];  
-        str{1}(end).value = [str{1}(end).value sprintf('%s|%0.2f} (%s{%0.2f}/%s{%0.0e})',cp{3},job.opts.acc,cp{1},job.opts.samp,cp{2},job.opts.tol)]; 
+        str{1}(end).value = [str{1}(end).value sprintf('%s|%0.2f} (%s{%0.2f} / %s{%0.0e})',cp{3},job.opts.acc,cp{1},job.opts.samp,cp{2},job.opts.tol)]; 
       end
     else
       if job.extopts.expertgui && isfield(job.opts,'samp')

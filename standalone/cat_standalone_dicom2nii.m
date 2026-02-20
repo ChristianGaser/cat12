@@ -1,4 +1,4 @@
-% Batch file for importing DICOM data for SPM12/CAT12 standalone installation
+% Batch file for importing DICOM data for SPM/CAT standalone installation
 %
 %_______________________________________________________________________
 % $Id$

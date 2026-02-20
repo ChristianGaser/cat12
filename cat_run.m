@@ -318,7 +318,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
       cat_io_cprintf('warn',...
         ['\nWARNING: CAT was not able to detect the PIDs of the parallel CAT processes. \n' ...
          '         Please note that no additional modules in the batch can be run \n' ...
-         '         except CAT12 segmentation. Any dependencies will be broken for \n' ...
+         '         except CAT segmentation. Any dependencies will be broken for \n' ...
          '         subsequent modules if you split the job into separate processes.\n\n']);
     else
       %% conclusion without filelist
@@ -370,7 +370,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
             txt = txt{1}; 
             fclose(FID);
             
-            % search for the _previous_ start entry "CAT12.# r####: 1/14:   ./MRData/*.nii" 
+            % search for the _previous_ start entry "CATxx.# r####: 1/14:   ./MRData/*.nii" 
             catis   = find(cellfun('isempty',strfind(txt,sprintf('%s r%s: ',catv,catr)))==0,2,'last'); 
             if isempty(catis)
               catis   = find(cellfun('isempty',strfind(txt,sprintf('%s r',catv)))==0,2,'last');
@@ -729,7 +729,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
   else
     cat_io_cprintf('warn',...
       ['\nWARNING: Please note that no additional modules in the batch can be run \n' ...
-       '         except CAT12 segmentation. Any dependencies will be broken for \n' ...
+       '         except CAT segmentation. Any dependencies will be broken for \n' ...
        '         subsequent modules if you split the job into separate processes.\n\n']);
   end
 
@@ -1307,7 +1307,7 @@ function vout = run_job(job)
   
   if isfield(job,'nproc') && job.nproc>0 
     fprintf('\n%s',repmat('_',1,72));
-    fprintf('\nCAT12 Segmentation job finished.\n');
+    fprintf('\nCAT Segmentation job finished.\n');
   end
 
   vout   = vout_job(job);

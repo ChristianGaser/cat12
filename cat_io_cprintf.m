@@ -65,7 +65,7 @@ function count = cat_io_cprintf(style,format,varargin) %#ok<*JAPIMATHWORKS>
 %    cprintf('*blue',  'and *bold* (R2011b+ only)\n');
 %    cprintf('string');  % same as fprintf('string') and cprintf('text','string')
 %
-% Extended sytles in CAT12: 
+% Extended sytles in CAT: 
 %     {'t','txt','text','k'},    style=[0.0 0.0 0.0];
 %     {'e','err','error'},       style=[0.8 0.0 0.0];
 %     {'w','warn','warning'},    style=[1.0 0.3 0.0];
@@ -197,7 +197,7 @@ end
   
 if cprintferror
   warning off
-  count1 = fprintf(format,varargin{:});
+  count1 = safe_fprintf(1, format, varargin);
   if nargout
       count = count1;
   end 
@@ -262,7 +262,7 @@ else
       % See: http://undocumentedmatlab.com/blog/bold-color-text-in-the-command-window/#comment-103035
       % Also see: https://mail.google.com/mail/u/0/?ui=2&shva=1#all/1390a26e7ef4aa4d
       % Also see: https://mail.google.com/mail/u/0/?ui=2&shva=1#all/13a6ed3223333b21
-      count1 = fprintf(format,varargin{:});
+      count1 = safe_fprintf(1, format, varargin);
   else
       % Else (Matlab desktop mode)
       % Get the normalized style name and underlining flag
@@ -314,7 +314,7 @@ else
       cw = mde.getClient('Command Window');
       % Fix: if command window isn't defined yet (startup), use standard fprintf()
       if (isempty(cw))
-         count1 = fprintf(format,varargin{:});
+         count1 = safe_fprintf(1, format, varargin);
          if nargout
              count = count1;
          end
@@ -332,7 +332,7 @@ else
       %format(end+1) = ' ';  % Jacob D's FEX comment 14/6/2016 (sometimes makes things worse!) https://mail.google.com/mail/u/0/#inbox/15551268609f9fef
       cmdWinLen = cmdWinDoc.getLength;
       cmdWinLenPrev = cmdWinLen;
-      count1 = fprintf(2,format,varargin{:});
+      count1 = safe_fprintf(2, format, varargin);
       % Repaint the command window (wait a bit for the async update to complete)
       iter = 0;
       while count1 > 0 && cmdWinLen <= cmdWinLenPrev && iter < 100
@@ -659,10 +659,38 @@ function dumpElement(docElements)
       end
       disp(data)
   end
+
+function count = safe_fprintf(fid, fmt, args)
+% Print literal text safely; preserve common escapes like \n, \t, \r.
+    if nargin < 3, args = {}; end
+
+    if ~isempty(args)
+        count = fprintf(fid, fmt, args{:});
+        return;
+    end
+
+    if isa(fmt,'string'), fmt = char(fmt); end
+    if ~ischar(fmt), fmt = char(string(fmt)); end
+
+    % 1) Turn intended escapes into real control chars
+    % (so user can write "... \n" and get a newline)
+    fmt = strrep(fmt, '\n', sprintf('\n'));
+    fmt = strrep(fmt, '\t', sprintf('\t'));
+    fmt = strrep(fmt, '\r', sprintf('\r'));
+
+    % 2) Escape all remaining backslashes to avoid \U, \x, etc. parsing
+    % (IMPORTANT: do this AFTER handling \n/\t/\r)
+    fmt = strrep(fmt, '\', '\\');
+
+    % 3) Print as data, not format
+    count = fprintf(fid, '%s', fmt);
+
+
 % Utility function to convert matrix => cell
 function cells = m2c(data)
   %datasize = size(data);  cells = mat2cell(data,ones(1,datasize(1)),ones(1,datasize(2)));
   cells = num2cell(data);
+
 % Display the help and demo
 function showDemo(majorVersion,minorVersion)
   fprintf('cprintf displays formatted text in the Command Window.\n\n');

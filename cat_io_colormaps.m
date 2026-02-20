@@ -6,7 +6,7 @@ function [C,XML] = cat_io_colormaps(Cname,ncolors)
 %   [C,XML] = cat_io_colormaps(Cname,ncolors)
 %
 %   Cname - colormap
-%   colormaps internally used in CAT12
+%   colormaps internally used in CAT
 %   'marks'
 %   'marks+'
 %   'turbo'

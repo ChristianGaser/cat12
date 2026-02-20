@@ -1,6 +1,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>CAT12 - Computational Anatomy Toolbox for SPM12</title>
+    <title>CAT - Computational Anatomy Toolbox for SPM</title>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <link rel="stylesheet" type="text/css" href="spm.css" />
     <link rel="stylesheet" type="text/css" href="../spm.css" />
@@ -53,7 +53,7 @@
         <li>
           <h4 id="Interp">Interpolation</h4>
           <p>
-            CAT12 uses an internal interpolation to provide more reliable results even with low resolution images and anisotropic spatial resolutions.
+            CAT uses an internal interpolation to provide more reliable results even with low resolution images and anisotropic spatial resolutions.
             Although interpolation cannot add more details to the images, some of the functions used benefit from the higher number of voxels and the usual strip artefacts in modulated images are greatly reduced. 
           </p>       
         </li>
@@ -102,7 +102,7 @@
         <li> 
           <h4 id="SS">Skull-Stripping and Cleanup</h4>
           <p>
-            CAT12 contains a (revised) SPM approach and a graph-cut based skull-stripping (GCUT). 
+            CAT contains a (revised) SPM approach and a graph-cut based skull-stripping (GCUT). 
             <!--
              GCUT approach can be further controlled by the <em>"Strength of Local Adaptive Segmentation"</em> parameter in the cat_defaults file, with 0 for a more liberal and wider brain masks and 1 for a more aggressive skull-stripping. The strength parameter affects multiple internal parameters, such as (i) intensity thresholds for the treatment of blood-vessels and meninges, (ii) distance and growth parameters for the graph-cut/region-growing, (iii) closing parameters that fill the sulci, and (iv) smoothing parameters that allow sharper or wider results. If your segmentations still contain skull and other non-brain tissue (e.g. dura) you can try to increase the strength. If parts of the brain are missing in the segmentations, the strength can be decreased.-->
              Moreover, a new cleanup routine, which uses morphological, distance and smoothing operations, improves removing of remaining meninges after the final segmentation. The strength of the cleanup is controlled by the <i>"Strength of Final Clean Up"</i> parameter in the expert GUI (<i>cleanupstr</i> in cat_defaults).
