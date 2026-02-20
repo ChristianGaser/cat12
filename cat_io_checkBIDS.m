@@ -35,9 +35,12 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,mdevdir] = cat_io_checkBIDS(sfile
         if any(cat_io_contains(sdirs{end-3}(1:min(4,numel(sdirs{end-3}))),{'sub-','sub_'})), sub = 1; else, sub = 0; end
       end
     end
-    sdirs_orig = sdirs;
-    dev = find(strcmp('derivatives',sdirs)); 
-    sdirs(dev:dev+1) = []; 
+    dev = find(strcmp('derivatives',sdirs),1,'last');
+    if ~isempty(dev), sdirs(dev:dev+1) = []; end
+% ... delete
+% sdirs_orig = sdirs;
+% dev = find(strcmp('derivatives',sdirs));
+% sdirs(dev:dev+1) = [];
     
     if ~sub
     % Handling of missing subject directory, i.e., this is not BIDS.
