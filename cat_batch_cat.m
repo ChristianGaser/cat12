@@ -110,13 +110,6 @@ catch %#ok<CTCH> % catch with lasterror is necessary for old matlab versions
     matlabbatch{1}.spm.tools.cat.estwrite = rmfield(matlabbatch{1}.spm.tools.cat.estwrite,'opts');
     matlabbatch{1}.spm.tools.cat.estwrite.nproc = 0;
     spm_jobman('initcfg');
-    if exist('tbx_cfg_cat','file')
-      try
-        cfg_util('addapp',@tbx_cfg_cat);
-      catch
-        cfg_util('addapp',tbx_cfg_cat);
-      end
-    end
     spm_jobman('run',matlabbatch);
   catch %#ok<CTCH>
     caterr = lasterror;  %#ok<LERR>
