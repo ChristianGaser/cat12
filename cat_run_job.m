@@ -842,10 +842,10 @@ end
           end
 
           try 
-            try
-              evalc('[Affine0, affscale]  = spm_affreg(VG1, VF1, aflags, Affine_com); Affine = Affine0;');
-            catch
-              evalc('[Affine0, affscale]  = cat_spm_affreg(VG1, VF1, aflags, Affine_com); Affine = Affine0;');
+            if exist('spm_affreg','file')
+              evalc('[Affine, affscale]  = spm_affreg(VG1, VF1, aflags, Affine_com);');
+            else
+              evalc('[Affine, affscale]  = cat_spm_affreg(VG1, VF1, aflags, Affine_com)');
             end
           catch
             affscale = 0; 

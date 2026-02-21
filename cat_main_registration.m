@@ -244,8 +244,12 @@ if dreg.affreg && ( ~isfield(job,'useprior') || isempty(job.useprior) || ~exist(
 
   % affreg
   aflags = struct('sep',job.opts.samp,'regtype','subj','WG',[],'WF',[],'globnorm',1);
-  warning off; 
-  [Affine, affscale]  = spm_affreg(VG, VF, aflags, dres.Affine); 
+  warning off;
+  if exist('spm_affreg','file')
+    [Affine, affscale]  = spm_affreg(VG, VF, aflags, dres.Affine);
+  else
+    [Affine, affscale]  = cat_spm_affreg(VG, VF, aflags, dres.Affine);
+  end
   warning on; 
   dres.Affine = Affine;
   clear VG VF ; 

@@ -140,18 +140,23 @@ function [Ym,Yb,WMth,Affine,skullstripped,mp2rage] = cat_long_APP(PF,PG,PB,opt)
     aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
   
     % Affine registration
+    warning off
     try 
-      warning off
       if skullstripped % RD20250811: apply brainmask
         VG.dat = VG.dat .* VB.dat; 
       end
-      [Affine, affscale]  = spm_affreg(VG, VF, aflags, eye(4));
-      warning on
+      if exist('spm_affreg','file')
+        [Affine, affscale]  = spm_affreg(VG, VF, aflags, eye(4));
+      else
+        [Affine, affscale]  = cat_spm_affreg(VG, VF, aflags, eye(4));
+      end
       clear VG 
     catch
       affscale = 0; 
     end
   end
+  warning on
+  
   % failed registration
   if affscale>3 || affscale<0.5
     Affine = eye(4); 
