@@ -812,9 +812,13 @@ if debug, clear Yp0; end
 if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
    all( [job.output.surface>10 job.output.surface<19 ] ) ||  (job.output.surface==9 && ...
    any( [job.output.ct.native job.output.ct.warped job.output.ct.dartel job.output.ROI] ))
- 
+  
   % prepare some parameters
-  if ~isfield(job,'useprior'), job.useprior = ''; end
+  if ~isfield(job,'useprior')
+    job.useprior = '';
+  elseif iscell(job.useprior) && isempty(job.useprior)
+    job.useprior = '';
+  end
   Yp0 = zeros(d,'single'); Yp0(indx,indy,indz) = single(Yp0b)*5/255; 
   Ym0 = zeros(d,'single'); Ym0(indx,indy,indz) = single(Yp0b)/255; 
   [Ymix,job,surf,stime] = cat_main_surf_preppara(Ym0,Yp0,job);
@@ -855,10 +859,12 @@ if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
       % cat_surf_createCS4 except for inv_weighting or if gcut was not used
       if ~(job.extopts.gcutstr>0 && ~job.inv_weighting), Yb0(:) = 1; end
       
+      opt0 = struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
+        'interpV',job.extopts.pbtres,'SRP', mod(job.extopts.SRP,10), 'vdist', job.extopts.vdist, ...
+        'Affine',res.Affine,'surf',{surf},'verb',job.extopts.verb,'useprior',job.useprior);
+        
       [Yth1, S, Psurf, qa.createCS] = ... 
-        cat_surf_createCS4(VT,VT0,Ymi,Ymix,Yl1,YMF,Yb0,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
-        'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,'SRP', mod(job.extopts.SRP,10), 'vdist', job.extopts.vdist, ...
-        'Affine',res.Affine,'surf',{surf},'verb',job.extopts.verb,'useprior',job.useprior),job); 
+        cat_surf_createCS4(VT,VT0,Ymi,Ymix,Yl1,YMF,Yb0,opt0,job); 
       qa.subjectmeasures.EC_abs = NaN;
       qa.subjectmeasures.defect_size = NaN;
     elseif job.extopts.SRP >= 30
