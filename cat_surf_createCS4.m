@@ -520,7 +520,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     clear facevertexcdata Yth1i CS; 
     
     if exist(Vppm.fname ,'file'), delete(Vppm.fname); end
-    if debug && exist(Vpp.fname ,'file') && ~opt.outputpp.native, delete(Vpp.fname); end
+    if ~debug && exist(Vpp.fname ,'file') && ~opt.outputpp.native, delete(Vpp.fname); end
     if ~debug && exist(Vgmt.fname ,'file'), delete(Vgmt.fname); end
     if ~debug && exist(Vmfs.fname ,'file'), delete(Vmfs.fname); end
   
