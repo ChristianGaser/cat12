@@ -4,19 +4,25 @@ function varargout = cat_plot_histogram(data,opt)
 % If data are spmT-files also print mean, std, effect size,
 % and upper 5%-tail cutoff
 %
-% data           - char array of input files or data matrix
-% opt fields:
-% color          = cat_io_colormaps('nejm',size(data,1)) as default, see cat_io_colormaps for more categorical colormaps
-% norm_frequency = true;
-% winsize        = [750 500];
-% xrange         = [];
-% xlim           = [];
-% ylim           = [];
-% dist           = 'kernel' (normal, gamma, rician, rayleigh, poisson, weibull)
-%                  see fitdist for all distributions
-% mean           = plot average histogram of all data
-% out            = histogram values
-% out2           = statistic of histogram values
+% data            .. char array of input files or data matrix or data cell
+%
+% opt             .. parameter structure
+% .color          .. cat_io_colormaps('nejm',size(data,1)) as default, 
+%                    see cat_io_colormaps for more categorical colormaps
+%                    use 4th column for specific alpha
+% .norm_frequency .. true;
+% .winsize        .. [750 500];
+% .xrange         .. [];
+% .xlim           .. [];
+% .ylim           .. [];
+% .dist           .. 'kernel' (normal, gamma, rician, rayleigh, poisson, weibull)
+%                    see fitdist for all distributions
+% .mean           .. plot average histogram of all data
+% .out            .. histogram values
+% .out2           .. statistic of histogram values
+% .alpha          .. use alpha transparancy (0-1-user defined, *2-auto)
+%                    only if color definition use 3 values (no alpha)
+% .rawline        .. plot fine line/raw data (0-no, 1-yes, *2-auto-only print <6 lines)
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -46,6 +52,7 @@ else
       if ind == 2
         data = data';
       end
+      data0 = cell(1,n);
       for i=1:n
         data0{i} = data(i,:);
       end
@@ -64,10 +71,20 @@ def.ylim           = [];
 def.dist           = 'kernel';
 def.mean           = n > 12;
 def.bins           = 500; 
+def.alpha          = 2; % use alpha transparancy (0-1-user defined, *2-auto)
+def.rawline        = 2; % plot fine line/raw data: 0-no, 1-yes, 2-auto (only print <6 lines)
 
 opt = cat_io_checkinopt(opt,def);
 
-if ~isempty(opt.dist) && exist('fitdist') ~= 2
+% use alpha tranparency in case of large data
+if opt.alpha > 1 || opt.alpha < 0
+  opt.alpha = max(.2, 1 / (n-5).^.5); 
+end
+if opt.alpha ~= 1 && size(opt.color,2) < 4
+  opt.color(:,4) = opt.alpha; 
+end
+
+if ~isempty(opt.dist) && exist('fitdist','file') ~= 2
   fprintf('Function fitdist not found: Disable curve fitting.');
   opt.dist = '';
 end
@@ -88,8 +105,8 @@ for i = 1:n
   else
   
     fname = deblank(data(i,:));
-    [pth,nam,ext] = spm_fileparts(fname);
-    [pth2,nam2,ext2] = spm_fileparts(nam);
+    [~,nam,ext] = spm_fileparts(fname);
+    [~,~,ext2] = spm_fileparts(nam);
 
     % 0 - nii.gz; 1 - txt; 2 - volume; 3 - mesh; 4 - Freesurfer
     if strcmp(ext,'.gz') && strcmp(ext2,'.nii')
@@ -248,7 +265,7 @@ for j = 1:n
     H0 = hist(y,X0);
     pd = fitdist(y,opt.dist);
 
-    [bincounts,binedges] = histcounts(y,X0);
+    [~,binedges] = histcounts(y,X0);
 
     % Normalize the density to match the total area of the histogram
     Hfit(j,:) = n * (binedges(2)-binedges(1)) * pdf(pd,X0);
@@ -282,7 +299,7 @@ for j = 1:n
 
     % give some specific output for (normally distributed) T-values or
     % effect size (D)
-    [pth,nam] = spm_fileparts(deblank(data(j,:)));
+    [~,nam] = spm_fileparts(deblank(data(j,:)));
     spmT_found = ~isempty(strfind(nam,'spmT')) || strcmp(nam(1),'D');
     mn = mean(y);
     sd = std(y);
@@ -309,27 +326,30 @@ end
 
 if ~isempty(opt.dist)
   HP  = plot(X(:,2:end-1)', Hfit(:,2:end-1)');
-  hold on
-  HP0 = plot(X(:,2:end-1)', H(:,2:end-1)');
-  hold off
+  if opt.rawline == 1  ||  ( opt.rawline == 2  &&  length(HP) < 6 )
+    hold on
+    HP0 = plot(X(:,2:end-1)', H(:,2:end-1)');
+    hold off
+  end
 else
   HP = plot(X(:,2:end-1)', H(:,2:end-1)');
 end
 
 for i = 1:length(HP)
   set(HP(i),'LineWidth',1);
-  if ~isempty(opt.dist)
+  if ~isempty(opt.dist) && exist('HP0','var')
     set(HP0(i),'LineWidth',1,'Linestyle',':');
   end
   if ~isempty(opt.color)
     set(HP(i),'Color',opt.color(i,:));
-    if ~isempty(opt.dist)
+    if ~isempty(opt.dist) && exist('HP0','var')
       set(HP0(i),'Color',opt.color(i,:));
     end
   end
 end
 
 h = legend(legend_str);
+% switch legend off (but have it prepared) in case of too many entries
 set(h,'Interpreter','none');
 grid on
 if opt.norm_frequency
@@ -337,6 +357,7 @@ if opt.norm_frequency
 else
   ylabel('Frequency');
 end
+if numel(legend_str) > 15, legend off; end
 
 if ~isempty(opt.xlim) && numel(opt.xlim) == 2
   xlim(opt.xlim)
