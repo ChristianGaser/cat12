@@ -2281,6 +2281,16 @@ if isfield( H , 'textures')
   cat_plot_histogram( H.textures{currentTexture,2}.fname )
 else
   cat_plot_histogram(  H.cdata );
+  if isfield(H,'axis')
+    HT = get( H.axis , 'Title' ) ; 
+    if ~isempty( HT )
+      title(HT.String);
+    end
+    HT = get( H.axis , 'Subtitle' ) ; 
+    if ~isempty( HT )
+      subtitle(HT.String);
+    end
+  end
 end
 %==========================================================================
 function mySynchroniseCaxis(obj,evt,H)
