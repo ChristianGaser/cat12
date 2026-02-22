@@ -855,8 +855,6 @@ if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
       % cat_surf_createCS4 except for inv_weighting or if gcut was not used
       if ~(job.extopts.gcutstr>0 && ~job.inv_weighting), Yb0(:) = 1; end
 
-      job.extopts.SRP = 42;    
-      
       opt0 = struct('trans',trans, ... required for Ypp output
         'interpV',job.extopts.pbtres,'SRP', mod(job.extopts.SRP,10), 'vdist', job.extopts.vdist, ...
         'Affine',res.Affine, 'surf',{surf}, 'verb',job.extopts.verb, 'useprior',job.useprior);
