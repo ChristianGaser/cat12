@@ -847,13 +847,13 @@ function cat_run_job1639(job,tpm,subj)
 
             warning off
             try 
-              [Affine0, affscale]  = spm_affreg(VG1, VF1, aflags, Affine_com); Affine = Affine0;
-            catch
-              try
-                [Affine0, affscale]  = cat_spm_affreg(VG1, VF1, aflags, Affine_com); Affine = Affine0;
-              catch
-                affscale = 0;
+              if exist('spm_affreg','file')
+                [Affine, affscale]  = spm_affreg(VG1, VF1, aflags, Affine_com);
+              else
+                [Affine, affscale]  = cat_spm_affreg(VG1, VF1, aflags, Affine_com);
               end
+            catch
+              affscale = 0;
             end
             if affscale>3 || affscale<0.5
               cat_io_cmd('Coarse affine registration failed. Try fine affine registration.','','',1,stime);

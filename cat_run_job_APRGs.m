@@ -334,9 +334,9 @@ end
     aflags.sep = max(aflags.sep,max(sqrt(sum(VG(1).mat(1:3,1:3).^2))));
     aflags.sep = max(aflags.sep,max(sqrt(sum(VF(1).mat(1:3,1:3).^2))));
     %
-    try
+    if exist('spm_affreg','file')
       [Affine2,affscale1] = spm_affreg(VG1, VF1, aflags, Affine, 1);
-    catch
+    else
       [Affine2,affscale1] = cat_spm_affreg(VG1, VF1, aflags, Affine, 1);
     end
   end

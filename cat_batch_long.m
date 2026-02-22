@@ -104,17 +104,6 @@ try
   % use expert mode for long. batch
   cat12('expert')
   spm_jobman('initcfg');
-  % fallback: explicitly register CAT toolbox app if it was not loaded
-  try
-    if exist('tbx_cfg_cat','file')
-      try
-        cfg_util('addapp',@tbx_cfg_cat);
-      catch
-        cfg_util('addapp',tbx_cfg_cat);
-      end
-    end
-  catch
-  end
   spm_jobman('run',matlabbatch);
 catch %#ok<CTCH> % catch with lasterror is necessary for old matlab versions
   caterr = lasterror;  %#ok<LERR>

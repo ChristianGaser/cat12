@@ -549,22 +549,22 @@ end
 
 if isfield(job.output,'rmat') && job.output.rmat
   cdep(end+1)          = cfg_dep;
-  cdep(end).sname      = sprintf('Affine forward transformation',i);
+  cdep(end).sname      = sprintf('Affine forward transformation');
   cdep(end).src_output = substruct('.','tiss','()',{i},'.','ta','()',{':'});
   cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 
   cdep(end+1)          = cfg_dep;
-  cdep(end).sname      = sprintf('Affine backward transformation',i);
+  cdep(end).sname      = sprintf('Affine backward transformation');
   cdep(end).src_output = substruct('.','tiss','()',{i},'.','ita','()',{':'});
   cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 
   cdep(end+1)          = cfg_dep;
-  cdep(end).sname      = sprintf('Rigid forward transformation',i);
+  cdep(end).sname      = sprintf('Rigid forward transformation');
   cdep(end).src_output = substruct('.','tiss','()',{i},'.','tr','()',{':'});
   cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 
   cdep(end+1)          = cfg_dep;
-  cdep(end).sname      = sprintf('Rigid backward transformation',i);
+  cdep(end).sname      = sprintf('Rigid backward transformation');
   cdep(end).src_output = substruct('.','tiss','()',{i},'.','itr','()',{':'});
   cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 end

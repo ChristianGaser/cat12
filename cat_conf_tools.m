@@ -180,7 +180,7 @@ function tools = cat_conf_tools(expert)
   avg_img                     = conf_vol_average(data,outdir);
   savg                        = conf_vol_savg(prefix,verb,expert);
   realign                     = conf_vol_series_align(data,expert);
-  shootlong                   = conf_shoot(expert); 
+  %shootlong                   = conf_shoot(expert); 
   [sanlm,sanlm2]              = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert);
   biascorrlong                = conf_longBiasCorr(data,expert,prefix);
   data2mat                    = conf_io_data2mat(data,outdir);
@@ -227,7 +227,7 @@ function tools = cat_conf_tools(expert)
     mp2rage, ...
     ...
     realign, ...                          cat.pre.long.?          % hidden
-    shootlong,...                         cat.pre.long.?          % hidden
+    ...shootlong,...                         cat.pre.long.?          % hidden
     biascorrlong,...                      cat.pre.long.?          % hidden
     createTPMlong, ...                    cat.pre.long.createTPM  % hidden
     long_report, ...                      cat.pre.long.report     % hidden
@@ -1641,9 +1641,9 @@ function shootlong = conf_shoot(expert)
 % -------------------------------------------------------------------------
 % This is slightly modified version of the original Shooting that allows to 
 % specify another default file. It is required to remove slight movements of
-% between scans in longidudinal data.
+% between scans in longitudinal data.
 % Although this is a general batch it is here defined as a private function 
-% called only from the CAT longidudinal batch.
+% called only from the CAT longitudinal batch.
 % 
 % RD202005
 % -------------------------------------------------------------------------
