@@ -78,7 +78,7 @@ opt = cat_io_checkinopt(opt,def);
 
 % use alpha tranparency in case of large data
 if opt.alpha > 1 || opt.alpha < 0
-  opt.alpha = max(.2, 1 / (n-5).^.5); 
+  opt.alpha = max(.2, 1 / max(1,n-5).^.5); 
 end
 if opt.alpha ~= 1 && size(opt.color,2) < 4
   opt.color(:,4) = opt.alpha; 
