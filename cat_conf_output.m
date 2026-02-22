@@ -29,53 +29,93 @@ function [output,output_spm] = cat_conf_output(expert)
     bids_folder = fullfile('derivatives',cat_version);
   end
   
+  % == 3 folder types ==
   BIDSfolder         = cfg_entry;
   BIDSfolder.tag     = 'BIDSfolder';
-  BIDSfolder.name    = 'BIDS folder (relative to dataset root)';
+  BIDSfolder.name    = 'BIDS folder';
   BIDSfolder.strtype = 's';
   BIDSfolder.num     = [1 Inf];
   BIDSfolder.val     = {bids_folder};
-  BIDSfolder.help    = {'Path to derivatives relative to the dataset root (the parent directory of the subject folders, i.e., the folder that contains sub-*).', ...
-                        'Example: "derivatives/CAT12.x_rxxxx" will save results to <dataset>/derivatives/CAT12.x_rxxxx/<sub-*>/... regardless of the depth of the input files.', ...
-                        'Absolute paths are not allowed here.'};
+  BIDSfolder.help    = {
+    'Use BIDS directory structure for storing data. '
+   ['The BIDS option will create "BIDS folder" directory in the BIDS root directory where the subjects are listed. ' ...
+    'If BIDS is off or if the input is not in BIDS (i.e. missing the subject directory), the output is written into (data-subfolders of) the input directory.']
+    ''
+    'Examples for "derivatives/CAT":'
+    '  ./sub/ses/anat/files  >>  ./derivatives/CAT/sub/ses/anat/files'
+    '  ./dir/files  >>  ./dir/[data-subfolder]/files'
+    ''
+  };
 
   BIDSfolder2        = BIDSfolder; 
-  BIDSfolder2.name   = 'Relative folder (advanced)';
+  BIDSfolder2.name   = 'Relative BIDS folder (relative to dataset root)';
+  BIDSfolder2.help   = {
+    'The relative BIDS option allows to consider parent directories ahead of the root directory and applies the "BIDS folder" also in non-BIDS cases. ' 
+    ''
+    'Examples for "derivatives/CAT":'
+    '  ./sub/ses/anat/files  >>  ./derivatives/CAT/sub/ses/anat/files'
+    '  ./dir/files  >>  ./dir/derivatives/CAT[/subfolder]/files'
+    'Examples for "../derivatives/CAT":'
+    '  ./dir/sub/ses/anat  >>  ./derivatives/CAT/dir/sub/ses/anat'
+    '  ./dir/files  >>  ./derivatives/CAT/dir[/subfolder]/files'
+    ''
+  };
 
-  BIDSyes2       = cfg_branch;
-  BIDSyes2.tag   = 'BIDSyes2';
-  BIDSyes2.name  = 'Yes (relative folder)';
-  BIDSyes2.val   = {BIDSfolder2};
-  BIDSyes2.help  = {'Use relative directory structure for storing data although if it is not BIDS conform.  This alternative definion based on the depth of the file, controlled here by the repetition of "../" is keeping subdirectories to be more robust in case of a regular but non-BIDS structure without default directory naming "sub-##/ses-##/anat" and similar filenames, e.g. for "../../derivatives/CAT##.#_#" and the following files:';
-    '   ../group-01/sub-01/t1w.nii';
-    '   ../group-01/sub-02/t1w.nii';
-    'it results in:'; 
-    '   ../derivatives/CAT##.#_#/group-01/sub-01/t1w.nii';
-    '   ../derivatives/CAT##.#_#/group-01/sub-02/t1w.nii';
-    'rather than:';
-    '   ../derivatives/CAT##.#_#/t1w.nii';
-    '   ../derivatives/CAT##.#_#/t1w.nii';
-    'where the relative BIDS folder would also cause conflicts by overwriting results.';
-    '';
-    };
+  BIDSfolder3        = BIDSfolder; 
+  BIDSfolder3.name   = 'Relative folder';
+  BIDSfolder3.help   = {
+    'The relative non-BIDS option ignores the BIDS structure and just writes relative to the input file. '
+    ''
+    'Examples for "derivatives/CAT":'
+    '  ./sub/ses/anat/files  >>  ./sub/ses/anat/derivatives/CAT/files'
+    '  ./dir/files  >>  ./dir/derivatives/CAT[/subfolder]/files'
+    'Examples for "../derivatives/CAT":'
+    '  ./dir/sub/ses/anat  >>  ./dir/sub/ses/derivatives/CAT/anat'
+    '  ./dir/files  >>  ./derivatives/CAT/dir[/subfolder]/files'
+    'Examples for "../../../derivatives/CAT":'
+    '  ./dir/sub/ses/anat  >>  ./derivatives/CAT/dir/sub/ses/anat'
+    '  ./dir3/dir2/dir1/files  >>  ./derivatives/CAT/dir3/dir2/dir1/[/subfolder]/files'
+    ''
+  }; 
+ 
+  % == 2 (4) BIDS cases ==
+  BIDSrel       = cfg_branch;
+  BIDSrel.tag   = 'BIDSrel';
+  BIDSrel.name  = 'Yes (relative folder)';
+  BIDSrel.val   = {BIDSfolder2};
+  BIDSrel.help  = BIDSfolder2.help;
+
+  relative       = cfg_branch;
+  relative.tag   = 'relative';
+  relative.name  = 'No (relative folder)';
+  relative.val   = {BIDSfolder3};
+  relative.help  = BIDSfolder3.help;
 
   BIDSyes       = cfg_branch;
   BIDSyes.tag   = 'BIDSyes';
   BIDSyes.name  = 'Yes';
   BIDSyes.val   = {BIDSfolder};
-  BIDSyes.help  = {'Use BIDS directory structure for storing data'};
+  BIDSyes.help  = BIDSfolder.help;
   
   BIDSno        = cfg_const;
   BIDSno.tag    = 'BIDSno';
   BIDSno.name   = 'No';
   BIDSno.val    = {1};
-  BIDSno.help   = {'Use CAT12 default directories for storing data'};
+  BIDSno.help   = {
+    'Use CAT12 default directories for storing data. '
+    ''
+    'Examples:'
+    '  ./sub/ses/anat/files  >>  ./sub/ses/anat/derivatives/CAT/files'
+    '  ./dir/files  >>  ./dir/derivatives/CAT[/data-subfolder]/files'  
+    ''
+  };
   
+  % == final note ==
   BIDS          = cfg_choice;
   BIDS.tag      = 'BIDS';
   BIDS.name     = 'Use BIDS directory structure?';
   if expert
-    BIDS.values   = {BIDSyes2 BIDSyes BIDSno};
+    BIDS.values   = {BIDSrel BIDSyes relative BIDSno};
   else
     BIDS.values   = {BIDSyes BIDSno};
   end
@@ -84,8 +124,61 @@ function [output,output_spm] = cat_conf_output(expert)
   else
     BIDS.val      = {BIDSno};
   end
-  BIDS.help     = {'Select prefered output structure to save data.'};
-
+  BIDS.help     = {'Select prefered output structure to save data. '};
+  if expert == 0 
+    BIDS.help = [ BIDS.help ; {
+     ['The BIDS option will create "BIDS folder" directory in the BIDS root directory where the subjects are listed. ' ...
+      'If BIDS is off or if the input is not in BIDS (i.e. missing the subject directory), the output is written into (data-subfolders of) the input directory.']
+      ''
+      'Examples for "derivatives/CAT":'
+      '  Yes - Write into BIDS-subfolder/data-subfolder into the dataset/file root directory'
+      '    ./sub/ses/anat/files  >>  ./derivatives/CAT/sub/ses/anat/files'
+      '    ./dir/files  >>  ./dir/[data-subfolder]/files'
+      ''
+      '  No - Write into file root directory, _independent_ of BIDS'
+      '    ./sub/ses/anat/files  >>  ./sub/ses/anat/derivatives/CAT/files'
+      '    ./dir/files  >>  ./dir/derivatives/CAT[/data-subfolder]/files'
+      ''
+    }];
+  else 
+    BIDS.help = [ BIDS.help; {
+     ['The BIDS option will create "BIDS folder" directory in the BIDS root directory where the subjects are listed. ' ...
+      'If BIDS is off or if the input is not in BIDS (i.e. missing the subject directory), the output is written into (subfolders of) the input directory. ' ...
+      'The relative BIDS option allows to consider parent directories ahead of the root directory and applies the "BIDS folder" also in non-BIDS cases. ' ...
+      'The relative non-BIDS option ignores the BIDS structure and just writes relative to the input file. '] 
+      ''
+      'Examples:'
+      '  Yes (relative folder) - Write relative to dataset root'
+      '   1) "derivatives/CAT":'
+      '       ./sub/ses/anat/files  >>  ./derivatives/CAT/sub/ses/anat/files'
+      '       ./dir/files  >>  ./dir/derivatives/CAT[/subfolder]/files'
+      '   2) "../derivatives/CAT":'
+      '       ./dir/sub/ses/anat  >>  ./derivatives/CAT/dir/sub/ses/anat'
+      '       ./dir/files  >>  ./derivatives/CAT/dir[/subfolder]/files'
+      ''
+      '  Yes - Write into BIDS-subfolder/data-subfolder into the dataset/file root'
+      '   1) "derivatives/CAT":'
+      '       ./sub/ses/anat/files  >>  ./derivatives/CAT/sub/ses/anat/files'
+      '       ./dir/files  >>  ./dir/[subfolder]/files'
+      ''
+      '  No (relative folder) - Write relative to dataset root, _independent_ of BIDS'
+      '   1) "derivatives/CAT":'
+      '       ./sub/ses/anat/files  >>  ./sub/ses/anat/derivatives/CAT/files'
+      '       ./dir/files  >>  ./dir/derivatives/CAT[/subfolder]/files'
+      '   2) "../derivatives/CAT":'
+      '       ./dir/sub/ses/anat  >>  ./dir/sub/ses/derivatives/CAT/anat'
+      '       ./dir/files  >>  ./derivatives/CAT/dir[/subfolder]/files'
+      '   3) "../../../derivatives/CAT":'
+      '       ./dir/sub/ses/anat  >>  ./derivatives/CAT/dir/sub/ses/anat'
+      '       ./dir3/dir2/dir1/files  >>  ./derivatives/CAT/dir3/dir2/dir1/[/subfolder]/files'
+      ''
+      '  No - Write into dataset root, _independent_ of BIDS'
+      '   1) "derivatives/CAT":'
+      '       ./sub/ses/anat/files  >>  ./sub/ses/anat/derivatives/CAT/files'
+      '       ./dir/files  >>  ./dir/derivatives/CAT[/subfolder]/files'
+      ''
+    }];
+  end
 
   %------------------------------------------------------------------------
 

@@ -27,25 +27,29 @@ function [mrifolder, reportfolder, surffolder, labelfolder, errfolder, BIDSfolde
     subfolders = job.extopts.subfolders;
 
     BIDSfolder_rel = '';
-    if isfield(job,'output') && isfield(job.output,'BIDS') && ...
-       ( isfield(job.output.BIDS,'BIDSyes') || isfield(job.output.BIDS,'BIDSyes2') )
-      if isfield(job.output.BIDS,'BIDSyes')
+    resdircase     = 0;
+    if isfield(job,'output') 
+      if isfield(job.output.BIDS,'BIDSyes') 
         BIDSfolder_rel = job.output.BIDS.BIDSyes.BIDSfolder;
-      else
-        BIDSfolder_rel = job.output.BIDS.BIDSyes2.BIDSfolder;
+        resdircase = 0; 
+      elseif isfield(job.output.BIDS,'BIDSrel')
+        BIDSfolder_rel = job.output.BIDS.BIDSrel.BIDSfolder;
+        resdircase = 1;
+      elseif isfield(job.output.BIDS,'relative')  
+        BIDSfolder_rel = job.output.BIDS.relative.BIDSfolder;
+        resdircase = 2;
       end
     elseif isfield(job.extopts,'BIDSfolder')
       BIDSfolder_rel = job.extopts.BIDSfolder;
-    elseif isfield(job.extopts,'BIDSfolder2')
-      BIDSfolder_rel = job.extopts.BIDSfolder2;
     end
   else
     subfolders     = cat_get_defaults('extopts.subfolders');
     BIDSfolder_rel = '';
+    resdircase     = 0;
   end
 
-  % get BIDS data
-  [~,sfilesBIDS,~,devdir,rdevdir] = cat_io_checkBIDS(fname,BIDSfolder_rel);
+  %% get BIDS data
+  [~,sfilesBIDS,~,devdir,rdevdir] = cat_io_checkBIDS(fname,BIDSfolder_rel,resdircase);
 
   if subfolders && ~sfilesBIDS(1)
   % if no BIDS is given and subfolder are wished ...

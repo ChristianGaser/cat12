@@ -1,7 +1,7 @@
 function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBIDS(sfiles,BIDSdir,resdircase) 
 %checkBIDS. Detect BIDS input and define of suited derivate directories. 
 %
-%  [sfiles, sfilesBIDS, BIDSsub, devdir, mdevdir] = checkBIDS(sfiles,BIDSdir) 
+%  [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir] = checkBIDS(sfiles,BIDSdir,resdircase) 
 % 
 %  sfiles   .. input files
 %  isBIDS   .. one if input is BIDS
@@ -9,17 +9,15 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBID
 %  devdir   .. main data directory (parent of sub in case of BIDS)
 %  redivdir .. relative directory (e.g. sub*/ses*/anat*)
 %  logdir   .. common directory for log files
-%  mdevdir  .. main data directory 
 %  resdircase  .. 0 - BIDSdir only if BIDS, 
 %                 1 - BIDSdir allways, 
 %                 2 - BIDSdir as pure relative dir also in case of BIDS  
 %
 
   
-  if ~exist('dirtype','var'), resdircase = 1; end
-
-% * what about longitudinal 
-% * what about derivates subdir?
+  if ~exist('resdircase','var'), resdircase = 1; end
+  % in this case no relative path is allowed
+  if resdircase==0, BIDSdir = strrep(BIDSdir,['..' filesep],''); end
 
   sfiles    = cellstr(sfiles);
   sfiles    = spm_file( sfiles, 'number', ''); 
@@ -28,9 +26,9 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBID
   BIDSsub   = cell(size(sfiles));
   devdir    = cell(size(sfiles));
   rdevdir   = cell(size(sfiles));
-  pdir      = cell(size(sfiles));
   mdevdir   = cell(size(sfiles));
-  
+  pdir      = cell(size(sfiles));
+ 
   %% if BIDS structure is detectected than use only the anat directory 
   for sfi = numel(sfiles):-1:1
     % Detect BIDS directories by looking for key words used in to define
@@ -64,13 +62,13 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBID
       devdir{sfi} = sdirs{1};
     end
 
-    if ~sub || isempty(BIDSdir) || resdircase>0
+    if ~sub || isempty(BIDSdir) || resdircase == 2
     % Handling of missing subject directory, i.e., this is not BIDS.
     % Here, we just use the BIDSdir directly. 
       isBIDS(sfi)  = 0; 
       BIDSsub{sfi} = spm_file( sdirs{end}, 'number', '', 'ext', '');
       
-      if isempty(dev) || resdircase>1
+      if isempty(dev) || resdircase == 0
         devdir{sfi} = fileparts(sfiles{sfi});
       else
         % File already resides in a derivatives directory.
@@ -83,21 +81,27 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBID
         devdir{sfi} = basepath;
       end
 
-      if ~isempty(BIDSdir) || resdircase==0
+      if ~isempty(BIDSdir) && resdircase > 0
         di = numel(sdirs);
         devdir{sfi} = fullfile(devdir{sfi}, BIDSdir);
+        mdevdir{sfi} = devdir{sfi};
         for dii = 1:min( extradirs , di-1 )
           devdir{sfi} = fullfile(devdir{sfi}, sdirs{di - dii});
         end
+      else
+        mdevdir{sfi} =fullfile(devdir{sfi}, BIDSdir);
       end
 
       devdir{sfi}  = spm_file(devdir{sfi}, 'cpath' );
-      mdevdir{sfi} = devdir{sfi};
-      rdevdir{sfi} = BIDSdir;
-      if ~isempty(BIDSdir) || resdircase==0
-        for dii = 1:min( extradirs , di-1 )
-          rdevdir{sfi} = fullfile(rdevdir{sfi}, sdirs{di - dii});
+      if resdircase > 0
+        rdevdir{sfi} = BIDSdir;
+        if ~isempty(BIDSdir)
+          for dii = 1:min( extradirs , di-1 )
+            rdevdir{sfi} = fullfile(rdevdir{sfi}, sdirs{di - dii});
+          end
         end
+      else
+        rdevdir{sfi} = '';
       end
       pdir{sfi}    = fullfile(sdirs{1:end-1});
       devi(sfi)    = numel(sdirs); 
@@ -115,11 +119,11 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBID
         if sub && di == devi(sfi)
           % add BIDSdir
           devdir{sfi} = fullfile(devdir{sfi}, BIDSdir); 
+          mdevdir{sfi} = devdir{sfi};
           % add some directories inbetween for every ../ used 
           for dii = 1:min( extradirs , di-1)
             devdir{sfi} = fullfile(devdir{sfi}, sdirs{di - dii});
           end
-          mdevdir{sfi} =  spm_file(spm_file(devdir{sfi}), 'cpath' );
         end 
         devdir{sfi} = fullfile(devdir{sfi}, sdirs{di});
       end
@@ -153,6 +157,7 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBID
   end
 
   % create directories
+  
   if ~exist(logdir,'dir')
     try
       mkdir(logdir); 
