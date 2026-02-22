@@ -805,55 +805,35 @@ if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
     end
     %% further GUI fields ...
     if ~isfield(job.extopts,'vdist'),           job.extopts.vdist           = 0;  end
-    if ~isfield(job.extopts,'scale_cortex'),    job.extopts.scale_cortex    = cat_get_defaults('extopts.scale_cortex'); end
-    if ~isfield(job.extopts,'add_parahipp'),    job.extopts.add_parahipp    = cat_get_defaults('extopts.add_parahipp'); end
-    if ~isfield(job.extopts,'close_parahipp'),  job.extopts.close_parahipp  = cat_get_defaults('extopts.close_parahipp'); end
-    if ~isfield(job.extopts,'pbtmethod'),       job.extopts.pbtmethod       = cat_get_defaults('extopts.pbtmethod'); end
-    if ~isfield(job.extopts,'reduce_mesh'),     job.extopts.reduce_mesh     = 1; end % cat_get_defaults('extopts.reduce_mesh'); end
     if ~isfield(job.output,'surf_measures'),    job.output.surf_measures    = 1; end % developer
     
     if job.extopts.SRP >= 40
       %% Yb0 was modified in cat_main_amap* for some conditions and we can use it as better mask in 
-      % cat_surf_createCS3 except for inv_weighting or if gcut was not used
+      % cat_surf_createCS4 except for inv_weighting or if gcut was not used
       if ~(job.extopts.gcutstr>0 && ~job.inv_weighting), Yb0(:) = 1; end
- 
-      [Yth1, S, Psurf, qa.createCS] = ... 
-        cat_surf_createCS4(VT,VT0,Ymi,Ymix,Yl1,YMF,Yb0,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
-        'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,'SRP', mod(job.extopts.SRP,10), 'vdist', 2, ... job.extopts.vdist, ...
-        'Affine',res.Affine,'surf',{surf},'verb',job.extopts.verb,'useprior',job.useprior),job); 
-      qa.subjectmeasures.EC_abs = NaN;
-      qa.subjectmeasures.defect_size = NaN;
-
-    elseif job.extopts.SRP >= 30
-     % Yb0 was modified in cat_main_amap* for some conditions and we can use it as better mask in 
-      % cat_surf_createCS3 except for inv_weighting or if gcut was not used
-      if ~(job.extopts.gcutstr>0 && ~job.inv_weighting), Yb0(:) = 1; end
-
-      [Yth1, S, Psurf, qa.createCS] = ...
-        cat_surf_createCS3(VT,VT0,Ymix,Yl1,YMF,YT,Yb0,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
-        'outputpp',job.output.pp,'surf_measures',job.output.surf_measures, ...
-        'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,'SRP', mod(job.extopts.SRP,10), ...
-        'scale_cortex', job.extopts.scale_cortex, 'add_parahipp', job.extopts.add_parahipp, 'close_parahipp', job.extopts.close_parahipp,  ....
-        'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
-        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'useprior',job.useprior),job); 
+      
+      opt0 = struct('trans',trans, ... required for Ypp output
+        'interpV',job.extopts.pbtres,'SRP', mod(job.extopts.SRP,10), 'vdist', job.extopts.vdist, ...
+        'Affine',res.Affine, 'surf',{surf}, 'verb',job.extopts.verb, 'useprior',job.useprior);
+        
+      [Yth1, S, Psurf, qa.createCS] = cat_surf_createCS4(VT,VT0,Ymi,Ymix,Yl1,YMF,Yb0,opt0,job);
+      
       qa.subjectmeasures.EC_abs = NaN;
       qa.subjectmeasures.defect_size = NaN;
     else
+      %% CS20
       [Yth1, S, Psurf, qa.subjectmeasures.EC_abs, qa.subjectmeasures.defect_size, qa.createCS] = ...
-        cat_surf_createCS2(VT,VT0,Ymix,Yl1,YMF,YT,struct('trans',trans,'reduce_mesh',job.extopts.reduce_mesh,... required for Ypp output
+        cat_surf_createCS2(VT,VT0,Ymix,Yl1,YMF,YT,struct('trans',trans, ... required for Ypp output
         'vdist',job.extopts.vdist,'outputpp',job.output.pp,'surf_measures',job.output.surf_measures, ...
-        'interpV',job.extopts.pbtres,'pbtmethod',job.extopts.pbtmethod,'SRP',mod(job.extopts.SRP,10),...
-        'scale_cortex', job.extopts.scale_cortex, 'add_parahipp', job.extopts.add_parahipp, 'close_parahipp', job.extopts.close_parahipp,  ....
-        'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
-        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'useprior',job.useprior),job); 
+        'interpV',job.extopts.pbtres, 'SRP',mod(job.extopts.SRP,10), 'Affine',res.Affine, 'surf',{surf}, ... 
+        'inv_weighting',job.inv_weighting,'verb',job.extopts.verb,'useprior',job.useprior), job); 
     end
   else
     %% createCS1 pipeline 
     [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size, qa.createCS] = ...
-      cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,struct('pbtmethod','pbtsimple',...
+      cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,struct('verb',job.extopts.verb,'useprior',job.useprior, ...
       'interpV',job.extopts.pbtres,'extract_pial_white',mod(job.extopts.SRP,10), ...
-      'Affine',res.Affine,'surf',{surf},'pbtlas',job.extopts.pbtlas, ... % pbtlas is the new parameter to reduce myelination effects
-      'inv_weighting',job.extopts.inv_weighting,'verb',job.extopts.verb,'useprior',job.useprior),job); 
+      'Affine',res.Affine,'surf',{surf}, 'inv_weighting',job.extopts.inv_weighting),job); 
   end
   
   % thickness map
@@ -991,7 +971,7 @@ if job.output.surface
     end
   elseif exist('Yth1','var')
     qa.subjectmeasures.dist_thickness{1} = [cat_stat_nanmean(Yth1(Yth1(:)>1)) cat_stat_nanstd(Yth1(Yth1(:)>1))];
-    th = Yth1(Yth1(:)>.5); 
+    th = Yth1(Yth1(:)>1); 
     % gyrus- and sulcus-width? 
   end
   qa.subjectmeasures.dist_thickness_md{1} = [cat_stat_nanmedian(th(:)) iqr(th(~isnan(th(:))))]; 

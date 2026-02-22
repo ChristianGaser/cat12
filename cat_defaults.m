@@ -19,7 +19,7 @@ clear global cat;
 global cat
 
 % CAT installation folder
-catdir = fileparts(which('cat12'));
+catdir = fileparts(which('spm_CAT'));
 
 % Options for inital SPM segmentation that is used as starting point for CAT. 
 %=======================================================================
@@ -252,27 +252,16 @@ cat.extopts.T1            = {fullfile(cat.extopts.pth_templates,'T1.nii')};     
 cat.extopts.cat12atlas    = {fullfile(cat.extopts.pth_templates,'cat.nii')};                          % CAT atlas with major regions for VBM, SBM & ROIs
 
 % surface options
-cat.extopts.pbtres         = 0.5; % internal resolution for thickness estimation in mm (default 0.5) 
-cat.extopts.SRP            = 40;  % surface reconstruction pipeline & self-intersection correction:
-                                  %           0/1 - CS1 without/with/with-optimized SIC
-                                  %           20/21/22 - CS2 without/with/with-optimized SIC
-                                  %           30 - CS3
-                                  %           40 - CS4
-cat.extopts.reduce_mesh    = 1;   % optimize surface sampling: 0 - PBT res. (slow); 1 - optimal res. (default); 2 - internal res.; 3 - SPM init; 4 - MATLAB init; 5 - SPM full; 
-                                  % 6 - MATLAB full; 7 - MATLAB full ext.;
-cat.extopts.vdist          = 2;   % mesh resolution (experimental, do not change!)
-cat.extopts.pbtlas         = 0;   % reduce myelination effects (experimental, not yet working properly!)
-cat.extopts.thick_measure  = 1;   % distance method for estimating thickness:  1 - Tfs: Freesurfer method using mean(Tnear1,Tnear2) (default in 12.7+); 0 - Tlink: linked distance (used before 12.7)
-cat.extopts.thick_limit    = 6;   % upper limit for Tfs thickness measure similar to Freesurfer (only valid if cat.extopts.thick_measure is set to "1"
-cat.extopts.close_parahipp = 1;   % optionally apply closing inside mask for parahippocampal gyrus to get rid of deep holes that lead to large
-                                  % cuts in gyri after topology correction. However, this may also lead to poorer quality of topology 
-                                  % correction for other data and should be only used if large cuts in the parahippocampal areas occur
-cat.extopts.scale_cortex   = 0.7; % scale intensity values for cortex to start with initial surface that is closer to GM/WM border to prevent that gyri/sulci are glued 
-                                  % if you still have glued gyri/sulci (mainly in the occ. lobe) you can try to decrease this value (start with 0.6)
-                                  % please note that decreasing this parameter also increases the risk of an interrupted parahippocampal gyrus
-cat.extopts.add_parahipp   = 0.1; % increase values in the parahippocampal area to prevent large cuts in the parahippocampal gyrus (initial surface in this area
-                                  % will be closer to GM/CSF border)
-                                  % if the parahippocampal gyrus is still cut you can try to increase this value (start with 0.15)
+cat.extopts.pbtres        = 0.5; % internal resolution for thickness estimation in mm (default 0.5) 
+cat.extopts.SRP           = 40;  % surface reconstruction pipeline & self-intersection correction:
+                                 %   10/11    - CS1 without/with/with-optimized SIC
+                                 %   20/21/22 - CS2 without/with/with-optimized SIC
+                                 %   40/42    - CS4 with C/Matlab function
+cat.extopts.vdist         = 2;   % mesh resolution (experimental, do not change!)
+cat.extopts.thick_measure = 0;   % distance method for estimating thickness:  
+                                 %   0 - Tpbt: Projection based thickness measure (<12.7,>12.9)
+                                 %   1 - Tfs:  Freesurfer method using mean(Tnear1,Tnear2) (default in 12.7-12.9)
+cat.extopts.thick_limit   = 6;   % upper limit for Tfs thickness measure (Freesurfer uses 5 mm, what is not sufficient in CAT in case of children) 
 
 % visualisation, print, developing, and debugging options
 cat.extopts.colormap     = 'BCGWHw'; % {'BCGWHw','BCGWHn'} and matlab colormaps {'jet','gray','bone',...};
@@ -286,8 +275,7 @@ cat.extopts.experimental = 0;     % experimental functions: 0 - default, 1 - cal
 cat.extopts.print        = 2;     % display and print out pdf-file of results: 0 - off, 1 - volume only (use this to avoid problems on servers that do not support openGL), 
                                   % 2 - volume and surface (default)
 cat.extopts.fontsize     = get(0,'defaultuicontrolFontSize'); % default font size for GUI; 
-%cat.extopts.fontsize     = spm('FontSizes',7); % set default font size for GUI manually; increase value for larger fonts or set it to 
-cat.extopts.send_info    = 1;     % send Matlab and CAT version to SBM server for internal statistics only. If you don't want to send this 
+cat.extopts.send_info    = 1;     % send Matlab and CAT version to SBM server for internal statistics only. If you don't want to send this
                                   % information set this flag to "0". See online help CAT->CAT user statistics for more information
 cat.extopts.gifti_dat    = 1;     % save gifti files after resampling with external dat-file, which increases speed of gifti-processing and keeps SPM.mat file small
                                   % because the cdata field is not saved with full data in SPM.mat.
