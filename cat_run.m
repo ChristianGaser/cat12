@@ -43,19 +43,23 @@ function varargout = cat_run(job)
 if isscalar(job.data), job.nproc = 0; end
 
 % extract BIDS directory from GUI parameters
-if isfield(job.output,'BIDS') && ...
-( isfield(job.output.BIDS,'BIDSyes') || isfield(job.output.BIDS,'BIDSyes2') )
+if isfield(job.output,'BIDS') 
   if isfield(job.output.BIDS,'BIDSyes') 
     BIDSfolder = job.output.BIDS.BIDSyes.BIDSfolder;
-  else
-    BIDSfolder = job.output.BIDS.BIDSyes2.BIDSfolder;
+    resdircase = 0; 
+  elseif isfield(job.output.BIDS,'BIDSrel')
+    BIDSfolder = job.output.BIDS.BIDSrel.BIDSfolder;
+    resdircase = 1;
+  elseif isfield(job.output.BIDS,'relative')  
+    BIDSfolder = job.output.BIDS.relative.BIDSfolder;
+    resdircase = 2;
   end
 else
   BIDSfolder = ''; 
 end
 job.extopts.BIDSfolder = BIDSfolder; 
 
-%% check for previous CAT12 BIDS processing 
+%% check for previous CAT BIDS processing 
 previousCATderivatives = cat_io_contains(job.data, fullfile('derivatives','CAT')) | ...
   cat_io_contains(job.data, [filesep 'mri' filesep] ); 
 if any(previousCATderivatives)
@@ -69,7 +73,7 @@ if any(previousCATderivatives)
 end
 
 %% get BIDS
-[sfiles,sfilesBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBIDS(job.data, BIDSfolder);
+[sfiles,sfilesBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBIDS(job.data, BIDSfolder, resdircase);
 
 %% evaluate input 
 if BIDSfolder
