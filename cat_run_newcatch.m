@@ -171,8 +171,12 @@ function cat_run_newcatch(job,tpm,subj)
       str_err = sprintf('%s%s|',['r' CATver],deblank(expertguistr(job.extopts.expertgui + 1))); % revision and guilevel
       for si=1:numel(caterr.stack)
         str_err = [str_err '|' caterr.stack(si).name ':' num2str(caterr.stack(si).line)];
-      end      
-      urlinfo = sprintf('%s/%s/%s/%s/%s/%s/%s/%s',CATrel,computer,'errors',['r' CATver],caterr_id,version('-release'),caterr_message_str,str_err);
+      end
+      system_str = computer;
+      if isdeployed
+        system_str = [system_str '_standalone'];
+      end
+      urlinfo = sprintf('%s/%s/%s/%s/%s/%s/%s/%s',CATrel,system_str,'errors',['r' CATver],caterr_id,version('-release'),caterr_message_str,str_err);
       cat_io_send_to_server(urlinfo);
     end
 
