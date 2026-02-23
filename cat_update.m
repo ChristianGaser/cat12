@@ -36,7 +36,7 @@ d0 = spm('Dir');
 d  = fileparts(fileparts(which('cat12')));
 toolbox_dir = fullfile(d0,'toolbox');
 cat_dir_new = fullfile(toolbox_dir,'CAT');
-cat_dir_old = fullfile(toolbox_dir,'cat12')
+cat_dir_old = fullfile(toolbox_dir,'cat12');
 
 % Chcek for old cat12 installations
 if exist(cat_dir_new,'dir') && exist(cat_dir_old,'dir')

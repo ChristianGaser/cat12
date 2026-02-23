@@ -177,4 +177,4 @@ check_pipeline: update install
 	-@echo Check pipeline
 	-@cd /Volumes/UltraMax/check_pipeline/
 	-@/Users/gaser/Dropbox/GitHub/cat12/check_pipeline.sh -d /Volumes/UltraMax/check_pipeline/ -s ~/spm/spm12 -bg 8 -f /Volumes/UltraMax/check_pipeline/check_pipeline_files.txt -l /Volumes/UltraMax/check_pipeline/check_pipeline_files_long.txt
-	-@echo Please finally call post-processing with the resp. pid: check_pipeline.sh -p pid
+	-@echo 1. cd /Volumes/UltraMax/check_pipeline/ 2. Call post-processing with the resp. pid: check_pipeline.sh -p pid

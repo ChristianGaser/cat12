@@ -5,8 +5,8 @@ function check_pipeline_homogeneity
 % _________________________________________________________________________
 % $Id$
 
-min_release = 1800;
-max_release = 3000;
+min_release = 2130;
+max_release = 4000;
 
 % list nifti files and exclude longitudinal ADNI-data
 data = spm_select('List','.','.nii');

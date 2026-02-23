@@ -1322,7 +1322,11 @@ function call_server(varargin)
 if cat_get_defaults('extopts.send_info')
   urlinfo = sprintf('%s%s%s','Start','%2F',version('-release'));
   cat_io_send_to_server(urlinfo);
-  urlinfo = sprintf('%s%s%s','TotalUsers','%2F',computer);
+  system_str = computer;
+  if isdeployed
+    system_str = [system_str '_standalone'];
+  end
+  urlinfo = sprintf('%s%s%s','TotalUsers','%2F',system_str);
   cat_io_send_to_server(urlinfo);
 end
 
