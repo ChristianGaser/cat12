@@ -35,8 +35,10 @@ The MATLAB Compiler Runtime (MCR) enables you to run applications compiled withi
 |CAT Standalone|MCR|
 |---|---:|
 [Linux](https://github.com/ChristianGaser/cat12/releases/latest/download/CAT_R2023b_MCR_Linux.zip) |[Linux](https://ssd.mathworks.com/supportfiles/downloads/R2023b/Release/10/deployment_files/installer/complete/glnxa64/MATLAB_Runtime_R2023b_Update_10_glnxa64.zip)|
-[Mac Intel](https://github.com/ChristianGaser/cat12/releases/latest/download/CAT_R2023b_MCR_Mac.zip) |[Mac](https://ssd.mathworks.com/supportfiles/downloads/R2023b/Release/10/deployment_files/installer/complete/maci64/MATLAB_Runtime_R2023b_Update_10_maci64.dmg.zip)|
-[Mac ARM64 (Silicon)](https://github.com/ChristianGaser/cat12/releases/latest/download/CAT_R2023b_MCR_Mac_arm64.zip) |[Mac ARM64](https://ssd.mathworks.com/supportfiles/downloads/R2023b/Release/10/deployment_files/installer/complete/maca64/MATLAB_Runtime_R2023b_Update_10_maca64.dmg)|
+[Mac Intel](https://github.com/ChristianGaser/cat12/releases/latest/download/CAT_R2023b_MCR_Mac.zip) |[Mac Intel](https://ssd.mathworks.com/supportfiles/downloads/R2023b/Release/10/deployment_files/installer/complete/maci64/MATLAB_Runtime_R2023b_Update_10_maci64.dmg.zip)|
+[Mac ARM64 (Silicon)](https://github.com/ChristianGaser/cat12/releases/latest/download/CAT_R2023b_MCR_Mac_arm64.zip) |[Mac ARM64 (Silicon)](https://ssd.mathworks.com/supportfiles/downloads/R2023b/Release/10/deployment_files/installer/complete/maca64/MATLAB_Runtime_R2023b_Update_10_maca64.dmg)|
 [Windows](https://github.com/ChristianGaser/cat12/releases/latest/download/CAT_R2023b_MCR_Win.zip) |[Windows](https://ssd.mathworks.com/supportfiles/downloads/R2023b/Release/10/deployment_files/installer/complete/win64/MATLAB_Runtime_R2023b_Update_10_win64.zip)|
+
+Older versions (CAT12.9 or newer can be found [here].(https://github.com/ChristianGaser/cat12/releases)
 
 <!--Please contact [me](mailto:christian.gaser@uni-jena.de) if you need other versions.-->
