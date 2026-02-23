@@ -842,11 +842,7 @@ end
           end
 
           try 
-            if exist('spm_affreg','file')
-              evalc('[Affine, affscale]  = spm_affreg(VG1, VF1, aflags, Affine_com);');
-            else
-              evalc('[Affine, affscale]  = cat_spm_affreg(VG1, VF1, aflags, Affine_com)');
-            end
+            evalc('[Affine, affscale]  = cat_spm_affreg(VG1, VF1, aflags, Affine_com)');
           catch
             affscale = 0; 
           end
@@ -895,11 +891,7 @@ end
           end
           warning off
           if ~exist('affscale','var'), affscale = 1.0; end
-          try
-            evalc('[Affine1,affscale1] = spm_affreg(VG1, VF1, aflags, Affine, affscale);');
-          catch
-            evalc('[Affine1,affscale1] = cat_spm_affreg(VG1, VF1, aflags, Affine, affscale);');
-          end
+          evalc('[Affine1,affscale1] = cat_spm_affreg(VG1, VF1, aflags, Affine, affscale);');
           warning on
           if ~any(any(isnan(Affine1(1:3,:)))) && affscale1>0.5 && affscale1<3, Affine = Affine1; end 
         end

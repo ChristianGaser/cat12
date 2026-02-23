@@ -1,6 +1,6 @@
 function [M,scal] = cat_spm_affreg(VG,VF,flags,M,scal)
 % Affine registration using least squares.
-% FORMAT [M,scal] = spm_affreg(VG,VF,flags,M0,scal0)
+% FORMAT [M,scal] = cat_spm_affreg(VG,VF,flags,M0,scal0)
 %
 % VG        - Vector of template volumes.
 % VF        - Source volume.

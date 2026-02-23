@@ -846,12 +846,8 @@ function cat_run_job1639(job,tpm,subj)
             end
 
             warning off
-            try 
-              if exist('spm_affreg','file')
-                [Affine, affscale]  = spm_affreg(VG1, VF1, aflags, Affine_com);
-              else
-                [Affine, affscale]  = cat_spm_affreg(VG1, VF1, aflags, Affine_com);
-              end
+            try
+              [Affine, affscale]  = cat_spm_affreg(VG1, VF1, aflags, Affine_com);
             catch
               affscale = 0;
             end
@@ -896,11 +892,7 @@ function cat_run_job1639(job,tpm,subj)
           end
           warning off
           if ~exist('affscale','var'), affscale = 1.0; end
-          try
-            [Affine1,affscale1] = spm_affreg(VG1, VF1, aflags, Affine, affscale);
-          catch
-            [Affine1,affscale1] = cat_spm_affreg(VG1, VF1, aflags, Affine, affscale);
-          end
+          [Affine1,affscale1] = cat_spm_affreg(VG1, VF1, aflags, Affine, affscale);
           warning on
           if ~any(any(isnan(Affine1(1:3,:)))) && affscale1>0.5 && affscale1<3, Affine = Affine1; end
         else

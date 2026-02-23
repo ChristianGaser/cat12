@@ -145,11 +145,7 @@ function [Ym,Yb,WMth,Affine,skullstripped,mp2rage] = cat_long_APP(PF,PG,PB,opt)
       if skullstripped % RD20250811: apply brainmask
         VG.dat = VG.dat .* VB.dat; 
       end
-      if exist('spm_affreg','file')
-        [Affine, affscale]  = spm_affreg(VG, VF, aflags, eye(4));
-      else
-        [Affine, affscale]  = cat_spm_affreg(VG, VF, aflags, eye(4));
-      end
+      [Affine, affscale]  = cat_spm_affreg(VG, VF, aflags, eye(4));
       clear VG 
     catch
       affscale = 0; 
