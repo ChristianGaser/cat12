@@ -23,12 +23,14 @@ if ST
     [pth,nam] = spm_fileparts(csv_file);
     xml_file = fullfile(atlas_dir, ['labels_CAT_' nam '.xml']);
     old_xml_file = fullfile(atlas_dir, ['labels_cat12_' nam '.xml']);
+    old_nii_file = fullfile(atlas_dir, ['cat12_' nam '.nii']);
     create_spm_atlas_xml(xml_file, csv);
     atlas_file = fullfile(pth,[nam '.nii']);
     new_atlas_name = ['CAT_' nam '.nii'];
     try
       copyfile(atlas_file,fullfile(atlas_dir,new_atlas_name),'f');
       if exist(old_xml_file,'file'), delete(old_xml_file); end
+      if exist(old_nii_file,'file'), delete(old_nii_file); end
       fprintf('Install %s\n',xml_file);
     catch
       disp('Writing error: Please check file permissions.');
