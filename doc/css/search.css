@@ -1,0 +1,133 @@
+/* ─── CAT Smart Search ──────────────────────────────────────── */
+
+#search-section {
+  border-bottom: solid 2px rgba(210, 215, 217, 0.75);
+  margin: 0 0 2em 0;
+  padding: 0 0 2em 0;
+}
+
+#cat-search-box {
+  display: flex;
+  gap: 0;
+  margin-top: 0.5em;
+}
+
+#cat-search-input {
+  flex: 1;
+  padding: 0.55em 0.8em;
+  font-size: 0.95em;
+  border: 2px solid #d2d7d9;
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+  outline: none;
+  background: #fff;
+  color: #3d4449;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+#cat-search-input:focus {
+  border-color: #f56a6a;
+}
+
+#cat-search-input::placeholder {
+  color: #9fa3a6;
+  font-style: italic;
+}
+
+#cat-search-btn {
+  padding: 0.55em 0.9em;
+  border: 2px solid #d2d7d9;
+  border-left: none;
+  border-radius: 0 6px 6px 0;
+  background: #f56a6a;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.95em;
+  transition: background-color 0.2s;
+  line-height: 1;
+}
+
+#cat-search-btn:hover {
+  background: #e45454;
+}
+
+/* ─── Results ──────────────────────────────────────────────── */
+
+#cat-search-results {
+  margin-top: 1em;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.search-result {
+  background: #fff;
+  border: 1px solid #e0e3e5;
+  border-radius: 6px;
+  padding: 0.75em 0.85em;
+  margin-bottom: 0.6em;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.search-result:hover {
+  border-color: #f56a6a;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+.search-result-title {
+  display: block;
+  font-weight: 700;
+  font-size: 0.92em;
+  color: #3d4449;
+  text-decoration: none;
+  margin-bottom: 0.3em;
+  line-height: 1.35;
+  border-bottom: none !important;
+}
+
+.search-result-title:hover {
+  color: #f56a6a;
+}
+
+.search-result-snippet {
+  font-size: 0.82em;
+  color: #6b7278;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.search-badge {
+  display: inline-block;
+  font-size: 0.72em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.15em 0.5em;
+  border-radius: 3px;
+  vertical-align: middle;
+  margin-right: 0.3em;
+}
+
+.search-badge.faq {
+  background: #fef3cd;
+  color: #856404;
+}
+
+.search-badge.section {
+  background: #d4edda;
+  color: #155724;
+}
+
+mark {
+  background: #fff3cd;
+  color: inherit;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.search-no-result {
+  font-size: 0.85em;
+  color: #9fa3a6;
+  font-style: italic;
+  padding: 0.5em 0;
+}
