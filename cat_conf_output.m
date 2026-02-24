@@ -48,9 +48,9 @@ function [output,output_spm] = cat_conf_output(expert)
   };
 
   BIDSfolder2        = BIDSfolder; 
-  BIDSfolder2.name   = 'Relative BIDS folder (relative to dataset root)';
+  BIDSfolder2.name   = 'Relative result folder';
   BIDSfolder2.help   = {
-    'The relative BIDS option allows to consider parent directories ahead of the root directory and applies the "BIDS folder" also in non-BIDS cases. ' 
+    'The relative BIDS option allows to consider parent directories ahead of the root directory and applies the "BIDS folder" also in non-BIDS cases. Adding "../" place the result directory one level up and add the name of the parent directory (e.g. the group or project direcotry) to the beginning of the subdirectories. ' 
     ''
     'Examples for "derivatives/CAT":'
     '  ./sub/ses/anat/files  >>  ./derivatives/CAT/sub/ses/anat/files'
@@ -81,25 +81,26 @@ function [output,output_spm] = cat_conf_output(expert)
   % == 2 (4) BIDS cases ==
   BIDSrel       = cfg_branch;
   BIDSrel.tag   = 'BIDSrel';
-  BIDSrel.name  = 'Yes (relative folder)';
+  BIDSrel.name  = 'Yes (if applicable, otherwise relative to file)';
   BIDSrel.val   = {BIDSfolder2};
   BIDSrel.help  = BIDSfolder2.help;
 
   relative       = cfg_branch;
   relative.tag   = 'relative';
-  relative.name  = 'No (relative folder)';
+  relative.name  = 'No (always relative to file)';
   relative.val   = {BIDSfolder3};
   relative.help  = BIDSfolder3.help;
 
+  BIDSfolder.hidden = expert < 1; 
   BIDSyes       = cfg_branch;
   BIDSyes.tag   = 'BIDSyes';
-  BIDSyes.name  = 'Yes';
+  BIDSyes.name  = 'Yes (if applicable, otherwise file folder)';
   BIDSyes.val   = {BIDSfolder};
   BIDSyes.help  = BIDSfolder.help;
   
   BIDSno        = cfg_const;
   BIDSno.tag    = 'BIDSno';
-  BIDSno.name   = 'No';
+  BIDSno.name   = 'No (use data directory)';
   BIDSno.val    = {1};
   BIDSno.help   = {
     'Use CAT12 default directories for storing data. '
@@ -117,12 +118,13 @@ function [output,output_spm] = cat_conf_output(expert)
   if expert
     BIDS.values   = {BIDSrel BIDSyes relative BIDSno};
   else
-    BIDS.values   = {BIDSyes BIDSno};
+    BIDS.values   = {BIDSrel BIDSyes BIDSno};
   end
-  if cat_get_defaults('extopts.bids_yes')
-    BIDS.val      = {BIDSyes};
-  else
-    BIDS.val      = {BIDSno};
+  switch cat_get_defaults('extopts.bids_yes')
+    case 0, BIDS.val = {BIDSno};
+    case 1, BIDS.val = {BIDSyes};
+    case 2, BIDS.val = {BIDSrel};
+    case 3, BIDS.val = {relative};
   end
   BIDS.help     = {'Select prefered output structure to save data. '};
   if expert == 0 
@@ -130,7 +132,15 @@ function [output,output_spm] = cat_conf_output(expert)
      ['The BIDS option will create "BIDS folder" directory in the BIDS root directory where the subjects are listed. ' ...
       'If BIDS is off or if the input is not in BIDS (i.e. missing the subject directory), the output is written into (data-subfolders of) the input directory.']
       ''
-      'Examples for "derivatives/CAT":'
+      'Examples:'
+      '  Yes (relative folder) - Write relative to dataset root'
+      '    with "derivatives/CAT":'
+      '      ./sub/ses/anat/files  >>  ./derivatives/CAT/sub/ses/anat/files'
+      '      ./dir/files  >>  ./dir/derivatives/CAT[/subfolder]/files'
+      '    with "../derivatives/CAT":'
+      '       ./dir/sub/ses/anat  >>  ./derivatives/CAT/dir/sub/ses/anat'
+      '       ./dir/files  >>  ./derivatives/CAT/dir[/subfolder]/files'
+      ''
       '  Yes - Write into BIDS-subfolder/data-subfolder into the dataset/file root directory'
       '    ./sub/ses/anat/files  >>  ./derivatives/CAT/sub/ses/anat/files'
       '    ./dir/files  >>  ./dir/[data-subfolder]/files'

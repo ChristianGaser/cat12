@@ -180,7 +180,7 @@ function tools = cat_conf_tools(expert)
   avg_img                     = conf_vol_average(data,outdir);
   savg                        = conf_vol_savg(prefix,verb,expert);
   realign                     = conf_vol_series_align(data,expert);
-  %shootlong                   = conf_shoot(expert); 
+  shootlong                   = conf_shoot(expert); 
   [sanlm,sanlm2]              = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert);
   biascorrlong                = conf_longBiasCorr(data,expert,prefix);
   data2mat                    = conf_io_data2mat(data,outdir);
@@ -227,7 +227,7 @@ function tools = cat_conf_tools(expert)
     mp2rage, ...
     ...
     realign, ...                          cat.pre.long.?          % hidden
-    ...shootlong,...                         cat.pre.long.?          % hidden
+    shootlong,...                         cat.pre.long.?          % hidden
     biascorrlong,...                      cat.pre.long.?          % hidden
     createTPMlong, ...                    cat.pre.long.createTPM  % hidden
     long_report, ...                      cat.pre.long.report     % hidden
@@ -296,7 +296,7 @@ function savg = conf_vol_savg(prefix,verb,expert)
   subjects          = cfg_repeat;
   subjects.tag      = 'subjects';
   subjects.name     = 'Subjects/Sessions';
-  subjects.values   = {subjectdirs,subject,scans};
+  subjects.values   = {subjectdirs,sessiondirs,subject,scans};
   subjects.val      = {subjectdirs}; 
   subjects.num      = [1 Inf];
   subjects.help     = {
@@ -316,7 +316,7 @@ function savg = conf_vol_savg(prefix,verb,expert)
   filelim.strtype        = 'n';
   filelim.num            = [1 1];
   filelim.val            = {inf}; 
-  filelim.hidden         = expert<1; 
+  %filelim.hidden         = expert<1; % good for tests
   filelim.help           = {'Just to support quick tests. '}; 
   
   % seplist
@@ -325,8 +325,11 @@ function savg = conf_vol_savg(prefix,verb,expert)
   seplist.name           = 'Data separation list';
   seplist.strtype        = 's';
   seplist.num            = [0 Inf];
-  seplist.val            = {'T1w T2w PD inv1 inv2'};
-  seplist.help           = {'Enter keywords to separate files in the averaging process, e.g., to separate protocols (T1w,T2w etc.). ' ''};
+  seplist.val            = {'_T1w _T2w _PD _inv1-T2w _inv2-T1w _unic-T1w _FLAIR _T2star' }; % 'T1w T2w PD inv1 inv2' 
+  seplist.help           = {
+   ['Enter keywords to separate files in the averaging process, e.g., to separate protocols (T1w,T2w etc.). ' ...
+    'Use empty field to avage all available images that fullfile the other constraints. ']
+    ''};
   
   % blacklist
   blacklist              = cfg_entry;
@@ -343,7 +346,7 @@ function savg = conf_vol_savg(prefix,verb,expert)
   reqlist.name           = 'Path selector (EXPERT)';
   reqlist.strtype        = 's';
   reqlist.num            = [0 Inf];
-  reqlist.hidden         = expert<1;
+  %reqlist.hidden         = expert<1; % needed if no BIDS
   reqlist.val            = {[filesep 'anat' filesep]};
   reqlist.help           = {'Enter strings that have to be in the path to force on specific directories, eg. with anatomical data. ' ''};
 
@@ -399,7 +402,7 @@ function savg = conf_vol_savg(prefix,verb,expert)
   % sharpen (EXPERT - this is experimental)
   sharpen               = cfg_menu;
   sharpen.tag           = 'sharpen';
-  sharpen.name          = 'Sharpening before resampling (EXPERT)'; 
+  sharpen.name          = 'Sharpening in case of resampling'; 
   if expert > 1
     sharpen.labels        = {'no','light','strong','heavy','insane'};
     sharpen.values        = {0 1 2 4 8};
@@ -408,8 +411,8 @@ function savg = conf_vol_savg(prefix,verb,expert)
     sharpen.values        = {0 1 2};
   end
   sharpen.val           = {1}; 
-  sharpen.hidden        = expert<1; % we hide as this is connected to the resolution
-  sharpen.help          = {'Apply sharpening filter before averaging to improve appearance of edges. ' ''};
+  %sharpen.hidden        = expert<1; % we hide as this is connected to the resolution ... however, in ds000239-TRT-GE3 sharpening is an issue before
+  sharpen.help          = {'Apply sharpening filter before averaging to improve appearance of edges. Switch off the sharpening if data was alreay enhanced before and shows artifacts close to strong boundaries. ' ''};
 
   % resolution 
   res                   = cfg_entry;
@@ -420,7 +423,8 @@ function savg = conf_vol_savg(prefix,verb,expert)
   res.val               = {0}; 
   res.help              = {
    ['Output resolution of the average file. The default "0" uses the minimum resolution per subject/session. ' ...
-    'Additional interpolation is only useful in case of many high-quality images. ']
+    'Additional interpolation is only useful in case of many high-quality images, e.g., 3 rescans with 1 mm (or .8 mm) could be interpolated to .8 mm (resp. .6 mm). ' ...
+    'However, the improvement of resolution is quite limited even you have 20-40 scans of the same subject and the result will be blurry. ' ]
     ''
     };
 
@@ -1160,6 +1164,7 @@ function long_report = conf_long_report(data_vol,data_xml,expert)
   printlong.labels  = {'No','Yes (volume only)','Yes (volume and surfaces)'};
   printlong.values  = {0 1 2};
   printlong.def     = @(val)cat_get_defaults('extopts.print', val{:});
+  printlong.hidden  = expert<1;
   printlong.help    = {
     'Create final longitudinal CAT report that requires Java.'
   };
@@ -1172,7 +1177,7 @@ function long_report = conf_long_report(data_vol,data_xml,expert)
   if expert
     long_report.val     = {data_vol avg_vol data_surf avg_surf xmls timepoints opts output printlong};
   else
-    long_report.val     = {data_vol data_surf};
+    long_report.val     = {data_vol data_surf printlong};
   end  
   long_report.prog      = @cat_long_report;
   %long_report.vout      = @vout_long_report; 

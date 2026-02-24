@@ -19,9 +19,11 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBID
   % in this case no relative path is allowed
   if resdircase==0, BIDSdir = strrep(BIDSdir,['..' filesep],''); end
 
+  % remove SPM image number
   sfiles    = cellstr(sfiles);
   sfiles    = spm_file( sfiles, 'number', ''); 
 
+  % prepare output
   isBIDS    = false(size(sfiles)); 
   BIDSsub   = cell(size(sfiles));
   devdir    = cell(size(sfiles));
@@ -62,7 +64,9 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBID
       devdir{sfi} = sdirs{1};
     end
 
+    
     if ~sub || isempty(BIDSdir) || resdircase == 2
+    % == NO BIDS > write into root (subdirectories) ==
     % Handling of missing subject directory, i.e., this is not BIDS.
     % Here, we just use the BIDSdir directly. 
       isBIDS(sfi)  = 0; 
@@ -93,7 +97,7 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBID
       end
 
       devdir{sfi}  = spm_file(devdir{sfi}, 'cpath' );
-      if resdircase > 0
+      if resdircase > 0 
         rdevdir{sfi} = BIDSdir;
         if ~isempty(BIDSdir)
           for dii = 1:min( extradirs , di-1 )
@@ -105,8 +109,12 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBID
       end
       pdir{sfi}    = fullfile(sdirs{1:end-1});
       devi(sfi)    = numel(sdirs); 
+
+
     else
-      %% Evaluation of the different cases, i.e., between cross and long cases
+      % == BIDS ==
+
+      % Evaluation of the different cases, i.e., between cross and long cases
       isBIDS(sfi) = sub; 
       if  ses && ~ana, BIDSsub{sfi} = sdirs{end-2}; devi(sfi) = numel(sdirs)-2; end % (maybe) long
       if  ses &&  ana, BIDSsub{sfi} = sdirs{end-3}; devi(sfi) = numel(sdirs)-3; end % (maybe) long
@@ -138,6 +146,7 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBID
     end
   end
 
+
   % log-directory setup
   switch 2
     case 1
@@ -150,19 +159,31 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBID
       end
     case 2
       % write into current directory
-      logdir = fullfile(pwd, BIDSdir,'log');
+      if strcmp(pwd,fullfile(spm('dir'),'toolbox','CAT'))
+        % in case of the CAT directory we file this in a dataspecific subdirectory
+        logdir = fullfile(pwd, 'logs', char(datetime('now','Format','yyyyMMdd')) );
+      else
+        logdir = fullfile(pwd, BIDSdir,'log');
+      end
     case 3
       % write into first subject directory
       logdir = fullfile(pdir{1}, BIDSdir, 'log');
   end
 
-  % create directories
-  
+
+  % create log and main result directory
   if ~exist(logdir,'dir')
     try
       mkdir(logdir); 
     catch
-      cat_io_cprintf('note','cat_run: BIDS evaluation failed. \n')
+      if cat_io_contains( logdir , spm('dir') )
+        logdirfailed = logdir; 
+        logdir = fullfile(pdir{1}, BIDSdir, 'log');
+        cat_io_cprintf('warning',['cat_run: Creation of log directory "%s" failed. \n' ...
+          'Write into first subject directory: "%s"'],logdirfailed,logdir)
+      else
+        cat_io_cprintf('warning','cat_run: Creation of log directory "%s" failed. \n',logdir)
+      end
     end
   end
   for sfi = 1:numel(sfiles)

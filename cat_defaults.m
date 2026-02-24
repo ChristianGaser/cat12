@@ -170,7 +170,12 @@ cat.extopts.resval       = [1.0 0.30];   % resolution value and its tolerance ra
 % use BIDS data structure
 [cat_ver, cat_rel] = cat_version;
 cat.extopts.bids_folder  = fullfile('derivatives',[cat_ver '_' cat_rel]); % default BIDS path relative to dataset root (parent of sub-*)
-cat.extopts.bids_yes     = 0; % use BIDS structure for saving data
+cat.extopts.bids_yes     = 1; % use BIDS structure for saving data (defined by the root of the sub-* directory)
+                              % 0 - no never, i.e., just write into (subfolders of) the main data directory
+                              % 1 - yes, if BIDS than write into the bids_folder directory, else like 0
+                              % 2 - yes (relative), write into the (relative, i.e., '../') bids_folder directory also for non-BIDS data
+                              % 3 - no (relative), write all data into the (relative, i.e., '../') bids_folder directory
+
 
 % check for multiple cores is different for octave
 if strcmpi(spm_check_version,'octave')

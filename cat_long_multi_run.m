@@ -68,106 +68,52 @@ if isfield(job,'datalong')
 
   is_copied = zeros(numel(job.data),1);
 
-  % create BIDS structure and unzip or copy file to BIDS-folder
-  if isfield(job.output,'BIDS')
-    if isfield(job.output.BIDS,'BIDSyes')
-    
-      c = 1;
-      is_copied = ones(numel(job.data),1);
-      for ti = 1:numel(job.subj)
 
-        BIDSfolder = job.output.BIDS.BIDSyes.BIDSfolder;
-        
-        % get path of first data set and find "sub-" BIDS part
-        name1 = spm_file(job.data{c},'fpath');
-        ind = min(strfind(name1,'sub-'));
+  %%
+  job = cat_run_prepareBIDS(job);
 
-        if ~isempty(ind)
-          % remove leading ".." for real BIDS structure
-          BIDSfolder = strrep(BIDSfolder,['..' filesep],'');
 
-          length_name = length(name1);
-
-          % Shorten path until "sub-" indicator is found and add additional
-          % relative paths to get BIDSfolder relative to "sub-" directories.
-          % This is necessary because there might be additional session 
-          % folders and more
-          while length_name > ind
-            name1 = spm_file(name1,'fpath');
-            length_name = length(name1);
-            BIDSfolder = ['..' filesep BIDSfolder];
-          end
-        end
-
-        % we need this in job.extopts for cat_io_subfolders
-        job.extopts.BIDSfolder = BIDSfolder;
+  %% we need this in job.extopts for cat_io_subfolders
+  c = 1;
+  for ti = 1:numel(job.subj)
+    for si = 1:numel(job.subj(ti).mov)
+      [pth,nam,ext] = spm_fileparts(job.subj(ti).mov{si});
+      rootfolder = cat_io_subfolders(job.subj(ti).mov{si},job);
+      % remove additional mri subfolder because registration first will 
+      % work in the upper folder
+      ind = strfind(rootfolder,[filesep 'mri']);
+      if ~isempty(ind), rootfolder(ind:end) = []; end
       
-        for si = 1:numel(job.subj(ti).mov)
-          [pth,nam,ext] = spm_fileparts(job.subj(ti).mov{si});
-          rootfolder = cat_io_subfolders(job.subj(ti).mov{si},job);
-          % remove additional mri subfolder because registration first will 
-          % work in the upper folder
-          ind = strfind(rootfolder,[filesep 'mri']);
-          if ~isempty(ind), rootfolder(ind:end) = []; end
-          
-          name = fullfile(pth,[nam ext]);
-          newdir = fullfile(pth,rootfolder);
-          % uncompress nii.gz files and change file name for job
-          if strcmp(ext,'.gz')
-            fname = gunzip(name,newdir);
-            fprintf('Uncompress %s to %s\n',name,newdir);
-            job.subj(ti).mov{si} = char(fname);
-            job.data{c} = char(fname);
-          else
-            if ~exist(newdir), mkdir(newdir); end
-            is_copied(c) = 2;
-            s = copyfile(name,newdir);
-            if ~s
-              error('Could not write %s to %s',name,newdir);
-            else
-              fprintf('Copy %s to %s\n',name,newdir);
-              job.subj(ti).mov{si} = fullfile(newdir,[nam ext]);
-              job.data{c} = fullfile(newdir,[nam ext]);
-            end
-          end
-          c = c + 1;
+      name = fullfile(pth,[nam ext]);
+      newdir = fullfile(pth,rootfolder);
+      % uncompress nii.gz files and change file name for job
+      if strcmp(ext,'.gz')
+        fname = gunzip(name,newdir);
+        fprintf('Uncompress %s to %s\n',name,newdir);
+        job.subj(ti).mov{si} = char(fname);
+        job.data{c} = char(fname);
+      else
+        if ~exist(newdir,'dir'), mkdir(newdir); end
+        is_copied(c) = 2;
+        s = copyfile(name,newdir);
+        if ~s
+          error('Could not write %s to %s',name,newdir);
+        else
+          fprintf('Copy %s to %s\n',name,newdir);
+          job.subj(ti).mov{si} = fullfile(newdir,[nam ext]);
+          job.data{c} = fullfile(newdir,[nam ext]);
         end
       end
-    
-    else
-      job.output  = rmfield(job.output,'BIDS');
-      if isfield(job.extopts,'BIDSfolder'), job.extopts = rmfield(job.extopts,'BIDSfolder'); end
-      output = job.output;
-      extopts = job.extopts;
+      c = c + 1;
+    end
+  end
 
-    end
-  end
-  
-  % also uncompress gz-files for non-BIDS structure
-  if ~isfield(job.extopts,'BIDSfolder') || isempty(job.extopts.BIDSfolder)
-    c = 1;
-    for ti = 1:numel(job.subj)
-      for si = 1:numel(job.subj(ti).mov)
-        [pth,nam,ext] = spm_fileparts(job.subj(ti).mov{si});
-        % uncompress nii.gz files and change file name for job
-        if strcmp(ext,'.gz')
-          is_copied(c) = 1;
-          fname = gunzip(job.subj(ti).mov{si});
-          job.subj(ti).mov{si} = char(fname);
-          job.data{c} = char(fname);
-          fprintf('Uncompress %s\n',job.subj(ti).mov{si});
-        end
-        c = c + 1;
-      end
-    end
-  else
-    % remove BIDS fields because files are now already copied to BIDS-folder
-    job.output  = rmfield(job.output,'BIDS');
-    job.extopts = rmfield(job.extopts,'BIDSfolder');
-    output = job.output;
-    extopts = job.extopts;
-  end
-  
+  %% remove BIDS fields because files are now already copied to BIDS-folder
+  job.output  = rmfield(job.output,'BIDS');
+  job.extopts.BIDSfolder = ''; 
+  job.extopts.resdircase = 0; 
+  output  = job.output;
+  extopts = job.extopts;
 end
 
 job_name = fullfile(fileparts(mfilename('fullpath')),'cat_long_main.txt');

@@ -1,4 +1,4 @@
-function [mrifolder, reportfolder, surffolder, labelfolder, errfolder, BIDSfolder] = ...
+function [mrifolder, reportfolder, surffolder, labelfolder, errfolder, mainfolder] = ...
   cat_io_subfolders(fname,job)
 % ______________________________________________________________________
 % Prepare subfolder names, optionally with BIDS structure
@@ -21,14 +21,14 @@ function [mrifolder, reportfolder, surffolder, labelfolder, errfolder, BIDSfolde
   % setup variables for subfolders (e.g, mri/surf) and 
   % the relative BIDSfolder_rel (e.g., ../derivatives/CAT0815)
   if nargin > 1 && isfield(job,'extopts')
-    if ~isfield(job.extopts,'subfolders')
+    if ~isfield(job.extopts,'subfolders') 
       job.extopts.subfolders = cat_get_defaults('extopts.subfolders');
     end
     subfolders = job.extopts.subfolders;
 
     BIDSfolder_rel = '';
     resdircase     = 0;
-    if isfield(job,'output') 
+    if isfield(job,'output') && isfield(job.output,'BIDS')
       if isfield(job.output.BIDS,'BIDSyes') 
         BIDSfolder_rel = job.output.BIDS.BIDSyes.BIDSfolder;
         resdircase = 0; 
@@ -39,8 +39,12 @@ function [mrifolder, reportfolder, surffolder, labelfolder, errfolder, BIDSfolde
         BIDSfolder_rel = job.output.BIDS.relative.BIDSfolder;
         resdircase = 2;
       end
-    elseif isfield(job.extopts,'BIDSfolder')
+    elseif isfield(job.extopts,'BIDSfolder') % eg. longitudinal 
       BIDSfolder_rel = job.extopts.BIDSfolder;
+      resdircase     = job.extopts.resdircase;
+    else % eg. longitudinal
+      BIDSfolder_rel = '';
+      resdircase     = 0;
     end
   else
     subfolders     = cat_get_defaults('extopts.subfolders');
@@ -48,7 +52,7 @@ function [mrifolder, reportfolder, surffolder, labelfolder, errfolder, BIDSfolde
     resdircase     = 0;
   end
 
-  %% get BIDS data
+  % get BIDS data
   [~,sfilesBIDS,~,devdir,rdevdir] = cat_io_checkBIDS(fname,BIDSfolder_rel,resdircase);
 
   if subfolders && ~sfilesBIDS(1)
@@ -74,6 +78,25 @@ function [mrifolder, reportfolder, surffolder, labelfolder, errfolder, BIDSfolde
     errfolder    = '';
   end
 
-  BIDSfolder = devdir{1};
+  % maindir without BIDS to avoid doubling 
+  if ~isempty(BIDSfolder_rel) && cat_io_contains( labelfolder , BIDSfolder_rel )
+    mainfolder = strrep( devdir{1}, BIDSfolder_rel,'') ;
+  else
+    mainfolder = devdir{1};
+  end
 
+  % for longitudinal we need update
+  if ~exist(mainfolder,'dir'), mkdir(mainfolder); end
+  if subfolders && ~sfilesBIDS(1)
+    usevatlases = isfield(job,'ROImenu') && isfield(job.ROImenu,'atlases') && any(cell2mat(struct2cell(rmfield(job.ROImenu.atlases,'ownatlas')))); 
+    %usesatlases = isfield(job,'ROImenu') && isfield(job.ROImenu,'atlases') && any(cell2mat(struct2cell(rmfield(job.ROImenu.atlases,'ownatlas')))); 
+    if ~exist(fullfile(mainfolder,labelfolder),'dir') && ...
+       (( isfield(job,'output') && isfield(job.output,'ROI') && job.output.ROI )  || usevatlases || ... 
+        ( isfield(job,'output') && isfield(job.output,'sROI') && job.output.sROI ))
+      mkdir(fullfile(mainfolder,labelfolder)); 
+    end
+    if ~exist(fullfile(mainfolder,mrifolder),'dir'), mkdir(fullfile(mainfolder,mrifolder)); end
+    if ~exist(fullfile(mainfolder,surffolder),'dir') && job.output.surface, mkdir(fullfile(mainfolder,surffolder)); end
+    if ~exist(fullfile(mainfolder,reportfolder),'dir'), mkdir(fullfile(mainfolder,reportfolder)); end
+  end
 end

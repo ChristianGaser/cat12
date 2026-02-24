@@ -97,10 +97,10 @@ function [P,pp0,mrifolder,pp0_surffolder,surffolder,ff] = setFileNames(V0,job,op
 %setFileNames. Define surface filenames.
 %#ok<*AGROW> 
 
-  [mrifolder, ~, surffolder] = cat_io_subfolders(V0.fname,job);
+  [mrifolder, ~, surffolder, ~, ~, pp0] = cat_io_subfolders(V0.fname,job);
   
   % get original filename without 'n'
-  [pp0,ff] = spm_fileparts(V0.fname);
+  [~,ff] = spm_fileparts(V0.fname);
   
   % correct '../' parts in directory for BIDS structure
   [stat, val] = fileattrib(fullfile(pp0,surffolder));
@@ -334,7 +334,7 @@ function useprior = setupprior(opt,surffolder,P,si)
     if ~useprior
       warn_str = sprintf('Surface files for %s not found. Move on with individual surface extraction.\n',pp1_surffolder);
       fprintf('\nWARNING: %s',warn_str);
-      cat_io_addwarning('cat_surf_createCS4:noPiorSurface', warn_str);
+      cat_io_addwarning('cat_surf_createCS4:noPriorSurface', warn_str);
     else
       cat_io_cprintf('blue','\n  Use existing average surface as prior and thus skip unnecessary processing steps:\n    %s\n',pp1_surffolder);
     end      
