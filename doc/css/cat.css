@@ -56,22 +56,39 @@ body {
   -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
   -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
-  background: #AADDEE;
+  background: #DDD;
   margin-top: 20px; 
   padding: 0 10 0 10px;
   text-decoration: none;
-  width: 50%;
+  width: 30%;
   margin-left: auto;
   margin-right: auto;
+  display: flex;
+  justify-content: center;   /* centers the two 30% blocks */
 }
+
+.button-row{
+  display: flex;
+  justify-content: center;   /* centers the two 30% blocks */
+  gap: 5%;                   /* spacing between them */
+  flex-wrap: nowrap;
+  margin-left: 10%;
+  margin-right: 10%;
+}
+
+.button-row .button{
+  flex: 0 0 30%;
+}
+
 #button a {
   color: #003344;
   font-weight: bold;
   text-decoration: none;
 }
+
 #button a:hover {
-  background: #AADDEE;
-  color: #FF0000;
+  background: #DDD;
+  color: #00AA00;
   text-decoration: none;
 }
 

@@ -17,6 +17,9 @@
     <div id="button">
       <p align="center" style="text-align:center;"><a href="matlab:web(fullfile(fileparts(which('cat12')),'doc','index.html#quick'),'-new');">Open ''Quick Start Guide'' in external window</a></p>      
     </div>
+    <div id="button">
+      <p align="center" style="text-align:center;"><a href="matlab:web(fullfile(fileparts(which('cat12')),'doc','index.html'),'-new');">Open ''CAT Manual'' in external window</a></p>      
+    </div>
 
     <div style="padding-left: 5%; padding-bottom: 30px; width: 90%; ">
       <h2>Description</h2>
@@ -25,9 +28,6 @@
       <p>
         This documentation contains <a class="function">interactive MATLAB links</a>&nbsp; that open SPM and CAT tools, e.g. to display ROIs like the <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','CAT','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','CAT','templates_MNI152NLin2009cAsym','lpba40.nii')}}))">LPBA40 volume map</a>.
         You can find this help (e.g. if the SPM graphic window was used by SPM/CAT) in the CAT toolbox menu at the bottom-left button <em>Tools > Internet/Help....</em>
-      </p>
-      <p>
-        For further instructions, also check the <a class="function" href="matlab:web(fullfile(fileparts(which('cat12')),'doc','index.html'),'-new');">CAT Manual</a>.  
       </p>
       <p>
       Please <a href="matlab:web(fullfile(fileparts(which('cat12')),'doc','index.html#cite'),'-new');">cite our papers</a> and the work of other researchers if you use this software.</p><p>
