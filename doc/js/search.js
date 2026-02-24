@@ -20,7 +20,7 @@
     findAllMatches: true
   };
 
-  const MAX_RESULTS    = 8;
+  const MAX_RESULTS    = 10;
   const SNIPPET_LENGTH = 300; // characters shown per result
 
   // ── Build search index from page content ───────────────────────

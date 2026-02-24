@@ -40,7 +40,7 @@
   border: 2px solid #d2d7d9;
   border-left: none;
   border-radius: 0 6px 6px 0;
-  background: #f56a6a;
+  background: #aaa;
   color: #fff;
   cursor: pointer;
   font-size: 0.95em;
@@ -49,7 +49,7 @@
 }
 
 #cat-search-btn:hover {
-  background: #e45454;
+  background: #ccc;
 }
 
 /* ─── Results ──────────────────────────────────────────────── */
