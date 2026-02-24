@@ -1160,10 +1160,6 @@ end
       end
       
       
-      %% test for flipping 
-      %fliptest = 1; % 1 - test x>1, 2 - test for shearing 
-      %[ppe.affreg.flipped, ppe.affreg.flippedval,stime] = cat_vol_testflipping(obj,Affine,fliptest,stime,0);
- 
       if isfield(ppe.affreg,'skullstripped') && ~ppe.affreg.skullstripped 
         %% affreg with brainmask
         if debug 

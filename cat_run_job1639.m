@@ -1112,9 +1112,6 @@ function cat_run_job1639(job,tpm,subj)
         Affine3 = Affine1; 
       end
       
-      %% test for flipping 
-      %fliptest = 2; 
-      %[ppe.affreg.flipped, ppe.affreg.flippedval,stime] = cat_vol_testflipping(obj,Affine,fliptest,stime);
       
       if 0
         %% visual control for development and debugging
