@@ -1,4 +1,4 @@
-%function varagout = cat_vol_createTPM(job)
+function varagout = cat_vol_createTPM(job)
 %cat_vol_createTPM.  Script to create a CAT preprocessing template.
 % Iterative generation of new preprocessing templates that include a tissue
 % probability map (TPM), registration T1/T2 maps with/without head, a brain
@@ -102,7 +102,7 @@
   def.write.T2          = 1;            % write T2 
   def.write.GS          = 1;            % write Shooting template
   def.write.DT          = 1;            % create and write Dartel template
-  job.write.brainmask   = 1;            % write brain mask
+  def.write.brainmask   = 1;            % write brain mask
   
   job = cat_io_checkinopt(job,def); 
 
@@ -253,7 +253,7 @@
 
   
   % load tissues
-  if isempty( job.files.mfiles ) || isempty( job.files.mfiles{1} )
+  if ~isempty( job.files.mfiles ) && ~isempty( job.files.mfiles{1} )
     Vm = spm_vol(job.files.mfiles{1}); 
     Ym  = single( spm_read_vols( Vm ) ); 
   else
@@ -354,7 +354,7 @@
         Yclss{ci} = Yclss{ci} + Yclsts; 
       end
     end
-    cat_progress_bar('Set',fi-0.8 + (0.7 * si / numel(job.ssize))); 
+%    cat_progress_bar('Set',fi-0.8 + (0.7 * si / numel(job.ssize))); 
   end
   for ci=1:3,  Yclss{ci} =  max( Yclss{ci} .* (1 - Ybgb) , job.minprob .* Yb ); end
   for ci=4:5,  Yclss{ci} =  max( Yclss{ci} .* (1 - Ybgb) , job.minprob .* (1-Yb) ); end
