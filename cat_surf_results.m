@@ -41,7 +41,7 @@ function varargout = cat_surf_results(action, varargin)
 %  * cat_surf_results('ov',structure)
 %  Define OV fields for cat_vol_slice_overlay.m.
 %  Example:
-%  struct('atlas','cat12_neuromorphometrics','slices_str','-55:5:60','xy',[5 5],'transform','axial')
+%  struct('atlas','CAT_neuromorphometrics','slices_str','-55:5:60','xy',[5 5],'transform','axial')
 %
 %  * cat_surf_results('colorbar')
 %  Disable colorbar.

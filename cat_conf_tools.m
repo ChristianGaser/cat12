@@ -3183,9 +3183,8 @@ function [T2x,T2x_surf,F2x,F2x_surf] = conf_T2x
   
   atlas.val         = {'None'};
   atlas.help        = {
-    'Select atlas for labeling. The prepending atlas name ''dartel_'' indicates that this atlas was created using Dartel spatial normalization with the Dartel IXI template as default.'
+    'Select atlas for labeling. The prepending atlas name ''CAT_'' indicates that this atlas was created using CAT in MNI152NLin2009cAsym space.'
     ''
-    'Please note, that you can install additional atlases for CAT using the command ''cat_install_atlases''. '
   };
 
 

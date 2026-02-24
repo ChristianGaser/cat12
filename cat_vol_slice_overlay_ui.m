@@ -109,7 +109,7 @@ OV.FS = 0.08;
 % define atlas for labeling
 % comment this out for interactive selection
 % or use 'none' for skipping atlas information
-OV.atlas = 'cat12_neuromorphometrics';
+OV.atlas = 'CAT_neuromorphometrics';
 
 % call slice overlay with that settings
 cat_vol_slice_overlay(OV)

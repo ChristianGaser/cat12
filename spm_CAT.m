@@ -292,7 +292,10 @@ for ai = 1:size(exsatlas,1)
   end
 end
 
- 
+% Install CAT atlases
+if ~exist(fullfile(spm('dir'),'atlas','labels_CAT_neuromorphometrics.xml'),'file')
+  cat_install_atlases
+end
 
 % temporary, because of JAVA errors in cat_io_cprintf ... 20160307
 if expert<2

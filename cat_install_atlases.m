@@ -21,11 +21,11 @@ if ST
     csv_file = deblank(csv_files{i});
     csv = cat_io_csv(csv_file,'','',struct('delimiter',';'));
     [pth,nam] = spm_fileparts(csv_file);
-    xml_file = fullfile(atlas_dir, ['labels_cat12_' nam '.xml']);
-    old_xml_file = fullfile(atlas_dir, ['labels_dartel_' nam '.xml']);
+    xml_file = fullfile(atlas_dir, ['labels_CAT_' nam '.xml']);
+    old_xml_file = fullfile(atlas_dir, ['labels_cat12_' nam '.xml']);
     create_spm_atlas_xml(xml_file, csv);
     atlas_file = fullfile(pth,[nam '.nii']);
-    new_atlas_name = ['cat12_' nam '.nii'];
+    new_atlas_name = ['CAT_' nam '.nii'];
     try
       copyfile(atlas_file,fullfile(atlas_dir,new_atlas_name),'f');
       if exist(old_xml_file,'file'), delete(old_xml_file); end
@@ -51,8 +51,8 @@ if ~exist('opt','var'), opt = struct(); end
 [pp,ff,ee] = spm_fileparts(fname); 
 
 % remove prepending name part
-if ~isempty(strfind(ff,'labels_cat12_'))
-  ff = ff(length('labels_cat12_')+1:end);
+if ~isempty(strfind(ff,'labels_CAT_'))
+  ff = ff(length('labels_CAT_')+1:end);
 end
 
 def.name   = ff;
@@ -62,7 +62,7 @@ def.ver    = cat_version;
 def.lic    = 'CC BY-NC';
 def.cor    = 'MNI152 NLin 2009c Asym'; 
 def.type   = 'Label';
-def.images = ['cat12_' ff '.nii'];
+def.images = ['CAT_' ff '.nii'];
 
 opt = cat_io_checkinopt(opt,def);
 
