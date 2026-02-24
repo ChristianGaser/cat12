@@ -7,6 +7,7 @@ cat_long_main.txt
 INSTALL.txt
 catlog*.txt
 templates_animals/
+logs/
 cat2*.m
 
 # ignore zip, pdf, doc*, and nifti
@@ -21,6 +22,10 @@ cat2*.m
 */*.nii
 *.m~
 *.~ 
+
+# ignore CAT log/report files
+log*.txt
+CheckSample*.csv
 
 # but consider nifti in template folders
 !templates_MNI152NLin2009cAsym/*.nii.gz
