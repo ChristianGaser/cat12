@@ -53,7 +53,27 @@ function [mrifolder, reportfolder, surffolder, labelfolder, errfolder, mainfolde
   end
 
   % get BIDS data
-  [~,sfilesBIDS,~,devdir,rdevdir] = cat_io_checkBIDS(fname,BIDSfolder_rel,resdircase);
+  [~,sfilesBIDS,~,devdir,rdevdir,~,mdevdir] = cat_io_checkBIDS(fname,BIDSfolder_rel,resdircase);
+
+  if 1
+    % required?
+    % RD20260224: Probably not required ... delete if BIDS in cross/longitudinal pipeline works
+    % if devdir is allready a CAT subdir (long pipeline) then resdet the devdir
+    [devdir0,subfold] = fileparts(devdir); 
+    if any( cat_io_contains( subfold , {'label','mri','surf','report','err'} ) )
+      devdir = devdir0; 
+    end
+    [rdevdir0,subfold] = fileparts(rdevdir); 
+    if any( cat_io_contains( subfold , {'label','mri','surf','report','err'} ) )
+      rdevdir = rdevdir0; 
+    end
+
+    % remove trouble entry (cross-pipeline surfaces)
+    devdirsi = strfind(devdir,BIDSfolder_rel);
+    if numel(devdirsi) > 1, devdir(devdirsi(2):devdirsi(2)+numel(BIDSfolder_rel)) = []; end
+    rdevdirsi = strfind(rdevdir,BIDSfolder_rel);
+    if numel(rdevdirsi) > 1, rdevdir(rdevdirsi(2):rdevdirsi(2)+numel(BIDSfolder_rel)) = []; end
+  end
 
   if subfolders && ~sfilesBIDS(1)
   % if no BIDS is given and subfolder are wished ...

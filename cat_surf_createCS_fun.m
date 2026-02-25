@@ -107,6 +107,13 @@ function [P,pp0,mrifolder,pp0_surffolder,surffolder,ff] = setFileNames(V0,job,op
   if stat, pp0_surffolder = val.Name; else, pp0_surffolder = fullfile(pp0,surffolder); end
   if ~exist(fullfile(pp0_surffolder),'dir'), mkdir(fullfile(pp0_surffolder)); end
 
+  % temporary fix
+  if isfield( job, 'extopts' ) && isfield( job.extopts, 'BIDSfolder' ) 
+    BIDSfolder_rel = strrep( job.extopts.BIDSfolder , ['..' filesep] ,'' );
+    rdevdirsi = strfind(pp0_surffolder, BIDSfolder_rel);
+    if numel(rdevdirsi) > 1, pp0_surffolder(rdevdirsi(2):rdevdirsi(2)+numel(BIDSfolder_rel)) = []; end
+  end 
+
   % surface filenames
   for si = 1:numel(opt.surf)
     P(si).Pm         = fullfile(pp0,mrifolder, sprintf('m%s.nii',ff));                                 % raw
@@ -322,7 +329,7 @@ function useprior = setupprior(opt,surffolder,P,si)
     % if it not exist than filecopy has to print the error
     [pp1,ff1] = spm_fileparts(opt.useprior);
     % correct '../' parts in directory for BIDS structure
-    [stat, val] = fileattrib(fullfile(pp1,surffolder));
+    [stat, val] = fileattrib(surffolder);
     if stat, pp1_surffolder = val.Name; else, pp1_surffolder = fullfile(pp1,surffolder);  end
     
     % try to copy surface files from prior to individual surface data 

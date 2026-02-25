@@ -4,14 +4,21 @@ function [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir,mdevdir] = cat_io_checkBID
 %  [sfiles,isBIDS,BIDSsub,devdir,rdevdir,logdir] = checkBIDS(sfiles,BIDSdir,resdircase) 
 % 
 %  sfiles   .. input files
-%  isBIDS   .. one if input is BIDS
-%  BIDSsub  .. subject/file name
-%  devdir   .. main data directory (parent of sub in case of BIDS)
-%  redivdir .. relative directory (e.g. sub*/ses*/anat*)
-%  logdir   .. common directory for log files
+%  BIDSdir  .. BIDS resultdirectory (/deriatives/CAT)
 %  resdircase  .. 0 - BIDSdir only if BIDS, 
 %                 1 - BIDSdir allways, 
 %                 2 - BIDSdir as pure relative dir also in case of BIDS  
+%
+%  sfiles   .. cleaned up input files
+%  isBIDS   .. one if input file is BIDS
+%  BIDSsub  .. subject/file name
+%  devdir   .. main data directory (parent of sub in case of BIDS)
+%              with derivatives!
+%  rdevdir  .. relative directory (e.g. sub*/ses*/anat*)
+%  logdir   .. common directory for log files
+%  mdevdir  .. main data directory (parent of sub in case of BIDS)
+%              without derivatives
+% 
 %
 
   
