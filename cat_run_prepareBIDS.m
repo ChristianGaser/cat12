@@ -1,4 +1,4 @@
-function [job, BIDSfolder] = cat_run_prepareBIDS(job)
+function [job, BIDSfolder, logdir] = cat_run_prepareBIDS(job)
 
 
   % extract BIDS directory from GUI parameters

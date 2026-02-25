@@ -42,7 +42,7 @@ function varargout = cat_run(job)
 % disable parallel processing for only one subject
 if isscalar(job.data), job.nproc = 0; end
 
-[job, BIDSfolder] = cat_run_prepareBIDS(job); 
+[job, BIDSfolder, logdir] = cat_run_prepareBIDS(job); 
   
 if ( isfield(job.extopts,'lazy') && job.extopts.lazy && ~isfield(job,'process_index') ) || ...
    ( isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.extopts.admin.lazy && ~isfield(job,'process_index') )
