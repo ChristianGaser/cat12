@@ -112,27 +112,13 @@ cstime = clock;
   Psurf = struct(); 
 
   % correction for 'n' prefix for noise corrected and/or interpolated files
-  [pp0,ff]   = spm_fileparts(V0.fname);
-
-  if exist('job','var')
-    [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(V0.fname,job);
-  else
-    [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(V0.fname);
-  end
-  
-  % change surffolder name if subfolders are forced and surffolder has
-  % default name "surf" (i.e. for non-BIDS structure)
-  if cat_get_defaults('extopts.subfolders') && strcmp(surffolder,'surf')
-    if strcmp(opt.pbtmethod,'pbt2x')
-      opt.pbtmethod = 'pbt2x';
-      surffolder = sprintf('%s_%s_%0.2f',surffolder,opt.pbtmethod,opt.interpV);
-    end
-    pp0 = spm_str_manip(pp0,'h'); % remove 'mri' in pathname that already exists
-    if ~exist(fullfile(pp0,surffolder),'dir'), mkdir(fullfile(pp0,surffolder)); end
-  end
+  pp0          = cat_io_BIDS(V0.fname,job,'mainpath');
+  mrifolder    = cat_io_BIDS(V0.fname,job,'mridir');
+  surffolder   = cat_io_BIDS(V0.fname,job,'surfdir');
+  reportfolder = cat_io_BIDS(V0.fname,job,'reportdir');
   
   % get original filename without 'n'
-  [pp0,ff] = spm_fileparts(V0.fname);
+  [~,ff] = spm_fileparts(V0.fname);
 
   % function to estimate the number of interactions of the surface deformation: d=distance in mm and a=accuracy 
   QMC    = cat_io_colormaps('marks+',17);

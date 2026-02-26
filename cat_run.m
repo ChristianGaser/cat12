@@ -42,8 +42,15 @@ function varargout = cat_run(job)
 % disable parallel processing for only one subject
 if isscalar(job.data), job.nproc = 0; end
 
-[job, BIDSfolder, logdir] = cat_run_prepareBIDS(job); 
-  
+% clean data input, get the BIDSfolder
+job.data   = cat_io_BIDS( job.data, job, 'files');  
+BIDSfolder = cat_io_BIDS( job.data, job, 'main_BIDSfolder'); 
+
+% create log and result directories
+job2   = job; job2.extopts.mkBIDSdir = 1; 
+logdir = cat_io_BIDS( job.data, job2, 'main_logpath'); 
+
+
 if ( isfield(job.extopts,'lazy') && job.extopts.lazy && ~isfield(job,'process_index') ) || ...
    ( isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.extopts.admin.lazy && ~isfield(job,'process_index') )
   jobl      = update_job(job,0);
@@ -515,9 +522,8 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
               
               [pp,ff,ee] = spm_fileparts(jobs(i).data{max(1,catSID(i))}); 
 
-              [mrifolder, reportfolder] = cat_io_subfolders(jobs(i).data{max(1,catSID(i))},job);
               % sometimes we have to remove .nii from filename if files were zipped
-              catlog = fullfile(pp,reportfolder,['catlog_' strrep(ff,'.nii','') '.txt']); 
+              catlog = fullfile(cat_io_BIDS( job.data{subj}, job, 'reportpath'),['catlog_' strrep(ff,'.nii','') '.txt']); 
 
               
               switch caterr
@@ -730,7 +736,7 @@ function cat_run_createCSVreport(job,BIDSfolder)
   % define input XMLs
   matlabbatch{1}.spm.tools.cat.tools.xml2csv.files = job.data; 
   for fi = 1:numel(job.data)
-    [~, reportfolderfi] = cat_io_subfolders(job.data{fi}, job);
+    reportfolderfi = cat_io_BIDS(job.data{subj}, job, 'reportpath');
     matlabbatch{1}.spm.tools.cat.tools.xml2csv.files{fi} = spm_file( strrep(job.data{fi},'.gz',''), ...
       'path', spm_file( fullfile( spm_fileparts(job.data{fi}), reportfolderfi,'t' ),'fpath'), ...
       'prefix', 'cat_', 'ext', '.xml');
@@ -745,7 +751,7 @@ function cat_run_createCSVreport(job,BIDSfolder)
   matlabbatch{1}.spm.tools.cat.tools.xml2csv.fname = ...
     sprintf('CATxml%s%s.csv', pp1, date); 
   matlabbatch{1}.spm.tools.cat.tools.xml2csv.outdir       = ...
-    {spm_file( fullfile( spm_fileparts(job.data{fi}), spm_str_manip(reportfolderfi,'h')),'fpath') };
+    {spm_file( fullfile( spm_fileparts(job.data{fi}), cat_io_BIDS(job.data{subj}, job, 'main_logreportpath') ) ,'fpath') };
   matlabbatch{1}.spm.tools.cat.tools.xml2csv.fieldnames   = {' '};
   matlabbatch{1}.spm.tools.cat.tools.xml2csv.avoidfields  = {''};
   matlabbatch{1}.spm.tools.cat.tools.xml2csv.report       = 'default';
@@ -1305,13 +1311,12 @@ catlog      = {};
 catxml      = {};
 jacobian    = {};
 
-mrifolder    = cell(n,1);
-reportfolder = cell(n,1);
-surffolder   = cell(n,1);
-labelfolder  = cell(n,1);
+mrifolder    = cat_io_BIDS(job.channel(1).vols, job, 'mripath');
+reportfolder = cat_io_BIDS(job.channel(1).vols, job, 'reportpath');
+surffolder   = cat_io_BIDS(job.channel(1).vols, job, 'surfpath');
+labelfolder  = cat_io_BIDS(job.channel(1).vols, job, 'labelpath');
 for j=1:n
     [parts{j,:}] = spm_fileparts(job.channel(1).vols{j});
-    [mrifolder{j}, reportfolder{j}, surffolder{j}, labelfolder{j}] = cat_io_subfolders(job.channel(1).vols{j},job);
     
     % .gz correction
     if strcmp(parts{j,3},'.gz')
@@ -1656,13 +1661,12 @@ return
 
 %=======================================================================
 function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
-  [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(job.data{subj},job);
-
+   
   lazy = 0;
 
   [pp,ff] = spm_fileparts(job.data{subj}); 
   if strcmp(ff(end-3:end),'.nii'), ff(end-3:end) = []; end % .gz case
-  catxml  = fullfile(pp,reportfolder,['cat_' ff '.xml']);
+  catxml  = fullfile( cat_io_BIDS(job.data{subj}, job, 'reportpath'), ['cat_' ff '.xml']);
   
   FNok = 0;
   if exist(catxml,'file')
@@ -1785,20 +1789,23 @@ function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
     % check output
     
     % surface
-    if job.output.surface && exist(fullfile(pp,surffolder),'dir')
-      Pcentral = cat_vol_findfiles(fullfile(pp,surffolder),['*h.central.' ff '.gii']);
+    surfpath = cat_io_BIDS( job.data{subj}, job, 'surfpath'); 
+    if job.output.surface && exist(surfpath,'dir')
+      Pcentral = cat_vol_findfiles(surfpath,['*h.central.' ff '.gii']);
       if  isscalar(Pcentral)
         return
       end
     end
     
     % rois
+    
     if job.output.ROI && isfield(opts,'ROImenu') && isfield(opts.ROImenu,'atlases') 
       if isfield(job.output.ROImenu.atlases,'ownatlas'), atlases = rmfield(job.output.ROImenu.atlases,'ownatlas'); end
       is_ROI = any(cell2mat(struct2cell(atlases))) || ...
         (~isempty( job.output.ROImenu.atlases.ownatlas ) & ~isempty( job.output.ROImenu.atlases.ownatlas{1} ));
 
-      if is_ROI && ~exist(fullfile(pp,labelfolder,['catROI_' ff '.xml']),'file')
+      labelpath = cat_io_BIDS( job.data{subj}, job, 'labelpath'); 
+      if is_ROI && ~exist(fullfile(labelpath,['catROI_' ff '.xml']),'file')
         return
       end
     end

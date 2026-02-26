@@ -893,19 +893,12 @@ if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
   if job.output.sROI 
     stime2 = cat_io_cmd('  Surface ROI estimation');  
     
-    %% estimate surface ROI estimates for thickness
+    % estimate surface ROI estimates for thickness
     % Use VT0 (original input) to avoid doubling of derivatives paths
     % that occurs when VT (denoised file in derivatives/mri/) is used.
-    [pp0,ff]   = spm_fileparts(VT0.fname);
-    [stat, val] = fileattrib(pp0);
-    if stat, pp0 = val.Name; end
-
-    [mrifolder, reportfolder, surffolder] = cat_io_subfolders(VT0.fname,job);
-    surffolder = fullfile(pp0,surffolder);
     
     Psatlas_lh   = job.extopts.satlas(  [job.extopts.satlas{:,4}]>0 , 2);
-    Pthick_lh    = cell(1,1);
-    Pthick_lh{1} = fullfile(surffolder,sprintf('lh.thickness.%s',ff));
+    Pthick_lh{1} = cat_io_BIDS( VT0.fname, job, 'surfpath', 'prefix', 'lh.thickness', 'ext', ''); 
     
     cat_surf_surf2roi(struct('cdata',{{Pthick_lh}},'rdata',{Psatlas_lh},'job',job));
     fprintf('%5.0fs\n',etime(clock,stime2));
@@ -1138,9 +1131,11 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
 
 
   % definition of subfolders - add to res variable?
-  [res.mrifolder, res.reportfolder, res.surffolder, res.labelfolder] = cat_io_subfolders(res.image0(1).fname,job);
-
-
+  res.mrifolder    = job_io_BIDS(res.image0(1).fname, job, 'mridir');
+  res.reportfolder = job_io_BIDS(res.image0(1).fname, job, 'reportdir');
+  res.surffolder   = job_io_BIDS(res.image0(1).fname, job, 'surfdir');
+  res.labelfolder  = job_io_BIDS(res.image0(1).fname, job, 'labeldir');
+  
   % Sort out bounding box etc
   res.bb = spm_get_bbox(tpm.V(1)); 
 

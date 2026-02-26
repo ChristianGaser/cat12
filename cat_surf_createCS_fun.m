@@ -97,30 +97,22 @@ function [P,pp0,mrifolder,pp0_surffolder,surffolder,ff] = setFileNames(V0,job,op
 %setFileNames. Define surface filenames.
 %#ok<*AGROW> 
 
-  [mrifolder, ~, surffolder, ~, ~, pp0] = cat_io_subfolders(V0.fname,job);
-  
+  pp0_mrifolder  = char(cat_io_BIDS( V0.fname , job, 'mripath'));
+  pp0_surffolder = char(cat_io_BIDS( V0.fname , job, 'surfpath'));
+
+  [pp0, mrifolder] = fileparts(pp0_mrifolder);
+  [~,  surffolder] = fileparts(pp0_surffolder);
+
   % get original filename without 'n'
+ 
   [~,ff] = spm_fileparts(V0.fname);
-  
-  % correct '../' parts in directory for BIDS structure
-  [stat, val] = fileattrib(fullfile(pp0,surffolder));
-  if stat, pp0_surffolder = val.Name; else, pp0_surffolder = fullfile(pp0,surffolder); end
-  if ~exist(fullfile(pp0_surffolder),'dir'), mkdir(fullfile(pp0_surffolder)); end
-
-  % temporary fix
-  if isfield( job, 'extopts' ) && isfield( job.extopts, 'BIDSfolder' ) 
-    BIDSfolder_rel = strrep( job.extopts.BIDSfolder , ['..' filesep] ,'' );
-    rdevdirsi = strfind(pp0_surffolder, BIDSfolder_rel);
-    if numel(rdevdirsi) > 1, pp0_surffolder(rdevdirsi(2):rdevdirsi(2)+numel(BIDSfolder_rel)) = []; end
-  end 
-
   % surface filenames
   for si = 1:numel(opt.surf)
-    P(si).Pm         = fullfile(pp0,mrifolder, sprintf('m%s.nii',ff));                                 % raw
-    P(si).Pp0        = fullfile(pp0,mrifolder, sprintf('p0%s.nii',ff));                                % labelmap
+    P(si).Pm         = fullfile(pp0_mrifolder, sprintf('m%s.nii',ff));                                 % raw
+    P(si).Pp0        = fullfile(pp0_mrifolder, sprintf('p0%s.nii',ff));                                % labelmap
     P(si).Praw       = fullfile(pp0_surffolder,sprintf('%s.central.nofix.%s.gii',opt.surf{si},ff));    % raw
     P(si).Praw2      = fullfile(pp0_surffolder,sprintf('%s.central.nofix_sep.%s.gii',opt.surf{si},ff));    % raw
-    P(si).Pdefects   = fullfile(pp0,mrifolder, sprintf('defects_%s.nii',ff));                          % defect
+    P(si).Pdefects   = fullfile(pp0_mrifolder, sprintf('defects_%s.nii',ff));                          % defect
     P(si).Pcentral   = fullfile(pp0_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff));          % central
     P(si).Pcentralh  = fullfile(pp0_surffolder,sprintf('%s.centralh.%s.gii',opt.surf{si},ff));         % central
     P(si).Pcentralr  = fullfile(pp0_surffolder,sprintf('%s.central.resampled.%s.gii',opt.surf{si},ff));% central .. used in inactive path
@@ -132,8 +124,8 @@ function [P,pp0,mrifolder,pp0_surffolder,surffolder,ff] = setFileNames(V0,job,op
     P(si).Psphere0   = fullfile(pp0_surffolder,sprintf('%s.sphere.nofix.%s.gii',opt.surf{si},ff));     % sphere.nofix
     P(si).Psphere    = fullfile(pp0_surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff));           % sphere
     P(si).Pspherereg = fullfile(pp0_surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff));       % sphere.reg
-    P(si).Pgmt       = fullfile(pp0,mrifolder, sprintf('%s_thickness-%s.nii',ff,opt.surf{si}));        % temp thickness
-    P(si).Pppm       = fullfile(pp0,mrifolder, sprintf('%s_ppm-%s.nii',ff,opt.surf{si}));              % temp position map
+    P(si).Pgmt       = fullfile(pp0_mrifolder, sprintf('%s_thickness-%s.nii',ff,opt.surf{si}));        % temp thickness
+    P(si).Pppm       = fullfile(pp0_mrifolder, sprintf('%s_ppm-%s.nii',ff,opt.surf{si}));              % temp position map
     P(si).Pfsavg     = fullfile(opt.fsavgDir,  sprintf('%s.central.freesurfer.gii',opt.surf{si}));     % fsaverage central
     P(si).Pfsavgsph  = fullfile(opt.fsavgDir,  sprintf('%s.sphere.freesurfer.gii',opt.surf{si}));      % fsaverage sphere    
     % special maps in CS2

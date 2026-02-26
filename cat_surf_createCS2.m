@@ -144,20 +144,6 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
     fprintf('  SRP / reduce_mesh:                 %d / %d',20 + opt.SRP,opt.reduce_mesh);
   end  
   
-  [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(V0.fname,job);
-  
-  % get original filename without 'n'
-  [pp0,ff] = spm_fileparts(V0.fname);
-  
-  % correct '../' parts in directory for BIDS structure
-  [stat, val] = fileattrib(fullfile(pp0,surffolder));
-  if stat
-    pp0_surffolder = val.Name;
-  else
-    pp0_surffolder = fullfile(pp0,surffolder);
-  end
-  if ~exist(fullfile(pp0_surffolder),'dir'), mkdir(fullfile(pp0_surffolder)); end
-
 
   %% get both sides in the atlas map
   NS = @(Ys,s) Ys==s | Ys==s+1; 
