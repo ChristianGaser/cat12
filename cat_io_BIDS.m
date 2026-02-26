@@ -38,8 +38,16 @@ function out = cat_io_BIDS(files, job, subfield, varargin)
 %
 % Examples: 
 %  1) Call testfunction for a set of BIDS / nonBIDS files:
-%      cat_io_BIDS( 'test' , 
+%      files = cat_io_BIDS( 'testfiles' ) % get testfiles
 %
+%  2) Get full BIDS structure for the first 3 test files
+%      cat_io_BIDS( files(1:3) ); 
+%
+%  3) Create the surface filename for the fifth file: 
+%      cat_io_BIDS( files(1:3), '', 'surfpath', 'prefix', 'lh.central.', 'suffix', '.topofix','ext','')
+%
+%  4) Run surface filename creation for the different BIDS result settings: 
+%      for i = 0:3, cat_io_BIDS( i ) 
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -279,6 +287,8 @@ end
 function job = updateJob(job)
 %updateJob. Check all varialbes. 
 
+  if isempty(job) && ~isstruct(job), clear job; job = struct(); end
+
   def.extopts             = cat_get_defaults('extopts');
   def.extopts.bids_folder = '';  % main (BIDS) result folder
   def.extopts.resdircase  = 1; 
@@ -373,15 +383,13 @@ function [SUB, SES, ANA, RUN, MOD, isSUB, isSES, isANA, isRUN, isMOD, ...
 end 
 %==========================================================================
 function out = testfunction( testcase, job , subfield)
-%%
+%testfunction. Create a set of test files. 
 
   if ~exist('testcase','var')
     testcase = 1;
   else
     if isnumeric(testcase)
       testcase = max(0,min(3,testcase));
-    else
-      testcase = 1; 
     end
   end
   if ~exist('job','var') || ~isfield(job,'extopts'), job.extopts.resdircase = testcase; end
@@ -443,6 +451,11 @@ function out = testfunction( testcase, job , subfield)
     files(corr)  = cellstr( strcat( 'C:' , files(corr) ) );
   end
 
+  if ~isnumeric(testcase) && strcmp(testcase,'testfiles')
+    out = files; 
+    return; 
+  end
+ 
   % run it
   job.extopts.verbBIDS  = 1; 
   switch job.extopts.resdircase
