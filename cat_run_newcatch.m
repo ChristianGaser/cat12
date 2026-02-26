@@ -52,8 +52,10 @@ function cat_run_newcatch(job,tpm,subj)
       caterr = addCause(caterr,adderr);
     end
     
-    [mrifolder, reportfolder, surffolder, labelfolder, errfolder] = cat_io_subfolders(job.channel(1).vols{subj},job);
-
+    mrifolder    = cat_io_BIDS(job.channel(1).vols{subj}, job, 'mridir');
+    reportfolder = cat_io_BIDS(job.channel(1).vols{subj}, job, 'reportdir');
+    errfolder    = cat_io_BIDS(job.channel(1).vols{subj}, job, 'errdir');
+    
     cat_io_cprintf('err',sprintf('\n%s\nCAT Preprocessing error for %s:\n%s\n%s\n%s\n', ...
       repmat('-',1,72),nam,repmat('-',1,72),caterr.message,repmat('-',1,72)));  
     

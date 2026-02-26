@@ -523,7 +523,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
               [pp,ff,ee] = spm_fileparts(jobs(i).data{max(1,catSID(i))}); 
 
               % sometimes we have to remove .nii from filename if files were zipped
-              catlog = fullfile(cat_io_BIDS( job.data{subj}, job, 'reportpath'),['catlog_' strrep(ff,'.nii','') '.txt']); 
+              catlog = fullfile(cat_io_BIDS( job.data{i}, job, 'reportpath'),['catlog_' strrep(ff,'.nii','') '.txt']); 
 
               
               switch caterr

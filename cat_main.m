@@ -1082,10 +1082,10 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
 
 
   % definition of subfolders - add to res variable?
-  res.mrifolder    = job_io_BIDS(res.image0(1).fname, job, 'mridir');
-  res.reportfolder = job_io_BIDS(res.image0(1).fname, job, 'reportdir');
-  res.surffolder   = job_io_BIDS(res.image0(1).fname, job, 'surfdir');
-  res.labelfolder  = job_io_BIDS(res.image0(1).fname, job, 'labeldir');
+  res.mrifolder    = cat_io_BIDS(res.image0(1).fname, job, 'mridir');
+  res.reportfolder = cat_io_BIDS(res.image0(1).fname, job, 'reportdir');
+  res.surffolder   = cat_io_BIDS(res.image0(1).fname, job, 'surfdir');
+  res.labelfolder  = cat_io_BIDS(res.image0(1).fname, job, 'labeldir');
   
   % Sort out bounding box etc
   res.bb = spm_get_bbox(tpm.V(1)); 
