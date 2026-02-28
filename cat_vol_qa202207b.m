@@ -83,19 +83,22 @@ function varargout = cat_vol_qa202207b(action,varargin)
   QAR = struct(); 
   %if nargout>0, varargout = cell(1,nargout); end
   
-  try
-    if strcmp(action,'cat12err')
-      [mrifolder, reportfolder] = cat_io_subfolders(varargin{1}.job.data,varargin{1}.job);
-    elseif strcmp(action,'cat12')
-      [mrifolder, reportfolder] = cat_io_subfolders(varargin{2},varargin{6}.job);
-    else
-      [mrifolder, reportfolder] = cat_io_subfolders(varargin{4}.catlog,varargin{6}.job);
-    end
-  catch
-    mrifolder    = 'mri'; 
-    reportfolder = 'report'; 
+  if strcmp(action,'cat12err')
+    fname = varargin{1}.job.data;
+    job   = varargin{1}.job;
+  elseif strcmp(action,'cat12')
+    fname = varargin{2};
+    job   = varargin{6};
+  else
+    fname = varargin{4}.catlog;
+    job   = varargin{6};
   end
-  
+  if ~isfield(job,'BIDS') || isempty(job.BIDS) 
+    job.BIDS = cat_io_BIDS(fname, job);
+  end
+  mridir    = job.BIDS(1).mridir;
+  reportdir = job.BIDS(1).reportdir;
+
   % no input and setting of default options
   action2 = action; 
   if nargin==0, action='p0'; end 
@@ -373,7 +376,7 @@ function varargout = cat_vol_qa202207b(action,varargin)
             error('cat_vol_qa:noYo','No original image.');
           end
           
-     if opt.rerun || cat_io_rerun(Vo.fname, fullfile(pp,reportfolder,[opt.prefix ff '.xml']) , 0 )
+     if opt.rerun || cat_io_rerun(Vo.fname, fullfile(reportdir,[opt.prefix ff '.xml']) , 0 )
           Vm  = spm_vol(Pm{fi});
           Vp0 = spm_vol(Pp0{fi});
           if any(Vp0.dim ~= Vm.dim)
@@ -445,9 +448,9 @@ function varargout = cat_vol_qa202207b(action,varargin)
           
           %% print the results for each scan 
           if opt.verb>1 
-            if opt.rerun || cat_io_rerun(Vo.fname, fullfile(pp,reportfolder,[opt.prefix ff '.xml']) , 0 )
+            if opt.rerun || cat_io_rerun(Vo.fname, fullfile(reportdir,[opt.prefix ff '.xml']) , 0 )
               rerun = ' updated';
-            elseif exist( fullfile(pp,reportfolder,[opt.prefix ff '.xml']) , 'file')
+            elseif exist( fullfile(reportdir,[opt.prefix ff '.xml']) , 'file')
               rerun = ' loaded';
             else
               rerun = ' '; % new
@@ -563,10 +566,9 @@ function varargout = cat_vol_qa202207b(action,varargin)
         % write csv results
         % --------------------------------------------------------------
         if opt.write_csv
-          pp = spm_fileparts(Pp0{1});
-          cat_io_csv(fullfile(pp,reportfolder,[opt.prefix num2str(numel(Vo),'%04d') ...
+          cat_io_csv(fullfile(reportdir,[opt.prefix num2str(numel(Vo),'%04d') ...
             'cat_vol_qa_values.csv']),QAT);
-          cat_io_csv(fullfile(pp,reportfolder,[opt.prefix num2str(numel(Vo),'%04d') ...
+          cat_io_csv(fullfile(reportdir,[opt.prefix num2str(numel(Vo),'%04d') ...
             'cat_vol_qa_marks.csv']),QATm);
         end
       end 
@@ -586,8 +588,8 @@ function varargout = cat_vol_qa202207b(action,varargin)
       [QAS.filedata.path,QAS.filedata.file] = spm_fileparts(opt.job.channel.vols{opt.subj});
       QAS.filedata.fname  = opt.job.data{opt.subj};
       QAS.filedata.F      = opt.job.data{opt.subj}; 
-      QAS.filedata.Fm     = fullfile(pp,mrifolder,['m'  ff ee]);
-      QAS.filedata.Fp0    = fullfile(pp,mrifolder,['p0' ff ee]);
+      QAS.filedata.Fm     = fullfile(mridir,['m'  ff ee]);
+      QAS.filedata.Fp0    = fullfile(mridir,['p0' ff ee]);
       QAS.filedata.fnames = [spm_str_manip(pp,sprintf('k%d',...
                          floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
                        spm_str_manip(ff,sprintf('k%d',...
@@ -639,14 +641,14 @@ function varargout = cat_vol_qa202207b(action,varargin)
       
       % export 
       if opt.write_xml
-        cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAS,'write');
+        cat_io_xml(fullfile(reportdir,[opt.prefix ff '.xml']),QAS,'write');
       end
       
     case 'cat12'
     % estimation of the measures for the single case    
 
 [pp,ff,ee] = spm_fileparts(Vo.fname);    
-if opt.rerun || cat_io_rerun(Vo.fname, fullfile(pp,reportfolder,[opt.prefix ff '.xml']) , 0 ) 
+if opt.rerun || cat_io_rerun(Vo.fname, fullfile(reportdir,[opt.prefix ff '.xml']) , 0 ) 
       stime = cat_io_cmd('  Main:','g5','',opt.verb>3,stime); 
       
       % file information
@@ -658,8 +660,8 @@ if opt.rerun || cat_io_rerun(Vo.fname, fullfile(pp,reportfolder,[opt.prefix ff '
       QAS.filedata.F      = char(Vo.fname); 
 %      if strcmpi(spm_check_version,'octave'), warning on; end
 %      if strcmpi(spm_check_version,'octave'), warning off; end
-      QAS.filedata.Fm     = fullfile(pp,mrifolder,['m'  ff ee]);
-      QAS.filedata.Fp0    = fullfile(pp,mrifolder,['p0' ff ee]);
+      QAS.filedata.Fm     = fullfile(mridir,['m'  ff ee]);
+      QAS.filedata.Fp0    = fullfile(mridir,['p0' ff ee]);
 %      if strcmpi(spm_check_version,'octave'), warning on; end
       QAS.filedata.fnames = [spm_str_manip(pp,sprintf('k%d',...
                          floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)),'/',...
@@ -1229,7 +1231,7 @@ end
         QAS.subjectratings = QAR.subjectratings;
         QAS.ratings_help   = QAR.help;
         
-        cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAS,'write'); %struct('QAS',QAS,'QAM',QAM)
+        cat_io_xml(fullfile(reportdir,[opt.prefix ff '.xml']),QAS,'write'); %struct('QAS',QAS,'QAM',QAM)
       end
 
       cat_io_cmd(' ','g5','',opt.verb>3,stime);      
@@ -1241,7 +1243,7 @@ end
           cat_stat_nansum(Yc(:)>0)/1000,cat_stat_nansum(Yg(:)>0)/1000,cat_stat_nansum(Yw(:)>0)/1000,noise,noisep0,etime(clock,stime2)); 
       end
 else
-  QAS = cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),'load'); %struct('QAS',QAS,'QAM',QAM)
+  QAS = cat_io_xml(fullfile(reportdir,[opt.prefix ff '.xml']),'load'); %struct('QAS',QAS,'QAM',QAM)
   QAR = cat_stat_marks('eval',1,QAS);
 end
 

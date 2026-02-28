@@ -109,7 +109,7 @@ function varargout = cat_surf_surf2roi(job)
     
     %% process the cdata files of each subject
     for si=1:numel(job.cdata{1}) % for each subject
-      [~, ~, surffolder, labelfolder] = cat_io_subfolders(job.cdata{1}{si},job.job);
+      
       for ti=1:numel(job.cdata)  % for each texture
       
         % check for kind of surface
@@ -203,7 +203,8 @@ function varargout = cat_surf_surf2roi(job)
               end
               
               % write xml data
-              roidir = get_surface_roi_dir(sinfo.pp,surffolder,labelfolder);
+              [roidir,sdir] = fileparts( fileparts( job.cdata{ti}{si}) ); 
+              roidir = fullfile(roidir,strrep(sdir,'surf','label'));
               if ~exist(roidir,'dir'), mkdir(roidir); end
               xmlname{si} = fullfile(roidir,['catROIs_' sinfo.name '.xml']);
               cat_io_xml(xmlname{si},catROI{si},'write+'); 

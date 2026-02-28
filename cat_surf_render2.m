@@ -704,16 +704,12 @@ switch lower(action)
           %   >> auwahl von csv-files 
         try
           % volume/surface-based atlas data
-          [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(sinfo1(1).fname);
-          if cat_get_defaults('extopts.subfolders')
-            labeldir = strrep(sinfo1(1).pp,[filesep surffolder],[filesep labelfolder]);
-          else
-            labeldir = sinfo1(1).pp;
-          end
+          BIDS = cat_io_BIDS(sinfo1(1).fname, cat_get_defaults);
+          labelfolder = BIDS(1).labeldir;
+          mrifolder = BIDS(1).mridir;
           % find xml-files
-          H.RBM.vlabelfile = cat_vol_findfiles(labeldir,sprintf('catROI_%s.xml',sinfo1(1).name),struct('maxdepth',1));
-          H.RBM.slabelfile = cat_vol_findfiles(labeldir,sprintf('catROIs_%s.xml',sinfo1(1).name),struct('maxdepth',1));
-
+          H.RBM.vlabelfile = cat_vol_findfiles(BIDS(1).labeldir,sprintf('catROI_%s.xml',sinfo1(1).name),struct('maxdepth',1));
+          H.RBM.slabelfile = cat_vol_findfiles(BIDS(1).labeldir,sprintf('catROIs_%s.xml',sinfo1(1).name),struct('maxdepth',1));
           % read xml-files ... this is realy slow for real XMLs >> MAT solution!
           % atlas-names
           % texture-names of volumen/surface ROIs
@@ -858,12 +854,8 @@ switch lower(action)
         % -----------------------------------------------------------------
         c = uimenu(cmenu, 'Label','Volume', 'Interruptible','off'); %, 'Callback',{@myImageSections, H});
         % -- image ---
-        [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(sinfo1(1).fname);
-        if cat_get_defaults('extopts.subfolders')
-          labeldir = strrep(sinfo1(1).pp,[filesep surffolder],[filesep mrifolder]);
-        else
-          labeldir = sinfo1(1).pp;
-        end
+        labeldir = cat_io_BIDS(sinfo1(1).fname, cat_get_defaults);
+       
         % find nii-files
         if exist(labeldir,'dir')
           H.niftis = [ ...

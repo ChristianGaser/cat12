@@ -65,29 +65,20 @@ if isfield(job,'datalong')
   
   % remove datalong field to prevent that modification of job.subjs is called again
   job = rmfield(job,'datalong');
-
+  
   is_copied = zeros(numel(job.data),1);
 
 
-  %%
-  job = cat_run_prepareBIDS(job);
-
-
-  %% we need this in job.extopts for cat_io_subfolders
+  %% we need this in job.extopts for catiosubfolders
   c = 1;
   for ti = 1:numel(job.subj)
     for si = 1:numel(job.subj(ti).mov)
-      [pth,nam,ext] = spm_fileparts(job.subj(ti).mov{si});
-      rootfolder = cat_io_subfolders(job.subj(ti).mov{si},job);
-      % remove additional mri subfolder because registration first will 
-      % work in the upper folder
-      fparts = strsplit(rootfolder,filesep); 
-      ind    = find(cat_io_contains(fparts,'mri')==1);
-      if ~isempty(ind) & ind==numel(fparts), fparts(ind) = []; end
-      if isempty(fparts), rootfolder = ''; else, rootfolder = fullfile(fparts{:}); end
-      
-      name = fullfile(pth,[nam ext]);
-      newdir = fullfile(pth,rootfolder);
+      BIDS = cat_io_BIDS( job.subj(ti).mov{si}, job ); 
+ 
+      name   = spm_file( job.subj(ti).mov{si} , 'number', ''); 
+      [~,nam,ext] = spm_fileparts(name);
+      newdir = cat_io_BIDS( BIDS, 'resdir');
+ 
       % uncompress nii.gz files and change file name for job
       if strcmp(ext,'.gz')
         fname = gunzip(name,newdir);
@@ -101,7 +92,7 @@ if isfield(job,'datalong')
         if ~s
           error('Could not write %s to %s',name,newdir);
         else
-          fprintf('Copy %s to %s\n',name,newdir);
+          fprintf('Copy "%s" to "%s"\n',name,newdir);
           job.subj(ti).mov{si} = fullfile(newdir,[nam ext]);
           job.data{c} = fullfile(newdir,[nam ext]);
         end
@@ -161,11 +152,12 @@ out.surf = cell(''); out.thick = cell(''); out.mwp1 = cell('');
 out.catreport = cell(''); out.catroi = cell('');
 
 for i=1:numel(job.subj)
-  [mrifolder, reportfolder, surffolder, labelfolder, ~, mdir] = cat_io_subfolders(job.subj(i).mov{1},job);
-  
+  BIDS(i) = cat_io_BIDS( job.subj(i).mov{1}, job ); 
+  BIDSmov = cat_io_BIDS( job.subj(i).mov, job ); 
+    
   out.sess(i).warps    = cell(1,1);
   [~,nam,ext,num]    = spm_fileparts(job.subj(i).mov{1});
-  out.sess(i).warps{1} = fullfile(mdir,mrifolder,['avg_y_', nam, ext, num]);
+  out.sess(i).warps{1} = fullfile(BIDS(i).mridir,['avg_y_', nam, ext, num]);
 
   out.sess(i).files = cell(numel(job.subj(i).mov),1);
   m = numel(job.subj(i).mov);
@@ -174,19 +166,19 @@ for i=1:numel(job.subj)
     [~,nam,ext,num] = spm_fileparts(job.subj(i).mov{j});
     switch modulate
     case 0
-      out.sess(i).files{j} = fullfile(mdir,mrifolder,['wp1r', nam, ext, num]);
+      out.sess(i).files{j} = fullfile(BIDSmov(j).mridir,['wp1r', nam, ext, num]);
     case 1
-      out.sess(i).files{j} = fullfile(mdir,mrifolder,['mwp1r', nam, ext, num]);
+      out.sess(i).files{j} = fullfile(BIDSmov(j).mridir,['mwp1r', nam, ext, num]);
     case 2
-      out.sess(i).files{j} = fullfile(mdir,mrifolder,['m0wp1r', nam, ext, num]);
+      out.sess(i).files{j} = fullfile(BIDSmov(j).mridir,['m0wp1r', nam, ext, num]);
     end
     data{j} = job.subj(i).mov{j};
 
-    out.mwp1      = [out.mwp1       fullfile(mdir,mrifolder   ,['mwp1r'          nam ext num])]; 
-    out.surf      = [out.surf       fullfile(mdir,surffolder  ,['lh.central.r'   nam '.gii'])]; 
-    out.thick     = [out.thick      fullfile(mdir,surffolder  ,['lh.thickness.r' nam])]; 
-    out.catreport = [out.catreport  fullfile(mdir,reportfolder,['cat_r'          nam '.xml'])]; 
-    out.catroi    = [out.catroi     fullfile(mdir,labelfolder ,['catROI_r'       nam '.xml'])]; 
+    out.mwp1      = [out.mwp1       fullfile(BIDSmov(j).mridir   ,['mwp1r'          nam ext num])]; 
+    out.surf      = [out.surf       fullfile(BIDSmov(j).surfdir  ,['lh.central.r'   nam '.gii'])]; 
+    out.thick     = [out.thick      fullfile(BIDSmov(j).surfdir  ,['lh.thickness.r' nam])]; 
+    out.catreport = [out.catreport  fullfile(BIDSmov(j).reportdir,['cat_r'          nam '.xml'])]; 
+    out.catroi    = [out.catroi     fullfile(BIDSmov(j).labeldir ,['catROI_r'       nam '.xml'])]; 
       
   end
   inputs{1,i} = data;
@@ -194,12 +186,12 @@ for i=1:numel(job.subj)
   % save XML Parameter
   if ~(isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index')) && numel(job.subj) > 1 )
     [~,ff]    = spm_fileparts(job.subj(i).mov{1});
-    longxml    = fullfile( mdir , reportfolder , ['catlong_' ff '.xml'] ); 
+    longxml    = fullfile( BIDS(i).resdir , BIDS(i).reportdir , ['catlong_' ff '.xml'] ); 
     jobsx      = rmfield(job,{'data','subj'});
     jobsx.subj = job.subj(i); 
     jobsx.out  = out; 
-    jobsx.dirs = struct('mrifolder',mrifolder, 'reportfolder', reportfolder, ...
-      'surffolder', surffolder, 'labelfolder', labelfolder, 'pp1', mdir, 'ff1', ff);
+    jobsx.dirs = struct('mrifolder',BIDS(i).mridir, 'reportfolder', BIDS(i).reportdir, ...
+      'surfdir', BIDS(i).surfdir, 'labeldir', BIDS(i).labeldir, 'pp1', BIDS(i).resdir, 'ff1', ff);
     cat_io_xml(longxml,struct('parameter',jobsx));
   end
   

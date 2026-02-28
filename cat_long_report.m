@@ -97,6 +97,7 @@ function out = cat_long_report(job)
       else
         job.data_vol_avgw    = job.data_vol_avg; 
       end
+      job.BIDS = cat_io_BIDS(job.data_vol,job); 
       
       [vresw,Vmnw,Vidiffw,Vrdiffw] = cat_vol_longdiff(job.data_volw, job.data_vol_avgw, job.opts.smoothvol, job.output.vols);
     end

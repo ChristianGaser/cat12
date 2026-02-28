@@ -681,7 +681,7 @@ function count = safe_fprintf(fid, fmt, args)
     % 2) Escape all remaining backslashes to avoid \U, \x, etc. parsing
     % (IMPORTANT: do this AFTER handling \n/\t/\r)
     fmt = strrep(fmt, '\', '\\');
-
+    
     % 3) Print as data, not format
     count = fprintf(fid, '%s', fmt);
 

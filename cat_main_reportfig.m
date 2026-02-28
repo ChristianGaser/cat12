@@ -115,9 +115,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   % in case of SPM input segmentation we have to add the name here to have a clearly different naming of the CAT output 
   if isfield(res,'spmpp'), nam = ['c1' nam]; end % no changes in VT0!
    
-  % definition of subfolders
-  [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(VT0.fname,job);
-  
+ 
   nprog = ( isfield(job,'printPID') && job.printPID ) || ... PID field
           ( isempty(findobj('type','Figure','Tag','CAT') ) && ... no menus
             isempty(findobj('type','Figure','Tag','Menu') ) );
@@ -1757,14 +1755,7 @@ if 1
   job.imgprint.dpi    = 300;
   job.imgprint.fdpi   = @(x) ['-r' num2str(x)];
   job.imgprint.ftype  = @(x) ['-d' num2str(x)];
-  
-  [pth1,pth2] = spm_fileparts(pth); 
-  if strcmp(pth2,mrifolder), pth = pth1; end % remove mri nameing
-    
-  pth_reportfolder = fullfile(pth,reportfolder);
-  [stat, val] = fileattrib(pth_reportfolder);
-  if stat, pth_reportfolder = val.Name; end
-  if ~exist(pth_reportfolder,'dir'), mkdir(pth_reportfolder); end 
+
   if isfield(res,'long')
     longstr = 'long';                 % catLONGreport
     nam     = strrep(nam,'mean_',''); % remove the mean 
@@ -1772,10 +1763,10 @@ if 1
     longstr = ''; 
   end
   if ~isfield(job,'imgprint') || ~isfield(job.imgprint,'fname')
-    job.imgprint.fname  = fullfile(pth_reportfolder,['cat' longstr 'report_'  nam '.' job.imgprint.type]); 
+    job.imgprint.fname  = cat_io_BIDS(job.BIDS(job.subj),'reportdir','prefix',['cat' longstr 'report_'],'ext',job.imgprint.type);
   end
   if ~isfield(job,'imgprint') || ~isfield(job.imgprint,'fnamej')
-    job.imgprint.fnamej = fullfile(pth_reportfolder,['cat' longstr 'reportj_' nam '.jpg']);
+    job.imgprint.fnamej = cat_io_BIDS(job.BIDS(job.subj),'reportdir','prefix',['cat' longstr 'reportj_'],'ext','jpg'); 
   end
 
   % save old settings of the SPM figure

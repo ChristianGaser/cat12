@@ -83,18 +83,21 @@ function varargout = cat_vol_qa202205(action,varargin)
   QAR = struct(); 
   %if nargout>0, varargout = cell(1,nargout); end
   
-  try
-    if strcmp(action,'cat12err')
-      [mrifolder, reportfolder] = cat_io_subfolders(varargin{1}.job.data,varargin{1}.job);
-    elseif strcmp(action,'cat12')
-      [mrifolder, reportfolder] = cat_io_subfolders(varargin{2},varargin{6}.job);
-    else
-      [mrifolder, reportfolder] = cat_io_subfolders(varargin{4}.catlog,varargin{6}.job);
-    end
-  catch
-    mrifolder    = 'mri'; 
-    reportfolder = 'report'; 
+  if strcmp(action,'cat12err')
+    fname = varargin{1}.job.data;
+    job   = varargin{1}.job;
+  elseif strcmp(action,'cat12')
+    fname = varargin{2};
+    job   = varargin{6};
+  else
+    fname = varargin{4}.catlog;
+    job   = varargin{6};
   end
+  if ~isfield(job,'BIDS') || isempty(job.BIDS) 
+    job.BIDS = cat_io_BIDS(fname, job);
+  end
+  mrifolder    = job.BIDS(1).reportdir;
+  reportfolder = job.BIDS(1).reportdir;
   
   % no input and setting of default options
   action2 = action; 
@@ -534,10 +537,9 @@ function varargout = cat_vol_qa202205(action,varargin)
         % write csv results
         % --------------------------------------------------------------
         if opt.write_csv
-          pp = spm_fileparts(Pp0{1});
-          cat_io_csv(fullfile(pp,reportfolder,[opt.prefix num2str(numel(Vo),'%04d') ...
+          cat_io_csv(fullfile(reportfolder,[opt.prefix num2str(numel(Vo),'%04d') ...
             'cat_vol_qa202205_values.csv']),QAT);
-          cat_io_csv(fullfile(pp,reportfolder,[opt.prefix num2str(numel(Vo),'%04d') ...
+          cat_io_csv(fullfile(reportfolder,[opt.prefix num2str(numel(Vo),'%04d') ...
             'cat_vol_qa202205_marks.csv']),QATm);
         end
       end 
@@ -611,15 +613,15 @@ function varargout = cat_vol_qa202205(action,varargin)
       
       % export 
       if opt.write_xml
-        cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAS,'write');
+        cat_io_xml(fullfile(reportfolder,[opt.prefix ff '.xml']),QAS,'write');
       end
       
     case 'cat12'
     % estimation of the measures for the single case    
  
-[pp,ff,ee] = spm_fileparts(Vo.fname); Pp0 = fullfile(pp,mrifolder,['p0' ff ee]);   
-if opt.rerun || cat_io_rerun(Vo.fname, fullfile(pp,reportfolder,[opt.prefix ff '.xml']) ) || ...
-		cat_io_rerun(Pp0, fullfile(pp,reportfolder,[opt.prefix ff '.xml']) )
+[pp,ff,ee] = spm_fileparts(Vo.fname); Pp0 = fullfile(mrifolder,['p0' ff ee]);   
+if opt.rerun || cat_io_rerun(Vo.fname, fullfile(reportfolder,[opt.prefix ff '.xml']) ) || ...
+		cat_io_rerun(Pp0, fullfile(reportfolder,[opt.prefix ff '.xml']) )
   
       % file information
       % ----------------------------------------------------------------
@@ -1123,10 +1125,10 @@ end
         QAS.subjectratings = QAR.subjectratings;
         QAS.ratings_help   = QAR.help;
         
-        cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAS,'write'); %struct('QAS',QAS,'QAM',QAM)
+        cat_io_xml(fullfile(reportfolder,[opt.prefix ff '.xml']),QAS,'write'); %struct('QAS',QAS,'QAM',QAM)
       end
 else
-  QAS = cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),'load'); %struct('QAS',QAS,'QAM',QAM)
+  QAS = cat_io_xml(fullfile(reportfolder,[opt.prefix ff '.xml']),'load'); %struct('QAS',QAS,'QAM',QAM)
   QAR = cat_stat_marks('eval',1,QAS);
 end
       

@@ -674,18 +674,6 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
     end
     clear Q P q q1 Coef b cr N lkp n wp M k1
 
-
-    if job.extopts.verb>2
-      % save information for debugging and OS test
-      % input variables + bias corrected, bias field, class image
-      % strong differences in bias fields can be the result of different 
-      % registration > check 'res.image.mat' and 'res.Affine'
-      [~, reportfolder] = cat_io_subfolders(res.image(1).fname,job);
-      [pth,nam] = spm_fileparts(res.image0(1).fname); 
-      tpmci  = 1;
-      tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postbias'));
-      save(tmpmat,'res','tpm','job','Ysrc','Ycls');
-    end
     
   catch e
   % just try to translate the input to the output

@@ -54,13 +54,7 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
   opt = cat_io_checkinopt(opt,def); 
   
   
-  % file name handling
-  [pth,nam] = spm_fileparts( trans.native.Vo.fname ); 
-  % in case of SPM input segmentation we have to add the name here to have a clearly different naming of the CAT output 
-  if isfield(job,'spmpp'), nam = ['c1' nam]; end
-  % definition of subfolders
-  [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(trans.native.Vo.fname,job);
-
+  
   % voxel size of the processed image
   vx_vol = sqrt( sum( trans.native.Vi.mat(1:3,1:3).^2 ) ); 
 
@@ -215,17 +209,17 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
           patlas = '-native'; 
           wVai   = spm_vol(trans.native.Vi.fname);     % internal volume information
         end
-        wVai.fname    = fullfile(pth,labelfolder,[nam '_' atlas patlas '.nii']); 
+        wVai.fname    = cat_io_BIDS(trans.native.Vo.fname,job,'labelpath','suffix',['_' atlas patlas],'ext','.nii'); 
         wVai.dt(1)    = 2;
         wVai.pinfo(1) = 1;
         spm_write_vol(wVai,wYa);
 
-        wVai.fname    = fullfile(pth,labelfolder,[nam '_' atlas '_p0' patlas '.nii']); 
+        wVai.fname    = cat_io_BIDS(trans.native.Vo.fname,job,'labelpath','suffix',['_' atlas '_p0' patlas],'ext','.nii'); 
         wVai.dt(1)    = 2;
         wVai.pinfo(1) = 0.02;
         spm_write_vol(wVai,wYp0);
 
-        wVai.fname    = fullfile(pth,labelfolder,[nam '_' atlas '_p1' patlas '.nii']); 
+        wVai.fname    = cat_io_BIDS(trans.native.Vo.fname,job,'labelpath','suffix',['_' atlas '_p1' patlas],'ext','.nii');  
         wVai.dt(1)    = 4; 
         wVai.pinfo(1) = 0.001; %modulated!
         spm_write_vol(wVai,wYcls{1});
@@ -238,8 +232,11 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
   if size(FA,1)>0 % if there was an atlas
     cat_io_cmd('  Write results','g5','',job.extopts.verb,stime2);
 
-    catROI = cat_roi_fun('csvtab2xmlroi',ROI);
-    cat_io_xml(fullfile(pth,labelfolder,['catROI_' nam '.xml']),catROI,'write'); 
+    % in case of SPM input segmentation we have to add the name here to have a clearly different naming of the CAT output 
+    if isfield(job,'spmpp'), spmprefix = 'c1'; else, spmprefix=''; end
+  
+    catROI = cat_roi_fun('csvtab2xmlroi',ROI); 
+    cat_io_xml(cat_io_BIDS(job.BIDS(job.subj),'labeldir','prefix',['catROI_' spmprefix],'ext','.xml'),catROI,'write'); 
   
     % central warning for missed csv files
     fst = 0; 

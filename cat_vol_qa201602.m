@@ -80,18 +80,20 @@ function varargout = cat_vol_qa201602(action,varargin)
   cat_warnings    = struct('identifier',{},'message',{});
   if nargout>0, varargout = cell(1,nargout); end
 
-   try
-    if strcmp(action,'cat12err')
-      [mrifolder, reportfolder] = cat_io_subfolders(varargin{1}.job.data,varargin{1}.job);
-    elseif strcmp(action,'cat12')
-      [mrifolder, reportfolder] = cat_io_subfolders(varargin{2},varargin{6}.job);
-    else
-      [mrifolder, reportfolder] = cat_io_subfolders(varargin{4}.catlog,varargin{6}.job);
-    end
-  catch
-    mrifolder    = 'mri'; 
-    reportfolder = 'report'; 
+  if strcmp(action,'cat12err')
+    fname = varargin{1}.job.data;
+    job   = varargin{1}.job;
+  elseif strcmp(action,'cat12')
+    fname = varargin{2};
+    job   = varargin{6};
+  else
+    fname = varargin{4}.catlog;
+    job   = varargin{6};
   end
+  if ~isfield(job,'BIDS') || isempty(job.BIDS) 
+    job.BIDS = cat_io_BIDS(fname, job);
+  end
+  reportfolder = job.BIDS(1).reportdir;
    
   % no input and setting of default options
   if nargin==0, action='p0'; end 

@@ -169,7 +169,7 @@ if ~isfield(res,'spmpp')
   end
   if job.extopts.verb>2
     tpmci  = 2; %tpmci + 1;
-    tmpmat = fullfile(pth,res.reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postgintnorm'));
+    tmpmat = fullfile(res.reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postgintnorm'));
     save(tmpmat,'Ysrc','Ycls','Ym','Yb','T3th','vx_vol');
   end
   fprintf('%5.0fs\n',etime(clock,stime));
@@ -363,7 +363,7 @@ if ~isfield(res,'spmpp')
   if ~debug; clear Ysrc ; end
   
   if job.extopts.verb>2
-    tpmci=tpmci+1; tmpmat = fullfile(pth,res.reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postLAS'));
+    tpmci=tpmci+1; tmpmat = fullfile(res.reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postLAS'));
     save(tmpmat,'Ysrc','Ycls','Ymi','Yb','T3th','vx_vol');
   end
   
@@ -710,7 +710,7 @@ if ~isfield(res,'spmpp')
   clear Yclsb;
 
   if job.extopts.verb>2
-    tpmci=tpmci+1; tmpmat = fullfile(pth,res.reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'preDartel'));
+    tpmci=tpmci+1; tmpmat = fullfile(res.reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'preDartel'));
     save(tmpmat,'Yp0','Ycls','Ymi','T3th','vx_vol','Yl1');
     clear Yp0;
   end
@@ -898,7 +898,7 @@ if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
     % that occurs when VT (denoised file in derivatives/mri/) is used.
     
     Psatlas_lh   = job.extopts.satlas(  [job.extopts.satlas{:,4}]>0 , 2);
-    Pthick_lh{1} = cat_io_BIDS( VT0.fname, job, 'surfpath', 'prefix', 'lh.thickness', 'ext', ''); 
+    Pthick_lh{1} = cat_io_BIDS( job.BIDS(job.subj), 'surfdir', 'prefix', 'lh.thickness.', 'ext', ''); 
     
     cat_surf_surf2roi(struct('cdata',{{Pthick_lh}},'rdata',{Psatlas_lh},'job',job));
     fprintf('%5.0fs\n',etime(clock,stime2));
@@ -1029,7 +1029,7 @@ if job.output.surface
   if ~debug, clear th;  end
 end 
 %% qam = cat_stat_marks('eval',job.cati,qa,'cat12'); % ... not ready
-cat_io_xml(fullfile(pth,res.reportfolder,['cat_' namspm nam '.xml']),struct(...
+cat_io_xml(cat_io_BIDS( job.BIDS(job.subj), 'reportdir', 'prefix', ['cat_' namspm], 'ext', '.xml'),struct(...
   ... 'subjectratings',qam.subjectmeasures, ... not ready
   'subjectmeasures',qa.subjectmeasures,'ppe',res.ppe),'write+'); % here we have to use the write+!
 fprintf('%5.0fs\n',etime(clock,stime));
@@ -1130,10 +1130,10 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
   res = cat_io_checkinopt(res,defr);
 
   % definition of subfolders - add to res variable?
-  res.mrifolder    = cat_io_BIDS([res.image0(1).fname], job, 'mridir');
-  res.reportfolder = cat_io_BIDS([res.image0(1).fname], job, 'reportdir');
-  res.surffolder   = cat_io_BIDS([res.image0(1).fname], job, 'surfdir');
-  res.labelfolder  = cat_io_BIDS([res.image0(1).fname], job, 'labeldir');
+  res.mrifolder    = job.BIDS.mridir;
+  res.reportfolder = job.BIDS.reportdir;
+  res.surffolder   = job.BIDS.surfdir;
+  res.labelfolder  = job.BIDS.labeldir;
   
   % Sort out bounding box etc
   res.bb = spm_get_bbox(tpm.V(1)); 
@@ -1181,7 +1181,7 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
   res.vx_vol = vx_vol; 
   
   % delete old xml file 
-  oldxml = fullfile(pth,res.reportfolder,['cat_' nam '.xml']);  
+  oldxml = fullfile(res.reportfolder,['cat_' nam '.xml']);  
   if exist(oldxml,'file'), delete(oldxml); end
   clear oldxml
 

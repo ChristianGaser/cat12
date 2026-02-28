@@ -73,27 +73,21 @@ function varargout = cat_vol_qa(action,varargin)
       reportfolder = 'report'; 
     end
   else
-    try
-      switch action
-        case 'cat12err'
-          [mrifolder, reportfolder] = cat_io_subfolders(varargin{1}.job.data{1},varargin{1}.job);
-        case 'cat12'
-          [mrifolder, reportfolder] = cat_io_subfolders(varargin{2},varargin{6}.job);
-        case 'cat12ver'
-          if isfield(varargin{6},'reportfolder') && isempty(varargin{6}.reportfolder)
-            mrifolder    = '';
-            reportfolder = ''; 
-          else
-            mrifolder    = 'mri';
-            reportfolder = 'report'; 
-          end
-        otherwise
-          [mrifolder, reportfolder] = cat_io_subfolders(varargin{4}.catlog,varargin{6}.job);
-      end
-    catch
-      mrifolder    = 'mri';
-      reportfolder = 'report'; 
+    if strcmp(action,'cat12err')
+      fname = varargin{1}.job.data;
+      job   = varargin{1}.job;
+    elseif strcmp(action,'cat12')
+      fname = varargin{2};
+      job   = varargin{6};
+    else 
+      fname = varargin{4}.catlog;
+      job   = varargin{6};
     end
+    if ~isfield(job,'BIDS') || isempty(job.BIDS) 
+      job.BIDS = cat_io_BIDS(fname, job);
+    end
+    mrifolder    = job.BIDS(1).mridir;
+    reportfolder = job.BIDS(1).reportdir;
   end
   
 

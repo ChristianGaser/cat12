@@ -398,10 +398,7 @@ function [mainbatch,perror] = cat_tst_cattest(job)
         copyfile(files_human{fi},files_human1173{fi}); 
         copyfile(files_human{fi},files_human1173plus{fi}); 
       end
-      
-      % cat subdirs
-      [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders;
-
+  
       % add batch dir & get batches 
       addpath(job.batchdir); 
       batches = cat_vol_findfiles(job.batchdir,'*.m'); 

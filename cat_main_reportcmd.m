@@ -14,9 +14,7 @@ function cat_main_reportcmd(job,res,qa)
 % ______________________________________________________________________
 % $Id$
 
-  VT0 = res.image0(1);
-  [pth,nam] = spm_fileparts(VT0.fname); 
-
+  
   % command window output
   QMC       = cat_io_colormaps('marks+',17);
   GMC       = cat_io_colormaps('turbo',45);
@@ -27,32 +25,13 @@ function cat_main_reportcmd(job,res,qa)
   grades    = {'A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E+','E','E-','F'};
   mark2grad = @(mark) grades{max(min(numel(grades),max(max(isnan(mark)*numel(grades),1),round((mark+2/3)*3-3))))};
   
-  % definition of subfolders
-  [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(VT0.fname,job);
-
-  mrifolder = fullfile(pth,mrifolder);
-  [stat, val] = fileattrib(mrifolder);
-  if stat, mrifolder = val.Name; end
-
-  reportfolder = fullfile(pth,reportfolder);
-  [stat, val] = fileattrib(reportfolder);
-  if stat, reportfolder = val.Name; end
-
-  surffolder = fullfile(pth,surffolder);
-  [stat, val] = fileattrib(surffolder);
-  if stat, surffolder = val.Name; end
-
-  labelfolder = fullfile(pth,labelfolder);
-  [stat, val] = fileattrib(labelfolder);
-  if stat, labelfolder = val.Name; end
-
   % output conclusion
   fprintf('\n%s',repmat('-',1,72));
   fprintf(1,'\nCAT preprocessing takes %0.0f minute(s) and %0.0f second(s).\n', ...
     floor(round(etime(clock,res.stime))/60),mod(round(etime(clock,res.stime)),60));
   
   % image quality (just use real to avoid some rare problems with irrational values that should not occur anymore)
-  cat_io_cprintf(color(QMC,real(qa.qualityratings.SIQR)), sprintf('Structural Image Quality Rating (SIQR):  %5.2f%%%% (%s)\n',...
+  cat_io_cprintf(color(QMC,real(qa.qualityratings.SIQR)), sprintf('Structural Image Quality Rating (SIQR):  %5.2f%% (%s)\n',...
     mark2rps(real(qa.qualityratings.SIQR)),mark2grad(real(qa.qualityratings.SIQR))));
   
   % processing quality
@@ -67,7 +46,7 @@ function cat_main_reportcmd(job,res,qa)
     else
       col = [0 0 0];
     end
-    cat_io_cprintf(col, sprintf('Relative gray matter volume (GMV/TIV):   %5.2f%%%% (%5.2f / %5.2f ml)\n',...
+    cat_io_cprintf(col, sprintf('Relative gray matter volume (GMV/TIV):   %5.2f%% (%5.2f / %5.2f ml)\n',...
       qa.subjectmeasures.vol_rel_CGW(2)*100 , qa.subjectmeasures.vol_abs_CGW(2) , qa.subjectmeasures.vol_TIV ));
     if isfield(qa.subjectmeasures,'dist_thickness')
       cat_io_cprintf(col, sprintf('Gray matter thickness (GMT):           %5.2f %s %4.2f mm\n',...
@@ -76,16 +55,15 @@ function cat_main_reportcmd(job,res,qa)
   end
   
   
-  
-  %% print subfolders
+  % print subfolders
   if job.extopts.subfolders
-    fprintf('Segmentations are saved in %s\n',mrifolder);
-    fprintf('Reports are saved in %s\n',reportfolder);
+    fprintf('Segmentations are saved in %s\n',job.BIDS(job.subj).mridir);
+    fprintf('Reports are saved in %s\n',job.BIDS(job.subj).reportdir);
     if job.output.ROI
-      fprintf('Labels are saved in %s\n',labelfolder);
+      fprintf('Labels are saved in %s\n',job.BIDS(job.subj).labeldir);
     end
     if job.output.surface && exist('Psurf','var') && ~isempty(Psurf)
-      fprintf('Surface measurements are saved in %s\n',surffolder);
+      fprintf('Surface measurements are saved in %s\n',job.BIDS(job.subj).surfdir);
     end
   end
 
@@ -99,7 +77,7 @@ function cat_main_reportcmd(job,res,qa)
     txt = fread(fid,200000,'uint8=>char');
     fclose(fid); 
     txt2 = textscan(txt,'%s','Delimiter',''); 
-    cat_io_xml(fullfile(reportfolder,['cat_' nam '.xml']),struct(...
+    cat_io_xml(cat_io_BIDS(job.BIDS(job.subj),'reportdir','prefix','cat_','ext','.xml'),struct(...
       'catlog',txt2),'write+'); % here we have to use the write+!
   end    
   

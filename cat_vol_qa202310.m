@@ -114,13 +114,11 @@ function varargout = cat_vol_qa202310(action,varargin)
   % file information
   % ----------------------------------------------------------------
   if isfield(opt,'job') 
-    [mrifolder, reportfolder] = cat_io_subfolders(Vo.fname,opt.job);
     if isfield( opt.job, 'filedata')
       QAS.filedata = opt.job.filedata; 
     end
-  else
-    [mrifolder, reportfolder] = cat_io_subfolders(Vo.fname,cat_get_defaults);
   end
+ 
   [pp,ff,ee] = spm_fileparts(Vo.fname);
   if strcmp(ee,'.gz'), [~,ff] = spm_fileparts(ff); ee = '.nii.gz'; end 
   [pp0,ff0,ee0] = spm_fileparts(Pp0);

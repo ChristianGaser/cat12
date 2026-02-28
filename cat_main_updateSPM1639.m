@@ -631,10 +631,9 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
     % input variables + bias corrected, bias field, class image
     % strong differences in bias fields can be the result of different 
     % registration > check 'res.image.mat' and 'res.Affine'
-    [~, reportfolder] = cat_io_subfolders(res.image(1).fname,job);
-    [pth,nam] = spm_fileparts(res.image0(1).fname); 
+    [~,nam] = spm_fileparts(res.image0(1).fname); 
     tpmci  = 1;
-    tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postbias'));
+    tmpmat = cat_io_BIDS(job.BIDS,'reportdir',sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postbias'));
     save(tmpmat,'res','tpm','job','Ysrc','Ycls');
   end
  

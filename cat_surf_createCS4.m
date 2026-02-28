@@ -149,7 +149,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
   
 
   % prepare file and directory names
-  [P,pp0,mrifolder,surfolder,surfdir,ff] = cat_surf_createCS_fun('setFileNames',V0,job,opt); 
+  [P,mridir,surfdir,ff] = cat_surf_createCS_fun('setFileNames',V0,job,opt); 
   
 
   % main loop for each surface structure 
@@ -160,7 +160,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     clear Ynocerebrum
 
     % prepare longitudinal case if required 
-    useprior = cat_surf_createCS_fun('setupprior',opt,surfolder,P,si);
+    useprior = cat_surf_createCS_fun('setupprior',opt,surfdir,P,si);
 
 
     %% reduce for object area
@@ -199,7 +199,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
    
     
     % surface coordinate transformation matrix
-    [Vmfs,Smat] = createOutputFileStructures(V,V0,resI,BB,opt,pp0,mrifolder,ff,si); 
+    [Vmfs,Smat] = createOutputFileStructures(V,V0,resI,BB,opt,mridir,ff,si); 
 
 
     %% thickness and position map estimation 
@@ -564,7 +564,7 @@ function CS1 =loadSurf(P)
   if isfield(CS,'cdata'), CS1.cdata = CS.cdata; end
 end
 %==========================================================================
-function [Vmfs,Smat] = createOutputFileStructures(V,V0,resI,BB,opt,pp0,mrifolder,ff,si)
+function [Vmfs,Smat] = createOutputFileStructures(V,V0,resI,BB,opt,mridir,ff,si)
     matI              = spm_imatrix(V.mat); 
     matI(7:9)         = sign( matI(7:9))   .* repmat( opt.interpV , 1 , 3); 
     matiBB            = spm_imatrix(V.mat   * [eye(4,3) [ (BB.BB([1,3,5])' - 1) ; 1]]); 
@@ -577,7 +577,7 @@ function [Vmfs,Smat] = createOutputFileStructures(V,V0,resI,BB,opt,pp0,mrifolder
 
     Vmfs = resI.hdrN;
     Vmfs.pinfo = V0.pinfo;
-    Vmfs.fname = fullfile(pp0,mrifolder, sprintf('%s_seg-%s.nii',ff,opt.surf{si}));
+    Vmfs.fname = fullfile(mridir, sprintf('%s_seg-%s.nii',ff,opt.surf{si}));
     if isfield(Vmfs,'dat'),     Vmfs = rmfield(Vmfs,'dat'); end
     if isfield(Vmfs,'private'), Vmfs = rmfield(Vmfs,'private'); end
     matiBB = spm_imatrix(V.mat   * [eye(4,3) [ (BB.BB([1,3,5])' - 1) ; 1]]); 

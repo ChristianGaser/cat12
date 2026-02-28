@@ -14,7 +14,7 @@ function varargout = cat_surf_createCS_fun(action,varargin)
       quickeval(varargin{:});
 
     case 'setFileNames'
-      [varargout{1},varargout{2},varargout{3},varargout{4},varargout{5},varargout{6}] = setFileNames(varargin{:}); 
+      [varargout{1},varargout{2},varargout{3},varargout{4}] = setFileNames(varargin{:}); 
 
     case 'saveSurf'
       saveSurf(varargin{:});
@@ -93,50 +93,47 @@ function CS1 = loadSurf(P)
   if isfield(CS,'cdata'), CS1.cdata = CS.cdata; end
 end
 %==========================================================================
-function [P,pp0,mrifolder,pp0_surffolder,surffolder,ff] = setFileNames(V0,job,opt) 
+function [P,mridir,surfdir,ff] = setFileNames(V0,job,opt) 
 %setFileNames. Define surface filenames.
 %#ok<*AGROW> 
 
-  pp0_mrifolder  = char(cat_io_BIDS( V0.fname , job, 'mripath'));
-  pp0_surffolder = char(cat_io_BIDS( V0.fname , job, 'surfpath'));
-
-  [pp0, mrifolder] = fileparts(pp0_mrifolder);
-  [~,  surffolder] = fileparts(pp0_surffolder);
+  mridir  = cat_io_BIDS( V0.fname, job, 'mridir' );
+  surfdir = cat_io_BIDS( V0.fname, job, 'surfdir' );
 
   % get original filename without 'n'
  
   [~,ff] = spm_fileparts(V0.fname);
   % surface filenames
   for si = 1:numel(opt.surf)
-    P(si).Pm         = fullfile(pp0_mrifolder, sprintf('m%s.nii',ff));                                 % raw
-    P(si).Pp0        = fullfile(pp0_mrifolder, sprintf('p0%s.nii',ff));                                % labelmap
-    P(si).Praw       = fullfile(pp0_surffolder,sprintf('%s.central.nofix.%s.gii',opt.surf{si},ff));    % raw
-    P(si).Praw2      = fullfile(pp0_surffolder,sprintf('%s.central.nofix_sep.%s.gii',opt.surf{si},ff));    % raw
-    P(si).Pdefects   = fullfile(pp0_mrifolder, sprintf('defects_%s.nii',ff));                          % defect
-    P(si).Pcentral   = fullfile(pp0_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff));          % central
-    P(si).Pcentralh  = fullfile(pp0_surffolder,sprintf('%s.centralh.%s.gii',opt.surf{si},ff));         % central
-    P(si).Pcentralr  = fullfile(pp0_surffolder,sprintf('%s.central.resampled.%s.gii',opt.surf{si},ff));% central .. used in inactive path
-    P(si).Ppial      = fullfile(pp0_surffolder,sprintf('%s.pial.%s.gii',opt.surf{si},ff));             % pial (GM/CSF)
-    P(si).Pwhite     = fullfile(pp0_surffolder,sprintf('%s.white.%s.gii',opt.surf{si},ff));            % white (WM/GM)
-    P(si).Pthick     = fullfile(pp0_surffolder,sprintf('%s.thickness.%s',opt.surf{si},ff));            % FS thickness / GM depth
-    P(si).Pmsk       = fullfile(pp0_surffolder,sprintf('%s.msk.%s',opt.surf{si},ff));                  % msk
-    P(si).Ppbt       = fullfile(pp0_surffolder,sprintf('%s.pbt.%s',opt.surf{si},ff));                  % PBT thickness / GM depth
-    P(si).Psphere0   = fullfile(pp0_surffolder,sprintf('%s.sphere.nofix.%s.gii',opt.surf{si},ff));     % sphere.nofix
-    P(si).Psphere    = fullfile(pp0_surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff));           % sphere
-    P(si).Pspherereg = fullfile(pp0_surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff));       % sphere.reg
-    P(si).Pgmt       = fullfile(pp0_mrifolder, sprintf('%s_thickness-%s.nii',ff,opt.surf{si}));        % temp thickness
-    P(si).Pppm       = fullfile(pp0_mrifolder, sprintf('%s_ppm-%s.nii',ff,opt.surf{si}));              % temp position map
+    P(si).Pm         = fullfile(mridir, sprintf('m%s.nii',ff));                                 % raw
+    P(si).Pp0        = fullfile(mridir, sprintf('p0%s.nii',ff));                                % labelmap
+    P(si).Praw       = fullfile(surfdir,sprintf('%s.central.nofix.%s.gii',opt.surf{si},ff));    % raw
+    P(si).Praw2      = fullfile(surfdir,sprintf('%s.central.nofix_sep.%s.gii',opt.surf{si},ff));    % raw
+    P(si).Pdefects   = fullfile(mridir, sprintf('defects_%s.nii',ff));                          % defect
+    P(si).Pcentral   = fullfile(surfdir,sprintf('%s.central.%s.gii',opt.surf{si},ff));          % central
+    P(si).Pcentralh  = fullfile(surfdir,sprintf('%s.centralh.%s.gii',opt.surf{si},ff));         % central
+    P(si).Pcentralr  = fullfile(surfdir,sprintf('%s.central.resampled.%s.gii',opt.surf{si},ff));% central .. used in inactive path
+    P(si).Ppial      = fullfile(surfdir,sprintf('%s.pial.%s.gii',opt.surf{si},ff));             % pial (GM/CSF)
+    P(si).Pwhite     = fullfile(surfdir,sprintf('%s.white.%s.gii',opt.surf{si},ff));            % white (WM/GM)
+    P(si).Pthick     = fullfile(surfdir,sprintf('%s.thickness.%s',opt.surf{si},ff));            % FS thickness / GM depth
+    P(si).Pmsk       = fullfile(surfdir,sprintf('%s.msk.%s',opt.surf{si},ff));                  % msk
+    P(si).Ppbt       = fullfile(surfdir,sprintf('%s.pbt.%s',opt.surf{si},ff));                  % PBT thickness / GM depth
+    P(si).Psphere0   = fullfile(surfdir,sprintf('%s.sphere.nofix.%s.gii',opt.surf{si},ff));     % sphere.nofix
+    P(si).Psphere    = fullfile(surfdir,sprintf('%s.sphere.%s.gii',opt.surf{si},ff));           % sphere
+    P(si).Pspherereg = fullfile(surfdir,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff));       % sphere.reg
+    P(si).Pgmt       = fullfile(mridir, sprintf('%s_thickness-%s.nii',ff,opt.surf{si}));        % temp thickness
+    P(si).Pppm       = fullfile(mridir, sprintf('%s_ppm-%s.nii',ff,opt.surf{si}));              % temp position map
     P(si).Pfsavg     = fullfile(opt.fsavgDir,  sprintf('%s.central.freesurfer.gii',opt.surf{si}));     % fsaverage central
     P(si).Pfsavgsph  = fullfile(opt.fsavgDir,  sprintf('%s.sphere.freesurfer.gii',opt.surf{si}));      % fsaverage sphere    
     % special maps in CS2
-    P(si).Player4    = fullfile(pp0_surffolder,sprintf('%s.layer4.%s.gii',opt.surf{si},ff));           % layer4
-    P(si).PintL4     = fullfile(pp0_surffolder,sprintf('%s.intlayer4.%s',opt.surf{si},ff));            % layer4 intensity
-    P(si).Pgwo       = fullfile(pp0_surffolder,sprintf('%s.depthWMo.%s',opt.surf{si},ff));             % gyrus width / GWM depth / gyral span
-    P(si).Pgw        = fullfile(pp0_surffolder,sprintf('%s.depthGWM.%s',opt.surf{si},ff));             % gyrus width / GWM depth / gyral span
-    P(si).Pgww       = fullfile(pp0_surffolder,sprintf('%s.depthWM.%s',opt.surf{si},ff));              % gyrus width of the WM / WM depth
-    P(si).Pgwwg      = fullfile(pp0_surffolder,sprintf('%s.depthWMg.%s',opt.surf{si},ff));             % gyrus width of the WM / WM depth
-    P(si).Psw        = fullfile(pp0_surffolder,sprintf('%s.depthCSF.%s',opt.surf{si},ff));             % sulcus width / CSF depth / sulcal span
-    P(si).Pdefects0  = fullfile(pp0_surffolder,sprintf('%s.defects0.%s',opt.surf{si},ff));             % defects temporary file    
+    P(si).Player4    = fullfile(surfdir,sprintf('%s.layer4.%s.gii',opt.surf{si},ff));           % layer4
+    P(si).PintL4     = fullfile(surfdir,sprintf('%s.intlayer4.%s',opt.surf{si},ff));            % layer4 intensity
+    P(si).Pgwo       = fullfile(surfdir,sprintf('%s.depthWMo.%s',opt.surf{si},ff));             % gyrus width / GWM depth / gyral span
+    P(si).Pgw        = fullfile(surfdir,sprintf('%s.depthGWM.%s',opt.surf{si},ff));             % gyrus width / GWM depth / gyral span
+    P(si).Pgww       = fullfile(surfdir,sprintf('%s.depthWM.%s',opt.surf{si},ff));              % gyrus width of the WM / WM depth
+    P(si).Pgwwg      = fullfile(surfdir,sprintf('%s.depthWMg.%s',opt.surf{si},ff));             % gyrus width of the WM / WM depth
+    P(si).Psw        = fullfile(surfdir,sprintf('%s.depthCSF.%s',opt.surf{si},ff));             % sulcus width / CSF depth / sulcal span
+    P(si).Pdefects0  = fullfile(surfdir,sprintf('%s.defects0.%s',opt.surf{si},ff));             % defects temporary file    
   end
 end
 %=======================================================================

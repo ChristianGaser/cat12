@@ -430,31 +430,22 @@ function output = cat_simple(job)
   
   %% create output
   %  ----------------------------------------------------------------------
-  mrifolder    = cell(numel(job.data),1);
-  surffolder   = cell(numel(job.data),1);
-  reportfolder = cell(numel(job.data),1);
-  labelfolder  = cell(numel(job.data),1);
   
   % unsmoothed segmentations
-  for fi = 1:numel(job.data)
-    [mrifolder{fi}, reportfolder{fi}, surffolder{fi}, labelfolder{fi}] = cat_io_subfolders(job.data{fi},job);
-    output.mwp1{fi} = spm_file(job.data,'prefix',fullfile(mrifolder{fi},'mwp1'));
-    output.mwp2{fi} = spm_file(job.data,'prefix',fullfile(mrifolder{fi},'mwp2'));
-  end
+  output.mwp1 = spm_io_BIDS(job.data,job,'mripath','prefix','mwp1');
+  output.mwp2 = spm_io_BIDS(job.data,job,'mripath','prefix','mwp2');
   
   if proc_surf && exist('measures','var')
     for mi = 1:size(measures,1)
-      for fi = 1:numel(job.data)
-        output.measures{mi,1}{fi} = spm_file(job.data,'prefix',fullfile(surffolder{fi},sprintf('mesh.%s.',measures{mi,1})),'ext','.gii');
-      end
+      output.measures{mi,1} = spm_io_BIDS(job.data,job,'surfpath','prefix',sprintf('mesh.%s.',measures{mi,1}),'ext','.gii');
     end
   end
   
   % smoothed data
   for si = 1:numel(vsmooth)
     for fi = 1:numel(job.data)
-      output.(sprintf('s%dmwp1',vsmooth(si))){fi} = spm_file(job.data,'prefix',fullfile(mrifolder{fi},sprintf('s%dmwp1',vsmooth(si))));
-      output.(sprintf('s%dmwp2',vsmooth(si))){fi} = spm_file(job.data,'prefix',fullfile(mrifolder{fi},sprintf('s%dmwp2',vsmooth(si))));
+      output.(sprintf('s%dmwp1',vsmooth(si))){fi} = spm_io_BIDS(job.data,job,'mripath','prefix',sprintf('s%dmwp1',vsmooth(si)));
+      output.(sprintf('s%dmwp2',vsmooth(si))){fi} = spm_io_BIDS(job.data,job,'mripath','prefix',sprintf('s%dmwp2',vsmooth(si)));
     end
   end
   
@@ -462,30 +453,21 @@ function output = cat_simple(job)
     for mi = 1:size(measures,1)
       if strcmp(measures{mi,1},'thickness')
         for si = 1:numel(ssmooth1)
-          for fi = 1:numel(job.data)
-            output.(sprintf('s%d%s',ssmooth1(si),measures{mi,1})){fi} = ...
-              spm_file(job.data,'prefix',fullfile(surffolder{fi},sprintf('s%dmm.mesh.%s.',ssmooth1(si),measures{mi,1})),'ext','.gii');
-          end
+          output.(sprintf('s%d%s',ssmooth1(si),measures{mi,1})) = ...
+            spm_io_BIDS(job.data,job,'surfpath','prefix',sprintf('s%dmm.mesh.%s.',ssmooth1(si),measures{mi,1}),'ext','.gii');
         end
       else
         for si = 1:numel(ssmooth2)
-          for fi = 1:numel(job.data)
-            output.(sprintf('s%d%s',ssmooth2(si),measures{mi,1})){fi} = ...
-              spm_file(job.data,'prefix',fullfile(surffolder{fi},sprintf('s%dmm.mesh.%s.',ssmooth2(si),measures{mi,1})),'ext','.gii');
-          end
+          output.(sprintf('s%d%s',ssmooth2(si),measures{mi,1})){fi} = ...
+            spm_io_BIDS(job.data,job,'surfpath','prefix',sprintf('s%dmm.mesh.%s.',ssmooth2(si),measures{mi,1}),'ext','.gii');
         end
       end
     end
   end
   
   % xml data
-  for fi = 1:numel(job.data)
-    output.catroi{fi} = spm_file(job.data,'prefix',fullfile(labelfolder{fi},'catROI_'),'ext','.xml');
-  end
-  
-  for fi = 1:numel(job.data)
-    output.catxml{fi} = spm_file(job.data,'prefix',fullfile(reportfolder{fi},'cat_'),'ext','.xml');
-  end
+  output.catroi = spm_io_BIDS(job.data,job,'labelpath','prefix','catROI_','ext','.xml');
+  output.catxml = spm_io_BIDS(job.data,job,'labelpath','prefix','cat_','ext','.xml');
     
   spm_jobman('initcfg'); % reinitialize
   spm_jobman('run',matlabbatch); %,inputs{:});

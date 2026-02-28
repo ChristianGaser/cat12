@@ -82,19 +82,21 @@ function varargout = cat_vol_qa202412(action,varargin)
   QAR = struct(); 
   %if nargout>0, varargout = cell(1,nargout); end
   
-  try
-    if strcmp(action,'cat12err')
-      [mrifolder, reportfolder] = cat_io_subfolders(varargin{1}.job.data,varargin{1}.job);
-    elseif strcmp(action,'cat12')
-      [mrifolder, reportfolder] = cat_io_subfolders(varargin{2},varargin{6}.job);
-    else
-      [mrifolder, reportfolder] = cat_io_subfolders(varargin{4}.catlog,varargin{6}.job);
-    end
-  catch
-    mrifolder    = 'mri'; 
-    reportfolder = 'report'; 
+  if strcmp(action,'cat12err')
+    fname = varargin{1}.job.data;
+    job   = varargin{1}.job;
+  elseif strcmp(action,'cat12')
+    fname = varargin{2};
+    job   = varargin{6};
+  else
+    fname = varargin{4}.catlog;
+    job   = varargin{6};
   end
-  
+  if ~isfield(job,'BIDS') || isempty(job.BIDS) 
+    job.BIDS = cat_io_BIDS(fname, job);
+  end
+  reportdir = job.BIDS(1).reportdir;
+
   % no input and setting of default options
   action2 = action; 
   if nargin==0, action='p0'; end 
@@ -445,9 +447,9 @@ function varargout = cat_vol_qa202412(action,varargin)
           
           
           if opt.verb>1 
-            if opt.rerun || cat_io_rerun(Vo.fname, fullfile(pp,reportfolder,[opt.prefix ff '.xml']) , 0 )
+            if opt.rerun || cat_io_rerun(Vo.fname, fullfile(reportdir,[opt.prefix ff '.xml']) , 0 )
               rerun = sprintf(' updated %2.0fs',etime(clock,stime1));
-            elseif exist( fullfile(pp,reportfolder,[opt.prefix ff '.xml']) , 'file')
+            elseif exist( fullfile(reportdir,[opt.prefix ff '.xml']) , 'file')
               rerun = ' loaded';
             else
               rerun = ' '; % new
@@ -560,9 +562,9 @@ function varargout = cat_vol_qa202412(action,varargin)
         % --------------------------------------------------------------
         if opt.write_csv
           pp = spm_fileparts(Pp0{1});
-          cat_io_csv(fullfile(pp,reportfolder,[opt.prefix num2str(numel(Vo),'%04d') ...
+          cat_io_csv(fullfile(reportdir,[opt.prefix num2str(numel(Vo),'%04d') ...
             'cat_vol_qa_values.csv']),QAT);
-          cat_io_csv(fullfile(pp,reportfolder,[opt.prefix num2str(numel(Vo),'%04d') ...
+          cat_io_csv(fullfile(reportdir,[opt.prefix num2str(numel(Vo),'%04d') ...
             'cat_vol_qa_marks.csv']),QATm);
         end
       end 

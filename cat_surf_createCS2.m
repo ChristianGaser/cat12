@@ -197,7 +197,7 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
   defect_number = 0; 
     
   % prepare file and directory names
-  [P,pp0,mrifolder,surffolder,surfdir,ff] = cat_surf_createCS_fun('setFileNames',V0,job,opt); 
+  [P,mridir,surfdir,ff] = cat_surf_createCS_fun('setFileNames',V0,job,opt); 
 
   
   % main loop for each surface structure 
@@ -270,7 +270,7 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
     stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,native2unicode(179, 'latin1'))); stimet =stime;
 
     % surface coordinate transformation matrix
-    [Vmfs,Smat] = createOutputFileStructures(V,V0,resI,BB,opt,pp0,mrifolder,ff,si); 
+    [Vmfs,Smat] = createOutputFileStructures(V,V0,resI,BB,opt,mridir,ff,si); 
     if strcmp(opt.pbtmethod,'pbtsimple') 
       if opt.SRP>5
         % Write PP
@@ -337,7 +337,7 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
     Ypp(Yppt>-1) = max(Ypp(Yppt>-1),Yppt(Yppt>-1)); 
     
     % this is the map that we want to keep in the original image resolution
-    Vpp  = cat_io_writenii(V0,(Ypp+1)/3,mrifolder,sprintf('%s.pp',opt.surf{si}) ,...
+    Vpp  = cat_io_writenii(V0,(Ypp+1)/3,mridir,sprintf('%s.pp',opt.surf{si}) ,...
       'percentage position map - V2 - pial=1/3, central=1/2, white=2/3, 0 and 1 to stablize white/pial values','uint8',[0,1/255],...'float32',[0 1],...
       min([1 1 2],[1 opt.outputpp.warped opt.outputpp.dartel]),opt.trans);
     Vpp  = Vpp(1); 
@@ -1938,7 +1938,7 @@ function CS = smoothArt(Yth1i,P,CS,Smat,Vppm,facevertexcdatanocut,si,opt,method,
   CS = loadSurf(P(si).Pcentral);
 end
 %==========================================================================
-function [Vmfs,Smat] = createOutputFileStructures(V,V0,resI,BB,opt,pp0,mrifolder,ff,si)
+function [Vmfs,Smat] = createOutputFileStructures(V,V0,resI,BB,opt,mrifolder,ff,si)
     matI              = spm_imatrix(V.mat); 
     matI(7:9)         = sign( matI(7:9))   .* repmat( opt.interpV , 1 , 3); 
     matiBB            = spm_imatrix(V.mat   * [eye(4,3) [ (BB.BB([1,3,5])' - 1) ; 1]]); 
@@ -1951,7 +1951,7 @@ function [Vmfs,Smat] = createOutputFileStructures(V,V0,resI,BB,opt,pp0,mrifolder
 
     Vmfs = resI.hdrN;
     Vmfs.pinfo = V0.pinfo;
-    Vmfs.fname = fullfile(pp0,mrifolder, sprintf('%s_seg-%s.nii',ff,opt.surf{si}));
+    Vmfs.fname = fullfile(mrifolder, sprintf('%s_seg-%s.nii',ff,opt.surf{si}));
     if isfield(Vmfs,'dat'),     Vmfs = rmfield(Vmfs,'dat'); end
     if isfield(Vmfs,'private'), Vmfs = rmfield(Vmfs,'private'); end
     matiBB = spm_imatrix(V.mat   * [eye(4,3) [ (BB.BB([1,3,5])' - 1) ; 1]]); 

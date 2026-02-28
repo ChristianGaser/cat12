@@ -42,13 +42,11 @@ function varargout = cat_run(job)
 % disable parallel processing for only one subject
 if isscalar(job.data), job.nproc = 0; end
 
-% clean data input, get the BIDSfolder
-job.data   = cat_io_BIDS( job.data, job, 'files');  
-BIDSfolder = cat_io_BIDS( job.data, job, 'main_BIDSfolder'); 
-
-% create log and result directories
-job2   = job; job2.extopts.mkBIDSdir = 1; 
-logdir = cat_io_BIDS( job.data, job2, 'main_logpath'); 
+% create BIDS structur and get BIDSfolder for later evaluation 
+job.data   = spm_file(job.data, 'number', ''); 
+job.BIDS   = cat_io_BIDS( job.data, job );  
+BIDSfolder = cat_io_BIDS( job.BIDS, 'main_BIDSfolder'); 
+logdir     = cat_io_BIDS( job.BIDS(1), 'logdir'); 
 
 
 if ( isfield(job.extopts,'lazy') && job.extopts.lazy && ~isfield(job,'process_index') ) || ...
@@ -99,6 +97,7 @@ end
 if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))  
   % rescue original subjects
   job_data = job.data;
+  job_BIDS = job.BIDS; 
   n_subjects = numel(job.data);
   if job.nproc > n_subjects
     job.nproc = n_subjects;
@@ -117,7 +116,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
 
   tmp_array = cell(job.nproc,1); job.printPID = 1; job.getPID = 2; 
     
-  logdate   = datestr(now,'YYYYmmdd_HHMMSS');
+  logdate   = datestr(now,'YYYYmmdd-HHMMSS');
   PID       = zeros(1,job.nproc);
   catSID    = zeros(1,job.nproc);
   for i=1:job.nproc
@@ -128,6 +127,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
       fprintf('  %s\n',spm_str_manip(char(job_data(job.process_index{i}(fi))),'a78')); 
     end
     job.data = job_data(job.process_index{i});
+    job.BIDS = job_BIDS(job.process_index{i});
          
     % temporary name for saving job information
     tmp_name = [tempname '.mat'];
@@ -148,9 +148,9 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
 
     % log-file for output
     if isempty(logdir)
-      log_name{i} = ['catlog_main_' logdate '_log' sprintf('%02d',i) '.txt'];
+      log_name{i} = ['catlog_segment_' logdate '_log' sprintf('%02d',i) '.txt'];
     else
-      log_name{i} = fullfile(logdir,['catlog_main_' logdate '_log' sprintf('%02d',i) '.txt']);
+      log_name{i} = fullfile(logdir,['catlog_segment_' logdate '_log' sprintf('%02d',i) '.txt']);
     end
     
     % test writing 
@@ -523,7 +523,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
               [pp,ff,ee] = spm_fileparts(jobs(i).data{max(1,catSID(i))}); 
 
               % sometimes we have to remove .nii from filename if files were zipped
-              catlog = fullfile(cat_io_BIDS( job.data{i}, job, 'reportpath'),['catlog_' strrep(ff,'.nii','') '.txt']); 
+              catlog = cat_io_BIDS( job.BIDS(i), 'reportdir','prefix','catlog_','ext','.txt'); 
 
               
               switch caterr
@@ -570,8 +570,8 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
                 cat_io_cprintf([0 0 0],sprintf('% 5d.%02d minutes, ',cattime'));
 
                 % add IQR
-                col = color(QMC,rps2mark( str2double( catiqr{1}(1:end-1) )));
-                cat_io_cprintf(col,sprintf('SIQR=%s',strrep(catiqr{1},'%','%%')));  
+                col = color(QMC,rps2mark( str2double( catiqr{1}(1:end-2) )));
+                cat_io_cprintf(col,'SIQR=%s',strrep(catiqr{1},'%%','%'));  
               
                 % add GMV - colors only for developer
                 if job.extopts.expertgui >= 1 && ~strcmp(catrgmv{1},'unknown')
@@ -599,10 +599,10 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
                 end
                 kcol = [0.5 0.5 0.5]; % color for comma
                 if job.extopts.expertgui >= 0 && ~strcmp(catrgmv{1},'unknown')
-                  cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('rGMV=%s',strrep(catrgmv{1},'%','%%')));  
+                  cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('rGMV=%s',strrep(catrgmv{1},'%','%')));  
                 end
                 if job.extopts.expertgui >= 0 && ~strcmp(catgmt{1},'unknown')
-                  cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('GMT=%s',strrep(catgmt{1},'%','%%')));  
+                  cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('GMT=%s',strrep(catgmt{1},'%','%')));  
                 end
 
                 % surf vals 
@@ -661,8 +661,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     %           all fields and not just the most relevant on listed in the
     %           report.
   %  try
-      if ~exist('BIDSfolder','var'), BIDSfolder = pwd; end
-      cat_run_createCSVreport(job,BIDSfolder);
+    cat_run_createCSVreport(job);
   %  end
 
 
@@ -730,28 +729,22 @@ cat_get_defaults('useprior','');
 varargout{1} = cat_io_checkdepfiles( varargout{1} );
 return
 %_______________________________________________________________________
-function cat_run_createCSVreport(job,BIDSfolder)
+function cat_run_createCSVreport(job)
 %% create a final csv with values from the XML reports
 
   % define input XMLs
   matlabbatch{1}.spm.tools.cat.tools.xml2csv.files = job.data; 
   for fi = 1:numel(job.data)
-    reportfolderfi = cat_io_BIDS(job.data{subj}, job, 'reportpath');
     matlabbatch{1}.spm.tools.cat.tools.xml2csv.files{fi} = spm_file( strrep(job.data{fi},'.gz',''), ...
-      'path', spm_file( fullfile( spm_fileparts(job.data{fi}), reportfolderfi,'t' ),'fpath'), ...
-      'prefix', 'cat_', 'ext', '.xml');
+      'path', job.BIDS(fi).reportdir, 'prefix', 'cat_', 'ext', '.xml');
   end
 
   % RD20240129: HOW TO HANDLE MISSED FILES ? >> handle in cat_io_xml2csv
 
   % filename with date 
-  [~,pp1,pp2] = spm_fileparts(BIDSfolder); 
-  date = ['_' char(datetime('now','Format','yyyyMMddHHmm'))]; 
-  if ~isempty(pp1), pp1 = ['_' pp1 strrep(pp2,'_','-')]; end
-  matlabbatch{1}.spm.tools.cat.tools.xml2csv.fname = ...
-    sprintf('CATxml%s%s.csv', pp1, date); 
-  matlabbatch{1}.spm.tools.cat.tools.xml2csv.outdir       = ...
-    {spm_file( fullfile( spm_fileparts(job.data{fi}), cat_io_BIDS(job.data{subj}, job, 'main_logreportpath') ) ,'fpath') };
+  matlabbatch{1}.spm.tools.cat.tools.xml2csv.fname        = ...
+    sprintf('CATsegment_%s%s.csv', job.BIDS(1).plogdir, char(datetime('now','Format','yyyyMMddHHmm'))); 
+  matlabbatch{1}.spm.tools.cat.tools.xml2csv.outdir       = { job.BIDS(1).logdir };
   matlabbatch{1}.spm.tools.cat.tools.xml2csv.fieldnames   = {' '};
   matlabbatch{1}.spm.tools.cat.tools.xml2csv.avoidfields  = {''};
   matlabbatch{1}.spm.tools.cat.tools.xml2csv.report       = 'default';
@@ -1311,10 +1304,13 @@ catlog      = {};
 catxml      = {};
 jacobian    = {};
 
-mrifolder    = cat_io_BIDS(job.channel(1).vols, job, 'mripath');
-reportfolder = cat_io_BIDS(job.channel(1).vols, job, 'reportpath');
-surffolder   = cat_io_BIDS(job.channel(1).vols, job, 'surfpath');
-labelfolder  = cat_io_BIDS(job.channel(1).vols, job, 'labelpath');
+if isfield(job,'BIDS')
+  BIDS = job.BIDS;
+else
+  job.extopts.mkBIDSdir = 0; 
+  BIDS = cat_io_BIDS(job.channel(1).vols, job); 
+end
+
 for j=1:n
     [parts{j,:}] = spm_fileparts(job.channel(1).vols{j});
     
@@ -1337,10 +1333,10 @@ end
 % ----------------------------------------------------------------------
 catroi = cell(0,1);
 for j=1:n
-    catxml{j,1}       = fullfile(parts{j,1},reportfolder{j},['cat_',parts{j,2},'.xml']);
-    catlog{j,1}       = fullfile(parts{j,1},reportfolder{j},['catlog_',parts{j,2},'.txt']);
-    catreportpdf{j,1} = fullfile(parts{j,1},reportfolder{j},['catreport_',parts{j,2},'.pdf']);
-    catreportjpg{j,1} = fullfile(parts{j,1},reportfolder{j},['catreportj_',parts{j,2},'.jpg']);
+    catxml{j,1}       = fullfile(cat_io_BIDS(BIDS(j),'reportdir'),['cat_',parts{j,2},'.xml']);
+    catlog{j,1}       = fullfile(cat_io_BIDS(BIDS(j),'reportdir'),['catlog_',parts{j,2},'.txt']);
+    catreportpdf{j,1} = fullfile(cat_io_BIDS(BIDS(j),'reportdir'),['catreport_',parts{j,2},'.pdf']);
+    catreportjpg{j,1} = fullfile(cat_io_BIDS(BIDS(j),'reportdir'),['catreportj_',parts{j,2},'.jpg']);
 end
 
 
@@ -1399,7 +1395,7 @@ for si = 1:numel(sides)
         if ~isempty( surfaceoutput{soi} ) && job.output.surface
           eval( sprintf('%s%s = cell(n,1);' , sides{si} , surfaceoutput_str ) ); 
           for j = 1:n
-            eval( sprintf('%s%s{j} = fullfile(  parts{j,1} , surffolder{j} , ''%s.%s.%s.gii'' ); ' , ...
+            eval( sprintf('%s%s{j} = fullfile(  BIDS(j).surfdir , ''%s.%s.%s.gii'' ); ' , ...
               sides{si} , surfaceoutput_str , ...
               sides{si} , surfaceoutput{soi}{soii} , sparts{j,2} ) ); 
             voutsfields{end+1} = sprintf('%s%s',  sides{si} , surfaceoutput_str );
@@ -1416,7 +1412,7 @@ for si = 1:numel(sides)
         if ~isempty( measureoutput{soi} ) && job.output.surface
           eval( sprintf('%s%s = cell(n,1);' , sides{si} , measureoutput{soi}{soii} ) ); 
           for j = 1:n
-            eval( sprintf('%s%s{j} = fullfile( parts{j,1} , surffolder{j} , ''%s.%s.%s'' ); ' , ...
+            eval( sprintf('%s%s{j} = fullfile( BIDS(j).surfdir , ''%s.%s.%s'' ); ' , ...
               sides{si} , measureoutput{soi}{soii} , ...
               sides{si} , measureoutput{soi}{soii} , sparts{j,2} ) ); 
             voutsfields{end+1} = sprintf('%s%s',  sides{si} , measureoutput{soi}{soii} );
@@ -1438,7 +1434,7 @@ if job.output.ROI %&& isfield(job.opts,'ROImenu') && isfield(job.opts.ROImenu,'a
     catroi = cell(n,1);
     if is_ROI
         for j=1:n
-            catroi{j,1} = fullfile(parts{j,1},labelfolder{j},['catROI_',parts{j,2},'.xml']);
+            catroi{j,1} = fullfile(BIDS(j).labeldir, ['catROI_',parts{j,2},'.xml']);
         end
     end
 end
@@ -1448,28 +1444,28 @@ end
 if job.output.bias.native
     biascorr = cell(n,1);
     for j=1:n
-        biascorr{j} = fullfile(parts{j,1},mrifolder{j},['m',parts{j,2},'.nii']);
+        biascorr{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['m',parts{j,2},'.nii']);
     end
 end
 
 if job.output.bias.warped
     wbiascorr = cell(n,1);
     for j=1:n
-        wbiascorr{j} = fullfile(parts{j,1},mrifolder{j},['wm',parts{j,2},'.nii']);
+        wbiascorr{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['wm',parts{j,2},'.nii']);
     end
 end
 
 if job.output.bias.dartel==1
     rbiascorr = cell(n,1);
     for j=1:n
-        rbiascorr{j} = fullfile(parts{j,1},mrifolder{j},['rm',parts{j,2},'_rigid.nii']);
+        rbiascorr{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['rm',parts{j,2},'_rigid.nii']);
     end
 end
 
 if job.output.bias.dartel==2
     abiascorr = cell(n,1);
     for j=1:n
-        abiascorr{j} = fullfile(parts{j,1},mrifolder{j},['rm',parts{j,2},'_affine.nii']);
+        abiascorr{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['rm',parts{j,2},'_affine.nii']);
     end
 end
 
@@ -1478,28 +1474,28 @@ end
 if job.output.las.native
     ibiascorr = cell(n,1);
     for j=1:n
-        ibiascorr{j} = fullfile(parts{j,1},mrifolder{j},['mi',parts{j,2},'.nii']);
+        ibiascorr{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['mi',parts{j,2},'.nii']);
     end
 end
 
 if job.output.las.warped
     wibiascorr = cell(n,1);
     for j=1:n
-        wibiascorr{j} = fullfile(parts{j,1},mrifolder{j},['wmi',parts{j,2},'.nii']);
+        wibiascorr{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['wmi',parts{j,2},'.nii']);
     end
 end
 
 if job.output.las.dartel==1
     ribiascorr = cell(n,1);
     for j=1:n
-        ribiascorr{j} = fullfile(parts{j,1},mrifolder{j},['rmi',parts{j,2},'_rigid.nii']);
+        ribiascorr{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['rmi',parts{j,2},'_rigid.nii']);
     end
 end
 
 if job.output.las.dartel==2
     aibiascorr = cell(n,1);
     for j=1:n
-        aibiascorr{j} = fullfile(parts{j,1},mrifolder{j},['rmi',parts{j,2},'_affine.nii']);
+        aibiascorr{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['rmi',parts{j,2},'_affine.nii']);
     end
 end
 
@@ -1509,28 +1505,28 @@ end
 if job.output.label.native
     label = cell(n,1);
     for j=1:n
-        label{j} = fullfile(parts{j,1},mrifolder{j},['p0',parts{j,2},'.nii']);
+        label{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['p0',parts{j,2},'.nii']);
     end
 end
 
 if job.output.label.warped
     wlabel = cell(n,1);
     for j=1:n
-        wlabel{j} = fullfile(parts{j,1},mrifolder{j},['wp0',parts{j,2},'.nii']);
+        wlabel{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['wp0',parts{j,2},'.nii']);
     end
 end
 
 if job.output.label.dartel==1
     rlabel = cell(n,1);
     for j=1:n
-        rlabel{j} = fullfile(parts{j,1},mrifolder{j},['rp0',parts{j,2},'_rigid.nii']);
+        rlabel{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['rp0',parts{j,2},'_rigid.nii']);
     end
 end
 
 if job.output.label.dartel==2
     alabel = cell(n,1);
     for j=1:n
-        alabel{j} = fullfile(parts{j,1},mrifolder{j},['rp0',parts{j,2},'_affine.nii']);
+        alabel{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['rp0',parts{j,2},'_affine.nii']);
     end
 end
 
@@ -1542,37 +1538,37 @@ for i=1:numel(job.tissue)
     if job.tissue(i).native(1)
         tiss(i).p = cell(n,1);
         for j=1:n
-            tiss(i).p{j} = fullfile(parts{j,1},mrifolder{j},['p',num2str(i),parts{j,2},'.nii']);
+            tiss(i).p{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['p',num2str(i),parts{j,2},'.nii']);
         end
     end
     if job.tissue(i).native(2)
         tiss(i).rp = cell(n,1);
         for j=1:n
-            tiss(i).rp{j} = fullfile(parts{j,1},mrifolder{j},['rp',num2str(i),parts{j,2},'_rigid.nii']);
+            tiss(i).rp{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['rp',num2str(i),parts{j,2},'_rigid.nii']);
         end
     end
     if job.tissue(i).native(3)
         tiss(i).rpa = cell(n,1);
         for j=1:n
-            tiss(i).rpa{j} = fullfile(parts{j,1},mrifolder{j},['rp',num2str(i),parts{j,2},'_affine.nii']);
+            tiss(i).rpa{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['rp',num2str(i),parts{j,2},'_affine.nii']);
         end
     end
     if job.tissue(i).warped(1)
         tiss(i).wp = cell(n,1);
         for j=1:n
-            tiss(i).wp{j} = fullfile(parts{j,1},mrifolder{j},['wp',num2str(i),parts{j,2},'.nii']);
+            tiss(i).wp{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['wp',num2str(i),parts{j,2},'.nii']);
         end
     end
     if job.tissue(i).warped(2)
         tiss(i).mwp = cell(n,1);
         for j=1:n
-            tiss(i).mwp{j} = fullfile(parts{j,1},mrifolder{j},['mwp',num2str(i),parts{j,2},'.nii']);
+            tiss(i).mwp{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['mwp',num2str(i),parts{j,2},'.nii']);
         end
     end
     if job.tissue(i).warped(3)
         tiss(i).m0wp = cell(n,1);
         for j=1:n
-            tiss(i).m0wp{j} = fullfile(parts{j,1},mrifolder{j},['m0wp',num2str(i),parts{j,2},'.nii']);
+            tiss(i).m0wp{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['m0wp',num2str(i),parts{j,2},'.nii']);
         end
     end
 end
@@ -1583,7 +1579,7 @@ end
 if job.output.warps(1)
     fordef = cell(n,1);
     for j=1:n
-        fordef{j} = fullfile(parts{j,1},mrifolder{j},['y_',parts{j,2},'.nii']);
+        fordef{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['y_',parts{j,2},'.nii']);
     end
 else
     fordef = {};
@@ -1592,7 +1588,7 @@ end
 if job.output.warps(2)
     invdef = cell(n,1);
     for j=1:n
-        invdef{j} = fullfile(parts{j,1},mrifolder{j},['iy_',parts{j,2},'.nii']);
+        invdef{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['iy_',parts{j,2},'.nii']);
     end
 else
     invdef = {};
@@ -1604,17 +1600,17 @@ end
 if job.output.jacobian.warped
     jacobian = cell(n,1);
     for j=1:n
-        jacobian{j} = fullfile(parts{j,1},mrifolder{j},['wj_',parts{j,2},'.nii']);
+        jacobian{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['wj_',parts{j,2},'.nii']);
     end
 end
 
 % affine/ridid tranformation matrices 
 % ----------------------------------------------------------------------
 if job.output.rmat
-  ta  = {fullfile(parts{j,1},mrifolder{j},['t_' ,parts{j,2},'_affine_reorient.mat'])};
-  ita = {fullfile(parts{j,1},mrifolder{j},['it_',parts{j,2},'_affine_reorient.mat'])};
-  tr  = {fullfile(parts{j,1},mrifolder{j},['t_' ,parts{j,2},'_rigid_reorient.mat'])};
-  itr = {fullfile(parts{j,1},mrifolder{j},['it_',parts{j,2},'_rigid_reorient.mat'])};
+  ta  = {fullfile(cat_io_BIDS(BIDS(j),'mridir'),['t_' ,parts{j,2},'_affine_reorient.mat'])};
+  ita = {fullfile(cat_io_BIDS(BIDS(j),'mridir'),['it_',parts{j,2},'_affine_reorient.mat'])};
+  tr  = {fullfile(cat_io_BIDS(BIDS(j),'mridir'),['t_' ,parts{j,2},'_rigid_reorient.mat'])};
+  itr = {fullfile(cat_io_BIDS(BIDS(j),'mridir'),['it_',parts{j,2},'_rigid_reorient.mat'])};
 else
   ta  = {}; 
   ita = {};

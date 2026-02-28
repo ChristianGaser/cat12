@@ -47,44 +47,11 @@ function cat_run_job1639(job,tpm,subj)
     job.channel(1).vols0{subj} = spm_file(job.channel(1).vols0{subj},'cpath');
   end
 
-  % create subfolders if not exist
-  pth = spm_fileparts(job.channel(1).vols{subj}); 
-  [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(job.channel(1).vols{subj},job);
-
-  if job.extopts.subfolders
-  
-    folders = {mrifolder,reportfolder};
-    warning('off', 'MATLAB:MKDIR:DirectoryExists');
-    for i=1:numel(folders)
-      [stat, msg] = mkdir(fullfile(pth,folders{i}));
-      if ~stat
-        fprintf('%s: Error while creating directory %s\n\n\n',msg,fullfile(pth,folders{i}));
-        return
-      end
-    end
-  
-    if ~exist(fullfile(pth,surffolder),'dir') && job.output.surface
-      [stat, msg] = mkdir(fullfile(pth,surffolder));
-      if ~stat
-        fprintf('%s: Error while creating directory %s\n\n\n',msg,fullfile(pth,surffolder));
-        return
-      end
-    end
-  
-    if ~exist(fullfile(pth,labelfolder),'dir') && job.output.ROI
-      [stat, msg] = mkdir(fullfile(pth,labelfolder));
-      if ~stat
-        fprintf('%s: Error while creating directory %s\n\n\n',msg,fullfile(pth,labelfolder));
-        return
-      end
-    end
-    
-  end
   
   % create subject-wise diary file with the command-line output
   [pp,ff,ee,ex] = spm_fileparts(job.data{subj});  %#ok<ASGLU>
   % sometimes we have to remove .nii from filename if files were zipped
-  catlog = fullfile(pth,reportfolder,['catlog_' strrep(ff,'.nii','') '.txt']);
+  catlog = cat_io_BIDS(job.BIDS(subj),'reportdir','prefix','catlog_','ext','.txt'); 
   if exist(catlog,'file'), delete(catlog); end % write every time a new file, turn this off to have an additional log file
   
   % check if not another diary is already written that is not the default- or catlog-file. 
@@ -183,7 +150,7 @@ function cat_run_job1639(job,tpm,subj)
       % prepare the internal T1 map
       cfname   = fullfile(pp,[ff ee]);
       ofname   = fullfile(pp,[ff(3:end) ee]); 
-      nfname   = fullfile(pp,mrifolder,['n' ff '.nii']); 
+      nfname   = cat_io_BIDS(job.BIDS(subj),'mridir','prefix','n','ext','.nii'); 
       copyfile(ofname,nfname,'f'); 
 
       % update option fields
@@ -271,7 +238,7 @@ function cat_run_job1639(job,tpm,subj)
       
       cfname  = fullfile(pp,[ff ee]);
       ofname  = fullfile(pp,[ff(3:end) ee]); 
-      nfname  = fullfile(pp,mrifolder,['n' ff '.nii']); 
+      nfname  = cat_io_BIDS(job.BIDS(subj),'mridir','prefix','n','ext','.nii'); 
       copyfile(ofname,nfname,'f'); 
 
       Ysrc0    = single(spm_read_vols(obj.image)); 
@@ -352,10 +319,10 @@ function cat_run_job1639(job,tpm,subj)
       for n=1:numel(job.channel) 
         [pp,ff,ee] = spm_fileparts(job.channel(n).vols{subj}); 
         ofname  = fullfile(pp,[ff ee]); 
-        nfname  = fullfile(pp,mrifolder,['n' ff '.nii']);
+        nfname  = cat_io_BIDS(job.BIDS(subj),'mridir','prefix','n','ext','.nii'); 
         if strcmp(ee,'.nii')
           if ~copyfile(ofname,nfname,'f')
-            spm('alert!',sprintf('ERROR: Check file permissions for folder %s.\n',fullfile(pp,mrifolder)),'',spm('CmdLine'),1);
+            spm('alert!',sprintf('ERROR: Check file permissions for folder %s.\n',job.BIDS(subj)),'',spm('CmdLine'),1);
           end
         elseif strcmp(ee,'.img')
           V = spm_vol(job.channel(n).vols{subj});
@@ -567,7 +534,7 @@ function cat_run_job1639(job,tpm,subj)
         if job.extopts.APP == 1  
            job.subj = subj;
            [Ym,Ybg,WMth] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,...
-             ofname,nfname,mrifolder,ppe.affreg.skullstripped);
+             ofname,nfname,ppe.affreg.skullstripped);
         end
       end
       job.extopts.gcutstr = mod(job.extopts.gcutstr,10);
@@ -652,8 +619,8 @@ function cat_run_job1639(job,tpm,subj)
       
       %% Initial affine registration.
       %  -----------------------------------------------------------------
-      [pp,ff] = spm_fileparts(job.channel(1).vols{subj});
-      Pbt     = fullfile(pp,mrifolder,['brainmask_' ff '.nii']);
+      [~,ff] = spm_fileparts(job.channel(1).vols{subj});
+      Pbt     = cat_io_BIDS(job.BIDS(subj),'mridir','prefix','brainmask_','ext','.nii');
       Pb      = char(job.extopts.brainmask);
       Pt1     = char(job.extopts.T1);
       
@@ -796,8 +763,8 @@ function cat_run_job1639(job,tpm,subj)
           % even in the development pipeline the prior is a good start !
           priorname = job.useprior{1};
           [pp,ff,ee,ex] = spm_fileparts(priorname);  %#ok<ASGLU>
-          catxml = fullfile(pp,reportfolder,['cat_' ff '.xml']);
-          catmat = fullfile(pp,reportfolder,['cat_' ff '.mat']);
+          catxml = cat_io_BIDS(job.BIDS(subj),'reportdir','prefix','cat_','ext','.xml'); 
+          catmat = cat_io_BIDS(job.BIDS(subj),'reportdir','prefix','cat_','ext','.mat'); 
           
           % check that file exists and get affine transformation
           if exist(catxml,'file') || exist(catmat,'file')
@@ -1479,11 +1446,9 @@ function cat_run_job1639(job,tpm,subj)
   end
   
   % delete denoised/interpolated image
-  [pp,ff,ee] = spm_fileparts(job.channel(1).vols{subj});
-  if exist(fullfile(pp,[ff,ee]),'file') 
-    delete(fullfile(pp,[ff,ee]));
+  if exist(job.channel(1).vols{subj},'file') 
+    delete(job.channel(1).vols{subj});
   end
-  %%
   
   if usediary
     diary off;

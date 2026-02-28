@@ -850,7 +850,7 @@ if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
     % Use VT0 (original input) to avoid doubling of derivatives paths
     % that occurs when VT (denoised file in derivatives/mri/) is used.
     Psatlas_lh   = job.extopts.satlas(  [job.extopts.satlas{:,4}]>0 , 2);
-    Pthick_lh{1} = cat_io_BIDS( VT0.fname, job, 'surfpath', 'prefix', 'lh.thickness', 'ext', ''); 
+    Pthick_lh{1} = cat_io_BIDS( job.BIDS, 'surfpath', 'prefix', 'lh.thickness', 'ext', ''); 
 
     cat_surf_surf2roi(struct('cdata',{{Pthick_lh}},'rdata',{Psatlas_lh}));
 
@@ -1082,10 +1082,10 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
 
 
   % definition of subfolders - add to res variable?
-  res.mrifolder    = cat_io_BIDS(res.image0(1).fname, job, 'mridir');
-  res.reportfolder = cat_io_BIDS(res.image0(1).fname, job, 'reportdir');
-  res.surffolder   = cat_io_BIDS(res.image0(1).fname, job, 'surfdir');
-  res.labelfolder  = cat_io_BIDS(res.image0(1).fname, job, 'labeldir');
+  res.mrifolder    = cat_io_BIDS(job.BIDS, 'mridir');
+  res.reportfolder = cat_io_BIDS(job.BIDS, 'reportdir');
+  res.surffolder   = cat_io_BIDS(job.BIDS, 'surfdir');
+  res.labelfolder  = cat_io_BIDS(job.BIDS, 'labeldir');
   
   % Sort out bounding box etc
   res.bb = spm_get_bbox(tpm.V(1)); 

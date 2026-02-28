@@ -66,15 +66,10 @@ function cat_io_report(job,qa,subj,createerr)
   % preparation of specific varialbes that are include in cat_run_job and cat_main
   % --------------------------------------------------------------------  
   try
-    % preprocessing subdirectories
-    [mrifolder, reportfolder, surffolder] = cat_io_subfolders(job.data{subj},job);
-    
     % setting template files
-    [pp,ff] = spm_fileparts(job.data{subj});
-
-    Pn  = fullfile(pp,mrifolder,['n' ff '.nii']); 
-    Pm  = fullfile(pp,mrifolder,['m' ff '.nii']); 
-    Pp0 = fullfile(pp,mrifolder,['p0' ff '.nii']); 
+    Pn  = cat_io_BIDS(job.data{subj}, job, 'mripath','prefix','n','ext','.nii'); 
+    Pm  = cat_io_BIDS(job.data{subj}, job, 'mripath','prefix','m','ext','.nii');
+    Pp0 = cat_io_BIDS(job.data{subj}, job, 'mripath','prefix','p0','ext','.nii');
 
     VT0 = spm_vol(cat_io_report_resolve_nii(job.data{subj})); % original 
     if exist(Pn,'file'), VT1 = spm_vol(Pn); end %else VT0.mat = nan(4,4); end % intern
@@ -566,7 +561,7 @@ function cat_io_report(job,qa,subj,createerr)
     end
     imat = spm_imatrix(Affine); Rigid = spm_matrix([imat(1:6) 1 1 1 0 0 0]); clear imat;
     
-    Pthick = fullfile(pp,surffolder,sprintf('lh.thickness.%s',ff));
+    Pthick = cat_io_BIDS(job.data{subj}, job, 'surfpath','prefix','lh.thickness.'); 
     if exist(Pthick,'file'), Pthickdata = dir(Pthick); Pthickdata = etime(datevec(Pthickdata.datenum),cat_err_res.stime)/3600 > 0; else Pthickdata = 0; end
     if Pthickdata
       hCS = subplot('Position',[0.5 0.05 0.55 0.25],'visible','off'); 
@@ -679,8 +674,8 @@ function cat_io_report(job,qa,subj,createerr)
     job.imgprint.dpi   = 100;
     job.imgprint.fdpi  = @(x) ['-r' num2str(x)];
     job.imgprint.ftype = @(x) ['-d' num2str(x)];
-    job.imgprint.fname     = fullfile(pth,reportfolder,['catreport_' nam '.' job.imgprint.type]); 
-    job.imgprint.fnamej    = fullfile(pth,reportfolder,['catreportj_' nam '.jpg']); 
+    job.imgprint.fname     = cat_io_BIDS(job.data{subj}, job, 'reportpath','prefix','catreport_','ext',job.imgprint.type); 
+    job.imgprint.fnamej    = cat_io_BIDS(job.data{subj}, job, 'reportpath','prefix','catreport_','ext','jpg'); 
 
     fgold.PaperPositionMode = get(fg,'PaperPositionMode');
     fgold.PaperPosition     = get(fg,'PaperPosition');

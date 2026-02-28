@@ -84,11 +84,38 @@ function varargout = cat_vol_qa201901x(action,varargin)
   
   try
     if strcmp(action,'cat12err')
-      [mrifolder, reportfolder] = cat_io_subfolders(varargin{1}.job.data,varargin{1}.job);
+      fname = varargin{1}.job.data;
+      job = varargin{1}.job;
+      if isfield(job, 'BIDS') && ~isempty(job.BIDS) && numel(job.BIDS) > 0
+        mrifolder = job.BIDS(1).mridir;
+        reportfolder = job.BIDS(1).reportdir;
+      else
+        BIDS = cat_io_BIDS(fname, job);
+        mrifolder = BIDS(1).mridir;
+        reportfolder = BIDS(1).reportdir;
+      end
     elseif strcmp(action,'cat12')
-      [mrifolder, reportfolder] = cat_io_subfolders(varargin{2},varargin{6}.job);
+      fname = varargin{2};
+      job = varargin{6};
+      if isfield(job, 'BIDS') && ~isempty(job.BIDS) && numel(job.BIDS) > 0
+        mrifolder = job.BIDS(1).mridir;
+        reportfolder = job.BIDS(1).reportdir;
+      else
+        BIDS = cat_io_BIDS(fname, job);
+        mrifolder = BIDS(1).mridir;
+        reportfolder = BIDS(1).reportdir;
+      end
     else
-      [mrifolder, reportfolder] = cat_io_subfolders(varargin{4}.catlog,varargin{6}.job);
+      fname = varargin{4}.catlog;
+      job = varargin{6};
+      if isfield(job, 'BIDS') && ~isempty(job.BIDS) && numel(job.BIDS) > 0
+        mrifolder = job.BIDS(1).mridir;
+        reportfolder = job.BIDS(1).reportdir;
+      else
+        BIDS = cat_io_BIDS(fname, job);
+        mrifolder = BIDS(1).mridir;
+        reportfolder = BIDS(1).reportdir;
+      end
     end
   catch
     mrifolder    = 'mri'; 

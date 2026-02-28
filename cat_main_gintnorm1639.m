@@ -406,14 +406,6 @@ function [Ym,Yb,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm1639(Ysrc,Ycls
   noise = round(min(cat_stat_nanmean(Ynw(Ynw(:)>0)),cat_stat_nanmean(Ync(Ync(:)>0))) / min(abs(diff(T3th(1:3)))) * 10^6)/10^6; 
   clear Ynw Ync;
  
-  if debug==2
-    [mrifolder, reportfolder] = cat_io_subfolders(res.image0(1).fname,struct('extopts',extopts));
-    [pth,nam] = spm_fileparts(res.image0(1).fname);
-    tmpmat = fullfile(pth,reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',1,'gintnorm00'));
-    save(tmpmat,'Ysrc','Ycls','Yb','vx_vol','res','T3th','T3thx','Yg','Ym','noise');
-  end
-  
-  
   
   
   

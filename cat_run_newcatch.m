@@ -30,6 +30,7 @@ function cat_run_newcatch(job,tpm,subj)
     return  
   end
   
+ 
   try
     if job.extopts.ignoreErrors>1
       % new pipeline that also include a warning because it still under test
@@ -39,6 +40,7 @@ function cat_run_newcatch(job,tpm,subj)
       %           have the best result 
       cat_run_job1639(job,tpm,subj);
     end
+ %if 0  
   catch caterr 
 
     %% add further information for special errors
@@ -50,12 +52,8 @@ function cat_run_newcatch(job,tpm,subj)
           adderr = MException('SPM:CAT:cat_main',strrep(caterr.message,'\','\\'));
       end
       caterr = addCause(caterr,adderr);
-    end
-    
-    mrifolder    = cat_io_BIDS(job.channel(1).vols{subj}, job, 'mridir');
-    reportfolder = cat_io_BIDS(job.channel(1).vols{subj}, job, 'reportdir');
-    errfolder    = cat_io_BIDS(job.channel(1).vols{subj}, job, 'errdir');
-    
+    end  
+  
     cat_io_cprintf('err',sprintf('\n%s\nCAT Preprocessing error for %s:\n%s\n%s\n%s\n', ...
       repmat('-',1,72),nam,repmat('-',1,72),caterr.message,repmat('-',1,72)));  
     
@@ -213,9 +211,9 @@ function cat_run_newcatch(job,tpm,subj)
     cat_io_report(job,qa,subj)
     
     % delete noise corrected image
-    if exist(fullfile(pth,mrifolder,['n' nam ext]),'file')
+    if exist(cat_io_BIDS(job.BIDS(subj),'mridir','prefix','n'),'file')
       try %#ok<TRYNC>
-        delete(fullfile(pth,mrifolder,['n' nam ext]));
+        delete(cat_io_BIDS(job.BIDS(subj),'mridir','prefix','n'));
       end
     end
         
@@ -224,8 +222,8 @@ function cat_run_newcatch(job,tpm,subj)
       promptMessage = sprintf('Do you want to send error message?');
       button = questdlg(promptMessage, 'Error message', 'Yes', 'No', 'Yes');
       if strcmpi(button, 'Yes')
-        catfile = fullfile(pth,reportfolder,['cat_' nam '.xml']);
-        logfile = fullfile(pth,reportfolder,['catlog_' nam '.txt']);
+        catfile = fullfile(job.BIDS(subj).reportdir,['cat_' nam '.xml']);
+        logfile = fullfile(job.BIDS(subj).reportdir,['catlog_' nam '.txt']);
         cat_io_senderrormail(catfile,logfile);
       end
     end
@@ -237,22 +235,23 @@ function cat_run_newcatch(job,tpm,subj)
     if job.extopts.subfolders
       try
         %%
+        errfolder    = job.BIDS(subj).errdir; 
         [ppe,ffe]    = spm_fileparts(caterr.stack(1).file); 
         suberrfolder = sprintf('%s.line%d.%s',ffe,caterr.stack(1).line,caterr.identifier); 
         suberrfolder = char(regexp(strrep(suberrfolder,':','.'),'[A-Za-z0-9_.\- ]','match'))'; % remove bad chars
         suberrfolder = strrep(suberrfolder,' ','_');
-        if ~exist(fullfile(pth,errfolder,suberrfolder),'dir'), mkdir(fullfile(pth,errfolder,suberrfolder)); end
-        catfile = fullfile(pth,reportfolder,['cat_' nam '.xml']);
-        logfile = fullfile(pth,reportfolder,['catlog_' nam '.txt']);
-        repfile = fullfile(pth,reportfolder,['catreport_' nam '.pdf']);
-        rejfile = fullfile(pth,reportfolder,['catreport_' nam '.jpg']);
-        if exist(catfile,'file'), copyfile(catfile,fullfile(pth,errfolder,suberrfolder),'f'); end
-        if exist(logfile,'file'), copyfile(logfile,fullfile(pth,errfolder,suberrfolder),'f'); end
-        if exist(repfile,'file'), copyfile(repfile,fullfile(pth,errfolder,suberrfolder),'f'); end
-        if exist(rejfile,'file'), copyfile(rejfile,fullfile(pth,errfolder,suberrfolder),'f'); end
+        if ~exist(fullfile(errfolder,suberrfolder),'dir'), mkdir(fullfile(errfolder,suberrfolder)); end
+        catfile = fullfile(job.BIDS(subj).reportdir,['cat_' nam '.xml']);
+        logfile = fullfile(job.BIDS(subj).reportdir,['catlog_' nam '.txt']);
+        repfile = fullfile(job.BIDS(subj).reportdir,['catreport_' nam '.pdf']);
+        rejfile = fullfile(job.BIDS(subj).reportdir,['catreport_' nam '.jpg']);
+        if exist(catfile,'file'), copyfile(catfile,fullfile(errfolder,suberrfolder),'f'); end
+        if exist(logfile,'file'), copyfile(logfile,fullfile(errfolder,suberrfolder),'f'); end
+        if exist(repfile,'file'), copyfile(repfile,fullfile(errfolder,suberrfolder),'f'); end
+        if exist(rejfile,'file'), copyfile(rejfile,fullfile(errfolder,suberrfolder),'f'); end
         if ismac || isunix
           [ST, RS] = system(sprintf('ln -s -F "%s" "%s"',...
-            fullfile(pth,[nam ext]),fullfile(pth,errfolder,suberrfolder,[nam ext])));
+            fullfile(pth,[nam ext]),fullfile(errfolder,suberrfolder,[nam ext])));
             cat_check_system_output(ST,RS,job.extopts.verb>2);
         end
       catch 

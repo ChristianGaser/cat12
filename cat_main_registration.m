@@ -1590,7 +1590,7 @@ function write_nii(Ycls,job,trans,testfolder,reg)
   
   stime = cat_io_cmd(sprintf('Write Output with %0.2f mm',job.extopts.vox(1)));
 
-  mrifolder = cat_io_subfolders(trans.native.Vo.fname,job);
+  mrifolder = cat_io_BIDS(trans.native.Vo.fname,job,'mridir');
   
   if ~exist('testfolder','var'); testfolder = sprintf('backup_or%3.1f',job.extopts.vox(1)); end
   [pth,nam] = spm_fileparts(trans.native.Vo.fname); 
