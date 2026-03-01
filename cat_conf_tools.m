@@ -1654,6 +1654,7 @@ function shootlong = conf_shoot(expert)
 % -------------------------------------------------------------------------
 
   % get shooting toolbox definition
+  addpath(fullfile(spm('dir'),'toolbox','Shoot'));  
   shoot = tbx_cfg_shoot; 
   
   % find the create template batch
