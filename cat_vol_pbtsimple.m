@@ -294,7 +294,7 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
     Ygm  = Yp0toC(2); spm_smooth(Ygm ,Ygm ,2./vx_vol); % more GM  >> stronger correction required 
     Ywm  = Yp0toC(3); spm_smooth(Ywm ,Ywm ,4./vx_vol); % less WM  >> stronger correction required ... here closing of WMHs/PVSs helps but to much can 
 
-    % RD20250407: the weigting is still not optimal
+    % RD20250407: the weighting is still not optimal
     Yp0  = min(3,Yp0 - (Ymgo - Ymgc) .* Ywm*4 .* Ygm .* (smooth3(Yp0)>2.1) .* (smooth3(Yp0)<2.6) .* min(4,max(0,Ygmt - median(Ygmt(:)) - std(Ygmt(:))) .* smooth3(Ypp*2)) ) ; 
     Yp0  = min(3,Yp0 - (Ymgo - Ymgc) .* Ywm*4 .* Ygm .* (smooth3(Yp0)>2.1) .* (smooth3(Yp0)<2.6) .* min(4,max(0,Ygmt - median(Ygmt(:))) .* smooth3(Ypp*4)) ) ; 
     if opt.presharpening > 1
@@ -303,7 +303,7 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
       clear Ymgc2 Ymgo2;
     end
 
-    % filling of deep wholes
+    % filling of deep holes
     % not fully working 
     %[~,D] = cat_vol_downcut( single(cat_vol_morph( Yp0<2 | Yp0d,'ldo',1)) , 1 - (Yp0/3).^10, .0001); 
     %Yp0  = min(3,Yp0 + smooth3( D==max(D(:)))); clear Yp0d
