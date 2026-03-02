@@ -65,12 +65,12 @@ function varargout = cat_vol_qa(action,varargin)
   end
 
   if isstruct(action)
-    if isfield(action,'reportfolder') && isempty(action.reportfolder)
+    if isfield(action,'reportdir') && isempty(action.reportdir)
       mrifolder    = '';
-      reportfolder = ''; 
+      reportdir = ''; 
     else
       mrifolder    = 'mri';
-      reportfolder = 'report'; 
+      reportdir = 'report'; 
     end
   else
     if strcmp(action,'cat12err')
@@ -83,11 +83,11 @@ function varargout = cat_vol_qa(action,varargin)
       fname = varargin{4}.catlog;
       job   = varargin{6};
     end
-    if ~isfield(job,'BIDS') || isempty(job.BIDS) 
-      job.BIDS = cat_io_BIDS(fname, job);
+    if ~isfield(job.job,'BIDS') || isempty(job.job.BIDS) 
+      job.job.BIDS = cat_io_BIDS(fname, job.job);
     end
-    mrifolder    = job.BIDS(1).mridir;
-    reportfolder = job.BIDS(1).reportdir;
+    mrifolder    = job.job.BIDS(1).mridir;
+    reportdir = job.job.BIDS(1).reportdir;
   end
   
 
@@ -144,7 +144,7 @@ function varargout = cat_vol_qa(action,varargin)
         %% run QC
         action2 = rmfield(action,'model'); 
         action2.model.spmc0  = action.model.spmp0;
-        action2.reportfolder = ''; 
+        action2.reportdir = ''; 
        
         out = cat_vol_qa(action2,varargin); 
 
@@ -152,7 +152,7 @@ function varargout = cat_vol_qa(action,varargin)
         varargout{2} = out; 
         for pi = 1:numel(action2.images)
           [pp,ff,ee] = spm_fileparts(action2.images{pi});
-          varargout{1}.xmls{pi} = fullfile(pp,reportfolder,[action2.opts.prefix ff '.xml']);
+          varargout{1}.xmls{pi} = fullfile(reportdir,[action2.opts.prefix ff '.xml']);
         end
         return 
       
@@ -200,9 +200,9 @@ function varargout = cat_vol_qa(action,varargin)
     opt.prefix = strrep( opt.prefix , 'VERSION', strrep( opt.version ,'_','')); 
   end
   if isfield(opt,'model') && isfield(opt.model,'spmc1')
-    opt.reportfolder = ''; 
+    opt.reportdir = ''; 
   else 
-    opt.reportfolder = reportfolder;
+    opt.reportdir = reportdir;
   end
   
 
@@ -412,7 +412,7 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
         % setup the XML file name
         [pp,ff,ee] = spm_fileparts( strrep(Pp0{fi},'.nii.gz','.nii') ); ff(1:2) = []; 
         [ppa,ppb] = spm_fileparts(pp); 
-        if strcmp(ppb,'mri'), ppo = fullfile(ppa,reportfolder); else, ppo = pp; end 
+        if strcmp(ppb,'mri'), ppo = fullfile(reportdir); else, ppo = pp; end 
         sfile   = fullfile(ppo,[opt.prefix ff '.xml']); 
 
         if ~exist( sfile ,'file') 
@@ -493,7 +493,7 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
             opt2.caterr     = struct();
             opt2.caterrtxt  = ''; 
             
-            [QASfi,QARfi] = cat12err(opt2,mrifolder,reportfolder);
+            [QASfi,QARfi] = cat12err(opt2,mrifolder,reportdir);
 
             % try to update the QC structure
             [QAS, QAR, qamat, qamatm, mqamatm] = updateQAstructure(QAS, ...
@@ -538,7 +538,7 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
             opt2.caterr     = struct();
             opt2.caterrtxt  = ''; 
             
-            [QASfi,QARfi] = cat12err(opt2,mrifolder,reportfolder);
+            [QASfi,QARfi] = cat12err(opt2,mrifolder,reportdir);
 
             %% try to update the QC structure
             [QAS, QAR, qamat, qamatm, mqamatm] = updateQAstructure(QAS, ...
@@ -659,9 +659,9 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
         % --------------------------------------------------------------
         if opt.write_csv
           pp = spm_fileparts(Pp0{1});
-          cat_io_csv(fullfile(pp,reportfolder,[opt.prefix num2str(numel(Vo),'%04d') ...
+          cat_io_csv(fullfile(reportdir,[opt.prefix num2str(numel(Vo),'%04d') ...
             'cat_vol_qa_values.csv']),QAT);
-          cat_io_csv(fullfile(pp,reportfolder,[opt.prefix num2str(numel(Vo),'%04d') ...
+          cat_io_csv(fullfile(pp,reportdir,[opt.prefix num2str(numel(Vo),'%04d') ...
             'cat_vol_qa_marks.csv']),QATm);
         end
       end 
@@ -675,7 +675,7 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
 
     case 'cat12err'
       opt = cat_check('checkinopt',varargin{1},defaults);
-      QAS = cat12err(opt,mrifolder,reportfolder);
+      QAS = cat12err(opt,mrifolder,reportdir);
 
 
     case 'cat12ver'
@@ -710,18 +710,18 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
                                                      qa.subjectmeasures.vol_TIV; 
               end
               varargin2 = varargin; 
-              varargin2{6}.job.extopts.subfolders = ~isempty(reportfolder); 
+              varargin2{6}.job.extopts.subfolders = ~isempty(reportdir); 
               eval(sprintf('[QAS,QAR] = %s(''cat12'',varargin2{1:4},struct(),varargin2{5:end});',opt.version));
             otherwise
               varargin2 = varargin; 
-              varargin2{6}.job.extopts.subfolders = ~isempty(reportfolder); 
+              varargin2{6}.job.extopts.subfolders = ~isempty(reportdir); 
               eval(sprintf('[QAS,QAR] = %s(''cat12'',varargin2{:});',opt.version));
           end
         else
         % setup the current/default version 
           varargin2 = varargin; 
           varargin2{6}.version = 'cat_vol_qa202310'; 
-          varargin2{6}.job.extopts.subfolders = ~isempty(reportfolder); 
+          varargin2{6}.job.extopts.subfolders = ~isempty(reportdir); 
           eval(sprintf('[QAS,QAR] = %s(''cat12'',varargin2{:});', varargin2{6}.version));
         end
       end
@@ -736,15 +736,15 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
         pp0     = spm_fileparts(varargin{7}); 
         [ppx,ffx] = spm_fileparts(pp0); 
         if strcmp(ffx,'mri')
-          sfile   = fullfile(ppx,reportfolder,[opt.prefix ff '.xml']); 
-          catfile = fullfile(ppx,reportfolder,['cat_' ff '.xml']); 
+          sfile   = fullfile(ppx,'report',[opt.prefix ff '.xml']); 
+          catfile = fullfile(ppx,'report',['cat_' ff '.xml']); 
         else
           sfile   = fullfile(pp0,[opt.prefix ff '.xml']); 
           catfile = fullfile(pp0,['cat_' ff '.xml']); 
         end
       else
-        sfile   = fullfile(pp,reportfolder,[opt.prefix ff '.xml']); 
-        catfile = fullfile(pp,reportfolder,['cat_'  ff '.xml']); 
+        sfile   = fullfile(reportdir,[opt.prefix ff '.xml']); 
+        catfile = fullfile(reportdir,['cat_'  ff '.xml']); 
       end  
       if exist(sfile,'file')
         S  = cat_io_xml( sfile ); 
@@ -770,8 +770,8 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
     QAS.ratings_help   = QAR.help;
 
     [pp,ff] = spm_fileparts(QAS.filedata.fname);  
-    cat_io_xml( fullfile(pp,reportfolder,[opt.prefix ff '.xml']) ,QAS,'write+'); 
-    cat_io_xml( fullfile(pp,reportfolder,[opt.prefix ff '.xml']) ,QAR,'write+'); %struct('QAS',QAS,'QAM',QAM)
+    cat_io_xml( fullfile(reportdir,[opt.prefix ff '.xml']) ,QAS,'write+'); 
+    cat_io_xml( fullfile(reportdir,[opt.prefix ff '.xml']) ,QAR,'write+'); %struct('QAS',QAS,'QAM',QAM)
   end
 
   if (isempty(varargin) || isstruct(varargin{1}) || isstruct(action)) && exist('Pp0','var')
@@ -779,7 +779,7 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
     varargout{1}.data = Pp0;
     for pi = 1:numel(Pp0)
       [pp,ff,ee] = spm_fileparts(Pp0{pi});
-      varargout{1}.xmls{pi} = fullfile(pp,reportfolder,[opt.prefix ff '.xml']);
+      varargout{1}.xmls{pi} = fullfile(reportdir,[opt.prefix ff '.xml']);
     end
   else
   % processing output case
@@ -936,7 +936,7 @@ function [Yp0,Ym,Vo,p0rmse] = getImages(Pp0,Po,Pm,fi)
   end
 end
 %==========================================================================
-function [QAS,QAR] = cat12err(opt,mrifolder,reportfolder)
+function [QAS,QAR] = cat12err(opt,mrifolder,reportdir)
 %cat12err. Create short report in case of CAT preprocessing error. 
 % This report contain basic parameters used for the CAT error report
 % creation in cat_io_report.
@@ -1027,8 +1027,8 @@ function [QAS,QAR] = cat12err(opt,mrifolder,reportfolder)
       
   % export 
   if opt.write_xml
-    cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAS,'write+');    
-    cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAR,'write+');    
+    cat_io_xml(fullfile(reportdir,[opt.prefix ff '.xml']),QAS,'write+');    
+    cat_io_xml(fullfile(reportdir,[opt.prefix ff '.xml']),QAR,'write+');    
   end
 end
 %==========================================================================

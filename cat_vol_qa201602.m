@@ -93,7 +93,7 @@ function varargout = cat_vol_qa201602(action,varargin)
   if ~isfield(job,'BIDS') || isempty(job.BIDS) 
     job.BIDS = cat_io_BIDS(fname, job);
   end
-  reportfolder = job.BIDS(1).reportdir;
+  reportdir = job.BIDS(1).reportdir;
    
   % no input and setting of default options
   if nargin==0, action='p0'; end 
@@ -470,9 +470,9 @@ function varargout = cat_vol_qa201602(action,varargin)
         % --------------------------------------------------------------
         if opt.write_csv
           pp = spm_fileparts(Pp0{1});
-          cat_io_csv(fullfile(pp,reportfolder,[opt.prefix num2str(numel(Vo),'%04d') ...
+          cat_io_csv(fullfile(reportdir,[opt.prefix num2str(numel(Vo),'%04d') ...
             'cat_vol_qa_values.csv']),QAT);
-          cat_io_csv(fullfile(pp,reportfolder,[opt.prefix num2str(numel(Vo),'%04d') ...
+          cat_io_csv(fullfile(reportdir,[opt.prefix num2str(numel(Vo),'%04d') ...
             'cat_vol_qa_marks.csv']),QATm);
         end
       end 
@@ -534,7 +534,7 @@ function varargout = cat_vol_qa201602(action,varargin)
       
       % export 
       if opt.write_xml
-        cat_io_xml(fullfile(pp,reportfolder,[opt.prefix ff '.xml']),QAS,'write');
+        cat_io_xml(fullfile(reportdir,[opt.prefix ff '.xml']),QAS,'write');
       end
       
     case 'cat12'
@@ -824,7 +824,7 @@ function varargout = cat_vol_qa201602(action,varargin)
         QAS.qualityratings = QAM.qualityratings;
        % QAS.subjectratings = QAM.subjectmeasures;
         
-        cat_io_xml(fullfile(pp0,[opt.prefix ff '.xml']),QAS,'write'); 
+        cat_io_xml(fullfile(reportdir,[opt.prefix ff '.xml']),QAS,'write'); 
       end
 
       clear Yi Ym Yo Yos Ybc

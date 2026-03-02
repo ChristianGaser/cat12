@@ -82,44 +82,27 @@ function varargout = cat_vol_qa201901x(action,varargin)
   QAR = struct(); 
   %if nargout>0, varargout = cell(1,nargout); end
   
-  try
+  if isstruct(action)
+    if isfield(action,'reportdir') && isempty(action.reportdir)
+      reportdir = ''; 
+    else
+      reportdir = 'report'; 
+    end
+  else
     if strcmp(action,'cat12err')
       fname = varargin{1}.job.data;
-      job = varargin{1}.job;
-      if isfield(job, 'BIDS') && ~isempty(job.BIDS) && numel(job.BIDS) > 0
-        mrifolder = job.BIDS(1).mridir;
-        reportfolder = job.BIDS(1).reportdir;
-      else
-        BIDS = cat_io_BIDS(fname, job);
-        mrifolder = BIDS(1).mridir;
-        reportfolder = BIDS(1).reportdir;
-      end
+      job   = varargin{1}.job;
     elseif strcmp(action,'cat12')
       fname = varargin{2};
-      job = varargin{6};
-      if isfield(job, 'BIDS') && ~isempty(job.BIDS) && numel(job.BIDS) > 0
-        mrifolder = job.BIDS(1).mridir;
-        reportfolder = job.BIDS(1).reportdir;
-      else
-        BIDS = cat_io_BIDS(fname, job);
-        mrifolder = BIDS(1).mridir;
-        reportfolder = BIDS(1).reportdir;
-      end
-    else
+      job   = varargin{6};
+    else 
       fname = varargin{4}.catlog;
-      job = varargin{6};
-      if isfield(job, 'BIDS') && ~isempty(job.BIDS) && numel(job.BIDS) > 0
-        mrifolder = job.BIDS(1).mridir;
-        reportfolder = job.BIDS(1).reportdir;
-      else
-        BIDS = cat_io_BIDS(fname, job);
-        mrifolder = BIDS(1).mridir;
-        reportfolder = BIDS(1).reportdir;
-      end
+      job   = varargin{6};
     end
-  catch
-    mrifolder    = 'mri'; 
-    reportfolder = 'report'; 
+    if ~isfield(job.job,'BIDS') || isempty(job.job.BIDS) 
+      job.job.BIDS = cat_io_BIDS(fname, job.job);
+    end
+    reportdir = job.job.BIDS(1).reportdir;
   end
   
   % no input and setting of default options
@@ -497,9 +480,9 @@ function varargout = cat_vol_qa201901x(action,varargin)
           
           
           if opt.verb>1 
-            if opt.rerun || cat_io_rerun(Vo.fname, fullfile(pp,reportfolder,[opt.prefix ff '.xml']) , 0 )
+            if opt.rerun || cat_io_rerun(Vo.fname, fullfile(reportdir,[opt.prefix ff '.xml']) , 0 )
               rerun = sprintf(' updated %2.0fs',etime(clock,stime1));
-            elseif exist( fullfile(pp,reportfolder,[opt.prefix ff '.xml']) , 'file')
+            elseif exist( fullfile(reportdir,[opt.prefix ff '.xml']) , 'file')
               rerun = ' loaded';
             else
               rerun = ' '; % new
@@ -612,9 +595,9 @@ function varargout = cat_vol_qa201901x(action,varargin)
         % --------------------------------------------------------------
         if opt.write_csv
           pp = spm_fileparts(Pp0{1});
-          cat_io_csv(fullfile(pp,reportfolder,[opt.prefix num2str(numel(Vo),'%04d') ...
+          cat_io_csv(fullfile(reportdir,[opt.prefix num2str(numel(Vo),'%04d') ...
             'cat_vol_qa_values.csv']),QAT);
-          cat_io_csv(fullfile(pp,reportfolder,[opt.prefix num2str(numel(Vo),'%04d') ...
+          cat_io_csv(fullfile(reportdir,[opt.prefix num2str(numel(Vo),'%04d') ...
             'cat_vol_qa_marks.csv']),QATm);
         end
       end 
@@ -688,7 +671,7 @@ function varargout = cat_vol_qa201901x(action,varargin)
       
       % export 
       if opt.write_xml
-        cat_io_xml(fullfile(pp0,[opt.prefix ff '.xml']),QAS,'write'); 
+        cat_io_xml(fullfile(reportdir,[opt.prefix ff '.xml']),QAS,'write'); 
       end
           
     case 'cat12'
@@ -1049,7 +1032,7 @@ function varargout = cat_vol_qa201901x(action,varargin)
         QAS.subjectratings = QAR.subjectratings;
         QAS.ratings_help   = QAR.help;
         
-        cat_io_xml(fullfile(pp0,[opt.prefix ff '.xml']),QAS,'write'); 
+        cat_io_xml(fullfile(reportdir,[opt.prefix ff '.xml']),QAS,'write'); 
       end
 
       clear Yi Ym Yo Yos Ybc

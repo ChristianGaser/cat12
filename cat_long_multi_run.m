@@ -76,8 +76,8 @@ if isfield(job,'datalong')
       BIDS = cat_io_BIDS( job.subj(ti).mov{si}, job ); 
  
       name   = spm_file( job.subj(ti).mov{si} , 'number', ''); 
-      [~,nam,ext] = spm_fileparts(name);
-      newdir = cat_io_BIDS( BIDS, 'resdir');
+      [pp,nam,ext] = spm_fileparts(name);
+      newdir = BIDS.resdir;
  
       % uncompress nii.gz files and change file name for job
       if strcmp(ext,'.gz')
@@ -85,7 +85,7 @@ if isfield(job,'datalong')
         fprintf('Uncompress %s to %s\n',name,newdir);
         job.subj(ti).mov{si} = char(fname);
         job.data{c} = char(fname);
-      elseif ~isempty(newdir)
+      elseif ~isempty(newdir) && ~strcmp(pp,newdir)
         if ~exist(newdir,'dir'), mkdir(newdir); end
         is_copied(c) = 2;
         s = copyfile(name,newdir);
@@ -103,8 +103,7 @@ if isfield(job,'datalong')
 
   %% remove BIDS fields because files are now already copied to BIDS-folder
   job.output  = rmfield(job.output,'BIDS');
-  job.extopts.BIDSfolder = '';  
-  job.extopts.resdircase = 0; 
+  job.output.BIDS.BIDSno = 1; 
   output  = job.output;
   extopts = job.extopts;
 end
@@ -186,7 +185,7 @@ for i=1:numel(job.subj)
   % save XML Parameter
   if ~(isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index')) && numel(job.subj) > 1 )
     [~,ff]    = spm_fileparts(job.subj(i).mov{1});
-    longxml    = fullfile( BIDS(i).resdir , BIDS(i).reportdir , ['catlong_' ff '.xml'] ); 
+    longxml    = fullfile( BIDS(i).reportdir , ['catlong_' ff '.xml'] ); 
     jobsx      = rmfield(job,{'data','subj'});
     jobsx.subj = job.subj(i); 
     jobsx.out  = out; 

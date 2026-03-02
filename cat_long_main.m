@@ -546,10 +546,8 @@ if longmodel || longTPM
 
   if exist('output','var') && ~isempty(output)
     matlabbatch{mbi}.spm.tools.cat.estwrite.output             = rmfield(output,'BIDS');
-    matlabbatch{mbi}.spm.tools.cat.estwrite.output.BIDS.BIDSno = 1; 
-  else
-    matlabbatch{mbi}.spm.tools.cat.estwrite.output.BIDS.BIDSno = 1;
   end
+  matlabbatch{mbi}.spm.tools.cat.estwrite.output.BIDS.BIDSno = 1; 
 
   % surface estimation
   matlabbatch{mbi}.spm.tools.cat.estwrite.output.surface      = surfaces .* (longmodel>0);
@@ -671,10 +669,8 @@ end
 
 if exist('output','var') && ~isempty(output)
   matlabbatch{mbi}.spm.tools.cat.estwrite.output             = rmfield(output,'BIDS');
-  matlabbatch{mbi}.spm.tools.cat.estwrite.output.BIDS.BIDSno = 1; 
-else
-  matlabbatch{mbi}.spm.tools.cat.estwrite.output.BIDS.BIDSno = 1; 
 end
+matlabbatch{mbi}.spm.tools.cat.estwrite.output.BIDS.BIDSno = 1; 
 
 % surface estimation
 matlabbatch{mbi}.spm.tools.cat.estwrite.output.surface      = surfaces;

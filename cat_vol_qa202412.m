@@ -638,7 +638,7 @@ function varargout = cat_vol_qa202412(action,varargin)
       
       % export 
       if opt.write_xml
-        cat_io_xml(fullfile(pp0,[opt.prefix ff '.xml']),QAS,'write'); 
+        cat_io_xml(fullfile(reportdir,[opt.prefix ff '.xml']),QAS,'write'); 
       end
           
     case 'cat12'
@@ -1125,7 +1125,7 @@ function varargout = cat_vol_qa202412(action,varargin)
         QAS.subjectratings = QAR.subjectratings;
         QAS.ratings_help   = QAR.help;
         
-        cat_io_xml(fullfile(pp0,[opt.prefix ff '.xml']),QAS,'write'); 
+        cat_io_xml(fullfile(reportdir,[opt.prefix ff '.xml']),QAS,'write'); 
       end
 
       clear Yi Ym Yo Yos Ybc

@@ -48,7 +48,6 @@ job.BIDS   = cat_io_BIDS( job.data, job );
 BIDSfolder = cat_io_BIDS( job.BIDS, 'main_BIDSfolder'); 
 logdir     = cat_io_BIDS( job.BIDS(1), 'logdir'); 
 
-
 if ( isfield(job.extopts,'lazy') && job.extopts.lazy && ~isfield(job,'process_index') ) || ...
    ( isfield(job.extopts,'admin') && isfield(job.extopts.admin,'lazy') && job.extopts.admin.lazy && ~isfield(job,'process_index') )
   jobl      = update_job(job,0);
@@ -1333,10 +1332,10 @@ end
 % ----------------------------------------------------------------------
 catroi = cell(0,1);
 for j=1:n
-    catxml{j,1}       = fullfile(cat_io_BIDS(BIDS(j),'reportdir'),['cat_',parts{j,2},'.xml']);
-    catlog{j,1}       = fullfile(cat_io_BIDS(BIDS(j),'reportdir'),['catlog_',parts{j,2},'.txt']);
-    catreportpdf{j,1} = fullfile(cat_io_BIDS(BIDS(j),'reportdir'),['catreport_',parts{j,2},'.pdf']);
-    catreportjpg{j,1} = fullfile(cat_io_BIDS(BIDS(j),'reportdir'),['catreportj_',parts{j,2},'.jpg']);
+    catxml{j,1}       = fullfile(BIDS(j).reportdir,['cat_',parts{j,2},'.xml']);
+    catlog{j,1}       = fullfile(BIDS(j).reportdir,['catlog_',parts{j,2},'.txt']);
+    catreportpdf{j,1} = fullfile(BIDS(j).reportdir,['catreport_',parts{j,2},'.pdf']);
+    catreportjpg{j,1} = fullfile(BIDS(j).reportdir,['catreportj_',parts{j,2},'.jpg']);
 end
 
 
@@ -1444,28 +1443,28 @@ end
 if job.output.bias.native
     biascorr = cell(n,1);
     for j=1:n
-        biascorr{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['m',parts{j,2},'.nii']);
+        biascorr{j} = fullfile(BIDS(j).mridir,['m',parts{j,2},'.nii']);
     end
 end
 
 if job.output.bias.warped
     wbiascorr = cell(n,1);
     for j=1:n
-        wbiascorr{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['wm',parts{j,2},'.nii']);
+        wbiascorr{j} = fullfile(BIDS(j).mridir,['wm',parts{j,2},'.nii']);
     end
 end
 
 if job.output.bias.dartel==1
     rbiascorr = cell(n,1);
     for j=1:n
-        rbiascorr{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['rm',parts{j,2},'_rigid.nii']);
+        rbiascorr{j} = fullfile(BIDS(j).mridir,['rm',parts{j,2},'_rigid.nii']);
     end
 end
 
 if job.output.bias.dartel==2
     abiascorr = cell(n,1);
     for j=1:n
-        abiascorr{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['rm',parts{j,2},'_affine.nii']);
+        abiascorr{j} = fullfile(BIDS(j).mridir,['rm',parts{j,2},'_affine.nii']);
     end
 end
 
@@ -1474,28 +1473,28 @@ end
 if job.output.las.native
     ibiascorr = cell(n,1);
     for j=1:n
-        ibiascorr{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['mi',parts{j,2},'.nii']);
+        ibiascorr{j} = fullfile(BIDS(j).mridir,['mi',parts{j,2},'.nii']);
     end
 end
 
 if job.output.las.warped
     wibiascorr = cell(n,1);
     for j=1:n
-        wibiascorr{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['wmi',parts{j,2},'.nii']);
+        wibiascorr{j} = fullfile(BIDS(j).mridir,['wmi',parts{j,2},'.nii']);
     end
 end
 
 if job.output.las.dartel==1
     ribiascorr = cell(n,1);
     for j=1:n
-        ribiascorr{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['rmi',parts{j,2},'_rigid.nii']);
+        ribiascorr{j} = fullfile(BIDS(j).mridir,['rmi',parts{j,2},'_rigid.nii']);
     end
 end
 
 if job.output.las.dartel==2
     aibiascorr = cell(n,1);
     for j=1:n
-        aibiascorr{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['rmi',parts{j,2},'_affine.nii']);
+        aibiascorr{j} = fullfile(BIDS(j).mridir,['rmi',parts{j,2},'_affine.nii']);
     end
 end
 
@@ -1505,28 +1504,28 @@ end
 if job.output.label.native
     label = cell(n,1);
     for j=1:n
-        label{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['p0',parts{j,2},'.nii']);
+        label{j} = fullfile(BIDS(j).mridir,['p0',parts{j,2},'.nii']);
     end
 end
 
 if job.output.label.warped
     wlabel = cell(n,1);
     for j=1:n
-        wlabel{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['wp0',parts{j,2},'.nii']);
+        wlabel{j} = fullfile(BIDS(j).mridir,['wp0',parts{j,2},'.nii']);
     end
 end
 
 if job.output.label.dartel==1
     rlabel = cell(n,1);
     for j=1:n
-        rlabel{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['rp0',parts{j,2},'_rigid.nii']);
+        rlabel{j} = fullfile(BIDS(j).mridir,['rp0',parts{j,2},'_rigid.nii']);
     end
 end
 
 if job.output.label.dartel==2
     alabel = cell(n,1);
     for j=1:n
-        alabel{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['rp0',parts{j,2},'_affine.nii']);
+        alabel{j} = fullfile(BIDS(j).mridir,['rp0',parts{j,2},'_affine.nii']);
     end
 end
 
@@ -1538,37 +1537,37 @@ for i=1:numel(job.tissue)
     if job.tissue(i).native(1)
         tiss(i).p = cell(n,1);
         for j=1:n
-            tiss(i).p{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['p',num2str(i),parts{j,2},'.nii']);
+            tiss(i).p{j} = fullfile(BIDS(j).mridir,['p',num2str(i),parts{j,2},'.nii']);
         end
     end
     if job.tissue(i).native(2)
         tiss(i).rp = cell(n,1);
         for j=1:n
-            tiss(i).rp{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['rp',num2str(i),parts{j,2},'_rigid.nii']);
+            tiss(i).rp{j} = fullfile(BIDS(j).mridir,['rp',num2str(i),parts{j,2},'_rigid.nii']);
         end
     end
     if job.tissue(i).native(3)
         tiss(i).rpa = cell(n,1);
         for j=1:n
-            tiss(i).rpa{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['rp',num2str(i),parts{j,2},'_affine.nii']);
+            tiss(i).rpa{j} = fullfile(BIDS(j).mridir,['rp',num2str(i),parts{j,2},'_affine.nii']);
         end
     end
     if job.tissue(i).warped(1)
         tiss(i).wp = cell(n,1);
         for j=1:n
-            tiss(i).wp{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['wp',num2str(i),parts{j,2},'.nii']);
+            tiss(i).wp{j} = fullfile(BIDS(j).mridir,['wp',num2str(i),parts{j,2},'.nii']);
         end
     end
     if job.tissue(i).warped(2)
         tiss(i).mwp = cell(n,1);
         for j=1:n
-            tiss(i).mwp{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['mwp',num2str(i),parts{j,2},'.nii']);
+            tiss(i).mwp{j} = fullfile(BIDS(j).mridir,['mwp',num2str(i),parts{j,2},'.nii']);
         end
     end
     if job.tissue(i).warped(3)
         tiss(i).m0wp = cell(n,1);
         for j=1:n
-            tiss(i).m0wp{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['m0wp',num2str(i),parts{j,2},'.nii']);
+            tiss(i).m0wp{j} = fullfile(BIDS(j).mridir,['m0wp',num2str(i),parts{j,2},'.nii']);
         end
     end
 end
@@ -1579,7 +1578,7 @@ end
 if job.output.warps(1)
     fordef = cell(n,1);
     for j=1:n
-        fordef{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['y_',parts{j,2},'.nii']);
+        fordef{j} = fullfile(BIDS(j).mridir,['y_',parts{j,2},'.nii']);
     end
 else
     fordef = {};
@@ -1588,7 +1587,7 @@ end
 if job.output.warps(2)
     invdef = cell(n,1);
     for j=1:n
-        invdef{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['iy_',parts{j,2},'.nii']);
+        invdef{j} = fullfile(BIDS(j).mridir,['iy_',parts{j,2},'.nii']);
     end
 else
     invdef = {};
@@ -1600,17 +1599,17 @@ end
 if job.output.jacobian.warped
     jacobian = cell(n,1);
     for j=1:n
-        jacobian{j} = fullfile(cat_io_BIDS(BIDS(j),'mridir'),['wj_',parts{j,2},'.nii']);
+        jacobian{j} = fullfile(BIDS(j).mridir,['wj_',parts{j,2},'.nii']);
     end
 end
 
 % affine/ridid tranformation matrices 
 % ----------------------------------------------------------------------
 if job.output.rmat
-  ta  = {fullfile(cat_io_BIDS(BIDS(j),'mridir'),['t_' ,parts{j,2},'_affine_reorient.mat'])};
-  ita = {fullfile(cat_io_BIDS(BIDS(j),'mridir'),['it_',parts{j,2},'_affine_reorient.mat'])};
-  tr  = {fullfile(cat_io_BIDS(BIDS(j),'mridir'),['t_' ,parts{j,2},'_rigid_reorient.mat'])};
-  itr = {fullfile(cat_io_BIDS(BIDS(j),'mridir'),['it_',parts{j,2},'_rigid_reorient.mat'])};
+  ta  = {fullfile(BIDS(j).mridir,['t_' ,parts{j,2},'_affine_reorient.mat'])};
+  ita = {fullfile(BIDS(j).mridir,['it_',parts{j,2},'_affine_reorient.mat'])};
+  tr  = {fullfile(BIDS(j).mridir,['t_' ,parts{j,2},'_rigid_reorient.mat'])};
+  itr = {fullfile(BIDS(j).mridir,['it_',parts{j,2},'_rigid_reorient.mat'])};
 else
   ta  = {}; 
   ita = {};

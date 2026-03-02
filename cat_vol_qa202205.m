@@ -97,7 +97,7 @@ function varargout = cat_vol_qa202205(action,varargin)
     job.BIDS = cat_io_BIDS(fname, job);
   end
   mrifolder    = job.BIDS(1).reportdir;
-  reportfolder = job.BIDS(1).reportdir;
+  reportdir = job.BIDS(1).reportdir;
   
   % no input and setting of default options
   action2 = action; 
@@ -537,9 +537,9 @@ function varargout = cat_vol_qa202205(action,varargin)
         % write csv results
         % --------------------------------------------------------------
         if opt.write_csv
-          cat_io_csv(fullfile(reportfolder,[opt.prefix num2str(numel(Vo),'%04d') ...
+          cat_io_csv(fullfile(reportdir,[opt.prefix num2str(numel(Vo),'%04d') ...
             'cat_vol_qa202205_values.csv']),QAT);
-          cat_io_csv(fullfile(reportfolder,[opt.prefix num2str(numel(Vo),'%04d') ...
+          cat_io_csv(fullfile(reportdir,[opt.prefix num2str(numel(Vo),'%04d') ...
             'cat_vol_qa202205_marks.csv']),QATm);
         end
       end 
@@ -613,15 +613,15 @@ function varargout = cat_vol_qa202205(action,varargin)
       
       % export 
       if opt.write_xml
-        cat_io_xml(fullfile(reportfolder,[opt.prefix ff '.xml']),QAS,'write');
+        cat_io_xml(fullfile(reportdir,[opt.prefix ff '.xml']),QAS,'write');
       end
       
     case 'cat12'
     % estimation of the measures for the single case    
  
 [pp,ff,ee] = spm_fileparts(Vo.fname); Pp0 = fullfile(mrifolder,['p0' ff ee]);   
-if opt.rerun || cat_io_rerun(Vo.fname, fullfile(reportfolder,[opt.prefix ff '.xml']) ) || ...
-		cat_io_rerun(Pp0, fullfile(reportfolder,[opt.prefix ff '.xml']) )
+if opt.rerun || cat_io_rerun(Vo.fname, fullfile(reportdir,[opt.prefix ff '.xml']) ) || ...
+		cat_io_rerun(Pp0, fullfile(reportdir,[opt.prefix ff '.xml']) )
   
       % file information
       % ----------------------------------------------------------------
@@ -1125,10 +1125,10 @@ end
         QAS.subjectratings = QAR.subjectratings;
         QAS.ratings_help   = QAR.help;
         
-        cat_io_xml(fullfile(reportfolder,[opt.prefix ff '.xml']),QAS,'write'); %struct('QAS',QAS,'QAM',QAM)
+        cat_io_xml(fullfile(reportdir,[opt.prefix ff '.xml']),QAS,'write'); %struct('QAS',QAS,'QAM',QAM)
       end
 else
-  QAS = cat_io_xml(fullfile(reportfolder,[opt.prefix ff '.xml']),'load'); %struct('QAS',QAS,'QAM',QAM)
+  QAS = cat_io_xml(fullfile(reportdir,[opt.prefix ff '.xml']),'load'); %struct('QAS',QAS,'QAM',QAM)
   QAR = cat_stat_marks('eval',1,QAS);
 end
       
