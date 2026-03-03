@@ -421,20 +421,27 @@ for i=1:n_subjects
     break
   end
 
+  % We have to check wether SIQR is available for older data and otherwise use IQR
+  if isfield(xml.qualityratings,'SIQR')
+    xml_SIQR = xml.qualityratings.SIQR;
+  else
+    xml_SIQR = xml.qualityratings.IQR;
+  end
+  
   if H.mesh_detected
     if isfield(xml.qualityratings,'NCR')
     % check for newer available surface measures
       if isfield(xml.subjectmeasures,'EC_abs') && isfinite(xml.subjectmeasures.EC_abs) && isfinite(xml.subjectmeasures.defect_size)
-        H.xml.QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.SIQR xml.subjectmeasures.EC_abs xml.subjectmeasures.defect_size];
+        H.xml.QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml_SIQR xml.subjectmeasures.EC_abs xml.subjectmeasures.defect_size];
       else
-        H.xml.QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.SIQR NaN NaN];
+        H.xml.QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml_SIQR NaN NaN];
       end
     else % also try to use old version
       H.xml.QM(i,:) = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
     end
   else
     if isfield(xml.qualityratings,'NCR')
-      H.xml.QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.SIQR];
+      H.xml.QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml_SIQR];
     else % also try to use old version
       H.xml.QM(i,:) = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
     end
