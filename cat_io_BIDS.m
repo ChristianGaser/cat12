@@ -164,7 +164,7 @@ function BIDS = setupBIDS(files,job)
 
 
     % In the default BIDS case, no-relative path is allowed!
-    if BIDS(fi).main_resdircase==0 && BIDS(fi).main_warning
+    if BIDS(fi).main_resdircase==1 && BIDS(fi).main_warning
       if contains( BIDS(fi).main_BIDSfolder , ['..' filesep] )
         cat_io_cprintf('warn','Warning:  Relative BIDS folder are not supported for "autobids" (resdircase=1)! \n')
       end
@@ -204,14 +204,41 @@ function BIDS = setupBIDS(files,job)
     else
       BIDS(fi).predirs= '';
     end
+
+    if BIDS(fi).main_resdircase==1 && ~BIDS(fi).isBIDS
+      BIDS(fi).rawBIDSpath = fileparts(BIDS(fi).file);
+      if isempty(BIDS(fi).rawBIDSpath), BIDS(fi).rawBIDSpath = pwd; end
+      BIDS(fi).predirs = '';
+    end
+
     [~,ff,ee] = fileparts(BIDS(fi).rawBIDSpath); BIDS(fi).pdir = [ff ee]; 
 
     
     % define main resultdir and subdirs
-    BIDS(fi).BIDSdir = fullfile( strrep( BIDS(fi).main_BIDSfolder , ...
-      ['..' filesep], ''), BIDS(fi).predirs ); 
-    BIDS(fi).resBIDSpath = fullfile( BIDS(fi).rawBIDSpath , ...
-      strrep( BIDS(fi).main_BIDSfolder ,['..' filesep], '') , BIDS(fi).predirs ); 
+    if BIDS(fi).main_resdircase==1 && ~BIDS(fi).isBIDS
+      % auto-BIDS fallback for non-BIDS data: keep original hierarchy
+      useBIDSfolder = '';
+      usepredirs    = '';
+    else
+      useBIDSfolder = strrep( BIDS(fi).main_BIDSfolder , ['..' filesep], '');
+      usepredirs    = BIDS(fi).predirs;
+
+      % avoid nested derivatives in non-BIDS reruns when inputs are already
+      % located inside the selected derivatives folder
+      if ~BIDS(fi).isBIDS
+        [isMapped, existingResdir] = getExistingNonBIDSResdir(BIDS(fi).file, useBIDSfolder, BIDS(fi).main_catfolders);
+        if isMapped
+          BIDS(fi).rawBIDSpath = fileparts(existingResdir);
+          if isempty(BIDS(fi).rawBIDSpath), BIDS(fi).rawBIDSpath = pwd; end
+          [~,baseResdir] = fileparts(existingResdir);
+          useBIDSfolder = baseResdir;
+          usepredirs    = '';
+        end
+      end
+    end
+
+    BIDS(fi).BIDSdir = fullfile( useBIDSfolder , usepredirs ); 
+    BIDS(fi).resBIDSpath = fullfile( BIDS(fi).rawBIDSpath , useBIDSfolder , usepredirs ); 
    
     BIDS(fi).resdir = fullfile( BIDS(fi).rawBIDSpath , BIDS(fi).BIDSdir , BIDS(fi).postdirs);  
     for sfi = 1:numel(BIDS(fi).main_catfolders)
@@ -445,27 +472,70 @@ function [SUB, SES, ANA, RUN, MOD, isSUB, isSES, isANA, isRUN, isMOD, ...
   isANA = 0; 
   isSUB = 0; 
   isSES = 0;
+  iSUB  = [];
+  iSES  = [];
+  iANA  = [];
   isRUN = cat_io_contains(lower(sdirs{end}),{'_run-'});
   isMOD = cat_io_contains(lower(sdirs{end}),wlist);
 
   % update boolean variables based on dirs
   if numel(sdirs) > 1
-  % get the subpath with sub-*[/ses-*][/anat]
-    isANA = cat_io_contains(lower(sdirs{end-1}(1:min(4,numel(sdirs{end-1})))),'anat');
-    isSES = any(cat_io_contains(lower(sdirs{end-isANA-1}(1:min(4,numel(sdirs{end-1-isANA})))),{'ses-','ses_','sess-','sess_'}));
-    isSUB = any(cat_io_contains(lower(sdirs{end-isANA-1-isSES}(1:min(4,numel(sdirs{end-1-isANA-isSES})))),{'sub-','sub_'})); 
-   
-    if isANA, ANA = sdirs{end-1}; end
-    if isSES, SES = sdirs{end-1-isANA}; end
-    if isSUB, SUB = sdirs{end-1-isANA-isSES}; end
+    nDirs = numel(sdirs);
+    % get the subpath with sub-*[/ses-*][/anat]
+    if cat_io_contains(lower(sdirs{end-1}(1:min(4,numel(sdirs{end-1})))),'anat')
+      isANA = 1;
+      iANA  = nDirs-1;
+    end
 
-    % more tolerant defintion
-    if ~isSES && ~isSUB
-      subcan = cat_io_contains(lower(sdirs(1:end-1)),{'sub-','sub_'});
-      for si = sort(find(subcan),'des')
-        isSUB = (numel(sdirs) - si) * any(cat_io_contains(lower(sdirs{si}(1:min(4,numel(sdirs{si})))),{'sub-','sub_'})); 
-        if isSUB>0, break; end
+    iSEScand = nDirs-isANA-1;
+    if iSEScand > 0 && any(cat_io_contains(lower(sdirs{iSEScand}(1:min(4,numel(sdirs{iSEScand})))),{'ses-','ses_','sess-','sess_'}))
+      isSES = 1;
+      iSES  = iSEScand;
+    end
+
+    iSUBcand = nDirs-isANA-isSES-1;
+    if iSUBcand > 0 && any(cat_io_contains(lower(sdirs{iSUBcand}(1:min(4,numel(sdirs{iSUBcand})))),{'sub-','sub_'}))
+      isSUB = 1;
+      iSUB  = iSUBcand;
+    end
+
+    % more tolerant definition (e.g. derivatives/sub-*/ses-*/anat/mri/*.nii)
+    if ~isSUB
+      subcan = find(cat_io_contains(lower(sdirs(1:end-1)),{'sub-','sub_'})==1,1,'last');
+      if ~isempty(subcan)
+        isSUB = 1;
+        iSUB  = subcan;
       end
+    end
+
+    if isSUB
+      if ~isSES
+        sescan = find(cat_io_contains(lower(sdirs(iSUB+1:end-1)),{'ses-','ses_','sess-','sess_'})==1,1,'first');
+        if ~isempty(sescan)
+          isSES = 1;
+          iSES  = iSUB + sescan;
+        end
+      end
+
+      if ~isANA
+        if isSES
+          iANAcand = find(cat_io_contains(lower(sdirs(iSES+1:end-1)),'anat')==1,1,'first');
+          if ~isempty(iANAcand)
+            isANA = 1;
+            iANA  = iSES + iANAcand;
+          end
+        else
+          iANAcand = find(cat_io_contains(lower(sdirs(iSUB+1:end-1)),'anat')==1,1,'first');
+          if ~isempty(iANAcand)
+            isANA = 1;
+            iANA  = iSUB + iANAcand;
+          end
+        end
+      end
+
+      SUB = sdirs{iSUB};
+      if isSES, SES = sdirs{iSES}; end
+      if isANA, ANA = sdirs{iANA}; end
     end
   end
 
@@ -486,10 +556,14 @@ function [SUB, SES, ANA, RUN, MOD, isSUB, isSES, isANA, isRUN, isMOD, ...
   end
 
   % directory information 
-  BIDSsubpathdepth = isANA + isSES + isSUB; 
-  if BIDSsubpathdepth > 0
-    BIDSsubpath = fullfile( sdirs{ end - BIDSsubpathdepth : end - 1} );
+  if isSUB
+    iEND = iSUB;
+    if isSES, iEND = iSES; end
+    if isANA, iEND = iANA; end
+    BIDSsubpathdepth = iEND - iSUB + 1;
+    BIDSsubpath = fullfile( sdirs{iSUB:iEND} );
   else
+    BIDSsubpathdepth = 0;
     BIDSsubpath = ''; 
   end
 end 
@@ -503,6 +577,21 @@ function out = testfunction( testcase )
     if isnumeric(testcase)
       testcase = max(0,min(3,testcase));
     end
+  end
+
+  if ~isnumeric(testcase) && strcmpi(testcase,'testfiles_long')
+    out = getLongitudinalTestFiles();
+    return;
+  end
+
+  if ~isnumeric(testcase) && any(strcmpi(testcase,{'test_long','selftest_long'}))
+    out = runLongitudinalPathSelftest();
+    return;
+  end
+
+  if ~isnumeric(testcase) && any(strcmpi(testcase,{'test_nonbids_auto','selftest_nonbids_auto'}))
+    out = runNonBIDSAutoSelftest();
+    return;
   end
 
 
@@ -589,4 +678,133 @@ function out = testfunction( testcase )
   BIDS = cat_io_BIDS(files,job); 
   out  = cat_io_BIDS(BIDS,'surfdir','prefix','lh.central.','suffix','.topofix','ext','');
 
+end
+
+function files = getLongitudinalTestFiles()
+  files = {
+    '/Users/tomcat/BIDSTEST/Project_Long/sub-01/ses-01/anat/sub-01_ses-01_T1w.nii'
+    '/Users/tomcat/BIDSTEST/Project_Long/sub-01/ses-02/anat/sub-01_ses-02_T1w.nii'
+    '/Users/tomcat/BIDSTEST/Project_Long/derivatives/CAT12.9_2565/sub-01/ses-01/anat/mri/p0sub-01_ses-01_T1w.nii'
+    '/Users/tomcat/BIDSTEST/Project_Long/derivatives/CAT12.9_2565/sub-01/ses-02/anat/mri/p0sub-01_ses-02_T1w.nii'
+    '/Users/tomcat/BIDSTEST/Project_Long/derivatives/CAT12.9_2565/sub-01/ses-01/anat/surf/lh.central.sub-01_ses-01_T1w.gii'
+  };
+
+  if ispc
+    files  = cat_io_strrep(files, {'/Users/','/'},{'C:\Users\','\'});
+  end
+end
+
+function out = runLongitudinalPathSelftest()
+  files = getLongitudinalTestFiles();
+
+  clear job
+  job.extopts.mkBIDSdir = 0;
+  job.extopts.verbBIDS  = 0;
+  job.output.BIDS.BIDSyes.BIDSfolder = fullfile('../derivatives','CATlongtest');
+
+  BIDS = cat_io_BIDS(files,job);
+  resdirs = {BIDS(:).resdir}';
+  baddup  = [filesep 'derivatives' filesep 'derivatives' filesep];
+  expectedroot = [filesep 'derivatives' filesep 'CATlongtest' filesep];
+
+  assert(~any(contains(resdirs,baddup)), 'cat_io_BIDS:selftest_long:DoubleDerivatives', ...
+    'Detected doubled derivatives path in longitudinal BIDS mapping.');
+  assert(all(contains(resdirs,expectedroot)), 'cat_io_BIDS:selftest_long:WrongRoot', ...
+    'Longitudinal BIDS mapping did not keep a single derivatives root.');
+  assert(all(contains(resdirs,[filesep 'sub-01' filesep])), 'cat_io_BIDS:selftest_long:MissingSubject', ...
+    'Longitudinal BIDS mapping lost the subject hierarchy.');
+  assert(all(contains(resdirs,[filesep 'anat'])), 'cat_io_BIDS:selftest_long:MissingAnat', ...
+    'Longitudinal BIDS mapping lost the anat hierarchy.');
+
+  out = BIDS;
+end
+
+function out = runNonBIDSAutoSelftest()
+  files = {
+    '/Volumes/UltraMax/ADNI50/AD25_00/ADNI_005_S_0221.nii'
+    '/Volumes/UltraMax/ADNI50/AD25_12/ADNI_005_S_0221.nii'
+    '/Volumes/UltraMax/ADNI50/AD25_24/ADNI_005_S_0221.nii'
+  };
+
+  if ispc
+    files = cat_io_strrep(files, {'/Volumes/','/'},{'C:\Volumes\','\'});
+  end
+
+  clear job
+  job.extopts.mkBIDSdir = 0;
+  job.extopts.verbBIDS  = 0;
+  job.output.BIDS.BIDSyes.BIDSfolder = fullfile('../derivatives','CATautobids');
+
+  BIDS = cat_io_BIDS(files,job);
+  resdirs = {BIDS(:).resdir}';
+  srcdirs = cellfun(@fileparts,files,'UniformOutput',false)';
+
+  assert(~any(contains(resdirs,[filesep 'derivatives' filesep])), 'cat_io_BIDS:selftest_nonbids_auto:UnexpectedDerivatives', ...
+    'Auto-BIDS fallback for non-BIDS input still writes to derivatives.');
+  samefallback = true;
+  for fi = 1:numel(files)
+    samefallback = samefallback && strcmp(resdirs{fi},srcdirs{fi});
+  end
+  assert(samefallback, 'cat_io_BIDS:selftest_nonbids_auto:WrongFallback', ...
+    'Auto-BIDS fallback for non-BIDS input does not keep original directory.');
+
+  clear job
+  job.extopts.mkBIDSdir = 0;
+  job.extopts.verbBIDS  = 0;
+  job.output.BIDS.BIDSrel.BIDSfolder = fullfile('../derivatives','CATforced');
+  BIDSforced = cat_io_BIDS(files,job);
+  resdirsforced = {BIDSforced(:).resdir}';
+
+  assert(all(contains(resdirsforced,[filesep 'derivatives' filesep 'CATforced' filesep])), 'cat_io_BIDS:selftest_nonbids_auto:ForcedModeBroken', ...
+    'Forced derivatives mode (BIDSrel) no longer writes derivatives for non-BIDS input.');
+
+  % idempotency for longitudinal-style reruns: if input is already copied
+  % into derivatives/CATforced, a second mapping must keep the same resdir
+  rerunFiles = cellfun(@(f,rd) fullfile(rd,[spm_str_manip(f,'r') '.nii']), files, resdirsforced, 'UniformOutput', false);
+  BIDSrerun = cat_io_BIDS(rerunFiles,job);
+  resdirsrerun = {BIDSrerun(:).resdir}';
+
+  sameresdir = true;
+  for fi = 1:numel(files)
+    sameresdir = sameresdir && strcmp(resdirsrerun{fi},resdirsforced{fi});
+  end
+  assert(sameresdir, 'cat_io_BIDS:selftest_nonbids_auto:ForcedModeNested', ...
+    'Repeated non-BIDS forced-derivatives mapping creates nested derivatives paths.');
+  assert(~any(contains(resdirsrerun,[filesep 'derivatives' filesep 'CATforced' filesep 'derivatives' filesep 'CATforced' filesep])), ...
+    'cat_io_BIDS:selftest_nonbids_auto:ForcedModeDoubleDerivatives', ...
+    'Repeated non-BIDS forced-derivatives mapping creates double derivatives folders.');
+
+  out = BIDS;
+end
+
+function [isMapped, existingResdir] = getExistingNonBIDSResdir(file, bidsfolder, catfolders)
+  isMapped = false;
+  existingResdir = '';
+
+  if isempty(file) || isempty(bidsfolder)
+    return;
+  end
+
+  fdir = fileparts(file);
+  if isempty(fdir)
+    return;
+  end
+
+  token = [filesep bidsfolder filesep];
+  if isempty(strfind(lower([fdir filesep]), lower(token)))
+    return;
+  end
+
+  [~,lastdir] = fileparts(fdir);
+  if any(strcmp(lastdir,catfolders))
+    existingResdir = fileparts(fdir);
+  else
+    existingResdir = fdir;
+  end
+
+  if isempty(existingResdir)
+    existingResdir = fdir;
+  end
+
+  isMapped = true;
 end
