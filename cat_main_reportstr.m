@@ -498,14 +498,14 @@ function str = cat_main_reportstr(job,res,qa)
   if job.extopts.WMHC<=2 && isfield(qa,'subjectmeasures') && isfield(qa.subjectmeasures,'vol_rel_WMH') && ...
     ( (qa.subjectmeasures.vol_rel_WMH>0.01 || qa.subjectmeasures.vol_rel_WMH/qa.subjectmeasures.vol_rel_CGW(3)>0.02) )
     if job.extopts.WMHC == 2
-      str{3}(end-1).value = [str{3}(end-1).value sprintf('\\color[rgb]{1 0 1} (WM inc. %0.0fcm%s WMHs)', ...
+      str{3}(end-1).value = [str{3}(end-1).value sprintf('\\color[rgb]{1 0 1} (WM incl. %0.0fcm%s WMHs)', ...
         qa.subjectmeasures.vol_abs_WMH,native2unicode(179, 'latin1'))];  
-      str{3}(end).value   = [str{3}(end).value   sprintf('\\color[rgb]{1 0 1} (WM inc. %0.1f%% WMHs)', qa.subjectmeasures.vol_rel_WMH)];  
+      str{3}(end).value   = [str{3}(end).value   sprintf('\\color[rgb]{1 0 1} (WM incl. %0.1f%% WMHs)', qa.subjectmeasures.vol_rel_WMH)];  
       %str{3}(end).value = [str{3}(end).value sprintf('\\bf\\color[rgb]{1 0 1} WMHs %0.1f%% > WM!', qa.subjectmeasures.vol_rel_WMH * 100)];  
     else
-      str{3}(end-1).value = [str{3}(end-1).value sprintf('\\color[rgb]{1 0 1} (GM inc. %0.0fcm%s WMHs)', ...
+      str{3}(end-1).value = [str{3}(end-1).value sprintf('\\color[rgb]{1 0 1} (GM incl. %0.0fcm%s WMHs)', ...
         qa.subjectmeasures.vol_abs_WMH,native2unicode(179, 'latin1'))];   
-      str{3}(end).value   = [str{3}(end).value sprintf('\\color[rgb]{1 0 1} (GM inc. %0.1f%% WMHs)', qa.subjectmeasures.vol_rel_WMH * 100)];  
+      str{3}(end).value   = [str{3}(end).value sprintf('\\color[rgb]{1 0 1} (GM incl. %0.1f%% WMHs)', qa.subjectmeasures.vol_rel_WMH * 100)];  
       %str{3}(end).value = [str{3}(end).value sprintf('\\bf\\color[rgb]{1 0 1} WMHs %0.1f%% > GM!', qa.subjectmeasures.vol_rel_WMH * 100)];  
     end
   end

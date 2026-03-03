@@ -76,6 +76,9 @@ function varargout = cat_vol_qa(action,varargin)
     if strcmp(action,'cat12err')
       fname = varargin{1}.job.data;
       job   = varargin{1}.job;
+      if ~isfield(job,'job')
+        job = struct('job',job);
+      end
     elseif strcmp(action,'cat12')
       fname = varargin{2};
       job   = varargin{6};

@@ -1025,29 +1025,35 @@ function cat_run_job1639(job,tpm,subj)
         stime = cat_io_cmd('SPM preprocessing 1 (estimate 1 - TPM registration):','','',1,stime); 
       end
       if ~isempty(job.opts.affreg) && useprior~=1 && job.extopts.setCOM ~= 10 % setcom == 10 - never use ... && strcmp('human',job.extopts.species)
+        affreg = job.opts.affreg;
+        if strcmp(affreg,'prior')
+          affreg = 'subj';
+          cat_io_cprintf('warn','  Affine regularisation "prior" requested but prior transform unavailable. Use "subj" regularisation.\n');
+        end
+
         spm_plot_convergence('Init','Fine affine registration','Mean squared difference','Iteration');
         warning off 
         
         try
-          Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg,80);
+          Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine,affreg,80);
         catch
-          Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine ,job.opts.affreg);
+          Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*16,obj.tpm,Affine,affreg);
         end
         scl1 = abs(det(Affine1(1:3,1:3)));
         scl2 = abs(det(Affine2(1:3,1:3)));
 
         if any(any(isnan(Affine2(1:3,:))))
           try
-            Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*4,obj.tpm,Affine ,job.opts.affreg,80);
+            Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*4,obj.tpm,Affine,affreg,80);
           catch
-            Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*4,obj.tpm,Affine ,job.opts.affreg);
+            Affine2 = spm_maff8(obj.image(1),obj.samp,(obj.fwhm+1)*4,obj.tpm,Affine,affreg);
           end
           if any(any(isnan(Affine2(1:3,:)))) 
             Affine2 = Affine; 
           end
         else
           % check for > 10% larger scaling 
-          if ~strcmp(job.opts.affreg,'prior')  &&  scl1 > 1.1*scl2 && job.extopts.setCOM ~= 11 % setcom == 11 - use always 
+          if ~strcmp(affreg,'prior')  &&  scl1 > 1.1*scl2 && job.extopts.setCOM ~= 11 % setcom == 11 - use always 
             stime = cat_io_cmd('  Use initial fine affine registration.','warn','',1,stime);
             %fprintf('\n  First fine affine registration failed.\n  Use affine registration from previous step.                ');
             Affine2 = Affine1;
@@ -1055,15 +1061,15 @@ function cat_run_job1639(job,tpm,subj)
           end
         end
         try
-          Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,obj.tpm,Affine2,job.opts.affreg,80);
+          Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,obj.tpm,Affine2,affreg,80);
         catch
-          Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,obj.tpm,Affine2,job.opts.affreg);
+          Affine3 = spm_maff8(obj.image(1),obj.samp,obj.fwhm,obj.tpm,Affine2,affreg);
         end
 
         if ~any(any(isnan(Affine3(1:3,:))))
           scl3 = abs(det(Affine3(1:3,1:3)));
           % check for > 5% larger scaling 
-          if ~strcmp(job.opts.affreg,'prior')  &&  scl2 > 1.05*scl3 && job.extopts.setCOM ~= 11 % setcom == 11 - use always
+          if ~strcmp(affreg,'prior')  &&  scl2 > 1.05*scl3 && job.extopts.setCOM ~= 11 % setcom == 11 - use always
             stime = cat_io_cmd('  Use previous fine affine registration.','warn','',1,stime);
             %fprintf('\n  Final fine affine registration failed.\n  Use fine affine registration from previous step.                ');
             Affine = Affine2;
