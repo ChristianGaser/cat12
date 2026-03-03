@@ -588,6 +588,35 @@
               </ul></li>
             </ul><br>
 
+            <h6>Output folder and BIDS/derivatives behavior</h6>
+            <p>The writing location is controlled by <b>Use BIDS directory structure?</b> and (for the BIDS modes) the <b>Output folder</b> entry. The output folder is usually something like <code>derivatives/CAT</code> (or <code>../derivatives/CAT</code> if you want to place it one level higher).</p>
+
+            <ul>
+              <li><b>Auto-BIDS; else derivatives folder</b>
+              <ul>
+                <li>BIDS input: writes to dataset-level derivatives (e.g. <code>.../derivatives/CAT/sub-01/ses-01/anat/...</code>).</li>
+                <li>non-BIDS input: writes to a derivatives folder inferred from the file/dataset root.</li>
+              </ul></li>
+
+              <li><b>Auto-BIDS; else CAT subfolders near input</b>
+              <ul>
+                <li>BIDS input: same BIDS derivatives handling as above.</li>
+                <li>non-BIDS input: writes CAT-style output next to each input file (e.g. <code>.../subject/derivatives/CAT/...</code>).</li>
+              </ul></li>
+
+              <li><b>No BIDS logic (always CAT subfolders)</b>
+              <ul>
+                <li>Always writes CAT-style output next to the input and ignores BIDS detection.</li>
+              </ul></li>
+
+              <li><b>Always file-relative derivatives folder</b> (expert mode only)
+              <ul>
+                <li>Always writes relative to the current input file location and ignores BIDS root detection.</li>
+              </ul></li>
+            </ul>
+
+            <p><b>Practical recommendation:</b> Use one mode consistently within a project and avoid mixing already preprocessed derivatives files with raw inputs in the same run. For repeated processing of files already located in a CAT derivatives tree, CAT keeps the derivatives root instead of creating nested derivatives folders.</p>
+
             <p>The resulting files are saved in the respective subfolders and follow the CAT <a href="#naming">naming convention</a>.</p>
 
             <p><b>Note:</b> If the segmentation fails, this is often due to an unsuccessful initial spatial registration. In this case, you can try to set the origin (anterior commissure) in the Display tool. Place the cursor roughly on the anterior commissure and press &quot;Set Origin&quot;. The now displayed correction in the coordinates can be applied to the image with the button &quot;Reorient&quot;. This procedure must be repeated for each data set individually.</p>
@@ -1845,6 +1874,7 @@
             </ul>
 
             <p>&rarr; For all other options you can follow the instructions for preprocessing of cross-sectional data as described before. Please note that not all writing options are available for longitudinal data.</p>
+            <p><b>Longitudinal note on output folders:</b> If you use BIDS/derivatives output modes, keep one consistent derivatives setting for all time points of a subject. This avoids ambiguous folder layouts and ensures reports (e.g. <code>catlong_*.xml</code>) are written to the expected report folder.</p>
             <p>For the naming conventions of all written files see <a href="#naming">Naming Convention of Output Files</a>. The GM segments are mwp1r* for the plasticity model or mwmwp1r* for the ageing model with larger changes, the WM segments are named mwp2r* (mwmwp2r*). Without modulation the leading &quot;m&quot; is omitted.</p>
             
             <!-- ############################# -->
