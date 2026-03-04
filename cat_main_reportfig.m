@@ -108,7 +108,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       return;
     end
   else
-    [pth,nam] = spm_fileparts(VT0.fname); 
+    [pth,nam,ee] = spm_fileparts(VT0.fname); 
     dispvol   = 1; 
   end
     
@@ -1762,11 +1762,18 @@ if 1
   else
     longstr = ''; 
   end
+
+  if isfield(res,'reportfolder')
+    reportdir = res.reportfolder; 
+  else
+    [pth1,pth2] = spm_fileparts(pth);
+    reportdir = fullfile( pth1, cat_io_strrep(pth2,{'surf','mri'},{'report','report'}));
+  end
   if ~isfield(job,'imgprint') || ~isfield(job.imgprint,'fname')
-    job.imgprint.fname  = cat_io_BIDS(job.BIDS(job.subj),'reportdir','prefix',['cat' longstr 'report_'],'ext',job.imgprint.type);
+    job.imgprint.fname  = spm_file(fullfile(reportdir,nam),'prefix',['cat' longstr 'report_'],'ext',job.imgprint.type);
   end
   if ~isfield(job,'imgprint') || ~isfield(job.imgprint,'fnamej')
-    job.imgprint.fnamej = cat_io_BIDS(job.BIDS(job.subj),'reportdir','prefix',['cat' longstr 'reportj_'],'ext','jpg'); 
+    job.imgprint.fnamej = spm_file(fullfile(reportdir,nam),'prefix',['cat' longstr 'reportj_'],'ext','jpg'); 
   end
 
   % save old settings of the SPM figure

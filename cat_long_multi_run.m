@@ -77,14 +77,15 @@ if isfield(job,'datalong')
  
       name   = spm_file( job.subj(ti).mov{si} , 'number', ''); 
       [pp,nam,ext] = spm_fileparts(name);
-      newdir = BIDS.resdir;
+      % ensure result dir is absolute (cpath adds leading slash)
+      newdir = spm_file(BIDS.resdir,'cpath');
  
       % uncompress nii.gz files and change file name for job
       if strcmp(ext,'.gz')
         fname = gunzip(name,newdir);
         fprintf('Uncompress %s to %s\n',name,newdir);
-        job.subj(ti).mov{si} = char(fname);
-        job.data{c} = char(fname);
+        job.subj(ti).mov{si} = spm_file(char(fname),'cpath');
+        job.data{c} = spm_file(char(fname),'cpath');
       elseif ~isempty(newdir) && ~strcmp(pp,newdir)
         if ~exist(newdir,'dir'), mkdir(newdir); end
         is_copied(c) = 2;
@@ -93,8 +94,8 @@ if isfield(job,'datalong')
           error('Could not write %s to %s',name,newdir);
         else
           fprintf('Copy "%s" to "%s"\n',name,newdir);
-          job.subj(ti).mov{si} = fullfile(newdir,[nam ext]);
-          job.data{c} = fullfile(newdir,[nam ext]);
+          job.subj(ti).mov{si} = spm_file(fullfile(newdir,[nam ext]),'cpath');
+          job.data{c} = spm_file(fullfile(newdir,[nam ext]),'cpath');
         end
       end
       c = c + 1;
@@ -107,7 +108,7 @@ if isfield(job,'datalong')
   output  = job.output;
   extopts = job.extopts;
 end
-
+ 
 job_name = fullfile(fileparts(mfilename('fullpath')),'cat_long_main.txt');
 
 % we have to copy the original txt-file to a matlab file because for deployed versions
@@ -151,6 +152,8 @@ out.surf = cell(''); out.thick = cell(''); out.mwp1 = cell('');
 out.catreport = cell(''); out.catroi = cell('');
 
 for i=1:numel(job.subj)
+  %job.output  = rmfield(job.output,'BIDS');
+  %job.output.BIDS.BIDSno = 1; 
   BIDS(i) = cat_io_BIDS( job.subj(i).mov{1}, job ); 
   BIDSmov = cat_io_BIDS( job.subj(i).mov, job ); 
     
@@ -189,7 +192,7 @@ for i=1:numel(job.subj)
     jobsx      = rmfield(job,{'data','subj'});
     jobsx.subj = job.subj(i); 
     jobsx.out  = out; 
-    jobsx.dirs = struct('mrifolder',BIDS(i).mridir, 'reportfolder', BIDS(i).reportdir, ...
+    jobsx.dirs = struct('mridir',BIDS(i).mridir, 'reportdir', BIDS(i).reportdir, ...
       'surfdir', BIDS(i).surfdir, 'labeldir', BIDS(i).labeldir, 'pp1', BIDS(i).resdir, 'ff1', ff);
     cat_io_xml(longxml,struct('parameter',jobsx));
   end
