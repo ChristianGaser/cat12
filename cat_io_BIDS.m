@@ -194,8 +194,9 @@ function BIDS = setupBIDS(files,job)
      BIDS(fi).isSUB, BIDS(fi).isSES, BIDS(fi).isANA, BIDS(fi).isRUN, BIDS(fi).isMOD, ...
      BIDS(fi).postdirs, BIDS(fi).npostdirs] = getBIDSpostdirs0(sdirs);
   
-    % define if output can or has to be BIDS
-    BIDS(fi).isBIDS = BIDS(fi).isSUB & ~isempty(BIDS(fi).main_BIDSfolder) & BIDS(fi).main_resdircase ~= 3; 
+    % define if output can or has to be BIDS (special case for longitudinal 
+    % pipeline that is call as nonBIDS after preparing the BIDSdirs directly)
+    BIDS(fi).isBIDS = BIDS(fi).isSUB & ( BIDS(fi).main_long | ~isempty(BIDS(fi).main_BIDSfolder)) & BIDS(fi).main_resdircase ~= 3; 
 
     % Avoid multiple derivatives and remove the leading part. In principle,
     % resdircase==0 should ignore such cases but as we had issues with
@@ -235,7 +236,7 @@ function BIDS = setupBIDS(files,job)
     % create path to main result directory resdir and further cat sub directories mri/surf/...
     BIDS(fi).resdir = fullfile( BIDS(fi).rawdir , BIDS(fi).BIDSdir , BIDS(fi).postdirs);  
     for sfi = 1:numel(BIDS(fi).main_catfolders )
-      if BIDS(fi).main_subfolders  &&  ~BIDS(fi).main_long  &&  ~BIDS(fi).isBIDS
+      if BIDS(fi).main_subfolders  &&  ~BIDS(fi).isBIDS 
         BIDS(fi).([BIDS(fi).main_catfolders{sfi} 'dir']) = fullfile( BIDS(fi).rawdir , ...
           BIDS(fi).BIDSdir , BIDS(fi).postdirs, BIDS(fi).main_catfolders{sfi} ); 
       else

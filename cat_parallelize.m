@@ -610,6 +610,27 @@ function varargout = cat_parallelize(job,func,datafield)
       %fprintf('done\n');
     end
     
+
+    %% output overview of main result directories
+    spmstack = dbstack; 
+    if exist('job','var') any( cat_io_contains( {spmstack.file} , 'cat_long_multi_run') );  
+      job.BIDS = cat_io_BIDS( job.data , job ); 
+
+      resdirs = {job.BIDS(:).mridir}';
+      isBIDS  = [job.BIDS(:).isBIDS]'; 
+  
+      % get unique entries
+      [~,udi] = unique(resdirs); 
+      resdirs = resdirs(udi); 
+      isBIDS  = isBIDS(udi); 
+      BIDSstr = {'[noBIDS]','[BIDS]'};
+  
+      fprintf('\nResult directories:\n')
+      for ri = 1:numel(resdirs)
+        cat_io_cprintf('blue','%10s %s\n', BIDSstr{isBIDS(ri)+1} , ...
+          strrep( resdirs{ri} , [filesep 'mri'], [filesep '[*subdir*]']) ); 
+      end
+    end
     
     %% Merge output of the subprocesses to support SPM dependencies.
     %  --------------------------------------------------------------------
