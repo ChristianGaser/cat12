@@ -30,6 +30,8 @@ FILES=${MATLAB_FILES} ${C_FILES} ${MISC_FILES}
 
 ZIPFILE=CAT_r${REVISION}.zip
 
+BIN ?= CAT*
+
 # remove .DS_Store files and correct file permissions
 clean:
 	-@find . -type f -name .DS_Store -exec rm {} \;
@@ -77,6 +79,7 @@ install4: copy_longmode
 help:
 	-@echo Available commands:
 	-@echo clean install zip docs update cp_binaries archive check_pipeline release standalone
+	-@echo "cp_binaries usage: make cp_binaries [BIN=CAT_MyBinary]"
 
 #make html documentation
 docs:
@@ -111,14 +114,14 @@ zip: update clean
 
 # copy binaries after cross-compiling
 cp_binaries: 
-	-@echo copy binaries
+	-@echo copy binaries matching $(BIN)
 	-@for file in ~/Dropbox/GitHub/CAT-Surface/build-*/Progs/*.o; do \
 			[ -f "$$file" ] && rm "$$file"; \
 	done
-	-@for i in CAT.glnx86/CAT*; do cp ~/Dropbox/GitHub/CAT-Surface/build-x86_64-pc-linux/Progs/`basename $${i}` CAT.glnx86/ ; done
-	-@for i in CAT.w32/CAT*; do cp ~/Dropbox/GitHub/CAT-Surface/build-x86_64-w64-mingw32/Progs/`basename $${i}` CAT.w32/ ; done
-	-@for i in CAT.maci64/CAT*; do cp ~/Dropbox/GitHub/CAT-Surface/build-native/Progs/`basename $${i}` CAT.maci64/ ; done
-	-@for i in CAT.maca64/CAT*; do cp ~/Dropbox/GitHub/CAT-Surface/build-native-arm64/Progs/`basename $${i}` CAT.maca64/ ; done
+	-@for i in CAT.glnx86/$(BIN); do cp ~/Dropbox/GitHub/CAT-Surface/build-x86_64-pc-linux/Progs/`basename $${i}` CAT.glnx86/ ; done
+	-@for i in CAT.w32/$(BIN); do cp ~/Dropbox/GitHub/CAT-Surface/build-x86_64-w64-mingw32/Progs/`basename $${i}` CAT.w32/ ; done
+	-@for i in CAT.maci64/$(BIN); do cp ~/Dropbox/GitHub/CAT-Surface/build-native/Progs/`basename $${i}` CAT.maci64/ ; done
+	-@for i in CAT.maca64/$(BIN); do cp ~/Dropbox/GitHub/CAT-Surface/build-native-arm64/Progs/`basename $${i}` CAT.maca64/ ; done
 
 # print check list for releasing
 release: checklist
