@@ -93,11 +93,14 @@ function varargout = cat_vol_qa202205(action,varargin)
     fname = varargin{4}.catlog;
     job   = varargin{6};
   end
-  if ~isfield(job,'BIDS') || isempty(job.BIDS) 
-    job.BIDS = cat_io_BIDS(fname, job);
+  if ~isfield(job.job,'BIDS') || isempty(job.job.BIDS) 
+    job.job.BIDS = cat_io_BIDS(fname, job.job);
   end
-  mrifolder    = job.BIDS(1).reportdir;
-  reportdir = job.BIDS(1).reportdir;
+  if ~isfield(job.job,'subj') || isempty(job.job.subj) 
+    job.job.subj = 1;
+  end
+  mridir    = job.job.BIDS(job.job.subj).mridir;
+  reportdir = job.job.BIDS(job.job.subj).reportdir;
   
   % no input and setting of default options
   action2 = action; 
@@ -619,7 +622,7 @@ function varargout = cat_vol_qa202205(action,varargin)
     case 'cat12'
     % estimation of the measures for the single case    
  
-[pp,ff,ee] = spm_fileparts(Vo.fname); Pp0 = fullfile(mrifolder,['p0' ff ee]);   
+[pp,ff,ee] = spm_fileparts(Vo.fname); Pp0 = fullfile(mridir,['p0' ff ee]);   
 if opt.rerun || cat_io_rerun(Vo.fname, fullfile(reportdir,[opt.prefix ff '.xml']) ) || ...
 		cat_io_rerun(Pp0, fullfile(reportdir,[opt.prefix ff '.xml']) )
   

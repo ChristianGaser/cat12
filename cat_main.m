@@ -668,7 +668,7 @@ if ~isfield(res,'spmpp')
   clear Yclsb;
 
   if job.extopts.verb>2
-    tpmci=tpmci+1; tmpmat = fullfile(pth,res.reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'preDartel'));
+    tpmci=tpmci+1; tmpmat = fullfile(pth,job.BIDS(job.subj).reportdir,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'preDartel'));
     save(tmpmat,'Yp0','Ycls','Ymi','T3th','vx_vol','Yl1');
     clear Yp0;
   end
@@ -839,7 +839,7 @@ if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
   % thickness map
   if numel(fieldnames(S))==0 && isempty(Psurf), clear S Psurf; end
   if isfield(job.output,'ct')
-    cat_io_writenii(VT0,Yth1,res.mrifolder,'ct','cortical thickness map','uint16',...
+    cat_io_writenii(VT0,Yth1,job.BIDS(job.subj).mridir,'ct','cortical thickness map','uint16',...
       [0,0.0001],job.output.ct,trans,single(Ycls{1})/255,0.1);
   end
   
@@ -979,7 +979,7 @@ if job.output.surface
   clear th; 
    
   %qam = cat_stat_marks('eval',job.cati,qa,'cat12'); % ... not ready
-  cat_io_xml(fullfile(pth,res.reportfolder,['cat_' namspm nam '.xml']),struct(...
+  cat_io_xml(fullfile(pth,job.BIDS(job.subj).reportdir,['cat_' namspm nam '.xml']),struct(...
     ... 'subjectratings',qam.subjectmeasures, ... not ready
     'subjectmeasures',qa.subjectmeasures,'ppe',res.ppe),'write+'); % here we have to use the write+!
 end
@@ -1080,13 +1080,6 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
   defr.ppe = struct(); 
   res = cat_io_checkinopt(res,defr);
 
-
-  % definition of subfolders - add to res variable?
-  res.mrifolder    = cat_io_BIDS(job.BIDS, 'mridir');
-  res.reportfolder = cat_io_BIDS(job.BIDS, 'reportdir');
-  res.surffolder   = cat_io_BIDS(job.BIDS, 'surfdir');
-  res.labelfolder  = cat_io_BIDS(job.BIDS, 'labeldir');
-  
   % Sort out bounding box etc
   res.bb = spm_get_bbox(tpm.V(1)); 
 
@@ -1134,7 +1127,7 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
   res.vx_vol = vx_vol; 
   
   % delete old xml file 
-  oldxml = fullfile(pth,res.reportfolder,['cat_' nam '.xml']);  
+  oldxml = fullfile(pth,job.BIDS(job.subj).reportdir,['cat_' nam '.xml']);  
   if exist(oldxml,'file'), delete(oldxml); end
   clear oldxml
 

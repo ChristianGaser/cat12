@@ -169,7 +169,7 @@ if ~isfield(res,'spmpp')
   end
   if job.extopts.verb>2
     tpmci  = 2; %tpmci + 1;
-    tmpmat = fullfile(res.reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postgintnorm'));
+    tmpmat = fullfile(job.BIDS(job.subj).reportdir,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postgintnorm'));
     save(tmpmat,'Ysrc','Ycls','Ym','Yb','T3th','vx_vol');
   end
   fprintf('%5.0fs\n',etime(clock,stime));
@@ -363,7 +363,7 @@ if ~isfield(res,'spmpp')
   if ~debug; clear Ysrc ; end
   
   if job.extopts.verb>2
-    tpmci=tpmci+1; tmpmat = fullfile(res.reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postLAS'));
+    tpmci=tpmci+1; tmpmat = fullfile(job.BIDS(job.subj).reportdir,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'postLAS'));
     save(tmpmat,'Ysrc','Ycls','Ymi','Yb','T3th','vx_vol');
   end
   
@@ -710,7 +710,7 @@ if ~isfield(res,'spmpp')
   clear Yclsb;
 
   if job.extopts.verb>2
-    tpmci=tpmci+1; tmpmat = fullfile(res.reportfolder,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'preDartel'));
+    tpmci=tpmci+1; tmpmat = fullfile(job.BIDS(job.subj).reportdir,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'preDartel'));
     save(tmpmat,'Yp0','Ycls','Ymi','T3th','vx_vol','Yl1');
     clear Yp0;
   end
@@ -886,7 +886,7 @@ if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
   %% thickness map
   if numel(fieldnames(S))==0 && isempty(Psurf), clear S Psurf; end
   if isfield(job.output,'ct')
-    cat_io_writenii(VT0,Yth1,res.mrifolder,'ct','cortical thickness map','uint16',...
+    cat_io_writenii(VT0,Yth1,job.BIDS(job.subj).mridir,'ct','cortical thickness map','uint16',...
       [0,0.0001],job.output.ct,trans,single(Ycls{1})/255,0.1);
   end
   
@@ -1129,12 +1129,6 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
   defr.ppe = struct(); 
   res = cat_io_checkinopt(res,defr);
 
-  % definition of subfolders - add to res variable?
-  res.mrifolder    = job.BIDS.mridir;
-  res.reportfolder = job.BIDS.reportdir;
-  res.surffolder   = job.BIDS.surfdir;
-  res.labelfolder  = job.BIDS.labeldir;
-  
   % Sort out bounding box etc
   res.bb = spm_get_bbox(tpm.V(1)); 
 
@@ -1181,7 +1175,7 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
   res.vx_vol = vx_vol; 
   
   % delete old xml file 
-  oldxml = fullfile(res.reportfolder,['cat_' nam '.xml']);  
+  oldxml = fullfile(job.BIDS(job.subj).reportdir,['cat_' nam '.xml']);  
   if exist(oldxml,'file'), delete(oldxml); end
   clear oldxml
 

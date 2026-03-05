@@ -1763,8 +1763,8 @@ if 1
     longstr = ''; 
   end
 
-  if isfield(res,'reportfolder')
-    reportdir = res.reportfolder; 
+  if isfield(job,'BIDS')
+    reportdir = job.BIDS(job.subj).reportdir; 
   else
     [pth1,pth2] = spm_fileparts(pth);
     reportdir = fullfile( pth1, cat_io_strrep(pth2,{'surf','mri'},{'report','report'}));

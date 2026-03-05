@@ -83,17 +83,30 @@ function varargout = cat_vol_qa201602(action,varargin)
   if strcmp(action,'cat12err')
     fname = varargin{1}.job.data;
     job   = varargin{1}.job;
+    if ~isfield(job,'job')
+      job = struct('job',job);
+    end
   elseif strcmp(action,'cat12')
     fname = varargin{2};
     job   = varargin{6};
-  else
+  elseif strcmp(action,'cat12ver')
+    fname = varargin{2}.fname;
+    job   = varargin{7};
+  elseif isfield( varargin{4}, 'catlog')
     fname = varargin{4}.catlog;
     job   = varargin{6};
+  else
+    error('cat_vol_qa:undefinedInputCase','Updated!')
   end
-  if ~isfield(job,'BIDS') || isempty(job.BIDS) 
-    job.BIDS = cat_io_BIDS(fname, job);
+  if isfield(job,'job') 
+    if ( ~isfield(job.job,'BIDS') || isempty(job.job.BIDS) )
+      job.job.BIDS = cat_io_BIDS(fname, job.job);
+   end
+    if ~isfield(job.job,'subj') || isempty(job.job.subj) 
+      job.job.subj = 1;
+    end
   end
-  reportdir = job.BIDS(1).reportdir;
+  reportdir = job.job.BIDS(job.job.subj).reportdir;
    
   % no input and setting of default options
   if nargin==0, action='p0'; end 
@@ -212,7 +225,7 @@ function varargout = cat_vol_qa201602(action,varargin)
       Yp0 = 1;
     case 'cat12err'
       opt  = cat_check('checkinopt',varargin{end},defaults);
-    case 'cat12'
+    case {'cat12','cat12ver'}
       % CAT12 internal input
       if nargin>3 
         Yp0 = varargin{1};
@@ -537,7 +550,7 @@ function varargout = cat_vol_qa201602(action,varargin)
         cat_io_xml(fullfile(reportdir,[opt.prefix ff '.xml']),QAS,'write');
       end
       
-    case 'cat12'
+    case {'cat12','cat12ver'}
     % estimation of the measures for the single case    
     
     

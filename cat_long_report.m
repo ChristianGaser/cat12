@@ -57,7 +57,7 @@ function out = cat_long_report(job)
   def.opts.plotGMWM   = 1; 
   def.printlong       = cat_get_defaults('extopts.print');                                          
   % print* to control the diagram output in the report that is maybe a bit crammed 
-  %def.output.printqc  = [1 1 1];          % [IQR COV RMSE]
+  %def.output.printqc  = [1 1 1];          % [SIQR COV RMSE]
   %def.output.printana = [1 1 0 0 0 0 1];  % [GM WM CSF WMHs LS TIV GMT] 
   % def.output ... to write output files 
   def.output.vols     = 0; 
@@ -101,7 +101,7 @@ function out = cat_long_report(job)
       
       [vresw,Vmnw,Vidiffw,Vrdiffw] = cat_vol_longdiff(job.data_volw, job.data_vol_avgw, job.opts.smoothvol, job.output.vols);
     end
-    % create (and write) surface maps and measurements (sres)
+    %% create (and write) surface maps and measurements (sres)
     [sres,Psurf]              = cat_surf_longdiff(job.data_surf, job.opts.smoothsurf); 
     % extract values from XML files and combine (and write) them 
     % this function creates also the main report str
@@ -520,7 +520,7 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
     for fi = 1:numel(job.data_xml), long.vol_abs_CGW(fi,:) = xml(fi).subjectmeasures.vol_abs_CGW; end
     for fi = 1:numel(job.data_xml), long.vol_abs_WMH(fi)   = xml(fi).subjectmeasures.vol_abs_WMH; end
     for fi = 1:numel(job.data_xml), long.vol_TIV(fi,:)     = xml(fi).subjectmeasures.vol_TIV; end
-    for fi = 1:numel(job.data_xml), long.qar_IQR(fi,:)     = xml(fi).qualityratings.IQR; end
+    for fi = 1:numel(job.data_xml), long.qar_SIQR(fi,:)    = xml(fi).qualityratings.SIQR; end
     for fi = 1:numel(job.data_xml), long.tissue_mn(fi,:)   = xml(fi).qualitymeasures.tissue_mn; end
     if isfield(xml(fi).subjectmeasures,'dist_thickness')
       for fi = 1:numel(job.data_xml), long.dist_thickness(fi,:) = xml(fi).subjectmeasures.dist_thickness{1}; end
@@ -552,7 +552,7 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
       long.change_vol_rel_CGW = (long.vol_rel_CGW - repmat(mean(long.vol_rel_CGW(1,:),1),size(long.vol_rel_CGW,1),1));
       long.change_vol_rel_TIV = (long.vol_TIV / long.vol_TIV(1) - 1 );
     end
-    long.change_qar_IQR     = (mark2rps(long.qar_IQR) - max(mark2rps(long.qar_IQR)) );
+    long.change_qar_SIQR     = (mark2rps(long.qar_SIQR) - max(mark2rps(long.qar_SIQR)) );
     if isfield(long,'dist_thickness')
       if job.opts.midpoint
         long.change_dist_thickness = (long.dist_thickness - repmat(mean(long.dist_thickness,1),size(long.dist_thickness,1),1)) ./ ...

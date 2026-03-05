@@ -102,7 +102,7 @@ function out = cat_io_BIDS(varargin)
     out = testfunction( varargin{1} ); 
   
   else
-    if isstruct( varargin{1} )
+    if isstruct( varargin{1} ) && ~isstruct( varargin{2})
       out = getBIDS(varargin{:});
 
     elseif isstruct( varargin{2} ) && ... 
@@ -439,7 +439,7 @@ function job = updateJob(job)
   def.extopts.resdircase  = 1; % 0-noBIDS, 1-onlyBIDS, 2-allways
   def.extopts.logdircase  = 2; 
   def.extopts.mkBIDSdir   = 1; % create the result directories: 0-no,1-yes,needed,2-all
-  def.extopts.verboseBIDS = 2; % 0-no, 1-yes-warings, 2-yes-full
+  def.extopts.verboseBIDS = 1; % 0-no, 1-yes-warings, 2-yes-full
   def.extopts.catfolders  = {'label','mri','surf','report','err','tmp'}; % basic catfolder definition
   
   job = cat_io_checkinopt(job,def); 

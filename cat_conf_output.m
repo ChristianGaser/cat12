@@ -32,7 +32,7 @@ function [output,output_spm] = cat_conf_output(expert)
   % == 3 folder types ==
   BIDSfolder         = cfg_entry;
   BIDSfolder.tag     = 'BIDSfolder';
-  BIDSfolder.name    = 'Output folder (BIDS/non-BIDS)';
+  BIDSfolder.name    = 'BIDS only output folder';
   BIDSfolder.strtype = 's';
   BIDSfolder.num     = [1 Inf];
   BIDSfolder.val     = {bids_folder};
@@ -51,7 +51,7 @@ function [output,output_spm] = cat_conf_output(expert)
   };
 
   BIDSfolder2        = BIDSfolder; 
-  BIDSfolder2.name   = 'Output folder (dataset-relative derivatives)';
+  BIDSfolder2.name   = 'Output folder';
   BIDSfolder2.help   = {
     'Uses the output folder relative to the detected/inferred dataset root.'
     'Best choice if you want derivatives-style output for BIDS and non-BIDS.'
@@ -67,9 +67,9 @@ function [output,output_spm] = cat_conf_output(expert)
   };
 
   BIDSfolder3        = BIDSfolder; 
-  BIDSfolder3.name   = 'Output folder (input-file-relative)';
+  BIDSfolder3.name   = 'Relative output folder';
   BIDSfolder3.help   = {
-    'Always writes relative to the input file location (ignores BIDS root detection).'
+    'Always write CAT subfolders next to input data and ignore BIDS.'
     ''
     'Examples ("derivatives/CAT"): '
     '  ./sub/ses/anat/files  >>  ./sub/ses/anat/derivatives/CAT/files'
@@ -84,31 +84,31 @@ function [output,output_spm] = cat_conf_output(expert)
   }; 
  
   % == 2 (4) BIDS cases ==
-  BIDSrel       = cfg_branch;
-  BIDSrel.tag   = 'BIDSrel';
-  BIDSrel.name  = 'Auto-BIDS; else derivatives folder';
-  BIDSrel.val   = {BIDSfolder2};
-  BIDSrel.help  = BIDSfolder2.help;
-
   relative       = cfg_branch;
   relative.tag   = 'relative';
-  relative.name  = 'Always file-relative derivatives folder';
+  relative.name  = 'Always output folder no BIDS';
   relative.val   = {BIDSfolder3};
   relative.help  = BIDSfolder3.help;
+
+  BIDSrel       = cfg_branch;
+  BIDSrel.tag   = 'BIDSrel';
+  BIDSrel.name  = 'BIDS else output folder';
+  BIDSrel.val   = {BIDSfolder2};
+  BIDSrel.help  = BIDSfolder2.help;
 
   BIDSfolder.hidden = expert < 1; 
   BIDSyes       = cfg_branch;
   BIDSyes.tag   = 'BIDSyes';
-  BIDSyes.name  = 'Auto-BIDS; else CAT subfolders near input';
+  BIDSyes.name  = 'BIDS else CAT subfolders';
   BIDSyes.val   = {BIDSfolder};
   BIDSyes.help  = BIDSfolder.help;
   
   BIDSno        = cfg_const;
   BIDSno.tag    = 'BIDSno';
-  BIDSno.name   = 'No BIDS logic (always CAT subfolders)';
+  BIDSno.name   = 'Always CAT subfolders no BIDS';
   BIDSno.val    = {1};
   BIDSno.help   = {
-    'Always write CAT-style output next to input data (ignore BIDS detection and output folder field).'
+    'Ignore BIDS and always write CAT-style subfolders next to input files.'
     ''
     'Examples:'
     '  ./sub/ses/anat/files  >>  ./sub/ses/anat/derivatives/CAT/files'
@@ -121,7 +121,7 @@ function [output,output_spm] = cat_conf_output(expert)
   BIDS.tag      = 'BIDS';
   BIDS.name     = 'Use BIDS directory structure?';
   if expert
-    BIDS.values   = {BIDSrel BIDSyes relative BIDSno};
+    BIDS.values   = {relative BIDSrel BIDSyes BIDSno};
   else
     BIDS.values   = {BIDSrel BIDSyes BIDSno};
   end
@@ -139,16 +139,16 @@ function [output,output_spm] = cat_conf_output(expert)
       'If BIDS is not detected, output can either be written into CAT-style subfolders next to the input files or into a user-defined derivatives folder.']
       ''
       'Modes:'
-      '  Auto-BIDS; else derivatives folder'
+      '  BIDS else output folder'
       '    BIDS input: detect dataset root and write to derivatives/<folder>/sub/ses/anat/...'
       '    non-BIDS input: infer file/dataset root and write to <root>/<folder>/...'
       ''
-      '  Auto-BIDS; else CAT subfolders near input'
+      '  BIDS else CAT subfolders'
       '    BIDS input: detect dataset root and write to derivatives/<folder>/sub/ses/anat/...'
       '    non-BIDS input: write CAT-style subfolders next to input files'
       ''
-      '  No BIDS logic (always CAT subfolders)'
-      '    Ignore BIDS detection and always write CAT-style subfolders next to input files'
+      '  Always CAT subfolders no BIDS'
+      '    Ignore BIDS and always write CAT-style subfolders next to input files.'
       ''
       'Examples:'
       '  With "derivatives/CAT":'

@@ -102,10 +102,13 @@ function varargout = cat_vol_qa202110x(action,varargin)
     fname = varargin{4}.catlog;
     job   = varargin{6};
   end
-  if ~isfield(job,'BIDS') || isempty(job.BIDS) 
-    job.BIDS = cat_io_BIDS(fname, job);
+  if ~isfield(job.job,'BIDS') || isempty(job.job.BIDS) 
+    job.job.BIDS = cat_io_BIDS(fname, job.job);
   end
-  reportfolder = job.BIDS(1).reportdir;
+  if ~isfield(job.job,'subj') || isempty(job.job.subj) 
+    job.job.subj = 1;
+  end
+  reportdir = job.job.BIDS(job.job.subj).reportdir;
 
   % no input and setting of default options
   if nargin==0, action='p0'; end 
@@ -392,9 +395,9 @@ function varargout = cat_vol_qa202110x(action,varargin)
           
           % print the results for each scan 
           if opt.verb>1 
-            if opt.rerun || cat_io_rerun(Vo.fname, fullfile(reportfolder,[opt.prefix ff '.xml']) , 0 )
+            if opt.rerun || cat_io_rerun(Vo.fname, fullfile(reportdir,[opt.prefix ff '.xml']) , 0 )
               rerun = sprintf(' updated %2.0fs',etime(clock,stime1));
-            elseif exist( fullfile(reportfolder,[opt.prefix ff '.xml']) , 'file')
+            elseif exist( fullfile(reportdir,[opt.prefix ff '.xml']) , 'file')
               rerun = ' loaded';
             else
               rerun = ' '; % new
@@ -508,9 +511,9 @@ function varargout = cat_vol_qa202110x(action,varargin)
         % --------------------------------------------------------------
         if opt.write_csv
           pp = spm_fileparts(Pp0{1});
-          cat_io_csv(fullfile(reportfolder,[opt.prefix num2str(numel(Vo),'%04d') ...
+          cat_io_csv(fullfile(reportdir,[opt.prefix num2str(numel(Vo),'%04d') ...
             'cat_vol_qa202110x_values.csv']),QAT);
-          cat_io_csv(fullfile(reportfolder,[opt.prefix num2str(numel(Vo),'%04d') ...
+          cat_io_csv(fullfile(reportdir,[opt.prefix num2str(numel(Vo),'%04d') ...
             'cat_vol_qa202110x_marks.csv']),QATm);
         end
       end 
@@ -580,7 +583,7 @@ function varargout = cat_vol_qa202110x(action,varargin)
       
       % export 
       if opt.write_xml
-        cat_io_xml(fullfile(reportfolder,[opt.prefix ff '.xml']),QAS,'write'); 
+        cat_io_xml(fullfile(reportdir,[opt.prefix ff '.xml']),QAS,'write'); 
       end
       
     case 'cat12'
@@ -969,7 +972,7 @@ function varargout = cat_vol_qa202110x(action,varargin)
         QAS.subjectratings = QAR.subjectratings;
         QAS.ratings_help   = QAR.help;
         
-        cat_io_xml(fullfile(reportfolder,[opt.prefix ff '.xml']),QAS,'write'); 
+        cat_io_xml(fullfile(reportdir,[opt.prefix ff '.xml']),QAS,'write'); 
       end
 
       clear Yi Ym Yo Yos Ybc

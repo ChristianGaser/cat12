@@ -100,7 +100,10 @@ function varargout = cat_vol_qa201901(action,varargin)
     if ~isfield(job.job,'BIDS') || isempty(job.job.BIDS) 
       job.job.BIDS = cat_io_BIDS(fname, job.job);
     end
-    reportdir = job.job.BIDS(1).reportdir;
+    if ~isfield(job.job,'subj') || isempty(job.job.subj) 
+      job.job.subj = 1;
+    end
+    reportdir = job.job.BIDS(job.job.subj).reportdir;
   end
   
   % no input and setting of default options

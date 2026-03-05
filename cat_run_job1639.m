@@ -763,8 +763,10 @@ function cat_run_job1639(job,tpm,subj)
           % even in the development pipeline the prior is a good start !
           priorname = job.useprior{1};
           [pp,ff,ee,ex] = spm_fileparts(priorname);  %#ok<ASGLU>
-          catxml = spm_file( priorname , 'path', cat_io_BIDS(job.BIDS(subj),'reportdir' ) ,'prefix','cat_','ext','.xml'); 
-          catmat = spm_file( priorname , 'path', cat_io_BIDS(job.BIDS(subj),'reportdir' ) ,'prefix','cat_','ext','.mat'); 
+          [pp1,pp2] = spm_fileparts(pp); 
+          if strcmp(pp2,'mri'), reportdir = [pp1,'report']; else, reportdir = pp; end
+          catxml = spm_file( priorname , 'path', reportdir ,'prefix','cat_','ext','.xml'); 
+          catmat = spm_file( priorname , 'path', reportdir ,'prefix','cat_','ext','.mat'); 
           
           % check that file exists and get affine transformation
           if exist(catxml,'file') || exist(catmat,'file')

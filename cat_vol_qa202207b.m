@@ -93,11 +93,14 @@ function varargout = cat_vol_qa202207b(action,varargin)
     fname = varargin{4}.catlog;
     job   = varargin{6};
   end
-  if ~isfield(job,'BIDS') || isempty(job.BIDS) 
-    job.BIDS = cat_io_BIDS(fname, job);
+  if ~isfield(job.job,'BIDS') || isempty(job.job.BIDS) 
+    job.job.BIDS = cat_io_BIDS(fname, job.job);
   end
-  mridir    = job.BIDS(1).mridir;
-  reportdir = job.BIDS(1).reportdir;
+  if ~isfield(job.job,'subj') || isempty(job.job.subj) 
+    job.job.subj = 1;
+  end
+  mridir    = job.job.BIDS(job.job.subj).mridir;
+  reportdir = job.job.BIDS(job.job.subj).reportdir;
 
   % no input and setting of default options
   action2 = action; 

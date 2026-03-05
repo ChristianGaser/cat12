@@ -276,7 +276,7 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
         % Write PP
         Vmfs.dt = [16 1];
         spm_write_vol(Vmfs, Ymfs);
-        cmd = sprintf('CAT_VolThicknessPbt -median-filter 2 -sharpen 0.02 -downsample 0 "%s" "%s" "%s"', Vmfs.fname, P(si).Pgmt, P(si).Pppm);
+        cmd = sprintf('CAT_VolThicknessPbt -correct-voxelsize 0.0 -median-filter 2 -sharpen 0.02 -downsample 0 "%s" "%s" "%s"', Vmfs.fname, P(si).Pgmt, P(si).Pppm);
         cat_system(cmd,opt.verb-3);
         Vgmt = spm_vol(P(si).Pgmt); Yth1i = single(spm_read_vols(Vgmt)); 
         Vppi = spm_vol(P(si).Pppm); Yppi  = single(spm_read_vols(Vppi)); 
@@ -285,7 +285,7 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
         delete(P(si).Pppm);
 
         % correction of general offset in mm 
-        Yth1i = max(0,Yth1i - .4); 
+        Yth1i = max(0,Yth1i - 0.05); % .3 for -correct-voxelsize 0.5 (default 202602), .05 for -correct-voxelsize 0.5 
       
       elseif opt.SRP>3
         [Yth1i,Yppi] = cat_vol_pbtsimpleCS4(Ymfs,opt.interpV);       

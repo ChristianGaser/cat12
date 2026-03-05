@@ -503,7 +503,7 @@ end
     QAS.subjectratings = QAR.subjectratings;
     QAS.ratings_help   = QAR.help;
     
-    cat_io_xml(fullfile(reportdir,[opt.prefix ff '.xml']),QAS,'write'); 
+    cat_io_xml(fullfile(opt.job.BIDS(1).reportdir,[opt.prefix ff '.xml']),QAS,'write'); 
   end
 
   clear Yi Ym Yo Yos Ybc

@@ -589,29 +589,29 @@
             </ul><br>
 
             <h6>Output folder and BIDS/derivatives behavior</h6>
-            <p>The writing location is controlled by <b>Use BIDS directory structure?</b> and (for the BIDS modes) the <b>Output folder</b> entry. The output folder is usually something like <code>derivatives/CAT</code> (or <code>../derivatives/CAT</code> if you want to place it one level higher).</p>
+            <p>The writing location is controlled by <b>Use BIDS directory structure?</b> and (for the BIDS modes) the <b>Output folder</b> entry. The output folder is usually something like <code>derivatives/CAT</code> (or <code>../derivatives/CAT</code> if you want to place it one level higher by using the "BIDS else CAT subfolder" option).</p>
 
             <ul>
-              <li><b>Auto-BIDS; else derivatives folder</b>
+              <li><b>Always CAT subfolders no BIDS</b>
+              <ul>
+                <li>Ignore BIDS and always write CAT-style subfolders next to input files.</li>
+              </ul></li>
+
+              <li><b>BIDS else CAT subfolders</b>
               <ul>
                 <li>BIDS input: writes to dataset-level derivatives (e.g. <code>.../derivatives/CAT/sub-01/ses-01/anat/...</code>).</li>
                 <li>non-BIDS input: writes to a derivatives folder inferred from the file/dataset root.</li>
               </ul></li>
 
-              <li><b>Auto-BIDS; else CAT subfolders near input</b>
+              <li><b>BIDS else output folder</b>
               <ul>
                 <li>BIDS input: same BIDS derivatives handling as above.</li>
                 <li>non-BIDS input: writes CAT-style output next to each input file (e.g. <code>.../subject/derivatives/CAT/...</code>).</li>
               </ul></li>
 
-              <li><b>No BIDS logic (always CAT subfolders)</b>
+              <li><b>Always output folder no BIDS</b> (expert mode only)
               <ul>
-                <li>Always writes CAT-style output next to the input and ignores BIDS detection.</li>
-              </ul></li>
-
-              <li><b>Always file-relative derivatives folder</b> (expert mode only)
-              <ul>
-                <li>Always writes relative to the current input file location and ignores BIDS root detection.</li>
+                <li>Always writes relative to the current input file location and ignores BIDS.</li>
               </ul></li>
             </ul>
 

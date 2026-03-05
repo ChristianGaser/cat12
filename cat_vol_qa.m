@@ -66,10 +66,10 @@ function varargout = cat_vol_qa(action,varargin)
 
   if isstruct(action)
     if isfield(action,'reportdir') && isempty(action.reportdir)
-      mrifolder    = '';
+      mridir    = '';
       reportdir = ''; 
     else
-      mrifolder    = 'mri';
+      mridir    = 'mri';
       reportdir = 'report'; 
     end
   else
@@ -82,15 +82,31 @@ function varargout = cat_vol_qa(action,varargin)
     elseif strcmp(action,'cat12')
       fname = varargin{2};
       job   = varargin{6};
-    else 
+    elseif strcmp(action,'cat12ver')
+      fname = varargin{2}.fname;
+      job   = varargin{6};
+      Pp0   = varargin{7};
+    elseif isfield( varargin{4}, 'catlog')
       fname = varargin{4}.catlog;
       job   = varargin{6};
+    else
+      error('cat_vol_qa:undefinedInputCase','Updated!')
     end
-    if ~isfield(job.job,'BIDS') || isempty(job.job.BIDS) 
+    if isfield(job,'job') && ( ~isfield(job.job,'BIDS') || isempty(job.job.BIDS) )
       job.job.BIDS = cat_io_BIDS(fname, job.job);
+    elseif exist('Pp0','var')
+      pp = fileparts( Pp0 ); 
+      [pp1,pp2] = fileparts( pp ); 
+      job.job.subj = 1; 
+      job.job.BIDS(job.job.subj).mridir    = fullfile(pp1,pp2);
+      job.job.BIDS(job.job.subj).reportdir = fullfile(pp1,strrep(pp2,'mri','report'));
     end
-    mrifolder    = job.job.BIDS(1).mridir;
-    reportdir = job.job.BIDS(1).reportdir;
+    if ~isfield(job.job,'subj') || isempty(job.job.subj) 
+      job.job.subj = 1;
+    end
+
+    mridir    = job.job.BIDS(job.job.subj).mridir;
+    reportdir = job.job.BIDS(job.job.subj).reportdir;
   end
   
 
@@ -496,7 +512,7 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
             opt2.caterr     = struct();
             opt2.caterrtxt  = ''; 
             
-            [QASfi,QARfi] = cat12err(opt2,mrifolder,reportdir);
+            [QASfi,QARfi] = cat12err(opt2,mridir,reportdir);
 
             % try to update the QC structure
             [QAS, QAR, qamat, qamatm, mqamatm] = updateQAstructure(QAS, ...
@@ -513,13 +529,15 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
           evalc('res.image = spm_vol(Po{fi});'); 
 
           if ~isempty(Yp0)
-            try
+            %try
               [QASfi,QARfi] = cat_vol_qa('cat12ver',Yp0,Vo,Ym,res,species,opt,Pp0{fi});
+            %{
             catch
               cat_io_cprintf('warn',sprintf('Failed ...run cat_vol_qa202412')); 
               opt2 = opt; opt2.version = 'cat_vol_qa202412';
               [QASfi,QARfi] = cat_vol_qa('cat12ver',Yp0,Vo,Ym,res,species,opt2,Pp0{fi});
             end
+            %}
           else
             opt2 = opt; opt2.version = 'cat_vol_qa202412';
             [QASfi,QARfi] = cat_vol_qa('cat12ver',Yp0,Vo,Ym,res,species,opt2,Pp0{fi});
@@ -541,7 +559,7 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
             opt2.caterr     = struct();
             opt2.caterrtxt  = ''; 
             
-            [QASfi,QARfi] = cat12err(opt2,mrifolder,reportdir);
+            [QASfi,QARfi] = cat12err(opt2,mridir,reportdir);
 
             %% try to update the QC structure
             [QAS, QAR, qamat, qamatm, mqamatm] = updateQAstructure(QAS, ...
@@ -678,7 +696,7 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
 
     case 'cat12err'
       opt = cat_check('checkinopt',varargin{1},defaults);
-      QAS = cat12err(opt,mrifolder,reportdir);
+      QAS = cat12err(opt,mridir,reportdir);
 
 
     case 'cat12ver'
@@ -713,10 +731,12 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
                                                      qa.subjectmeasures.vol_TIV; 
               end
               varargin2 = varargin; 
+              varargin2{6}.job = job.job; 
               varargin2{6}.job.extopts.subfolders = ~isempty(reportdir); 
-              eval(sprintf('[QAS,QAR] = %s(''cat12'',varargin2{1:4},struct(),varargin2{5:end});',opt.version));
+              eval(sprintf('[QAS,QAR] = %s(''cat12ver'',varargin2{1:4},struct(),varargin2{5:end});',opt.version));
             otherwise
               varargin2 = varargin; 
+              varargin2{6}.job = job.job; 
               varargin2{6}.job.extopts.subfolders = ~isempty(reportdir); 
               eval(sprintf('[QAS,QAR] = %s(''cat12'',varargin2{:});',opt.version));
           end
@@ -724,6 +744,7 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
         % setup the current/default version 
           varargin2 = varargin; 
           varargin2{6}.version = 'cat_vol_qa202310'; 
+          varargin2{6}.job = job.job; 
           varargin2{6}.job.extopts.subfolders = ~isempty(reportdir); 
           eval(sprintf('[QAS,QAR] = %s(''cat12'',varargin2{:});', varargin2{6}.version));
         end
@@ -939,7 +960,7 @@ function [Yp0,Ym,Vo,p0rmse] = getImages(Pp0,Po,Pm,fi)
   end
 end
 %==========================================================================
-function [QAS,QAR] = cat12err(opt,mrifolder,reportdir)
+function [QAS,QAR] = cat12err(opt,mridir,reportdir)
 %cat12err. Create short report in case of CAT preprocessing error. 
 % This report contain basic parameters used for the CAT error report
 % creation in cat_io_report.
@@ -951,8 +972,8 @@ function [QAS,QAR] = cat12err(opt,mrifolder,reportdir)
                         spm_fileparts(opt.job.channel.vols{opt.subj});
   QAS.filedata.fname  = opt.job.data{opt.subj};
   QAS.filedata.F      = fullfile(pp,[ff ee]);
-  QAS.filedata.Fm     = fullfile(pp,mrifolder,['m'  ff ee]);
-  QAS.filedata.Fp0    = fullfile(pp,mrifolder,['p0' ff ee]);
+  QAS.filedata.Fm     = fullfile(pp,mridir,['m'  ff ee]);
+  QAS.filedata.Fp0    = fullfile(pp,mridir,['p0' ff ee]);
   QAS.filedata.fnames = [ 
     spm_str_manip(pp,sprintf('k%d', ...
       floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)), '/',...
