@@ -757,12 +757,32 @@ function cat_run_createCSVreport(job)
   end
   warning on; 
 
+  % final CSV table of this processing
   csvfile = fullfile( ...
     matlabbatch{1}.spm.tools.cat.tools.xml2csv.outdir{1}, ...
     matlabbatch{1}.spm.tools.cat.tools.xml2csv.fname ); 
   if exist(csvfile,'file')
     fprintf('\nPrint CSV-file %s\n\n',spm_file(csvfile,'link','edit(''%s'')')); 
   end
+  
+  % output overview of main result directories
+  if exist('job','var') && isfield(job,'BIDS')
+    resdirs = {job.BIDS(:).mridir}';
+    isBIDS  = [job.BIDS(:).isBIDS]'; 
+
+    % get unique entries
+    [~,udi] = unique(resdirs); 
+    resdirs = resdirs(udi); 
+    isBIDS  = isBIDS(udi); 
+    BIDSstr = {'[noBIDS]','[BIDS]'};
+
+    fprintf('\nResult directories:\n')
+    for ri = 1:numel(resdirs)
+      cat_io_cprintf('blue','%10s %s\n', BIDSstr{isBIDS(ri)+1} , ...
+        strrep( resdirs{ri} , [filesep 'mri'], [filesep '[*subdir*]']) ); 
+    end
+  end
+
 return
 %_______________________________________________________________________
 function job = update_job(job,verbatlas)
