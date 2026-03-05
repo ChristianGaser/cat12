@@ -601,7 +601,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
                   cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('rGMV=%s',strrep(catrgmv{1},'%','%')));  
                 end
                 if job.extopts.expertgui >= 0 && ~strcmp(catgmt{1},'unknown')
-                  cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('GMT=%s',strrep(catgmt{1},'%','%')));  
+                  cat_io_cprintf(kcol,', '); cat_io_cprintf(col,sprintf('GMT=%smm',strrep(catgmt{1},'%','%')));  
                 end
 
                 % surf vals 
@@ -762,7 +762,7 @@ function cat_run_createCSVreport(job)
     matlabbatch{1}.spm.tools.cat.tools.xml2csv.outdir{1}, ...
     matlabbatch{1}.spm.tools.cat.tools.xml2csv.fname ); 
   if exist(csvfile,'file')
-    fprintf('\nPrint CSV-file %s\n\n',spm_file(csvfile,'link','edit(''%s'')')); 
+    fprintf('\nPrint CSV-file %s\n',spm_file(csvfile,'link','edit(''%s'')')); 
   end
   
   % output overview of main result directories
