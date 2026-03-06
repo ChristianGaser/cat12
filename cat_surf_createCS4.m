@@ -160,7 +160,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     clear Ynocerebrum
 
     % prepare longitudinal case if required 
-    useprior = cat_surf_createCS_fun('setupprior',opt,surfdir,P,si);
+    useprior = cat_surf_createCS_fun('setupprior',opt, job.BIDS(1).surfdir,P,si);
 
 
     %% reduce for object area

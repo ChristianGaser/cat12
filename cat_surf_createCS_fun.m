@@ -314,13 +314,17 @@ function useprior = setupprior(opt,surffolder,P,si)
 
   % use surface of given (average) data as prior for longitudinal mode
   if isfield(opt,'useprior') && ~isempty(opt.useprior) 
-    % RD20200729: delete later ... && exist(char(opt.useprior),'file') 
+    % RD20200729: delete later ... && exist(char(opt.useprior),'file')
     % if it not exist than filecopy has to print the error
     [pp1,ff1] = spm_fileparts(opt.useprior);
+    %{
     % correct '../' parts in directory for BIDS structure
     [stat, val] = fileattrib(surffolder);
     if stat, pp1_surffolder = val.Name; else, pp1_surffolder = fullfile(pp1,surffolder);  end
-    
+    %}
+    % this is allways the first of a subject
+    pp1_surffolder = surffolder;
+
     % try to copy surface files from prior to individual surface data 
     useprior = 1;
     useprior = useprior & copyfile(fullfile(pp1_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff1)),P(si).Pcentral,'f');

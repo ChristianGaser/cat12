@@ -208,7 +208,7 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
     fprintf('%s:\n',opt.surf{si});
     
     % prepare longitudinal case if required 
-    useprior = cat_surf_createCS_fun('setupprior',opt,surfdir,P,si);
+    useprior = cat_surf_createCS_fun('setupprior',opt, job.BIDS(1).surfdir,P,si);
     
 
     %% reduce for object area
