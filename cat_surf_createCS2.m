@@ -276,11 +276,7 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
         % Write PP
         Vmfs.dt = [16 1];
         spm_write_vol(Vmfs, Ymfs);
-<<<<<<< Updated upstream
-        cmd = sprintf('CAT_VolThicknessPbt -correct-voxelsize 0.0 -median-filter 2 -sharpen 0.02 -downsample 0 "%s" "%s" "%s"', Vmfs.fname, P(si).Pgmt, P(si).Pppm);
-=======
-        cmd = sprintf('CAT_VolThicknessPbt -median-filter 2 -downsample 0 "%s" "%s" "%s"', Vmfs.fname, P(si).Pgmt, P(si).Pppm);
->>>>>>> Stashed changes
+        cmd = sprintf('CAT_VolThicknessPbt -correct-voxelsize 0.0 -median-filter 2 -downsample 0 "%s" "%s" "%s"', Vmfs.fname, P(si).Pgmt, P(si).Pppm);
         cat_system(cmd,opt.verb-3);
         Vgmt = spm_vol(P(si).Pgmt); Yth1i = single(spm_read_vols(Vgmt)); 
         Vppi = spm_vol(P(si).Pppm); Yppi  = single(spm_read_vols(Vppi)); 
