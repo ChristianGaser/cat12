@@ -10,6 +10,8 @@ function out = cat_io_BIDS(varargin)
 % The function is typically called in the preprocessing e.g. cat_run
 % and added to the job structure to be used together with the job.subj
 % selector. 
+% 
+% Example cases are defined in test functions (see examples).
 %
 % The function is designed to be combined with spm_file and therefore 
 % kept simple:
@@ -29,19 +31,21 @@ function out = cat_io_BIDS(varargin)
 %                    Subfolders are never used in case of BIDS but else.
 %                    0 - none
 %                    1 - use catsubfolder in non-BIDS (default)   
-%    .logdircase  .. 1 - main common directory of all inputs
+%    .logdircase  .. Directory to write log files to. If SPM directory then
+%                    try the CAT/logs/*DATE* directory otherwise use the
+%                    the current directory. We are not writing into a BIDS
+%                    result directory as CAT might run over various projects.
+%                    1 - main common directory of all inputs
 %                    2 - current working directory (default)
 %                    3 - first input directory 
-%    .resdircase  .. 0 - noBIDS, allways maindir/CAT subdirs
+%    .resdircase  .. 0 - noBIDS, allways maindir/CAT subdirs 
 %                    1 - BIDSdir only for BIDS input (default)
 %                        no relative paths, i.e., ingnore "../"
 %                    2 - BIDSdir allways
 %                        with relative paths, i.e., use leading "../"
-%                    3 - BIDSdir as pure relative dir independed of BIDS  
-%    .createdirs  .. 0 - no (default)
-%                    1 - yes, dependent on job.output, e.g. ceate surf 
-%                        if surfaces are written
-%    .mkBIDSdir   .. create (BIDS) result directories (0-no, default; 1-yes)
+%                    3 - pure relative directory independed of BIDS 
+%                        Warning: This can create nested derivatives directories.
+%    .mkBIDSdir   .. create (BIDS) result directories (0-no, default; 1-yes) 
 %    .verboseBIDS .. be verbose and print out (0-no,1-yes-warnings,2-yes-full)
 %
 %
@@ -73,25 +77,24 @@ function out = cat_io_BIDS(varargin)
 %
 %
 % Examples: 
-%  1) Call testfunction to get a test-set of BIDS / nonBIDS files:
+%  1) Predefined self tests: 
+%       cases = cat_io_BIDS( 'selftest' ); 
+%       BIDS1 = cat_io_BIDS( 'selftest_long' );
+%       BIDS2 = cat_io_BIDS( 'selftest_nonbids_auto' );
+%
+%  2) Call test function to get a test-set of BIDS / nonBIDS files:
 %       files = cat_io_BIDS( 'testfiles' );
-%       BIDS  = cat_io_BIDS( files ); 
-%       [{BIDS(fi).surfdir}]'
 %
-%     Predefined self tests: 
-%       BIDS = cat_io_BIDS( 'selftest_long' );
-%       BIDS = cat_io_BIDS( 'selftest_nonbids_auto' );
+%     To avoid uncontrolled BIDS setting the CAT job structure is not set by default.
+%       BIDS  = cat_io_BIDS( files , struct('extopts',struct('mkBIDSdir',0)));
 %
-%  2) Get full BIDS structure for the first 3 test files
-%       BIDS = cat_io_BIDS( files(1:3) )
+%     Have a short look for the surface result directories: 
+%       [{BIDS(:).surfdir}]'
 %
-%  3) Create the surface filename for the fifth file: 
-%      spm_file( files(5), 'path', cat_io_BIDS( files(5), '', 'surfdir', ... 
+%     Two variants to set the surface filename for the fifth file: 
+%      spm_file( files(5), 'path', cat_io_BIDS(  BIDS(5), 'surfdir'), ... 
 %         'prefix', 'lh.central.', 'suffix', '.topofix','ext','')
-%      cat_io_BIDS( files(5), 'surfdir', 'prefix', 'lh.central.', 'suffix', '.topofix','ext','')
-%
-%  4) Run surface filename creation for the different BIDS result settings: 
-%      for i = 0:3, cat_io_BIDS( i , struct('extopts',struct('verboseBIDS',1))); end
+%      cat_io_BIDS( BIDS(5), 'surfdir', 'prefix', 'lh.central.', 'suffix', '.topofix','ext','')
 %
 % ______________________________________________________________________
 %
@@ -108,10 +111,13 @@ function out = cat_io_BIDS(varargin)
   if nargin < 1
     help cat_io_BIDS; 
   
-  elseif nargin == 1
-    % basic testfunction 
-    out = testfunction( varargin{1} ); 
-  
+  elseif nargin == 1 
+    if ischar(varargin{1})
+      % basic testfunction 
+      out = testfunction( varargin{1} ); 
+    else
+      error('cat_io_BIDS: Incorrect testfunction definition (need to be a char) or missing CAT job structure as second input.'); 
+    end
   else
     if isstruct( varargin{1} ) && ~isstruct( varargin{2})
       % selection of specific field or files usign spm_file
@@ -169,7 +175,7 @@ function BIDS = setupBIDS(files,job)
     % In the default BIDS case, no-relative path is allowed!
     if BIDS(fi).main_resdircase==1 
       if contains( BIDS(fi).main_BIDSfolder , ['..' filesep] ) && BIDS(fi).main_verboseBIDS
-        cat_io_cprintf('warn','Warning:  Relative BIDS folder are not supported for "autobids" (resdircase=1)! \n')
+        cat_io_cprintf('warn','Warning:  Relative BIDS folder are not supported for "BIDS/subfolder" (resdircase=1)! \n')
       end
       BIDS(fi).main_BIDSfolder = strrep(BIDS(fi).main_BIDSfolder,['..' filesep],''); 
     end
@@ -192,16 +198,23 @@ function BIDS = setupBIDS(files,job)
     % the subject, session, and the anatomic directory.
     [BIDS(fi).SUB, BIDS(fi).SES, BIDS(fi).ANA, BIDS(fi).RUN, BIDS(fi).MOD, ...
      BIDS(fi).isSUB, BIDS(fi).isSES, BIDS(fi).isANA, BIDS(fi).isRUN, BIDS(fi).isMOD, ...
-     BIDS(fi).postdirs, BIDS(fi).npostdirs] = getBIDSpostdirs0(sdirs);
+     BIDS(fi).postdirs, BIDS(fi).npostdirs] = getBIDSpostdirs(sdirs);
+    if BIDS(fi).main_resdircase == 3
+      % in case of the relative dirs we ignore BIDS completely!
+      BIDS(fi).SUB = ''; BIDS(fi).SES = ''; BIDS(fi).ANA = ''; BIDS(fi).RUN = ''; BIDS(fi).MOD = ''; 
+      BIDS(fi).isSUB = 0; BIDS(fi).isSES = 0; BIDS(fi).isANA = 0; BIDS(fi).isRUN = 0; BIDS(fi).isMOD = 0;
+      BIDS(fi).postdirs = ''; BIDS(fi).npostdirs = 0; 
+    end
   
     % define if output can or has to be BIDS (special case for longitudinal 
     % pipeline that is call as nonBIDS after preparing the BIDSdirs directly)
-    BIDS(fi).isBIDS = BIDS(fi).isSUB & ( BIDS(fi).main_long | ~isempty(BIDS(fi).main_BIDSfolder)) & BIDS(fi).main_resdircase ~= 3; 
+    BIDS(fi).isBIDS = BIDS(fi).isSUB  &  ( BIDS(fi).main_long | ~isempty(BIDS(fi).main_BIDSfolder))  &  BIDS(fi).main_resdircase ~= 3; 
+   
 
     % Avoid multiple derivatives and remove the leading part. In principle,
-    % resdircase==0 should ignore such cases but as we had issues with
-    % double derivatives in the longitudinal pipeline it is now just one
-    if 1 % BIDS(fi).main_resdircase
+    % resdircase==0 and ==3 should ignore such cases but as we had issues 
+    % with double derivatives in the longitudinal pipeline it is now just one.
+    if BIDS(fi).main_resdircase~=0 && BIDS(fi).main_resdircase~=3 
       sdirs = clearDoubleDerivatives(sdirs, BIDS(fi).main_BIDSfolder, BIDS(fi).npostdirs);
     end
 
@@ -469,7 +482,7 @@ function sdirs = clearDoubleDerivatives(sdirs, ressubfolder, subdirs)
 end
 %==========================================================================
 function [SUB, SES, ANA, RUN, MOD, isSUB, isSES, isANA, isRUN, isMOD, ...
-  BIDSsubpath, BIDSsubpathdepth] = getBIDSpostdirs0(sdirs)
+  BIDSsubpath, BIDSsubpathdepth] = getBIDSpostdirs(sdirs)
 %getpostdirs. Get information about possible subject, session, and anat directories.  
 % Detect BIDS directories by looking for key words used in to define
 % the subject, session, and the anatomic directory.
@@ -525,10 +538,12 @@ function [SUB, SES, ANA, RUN, MOD, isSUB, isSES, isANA, isRUN, isMOD, ...
   end
 
   % weighting
-  if isMOD
+  if isMOD 
     fparts = strsplit(filename,'_'); 
     modid  = cat_io_contains(lower(fparts),strrep(wlist,'_',''));
-    MOD    = strcat(fparts{modid});
+    if ~isempty(MOD)   
+      MOD  = strcat(fparts{modid});
+    end
   end
 
   % directory information 
@@ -557,17 +572,21 @@ function out = testfunction( testcase )
     testcase = 1;
   end
 
-  if ~isnumeric(testcase)
+  if ~isnumeric(testcase) 
   % get testfiles or run self test
     switch lower(testcase)
       case 'testfiles'
         out = getTestFiles;
+      case 'selftest'
+        out = testTestFiles;
       case 'testfiles_long'
         out = getLongitudinalTestFiles;
       case {'test_long','selftest_long'}
         out = runLongitudinalPathSelftest;
       case {'test_nonbids_auto','selftest_nonbids_auto'}
         out = runNonBIDSAutoSelftest();
+      otherwise
+        error('cat_io_BIDS:testcase','Unknown testcase %s\n',testcase); 
     end
   else
   % run test for the different BIDS resdircase outputs
@@ -589,6 +608,116 @@ function out = testfunction( testcase )
 
     out = cat_io_BIDS(files,job); 
   end
+end
+%==========================================================================
+function files = testTestFiles
+
+%%
+  BIDSdircase = {'subdir','BIDS/subdir','BIDS/reldir','reldir'};
+  files = {
+    ... BIDS: sub-ses-anat
+    {
+      '/Users/tomcat/BIDS_A/sub-01/ses-01/anat/sub-01_ses-01_T1w.nii'                      
+      ... derivatives/CAT26.0.rc1_3074
+      '/Users/tomcat/BIDS_A/sub-01/ses-01/anat/mri/p0sub-01_ses-01_T1w.nii'                             % subdir         
+      '/Users/tomcat/BIDS_A/derivatives/CAT26.0.rc1_3074/sub-01/ses-01/anat/p0sub-01_ses-01_T1w.nii'      % BIDS/subdir           
+      '/Users/tomcat/BIDS_A/derivatives/CAT26.0.rc1_3074/sub-01/ses-01/anat/p0sub-01_ses-01_T1w.nii'      % BIDS/reldir           
+      '/Users/tomcat/BIDS_A/sub-01/ses-01/anat/derivatives/CAT26.0.rc1_3074/mri/p0sub-01_ses-01_T1w.nii'  % reldir           
+      ... ../derivatives/CAT26.0.rc1_3074
+      '/Users/tomcat/BIDS_A/sub-01/ses-01/anat/mri/p0sub-01_ses-01_T1w.nii'                             % subdir         
+      '/Users/tomcat/BIDS_A/derivatives/CAT26.0.rc1_3074/sub-01/ses-01/anat/p0sub-01_ses-01_T1w.nii'      % BIDS/subdir           
+      '/Users/tomcat/derivatives/CAT26.0.rc1_3074/BIDS_A/sub-01/ses-01/anat/p0sub-01_ses-01_T1w.nii'      % BIDS/reldir           
+      '/Users/tomcat/BIDS_A/sub-01/ses-01/derivatives/CAT26.0.rc1_3074/anat/mri/p0sub-01_ses-01_T1w.nii'  % reldir          
+    }
+    ... bad BIDS: incorrect session + insufficient long filename + no anat 
+    {
+      '/Users/tomcat/BIDS_C/sub-AA/BL/T1w.nii'                                                                                      
+      ... derivatives/CAT26.0.rc1_3074
+      '/Users/tomcat/BIDS_C/sub-AA/BL/mri/p0T1w.nii'   
+      '/Users/tomcat/BIDS_C/derivatives/CAT26.0.rc1_3074/sub-AA/BL/p0T1w.nii'
+      '/Users/tomcat/BIDS_C/derivatives/CAT26.0.rc1_3074/sub-AA/BL/p0T1w.nii'
+      '/Users/tomcat/BIDS_C/sub-AA/BL/derivatives/CAT26.0.rc1_3074/mri/p0T1w.nii'
+      ... ../derivatives/CAT26.0.rc1_3074
+      '/Users/tomcat/BIDS_C/sub-AA/BL/mri/p0T1w.nii'   
+      '/Users/tomcat/BIDS_C/derivatives/CAT26.0.rc1_3074/sub-AA/BL/p0T1w.nii'
+      '/Users/tomcat/derivatives/CAT26.0.rc1_3074/BIDS_C/sub-AA/BL/p0T1w.nii'
+      '/Users/tomcat/BIDS_C/sub-AA/derivatives/CAT26.0.rc1_3074/BL/mri/p0T1w.nii'
+    }
+    ... no BIDS
+    {
+      '/Users/tomcat/noBIDS_A/sub-01_T1.nii'                                                                                
+      ... derivatives/CAT26.0.rc1_3074
+      '/Users/tomcat/noBIDS_A/mri/p0sub-01_T1.nii'      
+      '/Users/tomcat/noBIDS_A/mri/p0sub-01_T1.nii'      
+      '/Users/tomcat/noBIDS_A/derivatives/CAT26.0.rc1_3074/mri/p0sub-01_T1.nii'      
+      '/Users/tomcat/noBIDS_A/derivatives/CAT26.0.rc1_3074/mri/p0sub-01_T1.nii'   
+      ... ../derivatives/CAT26.0.rc1_3074
+      '/Users/tomcat/noBIDS_A/mri/p0sub-01_T1.nii'      
+      '/Users/tomcat/noBIDS_A/mri/p0sub-01_T1.nii'      
+      '/Users/tomcat/derivatives/CAT26.0.rc1_3074/noBIDS_A/mri/p0sub-01_T1.nii'      
+      '/Users/tomcat/derivatives/CAT26.0.rc1_3074/noBIDS_A/mri/p0sub-01_T1.nii'   
+    }
+    ... previous derivatives and doubled BIDS 
+    ... not perfect but the relative folder settings have to add further levels 
+    {
+      '/Users/tomcat/BIDSD_B/Project_J_derivatives/derivatives/CAT12/derivatives/CAT24/sub-01/ses-00/anat/sub-01_ses-01_T1w.nii' 
+      ... derivatives/CAT26.0.rc1_3074
+      '/Users/tomcat/BIDSD_B/Project_J_derivatives/derivatives/CAT12/derivatives/CAT24/sub-01/ses-00/anat/mri/p0sub-01_ses-01_T1w.nii' 
+      '/Users/tomcat/BIDSD_B/Project_J_derivatives/derivatives/CAT26.0.rc1_3074/sub-01/ses-00/anat/p0sub-01_ses-01_T1w.nii' 
+      '/Users/tomcat/BIDSD_B/Project_J_derivatives/derivatives/CAT26.0.rc1_3074/sub-01/ses-00/anat/p0sub-01_ses-01_T1w.nii' 
+      '/Users/tomcat/BIDSD_B/Project_J_derivatives/derivatives/CAT12/derivatives/CAT24/sub-01/ses-00/anat/derivatives/CAT26.0.rc1_3074/mri/p0sub-01_ses-01_T1w.nii' 
+      ... ../derivatives/CAT26.0.rc1_3074
+      '/Users/tomcat/BIDSD_B/Project_J_derivatives/derivatives/CAT12/derivatives/CAT24/sub-01/ses-00/anat/mri/p0sub-01_ses-01_T1w.nii' 
+      '/Users/tomcat/BIDSD_B/Project_J_derivatives/derivatives/CAT26.0.rc1_3074/sub-01/ses-00/anat/p0sub-01_ses-01_T1w.nii' 
+      '/Users/tomcat/BIDSD_B/derivatives/CAT26.0.rc1_3074/Project_J_derivatives/sub-01/ses-00/anat/p0sub-01_ses-01_T1w.nii' 
+      '/Users/tomcat/BIDSD_B/Project_J_derivatives/derivatives/CAT12/derivatives/CAT24/sub-01/ses-00/derivatives/CAT26.0.rc1_3074/anat/mri/p0sub-01_ses-01_T1w.nii' 
+    }
+    ... longitudinal BIDS/noBIDS
+    ... these case cannot be directly addressed
+    ...'/Users/tomcat/BIDSTEST/Project_LongBIDS/sub-01/ses-01/anat/sub-01_ses-01_T1w.nii'
+    ...'/Users/tomcat/BIDSTEST/Project_LongBIDS/derivatives/CAT12.9_2565/sub-01/ses-01/anat/p0sub-01_ses-01_T1w.nii' ... by longjob settings noBIDS!
+    ...'/Users/tomcat/BIDSTEST/Project_LongBIDS/derivatives/CAT12.9_2565/sub-01/ses-01/anat/lh.central.sub-01_ses-01_T1w.gii'
+    ... longitidunal 
+    ...'/Users/tomcat/BIDSTEST/Project_Long/BL/T1w.nii'
+    ...'/Users/tomcat/BIDSTEST/Project_Long/BL/derivatives/CAT12.9_2565/mrip0sub-01_ses-01_T1w.nii' ... by longjob settings noBIDS!
+    ...'/Users/tomcat/BIDSTEST/Project_Long/BL/derivatives/CAT12.9_2565/surf/lh.central.sub-01_ses-01_T1w.gii'
+  };
+
+  files = adaptWindows(files);
+
+  clear job; 
+  % create basic job parameterization 
+  job{1}.output.BIDS.BIDSno              = 1; 
+  job{2}.output.BIDS.BIDSyes.BIDSfolder  = 'derivatives/CAT26.0.rc1_3074';
+  job{3}.output.BIDS.BIDSrel.BIDSfolder  = 'derivatives/CAT26.0.rc1_3074';
+  job{4}.output.BIDS.relative.BIDSfolder = 'derivatives/CAT26.0.rc1_3074';
+  job{5}.output.BIDS.BIDSno              = 1; 
+  job{6}.output.BIDS.BIDSyes.BIDSfolder  = '../derivatives/CAT26.0.rc1_3074';
+  job{7}.output.BIDS.BIDSrel.BIDSfolder  = '../derivatives/CAT26.0.rc1_3074';
+  job{8}.output.BIDS.relative.BIDSfolder = '../derivatives/CAT26.0.rc1_3074';
+  for fi = 1:numel(job)
+    job{fi}.extopts.mkBIDSdir = 0; 
+  end
+  
+  fprintf('BIDS test: \n'); err = 0; count = 0; 
+  for fi = 1:numel(files)
+    for bi = 1:numel(job)
+      BIDS0dir{fi}{bi} = cat_io_BIDS( files{fi}(1) , job{bi}, 'mridir','prefix','p0');  
+      if ~strcmp( files{fi}{bi+1} , BIDS0dir{fi}{bi} )
+        fprintf('%2d-%d) Case "%s" failed \n',fi, bi, BIDSdircase{mod(bi-1,4)+1} )
+        cat_io_cprintf('blue','  Input:    %s  \n  Expected: %s  \n  Real:     %s \n', ...
+          files{fi}{1}, files{fi}{bi+1}, BIDS0dir{fi}{bi} )
+        err = err + 1; 
+      end
+      count = count + 1; 
+    end
+  end
+  if err 
+    cat_io_cprintf('err','%d of %d cases were incorrected coded.\n',err,count); 
+  else
+    cat_io_cprintf([0 .5 0],'All %d test cases were corrected coded.\n',count); 
+  end
+  
 end
 %==========================================================================
 function files = getTestFiles
