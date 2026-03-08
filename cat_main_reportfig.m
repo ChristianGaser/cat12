@@ -109,6 +109,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     end
   else
     [pth,nam,ee] = spm_fileparts(VT0.fname); 
+    nam = [nam cat_io_strrep(ee,{'.nii.gz','.nii'},'')];
     dispvol   = 1; 
   end
     
@@ -1770,10 +1771,10 @@ if 1
     reportdir = fullfile( pth1, cat_io_strrep(pth2,{'surf','mri'},{'report','report'}));
   end
   if ~isfield(job,'imgprint') || ~isfield(job.imgprint,'fname')
-    job.imgprint.fname  = spm_file(fullfile(reportdir,nam),'prefix',['cat' longstr 'report_'],'ext',job.imgprint.type);
+    job.imgprint.fname  = spm_file(fullfile(reportdir,[nam,ee]),'prefix',['cat' longstr 'report_'],'ext',job.imgprint.type);
   end
   if ~isfield(job,'imgprint') || ~isfield(job.imgprint,'fnamej')
-    job.imgprint.fnamej = spm_file(fullfile(reportdir,nam),'prefix',['cat' longstr 'reportj_'],'ext','jpg'); 
+    job.imgprint.fnamej = spm_file(fullfile(reportdir,[nam,ee]),'prefix',['cat' longstr 'reportj_'],'ext','jpg'); 
   end
 
   % save old settings of the SPM figure

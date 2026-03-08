@@ -336,7 +336,7 @@ function useprior = setupprior(opt,surffolder,P,si)
       fprintf('\nWARNING: %s',warn_str);
       cat_io_addwarning('cat_surf_createCS4:noPriorSurface', warn_str);
     else
-      cat_io_cprintf('blue','\n  Use existing average surface as prior and thus skip unnecessary processing steps:\n    %s\n',pp1_surffolder);
+      cat_io_cprintf('blue','  Use existing average surface as prior and thus skip unnecessary processing steps:\n    %s\n',pp1_surffolder);
     end      
   else
     useprior = 0;

@@ -672,6 +672,21 @@ function files = testTestFiles
       '/Users/tomcat/BIDSD_B/derivatives/CAT26.0.rc1_3074/Project_J_derivatives/sub-01/ses-00/anat/p0sub-01_ses-01_T1w.nii' 
       '/Users/tomcat/BIDSD_B/Project_J_derivatives/derivatives/CAT12/derivatives/CAT24/sub-01/ses-00/derivatives/CAT26.0.rc1_3074/anat/mri/p0sub-01_ses-01_T1w.nii' 
     }
+    ... special caracters. 
+    {
+      '/Users/tomcat/BIDS_A/sub-01/ses-01/anat/sub-01_ses-01_T1w.extendname.nii'                      
+      ... derivatives/CAT26.0.rc1_3074
+      '/Users/tomcat/BIDS_A/sub-01/ses-01/anat/mri/p0sub-01_ses-01_T1w.extendname.nii'                             % subdir         
+      '/Users/tomcat/BIDS_A/derivatives/CAT26.0.rc1_3074/sub-01/ses-01/anat/p0sub-01_ses-01_T1w.extendname.nii'      % BIDS/subdir           
+      '/Users/tomcat/BIDS_A/derivatives/CAT26.0.rc1_3074/sub-01/ses-01/anat/p0sub-01_ses-01_T1w.extendname.nii'      % BIDS/reldir           
+      '/Users/tomcat/BIDS_A/sub-01/ses-01/anat/derivatives/CAT26.0.rc1_3074/mri/p0sub-01_ses-01_T1w.extendname.nii'  % reldir           
+      ... ../derivatives/CAT26.0.rc1_3074
+      '/Users/tomcat/BIDS_A/sub-01/ses-01/anat/mri/p0sub-01_ses-01_T1w.extendname.nii'                             % subdir         
+      '/Users/tomcat/BIDS_A/derivatives/CAT26.0.rc1_3074/sub-01/ses-01/anat/p0sub-01_ses-01_T1w.extendname.nii'      % BIDS/subdir           
+      '/Users/tomcat/derivatives/CAT26.0.rc1_3074/BIDS_A/sub-01/ses-01/anat/p0sub-01_ses-01_T1w.extendname.nii'      % BIDS/reldir           
+      '/Users/tomcat/BIDS_A/sub-01/ses-01/derivatives/CAT26.0.rc1_3074/anat/mri/p0sub-01_ses-01_T1w.extendname.nii'  % reldir          
+    }
+    
     ... longitudinal BIDS/noBIDS
     ... these case cannot be directly addressed
     ...'/Users/tomcat/BIDSTEST/Project_LongBIDS/sub-01/ses-01/anat/sub-01_ses-01_T1w.nii'
