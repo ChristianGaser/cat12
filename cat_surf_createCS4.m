@@ -490,9 +490,10 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     fprintf('\n');
     
 
-    % correct thickness based on folding pattern 
+    % correct thickness based on folding pattern, but smaller thickness values 
+    % are corrected less strongly than larger thickness values
     if opt.foldingcorrection
-      cmd = sprintf('CAT_SurfCorrectThicknessFolding -max "%f" "%s" "%s" "%s"', opt.thick_limit, P(si).Pcentral, P(si).Pthick, P(si).Pthick);
+      cmd = sprintf('CAT_SurfCorrectThicknessFolding -slope 1.0 -max "%f" "%s" "%s" "%s"', opt.thick_limit, P(si).Pcentral, P(si).Pthick, P(si).Pthick);
       cat_system(cmd,opt.verb-3);
     end
 
