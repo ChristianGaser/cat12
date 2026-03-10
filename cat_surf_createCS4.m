@@ -542,7 +542,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
 end
 %=======================================================================
 function saveSurf(CS,P)
-  save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),P); %,'Base64Binary');
+  save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),P,'Base64Binary');
 end
 %=======================================================================
 function CS1 =loadSurf(P)

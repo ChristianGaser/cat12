@@ -319,7 +319,8 @@ function cat_run_job1639(job,tpm,subj)
       for n=1:numel(job.channel) 
         [pp,ff,ee] = spm_fileparts(job.channel(n).vols{subj}); 
         ofname  = fullfile(pp,[ff ee]); 
-        nfname  = cat_io_BIDS(job.BIDS(subj),'mridir','prefix','n','ext','.nii'); 
+        nfname  = cat_io_BIDS(job.BIDS(subj),'mridir','prefix','n','ext','.nii');
+        if ~exist(spm_fileparts(nfname),'dir'), mkdir(spm_fileparts(nfname)); end
         if strcmp(ee,'.nii')
           if ~copyfile(ofname,nfname,'f')
             spm('alert!',sprintf('ERROR: Check file permissions for folder %s.\n',job.BIDS(subj)),'',spm('CmdLine'),1);
