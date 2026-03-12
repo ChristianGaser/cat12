@@ -152,13 +152,16 @@ checklist:
 	'5. Create and Check Standalone Versions' \
 	'   https://github.com/ChristianGaser/cat12/actions/workflows/install_test_standalone.yml' \
 	'' \
-	'6. Check Skull-Stripping if Pipeline Changed' \
+	'6. Build CAT-Surface binaries and apply make cp_binaries to copy them' \
+	'   https://github.com/ChristianGaser/CAT-Surface/actions/workflows/binaries.yml' \
+	'' \
+	'7. Check Skull-Stripping if Pipeline Changed' \
 	'   cat12_all.m in /Volumes/UltraMax/validate_skullstripping_withT12' \
 	'   calc_kappa_c0_SPM12_T12.m' \
 	'' \
-	'7. Make fork from new version!' \
+	'8. Check thickness phantom' \
 	'' \
-	'8. Check thickness phantom'
+	'9. Make fork from new version!'
 
 # print help for standalone
 standalone:
