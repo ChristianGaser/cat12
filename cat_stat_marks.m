@@ -196,7 +196,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
       end        
       
       
-    case 'eval'    % evalutate input structure
+    case 'eval'    % evaluate input structure
       if nargin<1 || isempty(varargin{1}) 
         error('MATLAB:cat_stat_marks:input','Need input structure with measurements!\n');
       end

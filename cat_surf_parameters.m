@@ -386,7 +386,7 @@ function varargout = cat_surf_parameters(job)
                 if job.verb, fprintf('%sexist - Display %s\n',nstr,spm_file(PtGI{ti,1},'link','cat_surf_display(''%s'')')); end
               else
                 stime = clock; 
-                cmd = sprintf('CAT_DumpSurfaceRatio "%s" "%s" %d -no_normalization %d',Pxname,PtGI{ti,1},job.tGI( ti ),job.tGI( ti )<0); 
+                cmd = sprintf('CAT_DumpSurfaceRatio "%s" "%s" -no_normalization %d',Pxname,PtGI{ti,1},job.tGI( ti )<0); 
                 cat_system(cmd,job.debug,job.trerr);
                 if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(PtGI{ti,1},'link','cat_surf_display(''%s'')')); end
               end
@@ -414,7 +414,7 @@ function varargout = cat_surf_parameters(job)
             stime = clock; 
 
             if ~cat_io_rerun(PlGI,Pxname) && job.lazy 
-              % check for old unremoved temporar data
+              % check for old unremoved temporary data
               Ppialfs  = fullfile(pp,strrep(ff,'central','pialfs')); 
               [lpp,lff,lee] = spm_fileparts(Ppialfs);  
               tmpdir = fullfile(lpp,['tmp-mris_compute_lgi-' lff lee]);
