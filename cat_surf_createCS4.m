@@ -226,7 +226,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       %% Write PP
       Vmfs.dt = [16 1];
       spm_write_vol(Vmfs, Yp0fs);
-      cmd = sprintf('CAT_VolThicknessPbt -correct-voxelsize 0.0 -median-filter 2 -downsample 0 "%s" "%s" "%s"', Vmfs.fname, P(si).Pgmt, P(si).Pppm);
+      cmd = sprintf('CAT_VolThicknessPbt -median-subsample 2 -n-avgs 2 -range 0.45 -correct-voxelsize 0.0 -median-filter 2 -downsample 0 "%s" "%s" "%s"', Vmfs.fname, P(si).Pgmt, P(si).Pppm);
       cat_system(cmd,opt.verb-3);
       Vgmt = spm_vol(P(si).Pgmt); Yth1i = spm_read_vols(Vgmt); 
       Vppi = spm_vol(P(si).Pppm); Yppi  = spm_read_vols(Vppi); 
