@@ -71,12 +71,6 @@ matlabbatch{1}.spm.tools.cat.estwrite.extopts.segmentation.SLC = 0;
 
 % surface options
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.pbtres = 0.5;
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.pbtmethod = 'pbt2x';
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.reduce_mesh = 1;
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.scale_cortex = 0.7;
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.add_parahipp = 0.1;
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.close_parahipp = 0;
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.SRP = 22;
 
 % set this to 1 for skipping preprocessing if already processed data exist
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.admin.lazy = 0;
@@ -108,9 +102,13 @@ matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.hammers = 0;
 matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.ibsr = 0;
 matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.aal3 = 0;
 matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.mori = 0;
+matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.suit = 0;
 matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.thalamus = 0;
+matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.thalamic_nuclei = 0;
+matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.hypothalamus = 0;
 matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.anatomy3 = 0;
 matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.julichbrain3 = 0;
+matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.Tian_Subcortex_S4_7T = 0;
 matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.Schaefer2018_100Parcels_17Networks_order = 0;
 matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.Schaefer2018_200Parcels_17Networks_order = 0;
 matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.Schaefer2018_400Parcels_17Networks_order = 0;
