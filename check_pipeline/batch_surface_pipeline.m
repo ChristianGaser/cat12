@@ -38,7 +38,7 @@ matlabbatch{5}.spm.tools.cat.tools.T2x_surf.data_T2x = {fullfile(pth,'analysis/s
 matlabbatch{5}.spm.tools.cat.tools.T2x_surf.conversion.sel = 2;
 matlabbatch{5}.spm.tools.cat.tools.T2x_surf.conversion.threshdesc.uncorr.thresh001 = 0.001;
 matlabbatch{5}.spm.tools.cat.tools.T2x_surf.conversion.inverse = 0;
-matlabbatch{1}.spm.tools.cat.tools.T2x_surf.conversion.cluster.none = 1;
+matlabbatch{5}.spm.tools.cat.tools.T2x_surf.conversion.cluster.none = 1;
 %__________________________________________________________________________
 matlabbatch{6}.spm.tools.cat.tools.F2x_surf.data_F2x = {fullfile(pth,'analysis/surface/spmF_0001.gii')};
 matlabbatch{6}.spm.tools.cat.tools.F2x_surf.conversion.sel = 2;
