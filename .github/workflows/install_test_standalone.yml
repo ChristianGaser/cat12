@@ -387,36 +387,30 @@ jobs:
 
       # ── Run CAT segmentation test ──
 
-      - name: Test CAT segmentation (Linux)
-        if: runner.os == 'Linux'
-        timeout-minutes: 60
-        shell: bash
-        run: |
-          SPMROOT=$(pwd)/cat_standalone
-          BATCH="${SPMROOT}/spm25_mcr/spm25/toolbox/CAT/standalone/cat_standalone_segment.m"
-
-          # If batch not at expected location, search for it
-          if [ ! -f "$BATCH" ]; then
-            BATCH=$(find cat_standalone -name "cat_standalone_segment.m" -type f | head -n 1)
-          fi
-
-          echo "Using batch file: $BATCH"
-          echo "Running CAT segmentation on single_subj_T1.nii..."
-
-          "${SPMROOT}/run_spm25.sh" "$MCRROOT" batch "$BATCH" "$(pwd)/single_subj_T1.nii"
-
-      - name: Test CAT segmentation (macOS)
-        if: runner.os == 'macOS'
+      - name: Test CAT segmentation (Linux/macOS)
+        if: runner.os != 'Windows'
         timeout-minutes: 60
         shell: bash
         run: |
           SPMROOT=$(pwd)/cat_standalone
           BATCH=$(find cat_standalone -name "cat_standalone_segment.m" -type f | head -n 1)
+          CAT_SH=$(find cat_standalone -name "cat_standalone.sh" -type f | head -n 1)
 
+          if [ -z "$BATCH" ]; then
+            echo "ERROR: cat_standalone_segment.m not found"
+            exit 1
+          fi
+          if [ -z "$CAT_SH" ]; then
+            echo "ERROR: cat_standalone.sh not found"
+            exit 1
+          fi
+
+          chmod +x "$CAT_SH"
           echo "Using batch file: $BATCH"
+          echo "Using launcher: $CAT_SH"
           echo "Running CAT segmentation on single_subj_T1.nii..."
 
-          "${SPMROOT}/run_spm25.sh" "$MCRROOT" batch "$BATCH" "$(pwd)/single_subj_T1.nii"
+          "$CAT_SH" -b "$BATCH" -m "$MCRROOT" -s "$SPMROOT" "$(pwd)/single_subj_T1.nii"
 
       - name: Test CAT segmentation (Windows)
         if: runner.os == 'Windows'
@@ -426,10 +420,24 @@ jobs:
           SPMROOT=$(pwd)/cat_standalone
           BATCH=$(find cat_standalone -name "cat_standalone_segment.m" -type f | head -n 1)
 
+          if [ -z "$BATCH" ]; then
+            echo "ERROR: cat_standalone_segment.m not found"
+            exit 1
+          fi
+
           echo "Using batch file: $BATCH"
           echo "Running CAT segmentation on single_subj_T1.nii..."
 
-          "${SPMROOT}/spm25.exe" batch "$BATCH" "$(pwd)/single_subj_T1.nii"
+          # Replicate cat_standalone.sh logic: replace <UNDEFINED> with actual filename
+          TMP=/tmp/cat_$$.m
+          grep -v "<UNDEFINED>" "$BATCH" > "$TMP"
+          data=$(grep -m 1 "<UNDEFINED>" "$BATCH" | cut -f1 -d'=' | sed -e 's,%,,')
+          echo "$data = {" >> "$TMP"
+          echo "'$(pwd)/single_subj_T1.nii'" >> "$TMP"
+          echo "     };" >> "$TMP"
+
+          "${SPMROOT}/spm25.exe" batch "$TMP"
+          rm -f "$TMP"
 
       # ── Verify outputs ──
 
