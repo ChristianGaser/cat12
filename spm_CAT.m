@@ -63,7 +63,36 @@ if ~isempty(niigz), gunzip(niigz); end
 for fi = 1:numel(niigz), if cat_io_contains(niigz{fi},'templates_animals'), delete(niigz{fi}); end; end
 clear niigz nii
 
-% check that mex-files on MAC are not blocked
+% Proactively clear macOS Gatekeeper quarantine before any binary is called.
+% We check a single representative binary for the quarantine attribute (~1ms).
+% Only if found, we recursively clear quarantine from the entire CAT directory.
+if ismac && ~isdeployed
+  [~, archOutput] = system('uname -v');
+  if ~isempty(strfind(archOutput, 'ARM64')) %#ok<STREMP>
+    CATBinDir = fullfile(catdir, 'CAT.maca64');
+  else
+    CATBinDir = fullfile(catdir, 'CAT.maci64');
+  end
+  binFiles = dir(fullfile(CATBinDir, 'CAT_*'));
+  if ~isempty(binFiles)
+    testBin = fullfile(CATBinDir, binFiles(1).name);
+    [qST, ~] = system(sprintf('xattr -p com.apple.quarantine "%s" 2>/dev/null', testBin));
+    if qST == 0 % quarantine attribute exists
+      [fixStatus1, ~] = system(sprintf('xattr -dr com.apple.quarantine "%s"', catdir));
+      [fixStatus2, ~] = system(sprintf('chmod -R a+x "%s"', CATBinDir));
+      if fixStatus1 ~= 0 || fixStatus2 ~= 0
+        fprintf(2, '\n========================================================================\n');
+        fprintf(2, 'CAT: Could not remove macOS quarantine automatically.\n');
+        fprintf(2, 'Please run this command in your Terminal to fix this:\n\n');
+        fprintf(2, '     sudo xattr -dr com.apple.quarantine "%s"\n\n', catdir);
+        fprintf(2, 'Then restart MATLAB.\n');
+        fprintf(2, '========================================================================\n\n');
+      end
+    end
+  end
+end
+
+% check that mex-files are working
 try
   feval(@cat_sanlm,single(rand(6,6,6)),1,3);
 catch
@@ -77,25 +106,6 @@ catch
     % check that patches and updates exist
     if ~exist('savexml') || ~exist('fcnchk')
       error('Please update and patch SPM first')
-    end
-  elseif ismac && ~isdeployed
-    CATDir = fullfile(catdir);
-    cat_io_cmd(sprintf('\nThe following commands might be executed as administrator to allow execution of CAT binaries and mex-files.'),'warning');
-    cmd = ['xattr -cr -d com.apple.quarantine ' CATDir];
-    [fixStatus1, ~] = system(cmd); fprintf([cmd '\n']);
-    cmd = ['chmod a+x ' CATDir '/CAT.mac*/CAT*'];
-    [fixStatus2, ~] = system(cmd); fprintf([cmd '\n']);
-
-   if fixStatus1 ~= 0 || fixStatus2 ~= 0
-      fprintf(2, '\n========================================================================\n');
-      fprintf(2, 'CAT: Critical Permission Error\n');
-      fprintf(2, 'macOS is blocking CAT binaries because they are quarantined.\n');
-      fprintf(2, 'Self-repair failed (likely due to permissions).\n');
-      fprintf(2, 'Please run the following command in your Terminal to fix this:\n\n');
-      fprintf(2, '     sudo xattr -cr "%s"\n\n', CATDir);
-      fprintf(2, '     sudo chmod a+x "%s"/CAT.mac*/CAT*\n\n', CATDir);
-      fprintf(2, 'Then restart MATLAB.\n');
-      fprintf(2, '========================================================================\n\n');
     end
   end
 end
