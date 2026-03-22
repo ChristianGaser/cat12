@@ -100,19 +100,11 @@ matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.lpba40 = 0;
 matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.cobra = 1;
 matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.hammers = 0;
 matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.ibsr = 0;
-matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.aal3 = 0;
-matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.mori = 0;
 matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.suit = 0;
 matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.thalamus = 0;
 matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.thalamic_nuclei = 0;
 matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.hypothalamus = 0;
-matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.anatomy3 = 0;
 matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.julichbrain3 = 0;
-matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.Tian_Subcortex_S4_7T = 0;
-matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.Schaefer2018_100Parcels_17Networks_order = 0;
-matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.Schaefer2018_200Parcels_17Networks_order = 0;
-matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.Schaefer2018_400Parcels_17Networks_order = 0;
-matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.Schaefer2018_600Parcels_17Networks_order = 0;
 matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.ownatlas = {''};
 
 % Writing options (see cat_defaults for the description of parameters)

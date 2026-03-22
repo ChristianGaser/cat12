@@ -24,15 +24,8 @@ matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.lpba40 = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.cobra = 1;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.hammers = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.ibsr = 0;
-matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.aal3 = 0;
-matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.mori = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.thalamus = 0;
-matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.anatomy3 = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.julichbrain3 = 0;
-matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.Schaefer2018_100Parcels_17Networks_order = 0;
-matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.Schaefer2018_200Parcels_17Networks_order = 0;
-matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.Schaefer2018_400Parcels_17Networks_order = 0;
-matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.Schaefer2018_600Parcels_17Networks_order = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.ROImenu.atlases.ownatlas = {''};
 
 % catch errors: 0 - stop with error (default); 1 - catch preprocessing errors (requires MATLAB 2008 or higher); 
@@ -42,10 +35,7 @@ matlabbatch{1}.spm.tools.cat.cat_simple.ignoreErrors = 1;
 matlabbatch{1}.spm.tools.cat.cat_simple.surface.yes.sROImenu.satlases.Desikan = 1;
 matlabbatch{1}.spm.tools.cat.cat_simple.surface.yes.sROImenu.satlases.HCP = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.surface.yes.sROImenu.satlases.Destrieux = 0;
-matlabbatch{1}.spm.tools.cat.cat_simple.surface.yes.sROImenu.satlases.Schaefer2018_100P_17N = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.surface.yes.sROImenu.satlases.Schaefer2018_200P_17N = 0;
-matlabbatch{1}.spm.tools.cat.cat_simple.surface.yes.sROImenu.satlases.Schaefer2018_400P_17N = 0;
-matlabbatch{1}.spm.tools.cat.cat_simple.surface.yes.sROImenu.satlases.Schaefer2018_600P_17N = 0;
 matlabbatch{1}.spm.tools.cat.cat_simple.surface.yes.sROImenu.satlases.ownatlas = {''};
 
 % smoothing filter size for cortical thickness (fwhm_surf1) and gyrification (fwhm_surf2)
