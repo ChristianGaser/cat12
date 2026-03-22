@@ -128,21 +128,10 @@ jobs:
           release: ${{ matrix.version }}
           products: MATLAB_Compiler
 
-      - name: Extract MATLAB version to file
-        uses: matlab-actions/run-command@v2
-        with:
-          command: |
-            fileID = fopen('matlab_release.txt', 'w')
-            fprintf(fileID, matlabRelease.Release)
-            fclose(fileID)
-        timeout-minutes: 2
-        continue-on-error: true
-
       - name: Set environment variable with MATLAB version
         shell: bash
         run: |
-          matlab_release=$(cat matlab_release.txt)
-          echo "MATLAB_VERSION=$matlab_release" >> $GITHUB_ENV
+          echo "MATLAB_VERSION=R2023b" >> $GITHUB_ENV
 
       - name: Compile CAT mex-files
         uses: matlab-actions/run-command@v2
