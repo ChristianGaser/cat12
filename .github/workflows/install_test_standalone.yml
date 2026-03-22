@@ -282,7 +282,8 @@ jobs:
             INSTALLER_BIN=$(find "$INSTALLER_APP/Contents/MacOS" -type f -perm +111 | head -n 1)
           fi
           echo "Using installer: $INSTALLER_BIN"
-          sudo "$INSTALLER_BIN" -agreeToLicense yes -destinationFolder "$HOME/MATLAB_Runtime" 2>&1 | tee install.log
+          # macOS .app installer treats -agreeToLicense as boolean flag (no "yes" value)
+          sudo "$INSTALLER_BIN" -agreeToLicense -destinationFolder "$HOME/MATLAB_Runtime" 2>&1 | tee install.log
           sleep 2
 
           sudo chown -R $USER "$HOME/MATLAB_Runtime"
