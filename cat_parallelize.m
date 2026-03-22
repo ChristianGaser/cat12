@@ -613,7 +613,7 @@ function varargout = cat_parallelize(job,func,datafield)
 
     %% output overview of main result directories
     spmstack = dbstack; 
-    if exist('job','var') any( cat_io_contains( {spmstack.file} , 'cat_long_multi_run') );  
+    if exist('job','var') && any( cat_io_contains( {spmstack.file} , 'cat_long_multi_run') );  
       job.BIDS = cat_io_BIDS( job.data , job ); 
 
       resdirs = {job.BIDS(:).mridir}';
