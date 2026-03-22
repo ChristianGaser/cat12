@@ -157,6 +157,17 @@ jobs:
         run: choco install zip -y
         shell: bash
 
+      # Decompress .nii.gz templates so they are available as .nii in the compiled standalone.
+      # Without this, atlas config (cat_conf_ROI.m) fails because it checks exist(...'.nii','file').
+      - name: Decompress NII.GZ templates
+        shell: bash
+        run: |
+          echo "Decompressing .nii.gz files in CAT templates..."
+          find spm/toolbox/CAT/templates_MNI152NLin2009cAsym -name '*.nii.gz' -exec gunzip -f {} \;
+          find spm/toolbox/CAT/templates_surfaces -name '*.nii.gz' -exec gunzip -f {} \;
+          find spm/toolbox/CAT/templates_surfaces_32k -name '*.nii.gz' -exec gunzip -f {} \;
+          echo "Decompression complete"
+
       # Build SPM standalone (which includes CAT as toolbox)
       - name: Build MATLAB standalone
         uses: matlab-actions/run-command@v2
@@ -266,8 +277,22 @@ jobs:
           hdiutil attach mcr.dmg -mountpoint /Volumes/MCR
 
           echo "Installing MATLAB Runtime..."
-          INSTALLER=$(find /Volumes/MCR -name "*.app" -maxdepth 1 | head -n 1)
-          sudo "$INSTALLER/Contents/MacOS/setup" -agreeToLicense yes -destinationFolder "$HOME/MATLAB_Runtime" 2>&1 | tee install.log
+          # Find the installer app and its actual executable (name varies by architecture)
+          INSTALLER_APP=$(find /Volumes/MCR -name "*.app" -maxdepth 1 | head -n 1)
+          if [ -z "$INSTALLER_APP" ]; then
+            echo "ERROR: No installer .app found in DMG"
+            ls -la /Volumes/MCR/
+            exit 1
+          fi
+          # The executable name matches the app name (e.g., InstallForMacOSAppleSilicon)
+          APP_NAME=$(basename "$INSTALLER_APP" .app)
+          INSTALLER_BIN="$INSTALLER_APP/Contents/MacOS/$APP_NAME"
+          if [ ! -f "$INSTALLER_BIN" ]; then
+            # Fallback: find the actual executable inside the app bundle
+            INSTALLER_BIN=$(find "$INSTALLER_APP/Contents/MacOS" -type f -perm +111 | head -n 1)
+          fi
+          echo "Using installer: $INSTALLER_BIN"
+          sudo "$INSTALLER_BIN" -agreeToLicense yes -destinationFolder "$HOME/MATLAB_Runtime" 2>&1 | tee install.log
           sleep 2
 
           sudo chown -R $USER "$HOME/MATLAB_Runtime"
@@ -318,9 +343,9 @@ jobs:
         if: runner.os == 'macOS'
         shell: bash
         run: |
-          # Remove quarantine attributes to avoid Gatekeeper "app is damaged" error
-          xattr -rc cat_standalone
-          chmod +x cat_standalone/run_spm25.sh
+          # Remove quarantine attributes to avoid Gatekeeper blocking binaries
+          xattr -dr com.apple.quarantine cat_standalone 2>/dev/null || true
+          chmod -R +x cat_standalone/
           echo "Extracting CTF archive..."
           cd cat_standalone
           ./run_spm25.sh "$MCRROOT" function exit || true
@@ -333,9 +358,12 @@ jobs:
         run: |
           echo "Extracting CTF archive..."
           cd cat_standalone
-          ./spm25.exe function exit || true
+          # On Windows, spm25.exe should find MCR via PATH/registry
+          ./spm25.exe function exit 2>&1 || true
           cd ..
           echo "CAT standalone setup complete"
+          echo "Standalone contents after setup:"
+          find cat_standalone -maxdepth 3 -type d | head -20
 
       # ── Find test data (single_subj_T1.nii from SPM canonical directory) ──
 
@@ -344,9 +372,21 @@ jobs:
         run: |
           echo "Searching for single_subj_T1.nii inside standalone..."
           T1=$(find cat_standalone -name "single_subj_T1.nii" -type f 2>/dev/null | head -n 1)
+          # If not found as .nii, try .nii.gz and decompress
+          if [ -z "$T1" ]; then
+            T1GZ=$(find cat_standalone -name "single_subj_T1.nii.gz" -type f 2>/dev/null | head -n 1)
+            if [ -n "$T1GZ" ]; then
+              echo "Found compressed: $T1GZ — decompressing..."
+              gunzip -k "$T1GZ"
+              T1="${T1GZ%.gz}"
+            fi
+          fi
           if [ -z "$T1" ]; then
             echo "ERROR: single_subj_T1.nii not found in standalone"
-            find cat_standalone -name "*.nii" -type f 2>/dev/null | head -20
+            echo "Listing all directories:"
+            find cat_standalone -maxdepth 4 -type d 2>/dev/null
+            echo "Listing all .nii and .nii.gz files:"
+            find cat_standalone -name "*.nii" -o -name "*.nii.gz" 2>/dev/null | head -30
             exit 1
           fi
           echo "Found test data: $T1"
