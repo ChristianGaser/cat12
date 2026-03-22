@@ -1744,20 +1744,9 @@ area.name   = 'Surface area';
 area.tag    = 'area';
 area.labels = {'No','Yes'}; 
 area.values = {0,1}; 
-area.val    = {0};
-area.hidden = expert<2;
+area.val    = {1};
 area.help   = {
-  'WARNING: IN DEVELOPMENT!'
-  'This method requires a sum-based mapping rather than the mean-based interpolation. The mapping utilize the Delaunay graph to transfer the area around a vertex to its nearest neighbor(s). See Winkler et al.,  2017. '}; 
-%{
-% Winklers method is not implemented right now (201904)
-area.help   = {
-  'Extract log10-transformed local surface area using re-parameterized tetrahedral surface. The method is described in Winkler et al. NeuroImage, 61: 1428-1443, 2012.'
-  ''
-  'Log-transformation is used to render the data more normally distributed.'
-  ''
-};
-%}
+  'Extract the local surface area compatible with the surface area estimation from FreeSurfer.'}; 
 
 gmv        = cfg_menu;
 gmv.name   = 'Surface GM volume';
