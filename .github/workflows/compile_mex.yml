@@ -18,7 +18,7 @@ jobs:
           - os: ubuntu-22.04
             os_name: Linux
             mex_ext: mexa64
-          - os: macos-15-intel
+          - os: macos-13
             os_name: macOS_Intel
             mex_ext: mexmaci64
           - os: macos-latest
@@ -27,7 +27,7 @@ jobs:
           - os: windows-latest
             os_name: Windows
             mex_ext: mexw64
-      
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -36,7 +36,7 @@ jobs:
         uses: matlab-actions/setup-matlab@v2
         with:
           release: R2023b
-          
+
       - name: Install rsync
         if: runner.os == 'Windows'
         run: choco install -y rsync
@@ -88,5 +88,3 @@ jobs:
         with:
           name: cat_${{ github.ref_name }}_${{ matrix.mex_ext }}
           path: cat_*.zip
-
-
