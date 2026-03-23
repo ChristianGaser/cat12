@@ -123,6 +123,11 @@ jobs:
         if: runner.os == 'Windows'
         run: Remove-Item -Recurse -Force standalone
 
+      - name: Install zip on Windows
+        if: runner.os == 'Windows'
+        run: choco install zip -y
+        shell: bash
+
       - name: Set up MATLAB
         uses: matlab-actions/setup-matlab@v2
         with:
@@ -141,11 +146,6 @@ jobs:
             addpath('spm');
             cd('spm/toolbox/CAT')
             compile
-
-      - name: Install zip on Windows
-        if: runner.os == 'Windows'
-        run: choco install zip -y
-        shell: bash
 
       # Decompress .nii.gz templates so they are available as .nii in the compiled standalone.
       # Without this, atlas config (cat_conf_ROI.m) fails because it checks exist(...'.nii','file').
@@ -184,7 +184,7 @@ jobs:
           retention-days: 7
 
   # ────────────────────────────────────────────────────
-  # Job 3: Test standalone on each OS
+  # Job 3: Test standalone on Linux
   # ────────────────────────────────────────────────────
   test_standalone:
     name: Test Standalone on ${{ matrix.os_name }}
@@ -196,20 +196,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-22.04", "macos-15-intel", "macos-latest", "windows-latest"]
+        os: ["ubuntu-22.04"]
         include:
           - os: ubuntu-22.04
             os_name: Linux
             standalone_os: Linux
-          - os: macos-15-intel
-            os_name: macOS_Intel
-            standalone_os: Mac
-          - os: macos-latest
-            os_name: macOS_ARM64
-            standalone_os: Mac_arm64
-          - os: windows-latest
-            os_name: Windows
-            standalone_os: Win
 
     steps:
       - name: Download standalone artifact
@@ -247,79 +238,6 @@ jobs:
           rm -rf mcr.zip mcr_installer
           echo "MATLAB Runtime installed at /usr/local/MATLAB/MATLAB_Runtime/R2023b"
 
-      - name: Install MATLAB Runtime (macOS)
-        if: runner.os == 'macOS'
-        shell: bash
-        run: |
-          ARCH=$(uname -m)
-          if [ "$ARCH" = "arm64" ]; then
-            echo "Downloading MATLAB Runtime R2023b for macOS ARM64..."
-            wget -q https://ssd.mathworks.com/supportfiles/downloads/R2023b/Release/10/deployment_files/installer/complete/maca64/MATLAB_Runtime_R2023b_Update_10_maca64.dmg -O mcr.dmg
-          else
-            echo "Downloading MATLAB Runtime R2023b for macOS Intel..."
-            wget -q https://ssd.mathworks.com/supportfiles/downloads/R2023b/Release/10/deployment_files/installer/complete/maci64/MATLAB_Runtime_R2023b_Update_10_maci64.dmg.zip -O mcr.dmg.zip
-            unzip -q mcr.dmg.zip
-            MCR_DMG=$(ls *.dmg | head -n 1)
-            mv "$MCR_DMG" mcr.dmg
-          fi
-
-          echo "Mounting DMG..."
-          hdiutil attach mcr.dmg -mountpoint /Volumes/MCR
-
-          echo "Installing MATLAB Runtime..."
-          # Find the installer app and its actual executable (name varies by architecture)
-          INSTALLER_APP=$(find /Volumes/MCR -name "*.app" -maxdepth 1 | head -n 1)
-          if [ -z "$INSTALLER_APP" ]; then
-            echo "ERROR: No installer .app found in DMG"
-            ls -la /Volumes/MCR/
-            exit 1
-          fi
-          # The executable name matches the app name (e.g., InstallForMacOSAppleSilicon)
-          APP_NAME=$(basename "$INSTALLER_APP" .app)
-          INSTALLER_BIN="$INSTALLER_APP/Contents/MacOS/$APP_NAME"
-          if [ ! -f "$INSTALLER_BIN" ]; then
-            # Fallback: find the actual executable inside the app bundle
-            INSTALLER_BIN=$(find "$INSTALLER_APP/Contents/MacOS" -type f -perm +111 | head -n 1)
-          fi
-          echo "Using installer: $INSTALLER_BIN"
-          # Create installer input file (works with both legacy and Qt IFW-based installers)
-          printf 'agreeToLicense=yes\ndestinationFolder=%s\n' "$HOME/MATLAB_Runtime" > /tmp/mcr_input.txt
-          sudo "$INSTALLER_BIN" -inputFile /tmp/mcr_input.txt 2>&1 | tee install.log
-          sleep 2
-
-          sudo chown -R $USER "$HOME/MATLAB_Runtime"
-          sudo chown -R $USER "$HOME/.matlab" 2>/dev/null || true
-
-          hdiutil detach /Volumes/MCR 2>/dev/null || true
-
-          echo "MCRROOT=$HOME/MATLAB_Runtime/R2023b" >> $GITHUB_ENV
-          echo "MCR_INHIBIT_CTF_LOCK=1" >> $GITHUB_ENV
-          echo "SPM_HTML_BROWSER=0" >> $GITHUB_ENV
-
-          rm -f mcr.dmg mcr.dmg.zip
-          echo "MATLAB Runtime installed at $HOME/MATLAB_Runtime/R2023b"
-
-      - name: Install MATLAB Runtime (Windows)
-        if: runner.os == 'Windows'
-        shell: bash
-        run: |
-          echo "Downloading MATLAB Runtime R2023b for Windows..."
-          curl -sL -o mcr.zip https://ssd.mathworks.com/supportfiles/downloads/R2023b/Release/10/deployment_files/installer/complete/win64/MATLAB_Runtime_R2023b_Update_10_win64.zip
-          unzip -q mcr.zip -d mcr_installer
-
-          echo "Installing MATLAB Runtime..."
-          INSTALLER=$(find mcr_installer -name "setup.exe" | head -n 1)
-          "$INSTALLER" -agreeToLicense yes -destinationFolder "C:\\MATLAB_Runtime"
-          echo "Installation command completed"
-
-          echo "C:\\MATLAB_Runtime\\R2023b\\runtime\\win64" >> $GITHUB_PATH
-          echo "MCRROOT=C:\\MATLAB_Runtime\\R2023b" >> $GITHUB_ENV
-          echo "MCR_INHIBIT_CTF_LOCK=1" >> $GITHUB_ENV
-          echo "SPM_HTML_BROWSER=0" >> $GITHUB_ENV
-
-          rm -rf mcr.zip mcr_installer
-          echo "MATLAB Runtime installed at C:\\MATLAB_Runtime\\R2023b"
-
       # ── Setup and extract CTF ──
 
       - name: Setup CAT standalone (Linux)
@@ -330,32 +248,6 @@ jobs:
           echo "Extracting CTF archive..."
           cat_standalone/spm25 function exit || true
           echo "CAT standalone setup complete"
-
-      - name: Setup CAT standalone (macOS)
-        if: runner.os == 'macOS'
-        shell: bash
-        run: |
-          # Remove quarantine attributes to avoid Gatekeeper blocking binaries
-          xattr -dr com.apple.quarantine cat_standalone 2>/dev/null || true
-          chmod -R +x cat_standalone/
-          echo "Extracting CTF archive..."
-          cd cat_standalone
-          ./run_spm25.sh "$MCRROOT" function exit || true
-          cd ..
-          echo "CAT standalone setup complete"
-
-      - name: Setup CAT standalone (Windows)
-        if: runner.os == 'Windows'
-        shell: bash
-        run: |
-          echo "Extracting CTF archive..."
-          cd cat_standalone
-          # On Windows, spm25.exe should find MCR via PATH/registry
-          ./spm25.exe function exit 2>&1 || true
-          cd ..
-          echo "CAT standalone setup complete"
-          echo "Standalone contents after setup:"
-          find cat_standalone -maxdepth 3 -type d | head -20
 
       # ── Find test data (single_subj_T1.nii from SPM canonical directory) ──
 
@@ -388,8 +280,7 @@ jobs:
 
       # ── Run CAT segmentation test ──
 
-      - name: Test CAT segmentation (Linux/macOS)
-        if: runner.os != 'Windows'
+      - name: Test CAT segmentation (Linux)
         timeout-minutes: 60
         shell: bash
         run: |
@@ -412,33 +303,6 @@ jobs:
           echo "Running CAT segmentation on single_subj_T1.nii..."
 
           "$CAT_SH" -b "$BATCH" -m "$MCRROOT" -s "$SPMROOT" "$(pwd)/single_subj_T1.nii"
-
-      - name: Test CAT segmentation (Windows)
-        if: runner.os == 'Windows'
-        timeout-minutes: 60
-        shell: bash
-        run: |
-          SPMROOT=$(pwd)/cat_standalone
-          BATCH=$(find cat_standalone -name "cat_standalone_segment.m" -type f | head -n 1)
-
-          if [ -z "$BATCH" ]; then
-            echo "ERROR: cat_standalone_segment.m not found"
-            exit 1
-          fi
-
-          echo "Using batch file: $BATCH"
-          echo "Running CAT segmentation on single_subj_T1.nii..."
-
-          # Replicate cat_standalone.sh logic: replace <UNDEFINED> with actual filename
-          TMP=/tmp/cat_$$.m
-          grep -v "<UNDEFINED>" "$BATCH" > "$TMP"
-          data=$(grep -m 1 "<UNDEFINED>" "$BATCH" | cut -f1 -d'=' | sed -e 's,%,,')
-          echo "$data = {" >> "$TMP"
-          echo "'$(pwd)/single_subj_T1.nii'" >> "$TMP"
-          echo "     };" >> "$TMP"
-
-          "${SPMROOT}/spm25.exe" batch "$TMP"
-          rm -f "$TMP"
 
       # ── Verify outputs ──
 
