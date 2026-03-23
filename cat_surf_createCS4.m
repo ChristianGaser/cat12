@@ -135,35 +135,30 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     
 
     % interpolation 
-    imethod         = 'cubic'; % cubic is be better in general but we have to consider interpolation artifacts
-    [Yp0fs,resI]    = cat_vol_resize(max(1,Yp0fs),'interp',V,opt.interpV,imethod);                  % interpolate volume
-    Ymfs            = cat_vol_resize(max(1,Ymfs),'interp',V,opt.interpV,imethod);                   % interpolate volume 
+    % cubic is be better than linear although we have to consider interpolation artifacts
+    [Yp0fs,resI]    = cat_vol_resize(max(1,Yp0fs),'interp',V,opt.interpV,'cubic'); 
+    Ymfs            = cat_vol_resize(max(1,Ymfs),'interp',V,opt.interpV,'cubic');  
     
     
     % surface coordinate transformation matrix
     [Vmfs,Smat] = createOutputFileStructures(V,V0,resI,BB,opt,mridir,ff,si); 
-
-
-    % thickness and position map estimation 
-    Vmfs.dt = [16 1];
-    spm_write_vol(Vmfs, Yp0fs);
-
+    
 
     % Myelination corretion for the CS40 that is also part of cat_vol_pbtsimpleCS4
     if opt.myelinCorrection > 0 
       stime = cat_io_cmd(sprintf('  Myelin correction (%0.1f%%)',opt.myelinCorrection*100),'g5'); 
+      Vmfs.dt = [16 1]; spm_write_vol(Vmfs, Yp0fs);
       Yp0fs = myelincorrection(Yp0fs, vx_vol, opt,P,Vmfs,si); 
-      spm_write_vol(Vmfs, Yp0fs);
       fprintf('%5.0fs\n',etime(clock,stime)); 
     end  
-
+    
     
     stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,native2unicode(179, 'latin1')),'g5');  % fprintf('\n'); 
-    cmd = sprintf('CAT_VolThicknessPbt  -correct-voxelsize 0   -median-filter 2   -downsample 0 "%s" "%s" "%s"', ...
+    Vmfs.dt = [16 1]; spm_write_vol(Vmfs, Yp0fs);
+    cmd = sprintf('CAT_VolThicknessPbt  -correct-voxelsize 0   -median-filter 2   -downsample 0  "%s" "%s" "%s"', ...
       Vmfs.fname, P(si).Pgmt, P(si).Pppm);
     cat_system(cmd,opt.verb-3);
     Vgmt  = spm_vol(P(si).Pgmt); Yth1i = spm_read_vols(Vgmt); 
-    Vppi  = spm_vol(P(si).Pppm); Yppi  = spm_read_vols(Vppi); 
     % correction of general offset in mm 
     Yth1i = max(0,Yth1i - 0.28); 
     
@@ -193,9 +188,8 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     else
       % optimized downsampling of the the Ypp map and
       if isscalar(opt.surf), time_sr = clock; end % temporary for tests 
-      %Vppmi = exportPPmap( Yppi, Vmfs, si, opt, '', ff);
       Vp0 = Vmfs; Vp0.fname = spm_file(P(si).Pp0,'suffix','_tmp'); 
-      spm_write_vol(Vp0, double(Yp0fs));
+      spm_write_vol(Vp0, Yp0fs);
  
       % static/dynamic surface threshold
       % using a global dynamic threshold to avoid topology defects that
@@ -215,10 +209,9 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
           %% Main initial surface creation with topology correction.
           if exist(P(si).Pcentral,'file'), delete(P(si).Pcentral); end % have to delete it to get useful error messages in case of reprocessing/testing
           gycon = gycon + .1*(thi>1);
-          Vppmi = exportPPmap( Yppi, Vmfs, si, opt, ff);
-
+        
           cmd = sprintf('CAT_VolMarchingCubes  "%s" "%s"  -thresh "%0.4f" -iter %d -label "%s" -median-filter "%d"',  ...
-            Vppmi.fname, P(si).Pcentral, gycon, ECiter, Vp0.fname, min(1,floor( .5 / opt.interpV ) )); %#ok<NASGU>
+            P(si).Pppm, P(si).Pcentral, gycon, ECiter, Vp0.fname, min(1,floor( .5 / opt.interpV ) )); %#ok<NASGU>
           txt = evalc('cat_system(cmd ,3)');
           
           % save surface characteristics 
@@ -229,12 +222,12 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
  
           % evaluate surface characteristics
           if gycon>.85  ||  res.ECmodvx(si) * prod(vx_vol) <= vxth  &&  abs(res.EC(si) - 2) <= ECdiffth 
-            if opt.verb>1 && thi>0, cat_io_cprintf([0 .5 0],'\n    Accepted configuration (EC=%d, %5dvx, %0.2f%%) for Ypp>%0.2f.   ', ...
+            if opt.verb>1 && thi>0, cat_io_cprintf([0 .5 0],'\n    Accepted configuration (EC=%d, %5dvx, %0.2f%%) for Ypp>%0.2f    ', ...
               res.EC(si), res.ECmodvx(si), res.ECmodwmp(si), gycon);
             end
             break;      
           else
-            if opt.verb>1, cat_io_cprintf([.7 0 0.5],'\n    Sulcal blurring (EC=%3d, %5dvx ~ %0.2f%%) for Ypp>%0.2f.       ', ...
+            if opt.verb>1, cat_io_cprintf([.7 0 0.5],'\n    Sulcal blurring (EC=%3d, %5dvx ~ %0.2f%%) for Ypp>%0.2f        ', ...
               res.EC(si), res.ECmodvx(si), res.ECmodwmp(si), gycon);
             end
           end
@@ -253,8 +246,6 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         cat_io_addwarning([mfilename ':MarchingCubes'],sprintf('Increased topological adjustments of %d voxels (~%0.2f%%%% of WM).',...
           res.ECmodvx(si),  res.ECmodwmp(si)), 1,[1 1]);
       end
-      Vppm = Vppi;  Vppm.fname = P(si).Pppm; Vppm.dt(1) = 16; Vppm.pinfo(1) = 1; Vpp = spm_write_vol(Vppm, Yppi); 
-      Vppm = spm_write_vol(Vppm, Yppi); % rewrite unweighted position map
       
       % load and check surface and 
       % define lower surface resolution based on the surface area of the subject
@@ -305,7 +296,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       % - minor improvement of values (IE+.001,PE+0.002) but visually strong reduction of local outliers >> useful
       if useprior
         stime = cat_io_cmd('  Filter topology artifacts','g5','',opt.verb,stime);
-        CS = smoothArt(Yth1i,P,CS,Smat,Vppm,si,opt,1,0); % last options - method & refine
+        CS = smoothArt(Yth1i,P,CS,Smat,si,opt,1,0); % last options - method & refine
         saveSurf(CS,P(si).Pcentral); 
         % get PBT thickness and update cutregion
         facevertexcdata = cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm); 
@@ -318,11 +309,11 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       % what improves also intensity and position values of the inner/outer surfaces!
       stime = cat_io_cmd('  Optimize surface','g5','',opt.verb,stime); 
       cmd = sprintf('CAT_SurfDeform -remove_intersect -iter 75 -isovalue 0.5 -w1 0.1 -w2 0.1 -w3 1.0 -sigma 0.2 "%s" "%s" "%s"', ...
-        Vppm.fname, P(si).Pcentral, P(si).Pcentral);
+        P(si).Pppm, P(si).Pcentral, P(si).Pcentral);
       cat_system(cmd,opt.verb-3);
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none  0  1  -1  .1 ' ...           
                 'avg  -0.1  0.1 .2  .1  5  0 "0.5"  "0.5"  n 0  0  0 %d  %g  0.0 0'], ...    
-                 Vppm.fname,P(si).Pcentral,P(si).Pcentral,50,0.001);  
+                 P(si).Pppm,P(si).Pcentral,P(si).Pcentral,50,0.001);  
       cat_system(cmd,opt.verb-3);
       cmd = sprintf('CAT_Central2Pial -equivolume -weight 0.5 "%s" "%s" "%s" 0',P(si).Pcentral,P(si).Ppbt,P(si).Pcentral);
       cat_system(cmd,opt.verb-3);
@@ -333,7 +324,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       cat_system(cmd,opt.verb-3);
       cmd = sprintf(['CAT_DeformSurf "%s" none 0 0 0 "%s" "%s" none  0  1  -1  .1 ' ...           
                   'avg  -0.1  0.1 .2  .1  5  0 "0.5"  "0.5"  n 0  0  0 %d  %g  0.0 0'], ...    
-                   Vppm.fname,P(si).Pcentral,P(si).Pcentral,25,0.001);  
+                   P(si).Pppm,P(si).Pcentral,P(si).Pcentral,25,0.001);  
       cat_system(cmd,opt.verb-3);
       cmd = sprintf('CAT_Central2Pial -equivolume -weight 0.5 "%s" "%s" "%s" 0',P(si).Pcentral,P(si).Ppbt,P(si).Pcentral);
       cat_system(cmd,opt.verb-3);
@@ -366,19 +357,18 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         cat_system(cmd,opt.verb-3); 
       elseif opt.create_white_pial > 1
         % write segmentation if necessary (and delete it later)
-        if ~exist(spm_file(P(si).Pp0,'suffix','_tmp'),'file')
-          Vp0 = Vmfs; Vp0.fname = spm_file(P(si).Pp0,'suffix','_tmp'); 
-          spm_write_vol(Vp0, Yp0fs);
-        end
-
+        Vp0 = Vmfs; Vp0.fname = spm_file(P(si).Pp0,'suffix','_tmp'); 
+        spm_write_vol(Vp0, Yp0fs);
+      
         % estimate pial and white surface with a limited thickness map
         facevertexcdata = min(6,max(eps, cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm))); 
         cat_io_FreeSurfer('write_surf_data', P(si).Pthick,   facevertexcdata);
         spm_write_vol(Vmfs, Yp0fs);
         cmd = sprintf('CAT_Surf2PialWhite "%s" "%s" "%s" "%s" "%s"', ...
-          P(si).Pcentral, P(si).Pthick, Vmfs.fname, P(si).Pp0, P(si).Pwhite);
+          P(si).Pcentral, P(si).Pthick, Vmfs.fname, Vp0.fname, P(si).Pwhite);
         cat_system(cmd,opt.verb-3); 
-        
+        delete(Vp0.fname); 
+
         % create new central surface and update thickness values
         cmd = sprintf('CAT_AverageSurfaces "%s" "%s" -avg "%s" ', ...
           P(si).Ppial, P(si).Pwhite, P(si).Pcentral);
@@ -393,6 +383,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     if isscalar(opt.surf)
       % only for test visualization  
       fprintf('%5.0fs',etime(clock,stime)); 
+      Vppm = spm_vol(P(si).Pppm); Yppi  = spm_read_vols(Vppm); 
       cat_surf_createCS_fun('quickeval',V0,Vpp,Ymfs,Yppi,CS,P,Smat,res,opt,EC0,si,time_sr,4); 
       return
     end
@@ -407,12 +398,11 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       cat_system(cmd,opt.verb-3);
       
       % spherical registration to fsaverage template
-      stime = cat_io_cmd('  Spherical registration','g5','',opt.verb,stime); %#ok<NASGU>
+      stime = cat_io_cmd('  Spherical registration','g5','',opt.verb,stime); 
       cmd = sprintf('CAT_SurfWarp -steps 2 -avg -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"', ...
         P(si).Pcentral,P(si).Psphere,P(si).Pfsavg,P(si).Pfsavgsph,P(si).Pspherereg);
       cat_system(cmd,opt.verb-3);
-      if opt.verb<2, fprintf('%5.0fs',etime(clock,stime)); end %#ok<*DETIM>
-%%%%%      
+      if opt.verb, fprintf('%5.0fs',etime(clock,stime)); end %#ok<*DETIM>
     end  
 
 
@@ -453,10 +443,11 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
 
 
     % final surface evaluation 
+    Vppm = spm_vol(P(si).Pppm); Yppi = spm_read_vols(Vppm); 
     res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS', ...
       loadSurf(P(si).Pcentral), cat_io_FreeSurfer('read_surf_data',P(si).Ppbt), cat_io_FreeSurfer('read_surf_data',P(si).Pthick), ...
       Ymfs, Yppi, P(si).Pcentral, Smat.matlabIBB_mm, debug + (cat_get_defaults('extopts.expertgui')>1), cat_get_defaults('extopts.expertgui')>1);
- 
+    clear Yppi; 
 
     % average final values
     FNres = fieldnames( res.(opt.surf{si}).createCS_final );
@@ -730,18 +721,18 @@ function [Ycd, Ywd] = cat_vol_cwdist(Yp0,opt)
   Ywd = Ywd + min(.0,max(-.5, (Yp0>1.5-opt.rangeE & Yp0<1.5+0*opt.rangeE) .* ( (Yp0-1.5)*opt.pvet*1 - 0*opt.vxs/2) ));
 end
 % ======================================================================
-function CS = smoothArt(Yth1i,P,CS,Smat,Vppm,si,opt,method,refine)
+function CS = smoothArt(Yth1i,P,CS,Smat,si,opt,method,refine)
 %% Topology artifact correction (after first deformation):
 %  Although the topology is fine after correction the geometry often
 %  suffers by small snake-like objects that were deformed close to the 
 %  central layer, resulting in underestimation of the FS thickness.
     
   saveSurf(CS,P(si).Pcentral); 
-  cmd = sprintf('CAT_SurfDeform "%s" "%s" "%s"', Vppm.fname, P(si).Pcentral, P(si).Pcentral);
+  cmd = sprintf('CAT_SurfDeform "%s" "%s" "%s"', P(si).Pppm, P(si).Pcentral, P(si).Pcentral);
   cat_system(cmd,opt.verb-3);
   cmd = sprintf('CAT_SurfRemoveIntersections "%s" "%s"',P(si).Pcentral,P(si).Pcentral);
   cat_system(cmd,opt.verb-3);
-  cmd = sprintf('CAT_SurfDeform "%s" "%s" "%s"', Vppm.fname, P(si).Pcentral, P(si).Pcentral);
+  cmd = sprintf('CAT_SurfDeform "%s" "%s" "%s"', P(si).Pppm, P(si).Pcentral, P(si).Pcentral);
   cat_system(cmd,opt.verb-3);
   CS = loadSurf(P(si).Pcentral);
  
@@ -774,7 +765,7 @@ function CS = smoothArt(Yth1i,P,CS,Smat,Vppm,si,opt,method,refine)
     cat_system(cmd,opt.verb-3);
   end
 
-  cmd = sprintf('CAT_SurfDeform -iter 100 "%s" "%s" "%s"', Vppm.fname, P(si).Pcentral, P(si).Pcentral);
+  cmd = sprintf('CAT_SurfDeform -iter 100 "%s" "%s" "%s"', P(si).Pppm, P(si).Pcentral, P(si).Pcentral);
   cat_system(cmd,opt.verb-3);
   
   CS = loadSurf(P(si).Pcentral);
