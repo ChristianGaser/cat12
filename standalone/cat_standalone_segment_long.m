@@ -56,16 +56,6 @@ matlabbatch{1}.spm.tools.cat.long.opts.biasstr = 0.5;
 
 matlabbatch{1}.spm.tools.cat.long.opts.accstr = 0.5;
 
-% surface options
-matlabbatch{1}.spm.tools.cat.long.extopts.surface.pbtres = 0.5;
-matlabbatch{1}.spm.tools.cat.long.extopts.surface.pbtmethod = 'pbt2x';
-matlabbatch{1}.spm.tools.cat.long.extopts.surface.SRP = 22;
-matlabbatch{1}.spm.tools.cat.long.extopts.surface.reduce_mesh = 1;
-matlabbatch{1}.spm.tools.cat.long.extopts.surface.vdist = 1.33333333333333;
-matlabbatch{1}.spm.tools.cat.long.extopts.surface.scale_cortex = 0.7;
-matlabbatch{1}.spm.tools.cat.long.extopts.surface.add_parahipp = 0.1;
-matlabbatch{1}.spm.tools.cat.long.extopts.surface.close_parahipp = 0;
-
 matlabbatch{1}.spm.tools.cat.long.extopts.admin.experimental = 0;
 matlabbatch{1}.spm.tools.cat.long.extopts.admin.new_release = 0;
 matlabbatch{1}.spm.tools.cat.long.extopts.admin.lazy = 0;
