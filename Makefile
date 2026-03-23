@@ -134,13 +134,13 @@ checklist:
 	'   make check_pipeline' \
 	'   check_pipeline.sh -p pid' \
 	'   check_all_matrix.sh' \
-	'   check_pipeline_ROIs.m -> check render views check_r*matrix.png and histograms' \
-	'   check_pipeline_homogeneity.m -> check sample homogeneity' \
+	'   check_pipeline_ROIs -> check render views check_r*matrix.png and histograms' \
+	'   check_pipeline_homogeneity -> check sample homogeneity' \
 	'' \
 	'2. Check Batches and Dependencies' \
 	'   cd check_pipeline' \
-	'   batch_volume_pipeline.m' \
-	'   batch_surface_pipeline.m' \
+	'   batch_volume_pipeline' \
+	'   batch_surface_pipeline' \
 	'' \
 	'3. Check Expert Mode' \
 	'   cat12('\''expert'\'')' \

@@ -70,15 +70,6 @@ matlabbatch{1}.spm.tools.cat.estwrite.extopts.segmentation.WMHC = 2;
 % 2 - automatic lesion detection (in development)
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.segmentation.SLC = 0;
 
-% surface options
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.pbtres = 0.5;
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.pbtmethod = 'pbt2x';
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.reduce_mesh = 1;
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.scale_cortex = 0.7;
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.add_parahipp = 0.1;
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.close_parahipp = 0;
-matlabbatch{1}.spm.tools.cat.estwrite.extopts.surface.SRP = 22;
-
 % set this to 1 for skipping preprocessing if already processed data exist
 matlabbatch{1}.spm.tools.cat.estwrite.extopts.admin.lazy = 0;
 

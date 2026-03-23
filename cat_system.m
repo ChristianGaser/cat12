@@ -85,11 +85,14 @@ end
 
 % for mac we need to enable execution because of Apple Gatekeeper
 if ismac && (ST == 137 || ST == 127)
-  cmd = ['xattr -cr -d com.apple.quarantine ' CATDir];
-  [fixStatus1, ~] = system(cmd); fprintf([cmd '\n']);
-  cmd = ['chmod a+x ' CATDir '/CAT.mac*/CAT*'];
-  [fixStatus2, ~] = system(cmd); fprintf([cmd '\n']);
-  return
+  [fixStatus1, ~] = system(sprintf('xattr -dr com.apple.quarantine "%s"', strrep(CATDir,'\ ',' ')));
+  [fixStatus2, ~] = system(sprintf('chmod -R a+x "%s"', strrep(CATDir,'\ ',' ')));
+  if fixStatus1 == 0 && fixStatus2 == 0
+    % retry the command after clearing quarantine
+    warning off
+    [ST, RS] = system(cmdfull);
+    warning on
+  end
 end
 
 if ST > 1 && ST~=139 % 139: data setup error
@@ -98,25 +101,19 @@ if ST > 1 && ST~=139 % 139: data setup error
   else
     [ST, RS] = system('uname -a');
   end
-  str = sprintf('\nWARNING: Surface processing will not work because\n(1) File permissions are not correct (for unix use sudo chmod a+x) or\n(1) CAT binaries are not compatible to your system or\n(3) Antivirus software in Windwos or Gatekeeper in MAC OS is blocking to execute binaries\nSystem: %s\n',RS);
+  str = sprintf('\nWARNING: Surface processing will not work because\n(1) File permissions are not correct (for unix use sudo chmod a+x) or\n(2) CAT binaries are not compatible to your system or\n(3) Antivirus software in Windows or Gatekeeper in macOS is blocking to execute binaries\nSystem: %s\n',RS);
   cat_io_cmd(str,'warning');
   helpdlg(str,'Error Using Surface Tools');
   
-  % check Gatekeeper on MAC OS
+  % check Gatekeeper on macOS
   if ismac && ~isdeployed
-    [ST, RS] = system('spctl --status');
-    if ~isempty(strfind(RS,'enabled'))
-      fprintf(2, '\n========================================================================\n');
-      fprintf(2, 'CAT: Critical Permission Error\n');
-      fprintf(2, 'macOS is blocking CAT binaries because they are quarantined.\n');
-      fprintf(2, 'Self-repair failed (likely due to permissions).\n');
-      fprintf(2, 'Please run the following command in your Terminal to fix this:\n\n');
-      fprintf(2, '     sudo xattr -cr "%s"\n\n', CATDir);
-      fprintf(2, '     sudo chmod a+x "%s"/CAT.mac*/CAT*\n\n', CATDir);
-      fprintf(2, 'Then restart MATLAB.\n');
-      fprintf(2, '========================================================================\n\n');
-
-    end
+    fprintf(2, '\n========================================================================\n');
+    fprintf(2, 'CAT: Critical Permission Error\n');
+    fprintf(2, 'macOS is blocking CAT binaries because they are quarantined.\n');
+    fprintf(2, 'Please run this command in your Terminal to fix this:\n\n');
+    fprintf(2, '     sudo xattr -dr com.apple.quarantine "%s"\n\n', strrep(CATDir,'\ ',' '));
+    fprintf(2, 'Then restart MATLAB.\n');
+    fprintf(2, '========================================================================\n\n');
   end
   fprintf('\n\nFor future support of your system please send this message to christian.gaser@uni-jena.de\n\n');
 end

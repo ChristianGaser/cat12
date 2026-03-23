@@ -56,16 +56,6 @@ matlabbatch{1}.spm.tools.cat.long.opts.biasstr = 0.5;
 
 matlabbatch{1}.spm.tools.cat.long.opts.accstr = 0.5;
 
-% surface options
-matlabbatch{1}.spm.tools.cat.long.extopts.surface.pbtres = 0.5;
-matlabbatch{1}.spm.tools.cat.long.extopts.surface.pbtmethod = 'pbt2x';
-matlabbatch{1}.spm.tools.cat.long.extopts.surface.SRP = 22;
-matlabbatch{1}.spm.tools.cat.long.extopts.surface.reduce_mesh = 1;
-matlabbatch{1}.spm.tools.cat.long.extopts.surface.vdist = 1.33333333333333;
-matlabbatch{1}.spm.tools.cat.long.extopts.surface.scale_cortex = 0.7;
-matlabbatch{1}.spm.tools.cat.long.extopts.surface.add_parahipp = 0.1;
-matlabbatch{1}.spm.tools.cat.long.extopts.surface.close_parahipp = 0;
-
 matlabbatch{1}.spm.tools.cat.long.extopts.admin.experimental = 0;
 matlabbatch{1}.spm.tools.cat.long.extopts.admin.new_release = 0;
 matlabbatch{1}.spm.tools.cat.long.extopts.admin.lazy = 0;
@@ -115,15 +105,8 @@ matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.lpba40 = 0;
 matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.cobra = 1;
 matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.hammers = 0;
 matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.ibsr = 0;
-matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.aal3 = 0;
-matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.mori = 0;
 matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.thalamus = 0;
-matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.anatomy3 = 0;
 matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.julichbrain3 = 0;
-matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.Schaefer2018_100Parcels_17Networks_order = 0;
-matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.Schaefer2018_200Parcels_17Networks_order = 0;
-matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.Schaefer2018_400Parcels_17Networks_order = 0;
-matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.Schaefer2018_600Parcels_17Networks_order = 0;
 matlabbatch{1}.spm.tools.cat.long.ROImenu.atlases.ownatlas = {''};
 
 % create and use longitudinal TPM to get more stable segmentations

@@ -32,13 +32,13 @@ matlabbatch{3}.spm.tools.cat.tools.check_homogeneity.sel_xml.data_xml = {
 matlabbatch{3}.spm.tools.cat.tools.check_homogeneity.c = cell(1, 0);
 %__________________________________________________________________________
 matlabbatch{4}.spm.tools.cat.stools.surf2roi.cdata{1}(1) = cfg_dep('Extract additional surface parameters: Left MNI gyrification', substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('()',{1}, '.','lPGI', '()',{':'}));
-matlabbatch{4}.spm.tools.cat.stools.surf2roi.rdata = {fullfile(spm('dir'),'toolbox','cat12','atlases_surfaces/lh.aparc_DK40.freesurfer.annot')};
+matlabbatch{4}.spm.tools.cat.stools.surf2roi.rdata = {fullfile(spm('dir'),'toolbox','CAT','atlases_surfaces/lh.aparc_DK40.freesurfer.annot')};
 %__________________________________________________________________________
 matlabbatch{5}.spm.tools.cat.tools.T2x_surf.data_T2x = {fullfile(pth,'analysis/surface/spmT_0002.gii')};
 matlabbatch{5}.spm.tools.cat.tools.T2x_surf.conversion.sel = 2;
 matlabbatch{5}.spm.tools.cat.tools.T2x_surf.conversion.threshdesc.uncorr.thresh001 = 0.001;
 matlabbatch{5}.spm.tools.cat.tools.T2x_surf.conversion.inverse = 0;
-matlabbatch{1}.spm.tools.cat.tools.T2x_surf.conversion.cluster.none = 1;
+matlabbatch{5}.spm.tools.cat.tools.T2x_surf.conversion.cluster.none = 1;
 %__________________________________________________________________________
 matlabbatch{6}.spm.tools.cat.tools.F2x_surf.data_F2x = {fullfile(pth,'analysis/surface/spmF_0001.gii')};
 matlabbatch{6}.spm.tools.cat.tools.F2x_surf.conversion.sel = 2;

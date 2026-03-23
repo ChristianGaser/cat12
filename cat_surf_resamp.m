@@ -252,7 +252,7 @@ function vout = cat_surf_resamp(varargin)
         Pfwhm_all{j} = Pfwhm_gii;
 
         % resample values
-        if ~isempty(strfind(pname,'area')) || ~isempty(strfind(pname,'gmv'))
+        if ~isempty(strfind(pname,'gmv')) %|| ~isempty(strfind(pname,'area'))
           % resample values using delaunay-based age map
 
           % create mapping between 
@@ -287,14 +287,19 @@ function vout = cat_surf_resamp(varargin)
           cdata  = cat_io_FreeSurfer('read_surf_data',Pvalue0);
           ncdata = cat_surf_fun('useEdgemap',cdata,edgemap); 
           cat_io_FreeSurfer('write_surf_data',Pvalue,ncdata); 
-          cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,Pvalue0,Pvalue);
+          cmd = sprintf('CAT_SurfResample "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,Pvalue0,Pvalue);
           err = cat_system(cmd,job.debug,def.trerr); if err, continue; end
           cat_io_FreeSurfer('write_surf_data',Pvalue,ncdata); 
           clear Si clear Si edgemap; 
 
         else
           %% resample values using warped sphere 
-          cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,Pvalue0,Pvalue);
+          % use areal interpolation for local surface area
+          if strcmp(pname,'area')
+            cmd = sprintf('CAT_SurfResample -areal "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,Pvalue0,Pvalue);
+          else
+            cmd = sprintf('CAT_SurfResample "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,Pvalue0,Pvalue);
+          end
           evalc('err = cat_system(cmd,job.debug,def.trerr);');
           %%
           if err, continue; end

@@ -17,12 +17,12 @@ function varargout = cat_surf_parameters(job)
 %    .FD        .. estimate fractal dimension (Yotter:2012; default 0)
 %    .SD        .. estimate sulcal depth (default 0)
 %    .tGI       .. estimate Toro's GI (default 0)
+%    .area      .. estimate area (default 1)
 %    = experimental measures = (only cat_get_defaults('extopts.expertgui')>1)
 %    .lGI       .. estimate Schaer's lGI (default 0)
 %    .GIL       .. estimate Laplacian-based gyrification index 
 %                  is a numeric in case of default users (default 0)
 %                  is a structure in case of expert users 
-%    .area      .. estimate area (not implemented; default 0)
 %    .surfaces  .. further cortical surfaces
 %    .IS        .. create inner surface (default 0)
 %    .OS        .. create outer surface (default 0)
@@ -234,7 +234,23 @@ function varargout = cat_surf_parameters(job)
         
         
         
-        
+  
+        if job.area
+          %% local surface area compatible with the surface area estimation from FreeSurfer
+          stime = clock; 
+          if ~cat_io_rerun(Parea,Pname) && job.lazy  
+            if job.verb, fprintf('%sexist - Display %s\n',nstr,spm_file(Parea,'link','cat_surf_display(''%s'')')); end
+          else
+            cmd = sprintf('CAT_SurfArea "%s" "%s"',Pxname,Parea); 
+            cat_system(cmd,job.debug,job.trerr);
+            if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(Parea,'link','cat_surf_display(''%s'')')); end
+          end
+
+          if nargout==1, varargout{1}.([sides{si} 'Parea' ]){i} = Parea; end          
+          measuresi = measuresi + 1; cat_progress_bar('Set',i - 1  + measuresi/measuresn);
+        end
+
+%{ 
         if job.area
           %% local surface area by nearest neighbor approach (see Winkler 2012, 2017)
           %  As far as cat_surf_parameters characterize the original surface
@@ -247,7 +263,7 @@ function varargout = cat_surf_parameters(job)
           stime = clock; 
           if ~cat_io_rerun(Parea,Pname) && job.lazy  
             if job.verb, fprintf('%sexist - Display %s\n',nstr,spm_file(Parea,'link','cat_surf_display(''%s'')')); end
-          else 
+          else
             Si   = gifti(Pname); 
             area = cat_surf_fun('area',Si) * 1000; clear Si              % in cm2
             cat_io_FreeSurfer('write_surf_data',Parea,area); clear area;  
@@ -257,7 +273,7 @@ function varargout = cat_surf_parameters(job)
           if nargout==1, varargout{1}.([sides{si} 'Parea' ]){i} = Parea; end
           measuresi = measuresi + 1; cat_progress_bar('Set',i - 1  + measuresi/measuresn);
         end
-
+%}
         
         
         

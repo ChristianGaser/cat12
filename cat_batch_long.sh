@@ -81,7 +81,7 @@ parse_args ()
         long_model=$optarg
         shift
         ;;
-      --print* | longlong*)
+      --print* | -p*)
         exit_if_empty "$optname" "$optarg"
         printlong=$optarg
         shift
@@ -120,7 +120,7 @@ parse_args ()
         fi
         shift
         ;;
-      --small* | -l*)
+      --small* | -s*)
         long_model=1
         ;;
       --large* | -l*)
