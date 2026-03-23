@@ -162,9 +162,9 @@ function quickeval(V0,Vpp,Ymfs,Yppi,CS,P,Smat,res,opt,EC0,si,time_sr,pipeline)
   cat_surf_render2('clim',H,[0 6]); 
   cat_surf_render2('view',H,cat_io_strrep(opt.surf{si},{'lh','rh','ch'},{'right','left','back'})); 
   cat_surf_render2('ColourBar',H,'on');
-  title(sprintf('CS%d%d, nF=%0.0fk, EC=%d, Tpbt=%0.3f±%0.3f, Tfs=%0.3f±%0.3f, \n IE=%0.3f, PE=%0.3f, ptime=%0.0fs, time=%s', ...
-    pipeline,opt.SRP, size(CS.faces,1)/1000, EC0, ...
-    mean( PBTthick ), std(PBTthick), mean( FSthick ), std(FSthick), ...
+  title(sprintf('CS%d%d, res=%0.2fmm, nF=%0.0fk, EC=%d, Tpbt=%0.3f±%0.3fmm,  \n IE=%0.3f, PE=%0.3f, ptime=%0.0fs, time=%s', ...
+    pipeline, opt.SRP, opt.interpV, size(CS.faces,1)/1000, EC0, ...
+    mean( PBTthick ), std(PBTthick), ... mean( FSthick ), std(FSthick), ... Tfs=%0.3f±%0.3f,
     mean( [ res.(opt.surf{si}).createCS_final.RMSE_Ym_white,  res.(opt.surf{si}).createCS_final.RMSE_Ym_layer4,   res.(opt.surf{si}).createCS_final.RMSE_Ym_pial ] ) , ...
     mean( [ res.(opt.surf{si}).createCS_final.RMSE_Ypp_white, res.(opt.surf{si}).createCS_final.RMSE_Ypp_central, res.(opt.surf{si}).createCS_final.RMSE_Ypp_pial ] ) , ...
     etime(clock,time_sr), datetime))
@@ -222,10 +222,10 @@ function res = addSurfaceQualityMeasures(res,opt)
       end
     end
   end
-  
+
   % final res structure
-  res.EC          = NaN; 
-  res.defect_size = NaN;
+  res.EC          = mean( abs(res.EC - 2) ) + 2; 
+  res.defect_size = mean( res.ECmodwmp );
   res.defect_area = NaN;
   res.defects     = NaN;
   res.mnth        = mean(res.mnth); 
