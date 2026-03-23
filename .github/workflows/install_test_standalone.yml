@@ -135,7 +135,7 @@ jobs:
           echo "MATLAB_VERSION=R2023b" >> $GITHUB_ENV
 
       - name: Compile CAT mex-files
-        uses: matlab-actions/run-command@v3
+        uses: matlab-actions/run-command@v2
         with:
           command: |
             addpath('spm');
@@ -160,7 +160,7 @@ jobs:
 
       # Build SPM standalone (which includes CAT as toolbox)
       - name: Build MATLAB standalone
-        uses: matlab-actions/run-command@v3
+        uses: matlab-actions/run-command@v2
         with:
           command: |
             cd('spm');
