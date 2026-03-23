@@ -282,8 +282,9 @@ jobs:
             INSTALLER_BIN=$(find "$INSTALLER_APP/Contents/MacOS" -type f -perm +111 | head -n 1)
           fi
           echo "Using installer: $INSTALLER_BIN"
-          # macOS .app installer treats -agreeToLicense as boolean flag (no "yes" value)
-          sudo "$INSTALLER_BIN" -agreeToLicense -destinationFolder "$HOME/MATLAB_Runtime" 2>&1 | tee install.log
+          # Create installer input file (works with both legacy and Qt IFW-based installers)
+          printf 'agreeToLicense=yes\ndestinationFolder=%s\n' "$HOME/MATLAB_Runtime" > /tmp/mcr_input.txt
+          sudo "$INSTALLER_BIN" -inputFile /tmp/mcr_input.txt 2>&1 | tee install.log
           sleep 2
 
           sudo chown -R $USER "$HOME/MATLAB_Runtime"
