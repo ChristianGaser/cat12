@@ -252,7 +252,7 @@ function vout = cat_surf_resamp(varargin)
         Pfwhm_all{j} = Pfwhm_gii;
 
         % resample values
-        if ~isempty(strfind(pname,'gmv')) %|| ~isempty(strfind(pname,'area'))
+        if ~isempty(strfind(pname,'gmv'))
           % resample values using delaunay-based age map
 
           % create mapping between 

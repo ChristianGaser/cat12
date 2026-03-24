@@ -249,31 +249,6 @@ function varargout = cat_surf_parameters(job)
           if nargout==1, varargout{1}.([sides{si} 'Parea' ]){i} = Parea; end          
           measuresi = measuresi + 1; cat_progress_bar('Set',i - 1  + measuresi/measuresn);
         end
-
-%{ 
-        if job.area
-          %% local surface area by nearest neighbor approach (see Winkler 2012, 2017)
-          %  As far as cat_surf_parameters characterize the original surface
-          %  her only the simple surface area is esimated an mapped to all
-          %  connected vertices (simply divided by 3 that describes the COM
-          %  alingment but the alignments by the voronoi / outer-circle  
-          %  point would be more accurate).
-          %  For area estimation scaling of the orinal surface is irelevant.
-          %  RD202005:  implement better mapping
-          stime = clock; 
-          if ~cat_io_rerun(Parea,Pname) && job.lazy  
-            if job.verb, fprintf('%sexist - Display %s\n',nstr,spm_file(Parea,'link','cat_surf_display(''%s'')')); end
-          else
-            Si   = gifti(Pname); 
-            area = cat_surf_fun('area',Si) * 1000; clear Si              % in cm2
-            cat_io_FreeSurfer('write_surf_data',Parea,area); clear area;  
-            if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(Parea,'link','cat_surf_display(''%s'')')); end
-          end
-
-          if nargout==1, varargout{1}.([sides{si} 'Parea' ]){i} = Parea; end
-          measuresi = measuresi + 1; cat_progress_bar('Set',i - 1  + measuresi/measuresn);
-        end
-%}
         
         
         

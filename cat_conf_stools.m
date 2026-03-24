@@ -1736,8 +1736,6 @@ FS_HOME.num     = [0 1];
 FS_HOME.hidden  = expert<2;
 FS_HOME.help    = {'Select the FreeSurfer home directory.'};
 
-
-
 % surface area 
 area        = cfg_menu;
 area.name   = 'Surface area';
