@@ -850,7 +850,7 @@ if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
     if ~isfield(job.extopts,'vdist'),           job.extopts.vdist           = 0; end
     if ~isfield(job.output,'surf_measures'),    job.output.surf_measures    = 1; end % developer
  
-    if job.extopts.SRP >= 40
+   if job.extopts.SRP >= 40
       %% Yb0 was modified in cat_main_amap* for some conditions and we can use it as better mask in 
       % cat_surf_createCS4 except for inv_weighting or if gcut was not used
       if ~(job.extopts.gcutstr>0 && ~job.inv_weighting), Yb0(:) = 1; end
@@ -859,7 +859,7 @@ if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
         'interpV',job.extopts.pbtres,'SRP', mod(job.extopts.SRP,10), 'vdist', job.extopts.vdist, ...
         'Affine',res.Affine, 'surf',{surf}, 'verb',job.extopts.verb, 'useprior',job.useprior);
 
-      if job.extopts.SRP == 40
+      if job.extopts.SRP < 45
         [Yth1, S, Psurf, qa.createCS] = cat_surf_createCS4(VT,VT0,Ymi,Ymix,Yl1,YMF,Yb0,opt0,job);
       else
         [Yth1, S, Psurf, qa.createCS] = cat_surf_createCS5(VT,VT0,Ymi,Ymix,Yl1,YMF,Yb0,opt0,job);

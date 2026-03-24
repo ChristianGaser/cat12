@@ -316,27 +316,20 @@ function useprior = setupprior(opt,surffolder,P,si)
   if isfield(opt,'useprior') && ~isempty(opt.useprior) 
     % RD20200729: delete later ... && exist(char(opt.useprior),'file')
     % if it not exist than filecopy has to print the error
-    [pp1,ff1] = spm_fileparts(opt.useprior);
-    %{
-    % correct '../' parts in directory for BIDS structure
-    [stat, val] = fileattrib(surffolder);
-    if stat, pp1_surffolder = val.Name; else, pp1_surffolder = fullfile(pp1,surffolder);  end
-    %}
-    % this is allways the first of a subject
-    pp1_surffolder = surffolder;
+    [~,ff1] = spm_fileparts(opt.useprior);
 
     % try to copy surface files from prior to individual surface data 
     useprior = 1;
-    useprior = useprior & copyfile(fullfile(pp1_surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff1)),P(si).Pcentral,'f');
-    useprior = useprior & copyfile(fullfile(pp1_surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff1)),P(si).Psphere,'f');
-    useprior = useprior & copyfile(fullfile(pp1_surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff1)),P(si).Pspherereg,'f');
+    useprior = useprior & copyfile(fullfile(surffolder,sprintf('%s.central.%s.gii',opt.surf{si},ff1)),P(si).Pcentral,'f');
+    useprior = useprior & copyfile(fullfile(surffolder,sprintf('%s.sphere.%s.gii',opt.surf{si},ff1)),P(si).Psphere,'f');
+    useprior = useprior & copyfile(fullfile(surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff1)),P(si).Pspherereg,'f');
     
     if ~useprior
       warn_str = sprintf('Surface files for %s not found. Move on with individual surface extraction.\n',pp1_surffolder);
       fprintf('\nWARNING: %s',warn_str);
       cat_io_addwarning('cat_surf_createCS4:noPriorSurface', warn_str);
     else
-      cat_io_cprintf('blue','  Use existing average surface as prior and thus skip unnecessary processing steps:\n    %s\n',pp1_surffolder);
+      cat_io_cprintf('blue','  Use existing average surface as prior and thus skip unnecessary processing steps:\n    %s\n',surffolder);
     end      
   else
     useprior = 0;

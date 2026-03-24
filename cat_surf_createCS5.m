@@ -374,22 +374,23 @@ function [Yth,S,P,res] = cat_surf_createCS5(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       vxth     = 200 * (1+2*cat_io_contains(opt.surf{si},'cb'));  % voxel threshold of accepted changes to adjust the topology (but in mm!) 
       ECdiffth = 10;   % accaptable EC of the final surface 
       stime = cat_io_cmd(sprintf('  Create initial surface (%0.2f mm)',opt.interpV),'g5','',opt.verb,stime); %if opt.verb>2, fprintf('\n'); end
-      for ECiter = 1:2 % this loop is to allow futher topology iterations if the first one was not good enough
-        for thi = 1:4; %*(1+1*cat_io_contains(opt.surf{si},'cb')) % with this loop we further increase the threshold of the Ypp map by .1 (eg. more WM like surface)
+      for ECiter = 1 % this loop is to allow futher topology iterations if the first one was not good enough
+        for thi = 1; %*(1+1*cat_io_contains(opt.surf{si},'cb')) % with this loop we further increase the threshold of the Ypp map by .1 (eg. more WM like surface)
           % Main initial surface creation with topology correction.
           if exist(P(si).Pcentral,'file'), delete(P(si).Pcentral); end % have to delete it to get useful error messages in case of reprocessing/testing
           if cat_io_contains(opt.surf{si},'cb')
             % RD202603: just as quick placeholder ...
-            gycon = .5 + 0.025*(thi);  %max(.5,sum(Yppi(:)>.1 & Yppi(:)<.5) ./ sum(Yppi(:)>.1 & Yppi(:)<.9)) + 0.05*(thi); 
-            [Vppmi,rel] = exportPPmap( Yp0 .* Ypb, Ymfsc, Yppi , Vmfs, Ypbs, 0, si, opt, '', ff); % have to rewrite it
-            spm_write_vol(Vppmi, (Pcb.Yppi*.5 + 0.5*(Pcb.Yta))  ); 
+            opt0=opt; opt0.reconres = 0.25; 
+            gycon = .55 + 0.025*(thi);  %max(.5,sum(Yppi(:)>.1 & Yppi(:)<.5) ./ sum(Yppi(:)>.1 & Yppi(:)<.9)) + 0.05*(thi); 
+            [Vppmi,rel] = exportPPmap( Yp0 .* Ypb, Ymfsc, Pcb.Yta , Vmfs, Ypbs, 0, si, opt0, '', ff); % have to rewrite it
+%            spm_write_vol(Vppmi, (Pcb.Yppi*.5 + 0.5*(Pcb.Yta))  ); 
             if 1
               cmd = sprintf('CAT_VolMarchingCubes  "%s" "%s"  -thresh "%0.4f" -iter 1 -median-filter "%d"',  ...
                 Vppmi.fname, P(si).Pcentral, gycon, 0); %#ok<NASGU>
             else
               spm_write_vol(Vp0,  Yp0fs ); 
               cmd = sprintf('CAT_VolMarchingCubes  "%s" "%s"  -thresh "%0.4f" -iter %d -label "%s" -median-filter "%d"',  ...
-                Vppmi.fname, P(si).Pcentral, gycon, ECiter, Vp0.fname, min(2,round( (opt.wmnoise*20) / opt.interpV ) )); %#ok<NASGU>
+                Vppmi.fname, P(si).Pcentral, gycon, ECiter, Vp0.fname, min(2,round( (opt.wmnoise*20) / opt.interpV ) )); 
             end
           else
             gycon = gycon + .1*(thi>1);
@@ -407,13 +408,15 @@ function [Yth,S,P,res] = cat_surf_createCS5(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
  
           % evaluate surface characteristics
           if gycon>.85  ||  res.ECmodvx(si) * prod(vx_vol) <= vxth  &&  abs(res.EC(si) - 2) <= ECdiffth 
-            if opt.verb && thi>0, cat_io_cprintf([0 .5 0],'\n    Accepted configuration (EC=%d, %5dvx, %0.2f%%) for Ypp>%0.2f.   ', ...
-              res.EC(si), res.ECmodvx(si), res.ECmodwmp(si), gycon);
+            if opt.verb>1 && thi>0, cat_io_cprintf([0 .5 0],sprintf( ...
+              '\n    Accepted configuration (EC=%d, %5dvx, %0.2f%%) for Ypp>%0.2f   ', ...
+              res.EC(si), res.ECmodvx(si), res.ECmodwmp(si), gycon));
             end
             break;      
           else
-            if opt.verb, cat_io_cprintf([.7 0 0.5],'\n    Sulcal blurring (EC=%3d, %5dvx, %0.2f%%) for Ypp>%0.2f.        ', ...
-              res.EC(si), res.ECmodvx(si), res.ECmodwmp(si), gycon);
+            if opt.verb>1, cat_io_cprintf([.7 0 0.5],sprintf( ...
+              '\n    Sulcal blurring (EC=%3d, %5dvx ~ %0.2f%%) for Ypp>%0.2f        ', ...
+              res.EC(si), res.ECmodvx(si), res.ECmodwmp(si), gycon));
             end
           end
         end
@@ -899,6 +902,7 @@ function [Vppm,rel] = exportPPmap( Yp0, Yp0fs, Yppi, Vmfs, Ypbs, optimize, si, o
     [Vppm,Yt]      = cat_vol_imcalc(Vpp,Vppr,'i1',struct('interp',5,'verb',0,'mask',-1));
     Vppm.pinfo     = Vmfs.pinfo;
     Ytx            = Yt; 
+    Vppm
   end
  
   if isfield(Vppm,'dat'), Vppm = rmfield(Vppm,{'dat'}); end
