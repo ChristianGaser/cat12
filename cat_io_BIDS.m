@@ -295,7 +295,7 @@ function out = getBIDS(BIDS,subfield,varargin)
       out = ({BIDS(:).(subfield)})';
       if nargin > 3 % call spm_file
         % add file name
-        [~,ff,ee] = fileparts( {BIDS(:).file}' ); 
+        [~,ff,ee] = fileparts( { strrep( BIDS(:).file , '.nii.gz', '.nii') }' ); 
         out = spm_file( fullfile(out,strcat(ff,ee)) , varargin{:} ); 
       end
       if isscalar( out ), out = char(out); end
