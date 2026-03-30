@@ -859,12 +859,8 @@ if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
         'interpV',job.extopts.pbtres,'SRP', mod(job.extopts.SRP,10), 'vdist', job.extopts.vdist, ...
         'Affine',res.Affine, 'surf',{surf}, 'verb',job.extopts.verb, 'useprior',job.useprior);
 
-      if job.extopts.SRP < 45
-        [Yth1, S, Psurf, qa.createCS] = cat_surf_createCS4(VT,VT0,Ymi,Ymix,Yl1,YMF,Yb0,opt0,job);
-      else
-        [Yth1, S, Psurf, qa.createCS] = cat_surf_createCS5(VT,VT0,Ymi,Ymix,Yl1,YMF,Yb0,opt0,job);
-      end
-
+      [Yth1, S, Psurf, qa.createCS] = cat_surf_createCS4(VT,VT0,Ymi,Ymix,Yl1,YMF,Yb0,opt0,job);
+    
       qa.subjectmeasures.EC_abs = NaN;
       qa.subjectmeasures.defect_size = NaN;
     else
