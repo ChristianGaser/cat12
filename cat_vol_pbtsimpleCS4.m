@@ -175,13 +175,8 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
 
   %% == Estimation of thickness maps == 
   if opt.verb, toc; fprintf('Thick:   '); tic; end      
-  if 0 % old version
-    Ygmtw0 = cat_vol_pbtp( single(1 + (Yp0>=1.5-opt.rangeE) + (Yp0>2.5+opt.rangeE)) , Ywd0, Ycd0);
-    Ygmtc0 = cat_vol_pbtp( single(3 - (Yp0>=1.5-opt.rangeE) - (Yp0>2.5+opt.rangeE)) , Ycd0, Ywd0);
-  else
-    Ygmtw0 = cat_vol_pbtp2( single(1 + (Yp0>=1.5-opt.rangeE) + (Yp0>2.5+opt.rangeE)) , Ywd0, Ycd0);
-    Ygmtc0 = cat_vol_pbtp2( single(3 - (Yp0>=1.5-opt.rangeE) - (Yp0>2.5+opt.rangeE)) , Ycd0, Ywd0);         
-  end
+  Ygmtw0 = cat_vol_pbtp( single(1 + (Yp0>=1.5-opt.rangeE) + (Yp0>2.5+opt.rangeE)) , Ywd0, Ycd0);
+  Ygmtc0 = cat_vol_pbtp( single(3 - (Yp0>=1.5-opt.rangeE) - (Yp0>2.5+opt.rangeE)) , Ycd0, Ywd0);         
   Ygmtw0 = min(Ygmtw0, Ycd0+Ywd0);
   Ygmtc0 = min(Ygmtc0, Ycd0+Ywd0);
 
@@ -701,7 +696,7 @@ function Yp0 = myelincorrection(Yp0,vx_vol,opt)
     [Ycd, Ywd] = cat_vol_cwdist(Yp0, opt);
   
     % projection-based thickness mapping
-    Ygmt0 = cat_vol_pbtp2( round(Yp0) , Ywd, Ycd);
+    Ygmt0 = cat_vol_pbtp( round(Yp0) , Ywd, Ycd);
     Ygmt0 = cat_vol_approx(Ygmt0,'rec',2); 
   
     % reestimation of the CSF distance 
@@ -710,7 +705,7 @@ function Yp0 = myelincorrection(Yp0,vx_vol,opt)
     Ycdc2(Ycdc2 > 6 / mean(vx_vol)) = 0; 
    
     % estimate the full tissue thickness (we needed the GM thickness and WM to reconstruct the sulcus)
-    Ybmt  = cat_vol_pbtp2( min(3,4 - min(2,Yp0)), Ycdc2, Ycdc2*inf); 
+    Ybmt  = cat_vol_pbtp( min(3,4 - min(2,Yp0)), Ycdc2, Ycdc2*inf); 
     Ybmt  = cat_vol_approx(Ybmt); 
 
     % estimate correction area

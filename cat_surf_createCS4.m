@@ -204,7 +204,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     if isscalar(opt.surf), time_sr = clock; end % temporary for tests 
     if useprior 
       stime = cat_io_cmd('  Load and refine subject average surface','g5','',opt.verb,stime);
-      res.EC(si)       = zeros(size(opt.surf)); 
+      res.EC(si)       = 0; 
       res.ECmodvx(si)  = res.EC;
     else
       % optimized downsampling of the the Ypp map and
