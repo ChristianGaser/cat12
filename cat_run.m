@@ -257,6 +257,7 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     % starting many large jobs can cause servere MATLAB errors
     pause(1 + rand(1) + job.nproc + numel(job.data)/100);
     jobs(i).data = job.data;
+    jobs(i).BIDS = job.BIDS; 
     
     job = jobo; 
   end
@@ -522,8 +523,8 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
               [pp,ff,ee] = spm_fileparts(jobs(i).data{max(1,catSID(i))}); 
 
               % sometimes we have to remove .nii from filename if files were zipped
-              catlog = cat_io_BIDS( job.BIDS(i), 'reportdir','prefix','catlog_','ext','.txt'); 
-
+              catlog = cat_io_BIDS( jobs(i).BIDS( max(1,catSID(i) )), 'reportdir','prefix','catlog_','ext','.txt'); 
+              
               
               switch caterr
                 case 'Bad SPM-Segmentation. Check image orientation!' % pink error that support user interaction  
