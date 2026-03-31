@@ -205,7 +205,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     if useprior 
       stime = cat_io_cmd('  Load and refine subject average surface','g5','',opt.verb,stime);
       res.EC(si)       = 0; 
-      res.ECmodvx(si)  = res.EC;
+      res.ECmodvx(si)  = res.EC(si);
     else
       % optimized downsampling of the the Ypp map and
       Vp0 = Vmfs; Vp0.fname = spm_file(P(si).Pp0,'suffix','_tmp'); 
@@ -232,7 +232,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         gth   = .5;
         relwm = sum(max(0,Ymf(:)-2)) / sum(min(1,Ymf(:))); 
         gycon = max(0,1 - max(0,relwm * 3 - 1) * 2);
-        gycon = max(0.4,min(.85,.6 - .2*gycon)); 
+        gycon = max(0.5,min(.85,.6 - .2*gycon)); 
         % export map
         Vppmi = spm_vol(P(si).Pppm); 
       end
@@ -298,6 +298,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       end
 
       %% use best surface 
+      thio = thi; 
       if thi > 1 
         err = res.surferr(si,:) + res.surferrgt(si,:); 
         thi = find( err == min(err), 1, 'first');
@@ -306,9 +307,14 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       res.EC(si)  = res.ECf(si,thi); 
       res.thi(si) = thi; 
       if opt.verb>1
+        if thi < thio
+          cat_io_cprintf([.7 0 0.5],sprintf( ...
+              '\n    Sulcal blurring for Ypp>%0.2f (EC=%3d,ATE=%5.1f%%,ATE0=%5.1f%%)  ', ...
+               res.gycon(si,thi), res.ECf(si,thi), res.surferr(si,thi), res.surferrgt(si,thi) ));
+        end
         cat_io_cprintf([0 .5 0],sprintf( ...
-                '\n    Final configuration Ypp>%0.2f (EC=%3d,ATE=%5.1f%%,ATE0=%5.1f%%)  ', ...
-                res.gycon(si,thi), res.ECf(si,thi), res.surferr(si,thi), res.surferrgt(si,thi) ));
+            '\n    Final configuration Ypp>%0.2f (EC=%3d,ATE=%5.1f%%,ATE0=%5.1f%%)  ', ...
+            res.gycon(si,thi), res.ECf(si,thi), res.surferr(si,thi), res.surferrgt(si,thi) ));
       end
       if res.genus > genuserr
         cat_io_addwarning([mfilename ':EC'],sprintf('Incorrect Euler Number i.e. reminding topological defects (EC=%d). ', ...
