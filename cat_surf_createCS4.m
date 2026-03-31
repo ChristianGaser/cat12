@@ -172,12 +172,14 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         'eidist',1,'NVBC',~iscerebellum,'denoise',1 & ~iscerebellum)); 
       Vppm = Vmfs; Vppm.fname = P(si).Pppm; spm_write_vol(Vppm, Yppi);
     else
-      cmd = sprintf('CAT_VolThicknessPbt  -correct-voxelsize 0   -median-filter 2   -downsample 0  "%s" "%s" "%s"', ...
+      cmd = sprintf('CAT_VolThicknessPbt  -correct-voxelsize 0   -median-filter 1   -downsample 0  "%s" "%s" "%s"', ...
         Vmfs.fname, P(si).Pgmt, P(si).Pppm);
       cat_system(cmd,opt.verb-3);
       Vgmt  = spm_vol(P(si).Pgmt); Yth1i = spm_read_vols(Vgmt); 
       % correction of general offset in mm 
-      Yth1i = max(0,Yth1i - 0.28); 
+      % Estimated for various interpolation resolution of 
+      %  sub-ds000113-1.3.0-01_ses-forrestgump_desc-snr30_rf30_2_res-07mm_thickness20mm-30mm_T1w.nii.gz
+      Yth1i = max(0,Yth1i - 0.56*mean(opt.interpV) ); 
     end
     
 
@@ -364,7 +366,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     % what improves also intensity and position values of the inner/outer surfaces!
     if useprior, remove_intersect = ' '; else, remove_intersect = ' -remove_intersect '; end
     stime = cat_io_cmd('  Optimize surface','g5','',opt.verb,stime); 
-     cmd = sprintf('CAT_SurfDeform %s -iter 75 -isovalue 0.5 -w1 0.1 -w2 0.1 -w3 1.0 -sigma 1.2 "%s" "%s" "%s"', ...
+     cmd = sprintf('CAT_SurfDeform %s -iter 75 -isovalue 0.5 -w1 0.1 -w2 0.1 -w3 1.0 -sigma 0.2 "%s" "%s" "%s"', ...
       remove_intersect, P(si).Pppm, P(si).Pcentral, P(si).Pcentral);
     cat_system(cmd,opt.verb-3);
 

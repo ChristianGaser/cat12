@@ -85,17 +85,20 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
                               %
   def.verb             = 0;   % be verbose
                               %
-  def.usemedian        = 2;   % GMT filtering setting (1-median)
+  def.usemedian        = 1;   % GMT filtering setting (0-approx,1-median-complex,2-median-simple)
+                              %
   def.medfs            = [1 2]; % [processingResolution filterSize] default [1.5 2]; 
                               %
   def.denoise          = 1;   % correct for noise, artifacts and anatomical issues as WMHs
                               % 
   def.eidist           = 0;   % eikonal distance (not so good yet)
+  def.ctproxy          = 1; 
 
   opt = cat_io_checkinopt(opt,def);
   vxs = mean(vx_vol); 
   opt.vxs = vxs;
-
+  opt.levels = max(1,min(8,2  * mean(vx_vol*2)^2)); 
+    
   opt.wmnoise = 0.02; 
 
   c = clock; %#ok<*CLOCK>
@@ -116,6 +119,18 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
     [Yp0,opt.pvet] = CS4_desnoise(Yp0,opt);
   end
 
+  if opt.ctproxy % tickness proxy
+    opt2.ctproxy = 0; opt2.verb = 0; opt2.myelinCorrection = 0; opt2.denoise = 0; 
+    [Yp0r,resp]  = cat_vol_resize(Yp0,'reduceV',vx_vol,1,32,'meanm');
+    Ygmtp        = cat_vol_pbtsimpleCS4(Yp0r,resp.vx_volr,opt2); clear Yp0r;
+    Ygmtp        = cat_vol_approx(Ygmtp); % smoothing
+    Ygmtp        = cat_vol_resize(Ygmtp,'dereduceV',resp); clear resp
+    gmtp         = [ cat_stat_nanmedian(Ygmtp(round(Yp0(:))==2)) cat_stat_nanstd(Ygmtp(round(Yp0(:))==2)) ];
+  else
+    Ygmtp = ones(size(Yp0),'single') * 2.5;
+    gmtp  = [2.5 0];
+  end
+
   if mean(vx_vol) < .75 
     % extend hard cuts, by a low value just to have a broader estimate
     % - could be improved by a basic WMD and GMT estimate to assure a
@@ -124,52 +139,38 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
     % - Ok for phantom.
     Yp0 = max(Yp0,(Yp0==1 & cat_vol_morph(Yp0==2,'d')) * 1.2);
   
-    % close holes 
-    % Helpful for SPM with unsufficient WM correction but minor/no-effects for CAT.
-    % Ok for phantom.
-    Yp0 = max(Yp0, 2.90 * smooth3(cat_vol_morph(Yp0>2.90,'ldc',opt.pvet/1)) ); 
-    Yp0 = max(Yp0, 2.75 * smooth3(cat_vol_morph(Yp0>2.75,'ldc',opt.pvet/2)) ); 
-    Yp0 = max(Yp0, 2.25 * smooth3(cat_vol_morph(Yp0>2.25,'ldc',0.50,vx_vol)) ); 
+    if opt.ctproxy % only thicker regions where WMHs cause damage >> need thickness proxy
+      % close holes 
+      % Helpful for SPM with unsufficient WM correction but minor/no-effects for CAT.
+      % Ok for phantom.
+      Ymsk = smooth3( Ygmtp > 2*max(vxs,opt.pvet/vxs) & Ygmtp > gmtp(1));
+      Yp0  = max(Yp0, Ymsk .* 2.90 .* smooth3(cat_vol_morph(Yp0>2.90,'ldc',opt.pvet/1)) ); 
+      Yp0  = max(Yp0, Ymsk .* 2.75 .* smooth3(cat_vol_morph(Yp0>2.75,'ldc',opt.pvet/2)) ); 
+      Yp0  = max(Yp0, Ymsk .* 2.25 .* smooth3(cat_vol_morph(Yp0>2.25,'ldc',0.50,vx_vol)) ); % not required in CAT/IXI ... ADNI100?
+    end
   end
   
-  % corrections for blood vessels, partial volume effects and myelination
-  % RD202503: new blood vessel correction 
-  if opt.NBVC, Yp0 = NBVC(Yp0, vx_vol, opt.pvet); end 
+
+  % corrections for blood vessels, partial volume effects and skull-stripping
+  if opt.NBVC, Yp0 = NBVC(Yp0, Ygmtp, gmtp, vx_vol); end 
   
 
   % RD2025: correct myelinated areas (using quick thickness estimation)
   if opt.myelinCorrection , Yp0 = myelincorrection(Yp0, vx_vol, opt); end  
 
 
-  % only within hull
-  [Yp0r,resYp0] = cat_vol_resize(Yp0,'reduceV',vx_vol,1,32,'meanm'); % 1mm
-  [Ywr,resYp0w] = cat_vol_resize( cat_vol_morph( Yp0r>1.25 ,'do',.5,resYp0.vx_volr) ,'reduceV',resYp0.vx_volr,2,32,'meanm'); clear Yp0r;
-  Ywr = cat_vol_morph(Ywr>.5,'ldc',8);
-  Ywr = cat_vol_smooth3X(Ywr,1.2); 
-  Ywr = cat_vol_resize(Ywr,'dereduceV',resYp0w); 
-  Yhull = cat_vol_resize(Ywr,'dereduceV',resYp0); clear Ywr; 
-  Yhull = max(0,min(1,atan(Yhull*pi/1.5))); 
-  
-
+  % estimate hull to limit eg. gyrus reconstruction 
+  Yhull = estimateHull(Yp0,vx_vol);
 
 
   %% == Estimation of distance measures ==
   % It is important to use the PVE for multiple (=levels) distance estimations 
   % but also to extened (range) and correct (corpve) the values at the oposite  
   % boundary by the PVE or distance. 
-  if 1
-    % quick manuell settings
-    % at least 1 but use more in low resolution to cope with various settings
-    opt.levels = max(1,min(8,2  * mean(vx_vol*2)^2)); 
-    opt.rangeE = 0.4; % extimation limit extention - smaller better
-    opt.range  = 0.4; % addition range - larger better
-    opt.range  = min(.4,opt.range);
-  end
 
-  
-  %% tested here multple estimations
+  % tested here multple estimations
   if opt.verb, toc; fprintf('Dist:    '); tic; end  
-  opt.eidist = 0; % not full ready 
+  opt.eidist = 1; % not full ready 
   [Ycd0, Ywd0] = cat_vol_cwdist( Yp0 ,opt);;;
 
 
@@ -182,9 +183,10 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
 
 
   %% extend areas that are too thin for quantification 
-  minthick = 0.05/vx_vol; 
+  %  this is typically the cutting area of the corpus callosum
+  minthick = 0.05/vxs; 
   Ycut   = cat_vol_morph(Yp0>2.5,'d',1)  &  cat_vol_morph(Yp0<1.5,'d',1)  &  Ygmtw0 < min(vxs , 1/opt.pvet0)/10 & Ycd0<.125 & Ywd0<.125;
-  Ycut   = cat_vol_morph(Ycut,'l',[100 20]) > 0; 
+  Ycut   = cat_vol_morph(Ycut,'l',[1 .3]) > 0; 
   Ycut   = cat_vol_morph(Ycut,'dd',3); 
   Ycut   = cat_vol_morph(Ycut,'dd',5,vx_vol) & Ygmtw0>0; 
   Ycuts  = cat_vol_localstat( min(Ygmtw0,Ygmtc0) , Ycut, max(1,round(1/vxs)) , 2, 1); 
@@ -196,32 +198,6 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
   Ygmtw0(Ypve) = max(minthick, Ygmtw0(Ypve) - mean(Ygmtw0(Ypve(:))) * 2); 
   clear Ycuts; 
 
-  %% low dist correction
-  pvefc = 1;
-  if 0 %pvefc
-    % thickness distribution 
-    Ygmt0  = min(Ygmtw0,Ygmtc0); Ygmt0 = Ygmt0(Ygmt0>eps); 
-    gmt    = [ cat_stat_nanmedian(Ygmt0) cat_stat_nanstd(Ygmt0) ]; clear Ygmt0;
-    % correction term
-    pvefc  = min( max(vxs,opt.pvet0) * pvefc , max(vxs, gmt(1) - 3*gmt(2)) );
-
-    %% keep thin sulci 
-    Ymsk   = Ygmtw0 > eps & Ygmtw0 < pvefc; 
-    Ymsk   = cat_vol_morph(Ymsk,'l',[100 5])>0; 
-    Ymsk   = cat_vol_morph(Ymsk,'dd',pvefc,vx_vol); 
-    Ygmtw0(Ymsk) = max(minthick,min(pvefc, (Ygmtw0(Ymsk)-(pvefc/2))*2) ); 
-    Ygmtw0 = cat_vol_median3(Ygmtw0,Ymsk,Ymsk);
-
-    %% not sure about that
-    if 0
-      Ymsk   = Ygmtc0 > eps & Ygmtc0 < opt.pvet0*pvefc; 
-      Ymsk   = cat_vol_morph(Ymsk,'l',[100 10])>0; 
-      Ymsk   = cat_vol_morph(Ymsk,'dd',pvefc,vx_vol); 
-      Ygmtc0(Ymsk) = max(minthick,min(pvefc, (Ygmtc0(Ymsk)-(pvefc/2))*2) ); 
-      Ygmtc0 = cat_vol_median3(Ygmtc0,Ymsk,Ymsk); 
-    end
-  end
-  
   
   %% final masking (after downsampling)
   th = .01;
@@ -241,6 +217,7 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
   Ygmtw0 = Ygmtw0 ./ ( 1 + (2./(Ygmtw0*vxs)) .* Yhull .* ( (Ygmtw0-Ywd0)./Ygmtw0 ).^(2) .* smooth3(Ygmtw0<Ygmtc0*.95 &  cat_vol_smooth3X(Yp0,4*vxs)>2 & (Ygmtw0*vxs<1.25 | Ygmtw0<1)) ) ; % thick update
   Ygmtw0 = max( Ycut * minthick, Ygmtw0);
   Ygmtc0 = max( Ycut * minthick, Ygmtc0);
+
 
   % Internal tests
   if 0
@@ -289,8 +266,9 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
     end
   end
 
-  % This is critical for the phantom ! 
+  
   if 1
+  % This is critical for the phantom ! 
   % avoid blurring of tiny sulci
     fac          = .5; 
     Ymsk         = Yhull > .5  &  Ygmtw0 < Ygmtc0*0.9  &  (Ygmtw0*vxs < 1.25 | Ygmtw0 < 0.75)  &  (cat_vol_smooth3X(Yp0,2) - Yp0)>2  &  Yhull>.5; 
@@ -319,17 +297,6 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
   Ycd0  = min(Ygmt0,Ycd0); 
   Ywd0  = min(Ygmt0,Ywd0); % limit
   
-  %% low dist correction
-  pvefc = 1; 
-  if 0 %pvefc
-    pvefc = min( max(vxs,opt.pvet0) * pvefc , max(vxs, gmt(1) - 2*gmt(2)) );
-    Ymsk  = Ygmtw0 > eps & Ygmtw0 < pvefc; 
-    Ymsk  = cat_vol_morph(Ymsk,'l',[100 5])>0; 
-    Ymsk  = cat_vol_morph(Ymsk,'dd',pvefc,vx_vol); 
-    Ygmt1 = Ygmt0; Ygmt1(Ymsk>0) = max(minthick,min(pvefc,(Ygmt1(Ymsk>0) - ((pvefc)/2))*2 )); 
-    Ygmt1 = cat_vol_median3(Ygmt1,Ymsk,Ymsk); 
-    Ygmt0 = min(Ygmt0,smooth3(Ygmt1)); clear Ygmt1;
-  end
   if opt.verb, toc; end  
   
   
@@ -412,6 +379,17 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
 
 end
 % ======================================================================
+function   Yhull = estimateHull(Yp0,vx_vol)
+  [Yp0r,resp] = cat_vol_resize(Yp0,'reduceV',vx_vol,1,32,'meanm'); % 1mm
+  Yp0r = cat_vol_morph( Yp0r>1.25 ,'do',.5,resp.vx_volr); 
+  [Ywr,resYp0w] = cat_vol_resize(Yp0r,'reduceV',resp.vx_volr,2,32,'meanm'); clear Yp0r;
+  Ywr = cat_vol_morph(Ywr>.5,'ldc',8);
+  Ywr = cat_vol_smooth3X(Ywr,1.2); 
+  Ywr = cat_vol_resize(Ywr,'dereduceV',resYp0w); 
+  Yhull = cat_vol_resize(Ywr,'dereduceV',resp); clear Ywr; 
+  Yhull = max(0,min(1,atan(Yhull*pi/1.5))); 
+end
+% ======================================================================
 function [Yp0,pvet] = CS4_desnoise(Yp0,opt)
   
   % filter interolation artifacts
@@ -475,29 +453,6 @@ function pvet = estimatePVEsize( Yp0 , fast )
   pvet  = max(1,median(Ypvet(Ypvet(:)>0) - 1)); 
 end
 % ======================================================================
-function Ypp = Yppsmooth(Ypp,Ygmt,vx_vol,th)
-  if ~exist('th','var'), th = 0.1; end
-  if isscalar(th), th = repmat(th,1,2); end
-
-  % filter in large areas
-  Yflt    = .5; %abs(smooth3(Ypp)*2 - 1) .* max(0,min(1,Ygmt - median(Ygmt(Ypp(:)>0 & Ypp(:)<1))/2 )); 
-  if th(1) >= 0
-    Ypp   = cat_vol_median3(Ypp, cat_vol_morph(Ypp>0 & Ypp<1,'d') , true(size(Ypp)), th(1));
-    Ypp   = cat_vol_smooth3X(Ypp,0.5); 
-    Ypp   = max(0,min(1, Ypp + .5 * (1-th(1))*(Ypp - smooth3(Ypp)) )); 
-  end
-  %Ypp    = Ypp.*(1-Yflt) + Yflt.*Yppm; 
-  if th(2) >= 0
-    [Yppr,resYp0] = cat_vol_resize(Ypp,'reduceV',vx_vol,1,32,'median');
-    Yppr  = cat_vol_median3(Yppr, cat_vol_morph(Yppr>0 & Yppr<1,'d') , true(size(Yppr)), th(2)); 
-    Yppr  = cat_vol_resize(Yppr,'dereduceV',resYp0); 
-    Yppr  = max(0,min(1,  Yppr + .5 * (1-th(2))*(Yppr - smooth3(Yppr)) )); 
-    Yppr  = max(0,min(1,tan(Yppr - .5) + .5)); 
-    Ypp   = Ypp.*(1-Yflt) + Yflt.*Yppr;
-    Ypp   = max(0,min(1, Ypp + .5 * (1-th(1))*(Ypp - smooth3(Ypp)) )); 
-  end
-end
-% ======================================================================
 function Yp0 = oneObject(Yp0, vx_vol, n)
 % oneObject. Remove addition objects for multiple threshold levels.
 
@@ -519,36 +474,56 @@ function Yp0 = oneObject(Yp0, vx_vol, n)
   end
 end
 % ======================================================================
-function Yp0 = NBVC(Yp0,vx_vol,pvet)
+function Yp0 = NBVC(Yp0,Ygmtp,gmtp,vx_vol)
 %% RD202503: new blood vessel correction 
 % In principle this is not really new and should be done by other functions before. 
 % However, it is so essential for PBT and not to difficult to include it here (too). 
 % First the save WM area is estimated and then extended by a region growing method
 % that focus on lower intensities in the Yp0 label mapf for GM and CSF. 
+
+  %%
   F      = min(1,max(0.0,Yp0-2)).^.01; F(Yp0<=1.9) = inf; 
-  Ywm    = cat_vol_morph(cat_vol_morph(Yp0>2.25,'de',1,vx_vol),'ldo',1,vx_vol) | cat_vol_morph(Yp0>2.75,'l'); 
+  Ywm    = cat_vol_morph(cat_vol_morph(Yp0>2.25 & Ygmtp>gmtp(1),'de',1,vx_vol),'ldo',1,vx_vol) | cat_vol_morph(Yp0>2.75,'l'); 
   % add closest voxels
   [~,Yd] = cat_vol_downcut(single(Ywm), F,0.01); Yd(isnan(Yd))=inf; 
-  Ywm    = Yp0>2.1 & Yd<median(Yd(Yp0(:)>=2.25 & Yp0(:)<2.7 & Yd(:)>0));
-  
-  % update Yp0 by sharpening the WM structures that blurr most
-  if 1 % pvet > 2
+  Ywm    = Yp0>2.1 & Yd<median(Yd(Yp0(:)>=2.25 & Yp0(:)<2.75 & Yd(:)>0));
+
+
+  %% update Yp0 by sharpening the WM structures that blurr most
+  if 1 
     Ywmh   = double(cat_vol_morph(Yp0>2.1 & Yd<median(Yd(Yp0(:)>=2.5 & Yp0(:)<2.8 & Yd(:)>0)),'dc',1.5,vx_vol));
     Ywml   = double(Yp0>2.1 & Yd<median(Yd(Yp0(:)>=2.1 & Yp0(:)<2.3 & Yd(:)>0)));
     spm_smooth(Ywmh, Ywmh, double(repmat(.6,1,3)) );
     spm_smooth(Ywml, Ywml, double(repmat(.6,1,3)) ); 
-    Yp0    = max(Yp0, Ywmh * 3.0); 
-    Yp0    = max(Yp0, Ywml * 2.5); 
+    Yp0    = max(Yp0, smooth3(Ygmtp>gmtp(1)-gmtp(2)) .* Ywmh * 3.0); 
+    Yp0    = max(Yp0, smooth3(Ygmtp>gmtp(1)) .* Ywml * 2.75); 
   end
   
   %% prepare mask
   [~,Yd] = cat_vol_downcut(single(Ywm), F,-0.001); Yd(isnan(Yd))=inf; %clear Ywm; 
-  Ymsk   = Yd > 20000 * mean(vx_vol) & Yp0>2.25 & ~cat_vol_morph(Ywm,'dd',1); 
+  %Ymsk   = Yd > 20000 * mean(vx_vol) & Yp0>2.25 & ~cat_vol_morph(Ywm,'dd',1) & (Ygmtp>gmtp(1)) ; 
+  Ymsk   = Yd > 20000 * mean(vx_vol) & Yp0>2.25 & ~cat_vol_morph(Ywm,'dd',1) & (Ygmtp>gmtp(1)) ; 
  
-  %% Ymsk as regions that we want to correct 
+  % Ymsk as regions that we want to correct 
   %[~,I]  = cat_vbdist(single(~Ymsk),Yp0>1.5); Yp0(Ymsk) = Yp0(I(Ymsk));
   Yp0(Ymsk) = 2; 
   Ymsk      = cat_vol_morph(Ymsk,'dd',1,vx_vol) & Yp0>1.5;
+  Yp0s      = cat_vol_median3(Yp0,Ymsk);
+  Yp0(Ymsk) = Yp0s(Ymsk); 
+
+  %% skull-stripping 2
+  F      = min(1,max(0.0,Yp0-1).^2); F(Yp0<=1.01) = inf; 
+  [~,Yd] = cat_vol_downcut(single(Ywm), F,0.1); Yd(isnan(Yd))=inf; 
+  [~,Yd] = cat_vol_downcut(single(Yd<3*cat_stat_nanmedian(Yd(Yp0>1.9 & Yp0<2.25)) & Yp0>1.95), F,-0.01); Yd(isnan(Yd))=inf; 
+  Ymsk   = smooth3(Yd > cat_stat_nanmedian(Yd(Yp0>1.25 & Yp0<1.75)))>.5;% & Yp0>2.25 & ~cat_vol_morph(Ywm,'dd',1) & (Ygmtp>gmtp(1)) ; 
+  % need the core for the insula
+  [Ycore,resR] = cat_vol_resize(Yp0>2.5,'reduceV',vx_vol,2,32,'median');
+  Ycore = smooth3(cat_vol_morph(Ycore,'dc',4));
+  Ycore = cat_vol_resize(Ycore,'dereduceV',resR); 
+  Ymsk  = cat_vol_morph( Ymsk & Ycore<.5,'e');
+  %%
+  Yp0(Ymsk) = 1; 
+  Ymsk      = cat_vol_morph(Ymsk,'dd',1,vx_vol) & Yp0>1 & Yp0<2;
   Yp0s      = cat_vol_median3(Yp0,Ymsk);
   Yp0(Ymsk) = Yp0s(Ymsk); 
 
@@ -590,8 +565,8 @@ function [Ycd, Ywd] = cat_vol_cwdist(Yp0,opt)
   hss = opt.levels; % number of opt.levels (as pairs)
   if opt.eidist 
     % speed/time map for eikonal distance
-    Fc = smooth3(max(.001,min(1,cat_vol_smooth3X(min(1,max(eps,2 - Yp0)),2).^4))); 
-    Fw = smooth3(max(.001,min(1,cat_vol_smooth3X(min(1,max(eps,Yp0 - 1)),2).^4))); 
+    Fc = smooth3(max(.001,min(1,cat_vol_smooth3X(min(1,max(eps,2 - Yp0)),2).^4))); Fc = max(Fc,cat_vol_morph(Yp0>2,'d'));
+    Fw = smooth3(max(.001,min(1,cat_vol_smooth3X(min(1,max(eps,Yp0 - 1)),2).^4))); Fw = max(Fw,cat_vol_morph(Yp0>2,'d'));
   end
   for si = 1:hss
     offset = max(0,min(.5, range * si/(hss+1))); 
@@ -653,10 +628,10 @@ function [Ycd, Ywd] = cat_vol_cwdist(Yp0,opt)
       offset = max(0,min(.5, range * si/(hss+1))); 
 
       % CSF dist
-      if opt.eidist 
-        [Ycdl,YIl] = cat_vbdist2(single(Yp0 < ( 2.5 - offset)), Fc , YMC); 
-        [Ycdh,YIh] = cat_vbdist2(single(Yp0 < ( 2.5 + offset)), Fc , YMC); 
-      else
+      if opt.eidist && exist('cat_vbdist3','file') 
+        [Ycdl,YIl] = cat_vbdist3(single(Yp0 < ( 2.5 - offset)), YMC); 
+        [Ycdh,YIh] = cat_vbdist3(single(Yp0 < ( 2.5 + offset)), YMC); 
+      else 
         [Ycdl,YIl] = cat_vbdist(single(Yp0 < ( 2.5 - offset)), YMC ); 
         [Ycdh,YIh] = cat_vbdist(single(Yp0 < ( 2.5 + offset)), YMC ); 
       end
@@ -667,9 +642,9 @@ function [Ycd, Ywd] = cat_vol_cwdist(Yp0,opt)
       Ycd  = max(0,Ycd - (.5/hss .* Ycdl  +  .5/hss .* Ycdh)); 
   
       % WM distances
-      if opt.eidist
-        [Ywdl,YIl] = cat_vbdist2(single(Yp0 > ( 1.5 - offset)), Fw , YMM);
-        [Ywdh,YIh] = cat_vbdist2(single(Yp0 > ( 1.5 + offset)), Fw , YMM); 
+      if opt.eidist && exist('cat_vbdist3','file')
+        [Ywdl,YIl] = cat_vbdist3(single(Yp0 > ( 1.5 - offset)), YMM);
+        [Ywdh,YIh] = cat_vbdist3(single(Yp0 > ( 1.5 + offset)), YMM); 
       else
         [Ywdl,YIl] = cat_vbdist(single(Yp0 > ( 1.5 - offset)), YMM );
         [Ywdh,YIh] = cat_vbdist(single(Yp0 > ( 1.5 + offset)), YMM ); 
@@ -691,6 +666,7 @@ function Yp0 = myelincorrection(Yp0,vx_vol,opt)
     opt.usemedian = 0; 
     opt.denoise   = 0; 
     opt.NBVC      = 0;
+    opt.ctproxy   = 0; 
     %opt.eidist    = 0; 
 
     [Ycd, Ywd] = cat_vol_cwdist(Yp0, opt);
