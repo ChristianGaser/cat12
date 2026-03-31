@@ -919,7 +919,7 @@ function varargout = cat_vol_qa201901x(action,varargin)
       % But most important is the noise with the medium high frequencies, that we try to detect by 
       % reducing the very high and low noise pattern by filtering and pixel smoothing by reduction.
       if 1
-        % This block is a bit weired but is imporant to balance the hard noise 
+        % This block is a bit weired but is important to balance the hard noise 
         % of the BWP and real data aspects. It uses a Gaussian smoothing to 
         % reduce this hard noise. 
         Ymx  = Ym; 

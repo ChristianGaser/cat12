@@ -225,7 +225,11 @@ function res = addSurfaceQualityMeasures(res,opt)
 
   % final res structure
   res.EC          = mean( abs(res.EC - 2) ) + 2; 
-  res.defect_size = mean( res.ECmodwmp );
+  if isfield(res,'ECmodvx')
+    res.defect_size = mean( res.ECmodvx );
+  else
+    res.defect_size = NaN;
+  end
   res.defect_area = NaN;
   res.defects     = NaN;
   res.mnth        = mean(res.mnth); 

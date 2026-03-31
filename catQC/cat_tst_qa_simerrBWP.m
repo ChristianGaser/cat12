@@ -2,7 +2,7 @@ function cat_tst_qa_simerrBWP( datadir, qaversions, fasttest, rerun )
 %% BWP resolutions
 %  ------------------------------------------------------------------------
 %  This function modifies an existing segmentation to test how segmentation
-%  errors effects the quality measuresments by modifying the Yp0 label map.
+%  errors effects the quality measurements by modifying the Yp0 label map.
 %  (goal is the evaluation of the general mean effect)  
 %
 %   (1) Simulation of skull-stripping errors
