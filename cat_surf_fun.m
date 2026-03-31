@@ -1092,33 +1092,44 @@ function PTN = cat_surf_thickness(action,PS,PT)
 % Estimation of different cortical thickness metrics. 
 %
 
-  if ~exist('T','var')
+  if ~exist('PT','var')
     % create inner and outer surfaces
     PIS  = cat_surf_fun('inner',PS);  % estimate inner surface
     POS  = cat_surf_fun('outer',PS);  % estimate outer surface
   else
-    % create inner and outer surfaces
-    PIS  = cat_surf_fun('inner',PS,PT);  % estimate inner surface
-    POS  = cat_surf_fun('outer',PS,PT);  % estimate outer surface
+    if ischar(PS) || iscell(PS)
+      % create inner and outer surfaces
+      PIS  = cat_surf_fun('inner',PS,PT);  % estimate inner surface
+      POS  = cat_surf_fun('outer',PS,PT);  % estimate outer surface
+    else
+      IS  = PS; 
+      OS  = PT;     
+    end
   end
   
-  % load surfaces
-  IS = gifti(PIS); 
-  OS = gifti(POS);
+  if ischar(PS) || iscell(PS)
+    % load surfaces
+    IS = gifti(PIS); 
+    OS = gifti(POS);
+  end
   
   % edgemap
   % create mapping between 
-  Pedgemap = cat_io_strrep(PS,{'.central.';'.gii'},{'.edgemapnative.';'.mat'});
+  if ischar(PS) || iscell(PS)
+    Pedgemap = cat_io_strrep(PS,{'.central.';'.gii'},{'.edgemapnative.';'.mat'});
+  else
+    Pedgemap = ''; 
+  end
   if 0%exist(Pedgemap,'file') % ... you have to test if central is older than the edgemap to use this 
     load(Pedgemap,'edgemap'); 
   else
     %%
     stime2  = clock;
-    fprintf('  Estimate mapping for native surface');
+    %fprintf('  Estimate mapping for native surface');
     edgemap = cat_surf_surf2surf(IS,OS,0); 
     %edgemap.dist = sum ( (IS.vertices(edgemap.edges(:,1),:) - OS.vertices(edgemap.edges(:,2),:)).^2 , 2).^0.5;  
     %save(Pedgemap,'edgemap'); 
-    fprintf(' takes %ds\n',round(etime(clock,stime2))); 
+    %fprintf(' takes %ds\n',round(etime(clock,stime2))); 
   end
 
   % create thickness metric mapping matrix
@@ -1126,8 +1137,10 @@ function PTN = cat_surf_thickness(action,PS,PT)
     case {'tfs','tmin'}
       Tnear = inf(edgemap.nvertices(1),2,'single'); 
       for i=1:size(edgemap.edges,1)
-        Tnear(edgemap.edges(i,1),1) = min( [ Tnear(edgemap.edges(i,1),1) edgemap.dist(i)  ] ) ;
-        Tnear(edgemap.edges(i,2),2) = min( [ Tnear(edgemap.edges(i,2),2) edgemap.dist(i)  ] ) ;
+        try
+          Tnear(edgemap.edges(i,1),1) = min( [ Tnear(edgemap.edges(i,1),1) edgemap.dist(i)  ] ) ;
+          Tnear(edgemap.edges(i,2),2) = min( [ Tnear(edgemap.edges(i,2),2) edgemap.dist(i)  ] ) ;
+        end
       end
     case 'tmax'
       Tfar  = zeros(edgemap.nvertices(1),2,'single'); 
@@ -1136,21 +1149,33 @@ function PTN = cat_surf_thickness(action,PS,PT)
         Tfar(edgemap.edges(i,2),2)  = max( [ Tfar(edgemap.edges(i,2),2) edgemap.dist(i)  ] ) ;
       end
   end
-    
-  switch lower(action)
-    case 'tfs'
-      TN  = mean(Tnear,2);
-      PTN = cat_io_strrep(PS,{'.central.';'.gii'},{'.thicknessfs.';''});
-    case 'tmin'
-      TN  = min(Tnear,[],2);
-      PTN = cat_io_strrep(PS,{'.central.';'.gii'},{'.thicknessmin.';''});
-    case 'tmax'
-      TN  = max(Tfar,[],2);
-      PTN = cat_io_strrep(PS,{'.central.';'.gii'},{'.thicknessmax.';''});
-  end
+   
+   
+    switch lower(action)
+      case 'tfs'
+        TN  = mean(Tnear,2);
+  
+        if ischar(PS) || iscell(PS)
+          PTN = cat_io_strrep(PS,{'.central.';'.gii'},{'.thicknessfs.';''});
+        end
+      case 'tmin'
+        TN  = min(Tnear,[],2);
+        if ischar(PS) || iscell(PS)
+          PTN = cat_io_strrep(PS,{'.central.';'.gii'},{'.thicknessmin.';''});
+        end
+      case 'tmax'
+        TN  = max(Tfar,[],2);
+        if ischar(PS) || iscell(PS)
+          PTN = cat_io_strrep(PS,{'.central.';'.gii'},{'.thicknessmax.';''});
+        end
+    end
   
   % save smoothed textures
-  cat_io_FreeSurfer('write_surf_data',PTN,TN);
+  if ischar(PS) || iscell(PS)
+    cat_io_FreeSurfer('write_surf_data',PTN,TN);
+  else
+    PTN = TN; 
+  end
 end
 
 function [SH,V] = cat_surf_core(S,opt)
@@ -1639,7 +1664,7 @@ function cat_surf_saveICO(S,Tpbt,Pcs,subdir,Pm,mat,writeTfs,writeSI,writeL4,writ
     % volume filenames for spm_orthview
     sinfo = cat_surf_info(Pcentral);
     
-    [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(sinfo.name);
+    mrifolder = fileparts(strrep( sinfo.name,'surf','mri'));
     if cat_get_defaults('extopts.subfolders')
       Pm = fullfile(spm_str_manip(pp,'h'),mrifolder,['m' sinfo.name '.nii']); 
     else
@@ -1679,9 +1704,10 @@ function cat_surf_saveICO(S,Tpbt,Pcs,subdir,Pm,mat,writeTfs,writeSI,writeL4,writ
     % define filename (same block as above)
     
     % volume filenames for spm_orthview
-    sinfo = cat_surf_info(Pcentral);
-    
-    [mrifolder, reportfolder, surffolder, labelfolder] = cat_io_subfolders(sinfo.name);
+    sinfo  = cat_surf_info(Pcentral); 
+    subdir = cat_io_contains( spm_str_manip( sinfo.name , 'th' ), 'surf') | ...
+             cat_io_contains( spm_str_manip( sinfo.name , 'tth' ), 'surf'); 
+    if subdir, mrifolder = 'mri'; else, mrifolder = ''; end
     if cat_get_defaults('extopts.subfolders')
       Pm = fullfile(spm_str_manip(pp,'h'),mrifolder,['m' sinfo.name '.nii']); 
     else
