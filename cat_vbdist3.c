@@ -61,7 +61,7 @@ void pmin(float A[], int sA, float *minimum, int *index)
   *minimum = FLT_MAX; 
   *index = 0; 
   for(int i=0; i<sA; i++) {
-    if ((A[i]>0.0) && (*minimum>A[i]))
+    if ((A[i]>0.0f) && (*minimum>A[i]))
     { 
       *minimum = A[i]; 
       *index   = i;
@@ -71,9 +71,10 @@ void pmin(float A[], int sA, float *minimum, int *index)
 
 /* estimate x,y,z position of index i in an array size sx and sxy=sx*sy... */
 void ind2sub(int i, int *x, int *y, int *z, int sxy, int sy) {
-  *z = (int)floor( (double)i / (double)sxy ) +1;
+/* integer division rounds torwards zero */
+  *z = i / sxy + 1;
    i = i % sxy;
-  *y = (int)floor( (double)i / (double)sy ) +1;        
+  *y = i / sy + 1;        
   *x = i % sy + 1;
 }
 
@@ -201,21 +202,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
   /* define the different neibhor distances*/
   float vx1 = (float)fabs(vx_vol[0]), vx2 = (float)fabs(vx_vol[1]), vx3 = (float)fabs(vx_vol[2]);
-  const float   vx12  = (float) sqrt( (double)  vx1*vx1  + vx2*vx2); /* xy - voxel size */
-  const float   vx13  = (float) sqrt( (double)  vx1*vx1  + vx3*vx3); /* xz - voxel size */
-  const float   vx23  = (float) sqrt( (double)  vx2*vx2  + vx3*vx3); /* yz - voxel size */
-  const float   vx123 = (float) sqrt( (double) vx12*vx12 + vx3*vx3); /* xyz - voxel size */
+  const float   vx12  = sqrtf(  vx1*vx1  + vx2*vx2); /* xy - voxel size */
+  const float   vx13  = sqrtf(  vx1*vx1  + vx3*vx3); /* xz - voxel size */
+  const float   vx23  = sqrtf(  vx2*vx2  + vx3*vx3); /* yz - voxel size */
+  const float   vx123 = sqrtf( vx12*vx12 + vx3*vx3); /* xyz - voxel size */
   
   /* indices of the neighbor relativeNeighborIndexes (index distance) and euclidean distance relativeNeighborDistances */
   const int   numNeighbors = 14;
   const int   relativeNeighborIndexes[14] = {  0, -1,-sizeX+1, -sizeX,-sizeX-1,  -sizeXY+1,-sizeXY,-sizeXY-1,  -sizeXY+sizeX+1,-sizeXY+sizeX,-sizeXY+sizeX-1,  -sizeXY-sizeX+1,-sizeXY-sizeX,-sizeXY-sizeX-1};  
   const float relativeNeighborDistances[14] = {0.0, vx1, vx12, vx2, vx12,    vx13, vx3,  vx13,     vx123,  vx23,   vx123,     vx123,  vx23,   vx123};
-  float       neighborDistances[14];
-  float       neighborTimes[14];
+  float       neighborDistances[14] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+  float       neighborTimes[14] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
   float       maxNeighborDistance = FLT_MAX;
   float       maxNeighborTime = FLT_MAX;
-  int         maxNeighborIndices;
-  int         maxNeighborTimeIndex;
+  int         maxNeighborIndices = 0;
+  int         maxNeighborTimeIndex = 0;
   
   /* get data */
   float *Ysegment = (float *)mxCalloc((size_t)numY, sizeof(float));
@@ -240,12 +241,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
   if (nlhs>1) {
     Yindex = (unsigned int  *)mxGetPr(plhs[1]);
-  } else {
+  } 
+  else {
     Yindex = (unsigned int *)mxCalloc((size_t)numY, sizeof(unsigned int));
   }
   if (nlhs>2) {
     Ytime = (float *)mxGetPr(plhs[2]);
-  } else {
+  } 
+  else {
     Ytime = (float *)mxCalloc((size_t)numY, sizeof(float));
   }
   
@@ -255,7 +258,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (Ysegment[i] >= 0.5f) {
       Ydistance[i] = 0.0f;
       Ytime[i] = 0.0f;
-    } else {
+    } 
+    else {
       Ydistance[i] = FLT_MAX;
       Ytime[i] = FLT_MAX;
     }
@@ -267,13 +271,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   {
     if ( (Ydistance[i]>0) && (Yspeed[i] > 0.0f) )
     {
-      ind2sub(i,&u,&v,&w,sizeXY,sizeX);
+      ind2sub(i, &u, &v, &w, sizeXY, sizeX);
       
       /* read neighbor values */
       for (int n=0;n<numNeighbors;n++)
       {
         int ni = i + relativeNeighborIndexes[n];
-        ind2sub(ni,&nu,&nv,&nw,sizeXY,sizeX);
+        ind2sub(ni, &nu, &nv, &nw, sizeXY, sizeX);
         if ( (ni<0) || (ni>=numY) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) ) ni=i;
         neighborDistances[n] = Ydistance[ni] + relativeNeighborDistances[n];
         float speed = 0.5f * (Yspeed[i] + Yspeed[ni]);
@@ -281,14 +285,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
       }
 
       /* find minimum distance and time within the neighborhood */
-      pmin(neighborDistances,numNeighbors,&maxNeighborDistance,&maxNeighborIndices);
-      pmin(neighborTimes,numNeighbors,&maxNeighborTime,&maxNeighborTimeIndex);
+      pmin(neighborDistances, numNeighbors, &maxNeighborDistance, &maxNeighborIndices);
+      pmin(neighborTimes, numNeighbors, &maxNeighborTime, &maxNeighborTimeIndex);
 
       /* update values */
-      if (maxNeighborIndices>0) {
-        Yindex[i] = (unsigned int) Yindex[i+relativeNeighborIndexes[maxNeighborIndices]];
-        ind2sub((int)Yindex[i],&nu,&nv,&nw,sizeXY,sizeX); 
-        Ydistance[i] = (float)sqrt(pow((double)(u-nu)*vx1,2) + pow((double)(v-nv)*vx2,2) + pow((double)(w-nw)*vx3,2));
+      if (maxNeighborIndices > 0) {
+        Yindex[i] = Yindex[i + relativeNeighborIndexes[ maxNeighborIndices ] ];
+        ind2sub((int)Yindex[i], &nu, &nv, &nw, sizeXY, sizeX); 
+        Ydistance[i] = sqrtf(powf((u-nu)*vx1,2) + powf((v-nv)*vx2,2) + powf((w-nw)*vx3,2));
       }
       if (maxNeighborTimeIndex>0 && maxNeighborTime < Ytime[i]) {
         Ytime[i] = maxNeighborTime;
@@ -302,13 +306,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if ( (Ydistance[i]>0) && (Yspeed[i] > 0.0f) )
     {
               
-      ind2sub(i,&u,&v,&w,sizeXY,sizeX);
+      ind2sub(i, &u, &v, &w, sizeXY, sizeX);
 
       /* read neighbor values */
       for (int n=0;n<numNeighbors;n++)
       {
         int ni = i - relativeNeighborIndexes[n];
-        ind2sub(ni,&nu,&nv,&nw,sizeXY,sizeX);
+        ind2sub((int)ni, &nu, &nv, &nw, sizeXY, sizeX);
         if ( (ni<0) || (ni>=numY) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) ) ni=i;
         neighborDistances[n] = Ydistance[ni] + relativeNeighborDistances[n];
         float speed = 0.5f * (Yspeed[i] + Yspeed[ni]);
@@ -316,14 +320,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
       }
 
       /* find minimum distance and time within the neighborhood */
-      pmin(neighborDistances,numNeighbors,&maxNeighborDistance,&maxNeighborIndices);
-      pmin(neighborTimes,numNeighbors,&maxNeighborTime,&maxNeighborTimeIndex);
+      pmin(neighborDistances, numNeighbors, &maxNeighborDistance, &maxNeighborIndices);
+      pmin(neighborTimes, numNeighbors, &maxNeighborTime, &maxNeighborTimeIndex);
 
       /* update values */
-      if (maxNeighborIndices>0) {
-        Yindex[i] = (unsigned int)  Yindex[i-relativeNeighborIndexes[maxNeighborIndices]];
-        ind2sub((int)Yindex[i],&nu,&nv,&nw,sizeXY,sizeX); 
-        Ydistance[i] = (float)sqrt(pow((double)(u-nu)*vx1,2) + pow((double)(v-nv)*vx2,2) + pow((double)(w-nw)*vx3,2));
+      if (maxNeighborIndices > 0) {
+        Yindex[i] = Yindex[i - relativeNeighborIndexes[ maxNeighborIndices ]];
+        ind2sub((int)Yindex[i], &nu, &nv, &nw, sizeXY, sizeX); 
+        Ydistance[i] = sqrtf(powf((u-nu)*vx1,2.0f) + powf((v-nv)*vx2,2.0f) + powf((w-nw)*vx3,2.0f));
       }
       if (maxNeighborTimeIndex>0 && maxNeighborTime < Ytime[i]) {
         Ytime[i] = maxNeighborTime;
@@ -334,7 +338,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   /* free internal input variables */  
   mxFree(Ysegment);
   mxFree(Yspeed);
-  /* set outputs and correct index values */
+  /* set outputs and correct index values for matlab */
   if (nlhs<2) mxFree(Yindex); else { for (int i=0;i<numY;i++) Yindex[i]=Yindex[i]+1; } 
   if (nlhs<3) mxFree(Ytime);
 
