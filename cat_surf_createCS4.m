@@ -56,6 +56,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
   % set debugging variable
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
   vx_vol                  = sqrt(sum(V.mat(1:3,1:3).^2));                  % further interpolation based on internal resolution 
+
   % set defaults
   def.verb                = cat_get_defaults('extopts.expertgui');         % 0-none, 1-minimal, 2-default, 3-details, 4-debug
   def.surf                = {'lh','rh'};                                   % surface reconstruction setting with {'lh','rh','cb'} 
@@ -63,7 +64,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
   def.useprior            = ''; 
   def.thick_limit         = cat_get_defaults('extopts.thick_limit');       % 6mm upper limit for thickness (similar limit as used in Freesurfer)
   def.thick_measure       = cat_get_defaults('extopts.thick_measure');     % 0-PBT; 1-Tfs (Freesurfer method using mean(TnearIS,TnearOS)) 
-  def.foldingcorrection   = cat_get_defaults('extopts.foldingcorrection'); % tickness correction that is influence by folding
+  def.foldingcorrection   = 1;                                             % tickness correction that is influence by folding
   def.fsavgDir            = fullfile(fileparts(mfilename('fullpath')),'templates_surfaces'); 
   def.outputpp.native     = 0;  % output of Ypp map for cortical orientation in EEG/MEG 
   def.outputpp.warped     = 0;
@@ -158,23 +159,21 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     % Myelination corretion for the CS40 that is also part of cat_vol_pbtsimpleCS4
     if opt.myelinCorrection > 0 
       stime = cat_io_cmd(sprintf('  Myelin correction (%0.1f%%)',opt.myelinCorrection*100),'g5'); 
-      Vmfs.dt = [16 1]; spm_write_vol(Vmfs, Yp0fs);
       Yp0fs = myelincorrection(Yp0fs, vx_vol, opt,P,Vmfs,si); 
       fprintf('%5.0fs\n',etime(clock,stime)); 
     end  
     
     
     stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,native2unicode(179, 'latin1')),'g5'); 
-    Vmfs.dt = [16 1]; spm_write_vol(Vmfs, Yp0fs);
+    Vmfs.dt = [16 1]; spm_write_vol(Vmfs, Yp0fs );
     if opt.SRP > 0
       [Yth1i,Yppi] = cat_vol_pbtsimpleCS4(Yp0fs, opt.interpV,...
         struct('myelinCorrection',0, 'verb',1, 'gyrusrecon',~iscerebellum, ...
         'eidist',1,'NVBC',~iscerebellum,'denoise',1 & ~iscerebellum)); 
       Vppm = Vmfs; Vppm.fname = P(si).Pppm; spm_write_vol(Vppm, Yppi);
-    else
-      cmd = sprintf('CAT_VolThicknessPbt  -correct-voxelsize 0   -median-filter 1   -downsample 0  "%s" "%s" "%s"', ...
-        Vmfs.fname, P(si).Pgmt, P(si).Pppm);
-      cat_system(cmd,opt.verb-3);
+    else 
+      cmd = sprintf('CAT_VolThicknessPbt  -correct-voxelsize 0  "%s" "%s" "%s"', Vmfs.fname, P(si).Pgmt, P(si).Pppm);
+      cat_system(cmd,3);
       Vgmt  = spm_vol(P(si).Pgmt); Yth1i = spm_read_vols(Vgmt); 
       % correction of general offset in mm 
       % Estimated for various interpolation resolution of 
@@ -360,7 +359,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     end
 
     
-    %% surface deformation 
+    % surface deformation 
     % CAT_DeformSurf in combination with smoothing correction CAT_Central2Pial 
     % allows PP values that are closer to the central position (std 0.049 vs. 0.73)
     % what improves also intensity and position values of the inner/outer surfaces!
@@ -377,7 +376,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     cat_io_FreeSurfer('write_surf_data',P(si).Ppbt,facevertexcdata);
     
 
-    %% create white and central surfaces
+    % create white and central surfaces
     if opt.create_white_pial  
       stime = cat_io_cmd('  Create pial and white surface','g5','',opt.verb,stime); 
       if useprior || opt.create_white_pial == 1 
@@ -411,13 +410,31 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     end
 
 
+    % create thickness map
+    if opt.thick_measure == 1
+      % use central surface and thickness to estimate Freesurfer thickness
+      cmd = sprintf('CAT_SurfDistance -mean -thickness "%s" "%s" "%s"', P(si).Ppbt, P(si).Pcentral, P(si).Pthick);
+      cat_system(cmd,opt.verb-3);
+    else
+      % just write PBT thickness
+      cat_io_FreeSurfer('write_surf_data', P(si).Pthick, facevertexcdata);
+    end
+
+
+    % correct thickness based on folding pattern, but smaller thickness values 
+    % are corrected less strongly than larger thickness values
+    if opt.foldingcorrection
+      cmd = sprintf('CAT_SurfCorrectThicknessFolding -slope 1.0 -max "%f" "%s" "%s" "%s"', ...
+        opt.thick_limit, P(si).Pcentral, P(si).Pthick, P(si).Pthick);
+      cat_system(cmd,opt.verb-3);
+    end
+
+
     if isscalar(opt.surf)
       % only for test visualization  
       fprintf('%5.0fs',etime(clock,stime)); 
       Vppm = spm_vol(P(si).Pppm); Yppi  = spm_read_vols(Vppm); 
-      if ~exist(P(si).Pthick,'file'), cat_io_FreeSurfer('write_surf_data', P(si).Pthick, facevertexcdata); end
       cat_surf_createCS_fun('quickeval',V0,Vppm,Ymfs,Yppi,CS,P,Smat,res,opt,res.EC(si),si,time_sr,4); 
-      if exist(P(si).Pthick,'file'), delete(P(si).Pthick); end
       return
     end
         
@@ -459,19 +476,6 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     cat_io_FreeSurfer('write_surf_data', P(si).Pthick, min(opt.thick_limit,facevertexcdatafs) );
     fprintf('\n');
     
-
-    % correct thickness based on folding pattern, but smaller thickness values 
-    % are corrected less strongly than larger thickness values
-    if opt.foldingcorrection
-      cmd = sprintf('CAT_SurfCorrectThicknessFolding -slope 1.0 -max "%f" "%s" "%s" "%s"', ...
-        opt.thick_limit, P(si).Pcentral, P(si).Pthick, P(si).Pthick);
-      cat_system(cmd,opt.verb-3);
-      % only minimum thickness to avoid overcorrections
-      facevertexcdatafsc = cat_io_FreeSurfer('read_surf_data',P(si).Pthick);
-      facevertexcdatafs = min(facevertexcdatafs,facevertexcdatafsc); clear facevertexcdatafsc
-      cat_io_FreeSurfer('write_surf_data', P(si).Pthick, min(opt.thick_limit,facevertexcdatafs) ); 
-    end
-
 
     % final surface evaluation 
     Vppm = spm_vol(P(si).Pppm); Yppi = spm_read_vols(Vppm); 

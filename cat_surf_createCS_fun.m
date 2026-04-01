@@ -224,13 +224,16 @@ function res = addSurfaceQualityMeasures(res,opt)
   end
 
   % final res structure
-  res.EC          = mean( abs(res.EC - 2) ) + 2; 
-  if isfield(res,'ECmodvx')
-    res.defect_size = mean( res.ECmodvx );
-  else
+  try
+    res.EC          = mean( [ res.genus(1,res.thi(1))   res.genus(2,res.thi(2))   ] ) + 2; 
+    res.defect_size = mean( [ res.ECmodvx(1,res.thi(1)) res.ECmodvx(2,res.thi(2)) ] ); 
+    res.defect_area = mean( [ res.surferr(1,res.thi(1)) res.surferr(2,res.thi(2)) ] ); 
+  catch
+    res.EC          = NaN; 
     res.defect_size = NaN;
+    res.defect_area = NaN;
   end
-  res.defect_area = NaN;
+
   res.defects     = NaN;
   res.mnth        = mean(res.mnth); 
   res.sdth        = mean(res.sdth); 
