@@ -2,9 +2,10 @@
  * ________________________________________________________________________
  * Calculates the euclidean distance to Ysegment > 0.5 moderated by a second
  * map Yspeed with values between 0 and 1, where 0 voxels are not visited at 
- * all. The speedmap allows to quantify asymetric conditions, e.g., for sulcal gaps.
+ * all. The speedmap allows to quantify asymetric conditions, e.g., for 
+ * sulcal gaps.
  * The closest voxel is determined by a quasi eikonal time distance.
- * Unvisited points were set to FLT_MAX. 
+ * Unvisited points were set to Infinity. 
  * 
  *  [Ydistance,Yindex,Ytime] = vbdist3(Ysegment[,Yspeed[,vx_vol]])
  *  
@@ -196,7 +197,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   const double *vx_vol;
   if (nrhs<3) {
     vx_vol = default_vx_vol;
-  } else {
+  } 
+  else {
     vx_vol = mxGetPr(prhs[2]);
   }
 
@@ -239,6 +241,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   unsigned int *Yindex;
   float *Ytime;
 
+  /* prepare additional output parameter with the index used for the assignment  
+   * of the closes voxel defined by the speedmap and the time distance to this 
+   * voxel. 
+   */
   if (nlhs>1) {
     Yindex = (unsigned int  *)mxGetPr(plhs[1]);
   } 
@@ -252,8 +258,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     Ytime = (float *)mxCalloc((size_t)numY, sizeof(float));
   }
   
-  for (int i=0;i<numY;i++) 
-  {
+  /* initialize the index, distance and time maps */
+  for (int i=0;i<numY;i++) {
     Yindex[i] = (unsigned int)i;
     if (Ysegment[i] >= 0.5f) {
       Ydistance[i] = 0.0f;
@@ -265,18 +271,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     }
   }
   
-  int u,v,w,nu,nv,nw; 
+  /* local coordinates of a voxel i (u,v,w = x,y,z) and the temporar neigbhor
+   * displacement nu,nv,nw.
+   */
+  int u,v,w,nu,nv,nw,ni = 0; 
   /* forward direction that consider all points smaller than i */
-  for (int i=0;i<numY;i++) 
-  {
-    if ( (Ydistance[i]>0) && (Yspeed[i] > 0.0f) )
-    {
+  for (int i=0;i<numY;i++) {
+    if ( (Ydistance[i]>0) && (Yspeed[i] > 0.0f) ) {
       ind2sub(i, &u, &v, &w, sizeXY, sizeX);
       
       /* read neighbor values */
-      for (int n=0;n<numNeighbors;n++)
-      {
-        int ni = i + relativeNeighborIndexes[n];
+      for (int n=0;n<numNeighbors;n++) {
+        ni = i + relativeNeighborIndexes[n];
         ind2sub(ni, &nu, &nv, &nw, sizeXY, sizeX);
         if ( (ni<0) || (ni>=numY) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) ) ni=i;
         neighborDistances[n] = Ydistance[ni] + relativeNeighborDistances[n];
@@ -284,13 +290,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         neighborTimes[n] = (speed > 0.0f) ? Ytime[ni] + relativeNeighborDistances[n] / speed : FLT_MAX;
       }
 
-      /* find minimum distance and time within the neighborhood */
+      /* find minimum distance/time within the neighborhood */
       pmin(neighborDistances, numNeighbors, &maxNeighborDistance, &maxNeighborIndices);
       pmin(neighborTimes, numNeighbors, &maxNeighborTime, &maxNeighborTimeIndex);
 
-      /* update values */
+      /* update values by using the time-index */
       if (maxNeighborIndices > 0) {
-        Yindex[i] = Yindex[i + relativeNeighborIndexes[ maxNeighborIndices ] ];
+        Yindex[i] = Yindex[i + relativeNeighborIndexes[ maxNeighborTimeIndex ] ];
         ind2sub((int)Yindex[i], &nu, &nv, &nw, sizeXY, sizeX); 
         Ydistance[i] = sqrtf(powf((u-nu)*vx1,2) + powf((v-nv)*vx2,2) + powf((w-nw)*vx3,2));
       }
@@ -301,17 +307,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   }
     
   /* backward direction that consider all points larger than i */
-  for (int i=numY-1;i>=0;i--) 
-  {
-    if ( (Ydistance[i]>0) && (Yspeed[i] > 0.0f) )
-    {
+  for (int i=numY-1;i>=0;i--) {
+    if ( (Ydistance[i]>0) && (Yspeed[i] > 0.0f) ) {
               
       ind2sub(i, &u, &v, &w, sizeXY, sizeX);
 
       /* read neighbor values */
-      for (int n=0;n<numNeighbors;n++)
-      {
-        int ni = i - relativeNeighborIndexes[n];
+      for (int n=0;n<numNeighbors;n++) {
+        ni = i - relativeNeighborIndexes[n];
         ind2sub((int)ni, &nu, &nv, &nw, sizeXY, sizeX);
         if ( (ni<0) || (ni>=numY) || (abs(nu-u)>1) || (abs(nv-v)>1) || (abs(nw-w)>1) ) ni=i;
         neighborDistances[n] = Ydistance[ni] + relativeNeighborDistances[n];
@@ -319,13 +322,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         neighborTimes[n] = (speed > 0.0f) ? Ytime[ni] + relativeNeighborDistances[n] / speed : FLT_MAX;
       }
 
-      /* find minimum distance and time within the neighborhood */
+      /* find minimum distance/time within the neighborhood */
       pmin(neighborDistances, numNeighbors, &maxNeighborDistance, &maxNeighborIndices);
       pmin(neighborTimes, numNeighbors, &maxNeighborTime, &maxNeighborTimeIndex);
 
-      /* update values */
+      /* update values by using the time-index */
       if (maxNeighborIndices > 0) {
-        Yindex[i] = Yindex[i - relativeNeighborIndexes[ maxNeighborIndices ]];
+        Yindex[i] = Yindex[i - relativeNeighborIndexes[ maxNeighborTimeIndex ]];
         ind2sub((int)Yindex[i], &nu, &nv, &nw, sizeXY, sizeX); 
         Ydistance[i] = sqrtf(powf((u-nu)*vx1,2.0f) + powf((v-nv)*vx2,2.0f) + powf((w-nw)*vx3,2.0f));
       }
@@ -335,9 +338,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     }
   }
 
+  /* final settings */
+  for (int i=0;i<numY;i++) {
+    if ( Ydistance[i] == FLT_MAX ) {
+      Ydistance[i] = INFINITY; /* set unvisited points to infinity */
+      Yindex[i] = (unsigned int)i; /* set index to itself for unvisited points */
+      Ytime[i] = INFINITY; /* set unvisited points to infinity */
+    }
+  }
+
   /* free internal input variables */  
   mxFree(Ysegment);
   mxFree(Yspeed);
+
   /* set outputs and correct index values for matlab */
   if (nlhs<2) mxFree(Yindex); else { for (int i=0;i<numY;i++) Yindex[i]=Yindex[i]+1; } 
   if (nlhs<3) mxFree(Ytime);
