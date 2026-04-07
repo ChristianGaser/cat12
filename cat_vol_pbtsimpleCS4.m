@@ -77,9 +77,6 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
                               %
   def.medfs            = [1 2]; % [processingResolution filterSize] default [1.5 2]; 
                               %
-  def.denoise          = 1;   % correct for noise, artifacts and anatomical issues as WMHs
-  def.wmnoise          = 0.02;% denoising parameter 
-                              %
   def.eidist           = 1;   % eikonal distance (not so good yet)
 
   opt = cat_io_checkinopt(opt,def);
@@ -101,6 +98,8 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
   opt.pvet0 = estimatePVEsize( Yp0 , 0); 
   opt.pvet  = max(0,min(4 / vxs,opt.pvet0)); 
 
+  % correct CSF interpolation artifacts
+  Yp0 = CS4_desnoise(Yp0,opt);
 
   if mean(vx_vol) < .75 
     % extend hard cuts, by a low value just to have a broader estimate
@@ -109,6 +108,10 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
     % - RD202601: important for small distances but less for large
     % - Ok for phantom.
     Yp0 = max(Yp0,(Yp0==1 & cat_vol_morph(Yp0==2,'d')) * 1.2);
+
+    Ymsk = cat_vol_smooth3X(Yp0>1.5 & Yp0<2.5,2); 
+    Yp0  = max(Yp0, Ymsk .* 2.90 .* smooth3(cat_vol_morph(Yp0>2.90,'ldc',opt.pvet/1)) ); 
+    Yp0  = max(Yp0, Ymsk .* 2.75 .* smooth3(cat_vol_morph(Yp0>2.75,'ldc',opt.pvet/2)) ); 
   end
   
 
@@ -281,6 +284,39 @@ function Yhull = estimateHull(Yp0,vx_vol)
   Yhull = max(0,min(1,atan(Yhull*pi/1.5))); 
 end
 % ======================================================================
+function Yp0 = CS4_desnoise(Yp0,opt)
+% filter interolation artifacts (important for eikonal speedmap)
+  inth  = cat_stat_nanmedian(Yp0(Yp0(:)>.5 & Yp0(:)<1)); 
+  Yp0   = min(3,max(1,Yp0)); 
+  if inth>.01
+    Yp0 = cat_vol_median3(Yp0, Yp0>1.9 & Yp0<2.1,true(size(Yp0)),inth/2);
+    Yp0 = cat_vol_median3(Yp0, Yp0>2.9 & Yp0<3.5,true(size(Yp0)),inth/2);
+  end
+
+  %% main filter depending on WM image _and_ anatomical noise to handle WMHs
+
+  Yp0om = Yp0; 
+  FECth = min(1,max(0,opt.pvet - 2)*2); 
+  
+  Ymm = cat_vol_morph( Yp0>2 & Yp0<3 , 'd'); 
+  Yp0 = Yp0om; 
+  opt.wmnoise = 0.02;
+  for i = 1:opt.wmnoise*100/3 
+    Yp0f = Yp0;% .* (Yp0<=2) + cat_vol_localstat(Yp0,Ymm,2, 8 );
+    Yp0f = cat_vol_median3(Yp0f, Ymm, Yp0>0, .05 );
+    
+    % refinement
+    Yp0d = abs(Yp0f-Yp0); 
+    Yp0a = cat_vol_approx(Yp0d); 
+    Yp0d = max( 0,Yp0 - Yp0a ) ./ Yp0a*2;
+    Yp0d = min(1,Yp0d .* smooth3(Yp0>2 & Yp0<3)); 
+    Yp0  = Yp0 .* (1-FECth.*Yp0d) + FECth .* Yp0d .* Yp0f;  
+    Yw   = cat_vol_smooth3X(Yp0./Yp0om,4); 
+    Yp0  = min(3,max(1,Yp0 ./ Yw));
+    Ymm  = Ymm & Yp0d>.01; 
+  end
+end
+% ======================================================================
 function pvet = estimatePVEsize( Yp0 , fast ) 
 %estimatePVEsize. Estimate the voxel-size of partial volume label map.
 %
@@ -367,14 +403,13 @@ function [Ycd, Ywd] = cat_vol_cwdist(Yp0,opt)
   def.rangeE = 0.50; % extimation limit extention - smaller better
   def.range  = 0.50; % addition range - larger better but limited by interpolation artifacts
   def.vxs    = 1;
-  def.eidist = 0; 
-
+ 
   % Only for quick tests!
   % There are two good combinations, with rangeE=.4: 
   %  1) voxelcorr/voxelcorrE = 0/1
   %  2) voxelcorr/voxelcorrE = 2/1
   % Other combinations are worse.
-  voxelcorr  = 0; % 0-none, 1-simple vx-correction-worse, 2-PVE-correction (default=2)
+  voxelcorr  = 2; % 0-none, 1-simple vx-correction-worse, 2-PVE-correction (default=2)
   voxelcorrE = 1; % 0-none, 1-simple vx-correction, 2-PVE-correction-worse (default=1)
   
   opt = cat_io_checkinopt(opt,def); 
@@ -394,8 +429,8 @@ function [Ycd, Ywd] = cat_vol_cwdist(Yp0,opt)
   hss = opt.levels; % number of opt.levels (as pairs)
   if opt.eidist 
     % speed/time map for eikonal distance
-    Fc = smooth3(max(.001,min(1,cat_vol_smooth3X(min(1,max(eps,2 - Yp0)),2).^4))); Fc = max(Fc,cat_vol_morph(Yp0<1.75,'dd',2));
-    Fw = smooth3(max(.001,min(1,cat_vol_smooth3X(min(1,max(eps,Yp0 - 1)),2).^4))); Fw = max(Fw,cat_vol_morph(Yp0>2.25,'dd',2));
+    Fc = smooth3(max(.001,min(1,cat_vol_smooth3X(min(1,max(eps,2 - Yp0)),2).^4))); Fc = max(Fc,cat_vol_morph(Yp0<2,'dd',1.9));
+    Fw = smooth3(max(.001,min(1,cat_vol_smooth3X(min(1,max(eps,Yp0 - 1)),2).^4))); Fw = max(Fw,cat_vol_morph(Yp0>2,'dd',1.9));
   end
   for si = 1:hss
     offset = max(0,min(.5, range * si/(hss+1))); 
@@ -410,6 +445,7 @@ function [Ycd, Ywd] = cat_vol_cwdist(Yp0,opt)
     end
     % PVE correction 
     if voxelcorr==2
+      vxc  = .5; 
       Ycdl = (Ycdl - min(vxc,max(0,- (Yp0(YIl) - (1.5-offset))*opt.pvet ))) .* (YMM & YMC); 
       Ycdh = (Ycdh - min(vxc,max(0,- (Yp0(YIh) - (1.5+offset))*opt.pvet ))) .* (YMM & YMC); 
     elseif voxelcorr==1
