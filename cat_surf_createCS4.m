@@ -100,24 +100,27 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
   [~,I] = cat_vbdist(single(Ya>0)); Ya=Ya(I); clear I;  
 
 
-  %% denoise to recude artifacts and WM hyperintensities - quite save
+  %% denoise to recude artifacts and WM hyperintensities 
+  %  quite save with clear improvement in surface creation (less defects and smaller corrections) 
   Ywmr = cat_vol_resize(Ym .* (Yp0>2.75/3),'reduceV',1,2,16,'meanm'); 
   Ywmrstd = cat_vol_localstat(Ywmr,Ywmr>0,2,4); clear Ywmr;
   opt.wmnoise  = min(1/6,cat_stat_nanmean(Ywmrstd(Ywmrstd>0))); 
-  fprintf('Denoising (CNR=%0.2f%%), ',opt.wmnoise*100); 
+  fprintf('\nDenoising (CNR=%0.2f%%) ',opt.wmnoise*100); 
   Yp0 = min(Yp0,cat_ornlm(Yp0,1,1,opt.wmnoise));
 
   
-  %% BVC - problematic !
-  Ygc = cat_vol_localstat(Yp0,Yb0,1,2);
-  Ygc = cat_vol_localstat(Ygc,Yb0,1,3);
-  Yd  = max(0,(Yp0 - min(Yp0,Ygc)) .* cat_vol_morph(Yb0,'e')); clear Ygc;
-  Yd  = cat_ornlm(Yd,1,1,.05); 
-  Yd(smooth3(Yd)<.125) = 0; 
-  fprintf('BVC (CNR=%0.2f%%)\n',median(Yd(Yd(:)>.1))*100); 
-  Yp0 = min(Yp0, max(2,Yp0 - Yd .* ( cat_vol_smooth3X(Yp0,4) > 2.125/3 & Yp0>2.5/3 & cat_vol_smooth3X(Yp0,4)<2.5))); %clear Yd;
-  Yp0 = min(Yp0,cat_ornlm(Yp0,1,1,opt.wmnoise));
-
+  %% BVC - might be problematic and only relevant to avoid blurring in T2/PD/FLAIR/BVs !
+  if 0
+    Ygc = cat_vol_localstat(Yp0,Yb0,1,2);
+    Ygc = cat_vol_localstat(Ygc,Yb0,1,3);
+    Yd  = max(0,(Yp0 - min(Yp0,Ygc)) .* cat_vol_morph(Yb0,'e')); clear Ygc;
+    Yd  = cat_ornlm(Yd,1,1,.05); 
+    Yd(smooth3(Yd)<.125) = 0; 
+    fprintf(', BVC (CNR=%0.2f%%)',median(Yd(Yd(:)>.1))*100); 
+    Yp0 = min(Yp0, max(2,Yp0 - Yd .* ( cat_vol_smooth3X(Yp0,4) > 2.125/3 & Yp0>2.5/3 & cat_vol_smooth3X(Yp0,4)<2.5))); %clear Yd;
+    Yp0 = min(Yp0,cat_ornlm(Yp0,1,1,opt.wmnoise));
+  end
+  
 
   %% simple filling
   [Yp0f,Ymf] = fillVentricle(Yp0,Ym,Ya,YMF,vx_vol); clear Ym YMF; 
@@ -183,8 +186,9 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     [Vmfs,Smat] = createOutputFileStructures(V,V0,resI,BB,opt,mridir,ff,si); 
     
 
-    % Myelination corretion for the CS40 that is also part of cat_vol_pbtsimpleCS4
-    if opt.myelinCorrection > 0  &&  ~iscerebellum
+    % Myelination corretion 
+    % **** this is not fully save working in all cases and can cause severe topology issues (phantom) ****
+    if opt.myelinCorrection > 0  &&  ~iscerebellum  &&  opt.SRP>0  &&  0
       stime = cat_io_cmd(sprintf('  Myelin correction (%0.1f%%)',opt.myelinCorrection*100),'g5'); 
       Yp0fs = myelincorrection(Yp0fs, vx_vol, opt, P, Vmfs, si, opt.SRP>0); 
       fprintf('%5.0fs\n',etime(clock,stime)); 
@@ -195,8 +199,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     Vmfs.dt = [16 1]; spm_write_vol(Vmfs, Yp0fs );
     if opt.SRP > 0
       [Yth1i,Yppi] = cat_vol_pbtsimpleCS4(Yp0fs, opt.interpV,...
-        struct('myelinCorrection',0, 'verb',1, 'gyrusrecon',~iscerebellum, ...
-        'eidist',1,'NVBC',~iscerebellum,'denoise',1 & ~iscerebellum)); 
+        struct('verb',1, 'gyrusrecon',~iscerebellum, 'eidist',1, 'NVBC',~iscerebellum, 'denoise',~iscerebellum)); 
       Vppm = Vmfs; Vppm.fname = P(si).Pppm; spm_write_vol(Vppm, Yppi);
     else 
       cmd = sprintf('CAT_VolThicknessPbt  -range 0.45  -correct-voxelsize 0  "%s" "%s" "%s"', Vmfs.fname, P(si).Pgmt, P(si).Pppm);
@@ -207,6 +210,14 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       %  sub-ds000113-1.3.0-01_ses-forrestgump_desc-snr30_rf30_2_res-07mm_thickness20mm-30mm_T1w.nii.gz
       Yth1i = max(0,Yth1i - 0.56*mean(opt.interpV) ); 
     end
+
+if  1
+  % addition denoising to reduce very local outliers.
+  Vppm = spm_vol(P(si).Pppm); 
+  Yppi = single(spm_read_vols(Vppm)); 
+  Yppi = min(Yppi, cat_ornlm(Yppi,1,1,.005)); 
+  spm_write_vol(Vppm, Yppi);
+end
     
 
     % prepare thickness output
@@ -263,7 +274,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         gth   = .5;
         relwm = sum(max(0,Ymf(:)-2)) / sum(min(1,Ymf(:))); 
         gycon = max(0,1 - max(0,relwm * 3 - 1) * 2);
-        gycon = max(0.5,min(.85,.6 - .2*gycon)); 
+        gycon = max(0.5,min(.85,.65 - .2*gycon)); 
         % export map
         Vppmi = spm_vol(P(si).Pppm); 
       end
@@ -278,13 +289,14 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       %% Iterative runs to create the central surface.
       areaerr  = .5;    % accepted percentage area changes by topology correction ... values below .5 are
       genuserr = 6;     % accaptable EC of the final surface 
+      final    = 0; 
       stime = cat_io_cmd(sprintf('  Create initial surface (%0.2f mm)',opt.interpV),'g5','',opt.verb,stime); 
-      for thi = 1:round(16/mean(vx_vol*2))  % with this loop we further increase the threshold of the Ypp map by .1 (eg. more WM like surface)
+      for thi = 1:round(8/mean(opt.interpV))  % with this loop we further increase the threshold of the Ypp map by .1 (eg. more WM like surface)
         %% Main initial surface creation with topology correction.
         if exist(P(si).Pcentral,'file'), delete(P(si).Pcentral); end % have to delete it to get useful error messages in case of reprocessing/testing
-        gycon = gycon + .04 / mean(vx_vol).*(thi>1);
+        gycon = gycon + .02 / opt.interpV * (thi>1);
  
-         % create basic surface to know the real surface geometry
+        % create basic surface to know the real surface geometry
         cmd = sprintf('CAT_VolMarchingCubes  "%s" "%s" -thresh "%0.4f" -fast', Vppmi.fname, P(si).Pcentral, gycon);
         cat_system(cmd ,opt.verb-3);  
         CSG{thi} = loadSurf(P(si).Pcentral); %#ok<AGROW>
@@ -296,7 +308,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
           txt = evalc('cat_system(cmd ,3)');
         else
           cmd = sprintf('CAT_VolMarchingCubes  "%s" "%s"  -thresh "%0.4f" -iter %d -label "%s" -median-filter "%d"',  ...
-            Vppmi.fname, P(si).Pcentral, gycon, 1, Vp0.fname, min(1,floor( .5 / opt.interpV ) )); %#ok<NASGU>
+            Vppmi.fname, P(si).Pcentral, gycon, 1+final, Vp0.fname, min(1,floor( .5 / opt.interpV ) )); %#ok<NASGU>
           txt = evalc('cat_system(cmd ,3)'); 
         end
         CST{thi} = loadSurf(P(si).Pcentral); %#ok<AGROW>
@@ -317,21 +329,26 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
             '\n    Sulcal blurring for Ypp>%0.2f (EC=%3d,ATE=%5.1f%%,ATE0=%5.1f%%)  ', ...
              res.gycon(si,thi), res.ECf(si,thi), res.surferr(si,thi), res.surferrgt(si,thi) ));
         end
-        if gycon > .8  ||  ( res.surferr(si,thi) < areaerr*(1+(thi==1))  &&  res.surferrgt(si,thi) < areaerr &&  res.genus(si,thi) < genuserr  )
-          break;      
+        if final || gycon > .80 || ( res.surferr(si,thi) < areaerr*(1+(thi==1))  &&  res.surferrgt(si,thi) < areaerr &&  res.genus(si,thi) < genuserr  )
+          break
+        end
+        if gycon > .75 
+          err = res.surferr(si,:) + res.surferrgt(si,:); 
+          thi = find( err == min(err), 1, 'first'); %#ok<FXSET>
+          final = 1; 
         end
       end
       
 
       %% use best surface 
-      if thi > 1 
+      if thi > 1 && ~final
         err = res.surferr(si,:) + res.surferrgt(si,:); 
         thi = find( err == min(err), 1, 'first');
         saveSurf( CST{thi} , P(si).Pcentral); 
       end
       res.EC(si)  = res.ECf(si,thi); 
       res.thi(si) = thi; 
-      if res.genus > genuserr
+      if res.genus(si,thi) > genuserr
         cat_io_addwarning([mfilename ':EC'],sprintf('Incorrect Euler Number i.e. reminding topological defects (EC=%d). ', ...
           res.EC(si)),1,[1 2*(res.surferr(si,thi) < areaerr)]);
       end
@@ -685,7 +702,7 @@ function Yp0 = myelincorrection(Yp0,vx_vol,opt,P,Vmfs,si,quick)
     Ycd(Ycd>1000) = 0; Ywd(Ywd>1000) = 0; % lazy debugging
   
     % projection-based thickness mapping
-    Ygmt0 = cat_vol_pbtp( round(Yp0) , Ywd, Ycd);
+    Ygmt0 = cat_vol_pbtp( round(Yp0) , Ywd, Ycd);  
     Ygmt0(Ygmt0>1000) = 0;  % lazy debugging
     Ygmt0 = cat_vol_approx(Ygmt0,'rec',2); 
   
@@ -693,9 +710,12 @@ function Yp0 = myelincorrection(Yp0,vx_vol,opt,P,Vmfs,si,quick)
     Ypp   = min(1,min(Ygmt0,Ycd) ./ max(eps,Ygmt0)); Ypp(Yp0>2.5 & Ypp==0) = 1; 
   else
     % alternative save but slow version (45s)
+    %[Vmfs,Smat] = createOutputFileStructures(V,V0,resI,BB,opt,mridir,ff,si); 
+    Vmfs.dt = [16 1]; spm_write_vol(Vmfs, Yp0 );
     cmd = sprintf('CAT_VolThicknessPbt  -correct-voxelsize 0   -median-filter 2   -downsample 0 "%s" "%s" "%s"', Vmfs.fname, P(si).Pgmt, P(si).Pppm);
     cat_system(cmd,opt.verb-3);
     Vgmt0  = spm_vol(P(si).Pgmt); Ygmt0 = spm_read_vols(Vgmt0); 
+    Ygmt0  = max(0,Ygmt0 - 0.56*mean(opt.interpV) ); 
     Vpp    = spm_vol(P(si).Pppm); Ypp  = spm_read_vols(Vpp); 
     Ycd    = Ygmt0 .* Ypp; 
   end
@@ -705,13 +725,13 @@ function Yp0 = myelincorrection(Yp0,vx_vol,opt,P,Vmfs,si,quick)
   Ycdc2(Ycdc2 > 6 / mean(vx_vol)) = 0; 
  
   % estimate the full tissue thickness (we needed the GM thickness and WM to reconstruct the sulcus)
-  Ybmt  = cat_vol_pbtp( min(3,4 - min(2,Yp0)), Ycdc2, Ycdc2*inf); 
+  Ybmt  = cat_vol_pbtp( min(3,4 - min(2,Yp0)), Ycdc2, Ycdc2*inf); Ybmt(Ybmt>1000) = 0; 
   Ybmt  = cat_vol_approx(Ybmt); 
 
   % estimate correction area
   medgmt = median(Ygmt0(:)); 
   try iqrgmt = iqr(Ygmt0(:)); catch, iqrgmt = std(Ygmt0(:)); end
-  YenoughWM  = Ycdc2 < Ybmt - 1.5;
+  YenoughWM  = Ycdc2>0 & Ycdc2 < Ybmt - 1.5;
   YthinnerGM = max(0,medgmt - 1.5*iqrgmt - Ygmt0); 
   Yclose2CSF = Ycdc2>0 & Ycdc2<(medgmt - 1.5*iqrgmt); 
   Ygmwmpve   = cat_vol_morph(Yp0>2 & Yp0<2.9,'do',1); % | smooth3(Yp0>2 & Yp0<2.9)>.7);
@@ -759,16 +779,16 @@ function [Ycd, Ywd] = cat_vol_cwdist(Yp0,opt)
     offset = max(0,min(.4, range * si/(hss+1))); 
 
     % CSF dist
-    [Ycdl,YI]  = cat_vbdist(single(Yp0 < ( 1.5 - offset)), YMC ); 
+    [Ycdl,YI]  = cat_vbdist3(single(Yp0 < ( 1.5 - offset)), YMC ); 
     Ycdl       = (Ycdl - min(vxc,max(0,- (Yp0(YI) - (1.5-offset))*opt.pvet ))) .* (YMM & YMC); 
-    [Ycdh,YI]  = cat_vbdist(single(Yp0 < ( 1.5 + offset)), YMC ); 
+    [Ycdh,YI]  = cat_vbdist3(single(Yp0 < ( 1.5 + offset)), YMC ); 
     Ycdh       = (Ycdh - min(vxc,max(0,- (Yp0(YI) - (1.5+offset))*opt.pvet ))) .* (YMM & YMC); 
     Ycd        = Ycd + .5/hss .* Ycdl  +  .5/hss .* Ycdh; 
 
     % WM distances
-    [Ywdl,YI]  = cat_vbdist(single(Yp0 > ( 2.5 - offset)), YMM );
+    [Ywdl,YI]  = cat_vbdist3(single(Yp0 > ( 2.5 - offset)), YMM );
     Ywdl       = (Ywdl - min(vxc,max(0, (Yp0(YI) - (2.5-offset))*opt.pvet ))) .* (YMM & YMC); 
-    [Ywdh,YI]  = cat_vbdist(single(Yp0 > ( 2.5 + offset)), YMM ); 
+    [Ywdh,YI]  = cat_vbdist3(single(Yp0 > ( 2.5 + offset)), YMM ); 
     Ywdh       = (Ywdh - min(vxc,max(0, (Yp0(YI) - (2.5+offset))*opt.pvet ))) .* (YMM & YMC); 
     Ywd        = Ywd + .5/hss .* Ywdl  +  .5/hss .* Ywdh;
   end
