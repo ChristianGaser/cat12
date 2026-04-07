@@ -53,25 +53,25 @@ float pmax(const float GMT[], const float RPM[], const float SEG[], const float 
   float n=0.0f, maximum=WMD, high_avg=0.0f;
 
   /* the pure maximum */
-  /* ... the maximum causes overestimations that helps for gyri but is 
-   *     problematic in sulci and in case of blood vessels and meninges */
-  if ( 0==1 ) {
-    for (int i=0;i<sA;i++) {
-      if (  ( GMT[i] < 1e15f ) && ( maximum < GMT[i] ) &&                  /* thickness/WMD of neighbors should be larger */
-            ( SEG[i] > 1.0f ) && ( SEGI>1.0f && SEGI<3.0f ) &&           /* projection range */
-            ( ( ( RPM[i] - ND[i] * 1.2f ) <= WMD ) ) &&                    /* upper boundary - maximum distance */
-            ( ( ( RPM[i] - ND[i] * 0.5f ) >  WMD ) || ( SEG[i]<1.5f ) ) &&  /* lower boundary - minimum distance - corrected values outside */
-            ( ( ( (SEGI * max(1.0f,min(1.2f,SEGI-1.5f)) ) >= SEG[i] ) ) || ( SEG[i]<1.5f ) ) )  /* for high values will project data over sulcal gaps */
-        { maximum = GMT[i]; n++; } 
-    }
+  /* ... The maximum causes overestimations that helps for gyri but is 
+   *     problematic in sulci and in case of blood vessels and meninges.
+   *     However, the attempt to avoid it was not working for small sulci.
+   */
+  for (int i=0;i<sA;i++) {
+    if (  ( GMT[i] < 1e15f ) && ( maximum < GMT[i] ) &&                  /* thickness/WMD of neighbors should be larger */
+          ( SEG[i] >= 1.0f ) && ( SEGI>1.25f && SEGI<2.75f ) &&           /* projection range */
+          ( ( ( RPM[i] - ND[i] * 1.2f ) <= WMD ) ) &&                    /* upper boundary - maximum distance */
+          ( ( ( RPM[i] - ND[i] * 0.5f ) >  WMD ) || ( SEG[i]<1.5f ) ) &&  /* lower boundary - minimum distance - corrected values outside */
+          ( ( ( (SEGI * max(1.0f,min(1.2f,SEGI-1.5f)) ) >= SEG[i] ) ) || ( SEG[i]<1.5f ) ) )  /* for high values will project data over sulcal gaps */
+      { maximum = GMT[i]; n++; } 
   }
   
   /* the median of the highest values*/
   float high_vals[14] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
   int count = 0;
   for (int i=0;i<sA;i++) {
-    if ( ( GMT[i] < 1e15f ) && ( (maximum + .5 ) < GMT[i] ) && /* the maximum is here the WMD of the voxel itself + .5 */
-         ( SEG[i] >= 1.0f ) && ( SEGI>1.0f && SEGI<3.0f ) && 
+    if ( ( GMT[i] < 1e15f ) && ( ( maximum - 1.0f ) < GMT[i] ) && /* lower maximum values gave larger thickness phantom peaks but more topology issues */ 
+         ( SEG[i] >= 1.0f ) && ( SEGI>1.25f && SEGI<2.75f ) && 
          ( ( (RPM[i] - ND[i] * 1.2f ) <= WMD ) ) && 
          ( ( (RPM[i] - ND[i] * 0.5f ) >  WMD ) || ( SEG[i]<1.5f ) ) &&
          ( ( ( (SEGI * max(1.0f,min(1.2f,SEGI-1.5f)) ) >= SEG[i] ) ) || ( SEG[i]<1.5f ) ) ) 
@@ -79,7 +79,11 @@ float pmax(const float GMT[], const float RPM[], const float SEG[], const float 
   }
   if ( count > 0 ) {
     qsort(high_vals, count, sizeof(float), compare_float);
-    /* Use central 50% of sorted values for robust averaging */
+    /* Use central 50% of sorted values for robust averaging.
+     * A larger range (10-90%) give larger peaks in the thickness phantom   
+     * but more topology issues. The thresholds here influences over- and 
+     * underestimation of cortical thickness.
+     */
     n=0.0f; 
     for (int i=(int)round( (float)count * 0.25f); i<(int)round( (float)count * 0.75f); i++) {
       high_avg = high_avg + high_vals[i];
