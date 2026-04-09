@@ -1390,10 +1390,15 @@ function res = cat_surf_evalCS(CS,Tpbt,Tfs,Ym,Ypp,Pcentral,mat,verb,estSI)
   %% Evaluation of surface position values
   %  Here we can of course use the central surface
   %  This will be relative age independent.
-  if exist('Ypp','var')
-    II = cat_surf_isocolors2(Ypp,VI,mat);          
+  if exist('Ypp','var') 
+    if exist('VI','var') && exist('VO','var')
+      II = cat_surf_isocolors2(Ypp,VI,mat);          
+      IO = cat_surf_isocolors2(Ypp,VO,mat);         
+    else
+      II = nan; 
+      IO = nan; 
+    end
     IC = cat_surf_isocolors2(Ypp,CS,mat); 
-    IO = cat_surf_isocolors2(Ypp,VO,mat);         
     II = II - 1.0;
     IC = IC - 0.5;
     IO = IO - 0.0;

@@ -90,7 +90,7 @@ if ~isempty(opt.dist) && exist('fitdist','file') ~= 2
 end
 
 % ignore NaNs
-dropNaNs = @(x) double(x(~isnan(x)));
+dropNaNs = @(x) double(x(~isnan(x) & ~isinf(x)));
 
 mn = zeros(n,1);
 mx = zeros(n,1);
