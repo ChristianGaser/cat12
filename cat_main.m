@@ -931,6 +931,11 @@ if job.output.surface
   qa.qualitymeasures.SurfaceDefectNumber      = qa.createCS.defects;
   qa.qualitymeasures.SurfaceIntensityRMSE     = qa.createCS.RMSE_Ym;
   qa.qualitymeasures.SurfacePositionRMSE      = qa.createCS.RMSE_Ypp;
+  try
+    qa.qualitymeasures.SurfaceAreaTopoError   = mean(qa.createCS.SATE); 
+  catch
+    qa.qualitymeasures.SurfaceAreaTopoError   = nan; 
+  end
   if isfield(qa,'createCS') && isfield(qa.createCS,'self_intersections')
     qa.qualitymeasures.SurfaceSelfIntersections = qa.createCS.self_intersections;
   else

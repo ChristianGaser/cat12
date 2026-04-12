@@ -981,6 +981,11 @@ if job.output.surface
     qa.qualitymeasures.SurfaceIntensityRMSE   = nan; 
     qa.qualitymeasures.SurfacePositionRMSE    = nan; 
   end
+  try
+    qa.qualitymeasures.SurfaceAreaTopoError   = mean(qa.createCS.SATE); 
+  catch
+    qa.qualitymeasures.SurfaceAreaTopoError   = nan; 
+  end
   if isfield(qa,'createCS') && isfield(qa.createCS,'self_intersections')
     qa.qualitymeasures.SurfaceSelfIntersections = qa.createCS.self_intersections;
   else

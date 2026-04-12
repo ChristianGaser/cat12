@@ -432,11 +432,18 @@ function str = cat_main_reportstr(job,res,qa)
     end
     % Surface Intensity/Position
     if job.extopts.expertgui && isfield(qa.qualityratings,'SurfaceIntensityRMSE')
-        str{2} = [str{2} struct('name',' Surface intensity / position RMSE:','value',[ marks2str( qa.qualityratings.SurfaceIntensityRMSE ,...
-          sprintf('%0.3f', qa.qualitymeasures.SurfaceIntensityRMSE)) ' / ' ...
-          marks2str( qa.qualityratings.SurfacePositionRMSE ,sprintf('%0.3f', qa.qualitymeasures.SurfacePositionRMSE) ) ] ) ];
+      if isfield( qa.qualityratings , 'SurfaceAreaTopoError' )
+        str{2} = [str{2} struct('name',' Surface intensity/position/area error:','value',[ 
+          marks2str( qa.qualityratings.SurfaceIntensityRMSE , sprintf('%0.3f', qa.qualitymeasures.SurfaceIntensityRMSE)) ' / ' ...
+          marks2str( qa.qualityratings.SurfacePositionRMSE  , sprintf('%0.3f', qa.qualitymeasures.SurfacePositionRMSE) ) ' / ' ...
+          marks2str( qa.qualityratings.SurfaceAreaTopoError , sprintf('%4.1f%%', qa.qualitymeasures.SurfaceAreaTopoError*100) ) ] ) ];
+      else
+        str{2} = [str{2} struct('name',' Surface intensity / position RMSE:','value',[ 
+          marks2str( qa.qualityratings.SurfaceIntensityRMSE , sprintf('%0.3f', qa.qualitymeasures.SurfaceIntensityRMSE)) ' / ' ...
+          marks2str( qa.qualityratings.SurfacePositionRMSE  , sprintf('%0.3f', qa.qualitymeasures.SurfacePositionRMSE) ) ] ) ];
+      end
     end
-    
+
     % average rating
     str{2} = [str{2} struct('name','\bf Weighted average (SIQR):','value',['\bf' marks2str(qa.qualityratings.SIQR,...
       sprintf('%5.2f%% (%s)',mark2rps(qa.qualityratings.SIQR),mark2grad(qa.qualityratings.SIQR)))])];

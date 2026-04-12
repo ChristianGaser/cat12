@@ -226,12 +226,14 @@ function res = addSurfaceQualityMeasures(res,opt)
   % final res structure
   try
     res.EC          = mean( [ res.genus(1,res.thi(1))   res.genus(2,res.thi(2))   ] ) + 2; 
-    res.defect_size = mean( [ res.ECmodvx(1,res.thi(1)) res.ECmodvx(2,res.thi(2)) ] ); 
+    res.defect_size = mean( [ res.ECf(1,res.thi(1))     res.ECf(2,res.thi(2)) ] ); 
     res.defect_area = mean( [ res.surferr(1,res.thi(1)) res.surferr(2,res.thi(2)) ] ); 
+    res.SATE        = mean( [ res.surferrfinal(1)       res.surferrfinal(2)  ] ); 
   catch
     res.EC          = NaN; 
     res.defect_size = NaN;
     res.defect_area = NaN;
+    res.SATE        = NaN; 
   end
 
   res.defects     = NaN;
@@ -278,10 +280,18 @@ function evalProcessing(res,opt,P,V0)
       cat_io_cprintf( color( rate( abs( res.mnth - 2.5 ) , 0 , 2.0 )) , sprintf('%0.4f'     , res.mnth ) );  fprintf(' %s ',native2unicode(177, 'latin1'));
       cat_io_cprintf( color( rate( abs( res.sdth - 0.5 ) , 0 , 1.0 )) , sprintf('%0.4f mm\n', res.sdth ) );
 
-      fprintf('  Surface intensity / position RMSE:          ');
-      cat_io_cprintf( color( rate( mean(res.mnRMSE_Ym)  , 0.05 , 0.3 ) ) , sprintf('%0.4f / ', mean(res.mnRMSE_Ym) ) );
-      cat_io_cprintf( color( rate( mean(res.mnRMSE_Ypp) , 0.05 , 0.3 ) ) , sprintf('%0.4f\n',  mean(res.mnRMSE_Ypp) ) );
-        
+      if isfield(res,'SATE')
+        fprintf('  Surface intensity/position/area RMSE:     ');
+      else
+        fprintf('  Surface intensity/position RMSE             ');
+      end
+      cat_io_cprintf( color( rate( mean(res.mnRMSE_Ym)  , 0.05  , 0.3 ) ) , sprintf('%0.4f / ', mean(res.mnRMSE_Ym) ) );
+      cat_io_cprintf( color( rate( mean(res.mnRMSE_Ypp) , 0.05  , 0.3 ) ) , sprintf('%0.4f',  mean(res.mnRMSE_Ypp) ) );
+      if isfield(res,'SATE')
+        cat_io_cprintf( color( rate( mean(res.SATE      ) , 0.001 , 0.1 ) ) , sprintf(' / %0.4f',  mean(res.SATE) ) );
+      end
+      fprintf('\n')
+
       if isfield(res.(opt.surf{1}).createCS_final,'white_self_interections')
         fprintf('  Pial/white self-intersections:              ');
         cat_io_cprintf( color( rate(  mean([res.SIw,res.SIp]) , 0 , 20 ) ) , sprintf('%0.2f%%%% (%0.2f mm%s)\n'  , mean([res.SIw,res.SIp]) , mean([res.SIwa,res.SIpa]) , char(178) ) );

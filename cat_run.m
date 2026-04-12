@@ -404,12 +404,14 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
               catgmt  = {'unknown'};
             end
             %% surface intensity / position RMSE
-            cati = find(cellfun('isempty',strfind(txt,'Surface intensity / position RMSE: '))==0,1,'last');
+            cati = max([ find(cellfun('isempty',strfind(txt,'Surface intensity/position RMSE: '))==0,1,'last');
+                         find(cellfun('isempty',strfind(txt,'Surface intensity/position/area RMSE: '))==0,1,'last') ]);
             if ~isempty(cati) 
               try
                 cathd   = textscan( txt{cati}  ,'%s','Delimiter',':'); 
                 cathd   = textscan( cathd{1}{2},'%s','Delimiter',' ');
                 catSRMSE = [cathd{1}(1) cathd{1}(3)]; 
+                if numel(cathd{1})>4, catSRMSE(3) = cathd{1}(5); end
               catch
                 catSRMSE = {'unknown'};
               end
@@ -610,8 +612,15 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
                   colorsurf = @(SI,m)  SI(max(1,min(size(SI,1),round((max(0.0,m-0.05)*300)+5))),:);
                   cat_io_cprintf(kcol,', '); 
                   cat_io_cprintf(colorsurf(GMC,str2double( catSRMSE{1} )),sprintf('surf=%s',catSRMSE{1}));  
-                  cat_io_cprintf(kcol,', '); 
-                  cat_io_cprintf(colorsurf(GMC,str2double( catSRMSE{2} )),sprintf('%s'     ,catSRMSE{2}));  
+                  if numel(catSRMSE) > 1
+                    cat_io_cprintf(kcol,', '); 
+                    cat_io_cprintf(colorsurf(GMC,str2double( catSRMSE{2} )),sprintf('%s'   ,catSRMSE{2}));  
+                  end
+                  if numel(catSRMSE) > 2
+                    colorsurf2 = @(SI,m)  SI(max(1,min(size(SI,1),round((max(0.0,m)*10)+5))),:);
+                    cat_io_cprintf(kcol,', '); 
+                    cat_io_cprintf(colorsurf2(GMC,str2double( catSRMSE{3}(1:end-1))),sprintf('%s'   ,catSRMSE{3}));  
+                  end
                 end
                 
                 

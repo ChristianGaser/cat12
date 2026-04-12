@@ -106,6 +106,7 @@ function varargout = cat_stat_marks(action,uselevel,varargin)
    'qualitymeasures'  'SurfaceDefectNumber'   'linear'    [     0    100]  'average number of defects'
    'qualitymeasures'  'SurfaceIntensityRMSE'  'linear'    [  0.05    0.3]  'RMSE of the expected boundary intensity Ym of the IS, OS, and CS'
    'qualitymeasures'  'SurfacePositionRMSE'   'linear'    [  0.05    0.3]  'RMSE of the expected boundary position Ypp of the IS, OS, and CS'
+   'qualitymeasures'  'SurfaceAreaTopoError'  'linear'    [  0.00   0.05]  'Percentual area change after topology correction mlt. by genus toplogy value.'
    'qualitymeasures'  'SurfaceSelfIntersections' 'linear' [     0     20]  'Percentual area of self-intersections of the IS and OS.'
 % -- subject-related data from the preprocessing -----------------------
   % - volumetric measures - 
