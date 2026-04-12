@@ -59,10 +59,10 @@ float pmax(const float GMT[], const float RPM[], const float SEG[], const float 
    */
   for (int i=0;i<sA;i++) {
     if (  ( GMT[i] < 1e15f ) && ( maximum < GMT[i] ) &&                  /* thickness/WMD of neighbors should be larger */
-          ( SEG[i] >= 1.0f ) && ( SEGI>1.25f && SEGI<2.75f ) &&           /* projection range */
-          ( ( ( RPM[i] - ND[i] * 1.2f ) <= WMD ) ) &&                    /* upper boundary - maximum distance */
-          ( ( ( RPM[i] - ND[i] * 0.5f ) >  WMD ) || ( SEG[i]<1.5f ) ) &&  /* lower boundary - minimum distance - corrected values outside */
-          ( ( ( (SEGI * max(1.0f,min(1.2f,SEGI-1.5f)) ) >= SEG[i] ) ) || ( SEG[i]<1.5f ) ) )  /* for high values will project data over sulcal gaps */
+          ( SEG[i] > 1.0f ) && ( SEGI>1.1f && SEGI<2.9f ) &&           /* projection range */
+          ( ( ( RPM[i] - ND[i] * 1.1f ) <= WMD ) ) &&                    /* upper boundary - maximum distance */
+          ( ( ( RPM[i] - ND[i] * 0.7f ) >  WMD ) || ( SEG[i]<=1.5f ) ) &&  /* lower boundary - minimum distance - corrected values outside */
+          ( ( ( (SEGI * 1.5f ) >= SEG[i] ) ) || ( SEG[i]<=1.5f ) ) )  /* for high values will project data over sulcal gaps */
       { maximum = GMT[i]; n++; } 
   }
   
@@ -70,11 +70,11 @@ float pmax(const float GMT[], const float RPM[], const float SEG[], const float 
   float high_vals[14] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
   int count = 0;
   for (int i=0;i<sA;i++) {
-    if ( ( GMT[i] < 1e15f ) && ( ( maximum - 1.0f ) < GMT[i] ) && /* lower maximum values gave larger thickness phantom peaks but more topology issues */ 
-         ( SEG[i] >= 1.0f ) && ( SEGI>1.25f && SEGI<2.75f ) && 
-         ( ( (RPM[i] - ND[i] * 1.2f ) <= WMD ) ) && 
-         ( ( (RPM[i] - ND[i] * 0.5f ) >  WMD ) || ( SEG[i]<1.5f ) ) &&
-         ( ( ( (SEGI * max(1.0f,min(1.2f,SEGI-1.5f)) ) >= SEG[i] ) ) || ( SEG[i]<1.5f ) ) ) 
+    if ( ( GMT[i] < 1e15f ) && ( ( maximum - 4.0f ) < GMT[i] ) && /* lower maximum values gave larger thickness phantom peaks but more topology issues */ 
+         ( SEG[i] > 1.0f ) && ( SEGI>1.1f && SEGI<2.9f ) && 
+         ( ( (RPM[i] - ND[i] * 2.0f ) <= WMD ) ) && 
+         ( ( (RPM[i] - ND[i] * 0.5f ) >  WMD ) || ( SEG[i]<=1.5f ) ) &&
+         ( ( ( (SEGI * 1.5f ) >= SEG[i] ) ) || ( SEG[i]<=1.5f ) ) ) 
       { high_vals[count++] = GMT[i]; } 
   }
   if ( count > 0 ) {
@@ -85,7 +85,7 @@ float pmax(const float GMT[], const float RPM[], const float SEG[], const float 
      * underestimation of cortical thickness.
      */
     n=0.0f; 
-    for (int i=(int)round( (float)count * 0.25f); i<(int)round( (float)count * 0.75f); i++) {
+    for (int i=(int)round( (float)count * 0.1f); i<(int)round( (float)count * 0.9f); i++) {
       high_avg = high_avg + high_vals[i];
       n++; 
     }

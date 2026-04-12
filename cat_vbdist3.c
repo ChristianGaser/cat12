@@ -217,7 +217,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   float       neighborTimes[14] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
   float       maxNeighborDistance = FLT_MAX;
   float       maxNeighborTime = FLT_MAX;
-  int         maxNeighborIndices = 0;
+  int         maxNeighborIndex = 0;
   int         maxNeighborTimeIndex = 0;
   
   /* get data */
@@ -291,16 +291,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
       }
 
       /* find minimum distance/time within the neighborhood */
-      pmin(neighborDistances, numNeighbors, &maxNeighborDistance, &maxNeighborIndices);
+      pmin(neighborDistances, numNeighbors, &maxNeighborDistance, &maxNeighborIndex);
       pmin(neighborTimes, numNeighbors, &maxNeighborTime, &maxNeighborTimeIndex);
 
       /* update values by using the time-index */
-      if (maxNeighborIndices > 0) {
+      if (maxNeighborTimeIndex > 0 && maxNeighborDistance < Ydistance[i]) 
         Yindex[i] = Yindex[i + relativeNeighborIndexes[ maxNeighborTimeIndex ] ];
+      else
+        if (maxNeighborIndex > 0 && maxNeighborTime < Ytime[i])
+          Yindex[i] = Yindex[i + relativeNeighborIndexes[ maxNeighborTimeIndex ] ];
+
+      if ((maxNeighborTimeIndex > 0 && maxNeighborDistance < Ydistance[i]) || (maxNeighborTimeIndex>0 && maxNeighborTime < Ytime[i])) {
         ind2sub((int)Yindex[i], &nu, &nv, &nw, sizeXY, sizeX); 
         Ydistance[i] = sqrtf(powf((u-nu)*vx1,2) + powf((v-nv)*vx2,2) + powf((w-nw)*vx3,2));
-      }
-      if (maxNeighborTimeIndex>0 && maxNeighborTime < Ytime[i]) {
         Ytime[i] = maxNeighborTime;
       }
     }
@@ -323,16 +326,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
       }
 
       /* find minimum distance/time within the neighborhood */
-      pmin(neighborDistances, numNeighbors, &maxNeighborDistance, &maxNeighborIndices);
+      pmin(neighborDistances, numNeighbors, &maxNeighborDistance, &maxNeighborIndex);
       pmin(neighborTimes, numNeighbors, &maxNeighborTime, &maxNeighborTimeIndex);
 
       /* update values by using the time-index */
-      if (maxNeighborIndices > 0) {
+      if (maxNeighborTimeIndex > 0 && maxNeighborDistance < Ydistance[i]) 
         Yindex[i] = Yindex[i - relativeNeighborIndexes[ maxNeighborTimeIndex ]];
+      else
+        if (maxNeighborTimeIndex>0 && maxNeighborTime < Ytime[i])
+          Yindex[i] = Yindex[i - relativeNeighborIndexes[ maxNeighborIndex ]];
+      
+      if ( (maxNeighborTimeIndex > 0 && maxNeighborDistance < Ydistance[i]) | (maxNeighborTimeIndex>0 && maxNeighborTime < Ytime[i])) {
         ind2sub((int)Yindex[i], &nu, &nv, &nw, sizeXY, sizeX); 
         Ydistance[i] = sqrtf(powf((u-nu)*vx1,2.0f) + powf((v-nv)*vx2,2.0f) + powf((w-nw)*vx3,2.0f));
-      }
-      if (maxNeighborTimeIndex>0 && maxNeighborTime < Ytime[i]) {
         Ytime[i] = maxNeighborTime;
       }
     }
