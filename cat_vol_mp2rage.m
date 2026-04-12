@@ -404,17 +404,6 @@ function [out,outs] = cat_vol_mp2rage(job)
     end
     spm8 = load(spm_file(job.files{si},'suffix','_seg8','ext','.mat'));
     
-    % load original for skull-stripping
-    if isfield(job,'ofiles')
-      Po = job.ofiles{si};
-      Vo = spm_vol(Po); 
-      Yo = single( spm_read_vols(Vo));
-    else 
-      Po = job.files{si}; 
-      Vo = spm_vol(Po); 
-      Yo = single( spm_read_vols(Vo));
-    end
-
     % load bias corrected 
 % ############# use the original if no bias corrected was written? ########## 
     if job.biascorrection
@@ -425,6 +414,17 @@ function [out,outs] = cat_vol_mp2rage(job)
     Vm = spm_vol(Pm); 
     Ym = single( spm_read_vols(Vm));
     vx_vol = sqrt(sum(Vm.mat(1:3,1:3).^2)); 
+    
+    % load (resampled) original for skull-stripping
+    Vx = Vm; Vx.fname = spm_file(Vx.fname,'prefix','tmp_'); 
+    if isfield(job,'ofiles')
+      Po = job.ofiles{si};
+    else 
+      Po = job.files{si}; 
+    end
+    Vo = spm_vol(Po); 
+    [~,Yo] = cat_vol_imcalc(Vo,Vx,'i1'); Yo = single( Yo ); 
+
     
     % load segmentation (for brain masking)
     Yseg = zeros(Vm.dim,'single');
