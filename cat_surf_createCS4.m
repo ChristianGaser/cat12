@@ -118,39 +118,18 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     Yd  = cat_ornlm(Yd,1,1,.05); 
     Yd(smooth3(Yd)<.125) = 0; 
     fprintf(', BVC (CNR=%0.2f%%)',median(Yd(Yd(:)>.1))*100); 
-    Yp0 = min(Yp0, max(2,Yp0 - Yd .* ( cat_vol_smooth3X(Yp0,4) > 2.125/3 & Yp0>2.5/3 & cat_vol_smooth3X(Yp0,4)<2.5))); %clear Yd;
+    Yp0 = min(Yp0, max(2,Yp0 - Yd .* ( cat_vol_smooth3X(Yp0,4) > 2.125/3 & Yp0>2.5/3 & cat_vol_smooth3X(Yp0,4)<2.5))); clear Yd;
     Yp0 = min(Yp0,cat_ornlm(Yp0,1,1,opt.wmnoise));
   end
 
 
   %% WMH and PVS correction 
-  %  Eg. NISALS_UTR_SP30T_als3_T1w dataset with Swiss cheese WM and wmnoise ~ 0.04.
-  %  Blood vessels should be already removed here! 
+  %  Eg.  NISALS_UTR_SP30T_als3_T1w  dataset with Swiss cheese WM and wmnoise ~ 0.04.
+  %  Blood vessels should be already removed here and we should also not apply this in non T1w data! 
   %  This can cause blurring of sulci!
-  if opt.wmnoise > 0.02  &&  opt.SRP>0 % only CS42 currently
-    Yp0o = Yp0;
-    
-    %% first we close the GM and the GM-WM segment
-    Yp0    = Yp0o;
-    Yp0hgm = single( 1 + (Yp0>2.25/3) ); Yp0hgm(cat_vol_smooth3X(Yp0)<1.75/3 & Yp0<2.25) = 0;
-    Yp0hgm = cat_vol_laplace3R(Yp0hgm,Yp0hgm==1,0.25); % small values blurr small sulci too
-    Yp0hgm = Yp0hgm & (cat_vol_smooth3X(Yp0,4)<2.125/3); % avoidblurres of sulci
-    Yp0hgm = max( min(2/3,smooth3(Yp0hgm)*2/3) , (smooth3(Yp0hgm)/2).^2 ); % first part close pure GM holes, second fills GM+tissue
-    Yp0    = max(Yp0,  ~NS(Ya,job.extopts.LAB.CB) .* Yp0hgm); % prepare correction 
-    Yp0    = max(Yp0o, min(1,Yp0 + smooth3( max(0,smooth3(Yp0-Yp0o) * 4 -.25) .* (Yp0o<1.9/3)).^.5 )); % corrected CSF was WM 
-    
-    %% next we fix the WM
-    Yp0hgm = single( 1 + (Yp0>2.75/3) ); Yp0hgm(cat_vol_smooth3X(Yp0)<2.25/3 & Yp0<2.75) = 0;
-    Yp0hgm = cat_vol_laplace3R(Yp0hgm,Yp0hgm==1,0.1); 
-    Yp0hgm = max( Yp0hgm, cat_vol_morph(Yp0hgm,'ldc',1)); 
-    Yp0    = max(Yp0,min(1,smooth3(Yp0hgm-1)));
-    
-    % final mixing beside the cerebellum
-    corr   = min(1,opt.wmnoise*100 - 2) .* (1 - NS(Ya,job.extopts.LAB.CB));
-    Yp0    = Yp0o .* (1-corr) + (corr) .* Yp0; 
-
-    %% cleanup
-    clear Yp0o Yp0hgm corr;
+  if opt.wmnoise > 0.03  &&  ~job.inv_weighting  &&  opt.SRP>0  % only CS42 currently
+    fprintf(', WMHC (%0.2f%%)',max(0,min(1,opt.wmnoise*100 - 3))); 
+    Yp0 = closeWMHandPVS(Yp0, Ya, NS, job.extopts.LAB.CB, opt.wmnoise);
   end
 
   
@@ -344,7 +323,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         res.area_tc(si,thi)   = sum(cat_surf_fun('area',CST{thi})) / 100;
         res.area_uc(si,thi)   = sum(cat_surf_fun('area',CSG{thi})) / 100;
         res.surferr(si,thi)   = abs(res.area_tc(si,thi) - res.area_uc(si,thi)) / res.area_uc(si,thi) * (res.genus(si,thi)+1)/genuserr;
-        res.surferrgt(si,thi) = abs(res.area_tc(si,thi) - res.area_gt(si))     / res.area_gt(si)     * (res.genus(si,thi)+1)/genuserr - (gycon - .5)/2;
+        res.surferrgt(si,thi) = abs(res.area_tc(si,thi) - res.area_gt(si))     / res.area_gt(si)     * (res.genus(si,thi)+1)/genuserr - (gycon - gth)/2;
         res.ECf(si,thi)       = str2double( txt(max(strfind(txt,':'))+1 : max(strfind(txt,'('))-2) ); 
         res.ECmodvx(si)       = str2double( txt(max(strfind(txt,'('))+1 : max(strfind(txt,'voxel'))-1) );
        
@@ -355,7 +334,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
              res.gycon(si,thi), res.ECf(si,thi), res.surferr(si,thi)*100, res.surferrgt(si,thi)*100 ));
         end
         % stop iteration
-        if final || gycon > .80 || ( res.surferr(si,thi) < areaerr*(1+(thi==1))  &&  res.surferrgt(si,thi) < areaerr &&  res.genus(si,thi) < genuserr  )
+        if final || gycon > .80 || ( res.surferr(si,thi) < areaerr  &&  res.surferrgt(si,thi) < areaerr &&  res.genus(si,thi) < genuserr  )
           break
         end
         % in case we havent stopped for a good reason (low blurring and acceptable euler number),
@@ -381,8 +360,8 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
           res.EC(si)),1,[1 2*(res.surferr(si,thi) < areaerr)]);
       end
       if res.surferr(si,thi) > areaerr
-        cat_io_addwarning([mfilename ':MarchingCubes'],sprintf('Increased topological adjustments of %0.2f%%%%. ',...
-          res.surferr(si,thi)), 1,[1 2]);
+        cat_io_addwarning([mfilename ':MarchingCubes:' opt.surf{si}],sprintf('Increased topological adjustments of %0.2f%%%% in %s surface. ',...
+          res.surferr(si,thi),opt.surf{si}), 1,[1 2]);
       end
       
       % load and check surface and 
@@ -675,6 +654,34 @@ function [Yp0f,Ymf] = fillVentricle(Yp0,Ym,Ya,YMF,vx_vol)
   Ytmp  = cat_vol_morph(YMF,'dd',3,vx_vol) & Ymfs>2.1/3;
   Ymf(Ytmp) = max(min(Ym(Ytmp),0),Ymfs(Ytmp)); clear Ytmp Ymfs; 
   Ymf   = Ymf * 3;
+end
+%==========================================================================
+function Yp0 = closeWMHandPVS(Yp0, Ya, NS, LABCB, wmnoise, vx_vol)
+%closeWMHandPVS. Correct strong WMHs and PVSs.
+%  Eg.  NISALS_UTR_SP30T_als3_T1w  dataset with Swiss cheese WM and wmnoise ~ 0.04.
+%  Blood vessels should be already removed here and we should also not apply this in non T1w data! 
+%  This can cause blurring of sulci (eg. INDI_HC_NWK_sub13411). 
+    
+  Yp0o = Yp0; vxs = mean(vx_vol); 
+  
+  %% first we close the GM and the GM-WM segment
+  Yp0    = Yp0o;
+  Yp0hgm = single( 1 + (Yp0>2.25/3) ); Yp0hgm(cat_vol_smooth3X(Yp0)<1.75/3 & Yp0<2.25) = 0;
+  Yp0hgm = cat_vol_laplace3R(Yp0hgm,Yp0hgm==1,0.25); % small values blurr small sulci too
+  Yp0hgm = Yp0hgm & (cat_vol_smooth3X(Yp0,4/vxs)<2.125/3); % avoid blurres of sulci
+  Yp0hgm = max( min(2/3,smooth3(Yp0hgm)*2/3) , (smooth3(Yp0hgm)/2).^2 ); % first part close pure GM holes, second fills GM+tissue
+  Yp0    = max(Yp0,  ~NS(Ya, LABCB) .* Yp0hgm); % prepare correction 
+  Yp0    = max(Yp0o, min(1,Yp0 + smooth3( max(0,smooth3(Yp0-Yp0o) * 4 -.25) .* (Yp0o<1.9/3)).^.5 )); % corrected CSF was WM 
+  
+  %% next we fix the WM
+  Yp0hgm = single( 1 + (Yp0>2.75/3) ); Yp0hgm(cat_vol_smooth3X(Yp0)<2.25/3 & Yp0<2.75) = 0;
+  Yp0hgm = cat_vol_laplace3R(Yp0hgm,Yp0hgm==1,0.1); 
+  Yp0hgm = max( Yp0hgm, cat_vol_morph(Yp0hgm,'ldc',1)); 
+  Yp0    = max(Yp0,min(1,smooth3(Yp0hgm-1)));
+  
+  % final mixing beside the cerebellum
+  corr   = min(1,wmnoise*100 - 3) .* (1 - NS(Ya, LABCB));
+  Yp0    = Yp0o .* (1-corr) + (corr) .* Yp0; 
 end
 %==========================================================================
 function Vppm = exportPPmap( Yppi, Vmfs, opt)
