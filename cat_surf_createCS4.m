@@ -129,7 +129,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
   %  This can cause blurring of sulci!
   if opt.wmnoise > 0.03  &&  ~job.inv_weighting  &&  opt.SRP>0  % only CS42 currently
     fprintf(', WMHC (%0.2f%%)',max(0,min(1,opt.wmnoise*100 - 3))); 
-    Yp0 = closeWMHandPVS(Yp0, Ya, NS, job.extopts.LAB.CB, opt.wmnoise);
+    Yp0 = closeWMHandPVS(Yp0, Ya, NS, job.extopts.LAB.CB, opt.wmnoise, vx_vol);
   end
 
   
@@ -246,10 +246,27 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     %  for surface reconstruction are  are possible. 
     %  --------------------------------------------------------------------
     if isscalar(opt.surf), time_sr = clock; end % temporary for tests 
+    areaerr  = .005;  % accepted percentage area changes by topology correction ... 0.5% are good
+    genuserr = 6;     % accaptable EC of the final surface 
+    final    = 0;     
     if useprior 
       stime = cat_io_cmd('  Load and refine subject average surface','g5','',opt.verb,stime);
-      res.EC(si)       = 0; 
-      res.ECmodvx(si)  = res.EC(si);
+      res.EC(si)            = 0; 
+      res.ECmodvx(si)       = res.EC(si);
+      % use average to define gt area
+      CS                    = loadSurf(P(si).Pcentral); 
+      thi                   = 1; 
+      res.area_gt(si)       = sum(cat_surf_fun('area',CS)) / 100; 
+      res.thi(si)           = 1; 
+      res.gycon(si,thi)     = .5; 
+      res.ECf(si,thi)       = size(CS.vertices,1) + size(CS.faces,1) - size(spm_mesh_edges(CS),1); 
+      res.genus(si,thi)     = abs(res.ECf(si,thi) - 2);
+      res.area_tc(si,thi)   = res.area_gt(si);
+      res.area_uc(si,thi)   = res.area_gt(si);
+      res.surferr(si,thi)   = 0;
+      res.surferrgt(si,thi) = 0;
+      res.ECmodvx(si)       = 0;
+      clear CS; 
     else
       % optimized downsampling of the the Ypp map and
       Vp0 = Vmfs; Vp0.fname = spm_file(P(si).Pp0,'suffix','_tmp'); 
@@ -291,9 +308,6 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       if ~debug, clear CSG05; end 
 
       %% Iterative runs to create the central surface.
-      areaerr  = .005;  % accepted percentage area changes by topology correction ... 0.5% are good
-      genuserr = 6;     % accaptable EC of the final surface 
-      final    = 0; 
       stime = cat_io_cmd(sprintf('  Create initial surface (%0.2f mm)',opt.interpV),'g5','',opt.verb,stime); 
       for thi = 1:round(8/mean(opt.interpV))  % with this loop we further increase the threshold of the Ypp map by .1 (eg. more WM like surface)
         %% Main initial surface creation with topology correction.
