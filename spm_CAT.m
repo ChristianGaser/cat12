@@ -20,7 +20,6 @@ function spm_CAT(varargin)
 %
 % ______________________________________________________________________
 % Christian Gaser, Robert Dahnke
-% $Id$
 
 
 rev = '$Rev$';
@@ -70,14 +69,18 @@ if ismac && ~isdeployed
   [~, archOutput] = system('uname -v');
   if ~isempty(strfind(archOutput, 'ARM64')) %#ok<STREMP>
     CATBinDir = fullfile(catdir, 'CAT.maca64');
+    mexFiles = dir(fullfile(catdir, '*.mexmaca64'));
   else
     CATBinDir = fullfile(catdir, 'CAT.maci64');
+    mexFiles = dir(fullfile(catdir, '*.mexmaci64'));
   end
   binFiles = dir(fullfile(CATBinDir, 'CAT_*'));
   if ~isempty(binFiles)
     testBin = fullfile(CATBinDir, binFiles(1).name);
-    [qST, ~] = system(sprintf('xattr -p com.apple.quarantine "%s" 2>/dev/null', testBin));
-    if qST == 0 % quarantine attribute exists
+    testMex = fullfile(catdir, mexFiles(1).name);
+    [qST1, ~] = system(sprintf('xattr -p com.apple.quarantine "%s" 2>/dev/null', testBin));
+    [qST2, ~] = system(sprintf('xattr -p com.apple.quarantine "%s" 2>/dev/null', testMex));
+    if qST1 == 0 || qST2 == 0 % quarantine attribute exists
       [fixStatus1, ~] = system(sprintf('xattr -dr com.apple.quarantine "%s"', catdir));
       [fixStatus2, ~] = system(sprintf('chmod -R a+x "%s"', CATBinDir));
       if fixStatus1 ~= 0 || fixStatus2 ~= 0
@@ -85,6 +88,7 @@ if ismac && ~isdeployed
         fprintf(2, 'CAT: Could not remove macOS quarantine automatically.\n');
         fprintf(2, 'Please run this command in your Terminal to fix this:\n\n');
         fprintf(2, '     sudo xattr -dr com.apple.quarantine "%s"\n\n', catdir);
+        fprintf(2, '     sudo chmod -R a+x "%s"\n\n', CATBinDir);
         fprintf(2, 'Then restart MATLAB.\n');
         fprintf(2, '========================================================================\n\n');
       end
