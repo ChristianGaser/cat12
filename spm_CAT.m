@@ -75,12 +75,14 @@ if ismac && ~isdeployed
     mexFiles = dir(fullfile(catdir, '*.mexmaci64'));
   end
   binFiles = dir(fullfile(CATBinDir, 'CAT_*'));
-  if ~isempty(binFiles)
+  if ~isempty(binFiles) && ~isempty(mexFiles)
     testBin = fullfile(CATBinDir, binFiles(1).name);
     testMex = fullfile(catdir, mexFiles(1).name);
-    [qST1, ~] = system(sprintf('xattr -p com.apple.quarantine "%s" 2>/dev/null', testBin));
-    [qST2, ~] = system(sprintf('xattr -p com.apple.quarantine "%s" 2>/dev/null', testMex));
-    if qST1 == 0 || qST2 == 0 % quarantine attribute exists
+    cmd1 = ['xattr -p com.apple.quarantine "' testBin '"'];
+    cmd1 = ['xattr -p com.apple.quarantine "' testMex '"'];
+    [qST1, result1] = system(cmd1);
+    [qST2, result2] = system(cmd2);
+    if (qST1 == 0 && ~isempty(strtrim(result1))) || (qST2 == 0 && ~isempty(strtrim(result2)))
       [fixStatus1, ~] = system(sprintf('xattr -dr com.apple.quarantine "%s"', catdir));
       [fixStatus2, ~] = system(sprintf('chmod -R a+x "%s"', CATBinDir));
       if fixStatus1 ~= 0 || fixStatus2 ~= 0
