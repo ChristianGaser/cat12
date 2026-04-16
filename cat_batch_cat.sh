@@ -33,6 +33,7 @@ bids=0
 bids_folder=
 nojvm=""
 NUMBER_OF_JOBS=-1
+matlab_version=""
 
 ########################################################
 # run main
@@ -491,12 +492,20 @@ run_cat12 ()
       fi
       
       if [ ! -n "$shellcommand" ]; then
+
+        # Use newer Matlab syntax for >=9.6
+        if [ -n "$matlab_version" ] && awk "BEGIN {exit !($matlab_version >= 9.6)}"; then
+          matlab_params=" -batch "
+        else
+          matlab_params=" -nodisplay -nosplash -r "
+        fi
+
         # do nohup in background or not
         if [ "$fg" -eq 0 ]; then
-          nohup nice -n $nicelevel ${matlab} -nodisplay "$nojvm" -nosplash -r "$COMMAND" >> "${vbmlog}_${j}.log" 2>&1 &
+          nohup nice -n $nicelevel ${matlab} "$nojvm" $matlab_params "$COMMAND" >> "${vbmlog}_${j}.log" 2>&1 &
           child_pids+=("$!")
         else
-          nohup nice -n $nicelevel ${matlab} -nodisplay "$nojvm" -nosplash -r "$COMMAND" >> "${vbmlog}_${j}.log" 2>&1
+          nohup nice -n $nicelevel ${matlab} "$nojvm" $matlab_params "$COMMAND" >> "${vbmlog}_${j}.log" 2>&1
         fi
       else
         # do nohup in background or not
@@ -529,7 +538,7 @@ run_cat12 ()
 }
 
 ########################################################
-# check if matlab exist
+# check if matlab exist and get Matlab version
 ########################################################
 
 check_matlab ()
@@ -539,6 +548,9 @@ check_matlab ()
     echo $matlab not found.
     exit 1
   fi
+  
+  verstr="$("$matlab" -nodisplay -nosplash -nodesktop -r "fprintf('%s\n', version); exit;" 2>/dev/null | awk '/^[0-9]+\.[0-9]+/ {print; exit}')"
+  matlab_version="$(echo "$verstr" | sed -n 's/^\([0-9]\+\.[0-9]\+\).*/\1/p')"
 }
 
 ########################################################

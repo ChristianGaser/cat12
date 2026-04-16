@@ -32,6 +32,7 @@ standalone=1
 expert=0
 fg=0
 matlab=matlab # you can use other matlab versions by changing the matlab parameter
+matlab_version=""
 
 ########################################################
 # run main
@@ -190,6 +191,9 @@ check_files ()
       echo $matlab not found.
       exit 1
     fi
+    
+    verstr="$("$matlab" -nodisplay -nosplash -nodesktop -r "fprintf('%s\n', version); exit;" 2>/dev/null | awk '/^[0-9]+\.[0-9]+/ {print; exit}')"
+    matlab_version="$(echo "$verstr" | sed -n 's/^\([0-9]\+\.[0-9]\+\).*/\1/p')"
   fi
   
   # check for batch file
@@ -337,10 +341,18 @@ run_cat ()
     else
       COMMAND="spm; spm_get_defaults; cat_get_defaults; global defaults cat matlabbatch;$COMMAND;spm_jobman('run',matlabbatch); exit;";
     fi
-    if [ "$fg" -eq 0 ]; then
-      nohup nice ${matlab} -nodisplay -nosplash -r "$COMMAND"  2>&1 &
+    
+    # Use newer Matlab syntax for >=9.6
+    if [ -n "$matlab_version" ] && awk "BEGIN {exit !($matlab_version >= 9.6)}"; then
+      matlab_params=" -batch "
     else
-      nohup nice  ${matlab} -nodisplay -nosplash -r "$COMMAND" 2>&1
+      matlab_params=" -nodisplay -nosplash -r "
+    fi
+
+    if [ "$fg" -eq 0 ]; then
+      nohup nice ${matlab} $matlab_params "$COMMAND"  2>&1 &
+    else
+      nohup nice ${matlab} $matlab_params "$COMMAND" 2>&1
     fi
   fi
 }

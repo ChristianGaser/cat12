@@ -35,6 +35,7 @@ defaults_tmp=/tmp/defaults$$.m
 fg=0
 bids=0
 bids_folder=
+matlab_version=""
 
 ########################################################
 # run main
@@ -304,10 +305,17 @@ run_cat12 ()
   echo $0 $ARG_LIST >> $vbmlog
   echo >> $vbmlog
 
-  if [ "$fg" -eq 0 ]; then
-    nohup ${matlab} "$nojvm" -nodisplay -nosplash -r "$COMMAND" >> $vbmlog 2>&1 &
+  # Use newer Matlab syntax for >=9.6
+  if [ -n "$matlab_version" ] && awk "BEGIN {exit !($matlab_version >= 9.6)}"; then
+    matlab_params=" -batch "
   else
-    nohup ${matlab} "$nojvm" -nodisplay -nosplash -r "$COMMAND" >> $vbmlog 2>&1
+    matlab_params=" -nodisplay -nosplash -r "
+  fi
+
+  if [ "$fg" -eq 0 ]; then
+    nohup ${matlab} "$nojvm" $matlab_params "$COMMAND" >> $vbmlog 2>&1 &
+  else
+    nohup ${matlab} "$nojvm" $matlab_params "$COMMAND" >> $vbmlog 2>&1
   fi
   
   exit 0
@@ -324,6 +332,9 @@ check_matlab ()
     echo $matlab not found.
     exit 1
   fi
+
+  verstr="$("$matlab" -nodisplay -nosplash -nodesktop -r "fprintf('%s\n', version); exit;" 2>/dev/null | awk '/^[0-9]+\.[0-9]+/ {print; exit}')"
+  matlab_version="$(echo "$verstr" | sed -n 's/^\([0-9]\+\.[0-9]\+\).*/\1/p')"
 }
 
 ########################################################
@@ -363,8 +374,7 @@ USAGE:
 
   Processing is only supported for one subject.
   Optionally you can set the matlab command with the "-m" option. As default no display
-  is used (via the -nodisplay option in matlab). However sometimes the batch file needs
-  a graphical output and the display should be enabled with the option "-d".
+  is used.
 
 PURPOSE:
   Command line call of longitudinal segmentation pipeline
