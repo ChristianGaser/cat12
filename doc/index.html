@@ -124,7 +124,7 @@
             <ul>
               <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">Segment</a> data and select "Surface and thickness estimation" under "Writing options" (for longitudinal data use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.long');">Segment Longitudinal Data</a>).<br>
               The surface data are saved in the folder "surf" and are named "?h.thickness.*" for cortical thickness.</li>
-              <li>Optionally, <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfextract');">Extract Additional Surface Parameters</a> (e.g. sulcal depth, gyrification, cortical complexity).</li>
+              <li>Optionally, <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfextract');">Extract Additional Surface Parameters</a> (e.g. surface, area, sulcal depth, gyrification, cortical complexity).</li>
               <li><a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfresamp');">Resample and smooth</a> surface data (suggested starting value 12 mm for cortical thickness and sulcal depth and 20–25 mm for folding measures<b><sup>1</sup></b>, use the default merging of hemispheres).<br>
               Select the "lh.thickness.*" data in the folder "surf". The resampled data are named "s12.mesh.resampled_32k.thickness.*" for 12 mm smoothed, merged hemispheres that were resampled to 32k template space.</li>
               <li>Check data quality of the resampled data using <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.check_homogeneity');">Sample Homogeneity</a>.</li>
@@ -168,7 +168,7 @@
             <p><a href="#top" aria-label="Back to top">Back to top</a></p>
             
             <!-- ###################################### -->
-            <h3>Changes in version CAT26.0 (3010)</h3>
+            <h3>Changes in version CAT26.0 (3190)</h3>
 
             <details>
               <summary><u>Changes in preprocessing pipeline (which affect your results compared to CAT12.9)</u></summary>
@@ -201,11 +201,15 @@
               <summary><u>New features</u></summary>
               <ul>
                 <li>
-                A new batch has been added under "Volume Tools" > "Rescan Average" to average rescans either in BIDS format or from manually selected images. This can be used, for example, to minimize motion artifacts. The functionality is already available directly from the menu.
+                The long-awaited and much-requested surface area estimation is finally available. This mirrors the sum-preserving per-vertex area estimation from FreeSurfer, and can now be used as an alternative measurement for surface folding. Use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfextract')">Extract Additional Surface Parameters</a> to access the new functionality.
                 </li>
-                
+
                 <li>
-                To run SPM ImCalc on multiple images (e.g., to compute T1w/T2w ratios for all subjects), use the batch available under "Volume Tools" > "Multi-Subject Image Calculator".
+                A new batch has been added under "Volume Tools" > <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.savg')">Rescan Average</a> to average rescans either in BIDS format or from manually selected images. This can be used, for example, to minimize motion artifacts. The functionality is already available directly from the menu.
+                </li>
+
+                <li>
+                To run SPM ImCalc on multiple images (e.g., to compute T1w/T2w ratios for all subjects), use the batch available under "Volume Tools" > <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.mimcalc.images')">Multi-Subject Image Calculator</a>.
                 </li>
                 
                 <li>
@@ -3336,10 +3340,10 @@
             <p>
               Besides cortical thickness, further measures of brain folding and data mapping are available after surface reconstruction in the <i>'Extract & Map Surface Data...'</i> menu. 
               <!-- folding -->
-              The <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.surfextract')">Extract Additional Surface Parameters</a>  batch allows estimation of the folding measure by the absolute mean curvature <i>(Gyrification)</i> <a href="https://neuro-jena.github.io/pdf/Luders-NI06.pdf">(Luders et al. 2006)</a>, the depth of sulci or the measurement of local surface complexity by the fractal dimension <a href="https://neuro-jena.github.io/pdf/Yotter-NI11.pdf">(Yotter et al. 2011c).</a> 
+              The <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfextract')">Extract Additional Surface Parameters</a>  batch allows estimation of the folding measure by the absolute mean curvature <i>(Gyrification)</i> <a href="https://neuro-jena.github.io/pdf/Luders-NI06.pdf">(Luders et al. 2006)</a>, the depth of sulci or the measurement of local surface complexity by the fractal dimension <a href="https://neuro-jena.github.io/pdf/Yotter-NI11.pdf">(Yotter et al. 2011c).</a> 
               <!-- value mapping -->
               Moreover, 3D volume data (e.g. fMRI data) can be mapped to the individual surface to benefit from enhanced surface-based smoothing and registration. 
-              The mapping can be applied to volumes from the same <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.vol2surf')">native space</a>, e.g., for cortical myelination measures, or <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.cat_surf_coregvol2surf')">nonlinear co-registered volumes,</a> such as fMRI images. This mapping can also be applied to <a class="function" href="matlab:spm_jobman('interactive'','','spm.tools.cat.stools.vol2surftemp')">normalized volumes</a> without individual surfaces to map results in MNI space to the template surface.
+              The mapping can be applied to volumes from the same <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.vol2surf')">native space</a>, e.g., for cortical myelination measures, or <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.cat_surf_coregvol2surf')">nonlinear co-registered volumes,</a> such as fMRI images. This mapping can also be applied to <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.vol2surftemp')">normalized volumes</a> without individual surfaces to map results in MNI space to the template surface.
               <!-- link -->
 <!--              See <a href="cat_tools_SBM.html">surface tools</a> for further information. -->
             </p>
