@@ -600,7 +600,7 @@ if expert && 0 % this is not ready now
   cdata.tag     = 'cdata';
   cdata.name    = '(Left) Surface Data Files';
   cdata.filter  = 'any';
-  cdata.ufilter = 'lh.(?!cent|pial|white|sphe|defe|hull|pbt).*';
+  cdata.ufilter = 'lh.(?!cent|pial|white|sphe|defe|hull|pbt|aparc).*';
   cdata.num     = [1 Inf];
   cdata.help    = {'Surface data files. Both sides will be processed'};
 else % only smoothed/resampled
@@ -608,7 +608,7 @@ else % only smoothed/resampled
   cdata.tag     = 'cdata';
   cdata.name    = '(Left) Surface Data Files';
   cdata.filter  = 'any';
-  cdata.ufilter = '^lh.(?!cent|pial|white|sphe|defe|hull|pbt).*';
+  cdata.ufilter = '^lh.(?!cent|pial|white|sphe|defe|hull|pbt|aparc).*';
   cdata.num     = [1 Inf];
   cdata.help    = {'Surface data files. Both sides will be processed'};
 end
@@ -1055,7 +1055,7 @@ cdata_sub           = cfg_files;
 cdata_sub.tag       = 'cdata';
 cdata_sub.name      = 'Surface Data Files';
 cdata_sub.filter    = 'any'; % use any to support Freesurfer surfaces and dependencies
-cdata_sub.ufilter   = '(lh|rh|mesh).(?!cent|pial|white|sphe|defe|hull).*gii';
+cdata_sub.ufilter   = '(lh|rh|mesh).(?!cent|pial|white|sphe|defe|hull|aparc).*gii';
 cdata_sub.num       = [1 Inf];
 cdata_sub.help      = {'These are the surface data files that are used by the calculator.  They are referred to as s1, s2, s3, etc in the order they are specified.'};
  
@@ -1235,7 +1235,7 @@ data_surf.filter  = 'any';
 if expert > 1
   data_surf.ufilter = '^lh.';
 else
-  data_surf.ufilter = '^lh.(?!cent|pial|white|sphe|defe|hull|pbt).*';
+  data_surf.ufilter = '^lh.(?!cent|pial|white|sphe|defe|hull|pbt|aparc).*';
 end
 data_surf.num     = [1 Inf];
 data_surf.help    = {'Select surfaces data files for left hemisphere for resampling to template space.Right side will be automatically processed.'};
