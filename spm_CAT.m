@@ -74,12 +74,11 @@ if ismac && ~isdeployed
     CATBinDir = fullfile(catdir, 'CAT.maci64');
     mexFiles = dir(fullfile(catdir, '*.mexmaci64'));
   end
-  binFiles = dir(fullfile(CATBinDir, 'CAT_*'));
-  if ~isempty(binFiles) && ~isempty(mexFiles)
-    testBin = fullfile(CATBinDir, binFiles(1).name);
+  if ~isempty(mexFiles)
+    testBin = fullfile(CATBinDir, 'CAT_SurfArea');
     testMex = fullfile(catdir, mexFiles(1).name);
     cmd1 = ['xattr -p com.apple.quarantine "' testBin '"'];
-    cmd1 = ['xattr -p com.apple.quarantine "' testMex '"'];
+    cmd2 = ['xattr -p com.apple.quarantine "' testMex '"'];
     [qST1, result1] = system(cmd1);
     [qST2, result2] = system(cmd2);
     if (qST1 == 0 && ~isempty(strtrim(result1))) || (qST2 == 0 && ~isempty(strtrim(result2)))
