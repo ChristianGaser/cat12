@@ -184,8 +184,11 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
       [status,result] = system(export_cmd);
       system_cmd = ['start matlab -nodesktop -nosplash -r ' matlab_cmd ' -logfile ' log_name{i}];
     else
-      % -nodisplay .. nodisplay is without figure output > problem with CAT report ... was there a server problem with -nodesktop?
-      system_cmd = [fullfile(matlabroot,'bin') '/matlab -nodesktop -nosplash -r ' matlab_cmd ' -logfile "' log_name{i} '" 2>&1 & '];
+      if cat_io_matlabversion>=20191
+        system_cmd = [fullfile(matlabroot,'bin') '/matlab -batch ' matlab_cmd ' -logfile "' log_name{i} '" 2>&1 & '];
+      else
+        system_cmd = [fullfile(matlabroot,'bin') '/matlab -nodesktop -nosplash -r ' matlab_cmd ' -logfile "' log_name{i} '" 2>&1 & '];
+      end
     end
     [status,result] = system(system_cmd); 
     cat_check_system_output(status,result);
