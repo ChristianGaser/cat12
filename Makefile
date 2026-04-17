@@ -109,7 +109,6 @@ zip: update clean
 	-@gzip -d CAT/templates_MNI152NLin2009cAsym/*.nii.gz
 	-@bash update_revision.sh
 	-@zip ${ZIPFILE} -rm CAT
-	-@rm spm_cat12.m
 
 # copy binaries after cross-compiling
 cp_binaries: 

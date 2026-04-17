@@ -5,7 +5,7 @@ It is developed by Christian Gaser and Robert Dahnke (Jena University Hospital, 
 
 ## Download
 [CAT toolbox](https://github.com/ChristianGaser/cat12/releases/latest)
-Older version can be obtained or [here](https://github.com/ChristianGaser/cat12/releases/latest) or versions <= CAT12.9 [here](http://dbm.neuro.uni-jena.de/cat12/).
+Older version can be obtained [here](https://github.com/ChristianGaser/cat12/releases) or versions <= CAT12.9 [here](http://dbm.neuro.uni-jena.de/cat12/).
 
 [CAT manual](https://neuro-jena.github.io/cat12-html)
 [Getting Started](https://neuro-jena.github.io/cat12-help/#get_started)
@@ -25,7 +25,7 @@ CAT is designed to work with SPM12 or newer and Matlab versions 7.4 (R2007a) or 
 - Unpack the zip-file
 - Copy the CAT folder to the spm/toolbox directory
 - If once installed use the update function in CAT in order to check for new versions
-- After restarting SPM either call CAT via the toolbox button or (as short-cut) type *cat12* on the Matlab command line.
+- After restarting SPM either call CAT via the toolbox button or (as short-cut) type *CAT* on the Matlab command line.
 
 ## Download Standalone Version (no need for Matlab licene)
 The advantage of the standalone version is that no Matlab license is needed. Only the (free) Matlab Runtime R2023b (v232) has to be downloaded. However, there are some limitations (e.g. no parallelization and no interactive help in the GUI version) and the standalone version is mainly intended to run without GUI on Unix systems. Please check the [ENIGMA CAT](https://neuro-jena.github.io/enigma-cat12/#standalone) site fore more information and examples to call CAT from shell scripts.
