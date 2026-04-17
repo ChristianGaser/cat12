@@ -20,9 +20,6 @@ function varargout = cat_update(update)
 % Departments of Neurology and Psychiatry
 % Jena University Hospital
 % ______________________________________________________________________
-% $Id$
-
-rev = '$Rev$';
 
 if isdeployed
   sts= Inf;
@@ -38,21 +35,27 @@ toolbox_dir = fullfile(d0,'toolbox');
 cat_dir_new = fullfile(toolbox_dir,'CAT');
 cat_dir_old = fullfile(toolbox_dir,'cat12');
 
-% Chcek for old cat12 installations
+% Check for old cat12 installations
 if exist(cat_dir_new,'dir') && exist(cat_dir_old,'dir')
   % remove duplicate legacy installation if CAT is already present
   remove = spm_input('Remove old cat12 folder?','+1','yes|no',[1 0],1);
   if remove
     try
       warning off
+      old_paths = strsplit(path, pathsep);
+      for k = 1:numel(old_paths)
+        if strncmp(old_paths{k}, cat_dir_old, numel(cat_dir_old))
+          rmpath(old_paths{k});
+        end
+      end
       rmdir(cat_dir_old, 's');
+      rehash toolboxcache;
       spm fmri; clear cat_version; spm_CAT
       warning on
       fprintf('         Removed duplicate legacy folder: %s\n', cat_dir_old);
     catch
       fprintf('         Warning: could not remove duplicate folder %s\n', cat_dir_old);
     end
-    rmpath(cat_dir_old);
   end
 elseif ~exist(cat_dir_new,'dir') && exist(cat_dir_old,'dir')
   % migration from old installation layout to current CAT layout
@@ -81,28 +84,43 @@ r = cat_version;
 r = strrep(r,'CAT','');
 
 % get new release
+%-Get list of updates from Github server
+%--------------------------------------------------------------------------
 try
-  [jsonStr, sts] = urlread(url_github,'Timeout',2);
+    response = webread(url_github);
 catch
-  [jsonStr, sts] = urlread(url_github);
+    sts = NaN;
+    msg = 'Cannot access Github server.';
+    if ~nargout, error(msg); else varargout = {sts, msg}; end
+    return
 end
 
-if ~sts
-  msg = sprintf('Cannot access %s. Please check your proxy and/or firewall to allow access.\nYou can download your update at %s\n',url,url); 
-  if ~nargout, fprintf(msg); else varargout = {NaN, msg}; end
-  return
+%-Get latest version
+%--------------------------------------------------------------------------
+valid_version_pattern = '^\d{2}\.\d{2}(\.\d+)?$';
+
+if iscell(response)
+    tagged_versions = string(cellfun(@(r) r.tag_name, response, 'uni', 0));
+else 
+    tagged_versions = string({response.tag_name});
 end
 
-data = jsondecode(jsonStr);
-% get largest release number using proper version comparison
-rnew = '';
-for i = 1:length(data)
-  if isempty(rnew) || compare_versions(data(i).tag_name, rnew) > 0
-    rnew = data(i).tag_name;
-  end
+valid_versions = ~cellfun('isempty', regexp(tagged_versions, valid_version_pattern));
+sorted_versions = sort(tagged_versions(valid_versions), 'descend');
+
+if numel(sorted_versions) == 0
+    sts = Inf;
+    msg = 'There are no updates available yet.';
+    if ~nargout, fprintf([blanks(9) msg '\n']);
+    else varargout = {sts, msg}; end
+    return
 end
 
-if compare_versions(rnew, r) > 0
+rnew = sorted_versions{1};
+
+%-Compare versions
+%--------------------------------------------------------------------------
+if string(rnew) > string(r)
   sts = str2double(rnew);
   msg = sprintf('         A new version of CAT is available on:\n');
   msg = [msg sprintf('   %s\n',url_github)];
@@ -206,11 +224,8 @@ if update
       end
     end
     
-    % open version information if difference between release numbers 
-    % is large enough (more than 1 minor version)
-    if version_diff(rnew, r) > 1
-      web(fullfile(fileparts(mfilename('fullpath')),'doc','index.html#version'));
-    end
+    % open version information
+    web(fullfile(fileparts(mfilename('fullpath')),'doc','index.html#version'));
     
     [warnmsg, msgid] = lastwarn;
     switch msgid
@@ -226,56 +241,3 @@ if update
     fprintf('Unzip file to %s\n',d);
   end
 end
-
-%=======================================================================
-function cmp = compare_versions(v1, v2)
-% Compare two version strings (e.g., '12.10' vs '12.9')
-% Returns: 1 if v1 > v2, -1 if v1 < v2, 0 if equal
-%=======================================================================
-
-  % Parse version strings into parts
-  parts1 = sscanf(v1, '%d.%d');
-  parts2 = sscanf(v2, '%d.%d');
-  
-  % Pad with zeros if needed
-  if length(parts1) < 2, parts1(2) = 0; end
-  if length(parts2) < 2, parts2(2) = 0; end
-  
-  % Compare major version first
-  if parts1(1) > parts2(1)
-    cmp = 1;
-  elseif parts1(1) < parts2(1)
-    cmp = -1;
-  else
-    % Major versions equal, compare minor
-    if parts1(2) > parts2(2)
-      cmp = 1;
-    elseif parts1(2) < parts2(2)
-      cmp = -1;
-    else
-      cmp = 0;
-    end
-  end
-return
-
-%=======================================================================
-function diff = version_diff(v1, v2)
-% Calculate the minor version difference between two version strings
-% Returns: difference in minor versions (assuming same major version)
-%=======================================================================
-
-  % Parse version strings into parts
-  parts1 = sscanf(v1, '%d.%d');
-  parts2 = sscanf(v2, '%d.%d');
-  
-  % Pad with zeros if needed
-  if length(parts1) < 2, parts1(2) = 0; end
-  if length(parts2) < 2, parts2(2) = 0; end
-  
-  % If major versions differ, return large diff
-  if parts1(1) ~= parts2(1)
-    diff = 100;
-  else
-    diff = abs(parts1(2) - parts2(2));
-  end
-return

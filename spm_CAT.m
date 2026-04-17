@@ -31,6 +31,35 @@ global cprintferror;  % temporary, because of JAVA errors in cat_io_cprintf ... 
 catdir = fileparts(mfilename('fullpath')); 
 catdef = fullfile(catdir,'cat_defaults.m');
 
+% ── Migration: remove legacy cat12 folder after update ──────────────────
+% When users update from an old installation the zip extracts into
+% spm/toolbox/CAT while the previous spm/toolbox/cat12 still exists.
+% Because spm_CAT is unique to the new CAT folder it is never shadowed,
+% so we can safely clean up here on first launch after the update.
+toolbox_dir = fileparts(catdir);
+cat12_legacy = fullfile(toolbox_dir, 'cat12');
+if exist(cat12_legacy, 'dir')
+  fprintf('CAT: Removing legacy installation %s ...\n', cat12_legacy);
+  warning('off','MATLAB:rmpath:DirNotFound');
+  % remove every cat12 sub-path from the MATLAB path
+  old_paths = strsplit(path, pathsep);
+  for k = 1:numel(old_paths)
+    if strncmp(old_paths{k}, cat12_legacy, numel(cat12_legacy))
+      rmpath(old_paths{k});
+    end
+  end
+  warning('on','MATLAB:rmpath:DirNotFound');
+  try
+    rmdir(cat12_legacy, 's');
+    fprintf('CAT: Legacy cat12 folder removed successfully.\n');
+  catch ME
+    fprintf('CAT: Could not remove %s — %s\n', cat12_legacy, ME.message);
+    fprintf('     Please delete it manually and restart MATLAB.\n');
+  end
+  rehash toolboxcache;
+end
+% ─────────────────────────────────────────────────────────────────────────
+
 % add path for octave mex-files
 if strcmpi(spm_check_version,'octave')
   if ismac

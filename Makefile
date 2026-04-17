@@ -10,8 +10,6 @@ REVISION=`git rev-list --count HEAD`
 DATE=`git log --date short |grep "Date:"|head -1|cut -f2 -d':'|sed -e s'/ //g'`
 VERSION=`echo ${NEWVERSION} | sed -e 's/CAT//g'`
 
-ZIPFOLDER=/Users/gaser/matlab/cat12
-
 TARGET=/Users/gaser/spm/spm12/toolbox/CAT
 TARGET2=/Volumes/UltraMax/spm12/toolbox/CAT
 TARGET4=/Users/gaser/spm/spm-octave/toolbox/CAT
@@ -28,7 +26,7 @@ MISC_FILES=README.md CHANGES.txt INSTALL.txt doc standalone templates_MNI152NLin
 
 FILES=${MATLAB_FILES} ${C_FILES} ${MISC_FILES}
 
-ZIPFILE=CAT_r${REVISION}.zip
+ZIPFILE=cat${VERSION}.zip
 
 BIN ?= CAT*
 
@@ -93,6 +91,7 @@ update: docs copy_longmode
 	-@echo '% Version' ${REVISION}' ('${NEWVERSION}')' ${DATE} >> Contents.m
 	-@cat Contents_info.txt >> Contents.m
 	-@cp Contents.m Contents.txt
+	-@cp spm_CAT.m spm_cat12.m
 	-@echo '% Computational Anatomy Toolbox' > INSTALL.txt
 	-@echo '% Version ' ${REVISION} ${NEWVERSION} ${DATE} >> INSTALL.txt
 	-@cat INSTALL_info.txt >> INSTALL.txt
@@ -110,7 +109,8 @@ zip: update clean
 	-@cp -rp ${FILES} CAT
 	-@gzip -d CAT/templates_MNI152NLin2009cAsym/*.nii.gz
 	-@bash update_revision.sh
-	-@zip ${ZIPFOLDER}/${ZIPFILE} -rm CAT
+	-@zip ${ZIPFILE} -rm CAT
+	-@rm spm_cat12.m
 
 # copy binaries after cross-compiling
 cp_binaries: 
