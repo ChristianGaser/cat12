@@ -72,6 +72,16 @@ function varargout = compile(comp,test,verb)
     else
       mexflag=' -O -largeArrayDims COPTIMFLAGS=''-O3 -fwrapv -DNDEBUG''';
     end
+    % On Apple Silicon (maca64), MATLAB R2024a adds C++ MEX API linker flags
+    % (-Wl,-U,_mexCreateMexFunction etc.) that cause linking to fail for legacy
+    % C-style mexFunction in .cpp files. Use a custom mexopts to suppress this.
+    mexflag_cpp = mexflag;
+    if strcmp(mexext,'mexmaca64')
+      mexoptsfile = fullfile(catdir,'clang++_maca64_legacy.xml');
+      if exist(mexoptsfile,'file')
+        mexflag_cpp = ['-f ''' mexoptsfile '''' mexflag];
+      end
+    end
     
     % main c-functions
     nc{1} = {
@@ -131,7 +141,11 @@ function varargout = compile(comp,test,verb)
               %}
             end
            
-            rc{nci}{ncj} = evalc([mexcmd ' ' mexflag ' ' nc{nci}{ncj}]);
+            if endsWith(strtrim(nc{nci}{ncj}),'.cpp')
+              rc{nci}{ncj} = evalc([mexcmd ' ' mexflag_cpp ' ' nc{nci}{ncj}]);
+            else
+              rc{nci}{ncj} = evalc([mexcmd ' ' mexflag ' ' nc{nci}{ncj}]);
+            end
             %{
             catch 
               rcc{nci}(ncj) = 1; 
