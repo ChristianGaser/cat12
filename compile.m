@@ -89,6 +89,7 @@ function varargout = compile(comp,test,verb)
       'cat_vol_eidist.c'
       'cat_vol_genus0.c genus0.c'
       'cat_vbdist.c'
+      'cat_vbdist3.c'
       'cat_ornlm.c ornlm_float.c'
       'cat_sanlm.c sanlm_float.c'
     };
@@ -370,6 +371,15 @@ function varargout = compile(comp,test,verb)
       dx2 = cat_vbdist(single(d5-1),round(d5)==1);
       ds('d2','',1,interp3(d5,ip)/2,d5/2,dx1/20,dx2/10,10)
     end
+
+    %% voxelbased distance / thickness
+    %    ds('l2','',1,d1,d1,d1/2,d{8}/10,10)
+    ni    = ni + 1;
+    n{ni} = 'cat_vbdist3';
+    d{ni} = cat_vbdist3(single(d1==0),d1==1);
+    r(ni) = max(d{ni}(d1(:)==1)) - 6; % grid distance 
+    s(ni) = r(ni)>=0 & r(ni)<0.5;  
+
     %%  eikonal distance
     %    ds('l2','',1,d1,d1,d1/2,d{9}/10,10)
     ni    = ni + 1;
