@@ -95,9 +95,10 @@ catch
     return
 end
 
-%-Get latest version
+%-Get latest version, allow one or two digits as minor version
 %--------------------------------------------------------------------------
-valid_version_pattern = '^\d{2}\.\d{2}(\.\d+)?$';
+valid_version_pattern1 = '^\d{2}\.\d{1}(\.\d+)?$';
+valid_version_pattern2 = '^\d{2}\.\d{2}(\.\d+)?$';
 
 if iscell(response)
     tagged_versions = string(cellfun(@(r) r.tag_name, response, 'uni', 0));
@@ -105,7 +106,8 @@ else
     tagged_versions = string({response.tag_name});
 end
 
-valid_versions = ~cellfun('isempty', regexp(tagged_versions, valid_version_pattern));
+valid_versions = ~cellfun('isempty', regexp(tagged_versions, valid_version_pattern1));
+valid_versions = valid_versions | ~cellfun('isempty', regexp(tagged_versions, valid_version_pattern2));
 sorted_versions = sort(tagged_versions(valid_versions), 'descend');
 
 if numel(sorted_versions) == 0
