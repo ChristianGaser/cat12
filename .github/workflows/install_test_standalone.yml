@@ -250,6 +250,15 @@ jobs:
           cat_standalone/spm25 function exit || true
           echo "CAT standalone setup complete"
 
+      - name: Checkout SPM canonical test data
+        uses: actions/checkout@v5
+        with:
+          repository: spm/spm
+          ref: 25.01.paper
+          path: spm_ref
+          sparse-checkout: |
+            canonical/single_subj_T1.nii
+
       # ── Find test data (single_subj_T1.nii from SPM canonical directory) ──
 
       - name: Locate test data
@@ -266,12 +275,21 @@ jobs:
               T1="${T1GZ%.gz}"
             fi
           fi
+          # Fallback: use canonical test image from SPM repository.
+          if [ -z "$T1" ] && [ -f "spm_ref/canonical/single_subj_T1.nii" ]; then
+            T1="spm_ref/canonical/single_subj_T1.nii"
+            echo "Using fallback test data from SPM canonical: $T1"
+          fi
           if [ -z "$T1" ]; then
             echo "ERROR: single_subj_T1.nii not found in standalone"
             echo "Listing all directories:"
             find cat_standalone -maxdepth 4 -type d 2>/dev/null
             echo "Listing all .nii and .nii.gz files:"
             find cat_standalone -name "*.nii" -o -name "*.nii.gz" 2>/dev/null | head -30
+            if [ -d "spm_ref" ]; then
+              echo "Listing SPM canonical directory:"
+              ls -la spm_ref/canonical || true
+            fi
             exit 1
           fi
           echo "Found test data: $T1"
