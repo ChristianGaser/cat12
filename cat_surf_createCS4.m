@@ -139,8 +139,10 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
   
 
   % prepare file and directory names
-  [P,mridir,~,ff] = cat_surf_createCS_fun('setFileNames',V0,job,opt); 
-  
+  [P,mridir,surfdir,ff] = cat_surf_createCS_fun('setFileNames',V0,job,opt);
+  % ensure surface directory exists (may not be created when job.output.surface=0,
+  % which causes CAT_VolMarchingCubes to fail silently on Windows)
+  if ~exist(surfdir,'dir'), mkdir(surfdir); end  
 
   % main loop for each surface structure 
   for si = 1:numel(opt.surf)
