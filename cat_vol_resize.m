@@ -44,10 +44,6 @@ function varargout = cat_vol_resize(Y, action, varargin)
 % ______________________________________________________________________
 % $Id$ 
   
-  if ~license('test', 'Statistics_Toolbox')
-    error('This function requires the "Statistics and Machine Learning Toolbox" of MATLAB.\n')
-  end
-
   if nargin == 0, help cat_vol_resize; return; end
   if isempty(Y), varargout{1} = Y; return; end
   
