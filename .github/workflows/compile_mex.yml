@@ -18,7 +18,7 @@ jobs:
             mex_ext: mexa64
             matlab_release: R2020a
             matlab_legacy: true
-          # On Mac and Windows, only the Matlab version matters for mex compatibility, so the OS can be the latest.  
+          # On Mac and Windows, only the Matlab version matters for mex compatibility, so the OS can be the latest.
           - os: macos-15-intel
             os_name: macOS_Intel
             mex_ext: mexmaci64
@@ -36,6 +36,15 @@ jobs:
             matlab_legacy: true
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Checkout SPM
+        uses: actions/checkout@v4
+        with:
+          repository: spm/spm
+          path: spm
+
       - name: Set up MATLAB (legacy)
         if: ${{ matrix.matlab_legacy }}
         uses: matlab-actions/setup-matlab@v1
@@ -46,8 +55,6 @@ jobs:
         uses: matlab-actions/setup-matlab@v2
         with:
           release: ${{ matrix.matlab_release }}
-      - name: Checkout SPM
-        uses: actions/checkout@v4
 
       - name: Delete old MEX files on Ubuntu and Mac
         if: matrix.os != 'windows-latest'
@@ -56,7 +63,7 @@ jobs:
       - name: Delete old MEX files on Windows
         if: matrix.os == 'windows-latest'
         run: Get-ChildItem -Path .\ -Recurse -Include *.mex* | Remove-Item -Force
-        
+
       - name: Install CAT in SPM toolbox
         shell: bash
         run: |
@@ -79,8 +86,9 @@ jobs:
         uses: matlab-actions/run-command@v2
         with:
           command: |
-            addpath('spm');
-            cd('spm/toolbox/CAT')
+            ws = getenv('GITHUB_WORKSPACE');
+            addpath(fullfile(ws, 'spm'));
+            cd(fullfile(ws, 'spm', 'toolbox', 'CAT'))
             compile
 
       - name: Install zip on Windows
