@@ -619,8 +619,8 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
                     cat_io_cprintf(kcol,', '); 
                     cat_io_cprintf(colorsurf(GMC,str2double( catSRMSE{2} )),sprintf('%s'   ,catSRMSE{2}));  
                   end
-                  if numel(catSRMSE) > 2
-                    colorsurf2 = @(SI,m)  SI(max(1,min(size(SI,1),round((max(0.0,m)*10)+5))),:);
+                  if numel(catSRMSE) > 2  &&  ~cat_io_contains(catSRMSE{3},'unknown')
+                    colorsurf2 = @(SI,m)  SI(max(1,min(size(SI,1),round((max(0.0,m)*100)+5))),:);
                     cat_io_cprintf(kcol,', '); 
                     cat_io_cprintf(colorsurf2(GMC,str2double( catSRMSE{3}(1:end-1))),sprintf('%s'   ,catSRMSE{3}));  
                   end
@@ -1694,7 +1694,7 @@ function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
 
   [pp,ff] = spm_fileparts(job.data{subj}); 
   if strcmp(ff(end-3:end),'.nii'), ff(end-3:end) = []; end % .gz case
-  catxml  = fullfile( cat_io_BIDS(job.data{subj}, job, 'reportpath'), ['cat_' ff '.xml']);
+  catxml  = fullfile( cat_io_BIDS(job.data{subj}, job, 'reportdir'), ['cat_' ff '.xml']);
   
   FNok = 0;
   if exist(catxml,'file')
@@ -1817,7 +1817,7 @@ function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
     % check output
     
     % surface
-    surfpath = cat_io_BIDS( job.data{subj}, job, 'surfpath'); 
+    surfpath = cat_io_BIDS( job.data{subj}, job, 'surfdir'); 
     if job.output.surface && exist(surfpath,'dir')
       Pcentral = cat_vol_findfiles(surfpath,['*h.central.' ff '.gii']);
       if  isscalar(Pcentral)
