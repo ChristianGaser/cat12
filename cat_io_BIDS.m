@@ -295,7 +295,11 @@ function out = getBIDS(BIDS,subfield,varargin)
       out = ({BIDS(:).(subfield)})';
       if nargin > 3 % call spm_file
         % add file name
-        [~,ff,ee] = fileparts( { strrep( BIDS(:).file , '.nii.gz', '.nii') }' ); 
+        % Use {BIDS(:).file} to properly collect all entries into a cell, then
+        % cellfun for fileparts to support MATLAB R2020a and earlier which does
+        % not accept cell arrays as input to fileparts.
+        files_cell = strrep( {BIDS(:).file}' , '.nii.gz', '.nii');
+        [~,ff,ee] = cellfun(@fileparts, files_cell, 'UniformOutput', false);
         out = spm_file( fullfile(out,strcat(ff,ee)) , varargin{:} ); 
       end
       if isscalar( out ), out = char(out); end

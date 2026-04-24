@@ -63,7 +63,7 @@ install3: copy_longmode
 	-@bash -c "ssh ${STARGET3_HOST} 'test ! -d ${STARGET3_FOLDER} || rm -rf ${STARGET3_FOLDER}/*'"
 	-@bash -c "ssh ${STARGET3_HOST} 'test -d ${STARGET3_FOLDER} || mkdir ${STARGET3_FOLDER}'"
 	-@scp -r ${FILES} ${STARGET3}/
-	-@gzip -d ${TARGET3}/*/*.nii.gz
+	-@bash -c "ssh ${STARGET3_HOST} 'gzip -d ${STARGET3_FOLDER}/*/*.nii.gz'"
 
 # install for octave
 install4: copy_longmode
