@@ -432,11 +432,11 @@ function str = cat_main_reportstr(job,res,qa)
     end
     % Surface Intensity/Position
     if job.extopts.expertgui && isfield(qa.qualityratings,'SurfaceIntensityRMSE')
-      if isfield( qa.qualityratings , 'SurfaceAreaTopoError' )
+      if isfield( qa.qualityratings , 'SurfaceAreaTopoError' ) && ~isnan(qa.qualityratings.SurfaceAreaTopoError)
         str{2} = [str{2} struct('name',' Surface intensity/position/area error:','value',[ 
           marks2str( qa.qualityratings.SurfaceIntensityRMSE , sprintf('%0.3f', qa.qualitymeasures.SurfaceIntensityRMSE)) ' / ' ...
           marks2str( qa.qualityratings.SurfacePositionRMSE  , sprintf('%0.3f', qa.qualitymeasures.SurfacePositionRMSE) ) ' / ' ...
-          marks2str( qa.qualityratings.SurfaceAreaTopoError , sprintf('%4.1f%%', qa.qualitymeasures.SurfaceAreaTopoError*100) ) ] ) ];
+          marks2str( qa.qualityratings.SurfaceAreaTopoError , sprintf('%0.3f%%', qa.qualitymeasures.SurfaceAreaTopoError*100) ) ] ) ];
       else
         str{2} = [str{2} struct('name',' Surface intensity / position RMSE:','value',[ 
           marks2str( qa.qualityratings.SurfaceIntensityRMSE , sprintf('%0.3f', qa.qualitymeasures.SurfaceIntensityRMSE)) ' / ' ...
