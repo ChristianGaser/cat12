@@ -7,16 +7,18 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  # Linux is a separate job so we can pin it to an ubuntu:18.04 container.
+  # Linux is a separate job so we can pin it to an ubuntu:20.04 container.
   # This keeps the compiled mexa64 binaries compatible with systems running
-  # glibc >= 2.27 (Ubuntu 18.04+).  Compiling on the bare ubuntu-22.04 runner
+  # glibc >= 2.31 (Ubuntu 20.04+).  Compiling on the bare ubuntu-22.04 runner
   # (glibc 2.35) would produce binaries that reference GLIBC_2.34 symbols and
   # fail on any system with an older glibc.
+  # Note: ubuntu:18.04 (glibc 2.27) cannot be used because the GitHub Actions
+  # Node.js 24 runtime itself requires GLIBC_2.28.
   compile_linux:
     name: Compile CAT12 mex-files (Linux)
     runs-on: ubuntu-22.04
     container:
-      image: ubuntu:18.04   # glibc 2.27 — compatible with Ubuntu 18.04+
+      image: ubuntu:20.04   # glibc 2.31 — oldest image compatible with GitHub Actions Node.js 24 (needs GLIBC_2.28)
     steps:
       - name: Install system dependencies
         run: |
