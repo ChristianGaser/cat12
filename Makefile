@@ -4,8 +4,8 @@
 
 .PHONY: clean install zip docs update cp_binaries archive check_pipeline release standalone
 
-OLDVERSION="CAT26.0.rc1"
-NEWVERSION="CAT26.0.rc2"
+OLDVERSION="CAT26.0.rc2"
+NEWVERSION="CAT26.0.rc3"
 REVISION=`git rev-list --count HEAD`
 DATE=`git log --date short |grep "Date:"|head -1|cut -f2 -d':'|sed -e s'/ //g'`
 VERSION=`echo ${NEWVERSION} | sed -e 's/CAT//g'`
