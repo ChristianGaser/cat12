@@ -366,8 +366,11 @@ cstime = clock;
     if si==1, fprintf('\n'); end
     fprintf('%s:\n',opt.surf{si});
     
-    stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,native2unicode(179, 'latin1'))); stimet =stime;
-    
+    if cat_get_defaults('extopts.expertgui')
+      stime = cat_io_cmd(sprintf('  Thickness estimation (CS1%d-%s,%0.2f mm%s)', opt.SRP, opt.pbtmethod, opt.interpV,native2unicode(179, 'latin1'))); stimet =stime;
+    else
+      stime = cat_io_cmd(sprintf('  Thickness estimation (CS1-%s,%0.2f mm%s)', opt.pbtmethod, opt.interpV,native2unicode(179, 'latin1'))); stimet =stime;
+    end
     % removing background (smoothing to remove artifacts)
     switch opt.surf{si}
       case {'lh','rh'},  [Ymfs,Ysidei,mask_parahipp,BB] = cat_vol_resize({Ymfs,Yside,mask_parahipp},'reduceBrain',vx_vol,4,smooth3(Ymfs)>1.5); 
@@ -729,7 +732,9 @@ cstime = clock;
       if strcmpi(spm_check_version,'octave') 
         cat_io_addwarning('cat_surf_createCS2:nofullSRP','Fine correction of surface collisions is not yet available under Octave.',2)
       else
-        [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3));
+        try
+          [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionRY' ,CS,facevertexcdata,Ymfs,struct('Pcs',Pcentral,'verb',verblc,'mat',Smat.matlabIBB_mm,'accuracy',1/2^3));
+        end
       end
       if debug, toc; end
       
@@ -749,7 +754,7 @@ cstime = clock;
       
       if ~debug, clear CSO; end
     end
-    
+   
     %% just a shortcut for manual tests 
     writedebug = 0; %cat_get_defaults('extopts.expertgui')==2;
     % intensity based evaluation
@@ -767,6 +772,11 @@ cstime = clock;
       res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',CS,facevertexcdata1,[],Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-2,cat_get_defaults('extopts.expertgui')>1);
     end
     
+    % create white and central surfaces
+    stime = cat_io_cmd('  Create pial and white surface','g5','',opt.verb,stime); 
+    cat_surf_fun('white',Pcentral);
+    cat_surf_fun('pial',Pcentral);
+
     % skip that part if a prior image is defined
     if ~useprior
       %% spherical surface mapping 2 of corrected surface
@@ -907,8 +917,12 @@ cstime = clock;
       
       res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',CS,cat_io_FreeSurfer('read_surf_data',Ppbt),cat_io_FreeSurfer('read_surf_data',Pthick),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,debug,cat_get_defaults('extopts.expertgui')>1);
     else % otherwise simply copy ?h.pbt.* to ?h.thickness.*
+      % estimate FS thickness for evaluation 
+      cmd = sprintf('CAT_SurfDistance -mean -thickness "%s" "%s" "%s"',Ppbt,Pcentral,Pthick);
+      cat_system(cmd,opt.verb-2);
+      res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',CS,cat_io_FreeSurfer('read_surf_data',Ppbt),cat_io_FreeSurfer('read_surf_data',Pthick),Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,debug,cat_get_defaults('extopts.expertgui')>1);
+      % replace FS thickness by PBT thickness
       copyfile(Ppbt,Pthick,'f');
-      res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS',CS,cat_io_FreeSurfer('read_surf_data',Pthick),[],Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,debug,cat_get_defaults('extopts.expertgui')>1);
     end
     
     fprintf('\n'); 
@@ -966,30 +980,22 @@ cstime = clock;
   end  
   
   % calculate mean EC and defect size for all surfaces
-  mnth = []; sdth = []; mnRMSE_Ypp = []; mnRMSE_Ym = []; sdRMSE_Ym = []; sdRMSE_Ypp = []; 
+  mnth = []; sdth = []; mnRMSE_Ypp = []; mnRMSE_Ym = []; 
   SIw = []; SIp = []; SIwa = []; SIpa = []; 
   for si=1:numel(opt.surf)
     if any(strcmp(opt.surf{si},{'lh','rh'}))
-       if isfield(res.(opt.surf{si}).createCS_final,'fsthickness_mn_sd_md_mx')
-         mnth      = [ mnth  res.(opt.surf{si}).createCS_final.fsthickness_mn_sd_md_mx(1) ]; 
-         sdth      = [ sdth  res.(opt.surf{si}).createCS_final.fsthickness_mn_sd_md_mx(2) ]; 
-       else
-         mnth      = [ mnth  res.(opt.surf{si}).createCS_final.thickness_mn_sd_md_mx(1) ];
-         sdth      = [ sdth  res.(opt.surf{si}).createCS_final.thickness_mn_sd_md_mx(2) ]; 
-       end
-       mnRMSE_Ym   = [ mnRMSE_Ym   mean([...
+      if isfield(res.(opt.surf{si}).createCS_final,'fsthickness_mn_sd_md_mx')
+        mnth      = [ mnth  res.(opt.surf{si}).createCS_final.fsthickness_mn_sd_md_mx(1) ]; 
+        sdth      = [ sdth  res.(opt.surf{si}).createCS_final.fsthickness_mn_sd_md_mx(2) ]; 
+      else
+        mnth      = [ mnth  res.(opt.surf{si}).createCS_final.thickness_mn_sd_md_mx(1) ];
+        sdth      = [ sdth  res.(opt.surf{si}).createCS_final.thickness_mn_sd_md_mx(2) ]; 
+      end
+      mnRMSE_Ym   = [ mnRMSE_Ym   cat_stat_nanmean([...
         res.(opt.surf{si}).createCS_final.RMSE_Ym_layer4 ...
         res.(opt.surf{si}).createCS_final.RMSE_Ym_white ...
         res.(opt.surf{si}).createCS_final.RMSE_Ym_pial ]) ];
-      sdRMSE_Ym   = [ sdRMSE_Ym  std([...
-        res.(opt.surf{si}).createCS_final.RMSE_Ym_layer4 ...
-        res.(opt.surf{si}).createCS_final.RMSE_Ym_white ...
-        res.(opt.surf{si}).createCS_final.RMSE_Ym_pial ]) ];
-      mnRMSE_Ypp  = [ mnRMSE_Ypp  mean([...
-        res.(opt.surf{si}).createCS_final.RMSE_Ypp_central ...
-        res.(opt.surf{si}).createCS_final.RMSE_Ypp_white ...
-        res.(opt.surf{si}).createCS_final.RMSE_Ypp_pial ]) ];
-      sdRMSE_Ypp  = [ sdRMSE_Ypp  std([...
+      mnRMSE_Ypp  = [ mnRMSE_Ypp  cat_stat_nanmean([...
         res.(opt.surf{si}).createCS_final.RMSE_Ypp_central ...
         res.(opt.surf{si}).createCS_final.RMSE_Ypp_white ...
         res.(opt.surf{si}).createCS_final.RMSE_Ypp_pial ]) ];
@@ -1054,31 +1060,31 @@ cstime = clock;
       
     if cat_get_defaults('extopts.expertgui')
     % color output currently only for expert ...
-      if isfield(res.(opt.surf{si}).createCS_final,'fsthickness_mn_sd_md_mx')
+      if isfield(res.(opt.surf{si}).createCS_final,'fsthickness_mn_sd_md_mx') && opt.thick_measure == 1
         fprintf('  Average thickness (FS):                     ');
       else
         fprintf('  Average thickness (PBT):                    ');
       end
-      cat_io_cprintf( color( rate( abs( mean(mnth) - 2.5 ) , 0 , 2.0 )) , sprintf('%0.4f'  , mean(mnth) ) );  fprintf(' %s ',native2unicode(177, 'latin1'));
-      cat_io_cprintf( color( rate( abs( mean(sdth) - 0.5 ) , 0 , 1.0 )) , sprintf('%0.4f mm\n', mean(sdth) ) );
+      cat_io_cprintf( color( rate( abs( cat_stat_nanmean(mnth) - 2.5 ) , 0 , 2.0 )) , sprintf('%0.4f'    ,  cat_stat_nanmean(mnth) ) );  fprintf(' %s ',native2unicode(177, 'latin1'));
+      cat_io_cprintf( color( rate( abs( cat_stat_nanmean(sdth) - 0.5 ) , 0 , 1.0 )) , sprintf('%0.4f mm\n', cat_stat_nanmean(sdth) ) );
   
       fprintf('  Surface intensity / position RMSE:          ');
-      cat_io_cprintf( color( rate( mean(mnRMSE_Ym)  , 0.05 , 0.3 ) ) , sprintf('%0.4f / ', mean(mnRMSE_Ym) ) );
-      cat_io_cprintf( color( rate( mean(mnRMSE_Ypp) , 0.05 , 0.3 ) ) , sprintf('%0.4f\n', mean(mnRMSE_Ypp) ) );
+      cat_io_cprintf( color( rate( cat_stat_nanmean(mnRMSE_Ym)  , 0.05 , 0.3 ) ) , sprintf('%0.4f / ', cat_stat_nanmean(mnRMSE_Ym) ) );
+      cat_io_cprintf( color( rate( cat_stat_nanmean(mnRMSE_Ypp) , 0.05 , 0.3 ) ) , sprintf('%0.4f\n',  cat_stat_nanmean(mnRMSE_Ypp) ) );
     
       if isfield(res.(opt.surf{si}).createCS_final,'white_self_interections')
         fprintf('  Pial/white self-intersections:              ');
-        cat_io_cprintf( color( rate(  mean([SIw,SIp]) , 0 , 20 ) ) , sprintf('%0.2f%%%% (%0.2f mm%s)\n'  , mean([SIw,SIp]) , mean([SIwa,SIpa]) , char(178) ) );
+        cat_io_cprintf( color( rate(  cat_stat_nanmean([SIw,SIp]) , 0 , 20 ) ) , sprintf('%0.2f%% (%0.2f mm%s)\n'  , cat_stat_nanmean([SIw,SIp]) , cat_stat_nanmean([SIwa,SIpa]) , char(178) ) );
       end
       
       fprintf('  Euler number / defect number / defect size: ');
       cat_io_cprintf( color( rate(  EC - 2        , 0 , 100 * (1+9*iscerebellum)) ) , sprintf('%0.1f / '   , EC ) );
       cat_io_cprintf( color( rate(  defect_number , 0 , 100 * (1+9*iscerebellum)) ) , sprintf('%0.1f / '   , defect_number ) );
-      cat_io_cprintf( color( rate(  defect_size   , 0 ,  10 * (1+9*iscerebellum)) ) , sprintf('%0.2f%%%% ' , defect_size ) );
+      cat_io_cprintf( color( rate(  defect_size   , 0 ,  10 * (1+9*iscerebellum)) ) , sprintf('%0.2f%% ' , defect_size ) );
       fprintf('\n');
     else
       fprintf('  Average thickness:                          %0.4f %s %0.4f mm\n' , mean(mnth), native2unicode(177, 'latin1'), mean(sdth));
-      fprintf('  Euler characteristic / defect size:         %0d / %0.2f%%%% \n'  , EC, defect_size);
+      fprintf('  Euler characteristic / defect size:         %0d / %0.2f%% \n'  , EC, defect_size);
     end
     
     for si=1:numel(Psurf)
