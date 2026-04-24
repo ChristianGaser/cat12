@@ -7,121 +7,62 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  # Linux is a separate job so we can pin it to an ubuntu:20.04 container.
-  # This keeps the compiled mexa64 binaries compatible with systems running
-  # glibc >= 2.31 (Ubuntu 20.04+).  Compiling on the bare ubuntu-22.04 runner
-  # (glibc 2.35) would produce binaries that reference GLIBC_2.34 symbols and
-  # fail on any system with an older glibc.
-  # Note: ubuntu:18.04 (glibc 2.27) cannot be used because the GitHub Actions
-  # Node.js 24 runtime itself requires GLIBC_2.28.
-  compile_linux:
-    name: Compile CAT12 mex-files (Linux)
-    runs-on: ubuntu-22.04
-    container:
-      image: ubuntu:20.04   # glibc 2.31 — oldest image compatible with GitHub Actions Node.js 24 (needs GLIBC_2.28)
-    steps:
-      - name: Install system dependencies
-        run: |
-          apt-get update
-          DEBIAN_FRONTEND=noninteractive apt-get install -y \
-            git rsync zip ca-certificates \
-            libxt6 libxmu6 libgl1-mesa-glx libglu1-mesa \
-            libatomic1
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up MATLAB
-        uses: matlab-actions/setup-matlab@v2
-        with:
-          release: R2020b
-
-      - name: Checkout SPM
-        uses: actions/checkout@v4
-        with:
-          repository: spm/spm
-          path: spm
-
-      - name: Install CAT12 in SPM toolbox
-        shell: bash
-        run: |
-          mkdir -p spm/toolbox/cat12
-          rsync -a --exclude='.git' \
-            --exclude='spm/toolbox/cat12/' \
-            --exclude='batches/' \
-            --exclude='catQC/' \
-            --exclude='check_pipeline/' \
-            --exclude='development/' \
-            --exclude='html/' \
-            --exclude='internal/' \
-            --exclude='mexmaca/' \
-            --exclude='mexmaci/' \
-            --exclude='spm/' \
-            --exclude='Makefile' \
-            ./ spm/toolbox/cat12/
-
-      - name: Compile CAT12 mex-files
-        uses: matlab-actions/run-command@v2
-        with:
-          command: |
-            addpath('spm');
-            cd('spm/toolbox/cat12')
-            compile
-
-      - name: Zip mex-files
-        run: |
-          cd spm/toolbox/
-          zip -r ../../cat_${{ github.ref_name }}_mexa64.zip . -i cat12/*.mexa64
-
-      - name: Upload ZIP
-        uses: actions/upload-artifact@v4
-        with:
-          name: cat_${{ github.ref_name }}_mexa64
-          path: cat_*.zip
-
-  compile_other:
-    name: Compile CAT12 mex-files
+  compile_mex:
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
-        os: ["macos-15-intel", "macos-latest", "windows-latest"] # macos-15 has Intel architecture, macos-latest has Apple Silicon
-        include: # These includes are just giving the OSs additional names
+        include:
+          # On Linux, the OS version should be as old as possible for mex compatibility.
+          - os: ubuntu-22.04
+            os_name: Linux
+            mex_ext: mexa64
+            matlab_release: R2020a
+            matlab_legacy: true
+          # On Mac and Windows, only the Matlab version matters for mex compatibility, so the OS can be the latest.  
           - os: macos-15-intel
             os_name: macOS_Intel
             mex_ext: mexmaci64
+            matlab_release: R2020a
+            matlab_legacy: true
           - os: macos-latest
-            os_name: macOS_Arm64
+            os_name: macOS_Apple_Silicon
             mex_ext: mexmaca64
+            matlab_release: R2023b
+            matlab_legacy: false
           - os: windows-latest
             os_name: Windows
             mex_ext: mexw64
+            matlab_release: R2022a
+            matlab_legacy: true
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
+      - name: Set up MATLAB (legacy)
+        if: ${{ matrix.matlab_legacy }}
+        uses: matlab-actions/setup-matlab@v1
+        with:
+          release: ${{ matrix.matlab_release }}
       - name: Set up MATLAB
+        if: ${{ !matrix.matlab_legacy }}
         uses: matlab-actions/setup-matlab@v2
         with:
-          release: R2020b
-
-      - name: Install rsync
-        if: runner.os == 'Windows'
-        run: choco install -y rsync
-
+          release: ${{ matrix.matlab_release }}
       - name: Checkout SPM
         uses: actions/checkout@v4
-        with:
-          repository: spm/spm
-          path: spm
 
-      - name: Install CAT12 in SPM toolbox
+      - name: Delete old MEX files on Ubuntu and Mac
+        if: matrix.os != 'windows-latest'
+        run: find . -type f -name "*.mex*" -delete
+
+      - name: Delete old MEX files on Windows
+        if: matrix.os == 'windows-latest'
+        run: Get-ChildItem -Path .\ -Recurse -Include *.mex* | Remove-Item -Force
+        
+      - name: Install CAT in SPM toolbox
         shell: bash
         run: |
-          mkdir -p spm/toolbox/cat12
+          mkdir -p spm/toolbox/CAT
           rsync -a --exclude='.git' \
-            --exclude='spm/toolbox/cat12/' \
+            --exclude='spm/toolbox/CAT/' \
             --exclude='batches/' \
             --exclude='catQC/' \
             --exclude='check_pipeline/' \
@@ -132,14 +73,14 @@ jobs:
             --exclude='mexmaci/' \
             --exclude='spm/' \
             --exclude='Makefile' \
-            ./ spm/toolbox/cat12/
+            ./ spm/toolbox/CAT/
 
       - name: Compile CAT12 mex-files
         uses: matlab-actions/run-command@v2
         with:
           command: |
             addpath('spm');
-            cd('spm/toolbox/cat12')
+            cd('spm/toolbox/CAT')
             compile
 
       - name: Install zip on Windows
@@ -150,7 +91,7 @@ jobs:
       - name: Zip mex-files
         run: |
           cd spm/toolbox/
-          zip -r ../../cat_${{ github.ref_name }}_${{ matrix.mex_ext }}.zip . -i cat12/*.${{ matrix.mex_ext }}
+          zip -r ../../cat_${{ github.ref_name }}_${{ matrix.mex_ext }}.zip . -i CAT/*.${{ matrix.mex_ext }}
 
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
