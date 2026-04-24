@@ -122,11 +122,15 @@ function vout = cat_surf_resamp(varargin)
   % ____________________________________________________________________
   
   % new banner
-  if isfield(job,'process_index'), spm('FnBanner',mfilename); end
+  if isfield(job,'process_index') && job.process_index, spm('FnBanner',mfilename); end
   
   % display something
   spm_clf('Interactive'); 
-  cat_progress_bar('Init',size(P,1),'Smoothed Resampled','Surfaces Completed');
+  if job.verb == 0
+    cat_progress_bar('Init',size(P,1),'Smoothed Resampled','cmd');
+  else
+    cat_progress_bar('Init',size(P,1),'Smoothed Resampled','Surfaces Completed','bar');
+  end
 
   Psdata  = cell(size(P,1),1);
   lPsdata = cell(size(P,1),1);
@@ -156,7 +160,7 @@ function vout = cat_surf_resamp(varargin)
     
     name0 = [ff(3:end) ex];          % remove leading hemisphere information
     name0 = strrep(name0,'.gii',''); % remove .gii extension
-    hemistr = {'lh','rh','cb'};
+    hemistr = {'lh','rh'};
     exist_hemi = [];
     
     if ~isempty(strfind(name0,'white')) || ~isempty(strfind(name0,'inner')) || ...
@@ -185,7 +189,11 @@ function vout = cat_surf_resamp(varargin)
 
         if job.merge_hemi
           k = strfind(Pfwhm,'.');
-          Pfwhm    = [strrep(Pfwhm(1:k(2)),'.lh.','.mesh.') Pfwhm(k(2)+1:end)]; 
+          if job.fwhm_surf > 0
+            Pfwhm    = [strrep(Pfwhm(1:k(2)),'.lh.','.mesh.') Pfwhm(k(2)+1:end)]; 
+          else
+            Pfwhm    = [strrep(Pfwhm(1:k(2)),'lh.','mesh.') Pfwhm(k(2)+1:end)]; 
+          end
           %Pcentral = [strrep(Pcentral(1:3),'lh.','mesh.') Pcentral(4:end)]; 
         end
         Pfwhm = strrep(Pfwhm,surfacefield,[pname str_resamp]);
@@ -201,7 +209,7 @@ function vout = cat_surf_resamp(varargin)
       end
     end
     %%
-    if ~job.lazy || (job.merge_hemi && cat_io_rerun(Psdata{i},P(i,:)) ) || ...
+    if ~job.lazy || (job.merge_hemi && cat_io_rerun(Psdata{i},P(i,:))) || ...
         (~job.merge_hemi && cat_io_rerun(lPsdata{i},P(i,:)) && cat_io_rerun(rPsdata{i},P(i,:)) ) 
 
       % go through left and right and potentially cerebellar hemispheres
