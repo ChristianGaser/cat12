@@ -48,13 +48,16 @@ elseif isunix
   CATDir = [CATDir '.glnx86'];
 end  
 
-% On Linux, MATLAB prepends its own library paths to LD_LIBRARY_PATH, which
-% can cause CAT binaries to pick up MATLAB's older libstdc++.so.6 instead of
-% the system one (missing GLIBCXX_3.4.29 and higher).  Unsetting
-% LD_LIBRARY_PATH for the subprocess lets the OS use its ldconfig cache and
-% find the correct system libraries, while leaving MATLAB's own environment
-% untouched.
-if isunix && ~ismac
+% MATLAB prepends its own library paths to LD_LIBRARY_PATH (Linux) and
+% DYLD_LIBRARY_PATH / DYLD_FALLBACK_LIBRARY_PATH (macOS), which can cause
+% CAT binaries to pick up MATLAB's older libstdc++.so.6 / libstdc++.dylib
+% instead of the system one (e.g. missing GLIBCXX_3.4.29 and higher).
+% Unsetting these variables for the subprocess lets the OS use its normal
+% library search (ldconfig on Linux, dyld defaults on macOS) while leaving
+% MATLAB's own environment completely untouched.
+if ismac
+  ldfix = 'env -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH ';
+elseif isunix
   ldfix = 'env -u LD_LIBRARY_PATH ';
 else
   ldfix = '';
