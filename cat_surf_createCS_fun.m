@@ -194,6 +194,7 @@ end
 function res = addSurfaceQualityMeasures(res,opt)
 %addSurfaceQualityMeasures. Measures to describe surface properties. 
   res.mnth = []; res.sdth = []; 
+  res.fullRMSE_Ypp = []; res.fullRMSE_Ym = []; 
   res.mnRMSE_Ypp = []; res.mnRMSE_Ym = []; 
   res.SIw = []; res.SIp = []; res.SIwa = []; res.SIpa = []; 
   for si=1:numel(opt.surf)
@@ -206,6 +207,14 @@ function res = addSurfaceQualityMeasures(res,opt)
         res.mnth      = [ res.mnth  res.(opt.surf{si}).createCS_final.thickness_mn_sd_md_mx(1) ];
         res.sdth      = [ res.sdth  res.(opt.surf{si}).createCS_final.thickness_mn_sd_md_mx(2) ]; 
       end
+      res.fullRMSE_Ym     = [ res.fullRMSE_Ym; ...
+        res.(opt.surf{si}).createCS_final.RMSE_Ym_white ...
+        res.(opt.surf{si}).createCS_final.RMSE_Ym_layer4 ...
+        res.(opt.surf{si}).createCS_final.RMSE_Ym_pial ]; 
+      res.fullRMSE_Ypp  = [ res.fullRMSE_Ypp;  ...
+        res.(opt.surf{si}).createCS_final.RMSE_Ypp_white ...
+        res.(opt.surf{si}).createCS_final.RMSE_Ypp_central ...
+        res.(opt.surf{si}).createCS_final.RMSE_Ypp_pial ];
       res.mnRMSE_Ym   = [ res.mnRMSE_Ym   mean([...
         res.(opt.surf{si}).createCS_final.RMSE_Ym_layer4 ...
         res.(opt.surf{si}).createCS_final.RMSE_Ym_white ...
@@ -280,15 +289,15 @@ function evalProcessing(res,opt,P,V0)
       cat_io_cprintf( color( rate( abs( res.mnth - 2.5 ) , 0 , 2.0 )) , sprintf('%0.4f'     , res.mnth ) );  fprintf(' %s ',native2unicode(177, 'latin1'));
       cat_io_cprintf( color( rate( abs( res.sdth - 0.5 ) , 0 , 1.0 )) , sprintf('%0.4f mm\n', res.sdth ) );
 
-      if isfield(res,'SATE')
+      if isfield(res,'SATE') && ~isnan(res.SATE)
         fprintf('  Surface intensity/position/area RMSE:     ');
       else
         fprintf('  Surface intensity/position RMSE             ');
       end
-      cat_io_cprintf( color( rate( mean(res.mnRMSE_Ym)  , 0.05  , 0.3 ) ) , sprintf('%0.4f / ', mean(res.mnRMSE_Ym) ) );
-      cat_io_cprintf( color( rate( mean(res.mnRMSE_Ypp) , 0.05  , 0.3 ) ) , sprintf('%0.4f',  mean(res.mnRMSE_Ypp) ) );
+      cat_io_cprintf( color( rate( mean(res.mnRMSE_Ym)  , 0.05  , 0.3 ) ) , sprintf('%0.3f / ', mean(res.mnRMSE_Ym) ) );
+      cat_io_cprintf( color( rate( mean(res.mnRMSE_Ypp) , 0.05  , 0.3 ) ) , sprintf('%0.3f',  mean(res.mnRMSE_Ypp) ) );
       if isfield(res,'SATE')
-        cat_io_cprintf( color( rate( mean(res.SATE      ) , 0.001 , 0.1 ) ) , sprintf(' / %0.4f',  mean(res.SATE) ) );
+        cat_io_cprintf( color( rate( mean(res.SATE      ) , 0.001 , 0.1 ) ) , sprintf(' / %0.3f%%',  mean(res.SATE)*100 ) );
       end
       fprintf('\n')
 
