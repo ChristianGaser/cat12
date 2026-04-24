@@ -417,7 +417,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     % CAT_DeformSurf in combination with smoothing correction CAT_Central2Pial 
     % allows PP values that are closer to the central position (std 0.049 vs. 0.73)
     % what improves also intensity and position values of the inner/outer surfaces!
-    if useprior, remove_intersect = ' '; else, remove_intersect = ' -remove_intersect '; end
+    remove_intersect = ' '; % to be compatible with Windows binaries we have to disable that
     stime = cat_io_cmd('  Optimize surface','g5','',opt.verb,stime); 
      cmd = sprintf('CAT_SurfDeform %s -iter 75 -isovalue 0.5 -w1 0.1 -w2 0.1 -w3 1.0 -sigma 0.2 "%s" "%s" "%s"', ...
       remove_intersect, P(si).Pppm, P(si).Pcentral, P(si).Pcentral);

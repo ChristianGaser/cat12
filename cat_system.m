@@ -48,13 +48,25 @@ elseif isunix
   CATDir = [CATDir '.glnx86'];
 end  
 
+% On Linux, MATLAB prepends its own library paths to LD_LIBRARY_PATH, which
+% can cause CAT binaries to pick up MATLAB's older libstdc++.so.6 instead of
+% the system one (missing GLIBCXX_3.4.29 and higher).  Unsetting
+% LD_LIBRARY_PATH for the subprocess lets the OS use its ldconfig cache and
+% find the correct system libraries, while leaving MATLAB's own environment
+% untouched.
+if isunix && ~ismac
+  ldfix = 'env -u LD_LIBRARY_PATH ';
+else
+  ldfix = '';
+end
+
 if ispc
   olddir = pwd;
   cd(CATDir);
   [ST, RS] = system(cmd);
   cd(olddir);
 else
-  cmdfull = fullfile(CATDir,cmd);
+  cmdfull = [ldfix fullfile(CATDir,cmd)];
   warning off % this is to prevent warnings by calling cat12 from the shell script
   [ST, RS] = system(cmdfull);
   warning on
@@ -70,7 +82,7 @@ if ST > 1
     cd(olddir);
   else
     try, fileattrib(fullfile(CATDir,'*'),'+x','a'); end
-    cmdfull = fullfile(CATDir,cmd);
+    cmdfull = [ldfix fullfile(CATDir,cmd)];
     warning off % this is to prevent warnings by calling cat12 from the shell script
     [ST, RS] = system(cmdfull);
     warning on
