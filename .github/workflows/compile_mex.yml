@@ -18,13 +18,14 @@ jobs:
     name: Compile CAT12 mex-files (Linux)
     runs-on: ubuntu-22.04
     container:
-      image: ubuntu:20.04   # glibc 2.31 — oldest image compatible with GitHub Actions Node.js 24 (needs GLIBC_2.28)
+      image: ubuntu:20.04 # glibc 2.31 — oldest image compatible with GitHub Actions Node.js 24 (needs GLIBC_2.28)
     steps:
       - name: Install system dependencies
         run: |
           apt-get update
           DEBIAN_FRONTEND=noninteractive apt-get install -y \
             git rsync zip ca-certificates \
+            build-essential gcc g++ \
             libxt6 libxmu6 libgl1-mesa-glx libglu1-mesa \
             libatomic1
 
@@ -59,6 +60,12 @@ jobs:
             --exclude='spm/' \
             --exclude='Makefile' \
             ./ spm/toolbox/cat12/
+
+      - name: Remove pre-compiled mexa64 binaries
+        # Delete any .mexa64 files copied from the repo (built on a newer glibc)
+        # so the compile step starts clean and the test step can only load the
+        # freshly compiled binaries.
+        run: find spm/toolbox/cat12 -name '*.mexa64' -delete
 
       - name: Compile CAT12 mex-files
         uses: matlab-actions/run-command@v2
