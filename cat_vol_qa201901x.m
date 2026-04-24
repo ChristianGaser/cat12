@@ -721,8 +721,6 @@ function varargout = cat_vol_qa201901x(action,varargin)
       QAS.software.qamethod     = action; 
       QAS.software.date         = datestr(clock,'yyyymmdd-HHMMSS');
       warning off
-      QAS.software.opengl       = opengl('INFO');
-      QAS.software.opengldata   = opengl('DATA');
       warning on
 % ### need for long?      
       %QAS.parameter             = opt.job; 
