@@ -234,7 +234,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   float CSFDc = 0.0f, GMTi = 0.0f, CSFDi = 0.0f;
   for (int i=0;i<nL;i++) { 
     GMT[i] = max(0.0f, min(CSFD[i] + WMD[i], GMT[i]));
-    if isinf(GMT[i]) GMT[i] = 0.0f; 
+    if (isinf(GMT[i])) GMT[i] = 0.0f; 
     if (SEG[i]>=1.5f && SEG[i]<=2.5f) {
       GMTi   = CSFD[i] + WMD[i];  
       CSFDi  = GMT[i]  - WMD[i];

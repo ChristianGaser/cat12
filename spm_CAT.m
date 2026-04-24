@@ -91,6 +91,22 @@ if ~isempty(niigz), gunzip(niigz); end
 for fi = 1:numel(niigz), if cat_io_contains(niigz{fi},'templates_animals'), delete(niigz{fi}); end; end
 clear niigz nii
 
+if exist('cat_sanlm') ~= 3
+  old_dir = pwd;
+  cd(catdir)
+  compile(1,0)
+  cd(old_dir)
+end
+
+try
+  cat_sanlm(randn(10,10,10,'single'),3,1);
+catch
+  old_dir = pwd;
+  cd(catdir)
+  compile(1,0)
+  cd(old_dir)
+end
+
 % Proactively clear macOS Gatekeeper quarantine before any binary is called.
 % We check a single representative binary for the quarantine attribute (~1ms).
 % Only if found, we recursively clear quarantine from the entire CAT directory.
