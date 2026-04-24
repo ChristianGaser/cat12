@@ -434,9 +434,12 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
     % Using PBT to reconstruct the sulci and then the gyri.
     distcorval = 0.5; % in theory 0.5 
 
+  firstcorrect = 0; % if we correct first PBT will underestimate 
+  if firstcorrect
     % correct general voxel offset (vbdist quantifies the distance to the 
     % object grid points rather than the boundary between object and background. 
     Ycd = max(0,Ycd - distcorval); Ywd = max(0,Ywd - distcorval); 
+  end
 
     % remove highly distant outliers
     [Yp0c, Ywdc, Ycdc] = cleanupVessels(Yp0, Ywd, Ycd, opt.distcleanup); 
@@ -485,6 +488,13 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
    
     % final update of distance functions
     Ycd = Ycdc; Ywd = Ywdc;
+
+    if ~firstcorrect
+      % correct general voxel offset (vbdist quantifies the distance to the 
+      % object grid points rather than the boundary between object and background. 
+      Ycd = max(0,Ycd - distcorval); Ywd = max(0,Ywd - distcorval); 
+    end
+
   end
 
 
