@@ -1,4 +1,4 @@
-name: Compile CAT12 mex-files
+name: Compile CAT mex-files
 
 on:
   workflow_dispatch:
@@ -53,7 +53,7 @@ jobs:
           repository: spm/spm
           path: spm
 
-      - name: Checkout CAT12 into SPM toolbox
+      - name: Checkout CAT into SPM toolbox
         # Checks out directly into spm/toolbox/CAT — no rsync or cp needed,
         # works on all platforms including Windows.
         uses: actions/checkout@v4
@@ -69,6 +69,11 @@ jobs:
         run: Get-ChildItem -Path .\ -Recurse -Include *.mex* | Remove-Item -Force
         #run: Get-ChildItem -Path spm\toolbox\CAT -Recurse -Include *.mex* | Remove-Item -Force
   
+      - name: Install rsync on Windows
+        if: runner.os == 'Windows'
+        run: choco install -y rsync
+        shell: bash
+
       - name: Install CAT in SPM toolbox
         shell: bash
         run: |
@@ -87,7 +92,7 @@ jobs:
             --exclude='Makefile' \
             ./ spm/toolbox/CAT/
 
-      - name: Compile CAT12 mex-files
+      - name: Compile CAT mex-files
         uses: matlab-actions/run-command@v2
         with:
           command: |
