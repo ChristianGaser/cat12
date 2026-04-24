@@ -36,15 +36,6 @@ jobs:
             matlab_legacy: true
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Checkout SPM
-        uses: actions/checkout@v4
-        with:
-          repository: spm/spm
-          path: spm
-
       - name: Set up MATLAB (legacy)
         if: ${{ matrix.matlab_legacy }}
         uses: matlab-actions/setup-matlab@v1
@@ -56,14 +47,28 @@ jobs:
         with:
           release: ${{ matrix.matlab_release }}
 
+      - name: Checkout SPM
+        uses: actions/checkout@v4
+        with:
+          repository: spm/spm
+          path: spm
+
+      - name: Checkout CAT12 into SPM toolbox
+        # Checks out directly into spm/toolbox/CAT — no rsync or cp needed,
+        # works on all platforms including Windows.
+        uses: actions/checkout@v4
+        with:
+          path: spm/toolbox/CAT
+
       - name: Delete old MEX files on Ubuntu and Mac
         if: matrix.os != 'windows-latest'
-        run: find . -type f -name "*.mex*" -delete
+        run: find spm/toolbox/CAT -type f -name "*.mex*" -delete
 
       - name: Delete old MEX files on Windows
         if: matrix.os == 'windows-latest'
         run: Get-ChildItem -Path .\ -Recurse -Include *.mex* | Remove-Item -Force
-
+        #run: Get-ChildItem -Path spm\toolbox\CAT -Recurse -Include *.mex* | Remove-Item -Force
+  
       - name: Install CAT in SPM toolbox
         shell: bash
         run: |
