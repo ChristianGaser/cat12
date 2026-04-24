@@ -92,7 +92,18 @@ jobs:
             --exclude='Makefile' \
             ./ spm/toolbox/CAT/
 
+      - name: Compile CAT mex-files (legacy)
+        if: ${{ matrix.matlab_legacy }}
+        uses: matlab-actions/run-command@v1
+        with:
+          command: |
+            ws = getenv('GITHUB_WORKSPACE');
+            addpath(fullfile(ws, 'spm'));
+            cd(fullfile(ws, 'spm', 'toolbox', 'CAT'))
+            compile(1,0)
+
       - name: Compile CAT mex-files
+        if: ${{ !matrix.matlab_legacy }}
         uses: matlab-actions/run-command@v2
         with:
           command: |
