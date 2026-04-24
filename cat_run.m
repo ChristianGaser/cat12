@@ -93,7 +93,8 @@ elseif ~isempty(BIDSfolder)
 end
 
 % split job and data into separate processes to save computation time
-if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))  
+if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
+
   % rescue original subjects
   job_data = job.data;
   job_BIDS = job.BIDS; 
@@ -112,6 +113,13 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
   for i=1:rem(n_subjects,job.nproc)
     job.process_index{i} = [job.process_index{i} n_subjects-i+1];
   end
+
+  if cat_get_defaults('extopts.send_info')
+    urlinfo = sprintf('%s%s%s%s%s%s%d',cat_version,'%2F',computer,'%2F','processed',...
+       '%2F',n_subjects);
+    cat_io_send_to_server(urlinfo);
+  end
+
 
   tmp_array = cell(job.nproc,1); job.printPID = 1; job.getPID = 2; 
     
@@ -718,6 +726,13 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
   cat_progress_bar('Clear');
   return
 end
+
+if cat_get_defaults('extopts.send_info')
+  urlinfo = sprintf('%s%s%s%s%s%s%d',cat_version,'%2F',computer,'%2F','processed',...
+     '%2F',1);
+  cat_io_send_to_server(urlinfo);
+end
+
 
 if isfield(job,'printPID') && job.printPID 
   cat_display_matlab_PID

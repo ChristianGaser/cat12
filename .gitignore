@@ -8,6 +8,7 @@ INSTALL.txt
 catlog*.txt
 templates_animals/
 logs/
+CAT/
 cat2*.m
 
 # ignore zip, pdf, doc*, and nifti
