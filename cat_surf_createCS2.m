@@ -71,7 +71,7 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
   % There is a new SPM approach spm_mesh_reduce that is maybe more robust. 
   % Higher resolution is at least required for animal preprocessing that is given by cat_main.
   def.LAB                 = cat_get_defaults('extopts.LAB');  % brain regions 
-  def.pbtmethod           = 'pbtsimple';                      % projection-based thickness (PBT) estimation ('pbt2x' (with minimum setting), 'pbt2', or 'pbtsimple')
+  def.pbtmethod           = 'pbt2x';                      % projection-based thickness (PBT) estimation ('pbt2x' (with minimum setting), 'pbt2', or 'pbtsimple')
   def.sharpenCB           = 1;                                % sharpening function for the cerebellum (in development, RD2017-2019)
   def.thick_measure       = cat_get_defaults('extopts.thick_measure');     % 0-PBT; 1-Tfs (Freesurfer method using mean(TnearIS,TnearOS))
   def.foldingcorrection   = cat_get_defaults('extopts.foldingcorrection'); % tickness correction that is influence by folding
@@ -106,7 +106,10 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
   opt.surf                = cat_io_strrep(opt.surf,'v','');                   % after definition of the 'vol' variable we simplify 'surf'
   opt.interpV             = max(0.1,min([opt.interpV,1.5]));                  % general limitation of the PBT resolution
  
- 
+  if opt.SRP > 23
+    opt.pbtmethod = 'pbtsimple'; 
+  end
+
   % distance between vertices that can be set directly by "vdist" or indirectly by "interpV"  
   % - surface should have more than 80k faces to look nice, whereas more than 400k does not improve the visual quality 
   % - controlled by power function to avoid a quadratic grow of the number of faces
@@ -267,8 +270,11 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
     
     
     %% pbt calculation
-    stime = cat_io_cmd(sprintf('  Thickness estimation (%0.2f mm%s)',opt.interpV,native2unicode(179, 'latin1'))); stimet =stime;
-
+    if cat_get_defaults('extopts.expertgui')
+      stime = cat_io_cmd(sprintf('  Thickness estimation (CS2%d-%s,%0.2f mm%s)', opt.SRP, opt.pbtmethod, opt.interpV,native2unicode(179, 'latin1'))); stimet =stime;
+    else
+      stime = cat_io_cmd(sprintf('  Thickness estimation (CS2-%s,%0.2f mm%s)', opt.pbtmethod, opt.interpV,native2unicode(179, 'latin1'))); stimet =stime;
+    end
     % surface coordinate transformation matrix
     [Vmfs,Smat] = createOutputFileStructures(V,V0,resI,BB,opt,mridir,ff,si); 
     if strcmp(opt.pbtmethod,'pbtsimple') 
@@ -684,9 +690,9 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
         cat_io_cprintf('g5',sprintf('( SC/EC/DN/DS = %0.2f/',scale_cortex));
         cat_io_cprintf( color( rate( abs( EC0 - 2 ) , 0 ,100 * (1+9*iscerebellum) )) ,sprintf('%d/',EC0));
         cat_io_cprintf( color( rate( defect_number0 , 0 ,100 * (1+9*iscerebellum) )) ,sprintf('%d/',defect_number0));
-        cat_io_cprintf( color( rate( defect_size0   , 1 , 10 * (1+9*iscerebellum) )) ,sprintf('%0.2f%%%%' ,defect_size0));
+        cat_io_cprintf( color( rate( defect_size0   , 1 , 10 * (1+9*iscerebellum) )) ,sprintf('%0.2f%%' ,defect_size0));
         cat_io_cprintf('g5',' )');
-        fprintf(repmat(' ',1,max(0,14 - numel(sprintf('%d/%d/%0.2f%%%% )',EC0,defect_number0,defect_size0))))); 
+        fprintf(repmat(' ',1,max(0,14 - numel(sprintf('%d/%d/%0.2f%% )',EC0,defect_number0,defect_size0))))); 
       end
       
 
@@ -1293,131 +1299,15 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
   end  
   
   % calculate surface quality parameters for all surfaces
+  res.euler_characteristic = EC; 
+  res.defect_size = defect_size;
   res = cat_surf_createCS_fun('addSurfaceQualityMeasures',res,opt);
   
   % print final stats
   cat_surf_createCS_fun('evalProcessing',res,opt,P,V0); 
-  %evalProcessing(res,opt,P,V0)
-
+  
 end
 %==========================================================================
-function res = addSurfaceQualityMeasures(res,opt)
-%addSurfaceQualityMeasures. Measures to describe surface properties. 
-  res.mnth = []; res.sdth = []; 
-  res.mnRMSE_Ypp = []; res.mnRMSE_Ym = []; 
-  res.SIw = []; res.SIp = []; res.SIwa = []; res.SIpa = []; 
-  for si=1:numel(opt.surf)
-    if any(strcmp(opt.surf{si},{'lh','rh'}))
-      if isfield(res.(opt.surf{si}).createCS_final,'fsthickness_mn_sd_md_mx') && ... 
-        ~isnan( res.(opt.surf{si}).createCS_final.fsthickness_mn_sd_md_mx(1) )
-        res.mnth      = [ res.mnth  res.(opt.surf{si}).createCS_final.fsthickness_mn_sd_md_mx(1) ]; 
-        res.sdth      = [ res.sdth  res.(opt.surf{si}).createCS_final.fsthickness_mn_sd_md_mx(2) ]; 
-      else
-        res.mnth      = [ res.mnth  res.(opt.surf{si}).createCS_final.thickness_mn_sd_md_mx(1) ];
-        res.sdth      = [ res.sdth  res.(opt.surf{si}).createCS_final.thickness_mn_sd_md_mx(2) ]; 
-      end
-      res.mnRMSE_Ym   = [ res.mnRMSE_Ym   mean([...
-        res.(opt.surf{si}).createCS_final.RMSE_Ym_layer4 ...
-        res.(opt.surf{si}).createCS_final.RMSE_Ym_white ...
-        res.(opt.surf{si}).createCS_final.RMSE_Ym_pial ]) ];
-      res.mnRMSE_Ypp  = [ res.mnRMSE_Ypp  mean([...
-        res.(opt.surf{si}).createCS_final.RMSE_Ypp_central ...
-        res.(opt.surf{si}).createCS_final.RMSE_Ypp_white ...
-        res.(opt.surf{si}).createCS_final.RMSE_Ypp_pial ]) ];
-      if isfield(res.(opt.surf{si}).createCS_final,'white_self_interections')
-        res.SIw     = [ res.SIw  res.(opt.surf{si}).createCS_final.white_self_interections ]; 
-        res.SIp     = [ res.SIp  res.(opt.surf{si}).createCS_final.pial_self_interections  ]; 
-        res.SIwa    = [ res.SIwa res.(opt.surf{si}).createCS_final.white_self_interection_area ]; 
-        res.SIpa    = [ res.SIpa res.(opt.surf{si}).createCS_final.pial_self_interection_area  ]; 
-      end
-    end
-  end
-  
-  % final res structure
-  res.EC          = NaN; 
-  res.defect_size = NaN;
-  res.defect_area = NaN;
-  res.defects     = NaN;
-  res.mnth        = mean(res.mnth); 
-  res.sdth        = mean(res.sdth); 
-  res.RMSE_Ym     = mean(res.mnRMSE_Ym);
-  res.RMSE_Ypp    = mean(res.mnRMSE_Ypp);
-  if isfield(res.(opt.surf{si}).createCS_final,'white_self_interections')
-    res.self_intersections      = mean([res.SIw,res.SIp]);
-    res.self_intersections_area = mean([res.SIwa,res.SIpa]);
-  end
-end
-%==========================================================================
-function evalProcessing(res,opt,P,V0)
-  if opt.verb && ~opt.vol  
-  % display some evaluation 
-  % - For normal use we limited the surface measures.  
-  % - Surface intensity would be interesting as cortical measure similar to thickness (also age dependent).
-  %   Especially the outer surface will describe the sulcal blurring in children. 
-  %   But the mixing of surface quality and anatomical features is problematic. 
-  % - The position value describes how good the transformation of the PBT map into a surface worked. 
-  %   Also the position values depend on age. Children have worse pial values due to sulcal blurring but
-  %   the white surface is may effected by aging, e.g., by WMHs.
-  % - However, for both intensity and position some (average) maps would be also interesting. 
-  %   Especially, some Kappa similar measure that describes the differences to the Ym or Ypp would be nice.
-  % - What does the Euler characteristic say?  Wouldn't the defect number more useful for users? 
-
-    if any(~cellfun('isempty',strfind(opt.surf,'cb'))), cbtxt = 'cerebral '; else, cbtxt = ''; end
-    fprintf('Final %ssurface processing results: \n', cbtxt);
-      
-    % function to estimate the number of interactions of the surface deformation: d=distance in mm and a=accuracy 
-    QMC    = cat_io_colormaps('marks+',17);
-    color  = @(m) QMC(max(1,min(size(QMC,1),round(((m-1)*3)+1))),:);
-    rate   = @(x,best,worst) min(6,max(1, max(0,x-best) ./ (worst-best) * 5 + 1));
-  
-    if cat_get_defaults('extopts.expertgui')
-    % color output currently only for expert ...
-      if isfield(res.(opt.surf{1}).createCS_final,'fsthickness_mn_sd_md_mx')
-        fprintf('  Average thickness (FS):                     ');
-      else
-        fprintf('  Average thickness (PBT):                    ');
-      end
-      cat_io_cprintf( color( rate( abs( res.mnth - 2.5 ) , 0 , 2.0 )) , sprintf('%0.4f'     , res.mnth ) );  fprintf(' %s ',native2unicode(177, 'latin1'));
-      cat_io_cprintf( color( rate( abs( res.sdth - 0.5 ) , 0 , 1.0 )) , sprintf('%0.4f mm\n', res.sdth ) );
-
-      fprintf('  Surface intensity / position RMSE:          ');
-      cat_io_cprintf( color( rate( mean(res.mnRMSE_Ym)  , 0.05 , 0.3 ) ) , sprintf('%0.4f / ', mean(res.mnRMSE_Ym) ) );
-      cat_io_cprintf( color( rate( mean(res.mnRMSE_Ypp) , 0.05 , 0.3 ) ) , sprintf('%0.4f\n',  mean(res.mnRMSE_Ypp) ) );
-        
-      if isfield(res.(opt.surf{1}).createCS_final,'white_self_interections')
-        fprintf('  Pial/white self-intersections:              ');
-        cat_io_cprintf( color( rate(  mean([res.SIw,res.SIp]) , 0 , 20 ) ) , sprintf('%0.2f%%%% (%0.2f mm%s)\n'  , mean([res.SIw,res.SIp]) , mean([res.SIwa,res.SIpa]) , char(178) ) );
-      end
-    else
-      fprintf('  Average thickness:                          %0.4f %s %0.4f mm\n' , res.mnth, native2unicode(177, 'latin1'), res.sdth);
-    end
-    
-    for si=1:numel(P)
-      fprintf('  Display thickness:          %s\n',spm_file(P(si).Pthick,'link','cat_surf_display(''%s'')'));
-    end
-    
-    %% surfaces in spm_orthview
-    if exist(P(si).Pm,'file'), Po = P(si).Pm; else, Po = V0.fname; end
-    if ~exist(Po,'file') && exist([V0.fname '.gz'],'file'), Po = [V0.fname '.gz']; end
-    
-    Porthfiles = '{'; Porthcolor = '{'; Porthnames = '{';
-    for si=1:numel(P)
-      Porthfiles = [ Porthfiles , sprintf('''%s'',''%s'',',P(si).Ppial, P(si).Pwhite )]; 
-      Porthcolor = [ Porthcolor , '''-g'',''-r'',' ]; 
-      Porthnames = [ Porthnames , '''pial'',''white'',' ];
-    end
-    Porthfiles = [ Porthfiles(1:end-1) '}']; 
-    Porthcolor = [ Porthcolor(1:end-1) '}']; 
-    Porthnames = [ Porthnames(1:end-1) '}']; 
-  
-    if 1 %debug 
-      fprintf('  Show surfaces in orthview:  %s\n',spm_file(Po ,'link',...
-        sprintf('cat_surf_fun(''show_orthview'',%s,''%s'',%s,%s)',Porthfiles,Po,Porthcolor,Porthnames))) ;
-    end
-
-  end
-end
-%=======================================================================
 function varargout = cat_vol_genus0opt(Yo,th,limit,debug)
 % cat_vol_genus0opt: Voxel-based topology optimization and surface creation 
 %   The correction of large defects is often not optimal and this function
