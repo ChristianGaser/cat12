@@ -155,7 +155,7 @@ function Prdata = cat_surf_flipsides(job)
         gii.faces = [gii.faces(:,2),gii.faces(:,1),gii.faces(:,3)];
         cat_io_FreeSurfer('write_surf',fullfile(pp,[ff 'tmp']),gii); 
 
-        cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',...
+        cmd = sprintf('CAT_SurfResample "%s" "%s" "%s" "%s" "%s" "%s"',...
           fullfile(pp,[ff 'tmp']),Preg{~(si-1)+1},Psphere{si},Prmesh{di},job.cdata{di},Prdata{di});
         err = cat_system(cmd,job.debug); 
 

@@ -91,10 +91,10 @@ function varargout = cat_surf_avg(varargin)
           % resample values using warped sphere 
           if ~exist(Presamp,'file')
             %try
-              cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,FSavgsphere{si},Presamp);
+              cmd = sprintf('CAT_SurfResample "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,FSavgsphere{si},Presamp);
               cat_system(cmd,opt.debug);
             %catch
-            %  cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,FSavgfname{si},Presamp);
+            %  cmd = sprintf('CAT_SurfResample "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,FSavgfname{si},Presamp);
             %  cat_system(cmd,opt.debug);
             %end
           end

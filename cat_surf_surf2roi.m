@@ -277,7 +277,7 @@ function resamp = get_resampled_values(P,debug,type)
   if ~exist(Pvalue,'file')
         
     % resample values using warped sphere 
-    cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,P,Pvalue);
+    cmd = sprintf('CAT_SurfResample "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavg,Presamp,P,Pvalue);
     err = cat_system(cmd,debug,0);
     if exist(Presamp,'file'), delete(Presamp); end
 

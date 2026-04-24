@@ -470,7 +470,7 @@ function Psgigii = cat_surf_GI_average(sinfo,opt)
   Pcentral = char(cat_surf_rename(sinfo,'resampled',1));
 
   % resample hull surface in subject space
-  cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s"',sinfo.Pmesh,sinfo.Psphere,opt.Pfsavgsph,Pcentral);
+  cmd = sprintf('CAT_SurfResample "%s" "%s" "%s" "%s"',sinfo.Pmesh,sinfo.Psphere,opt.Pfsavgsph,Pcentral);
   cat_system(cmd,opt.debug,opt.trerr); 
   
   % load surfaces
@@ -492,7 +492,7 @@ function Psgigii = cat_surf_GI_average(sinfo,opt)
   %cat_io_FreeSurfer('write_surf_data',Psgi,GI);
   
   %% resample hull surface in subject space ... 
-  %cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',opt.Pfsavg,opt.Pfsavgsph,sinfo.Pmesh,sinfo.Psphere,Psgi,Psgi);
+  %cmd = sprintf('CAT_SurfResample "%s" "%s" "%s" "%s" "%s" "%s"',opt.Pfsavg,opt.Pfsavgsph,sinfo.Pmesh,sinfo.Psphere,Psgi,Psgi);
   %cat_system(cmd,opt.debug,opt.trerr); 
   
   %% smoothing
@@ -555,7 +555,7 @@ function Psgi = cat_surf_SGI_hullmapping(sinfo,opt)
   cat_system(cmd,opt.debug);
 
   % resample hull surface in subject space
-  cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s"',Phull,Phullspherereg,sinfo.Psphere,PhullR);
+  cmd = sprintf('CAT_SurfResample "%s" "%s" "%s" "%s"',Phull,Phullspherereg,sinfo.Psphere,PhullR);
   cat_system(cmd,opt.debug,opt.trerr); 
   
   %% load surfaces

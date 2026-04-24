@@ -785,7 +785,7 @@ cstime = clock;
     % does not work properly for all data...
     if 0
       stime = cat_io_cmd('  Correct thickness','g5','',opt.verb,stime);
-      cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"', ...
+      cmd = sprintf('CAT_SurfResample "%s" "%s" "%s" "%s" "%s" "%s"', ...
         Pfsavg,Pfsavgsph,Pspherereg,Ptemp,Pfsavgmask,Pmask);
       cat_system(cmd,opt.verb-2);      
       resampled_mask = cat_io_FreeSurfer('read_surf_data',Pmask);
@@ -845,7 +845,7 @@ cstime = clock;
       Ppbtr_gii = [Ppbtr '.gii'];
       
       % resample values using warped sphere 
-      cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavgsph,Presamp,Ppbt,Ppbtr);
+      cmd = sprintf('CAT_SurfResample "%s" "%s" "%s" "%s" "%s" "%s"',Pcentral,Pspherereg,Pfsavgsph,Presamp,Ppbt,Ppbtr);
       cat_system(cmd,opt.verb-2);
       
       if 0 
@@ -857,7 +857,7 @@ cstime = clock;
         cat_system(cmd,opt.verb-2);
 
         % resample surface according to freesurfer sphere
-        cmd = sprintf('CAT_ResampleSurf "%s" NULL "%s" "%s"',Presamp,Pfsavgsph,Presamp);
+        cmd = sprintf('CAT_SurfResample "%s" NULL "%s" "%s"',Presamp,Pfsavgsph,Presamp);
         cat_system(cmd,opt.verb-2); 
       end
       

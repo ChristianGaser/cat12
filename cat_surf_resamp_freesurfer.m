@@ -88,7 +88,7 @@ function cat_surf_resamp_freesurfer(vargin)
       fprintf('Resample %s in %s\n',hemi,deblank(Psubj(i,:)));
   
       % resample values using warped sphere 
-      cmd = sprintf('CAT_ResampleSurf "%s" "%s" "%s" "%s" "%s" "%s"',Psmoothwm,Pspherereg,Pfsavg,Presamp,Pmeasure,Pvalue);
+      cmd = sprintf('CAT_SurfResample "%s" "%s" "%s" "%s" "%s" "%s"',Psmoothwm,Pspherereg,Pfsavg,Presamp,Pmeasure,Pvalue);
       cat_system(cmd,opt.debug);
     
       % smooth resampled values
