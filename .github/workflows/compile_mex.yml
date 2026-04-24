@@ -25,7 +25,8 @@ jobs:
           apt-get update
           DEBIAN_FRONTEND=noninteractive apt-get install -y \
             git rsync zip ca-certificates \
-            libxt6 libxmu6 libgl1-mesa-glx libglu1-mesa
+            libxt6 libxmu6 libgl1-mesa-glx libglu1-mesa \
+            libatomic1
 
       - name: Checkout code
         uses: actions/checkout@v4
