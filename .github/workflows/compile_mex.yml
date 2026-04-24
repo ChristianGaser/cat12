@@ -94,7 +94,7 @@ jobs:
             ws = getenv('GITHUB_WORKSPACE');
             addpath(fullfile(ws, 'spm'));
             cd(fullfile(ws, 'spm', 'toolbox', 'CAT'))
-            compile
+            compile(1,0)
 
       - name: Install zip on Windows
         if: runner.os == 'Windows'
