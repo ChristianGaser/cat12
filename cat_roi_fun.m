@@ -165,7 +165,7 @@ function mcsvtab = cat_roi_exportSample(job)
             [pp,ff] = spm_fileparts(job.(FN{fni}){si});
             if isnumeric(job.folder)
               if job.folder
-                pp = cat_io_BIDS(job.(FN{fni}){si},job,'labelpath');
+                pp = cat_io_BIDS(job.(FN{fni}){si},job,'labeldir');
               else
                 pp = cat_io_BIDS(job.(FN{fni}){si},job,'mainpath');
               end
