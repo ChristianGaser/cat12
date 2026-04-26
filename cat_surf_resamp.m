@@ -122,7 +122,7 @@ function vout = cat_surf_resamp(varargin)
   % ____________________________________________________________________
   
   % new banner
-  if isfield(job,'process_index') && job.process_index, spm('FnBanner',mfilename); end
+  if isfield(job,'process_index') && job.process_index > 0, spm('FnBanner',mfilename); end
   
   % display something
   spm_clf('Interactive'); 
