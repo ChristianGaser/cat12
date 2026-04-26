@@ -720,8 +720,7 @@ function varargout = cat_vol_qa201901x(action,varargin)
       QAS.software.markdefs     = which('cat_stat_marks');
       QAS.software.qamethod     = action; 
       QAS.software.date         = datestr(clock,'yyyymmdd-HHMMSS');
-      warning off
-      warning on
+
 % ### need for long?      
       %QAS.parameter             = opt.job; 
       

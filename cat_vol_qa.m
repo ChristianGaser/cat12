@@ -359,8 +359,8 @@ function varargout = cat_vol_qa(action,varargin)
     case 'cat12'
     % Direct call of the specific QC version with input images given by the 
     % varargin structure used in the CAT pipeline (processing of one case)
-%sprintf('[QAS,QAR] = %s(''cat12'',varargin{:});', opt.version)
-if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
+      %sprintf('[QAS,QAR] = %s(''cat12'',varargin{:});', opt.version)
+      if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
 
       eval(sprintf('[QAS,QAR] = %s(''cat12'',varargin{:});', opt.version));
       QAR  = upate_rating(QAS,opt.version);
@@ -795,7 +795,6 @@ if isstruct(varargin{end-1}), varargin{end-1}.write_xml = 0; end
 
     [pp,ff] = spm_fileparts(QAS.filedata.fname);  
     cat_io_xml( fullfile(reportdir,[opt.prefix ff '.xml']) ,QAS,'write+'); 
-    cat_io_xml( fullfile(reportdir,[opt.prefix ff '.xml']) ,QAR,'write+'); %struct('QAS',QAS,'QAM',QAM)
   end
 
   if (isempty(varargin) || isstruct(varargin{1}) || isstruct(action)) && exist('Pp0','var')
