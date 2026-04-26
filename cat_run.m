@@ -1847,7 +1847,7 @@ function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
       is_ROI = any(cell2mat(struct2cell(atlases))) || ...
         (~isempty( job.output.ROImenu.atlases.ownatlas ) & ~isempty( job.output.ROImenu.atlases.ownatlas{1} ));
 
-      labelpath = cat_io_BIDS( job.data{subj}, job, 'labelpath'); 
+      labelpath = cat_io_BIDS( job.data{subj}, job, 'labeldir'); 
       if is_ROI && ~exist(fullfile(labelpath,['catROI_' ff '.xml']),'file')
         return
       end

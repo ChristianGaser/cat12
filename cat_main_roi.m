@@ -209,17 +209,17 @@ function cat_main_roi(job,trans,Ycls,Yp0,opt)
           patlas = '-native'; 
           wVai   = spm_vol(trans.native.Vi.fname);     % internal volume information
         end
-        wVai.fname    = cat_io_BIDS(trans.native.Vo.fname,job,'labelpath','suffix',['_' atlas patlas],'ext','.nii'); 
+        wVai.fname    = cat_io_BIDS(trans.native.Vo.fname,job,'labeldir','suffix',['_' atlas patlas],'ext','.nii'); 
         wVai.dt(1)    = 2;
         wVai.pinfo(1) = 1;
         spm_write_vol(wVai,wYa);
 
-        wVai.fname    = cat_io_BIDS(trans.native.Vo.fname,job,'labelpath','suffix',['_' atlas '_p0' patlas],'ext','.nii'); 
+        wVai.fname    = cat_io_BIDS(trans.native.Vo.fname,job,'labeldir','suffix',['_' atlas '_p0' patlas],'ext','.nii'); 
         wVai.dt(1)    = 2;
         wVai.pinfo(1) = 0.02;
         spm_write_vol(wVai,wYp0);
 
-        wVai.fname    = cat_io_BIDS(trans.native.Vo.fname,job,'labelpath','suffix',['_' atlas '_p1' patlas],'ext','.nii');  
+        wVai.fname    = cat_io_BIDS(trans.native.Vo.fname,job,'labeldir','suffix',['_' atlas '_p1' patlas],'ext','.nii');  
         wVai.dt(1)    = 4; 
         wVai.pinfo(1) = 0.001; %modulated!
         spm_write_vol(wVai,wYcls{1});

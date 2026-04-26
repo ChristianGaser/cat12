@@ -67,9 +67,9 @@ function cat_io_report(job,qa,subj,createerr)
   % --------------------------------------------------------------------  
   try
     % setting template files
-    Pn  = cat_io_BIDS(job.data{subj}, job, 'mripath','prefix','n','ext','.nii'); 
-    Pm  = cat_io_BIDS(job.data{subj}, job, 'mripath','prefix','m','ext','.nii');
-    Pp0 = cat_io_BIDS(job.data{subj}, job, 'mripath','prefix','p0','ext','.nii');
+    Pn  = cat_io_BIDS(job.data{subj}, job, 'mridir','prefix','n','ext','.nii'); 
+    Pm  = cat_io_BIDS(job.data{subj}, job, 'mridir','prefix','m','ext','.nii');
+    Pp0 = cat_io_BIDS(job.data{subj}, job, 'mridir','prefix','p0','ext','.nii');
 
     VT0 = spm_vol(cat_io_report_resolve_nii(job.data{subj})); % original 
     if exist(Pn,'file'), VT1 = spm_vol(Pn); end %else VT0.mat = nan(4,4); end % intern
@@ -561,7 +561,7 @@ function cat_io_report(job,qa,subj,createerr)
     end
     imat = spm_imatrix(Affine); Rigid = spm_matrix([imat(1:6) 1 1 1 0 0 0]); clear imat;
     
-    Pthick = cat_io_BIDS(job.data{subj}, job, 'surfpath','prefix','lh.thickness.'); 
+    Pthick = cat_io_BIDS(job.data{subj}, job, 'surfdir','prefix','lh.thickness.'); 
     if exist(Pthick,'file'), Pthickdata = dir(Pthick); Pthickdata = etime(datevec(Pthickdata.datenum),cat_err_res.stime)/3600 > 0; else Pthickdata = 0; end
     if Pthickdata
       hCS = subplot('Position',[0.5 0.05 0.55 0.25],'visible','off'); 
@@ -674,8 +674,8 @@ function cat_io_report(job,qa,subj,createerr)
     job.imgprint.dpi   = 100;
     job.imgprint.fdpi  = @(x) ['-r' num2str(x)];
     job.imgprint.ftype = @(x) ['-d' num2str(x)];
-    job.imgprint.fname     = cat_io_BIDS(job.data{subj}, job, 'reportpath','prefix','catreport_','ext',job.imgprint.type); 
-    job.imgprint.fnamej    = cat_io_BIDS(job.data{subj}, job, 'reportpath','prefix','catreport_','ext','jpg'); 
+    job.imgprint.fname     = cat_io_BIDS(job.data{subj}, job, 'reportdir','prefix','catreport_','ext',job.imgprint.type); 
+    job.imgprint.fnamej    = cat_io_BIDS(job.data{subj}, job, 'reportdir','prefix','catreport_','ext','jpg'); 
 
     fgold.PaperPositionMode = get(fg,'PaperPositionMode');
     fgold.PaperPosition     = get(fg,'PaperPosition');

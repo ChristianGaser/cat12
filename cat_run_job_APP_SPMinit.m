@@ -21,7 +21,7 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
   
   if exist('rng','file') == 2, rng('default'); rng(0); else, rand('state',0); randn('state',0); end %#ok<RAND> 
   
-  mripath = cat_io_BIDS(job.channel(1).vols{subj},job,'mripath');
+  mripath = cat_io_BIDS(job.channel(1).vols{subj},job,'mridir');
   V = spm_vol(job.channel(n).vols{job.subj});
   vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
   

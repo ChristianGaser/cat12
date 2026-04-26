@@ -467,7 +467,7 @@ function [Ym,T3th3,Tth,inv_weighting,noise] = cat_main_gintnorm(Ysrc,Ycls,Yb,vx_
 
 
       if debug==2
-        tmpmat = fullfile(cat_io_BIDS(res.image0(1).fname,'reportpath'),sprintf('%s_%s%02d%s.mat',nam,'write',1,'gintnorm01'));
+        tmpmat = fullfile(cat_io_BIDS(res.image0(1).fname,'reportdir'),sprintf('%s_%s%02d%s.mat',nam,'write',1,'gintnorm01'));
         save(tmpmat,'Ysrc','Ycls','Yb','vx_vol','res','T3th','Yg','Ydiv','Ym',...
          'Yb2','gth','Ybm','BMth','Ywm','Ygm','Ycm','Ybg','T3th_cls','T3th','noise');
       end
