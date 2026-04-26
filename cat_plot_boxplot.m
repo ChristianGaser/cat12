@@ -618,8 +618,8 @@ median_y(:,chop) = [];
 
 % Add caps to the remaining whiskers
 cap_x = whisker_x;
-cap_x(1,:) = cap_x(1,:) - 0.1;
-cap_x(2,:) = cap_x(2,:) + 0.1;
+cap_x(1,:) = cap_x(1,:) - opt.boxwidth*0.125;
+cap_x(2,:) = cap_x(2,:) + opt.boxwidth*0.125;
 cap_y = whisker_y([1,1],:);
 datac = cell2mat(data(:)); 
 vp = 10^(1+round(abs(diff([min(datac(:)),max(datac(:))]))^(1/10) )); 
