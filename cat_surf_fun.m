@@ -3535,7 +3535,7 @@ function [Yp,Yt,vmat1,vmat1i] = cat_surf_surf2vol(S,Y,T,type,opt)
         [D,I] = cat_vbdist( single( ~isnan(Yt) ) , Y>0 ); 
         Yt  = Yt(I); 
       else
-        Yt  = cat_vol_approx(Yt,1);
+        Yt  = cat_vol_approx(Yt,'rec');
       end
     end
     %T    = isocolors(Yt,([0 1 0; 1 0 0; 0 0 1] *  [eye(3) vmat'] * [So.vertices';ones(1,size(So.vertices,1))] )' ); % self projection
