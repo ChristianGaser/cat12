@@ -88,6 +88,7 @@ if nargin <= 1
       call_server;
     end
   end
+  cat_version('reset');
   
   cat_bg = imread(fullfile(fileparts(mfilename('fullpath')),'doc','images','cat_bg.jpg'));
   

@@ -35,9 +35,10 @@ function out = cat_io_BIDS(varargin)
 %                    try the CAT/logs/*DATE* directory otherwise use the
 %                    the current directory. We are not writing into a BIDS
 %                    result directory as CAT might run over various projects.
-%                    1 - main common directory of all inputs
+%                    1 - common (BIDS) directory of all inputs
 %                    2 - current working directory (default)
 %                    3 - first input directory 
+%                    4 - CAT/log/date directory 
 %    .resdircase  .. 0 - noBIDS, allways maindir/CAT subdirs 
 %                    1 - BIDSdir only for BIDS input (default)
 %                        no relative paths, i.e., ingnore "../"
@@ -318,22 +319,31 @@ function BIDS = prepare_logpath(BIDS)
   switch BIDS(1).main_logdircase
     case 1
       % one main directory for all cases
-      if numel(sfiles) > 1
-        [~,S] = spm_str_manip( {BIDS(:).files} ,'C'); 
-        logdir = fullfile(S.s, BIDS(1).main_BIDSfolder, 'log');
+      if numel(BIDS) > 1 
+        [~,S] = spm_str_manip( fullfile( {BIDS(:).rawdir}, {BIDS(:).BIDSdir}) ,'C'); 
       else
-        logdir = fullfile( {BIDS(1).resdir} , 'log');
+        S.s = fullfile( BIDS(1).rawdir, BIDS(1).BIDSdir); 
       end
-      [~,ff,ee] = fileparts(logdir); plogdir = [ff ee '_'];
+      logdir = fullfile(S.s, BIDS(1).main_BIDSfolder, 'log');
     case 3
-      % write into first subject directory
-      logdir = fullfile(BIDS(1).resdir, 'log');
-      [~,ff,ee] = fileparts(logdir); plogdir = [ff ee '_'];
+      % write into first BIDS or subject directory
+      if BIDS(1).isBIDS
+        logdir = fullfile( fullfile( BIDS(1).rawdir, BIDS(1).BIDSdir) , 'log');
+      else
+        logdir = fullfile(BIDS(1).resdir, 'log');
+      end
+    case 4 
+      % write into CAT log dir
+      logdir = fullfile( spm('dir'), 'toolbox', 'CAT', 'log', char( datetime('now','Format','yyyyMMdd')) );
     otherwise
-      % write into current directory
-      logdir = fullfile(pwd, 'log');
-      [~,ff,ee] = fileparts(logdir); plogdir = [ff ee '_'];
+      % write (into first BIDS or) current directory without log sub directory
+      %if BIDS(1).isBIDS
+      %  logdir = fullfile( fullfile( BIDS(1).rawdir, BIDS(1).BIDSdir) , 'log');
+      %else
+        logdir = pwd; 
+      %end
   end
+  [~,ff,ee] = fileparts(logdir); plogdir = [ff ee '_'];
         
   if cat_io_contains(logdir, spm('dir'))
     % in case of the SPM directory we file this in a dataspecific subdirectory
@@ -345,7 +355,7 @@ function BIDS = prepare_logpath(BIDS)
       cat_io_cprintf('warn','cat_io_BIDS:  Creation of log directory in SPM/CAT path redirected to: \n  %s\n', logdir)
     end
   end  
-
+  
   % == create log and main result directory == 
   if ~exist(logdir,'dir')  &&  BIDS(1).main_mkBIDSdir 
     try

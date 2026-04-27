@@ -15,8 +15,8 @@ function cat_defaults
 % ______________________________________________________________________
 % $Id$
 
-clear global cat; 
-global cat
+clearvars -global cat; 
+global cat %#ok<GVMIS>
 
 % CAT installation folder
 catdir = fileparts(which('spm_CAT'));

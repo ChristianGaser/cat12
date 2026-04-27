@@ -89,71 +89,14 @@ function varargout = cat_parallelize(job,func,datafield)
   % subfolder derivatives/CATxx.#/log to save the log-files there and not
   % somewhere. A try catch block is used in case of untested input (e.g.,
   % structures). See also for a similar block in cat_run.
-  try
-    % Get the first input file path
-    BIDSdir_candidates  = spm_str_manip(data,'h');
-    BIDSdir = [];
-    
-    % Try to find dataset root by looking for subject folders (sub- or sub_)
-    for bdi = 1:numel(BIDSdir_candidates)
-      if isempty(BIDSdir_candidates{bdi}), continue; end
-      
-      ppath = BIDSdir_candidates{bdi};
-      % Split path and find last folder starting with 'sub-' or 'sub_'
-      parts = strsplit(ppath, filesep);
-      for pi = length(parts):-1:1
-        if ~isempty(parts{pi}) && (strncmp(parts{pi}, 'sub-', 4) || strncmp(parts{pi}, 'sub_', 4))
-          % Found subject folder - reconstruct dataset root (parent of sub-* folder)
-          ind = strfind(ppath, [filesep parts{pi}]);
-          if ~isempty(ind)
-            ind = ind(end);
-            dataset_root = ppath(1:ind-1);
-            % Build derivatives path using CAT version
-            [cat_ver, cat_rel] = cat_version;
-            BIDSdir = fullfile(dataset_root, 'derivatives', [cat_ver '_' cat_rel]);
-            break;
-          end
-        end
-      end
-      if ~isempty(BIDSdir), break; end
-    end
-  catch
-    BIDSdir = [];  
-  end
-  if ~isempty(BIDSdir)
-    logdir  = fullfile(BIDSdir,'log');
-    if ~exist(logdir,'dir'), mkdir(logdir); end
+  BIDS = cat_io_BIDS( data , struct());
+  if any( [BIDS.isBIDS] )
+    BIDSdir = spm_fileparts( cat_io_BIDS(BIDS(1),'logdir') ); 
+    logdir  = cat_io_BIDS(BIDS(1),'logdir'); 
   else
-    logdir  = [];  
-  end
-  % Another thing that we want to avoid is to fill some of the SPM
-  % directories and just write in a ../spm/toolbox/CAT/log subdirectory.
-  % Do not forget that this is only about the additional log files and 
-  % not real data output. If there are no writing permissions in the directory 
-  % the same is probably true for other SPM dirs and the user has to change
-  % the working directory anyway. 
-  if isempty(logdir)
-    try 
-      SPMdir  = spm_str_manip(data,'h');
-      SPMdiri = find(~cellfun('isempty',SPMdir),1);
-      if ~isempty(SPMdiri)
-%        logdir = fullfile(fileparts(mfilename('fullpath')),'logs'); % log already exist as file
-        logdir = 'logs'; % log already exist as file
-        if ~exist(logdir,'dir')
-          try
-            mkdir(logdir); 
-          catch
-            error('cat_parallelize:CATlogs',['Cannot create directory for logs. \n' ...
-              'Please choose another working directory with writing permissions to save the log-files. ']);
-          end 
-        end
-      else
-        logdir  = [];  
-      end
-    catch 
-      logdir  = [];  
-    end
-  end
+    BIDSdir = [];  
+    logdir  = []; 
+  end 
   if ~isempty(logdir) && job.verb 
     if ~isempty(BIDSdir)
       cat_io_cprintf('n', ['\nFound a CAT BIDS directory in the given ' ...
@@ -165,11 +108,11 @@ function varargout = cat_parallelize(job,func,datafield)
       cat_io_cprintf('blue','%s\n\n', logdir);
     end
   end
-  
+
 
 
   tmp_array = cell(job.nproc,1);
-  logdate   = datestr(now,'YYYYmmdd_HHMMSS');
+  logdate   = char(datetime('now','Format','yyyyMMdd-hhmmss'));
   PID       = zeros(1,job.nproc);
   %catSID    = zeros(1,job.nproc);
   SID       = cell(1,job.nproc); 
@@ -199,7 +142,7 @@ function varargout = cat_parallelize(job,func,datafield)
     % temporary name for saving job information
     tmp_name = [tempname '.mat'];
     tmp_array{i} = tmp_name; 
-    global defaults cat;  %#ok<TLEV>
+    global defaults cat;  %#ok<GVMIS,TLEV>
     spm12def = defaults; 
     cat12def = cat;      
     save(tmp_name,'job','spm12def','cat12def');
@@ -262,10 +205,17 @@ function varargout = cat_parallelize(job,func,datafield)
     
     %% look for existing files and extract their PID for later control  
     %  --------------------------------------------------------------------
-    test    = 0; lim    = 100; ptime    = 0.5; % exist file?
-    testpid = 0; limpid = 200; ptimepid = 2.0; % get PID
+    %  - if the file and PID cannot be extracted after "lim[pid]" seconds 
+    %    go on (test all ptime[pid] seconds)
+    %  
+    test    = 0; lim    = 60;  ptime    = 0.5; % exist file?
+    testpid = 0; limpid = 120; ptimepid = 2.0; % get PID
     if ~isempty(strfind(func,'cat_long_multi_run'))
-      ptimesid = 30;  % update every 30s for long. segmentation
+      ptimesid = 10;  % update every 10s for long. segmentation
+    elseif ~isempty(strfind(func,'cat_surf_resamp'))
+      ptimesid = 1;   % update every 1s for all remaining functions
+      lim      = 2; 
+      limpid   = 3; 
     else
       ptimesid = 2;   % update every 2s for all remaining functions
       lim      = 10; 
@@ -552,6 +502,14 @@ function varargout = cat_parallelize(job,func,datafield)
                         find(cellfun('isempty', strfind( txt , pp ))==0,1,'first') & ... 
                         find(cellfun('isempty', strfind( txt , ff ))==0,1,'first') & ...
                         find(cellfun('isempty', strfind( txt , ee ))==0,1,'first'); 
+
+                      if isempty(SID{si})
+                        ff = strrep(ff,'lh.','mesh.'); 
+                        SID{si} = ...
+                          find(cellfun('isempty', strfind( txt , pp ))==0,1,'first') & ... 
+                          find(cellfun('isempty', strfind( txt , ff ))==0,1,'first') & ...
+                          find(cellfun('isempty', strfind( txt , ee ))==0,1,'first'); 
+                      end
                     end
                   else
                     [pp,ff,ee] = spm_fileparts(jobs(i).(datafield){si}); 
@@ -560,6 +518,14 @@ function varargout = cat_parallelize(job,func,datafield)
                       find(cellfun('isempty', strfind( txt , pp ))==0,1,'first') & ... 
                       find(cellfun('isempty', strfind( txt , ff ))==0,1,'first') & ...
                       find(cellfun('isempty', strfind( txt , ee ))==0,1,'first'); 
+                    
+                    if isempty(SID{si})
+                      ff = strrep(ff,'lh.','mesh.'); 
+                      SID{si} = ...
+                        find(cellfun('isempty', strfind( txt , pp ))==0,1,'first') & ... 
+                        find(cellfun('isempty', strfind( txt , ff ))==0,1,'first') & ...
+                        find(cellfun('isempty', strfind( txt , ee ))==0,1,'first'); 
+                    end
                   end
                 end
               else % volumes
@@ -587,7 +553,7 @@ function varargout = cat_parallelize(job,func,datafield)
               findSIDi = find(cellfun('isempty',SID)==0,1,'last'); 
               if ~isempty(findSIDi), catSID(i) = findSIDi; end
               
-              if numel(catSID)>1 && ( catSIDlast(i) < catSID(i) ) 
+              if numel(catSID)>0 && ( catSIDlast(i) < catSID(i) )
                 try
                   catSIDlast(i) = catSID(i);
                   cat_io_cprintf([ 0 0 0 ],sprintf('  %d/%d (pjob %d: %d/%d): %s\n',...
