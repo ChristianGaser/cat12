@@ -432,20 +432,20 @@ function output = cat_simple(job)
   %  ----------------------------------------------------------------------
   
   % unsmoothed segmentations
-  output.mwp1 = spm_io_BIDS(job.data,job,'mripath','prefix','mwp1');
-  output.mwp2 = spm_io_BIDS(job.data,job,'mripath','prefix','mwp2');
+  output.mwp1 = spm_io_BIDS(job.data,job,'mridir','prefix','mwp1');
+  output.mwp2 = spm_io_BIDS(job.data,job,'mridir','prefix','mwp2');
   
   if proc_surf && exist('measures','var')
     for mi = 1:size(measures,1)
-      output.measures{mi,1} = spm_io_BIDS(job.data,job,'surfpath','prefix',sprintf('mesh.%s.',measures{mi,1}),'ext','.gii');
+      output.measures{mi,1} = spm_io_BIDS(job.data,job,'surfdir','prefix',sprintf('mesh.%s.',measures{mi,1}),'ext','.gii');
     end
   end
   
   % smoothed data
   for si = 1:numel(vsmooth)
     for fi = 1:numel(job.data)
-      output.(sprintf('s%dmwp1',vsmooth(si))){fi} = spm_io_BIDS(job.data,job,'mripath','prefix',sprintf('s%dmwp1',vsmooth(si)));
-      output.(sprintf('s%dmwp2',vsmooth(si))){fi} = spm_io_BIDS(job.data,job,'mripath','prefix',sprintf('s%dmwp2',vsmooth(si)));
+      output.(sprintf('s%dmwp1',vsmooth(si))){fi} = spm_io_BIDS(job.data,job,'mridir','prefix',sprintf('s%dmwp1',vsmooth(si)));
+      output.(sprintf('s%dmwp2',vsmooth(si))){fi} = spm_io_BIDS(job.data,job,'mridir','prefix',sprintf('s%dmwp2',vsmooth(si)));
     end
   end
   
@@ -454,12 +454,12 @@ function output = cat_simple(job)
       if strcmp(measures{mi,1},'thickness')
         for si = 1:numel(ssmooth1)
           output.(sprintf('s%d%s',ssmooth1(si),measures{mi,1})) = ...
-            spm_io_BIDS(job.data,job,'surfpath','prefix',sprintf('s%dmm.mesh.%s.',ssmooth1(si),measures{mi,1}),'ext','.gii');
+            spm_io_BIDS(job.data,job,'surfdir','prefix',sprintf('s%dmm.mesh.%s.',ssmooth1(si),measures{mi,1}),'ext','.gii');
         end
       else
         for si = 1:numel(ssmooth2)
           output.(sprintf('s%d%s',ssmooth2(si),measures{mi,1})){fi} = ...
-            spm_io_BIDS(job.data,job,'surfpath','prefix',sprintf('s%dmm.mesh.%s.',ssmooth2(si),measures{mi,1}),'ext','.gii');
+            spm_io_BIDS(job.data,job,'surfdir','prefix',sprintf('s%dmm.mesh.%s.',ssmooth2(si),measures{mi,1}),'ext','.gii');
         end
       end
     end

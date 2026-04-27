@@ -21,7 +21,7 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
   
   if exist('rng','file') == 2, rng('default'); rng(0); else, rand('state',0); randn('state',0); end %#ok<RAND> 
   
-  mripath = cat_io_BIDS(job.channel(1).vols{subj},job,'mridir');
+  mridir = cat_io_BIDS(job.channel(1).vols{subj},job,'mridir');
   V = spm_vol(job.channel(n).vols{job.subj});
   vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
   
@@ -216,11 +216,11 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
 
       % write segmentation 
       if spmp0>1 && exist('vout','var') && isfield(vout,'Ycls') 
-        VF  = spm_vol(nfname); VF.fname = fullfile(mripath,['p0n' ff '.nii']); VF.dt(1) = 2; 
+        VF  = spm_vol(nfname); VF.fname = fullfile(mridir,['p0n' ff '.nii']); VF.dt(1) = 2; 
         Yp0 = single(vout.Ycls{1})/255*2 + single(vout.Ycls{2})/255*3 + single(vout.Ycls{3})/255;
         spm_write_vol(VF,Yp0);  
       elseif spmp0==0 && ix==numel(sampx) % remove spm mat file
-        delete(fullfile(mripath,['n' ff '_seg8.mat']));
+        delete(fullfile(mridir,['n' ff '_seg8.mat']));
       end
 
       %% combine low and high frequency filted images 
@@ -292,7 +292,7 @@ function [Ym,Ybg,WMth,bias] = cat_run_job_APP_SPMinit(job,tpm,ppe,n,ofname,nfnam
           if ~debug, clear Yp0; end
         else
           Pb  = char(job.extopts.brainmask);
-          Pbt = fullfile(mripath,['brainmask_' ff '.nii']);
+          Pbt = fullfile(mridir,['brainmask_' ff '.nii']);
           VF  = spm_vol(onfname); 
           VFa = VF; %if job.extopts.APP~=5, VFa.mat = Affine * VF.mat; end
           [Vmsk,Yb] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',struct('interp',3,'verb',0,'mask',-1));  %#ok<ASGLU>
@@ -337,19 +337,19 @@ Yoc(isnan(Yo)) = nan; % not sure if this is good
 
         % backup the bias corrected image
         if spmp0>0 
-          copyfile(nfname,fullfile(mripath,['mn' ff '_r' num2str(ix)+1 '.nii'])); 
+          copyfile(nfname,fullfile(mridir,['mn' ff '_r' num2str(ix)+1 '.nii'])); 
         end
         if exist(Pmn_r0,'file'), delete(Pmn_r0); end
         %%
         break
       else
-        movefile(fullfile(mripath,['mn' ff '.nii']),nfname); 
+        movefile(fullfile(mridir,['mn' ff '.nii']),nfname); 
       end
     try
     catch
       fprintf('\b\b\b\b\b\b\b\b\b(failed) ');   
-      if exist(fullfile(mripath,['mn' ff '.nii']),'file')
-        delete(fullfile(mripath,['mn' ff '.nii']));
+      if exist(fullfile(mridir,['mn' ff '.nii']),'file')
+        delete(fullfile(mridir,['mn' ff '.nii']));
       end
     end
     
@@ -364,7 +364,7 @@ Yoc(isnan(Yo)) = nan; % not sure if this is good
     end
   end
   if debug, cat_io_cmd('','g5','',job.extopts.verb-1,stime); end
-  Pmn = fullfile(mripath,['mn' ff '.nii']); 
+  Pmn = fullfile(mridir,['mn' ff '.nii']); 
   if exist(Pmn,'file'), delete(Pmn); end
 
   
