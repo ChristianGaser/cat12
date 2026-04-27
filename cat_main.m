@@ -832,7 +832,7 @@ if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
     %% createCS1 pipeline 
     [Yth1,S,Psurf,qa.subjectmeasures.EC_abs,qa.subjectmeasures.defect_size, qa.createCS] = ...
       cat_surf_createCS(VT,VT0,Ymix,Yl1,YMF,struct('verb',job.extopts.verb,'useprior',job.useprior, ...
-      'interpV',job.extopts.pbtres,'extract_pial_white',mod(job.extopts.SRP,10), ...
+      'interpV',job.extopts.pbtres,'extract_pial_white',mod(job.extopts.SRP,10),'pbtmethod','pbt2x', ... 
       'Affine',res.Affine,'surf',{surf}, 'inv_weighting',job.extopts.inv_weighting),job); 
   end
   
@@ -931,6 +931,13 @@ if job.output.surface
   qa.qualitymeasures.SurfaceDefectNumber      = qa.createCS.defects;
   qa.qualitymeasures.SurfaceIntensityRMSE     = qa.createCS.RMSE_Ym;
   qa.qualitymeasures.SurfacePositionRMSE      = qa.createCS.RMSE_Ypp;
+  try
+    qa.qualitymeasures.SurfaceIntensityRMSEwgc = qa.createCS.fullRMSE_Ym;
+    qa.qualitymeasures.SurfacePositionRMSEwgc  = qa.createCS.fullRMSE_Ypp;
+  catch
+    qa.qualitymeasures.SurfaceIntensityRMSEwgc = nan;
+    qa.qualitymeasures.SurfacePositionRMSEwgc  = nan;
+  end
   try
     qa.qualitymeasures.SurfaceAreaTopoError   = mean(qa.createCS.SATE); 
   catch
