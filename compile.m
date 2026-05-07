@@ -72,14 +72,21 @@ function varargout = compile(comp,test,verb)
     else
       mexflag=' -O -largeArrayDims COPTIMFLAGS=''-O3 -fwrapv -DNDEBUG''';
     end
-    % On Apple Silicon (maca64), MATLAB R2024a adds C++ MEX API linker flags
-    % (-Wl,-U,_mexCreateMexFunction etc.) that cause linking to fail for legacy
-    % C-style mexFunction in .cpp files. Use a custom mexopts to suppress this.
+    % On Apple Silicon (maca64), recent MATLAB clang++ mex options add C++ MEX
+    % API linker flags (-Wl,-U,_mexCreateMexFunction etc.). Legacy C-style
+    % mexFunction entry points in .cpp files can then fail to link, depending on
+    % the active MATLAB release and selected mex configuration. Detect this from
+    % the installed mex options file instead of hardcoding a release check.
     mexflag_cpp = mexflag;
     if strcmp(mexext,'mexmaca64')
       mexoptsfile = fullfile(catdir,'clang++_maca64_legacy.xml');
-      if exist(mexoptsfile,'file')
+      use_legacy_mexopts = cat_needs_legacy_maca64_mexopts();
+      if use_legacy_mexopts && exist(mexoptsfile,'file')
         mexflag_cpp = ['-f ''' mexoptsfile '''' mexflag];
+      elseif use_legacy_mexopts
+        warning('CAT:compile:MissingLegacyMexopts', ...
+          ['MATLAB arm64 clang++ mex options enable C++ MEX adapter exports for legacy .cpp MEX files, ' ...
+           'but the custom options file is missing: %s'], mexoptsfile);
       end
     end
     
@@ -588,4 +595,21 @@ function varargout = compile(comp,test,verb)
   if nargout>0, varargout{1}=ok; end
   if nargout>1, varargout{2}=s;  end  
   if nargout>2, varargout{3}=r;  end  
+end
+
+function use_legacy_mexopts = cat_needs_legacy_maca64_mexopts()
+  use_legacy_mexopts = true;
+
+  mexoptsfile = fullfile(matlabroot,'bin','maca64','mexopts','clang++_maca64.xml');
+  if ~exist(mexoptsfile,'file')
+    return
+  end
+
+  try
+    mexopts = fileread(mexoptsfile);
+    use_legacy_mexopts = contains(mexopts,'LINKEXPORTCPP') && ...
+      (contains(mexopts,'_mexCreateMexFunction') || contains(mexopts,'cppMexFunction.map'));
+  catch
+    use_legacy_mexopts = true;
+  end
 end

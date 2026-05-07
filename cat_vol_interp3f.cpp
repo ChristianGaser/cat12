@@ -613,21 +613,25 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
   const mwSize ND = mxGetNumberOfElements(X);
 
-  const float *pF = (float *)mxGetPr(F);
-  const float *pX = (float *)mxGetPr(X);
-  const float *pY = (float *)mxGetPr(Y);
-  const float *pZ = (float *)mxGetPr(Z);
-  float *pO = (float *)mxGetPr(plhs[0]);
+  const float *pF = static_cast<const float *>(mxGetData(F));
+  const float *pX = static_cast<const float *>(mxGetData(X));
+  const float *pY = static_cast<const float *>(mxGetData(Y));
+  const float *pZ = static_cast<const float *>(mxGetData(Z));
+  float *pO = static_cast<float *>(mxGetData(plhs[0]));
 
   if (Fx)
   {
 
-    const float x_low = mxGetPr(Fx)[0];
-    const float x_high = mxGetPr(Fx)[mxGetNumberOfElements(Fx) - 1];
-    const float y_low = mxGetPr(Fy)[0];
-    const float y_high = mxGetPr(Fy)[mxGetNumberOfElements(Fy) - 1];
-    const float z_low = mxGetPr(Fz)[0];
-    const float z_high = mxGetPr(Fz)[mxGetNumberOfElements(Fz) - 1];
+    const float *pFx = static_cast<const float *>(mxGetData(Fx));
+    const float *pFy = static_cast<const float *>(mxGetData(Fy));
+    const float *pFz = static_cast<const float *>(mxGetData(Fz));
+
+    const float x_low = pFx[0];
+    const float x_high = pFx[mxGetNumberOfElements(Fx) - 1];
+    const float y_low = pFy[0];
+    const float y_high = pFy[mxGetNumberOfElements(Fy) - 1];
+    const float z_low = pFz[0];
+    const float z_high = pFz[mxGetNumberOfElements(Fz) - 1];
 
     const float s_x = float(1 - N) / (x_low - x_high);
     const float s_y = float(1 - M) / (y_low - y_high);
