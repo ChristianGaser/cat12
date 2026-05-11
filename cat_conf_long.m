@@ -434,8 +434,8 @@ end
 function [dep,out,inputs] = vout_long2(job)
     inputs = cell(1, numel(job.subj));
 
-    mripath    = cat_io_BIDS(job.subj(1).mov, job, 'mripath');
-    surfpath   = cat_io_BIDS(job.subj(1).mov, job, 'surfpath');
+    mridir    = cat_io_BIDS(job.subj(1).mov, job, 'mridir');
+    surfdir   = cat_io_BIDS(job.subj(1).mov, job, 'surfdir');
         
     for i=1:numel(job.subj)
       %%
@@ -445,7 +445,7 @@ function [dep,out,inputs] = vout_long2(job)
         else
             [~,nam,ext,num] = spm_fileparts(job.subj(i).mov);
         end
-        out.subj(i).warps{1} = fullfile(mripath,['avg_y_', nam, ext, num]);
+        out.subj(i).warps{1} = fullfile(mridir,['avg_y_', nam, ext, num]);
 
         out.subj(i).files = cell(numel(cellstr(job.subj(i).mov)),1);
         m = numel(cellstr(job.subj(i).mov)); % number of scans of this subject
@@ -477,20 +477,20 @@ function [dep,out,inputs] = vout_long2(job)
               for ti = 1:size(tissue,1)
                 if isfield(job.output,tissue{ti,1}) && isfield(job.output.(tissue{ti,1}),tissue{ti,2}) && ...
                   any( job.output.(tissue{ti,1}).(tissue{ti,2}) == tissue{ti,3} )
-                  out.subj(i).(tissue{ti,4}){j,1} = fullfile(mripath,[(tissue{ti,5}), nam, (tissue{ti,6}), ext, num]);
+                  out.subj(i).(tissue{ti,4}){j,1} = fullfile(mridir,[(tissue{ti,5}), nam, (tissue{ti,6}), ext, num]);
                 end
               end
             end
             %%
             if isfield(job.output,'labelnative') && job.output.labelnative
-              out.subj(i).p0{j,1}   = fullfile(mripath,['p0r', nam, ext, num]);
+              out.subj(i).p0{j,1}   = fullfile(mridir,['p0r', nam, ext, num]);
             end
             if isfield(job.output.bias,'warped') && job.output.bias.warped
-              out.subj(i).wm{j,1}   = fullfile(mripath,['wmr', nam, ext, num]);
+              out.subj(i).wm{j,1}   = fullfile(mridir,['wmr', nam, ext, num]);
             end
             if job.output.surface
-              out.subj(i).surface{j,1}   = fullfile(surfpath,['lh.central.'  , nam, ext, num]);
-              out.subj(i).thickness{j,1} = fullfile(surfpath,['lh.thickness.', nam, ext, num]);
+              out.subj(i).surface{j,1}   = fullfile(surfdir,['lh.central.'  , nam, ext, num]);
+              out.subj(i).thickness{j,1} = fullfile(surfdir,['lh.thickness.', nam, ext, num]);
             end
 
           % for input
