@@ -239,7 +239,7 @@ function varargout = cat_vol_sanlm_file(job)
                 job.replaceNANandINF , job.outlier , job.addnoise , job.iterm , job.iter); 
         end
     elseif ~isempty(strfind(job.suffix,'PARA'))
-        if numel(job.NCstr)==1 && job.NCstr>=0 
+        if isscalar(job.NCstr) && job.NCstr>=0 
             job.suffix = sprintf('_NC%0.2f',job.NCstr); 
         elseif isinf(job.NCstr) && sign(job.NCstr)==-1
             job.prefix = sprintf('_NC%0.2f',3); 
@@ -258,6 +258,50 @@ function varargout = cat_vol_sanlm_file(job)
         return
     end
 
+    
+    % == prepare filtering of higher dimensions == 
+    % To filter higher dimentions, we just filter every 3D subvolume within the file.
+    [data1,id] = unique(spm_file(job.data,'number',''));
+    rerun1     = repmat( ~job.lazy, size(data1)) | cat_io_rerun( job.data , varargout{1} );
+    iszipped   = cellfun( @(x) strcmp(x,'gz') , spm_file( data1, 'ext' ) );
+    varargout1{1} = varargout{1}(id);
+    
+    % gunzip
+    for fi = numel(data1):-1:1
+      if iszipped(fi) && rerun1(fi) 
+        fprintf('  Gunzip %s', data1{fi}); 
+        try 
+          if ~exist(spm_file(data1{fi},'ext',''),'file'), gunzip( data1{fi} ); end
+          data1{fi} = spm_file(data1{fi},'ext',''); 
+          fprintf('\n'); 
+        catch
+%          data1{fi} = []; 
+          cat_io_cprintf('err',' failed! \n'); 
+        end
+      end
+    end
+
+    % prepare new image list for filtering
+    dimlim   = inf; % just for quick tests! 
+    data2    = {}; 
+    rerun2   = [];
+    data2nd  = [];
+    data1nd  = ones(size(data1)); 
+    for fi = 1:numel(data1)
+      Vfi    = spm_vol( data1{fi} ); % read full image
+      data1nd(fi) = min( dimlim, max( [  Vfi(:).n ] )); % size of the last dimention beyond the 3D case 
+      data2nd = [ data2nd ;  repmat( data1nd(fi) , data1nd(fi) , 1) ]; %#ok<AGROW>
+      rerun2  = [ rerun2 ; repmat( rerun1(fi) , data1nd(fi) , 1) ]; %#ok<AGROW>
+      data2   = [ data2 ; strcat( ...
+        repmat( data1(fi) , data1nd(fi), 1 ), ...
+        repmat( ','       , data1nd(fi), 1 ), ...
+        num2str( (1:data1nd(fi))' ) ) ]; %#ok<AGROW>
+    end
+    job.data0    = job.data; 
+    job.data     = data2; 
+    job.data1sz4 = data2nd; 
+
+    % load header 
     V  = spm_vol(char(job.data));
 
     % new banner
@@ -265,12 +309,25 @@ function varargout = cat_vol_sanlm_file(job)
     spm_clf('Interactive'); 
     spm_progress_bar('Init',numel(job.data),'SANLM-Filtering','Volumes Complete');
 
-    for i = 1:numel(job.data)
-      if ~job.lazy || cat_io_rerun( job.data{1} , varargout{1}{i} )
-        cat_vol_sanlm_filter(job,V,i);
+    for fi = 1:numel(job.data)
+      if rerun2(fi)
+        cat_vol_sanlm_filter(job,V,fi);
       end
     end
 
+    %% zip
+    for fi = 1:numel(job.data0)
+      if iszipped(fi) && rerun1(fi)
+        fprintf('  Zip %s', data1{fi}); 
+        % remove the unzipped version if the zipped version exist
+        if exist( data1{fi} ,'file') && exist( [data1{fi} '.gz'] ,'file'), delete( data1{fi}  ); end
+        % gzip the ouput if the input was zipped
+        gzip( spm_file( varargout1{1}{fi} ,'ext','') ); 
+        delete( spm_file( varargout1{1}{fi} ,'ext','') ); 
+        fprintf('\n'); 
+      end
+    end
+      
     if isfield(job,'process_index') && job.verb, fprintf('Done\n'); end
     spm_progress_bar('Clear');
 end
@@ -287,7 +344,7 @@ function [src2,NCstr] = cat_vol_sanlm_filter(job,V,i,src)
 
 
     [pth,nm,xt,vr] = spm_fileparts(deblank(V(i).fname)); %#ok<ASGLU>
-
+ 
     stime = clock; stimef = clock;
     vx_vol  = sqrt(sum(V(i).mat(1:3,1:3).^2));
 
@@ -300,6 +357,13 @@ function [src2,NCstr] = cat_vol_sanlm_filter(job,V,i,src)
     % get zero areas before filtering to consider skull-stripped data
     ind_zero = src == 0;
         
+    % in case of 2D input extend it temporary
+    isimg = 0; 
+    if ismatrix(src)
+      isimg = 1; 
+      src = repmat(src,[1,1,3]);
+    end 
+
     for im=1:1+job.iterm  
       % prevent NaN and INF
       if job.replaceNANandINF
@@ -538,7 +602,7 @@ function [src2,NCstr] = cat_vol_sanlm_filter(job,V,i,src)
                  (randn(size(src)) * job.addnoise.*sth/100);
           if ~debug, clear sth; end
         end
-        if numel(NCstr)==1 && ~debug, clear src srco; end
+        if isscalar(NCstr) && ~debug, clear src srco; end
         
         % rescue zero-values (i.e. for skull-stripped data)
         src2(ind_zero) = 0;  
@@ -548,17 +612,19 @@ function [src2,NCstr] = cat_vol_sanlm_filter(job,V,i,src)
         if exist('nanmsk','var'), src2(nanmsk) = nan; end
         if exist('infmsk','var'), src2(infmsk==-1) = -inf; src2(infmsk==1) = inf; end
         if job.verb>1 && (nargin>3 || NCstrr>0), cat_io_cprintf('g5',sprintf('  %5.0fs\n',etime(clock,stime))); end
+        if isimg, src2 = src2(:,:,2); end
           
         if nargin==4
           return; 
         end
         
-        % use only float precision
-        Vo(i).fname   = fullfile(pth,[job.prefix nm job.suffix '.nii' vr]);
+        %% use only float precision
+        Vo(i).fname   = fullfile(pth,[job.prefix nm job.suffix '.nii']);
         Vo(i).descrip = sprintf('%s SANLM filtered (NCstr=%-4.2f > %0.2f)',...
           V(i).descrip,job.NCstr(NCstri),abs(NCstr(NCstri)) + NCstrr);
-        Vo(i).dt(1)   = 16; % default - changes later if required 
-        if exist(Vo(i).fname,'file'); delete(Vo(i).fname); end
+        % don't change datatype high-dimentional data
+        if ~isfield(job,'data1sz4') || job.data1sz4(i)==1, Vo(i).dt(1) = 16; end % default - changes later if required 
+        if exist(Vo(i).fname,'file') && all(Vo(i).n==[1 1]); delete(Vo(i).fname); end
         spm_write_vol(Vo(i), src2);
         spm_progress_bar('Set',i);
         
@@ -620,7 +686,7 @@ function [src2,NCstr] = cat_vol_sanlm_filter(job,V,i,src)
             %  This is a long string but it loads the original and the filtered
             %  image for comparison (with  parameter settings)
             fprintf('%5.0fs, Output %s\n',etime(clock,stimef),...
-              spm_file(Vo(i).fname,'link',sprintf(...
+              spm_file( [Vo(i).fname , sprintf(',%d',max(Vo(i).n)) ] ,'link',sprintf(...
               ['spm_figure(''Clear'',spm_figure(''GetWin'',''Graphics'')); ' ...
                'spm_orthviews(''Reset''); ' ... remove old settings
                'ax = axes; set(ax,''Position'',[0 0 1 1]); axis off; hd = text(ax,0.01,0.99,''File: ' job.data{i} '''); ' ...
@@ -631,7 +697,7 @@ function [src2,NCstr] = cat_vol_sanlm_filter(job,V,i,src)
                parastr '}}); ', ... % the parameters
                'spm_orthviews(''AddContext'',ho); spm_orthviews(''AddContext'',hf); ', ... % add menu
                'spm_orthviews(''Zoom'',40);', ... % zoom in
-              ],V(i).fname)));
+              ],[V(i).fname , sprintf(',%d',max(V(i).n)) ] )));
         end
         
         
