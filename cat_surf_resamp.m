@@ -122,7 +122,7 @@ function vout = cat_surf_resamp(varargin)
   % ____________________________________________________________________
   
   % new banner
-  if isfield(job,'process_index') && job.process_index > 0, spm('FnBanner',mfilename); end
+  if isfield(job,'process_index') && job.verb, spm('FnBanner',mfilename); end
   
   % display something
   spm_clf('Interactive'); 
@@ -459,12 +459,12 @@ function vout = cat_surf_resamp(varargin)
   end
   
   
-  if isfield(job,'process_index')
+  if isfield(job,'process_index') && job.verb
     fprintf('Done\n'); 
   end
   
   if job.merge_hemi
-    if iscell(varargin{1}.data_surf) && iscell(varargin{1}.data_surf{1})
+    if iscell(varargin{1}.data_surf) && ~isempty(varargin{1}.data_surf) && iscell(varargin{1}.data_surf{1})
       n = cumsum(cellfun(@numel,varargin{1}.data_surf)); 
       a = [1 n+1]; a(end) = [];  
       for i=1:numel(varargin{1}.data_surf)
@@ -474,7 +474,7 @@ function vout = cat_surf_resamp(varargin)
       vout.sample(1).Psdata = Psdata; 
     end
   else
-    if iscell(varargin{1}.data_surf) && iscell(varargin{1}.data_surf{1})
+    if iscell(varargin{1}.data_surf) && ~isempty(varargin{1}.data_surf) && iscell(varargin{1}.data_surf{1})
       n = cumsum(cellfun(@numel,varargin{1}.data_surf)); 
       a = [1 n+1]; a(end) = [];  
       for i=1:numel(varargin{1}.data_surf)
