@@ -729,7 +729,7 @@ function varargout = cat_vol_qa201901x(action,varargin)
       if isfield(opt,'job') && isfield(opt.job,'extopts'), QAS.parameter.opts        = opt.job.extopts; end
       if exist('res','var')
         % add important SPM preprocessing variables
-        rf = {'Affine','Affine0','lkp','mn','vr','ll'}; 
+        rf = {'Affine','Affine0','lkp','mg','mn','vr','ll'}; 
         for rfi=1:numel(rf)
           if isfield(res,rf{rfi}), QAS.SPMpreprocessing.(rf{rfi}) = res.(rf{rfi}); end
         end
