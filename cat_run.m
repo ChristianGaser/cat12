@@ -39,6 +39,10 @@ function varargout = cat_run(job)
 %  is missed and if the same preprocessing options were used before.
 %  -----------------------------------------------------------------
 
+% Just reset the version value that was maybe updated.
+% Without reset the progress of each subject cannot be traced.
+cat_version('reset'); 
+
 % disable parallel processing for only one subject
 if isscalar(job.data), job.nproc = 0; end
 
