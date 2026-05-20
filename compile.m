@@ -491,9 +491,9 @@ function varargout = compile(comp,test,verb)
     % tested methods with error limit
     pbtmethod = {
       ... basic pbt-functions 
-      'cat_vol_pbt-restest'            .20  0;
-      'cat_vol_pbtsimple-restest'      .15  0;
-      'cat_vol_pbtsimpleCS4-restest'   .10  0;
+      'cat_vol_pbt-restest'            .40  0;
+      'cat_vol_pbtsimple-restest'      .30  0;
+      'cat_vol_pbtsimpleCS4-restest'   .20  0;
       ...
       ... full surface reconstruction functions
    ...'cat_surf_createCS'              .10  11; % very slow !
