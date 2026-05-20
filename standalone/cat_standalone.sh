@@ -250,15 +250,17 @@ run_cat ()
   # create temporary batch file
   TMP=/tmp/cat_$$.m
 
-  # copy everything except rows with UNDEFINED to temp file 
-  grep -v "<UNDEFINED>" $BATCHFILE > $TMP
-  
+  # copy everything except rows with UNDEFINED to temp file
+  # (-a forces text mode so a batch file that grep might misdetect as binary,
+  #  e.g. when extracted from the MCR CTF archive, is still processed)
+  grep -a -v "<UNDEFINED>" $BATCHFILE > $TMP
+
   if [ ! "$count" -eq "0" ]  ; then
     # extract parameter name of data structure (1st occurance of "<UNDEFINED>")
-    data=`grep -m 1 "<UNDEFINED>" $BATCHFILE | cut -f1 -d'='| sed -e 's,%,,'`
+    data=`grep -a -m 1 "<UNDEFINED>" $BATCHFILE | cut -f1 -d'='| sed -e 's,%,,'`
 
     # surface data need an additional curly bracket
-    if grep -q -e "\.datalong" $BATCHFILE ; then
+    if grep -a -q -e "\.datalong" $BATCHFILE ; then
       echo "$data = {{" >> $TMP
     else
       echo "$data = {" >> $TMP
@@ -267,13 +269,13 @@ run_cat ()
   
   # extract parameter name of optional argument(s) (additional occurances of "<UNDEFINED>")
   if [ -n "$ARG1" ]; then # ARG1 defined?
-    param1=`grep -m $c2 "<UNDEFINED>" $BATCHFILE | tail -n 1 | cut -f1 -d'=' | sed -e 's,%,,'`
+    param1=`grep -a -m $c2 "<UNDEFINED>" $BATCHFILE | tail -n 1 | cut -f1 -d'=' | sed -e 's,%,,'`
     # extract parameter name of optional argument (3rd occurance of "<UNDEFINED>")
     if [ -n "$ARG2" ]; then # ARG2 defined?
-      param2=`grep -m $c3 "<UNDEFINED>" $BATCHFILE | tail -n 1 | cut -f1 -d'=' | sed -e 's,%,,'`
+      param2=`grep -a -m $c3 "<UNDEFINED>" $BATCHFILE | tail -n 1 | cut -f1 -d'=' | sed -e 's,%,,'`
       # extract parameter name of optional argument (4th occurance of "<UNDEFINED>")
       if [ -n "$ARG3" ]; then # ARG3 defined?
-        param3=`grep -m $c4 "<UNDEFINED>" $BATCHFILE | tail -n 1 | cut -f1 -d'=' | sed -e 's,%,,'`
+        param3=`grep -a -m $c4 "<UNDEFINED>" $BATCHFILE | tail -n 1 | cut -f1 -d'=' | sed -e 's,%,,'`
       fi
     fi
   fi
@@ -299,7 +301,7 @@ run_cat ()
 
   if [ ! "$count" -eq "0" ]  ; then
     # surface data need an additional curly bracket
-    if grep -q -e "\.datalong" $BATCHFILE ; then
+    if grep -a -q -e "\.datalong" $BATCHFILE ; then
       echo "     }};" >> $TMP
     else
       echo "     };" >> $TMP

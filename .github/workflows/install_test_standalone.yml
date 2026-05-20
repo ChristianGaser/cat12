@@ -304,8 +304,11 @@ jobs:
         shell: bash
         run: |
           SPMROOT=$(pwd)/cat_standalone
-          BATCH=$(find cat_standalone -name "cat_standalone_segment_enigma.m" -type f | head -n 1)
-          CAT_SH=$(find cat_standalone -name "cat_standalone.sh" -type f | head -n 1)
+          # Use the top-level script copies, NOT the ones embedded in the
+          # extracted MCR CTF archive (spm25_mcr/...), which grep can misdetect
+          # as binary and turn the generated batch into an empty job.
+          BATCH=$(find cat_standalone -name "cat_standalone_segment_enigma.m" -type f -not -path "*/spm25_mcr/*" | head -n 1)
+          CAT_SH=$(find cat_standalone -name "cat_standalone.sh" -type f -not -path "*/spm25_mcr/*" | head -n 1)
 
           if [ -z "$BATCH" ]; then
             echo "ERROR: cat_standalone_segment_enigma.m not found"
@@ -341,11 +344,12 @@ jobs:
           done
 
           if [ "$found" -eq 0 ]; then
-            echo "WARNING: No standard CAT output files found in current directory"
-            echo "Checking all nii files created:"
+            echo "ERROR: No CAT output files found - standalone segmentation produced no results"
+            echo "Files created after the input image:"
             find . -name "*.nii" -newer single_subj_T1.nii 2>/dev/null || echo "No new .nii files"
             find . -name "*.gii" 2>/dev/null || echo "No .gii files"
             find . -name "*.xml" -path "*/report/*" 2>/dev/null || echo "No report XMLs"
+            exit 1
           fi
 
           echo "Test completed successfully"
