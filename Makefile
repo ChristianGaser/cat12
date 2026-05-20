@@ -2,7 +2,7 @@
 #
 # $Id$
 
-.PHONY: clean install zip docs update cp_binaries archive check_pipeline release standalone
+.PHONY: clean install zip docs update cp_binaries archive check_pipeline release standalone tests
 
 OLDVERSION="CAT26.0.rc2"
 NEWVERSION="CAT26.0.rc3"
@@ -15,6 +15,10 @@ TARGET2=/Volumes/UltraMax/spm12/toolbox/CAT
 TARGET4=/Users/gaser/spm/spm-octave/toolbox/CAT
 
 PRECOMPILED=/Users/gaser/matlab/Matlab_standalone
+
+# matlab binary and SPM path used by the "tests" target (override on the command line)
+MATLAB ?= matlab
+SPMDIR ?= /Users/gaser/spm/spm12
 
 STARGET3_HOST=paris.biomag.uni-jena.de
 STARGET3_FOLDER=/home/gaser/spm12/toolbox/CAT
@@ -76,7 +80,7 @@ install4: copy_longmode
 # print available commands
 help:
 	-@echo Available commands:
-	-@echo clean install zip docs update cp_binaries archive check_pipeline release standalone
+	-@echo clean install zip docs update cp_binaries archive check_pipeline release standalone tests
 	-@echo "cp_binaries usage: make cp_binaries [BIN=CAT_MyBinary]"
 
 #make html documentation
@@ -128,32 +132,35 @@ checklist:
 	'' \
 	'Checklist for testing CAT12 in order to release' \
 	'-----------------------------------------------' \
-	'1. Check Pipeline' \
+	'1. Make unittests' \
+	'   make tests' \
+	'' \
+	21. Check Pipeline' \
 	'   make check_pipeline' \
 	'   check_pipeline.sh -p pid' \
 	'   check_all_matrix.sh' \
 	'   check_pipeline_ROIs -> check render views check_r*matrix.png and histograms' \
 	'   check_pipeline_homogeneity -> check sample homogeneity' \
 	'' \
-	'2. Check Batches and Dependencies' \
+	'3. Check Batches and Dependencies' \
 	'   cd check_pipeline' \
 	'   batch_volume_pipeline' \
 	'   batch_surface_pipeline' \
 	'' \
-	'3. Check Expert Mode' \
+	'4. Check Expert Mode' \
 	'   cat12('\''expert'\'')' \
 	'   CAT12 GUI Segment' \
 	'' \
-	'4. Check Simple Preprocessing' \
+	'5. Check Simple Preprocessing' \
 	'   SPM->Tools->CAT12->CAT12 Simple Preprocessing' \
 	'' \
-	'5. Create and Check Standalone Versions' \
+	'6. Create and Check Standalone Versions' \
 	'   https://github.com/ChristianGaser/cat12/actions/workflows/install_test_standalone.yml' \
 	'' \
-	'6. Build CAT-Surface binaries and apply make cp_binaries to copy them' \
+	'7. Build CAT-Surface binaries and apply make cp_binaries to copy them' \
 	'   https://github.com/ChristianGaser/CAT-Surface/actions/workflows/binaries.yml' \
 	'' \
-	'7. Check Skull-Stripping if Pipeline Changed' \
+	'8. Optionally check Skull-Stripping if Pipeline Changed' \
 	'   cat12_all.m in /Volumes/UltraMax/validate_skullstripping_withT12' \
 	'   calc_kappa_c0_SPM12_T12.m' \
 	'' \
@@ -175,6 +182,12 @@ archive:
 	-@test ! -d cat12 || rm -rf cat12
 	-@test ! -d ${TARGET} || rm -rf ${TARGET}
 	-@read -p "Type release number (3 or 4 digits), followed by [ENTER]:" ver; unzip cat12_r$${ver}.zip; cp -R cat12 ${TARGET}
+
+# run fast unit and compiled-function tests on the working copy
+# (no image data required; needs SPM at ${SPMDIR})
+tests:
+	-@echo Running CAT12 unit and mex tests
+	@${MATLAB} -nodisplay -nosplash -batch "addpath('${SPMDIR}'); cd('${CURDIR}'); ok1 = compile(0,1,2); [ok2,~] = cat_tst_unittests(1); if ~(ok1 && ok2), error('CAT12 tests failed'); end; disp('All CAT12 tests passed.')"
 
 # run check pipeline
 check_pipeline: update install
