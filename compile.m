@@ -496,19 +496,20 @@ function varargout = compile(comp,test,verb)
       'cat_vol_pbtsimpleCS4-restest'   .20  0;
       ...
       ... full surface reconstruction functions
-   ...'cat_surf_createCS'              .10  11; % very slow !
-   ...'cat_surf_createCS'              .10  22;
-   ...'cat_surf_createCS'              .10  24;
-   ...'cat_surf_createCS'              .10  25;
-      'cat_surf_createCS'              .10  40;
-      'cat_surf_createCS'              .10  42;
+      'cat_surf_createCS'              .10  11; 
+      ...'cat_surf_createCS'              .10  22; % not running
+      'cat_surf_createCS'              .10  23;
+      'cat_surf_createCS'              .10  24;
+      'cat_surf_createCS'              .10  25;
+      ...'cat_surf_createCS'              .10  40; % not running without update 
+      ...'cat_surf_createCS'              .10  42; % not running without update 
     };
   
     % rescale function with basic offset m and interpolation factor i dependend offset n
     rescale = @(Y,mn,i)  max(0,min(10,(Y>.5)  .* (Y  + mn(1) + mn(2)*(1 / 2^(i)) )));
     
     % spherical test case
-    spheresz = [25 5.22 2.42]; % vol-size, innerradius thickness
+    spheresz = [25+10 5.22+5 2.42]; % vol-size, innerradius thickness
     dsphere  = zeros(repmat(spheresz(1),1,3),'single');
     dsphere( ceil(spheresz(1)/2), ceil(spheresz(1)/2), ceil(spheresz(1)/2) ) = 1;
     dsphered = cat_vbdist(dsphere); 
