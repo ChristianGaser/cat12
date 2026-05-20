@@ -419,7 +419,7 @@ function varargout = compile(comp,test,verb)
     r(ni)       = rms(d{ni}(d1==1)) - 5.5; 
     s(ni)       = r(ni)<0.05;
  
-    
+
     %% PBT cortical thickness on known-thickness slabs
     %  Build PVE-graded slabs (CSF=1, GM=2, WM=3) with K GM voxels on each
     %  side of a WM core and check that the measured GM thickness tracks the
@@ -433,7 +433,8 @@ function varargout = compile(comp,test,verb)
     n{ni}  = 'cat_vol_pbt';
     Sp = 28; wmh = 4; K1 = 4; K2 = 6;          % true GM thickness difference = 2 voxel
     vol1 = ones(Sp,Sp,Sp,'single'); vol2 = vol1; cc = round(Sp/2);
-    vol1(cc-wmh:cc+wmh,:,:) = 3;                       vol2(cc-wmh:cc+wmh,:,:) = 3;
+    vol1(cc-wmh:cc+wmh,:,:) = 3;                       
+    vol2(cc-wmh:cc+wmh,:,:) = 3;
     vol1(cc-wmh-K1:cc-wmh-1,:,:) = 2; vol1(cc+wmh+1:cc+wmh+K1,:,:) = 2;
     vol2(cc-wmh-K2:cc-wmh-1,:,:) = 2; vol2(cc+wmh+1:cc+wmh+K2,:,:) = 2;
     vol1(cc-wmh-K1-1,:,:) = 1.5; vol1(cc+wmh+K1+1,:,:) = 1.5;   % CSF/GM PVE layer
@@ -476,6 +477,176 @@ function varargout = compile(comp,test,verb)
     if verb>2
       fprintf('   PBT interp invariance: native=%0.2f, 2x=%0.2f, reldiff=%0.3f\n',mtn,mti,r(ni));
     end
+
+
+    %% test interpolation invariance 
+    %  ------------------------------------------------------------------------
+    %  Main idea is that the thickness estimation should be similar regardless
+    %  of the interpolation of the input data.
+    %  However, there are some offsets could be used also in cat_surf_createCS*
+    %  ------------------------------------------------------------------------
+    %    ds('d2','',1,d5/2,(Ygmti)/5,(Ygmt)/5,Yppi,5)
+    %    ds('d2','',1,d5/2,Ycsfdi/3,Ywmdi/3,Yppi,5)
+    
+    % tested methods with error limit
+    pbtmethod = {
+      ... basic pbt-functions 
+      'cat_vol_pbt-restest'            .20  0;
+      'cat_vol_pbtsimple-restest'      .15  0;
+      'cat_vol_pbtsimpleCS4-restest'   .10  0;
+      ...
+      ... full surface reconstruction functions
+   ...'cat_surf_createCS'              .10  11; % very slow !
+   ...'cat_surf_createCS'              .10  22;
+   ...'cat_surf_createCS'              .10  24;
+   ...'cat_surf_createCS'              .10  25;
+      'cat_surf_createCS'              .10  40;
+      'cat_surf_createCS'              .10  42;
+    };
+  
+    % rescale function with basic offset m and interpolation factor i dependend offset n
+    rescale = @(Y,mn,i)  max(0,min(10,(Y>.5)  .* (Y  + mn(1) + mn(2)*(1 / 2^(i)) )));
+    
+    % spherical test case
+    spheresz = [25 5.22 2.42]; % vol-size, innerradius thickness
+    dsphere  = zeros(repmat(spheresz(1),1,3),'single');
+    dsphere( ceil(spheresz(1)/2), ceil(spheresz(1)/2), ceil(spheresz(1)/2) ) = 1;
+    dsphered = cat_vbdist(dsphere); 
+    dsphere  = 3 - max(0,min(1,dsphered - sum(spheresz(2:3))-.5)) - max(0,min(1,dsphered - spheresz(2)-.5));
+    dbar     = zeros(repmat(spheresz(1),1,3),'single');
+    dbar( ceil(spheresz(1)/2), ceil(spheresz(1)/2):end, :) = 1;
+    dbard    = cat_vbdist(dbar); 
+    dbar     = 1 + max(0,min(1,dbard - spheresz(3)+0.25)) + max(0,min(1,dbard+.5));
+    dsphere2 = min(dsphere,dbar);
+
+    %% loop over methods (and testcases)
+    for pbti = 1:size(pbtmethod,1)
+      ni           = ni + 1;
+      if pbtmethod{pbti,3} > 0
+        n{ni}      = sprintf('%s%0.0f',pbtmethod{pbti,1},pbtmethod{pbti,3});      
+      else
+        n{ni}      = pbtmethod{pbti,1};      
+      end
+      ip           = 1;    % interpolation factor
+      distfunct    = 1;    % eidist (=1) is standard, but the simple vbdist is a nice comparison and test 
+                           % only 'cat_vol_pbt-restest'
+      Yb = ones(size(d2)); Yb(2:end-1,2:end-1,2:end) = 0; 
+      
+      %% testsets
+      clear rt rmsgmt rmsgmti
+      for casei = 1:4
+        %% select data
+        switch casei
+          case 1, dx = d2+1; gmt=4 + .8 + .8;    % very simple case with 4 full voxel and 2 PVE voxels with 1.8 and 2.2 what is .8
+          case 2, dx = d5+1; gmt=2;              % complex sulcus case
+          case 3, dx = dsphere;  gmt=spheresz(3); 
+          case 4, dx = dsphere2; gmt=spheresz(3); 
+        end
+        dxa = cat_vol_approx(dx); dx(isnan(dx))=dxa(isnan(dx)); % have to assume that NANs were replaced before
+        %dx  = interp3(dx,ip,'cubic');  gmt = gmt*2;  % 'linear' (default) | 'nearest' | 'cubic' | 'spline' | 'makima'
+        dxi = interp3(dx,ip,'cubic');
+       
+        %% thickness and position estimation with the different pbtmethod
+        switch pbtmethod{pbti} 
+          case 'cat_vol_pbt-restest'
+            if distfunct  % default eikonal distance
+              [Ygmt ,Ypp ] = cat_vol_pbt(dx,  struct('verb',0,'method','pbt2x')); 
+              [Ygmti,Yppi] = cat_vol_pbt(dxi, struct('resV',1/2^ip,'verb',0,'method','pbt2x'));
+              mn = [1 -0.5]; %[1.5 -.5]; % offset correction
+            else % simple voxel distance
+              [Ygmt ,Ypp ] = cat_vol_pbt(dx,  struct('verb',0,'method','pbt2x','dmethod','vbdist'));
+              [Ygmti,Yppi] = cat_vol_pbt(dxi, struct('resV',1/2^ip,'verb',0,'method','pbt2x','dmethod','vbdist'));
+              mn = [0 0]; % offset correction
+            end
+  
+          case 'cat_vol_pbtsimple-restest'
+            [Ygmt ,Ypp ] = cat_vol_pbtsimple(dx,  [1 1 1]); 
+            [Ygmti,Yppi] = cat_vol_pbtsimple(dxi, [1 1 1]/2^ip);
+            mn = [0.5 -0.25]; % offset correction
+  
+          case 'cat_vol_pbtsimpleCS4-restest'
+            [Ygmt ,Ypp ] = cat_vol_pbtsimpleCS4(dx,  [1 1 1]); 
+            [Ygmti,Yppi] = cat_vol_pbtsimpleCS4(dxi, [1 1 1]/2^ip);
+            mn = [0 0]; % offset correction
+             
+          case {'cat_surf_createCS'}
+            mn = [0 0]; 
+            if casei<=3, continue; end
+
+            %%
+            %pbti = 4;
+            fprintf('\n===CS%02d===',pbtmethod{pbti,3});
+            for di = 0:1
+              switch di 
+                case 0, Y = dx;  res = 1; 
+                case 1, Y = dxi; res = 1/2^ip;
+              end
+            
+              % create image
+              fname     = fullfile(tempdir,'compile.nii'); 
+              N         = nifti;
+              N.dat     = file_array(fname,size(Y),...
+                           [spm_type('float32') spm_platform('bigend')],0,1,0);
+              N.mat     = spm_matrix([ round(size(Y)), 0 0 0,  repmat(res,1,3), 0 0 0]);  
+              N.mat0    = N.mat;
+              N.descrip = 'testimage';
+              create(N);
+              N.dat(:,:,:) = Y;
+  
+              V   = spm_vol(fname); 
+              opt = struct('trans',struct(), 'interpV',.5, 'SRP',mod(pbtmethod{pbti,3},10), ...
+                      'surf',{{'lh'}}, 'verb', pbtmethod{pbti,3} < 20); 
+              job = struct('inv_weighting',0, 'BIDS',cat_io_BIDS(fname,cat_get_defaults), 'subj',1 ,...
+                      'extopts', cat_get_defaults('extopts')); 
+  
+              if pbtmethod{pbti,3} >= 40
+                 Ygmtt = cat_surf_createCS4(V,V, Y/3,Y/3, Y>0,Y>3,Y>1, opt,job);
+              elseif pbtmethod{pbti,3} >= 20
+                 Ygmtt = cat_surf_createCS2(V,V, Y/3, Y>0,Y<0,Y<1, opt,job);
+              else 
+                % this takes some minutes!
+                Ygmtt = cat_surf_createCS(V,V, Y/3, Y>0,Y<0, opt,job);
+              end
+
+              switch di 
+                case 0, Ygmt  = Ygmtt; 
+                case 1, Ygmti = Ygmtt;
+              end
+              clear Ygmtt;
+              
+              %% close figure
+              if verb<3, close(gcf); end
+            end
+        end 
+  
+        %% offset correction
+        Ygmt  = rescale(Ygmt,  mn, 1);
+        Ygmti = rescale(Ygmti, mn, ip);
+  
+        % evaluation 
+        Ytr  = round(dx)==2  & Ygmt>0;
+        Ytri = round(dxi)==2 & Ygmti>0; 
+        rt(casei) = rms( (cat_stat_nanmedian(Ygmt(Ytr(:))) - cat_stat_nanmedian(Ygmti(Ytri(:))) ) / gmt );  
+        rmsgmt(casei) = cat_stat_nanmean(Ygmt(Ytr(:)>0) - gmt); 
+        rmsgmti(casei) = cat_stat_nanmean(Ygmti(Ytri(:)>0) - gmt); 
+
+        if verb>2 % just for debuging
+          %%
+          if casei==1, fprintf('\n'); end
+          ds('d2','',1,dx/3,Ygmt/(gmt*2) .* Ytr,dxi/3,Ygmti/(gmt*2) .* Ytri,round(size(dx)*2/3))
+          fprintf('%40s-testcase%d: rt=%0.4f, GMTE/GMTEi = %+0.4f / %+0.4f\n', n{ni}, casei, rt(casei), ...
+            cat_stat_nanmean(Ygmt(Ytr(:)>0) - gmt),  cat_stat_nanmean(Ygmti(Ytri(:)>0) - gmt));
+        end
+      end  
+      r(ni) = cat_stat_nanmean(rt); 
+      s(ni) = r(ni) < pbtmethod{pbti,2};
+      if verb>2 
+        fprintf('%50s: rt=%0.4f, GMTE/GMTEi = %+0.4f / %+0.4f\n', n{ni}, r(ni) , ...
+              cat_stat_nanmean(rmsgmt),  cat_stat_nanmean(rmsgmti));
+      end         
+    end
+
+
 
     %% interpolation
     ni         = ni + 1;
@@ -578,10 +749,10 @@ function varargout = compile(comp,test,verb)
       fprintf('\n\nTest of compiled c-functions:\nThese are amplified tests with RMS values as rough approximation!\n'); 
       for si=1:numel(s)
         if s(si) 
-          cat_io_cprintf([0.0 0.6 0.0],sprintf('%4d)  RMS = % 05.2f;  Test of %20s successful!\n',...
+          cat_io_cprintf([0.0 0.6 0.0],sprintf('%4d)  RMS = % 05.2f;  Test of %30s successful!\n',...
           si,r(si),['"' n{si} '"'])); 
         else
-          cat_io_cprintf([0.6 0.0 0.0],sprintf('%4d)  RMS = % 05.2f;  Test of %20s failed!\n',...
+          cat_io_cprintf([0.6 0.0 0.0],sprintf('%4d)  RMS = % 05.2f;  Test of %30s failed!\n',...
             si,r(si),['"' n{si} '"']));
         end
       end
