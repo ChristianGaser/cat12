@@ -304,11 +304,11 @@ jobs:
         shell: bash
         run: |
           SPMROOT=$(pwd)/cat_standalone
-          BATCH=$(find cat_standalone -name "cat_standalone_segment.m" -type f | head -n 1)
+          BATCH=$(find cat_standalone -name "cat_standalone_segment_enigma.m" -type f | head -n 1)
           CAT_SH=$(find cat_standalone -name "cat_standalone.sh" -type f | head -n 1)
 
           if [ -z "$BATCH" ]; then
-            echo "ERROR: cat_standalone_segment.m not found"
+            echo "ERROR: cat_standalone_segment_enigma.m not found"
             exit 1
           fi
           if [ -z "$CAT_SH" ]; then
