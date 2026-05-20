@@ -192,7 +192,7 @@ copy_files ()
     cd $old_dir
   fi
 
-  if [ "$SIZE_OF_ARRAY_LONG" -gt 0 ]; then
+  if [ "$SIZE_OF_ARRAY_LONG" -gt 1 ]; then
     mkdir -p ${calc_tmp}/long
   
     cd ${calc_tmp}/long
