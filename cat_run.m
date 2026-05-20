@@ -1398,12 +1398,18 @@ end
 
 % CAT report XML file
 % ----------------------------------------------------------------------
+% In headless mode (no display/Java) the PDF and JPG reports are not
+% created by cat_main_reportfig, so they must not be added to the SPM
+% dependency list to avoid misleading "file does not exist" warnings.
+hasdisplay = ~strcmpi(spm_check_version,'octave') && usejava('jvm') && feature('ShowFigureWindows') && usejava('awt');
 catroi = cell(0,1);
 for j=1:n
     catxml{j,1}       = fullfile(BIDS(j).reportdir,['cat_',parts{j,2},'.xml']);
     catlog{j,1}       = fullfile(BIDS(j).reportdir,['catlog_',parts{j,2},'.txt']);
-    catreportpdf{j,1} = fullfile(BIDS(j).reportdir,['catreport_',parts{j,2},'.pdf']);
-    catreportjpg{j,1} = fullfile(BIDS(j).reportdir,['catreportj_',parts{j,2},'.jpg']);
+    if hasdisplay
+      catreportpdf{j,1} = fullfile(BIDS(j).reportdir,['catreport_',parts{j,2},'.pdf']);
+      catreportjpg{j,1} = fullfile(BIDS(j).reportdir,['catreportj_',parts{j,2},'.jpg']);
+    end
 end
 
 
