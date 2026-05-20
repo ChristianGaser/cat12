@@ -850,10 +850,9 @@ if all( [job.output.surface>0  job.output.surface<9  ] ) || ...
     % Use VT0 (original input) to avoid doubling of derivatives paths
     % that occurs when VT (denoised file in derivatives/mri/) is used.
     Psatlas_lh   = job.extopts.satlas(  [job.extopts.satlas{:,4}]>0 , 2);
-    Pthick_lh{1} = cat_io_BIDS( job.BIDS, 'surfdir', 'prefix', 'lh.thickness', 'ext', ''); 
-
-    cat_surf_surf2roi(struct('cdata',{{Pthick_lh}},'rdata',{Psatlas_lh}));
-
+    Pthick_lh{1} = cat_io_BIDS( job.BIDS(job.subj), 'surfdir', 'prefix', 'lh.thickness.', 'ext', ''); 
+  
+    cat_surf_surf2roi(struct('cdata',{{Pthick_lh}},'rdata',{Psatlas_lh},'job',job));
     fprintf('%5.0fs\n',etime(clock,stime2));
   end
   
