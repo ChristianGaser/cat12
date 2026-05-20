@@ -44,5 +44,6 @@ check_pipeline/
 /private
 /cattest
 /templates_animals_internal
+.refact
 
 debug_*.mat
