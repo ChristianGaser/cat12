@@ -88,7 +88,7 @@ try
   job.data = cellstr(names);
   job.nproc = 0;
   if ~isfield(job.output,'ROImenu') || ~isfield(job.output.ROImenu,'atlases')
-    job.output.ROImenu.atlases = job.output.atlas;
+    job.output.ROImenu.atlases = job.output.atlases;
   end
   if ~isfield(job.output.ROImenu.atlases,'ownatlas')
     job.output.ROImenu.atlases.ownatlas = {''};

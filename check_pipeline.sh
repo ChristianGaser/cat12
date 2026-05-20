@@ -386,7 +386,7 @@ postprocess ()
   
         # grep for Vgm and update csv file
         # check first for keyword neuromorphometrics and print next 200 lines
-        Vgm=`grep -A200 "<neuromorphometrics" $label |grep Vgm | sed -e 's/;/,/g'|cut -f2 -d"["|cut -f1 -d"]"`
+        Vgm=`grep -A150 "<neuromorphometrics" $label |grep Vgm | sed -e 's/;/,/g'|cut -f2 -d"["|cut -f1 -d"]"`
         if [ -n "$Vgm" ]; then
           # add entry to csv file and sort and only keep unique lines
           echo "${revision_cat},${Vgm}" >> ${subj}_Vgm.csv
@@ -396,7 +396,7 @@ postprocess ()
         
         # grep for Vcsf and update csv file
         # check first for keyword neuromorphometrics and print next 200 lines
-        Vcsf=`grep -A200 "<neuromorphometrics" $label |grep Vcsf | sed -e 's/;/,/g'|cut -f2 -d"["|cut -f1 -d"]"`
+        Vcsf=`grep -A150 "<neuromorphometrics" $label |grep Vcsf | sed -e 's/;/,/g'|cut -f2 -d"["|cut -f1 -d"]"`
         if [ -n "$Vcsf" ]; then
           # add entry to csv file and sort and only keep unique lines
           echo "${revision_cat},${Vcsf}" >> ${subj}_Vcsf.csv
@@ -406,8 +406,8 @@ postprocess ()
   
         # grep for thickness and update csv file
         # check first for keyword neuromorphometrics and print next 200 lines
-        thickness=`grep -A200 "<aparc_DK40" $labels |grep thickness | sed -e 's/\ /,/g' -e 's/;/,/g'|cut -f2 -d"["|cut -f1 -d"]"`
-        thickness=`grep -A200 "<aparc_DK40" $labels |grep thickness | sed -e 's/;/,/g' -e 's/;/,/g'|cut -f2 -d"["|cut -f1 -d"]"`
+        thickness=`grep -A150 "<aparc_DK40" $labels |grep thickness | sed -e 's/\ /,/g' -e 's/;/,/g'|cut -f2 -d"["|cut -f1 -d"]"`
+        thickness=`grep -A150 "<aparc_DK40" $labels |grep thickness | sed -e 's/;/,/g' -e 's/;/,/g'|cut -f2 -d"["|cut -f1 -d"]"`
         if [ -n "$thickness" ]; then
           # add entry to csv file and sort and only keep unique lines
           echo "${revision_cat},${thickness}" >> ${subj}_thickness.csv
