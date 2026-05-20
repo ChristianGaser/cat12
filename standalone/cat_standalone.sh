@@ -14,6 +14,10 @@
 version='cat_standalone.sh $Id$'
 
 cwd=$(dirname "$0")
+# if a relative path was given add current folder to name
+if [ "$cwd" == "." ]; then 
+   cwd=$(pwd)
+fi
 
 if [ ! -n "$SPMROOT" ]; then
   SPMROOT=$(dirname "${cwd}")

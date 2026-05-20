@@ -18,7 +18,7 @@ cwd=$(dirname "$0")
 
 # if a relative path was given add current folder to name
 if [ "$cwd" == "." ]; then 
-   cwd=$(pwd); 
+   cwd=$(pwd)
 fi
 
 cat12_dir=$cwd

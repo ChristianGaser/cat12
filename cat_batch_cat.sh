@@ -15,6 +15,10 @@
 
 matlab=matlab # you can use other matlab versions by changing the matlab parameter
 cwd=$(dirname "$0")
+# if a relative path was given add current folder to name
+if [ "$cwd" == "." ]; then 
+   cwd=$(pwd)
+fi
 cat12_dir=$cwd
 spm12=$(dirname "$cwd")
 spm12=$(dirname "$spm12")

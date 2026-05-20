@@ -14,6 +14,10 @@
 ########################################################
 
 cwd=$(dirname "$0")
+# if a relative path was given add current folder to name
+if [ "$cwd" == "." ]; then 
+   cwd=$(pwd)
+fi
 matlab=matlab     # you can use other matlab versions by changing the matlab parameter
 display=0         # use nodisplay option for matlab or not
 LOGDIR=$PWD
