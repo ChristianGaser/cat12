@@ -50,6 +50,11 @@ function varargout = cat_tst_unittests(verb)
     'cat_surf_info:selftest'          @t_surf_info_selftest
     'cat_surf_rename:dataname'        @t_surf_rename_dataname
     'cat_io_contains:basic'           @t_contains_basic
+    'cat_io_BIDS:detectBIDS'          @t_bids_detect
+    'cat_io_BIDS:detectNonBIDS'       @t_bids_detect_nonbids
+    'cat_io_BIDS:selftest'            @t_bids_selftest
+    'cat_io_BIDS:selftest_long'       @t_bids_selftest_long
+    'cat_io_BIDS:selftest_nonbidsAuto' @t_bids_selftest_nonbids_auto
     % --- config / dependency integrity ---------------------------------
     'tbx_cfg_cat:builds'              @t_tbx_cfg_cat
     'cat_get_defaults:keysExist'      @t_defaults_keys
@@ -190,6 +195,39 @@ function tf = t_contains_basic
   tf = cat_io_contains('hello world','world') && ...
        ~cat_io_contains('abc','x') && ...
         cat_io_contains('Hello','hello','ignoreCase',true);
+end
+
+function tf = t_bids_detect
+% a canonical BIDS file is recognised and its entities are parsed
+  job.extopts.mkBIDSdir = 0; job.extopts.verboseBIDS = 0; B = []; %#ok<STRNU> (job used in evalc)
+  evalc('B = cat_io_BIDS({''/x/BIDS_A/sub-01/ses-01/anat/sub-01_ses-01_T1w.nii''},job);');
+  tf = B(1).isBIDS && strcmp(B(1).SUB,'sub-01') && ...
+       strcmp(B(1).SES,'ses-01') && strcmp(B(1).ANA,'anat');
+end
+
+function tf = t_bids_detect_nonbids
+% a non-BIDS file is not mistaken for BIDS
+  job.extopts.mkBIDSdir = 0; job.extopts.verboseBIDS = 0; B = []; %#ok<STRNU> (job used in evalc)
+  evalc('B = cat_io_BIDS({''/x/noBIDS_A/sub-01_T1.nii''},job);');
+  tf = ~B(1).isBIDS && ~B(1).isSUB;
+end
+
+function tf = t_bids_selftest
+% built-in 40-case path-mapping selftest (now asserts on mismatch)
+  evalc('cat_io_BIDS(''selftest'');');
+  tf = true;
+end
+
+function tf = t_bids_selftest_long
+% built-in longitudinal BIDS path selftest (asserts on mismatch)
+  evalc('cat_io_BIDS(''selftest_long'');');
+  tf = true;
+end
+
+function tf = t_bids_selftest_nonbids_auto
+% built-in non-BIDS auto-fallback / forced-derivatives selftest (asserts)
+  evalc('cat_io_BIDS(''selftest_nonbids_auto'');');
+  tf = true;
 end
 
 % ======================================================================

@@ -741,12 +741,17 @@ function files = testTestFiles
       count = count + 1; 
     end
   end
-  if err 
-    cat_io_cprintf('err','%d of %d cases were incorrected coded.\n',err,count); 
+  if err
+    cat_io_cprintf('err','%d of %d cases were incorrected coded.\n',err,count);
   else
-    cat_io_cprintf([0 .5 0],'All %d test cases were corrected coded.\n',count); 
+    cat_io_cprintf([0 .5 0],'All %d test cases were corrected coded.\n',count);
   end
-  
+
+  % fail loudly so the selftest can be used as a gate (like selftest_long
+  % and selftest_nonbids_auto, which already assert)
+  assert(err==0, 'cat_io_BIDS:selftest:Failed', ...
+    '%d of %d BIDS path-mapping test cases were incorrectly coded.', err, count);
+
 end
 %==========================================================================
 function files = getTestFiles
