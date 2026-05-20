@@ -1237,13 +1237,29 @@ function job = update_job(job,verbatlas)
   if isempty( job.extopts.vox ),  job.extopts.vox = cat_get_defaults('extopts.vox'); end 
   job.extopts.vox = abs( job.extopts.vox );
   
-  % prepare tissue priors and number of gaussians for all 6 classes
+  % prepare tissue priors and number of gaussians for all tissue classes
   [pth,nam,ext] = spm_fileparts(job.opts.tpm{1});
-  clsn = min(6,numel(spm_vol(fullfile(pth,[nam ext])))); 
-  tissue = struct();
-  for i=1:clsn
-    tissue(i).ngaus = job.opts.ngaus(i);
-    tissue(i).tpm = [fullfile(pth,[nam ext]) ',' num2str(i)];
+  clsn = numel(spm_vol(fullfile(pth,[nam ext])));
+  if clsn <= numel( job.opts.ngaus )
+    % prepare tpyical 6-class TPMs (or less classes but where the gaussians are defined)
+    tissue = struct();
+    for i=1:clsn
+      tissue(i).ngaus = job.opts.ngaus(i);
+      tissue(i).tpm = [fullfile(pth,[nam ext]) ',' num2str(i)];
+    end
+  elseif clsn==7 && strcmp(nam,'BlaiottaTPM')
+    % set Blaiotta TPM defaults for [ GM WM CSF , muscle fat/BV bone/air , BG ]
+    % see batch in SPM/tpm directory
+    job.opts.ngaus = [ 1 1 1, 3 1 2, 3 ];
+    tissue = struct();
+    for i=1:clsn
+      tissue(i).ngaus = job.opts.ngaus(i);
+      tissue(i).tpm = [fullfile(pth,[nam ext]) ',' num2str(i)];
+    end
+  else
+    % Although it would be possible to set undefined classes to one, 
+    % it is probably better to simply throw an error.
+    error('Number of gaussians don''t fit the number of classes in TPM.\n')
   end
   
   tissue(1).warped = [job.output.GM.warped  (job.output.GM.mod==1)        (job.output.GM.mod==2)       ];
@@ -1253,9 +1269,9 @@ function job = update_job(job,verbatlas)
   tissue(3).warped = [job.output.CSF.warped (job.output.CSF.mod==1)       (job.output.CSF.mod==2)      ];
   tissue(3).native = [job.output.CSF.native (job.output.CSF.dartel==1)    (job.output.CSF.dartel==2)   ];
 
-  % never write class 4-6
+  % never write class 4-n
   if isfield(job.output,'TPMC')
-    for i=4:6
+    for i=4:clsn
       tissue(i).warped = [job.output.TPMC.warped (job.output.TPMC.mod==1)       (job.output.TPMC.mod==2)      ];
       tissue(i).native = [job.output.TPMC.native (job.output.TPMC.dartel==1)    (job.output.TPMC.dartel==2)   ];
     end

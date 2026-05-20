@@ -108,7 +108,7 @@ function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th,cutstr)
   %        structures (e.g.in children) or failed registration where 
   %        the TPM does not fit well and the CSF include brain tissue
   %        simply by chance.
-  BGth = min(cat_stat_nanmean(Ysrc( P(:,:,:,6)>128 )),clsint(6));
+  BGth = min(cat_stat_nanmean(Ysrc( P(:,:,:,end)>128 )),clsint(size(P,4)));
   Yg   = cat_vol_grad((Ysrc - BGth)/diff([BGth,T3th(3)]),vx_vol);
   BVth = abs(diff(T3th(1:2:3)) / abs(T3th(3)) * 3);   % avoid blood vessels (high gradients) 
   RGth = abs(diff(T3th(2:3))   / abs(T3th(3)) * 0.1); % region growing threshold
@@ -159,10 +159,10 @@ if cutstr == 0
   %% RD202007: This is the original version without further adaptations/corrections
   Yb2  = single(cat_vol_morph(Yb,'de',1.9,vx_vol)); 
   if T3th(1) < T3th(3)
-    Yh   = (Yb2<0.5) & (Ysrc<sum(T3th(1:2).*[0.9 0.1]) | sum(P(:,:,:,4:6),4)>250 | ...
+    Yh   = (Yb2<0.5) & (Ysrc<sum(T3th(1:2).*[0.9 0.1]) | sum(P(:,:,:,4:end),4)>250 | ...
             Ysrc>cat_stat_nanmean(T3th(3)*1.2) | Yg>BVth); 
   else
-    Yh   = (Yb2<0.5) & (Ysrc>sum(T3th(1:2).*[0.9 0.1]) | sum(P(:,:,:,4:6),4)>250 | ...
+    Yh   = (Yb2<0.5) & (Ysrc>sum(T3th(1:2).*[0.9 0.1]) | sum(P(:,:,:,4:end),4)>250 | ...
             Ysrc<(T3th(3) - sum(T3th(2:3).*[0.5 0.5])) | Yg>BVth); 
   end
   Yh   = cat_vol_morph(Yh,'dc',1) | cat_vol_morph(~Yb,'de',10,vx_vol); 
@@ -181,11 +181,11 @@ else
   Yb2  = single(cat_vol_morph(cat_vol_morph(Yb,'de',1.9,vx_vol),'ldc',3)); 
   if T3th(1) < T3th(3)
     Yh   = (Yb2<0.5) & ( Ysrc<(T3th(1) - 1*(1-cutstr) * diff([T3th(1) min(T3th(2:3))])) | ...
-            cat_vol_morph(sum(P(:,:,:,4:6),4)>250,'e',2,vx_vol) | ...
+            cat_vol_morph(sum(P(:,:,:,4:end),4)>250,'e',2,vx_vol) | ...
             (Ysrc>cat_stat_nanmean(mean(T3th(1:2))) & ~Yb) | Yg>BVth); 
   else
     Yh   = (Yb2<0.5) & ( Ysrc>(T3th(1) + 1*(1-cutstr) * diff([T3th(1) max(T3th(2:3))])/2) | ...
-            cat_vol_morph(sum(P(:,:,:,4:6),4)>250,'e',2,vx_vol) | ...
+            cat_vol_morph(sum(P(:,:,:,4:end),4)>250,'e',2,vx_vol) | ...
             (Ysrc>cat_stat_nanmean(mean(T3th(1:2))) & ~Yb) | Yg>BVth); 
   end
   Yh(smooth3(Yh)>0.7) = 1; Yh(smooth3(Yh)<0.3) = 0;   

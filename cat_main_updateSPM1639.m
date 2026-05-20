@@ -85,7 +85,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   %  HR075   Mean:   GM=0.54, WM=0.79, CSF=0.20  
   % 		         		   <0.5     <0.6      <0.13
 
-  if job.extopts.expertgui > 1 && ...
+  if job.extopts.expertgui > 1 && numel(res.spmP0.md)==6 && ...
     ( any( res.spmP0.md(1:3) < [.5 .5 .01],2) || ...
       any( res.spmP0.mn(1:3) < [.5 .5 .10],2) || ...
       any( any( res.spmP0.hstsumi(1:3,round(hbuckets*[.25,.50,.75])) < [0.6 0.5 0.4; 0.8 0.7 0.6; 0.5 0.2 0.05 ] )) )
@@ -141,8 +141,12 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   end
   %%
   stime2 = cat_io_cmd('  Update Segmentation','g5','',job.extopts.verb-1,stime2); 
-  
 
+  % add zero and NaN areas to background 
+  Ybg0 = cat_vol_morph( cat_vol_morph( cat_vol_morph( Ysrc == 0 | isnan(Ysrc) ,'o') ,'l',[4 .5]) ,'c'); 
+  P(:,:,:,1:end-1) = P(:,:,:,1:end-1) .* uint8( repmat( Ybg0<.5 , [1,1,1,size(P,4)-1]) ); 
+  P(:,:,:,end)     = P(:,:,:,end)     .* uint8( Ybg0>.5 );  clear Ybg0 
+  
   % Create brain mask based on the the TPM classes
   % cleanup with brain mask - required for ngaus [1 1 2 4 3 2] and R1/MP2Rage like data 
   %YbA = zeros(d,'single');
@@ -287,19 +291,6 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   cat_err_res.init.Yp0 = cat_vol_ctype(cat_err_res.init.Yp0/3*255);
   clear Yp0; 
 
-  % ### This can not be reached because the mask field is removed by SPM! ###
-  if isfield(res,'msk') 
-    Ybg = ~res.msk.dat; 
-    P4  = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc<T3th(2))  .* (Ybg<0.5) + single(P(:,:,:,4)) .* (Ybg<0.5) ); % remove air in head
-    P5  = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc>=T3th(2)) .* (Ybg<0.5) + single(P(:,:,:,5)) .* (Ybg<0.5) ); % remove air in head
-    P6  = cat_vol_ctype( single(sum(P(:,:,:,4:5),4)) .* (Ybg>0.5) + single(P(:,:,:,6)) .* (Ybg>0.5) ); % add objects/artifacts to background
-    P(:,:,:,4) = P4;
-    P(:,:,:,5) = P5;
-    P(:,:,:,6) = P6;
-    clear P4 P5 P6 Ybg; 
-  end
-  
-
   
   
   %% Skull-Stripping
@@ -409,10 +400,16 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   if ~exist('Ym0','var')
     Ym0 = single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255;
   end
+  if ~isempty( strfind( job.opts.tpm , 'BlaiottaTPM') )
+    Ym0 = max( Ym0 , .51 * Yb); 
+    % cleanup of low intensity head structures within the brain 
+    P(:,:,:,3)     = max(P(:,:,:,3), uint8(255 * (cat_vol_morph( Yb>.5 ,'de',2,vx_vol) & Ysrc < WMth*.5))); 
+    P(:,:,:,4:end) = P(:,:,:,4:end) .* repmat( uint8(Yb<.5 & Ysrc < WMth*.5) , [1 1 1 size(P,4)-3]);
+  end
   Yb0 = (Ym0 > min(0.5,max(0.25, job.extopts.gcutstr))); clear Ym0
   Yb0 = cat_vol_morph(cat_vol_morph(Yb0,'lo'),'c');
+  Ybb = max( Ybb , uint8( 255 * smooth3(cat_vol_morph(Yb0,'de',5,vx_vol) & Ysrc < WMth*.7)));
 
-  
   
 % RD202010: In some images SPM selects the image BG and brain tisssue as class 4  
 %{
@@ -485,8 +482,6 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   end
 
   
-  
-  
   stime2 = cat_io_cmd('  Update probability maps','g5','',job.extopts.verb-1,stime2);
   if ~(any(sign(diff(T3th))==-1)) && ...
      ~( (isfield(job,'useprior') && ~isempty(job.useprior) && strcmp(job.opts.affreg,'prior') ) && ... % no single longitudinal timepoint
@@ -496,8 +491,9 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
     if size(P,4)==4 || size(P,4)==3 % skull-stripped
       Ybg = ~Yb;
     else
-      if sum(sum(sum(P(:,:,:,6)>240 & Ysrc<cat_stat_nanmean(T3th(1:2)))))>10000
-        Ybg = P(:,:,:,6); 
+      if sum(sum(sum(P(:,:,:,end)>240 & Ysrc<cat_stat_nanmean(T3th(1:2)))))>10000
+        Ybgx = cat_vol_morph( cat_vol_morph( Ysrc ./ WMth < .3 ,'ldo',4,vx_vol) ,'l',[5 .2]);
+        Ybg  = max( P(:,:,:,end), uint8(255*Ybgx)); clear Ybgx;
         [Ybgr,Ysrcr,resT2] = cat_vol_resize({Ybg,Ysrc},'reduceV',vx_vol,2,32); 
         Ybgrth = max(cat_stat_nanmean(Ysrcr(Ybgr(:)>128)) + 2*std(Ysrcr(Ybgr(:)>128)),T3th(1));
         Ybgr = cat_vol_morph(cat_vol_morph(cat_vol_morph(Ybgr>128,'d') & Ysrcr<Ybgrth,'lo',1),'lc',1);
@@ -507,65 +503,77 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
         Ybg = ~Yb;
       end
     end
+
     %%
-    P4   = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc<T3th(2))  .* (Ybg<0.5) + single(P(:,:,:,4)) .* (Ybg<0.5) ); % remove air in head
-    P5   = cat_vol_ctype( single(P(:,:,:,6)) .* (Ysrc>=T3th(2)) .* (Ybg<0.5) + single(P(:,:,:,5)) .* (Ybg<0.5) ); % remove air in head
-    P6   = cat_vol_ctype( single(sum(P(:,:,:,4:5),4)) .* (Ybg>0.5) + single(P(:,:,:,6)) .* (Ybg>0.5) ); % add objects/artifacts to background
-    P(:,:,:,4) = P4;
-    P(:,:,:,5) = P5;
-    P(:,:,:,6) = P6;
-    clear P4 P5 P6;
+    if size(P,4)>=6
+      P4   = cat_vol_ctype( single(P(:,:,:,end)) .* (Ysrc<T3th(2))  .* (Ybg<0.5) + single(P(:,:,:,4)) .* (Ybg<0.5) ); % remove air in head
+      P5   = cat_vol_ctype( single(P(:,:,:,end)) .* (Ysrc>=T3th(2)) .* (Ybg<0.5) + single(P(:,:,:,5)) .* (Ybg<0.5) ); % remove air in head
+      Pe   = cat_vol_ctype( single(sum(P(:,:,:,4:end),4)) .* (Ybg>0.5) ); % add objects/artifacts to background
+      P(:,:,:,4) = P4;
+      P(:,:,:,5) = P5;
+      P(:,:,:,6:size(P,4)-1) = P(:,:,:,6:size(P,4)-1) .* uint8(Ybg<.5);
+      P(:,:,:,end) = max(P(:,:,:,end),max(Pe,255*uint8(Ybg)));
+      clear P4 P5 P6;
+      sP = (sum(single(P),4)+eps)/255;
+      for k1=1:size(P,4), P(:,:,:,k1) = cat_vol_ctype(single(P(:,:,:,k1))./sP); end
+      
+      %% correct probability maps to 100% 
+      sumP = cat_vol_ctype(255 - sum(P(:,:,:,1:6),4));
+      P(:,:,:,1) = P(:,:,:,1) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc>cat_stat_nanmean(T3th(1:2)) & Ysrc<cat_stat_nanmean(T3th(2:3)));
+      P(:,:,:,2) = P(:,:,:,2) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc>=cat_stat_nanmean(T3th(2:3)));
+      P(:,:,:,3) = P(:,:,:,3) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc<=cat_stat_nanmean(T3th(1:2)));
+      P(:,:,:,4) = P(:,:,:,4) + sumP .* uint8( Ybg<0.5  & ~Yb & Ysrc<T3th(2));
+      P(:,:,:,5) = P(:,:,:,5) + sumP .* uint8( Ybg<0.5  & ~Yb & Ysrc>=T3th(2));
+      P(:,:,:,end) = P(:,:,:,end) + sumP .* uint8( Ybg>=0.5 & ~Yb );
+      clear Ybg sumP;
     
-    sP = (sum(single(P),4)+eps)/255;
-    for k1=1:size(P,4), P(:,:,:,k1) = cat_vol_ctype(single(P(:,:,:,k1))./sP); end
+      if ~isempty( strfind( job.opts.tpm , 'BlaiottaTPM') ) && size(P,4)==7
+      % simplify Blaiotta TPM 
+        P(:,:,:,5) = sum(P(:,:,:,4:5),4); % head
+        P(:,:,:,4) = P(:,:,:,6); % bone
+        P(:,:,:,6) = P(:,:,:,7); % background
+        P(:,:,:,7) = [];        
+      end
     
-    %% correct probability maps to 100% 
-    sumP = cat_vol_ctype(255 - sum(P(:,:,:,1:6),4));
-    P(:,:,:,1) = P(:,:,:,1) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc>cat_stat_nanmean(T3th(1:2)) & Ysrc<cat_stat_nanmean(T3th(2:3)));
-    P(:,:,:,2) = P(:,:,:,2) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc>=cat_stat_nanmean(T3th(2:3)));
-    P(:,:,:,3) = P(:,:,:,3) + sumP .* uint8( Ybg<0.5  &  Yb & Ysrc<=cat_stat_nanmean(T3th(1:2)));
-    P(:,:,:,4) = P(:,:,:,4) + sumP .* uint8( Ybg<0.5  & ~Yb & Ysrc<T3th(2));
-    P(:,:,:,5) = P(:,:,:,5) + sumP .* uint8( Ybg<0.5  & ~Yb & Ysrc>=T3th(2));
-    P(:,:,:,6) = P(:,:,:,6) + sumP .* uint8( Ybg>=0.5 & ~Yb );
-    clear Ybg sumP;
-
-    
-    %% head to WM 
-    % Undercorrection of strong inhomogeneities in high field scans 
-    % (>1.5T) can cause missalignments of the template and therefore 
-    % miss classifications of the tissues that finally avoid further 
-    % corrections in by LAS. 
-    % Typically the alginment failed in this cases because the high 
-    % intensities next to the head that were counted as head and not
-    % corrected by SPM.
-    % e.g. HR075, Magdeburg7T, SRS_SRS_Jena_DaRo81_T1_20150320-191509_MPR-08mm-G2-bw330-nbc.nii, ...
-    Ywm = single(P(:,:,:,2)>128 & Yg<0.3 & Ydiv<0.03); Ywm(Ybb<128 | (P(:,:,:,1)>128 & abs(Ysrc/T3th(3)-2/3)<1/3) | Ydiv>0.03) = nan;
-    [Ywm1,YD] = cat_vol_downcut(Ywm,1-Ysrc/T3th(3),0.02); Yb(isnan(Yb))=0; Ywm(YD<300)=1; Ywm(isnan(Ywm))=0; clear Ywm1 YD; %#ok<ASGLU>
-    Ywmc = uint8(smooth3(Ywm)>0.7);
-    Ygmc = uint8(cat_vol_morph(Ywmc,'d',2) & ~Ywmc & Ydiv>0 & Yb & cat_vol_smooth3X(Yb,8)<0.9 & Ysrc>mean(T3th(1:2)));
-    P(:,:,:,[1,3:6]) = P(:,:,:,[1,3:6]) .* repmat(1-Ywmc,[1,1,1,5]);
-    P(:,:,:,2:6)     = P(:,:,:,2:6)     .* repmat(1-Ygmc,[1,1,1,5]);
-    P(:,:,:,1)       = max(P(:,:,:,1),255*Ygmc);
-    P(:,:,:,2)       = max(P(:,:,:,2),255*Ywmc);
-    Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
-    clear Ygmc Ywmc; 
-
-    
-    %% head to GM ... important for children
-    [Ywmr,Ybr,resT2] = cat_vol_resize({Ywm,Yb},'reduceV',vx_vol,2,32); 
-    Ygm = cat_vol_morph(Ywmr>0.5,'d',3) & (cat_vol_morph(~Ybr,'d',3) | cat_vol_morph(Ybr,'d',1)); clear Ybr Ywmr;  % close to the head
-    Ygm = cat_vol_resize(single(Ygm),'dereduceV',resT2)>0.5;
-    Ygm = Ygm & Yp0<2/3 & Yb & Yg<cat_stat_nanmean(Yg(P(:,:,:,1)>64)) & Ydiv<cat_stat_nanmean(Ydiv(P(:,:,:,1)>64)); % add GM with low SPM prob ... 
-    Ygm = Ygm & (Ysrc>cat_stat_nansum(T3th(1:2).*[0.5 0.5])) & (Ysrc<cat_stat_nansum(T3th(2:3).*[0.2 0.8])); % but good intensity
-    Ygm(smooth3(Ygm)<0.5)=0; 
-    clear Ydiv;
-    Ygm = uint8(Ygm); 
-    P(:,:,:,5) = P(:,:,:,5) .* (1-Ygm);
-    P(:,:,:,3) = P(:,:,:,3) .* (1-Ygm);
-    P(:,:,:,2) = P(:,:,:,2) .* (1-Ygm);
-    P(:,:,:,1) = cat_vol_ctype(single(P(:,:,:,1)) + 255*single(Ygm));
-    Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
-    clear Ywm Ygm;
+      %% head to WM 
+      % Undercorrection of strong inhomogeneities in high field scans 
+      % (>1.5T) can cause missalignments of the template and therefore 
+      % miss classifications of the tissues that finally avoid further 
+      % corrections in by LAS. 
+      % Typically the alginment failed in this cases because the high 
+      % intensities next to the head that were counted as head and not
+      % corrected by SPM.
+      % e.g. HR075, Magdeburg7T, SRS_SRS_Jena_DaRo81_T1_20150320-191509_MPR-08mm-G2-bw330-nbc.nii, ...
+      Ywm = single(P(:,:,:,2)>128 & Yg<0.3 & Ydiv<0.03); Ywm(Ybb<128 | (P(:,:,:,1)>128 & abs(Ysrc/T3th(3)-2/3)<1/3) | Ydiv>0.03) = nan;
+      [Ywm1,YD] = cat_vol_downcut(Ywm,1-Ysrc/T3th(3),0.02); Yb(isnan(Yb))=0; Ywm(YD<300)=1; Ywm(isnan(Ywm))=0; clear Ywm1 YD; %#ok<ASGLU>
+      Ywmc = uint8(smooth3(Ywm)>0.7);
+      Ygmc = uint8(cat_vol_morph(Ywmc,'d',2) & ~Ywmc & Ydiv>0 & Yb & cat_vol_smooth3X(Yb,8)<0.9 & Ysrc>mean(T3th(1:2)));
+      P(:,:,:,[1,3:end]) = P(:,:,:,[1,3:end]) .* repmat(1-Ywmc,[1,1,1,size(P,4)-1]);
+      P(:,:,:,2:end)     = P(:,:,:,2:end)     .* repmat(1-Ygmc,[1,1,1,size(P,4)-1]);
+      P(:,:,:,1)         = max(P(:,:,:,1),255*Ygmc);
+      P(:,:,:,2)         = max(P(:,:,:,2),255*Ywmc);
+      Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
+      clear Ygmc Ywmc; 
+  
+      
+      %% head to GM ... important for children
+      [Ywmr,Ybr,resT2] = cat_vol_resize({Ywm,Yb},'reduceV',vx_vol,2,32); 
+      Ygm = cat_vol_morph(Ywmr>0.5,'d',3) & (cat_vol_morph(~Ybr,'d',3) | cat_vol_morph(Ybr,'d',1)); clear Ybr Ywmr;  % close to the head
+      Ygm = cat_vol_resize(single(Ygm),'dereduceV',resT2)>0.5;
+      Ygm = Ygm & Yp0<2/3 & Yb & Yg<cat_stat_nanmean(Yg(P(:,:,:,1)>64)) & Ydiv<cat_stat_nanmean(Ydiv(P(:,:,:,1)>64)); % add GM with low SPM prob ... 
+      Ygm = Ygm & (Ysrc>cat_stat_nansum(T3th(1:2).*[0.5 0.5])) & (Ysrc<cat_stat_nansum(T3th(2:3).*[0.2 0.8])); % but good intensity
+      Ygm(smooth3(Ygm)<0.5)=0; 
+      clear Ydiv;
+      Ygm = uint8(Ygm); 
+      P(:,:,:,5) = P(:,:,:,5) .* (1-Ygm);
+      P(:,:,:,3) = P(:,:,:,3) .* (1-Ygm);
+      P(:,:,:,2) = P(:,:,:,2) .* (1-Ygm);
+      P(:,:,:,1) = cat_vol_ctype(single(P(:,:,:,1)) + 255*single(Ygm));
+      Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
+      clear Ywm Ygm;
+    else
+      Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
+    end
 
     %% RD20221108: update CSF to reduce problems in MP2rage
     if res.isMP2RAGE
@@ -704,7 +712,7 @@ function [Yb,Ybb,Yg,Ydiv] = cat_main_updateSPM_gcutold(Ysrc,P,res,vx_vol,T3th)
     brad = voli(sum(Yp0(:)>0.5).*prod(vx_vol)/1000); 
     [Ysrcb,Yp0,BB] = cat_vol_resize({Ysrc,Yp0},'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yp0>1/3);
     %Ysrcb = max(0,min(Ysrcb,max(T3th)*2));
-    BGth = min(cat_stat_nanmean(Ysrc( P(:,:,:,6)>128 )),clsint(6));
+    BGth = min(cat_stat_nanmean(Ysrc( P(:,:,:,end)>128 )),clsint(size(P,4)));
     Yg   = cat_vol_grad((Ysrcb-BGth)/diff([BGth,T3th(3)]),vx_vol);
     Ydiv = cat_vol_div((Ysrcb-BGth)/diff([BGth,T3th(3)]),vx_vol);
     Ybo  = cat_vol_morph(cat_vol_morph(Yp0>0.3,'lc',2),'d',brad/2/mean(vx_vol)); 
