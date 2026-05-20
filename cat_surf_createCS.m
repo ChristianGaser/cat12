@@ -480,7 +480,8 @@ cstime = clock;
     
     if debug, Yppio=Yppi; end
     if ~useprior, fprintf('%5.0fs\n',etime(clock,stime)); end
-    
+    time_sr = clock;
+
     %% Replace isolated voxels and holes in Ypp by its median value
     
     % indicate isolated holes and replace by median of the neighbors
@@ -743,7 +744,7 @@ cstime = clock;
       fprintf('%5.0fs',etime(clock,min([stime2;stime],[],1))); if ~debug, stime = []; end
       saveSurf(CS,Pcentral); cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata);
       % final result ... test for self-intersections only in developer mode? 
-      if debug % opt.surf_measures > 2  ||  opt.verb > 2
+      if 0 %debug % opt.surf_measures > 2  ||  opt.verb > 2
         cat_surf_fun('saveico',CS,facevertexcdata,Pcentral,sprintf('createCS_3_collcorr_%0.2fmm_vdist%0.2fmm',opt.interpV,opt.vdist),Ymfs,Smat.matlabIBB_mm); 
         fprintf('\n');
         res.(opt.surf{si}).createCS_3_collcorr = cat_surf_fun('evalCS' ,CS,facevertexcdata,[],Ymfs,Yppi,Pcentral,Smat.matlabIBB_mm,opt.verb-1,cat_get_defaults('extopts.expertgui')>1);
@@ -777,8 +778,19 @@ cstime = clock;
     cat_surf_fun('white',Pcentral);
     cat_surf_fun('pial',Pcentral);
 
+    % Test without surface registration - just a shortcut for manual tests! 
+    if isscalar(opt.surf)
+      cat_surf_fun('white',Pcentral);
+      cat_surf_fun('pial',Pcentral);
+      %% prepare file and directory names
+      [P,mridir,surfdir,ff] = cat_surf_createCS_fun('setFileNames',V0,job,opt); 
+
+      cat_surf_createCS_fun('quickeval',V0,Vpp,Ymfs,Yppi,CS,P,Smat,res,opt,EC0,si,time_sr,2);
+      return
+    end
+
     % skip that part if a prior image is defined
-    if ~useprior
+    if ~useprior 
       %% spherical surface mapping 2 of corrected surface
       stime = cat_io_cmd('  Spherical mapping with areal smoothing','g5','',opt.verb,stime); 
       cmd = sprintf('CAT_Surf2Sphere "%s" "%s" 10',Pcentral,Psphere);
