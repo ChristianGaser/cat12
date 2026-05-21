@@ -342,7 +342,7 @@ function varargout = compile(comp,test,verb)
     vx_vol = 8*[1 1 1]/(ip+1); n_iters = 16; sub = round(16/min(vx_vol));
     bias_fwhm = 60; init_kmeans = 0; mrf = 0.1; iters_icm = 50; n_classes = 3; pve = 5; 
     t1c  = double(t1+0); segc = cat_vol_ctype(seg+0); 
-    [txt,prob,mean] = evalc('cat_amap(t1c,segc, n_classes, n_iters, sub, pve, init_kmeans, mrf, vx_vol, iters_icm, bias_fwhm)');
+    [txt,prob,mn] = evalc('cat_amap(t1c,segc, n_classes, n_iters, sub, pve, init_kmeans, mrf, vx_vol, iters_icm, bias_fwhm)');
     prob = prob(:,:,:,[1 2 3]);
     d{ni} = single(prob(:,:,:,1))/255 + single(prob(:,:,:,2))/255*2 + single(prob(:,:,:,3))/255*3; 
     r(ni) = rms(seg - d{ni}); 
@@ -493,7 +493,7 @@ function varargout = compile(comp,test,verb)
       ... basic pbt-functions 
       'cat_vol_pbt-restest'            .20  0;
       'cat_vol_pbtsimple-restest'      .15  0;
-      ...'cat_vol_pbtsimpleCS4-restest'   .10  0; - #### not running yet without update! ####   
+      'cat_vol_pbtsimpleCS4-restest'   .10  0; 
     }; 
     % Run these tests also for the quick lh-case (without spherical mapping and registration)
     % of the full surface reconstruction pipelines cat_surf_createCS*.
@@ -527,7 +527,29 @@ function varargout = compile(comp,test,verb)
     dbard    = cat_vbdist(dbar); 
     dbar     = 1 + max(0,min(1,dbard - spheresz(3)+0.25)) + max(0,min(1,dbard+.5));
     dsphere2 = min(dsphere,dbar);
-    % extend C-phantom to test pipeline with both hemispheres?
+    %% extend packman C-phantom to test pipeline with both hemispheres?
+    levels = [1.5 2 2.5 3]; sulcusPVE = .25;
+    subsph = cell(1,numel(levels)); subbar = subsph;
+    for thi = 1:numel(levels)
+      subsph{thi} = sphere( spheresz(1) , spheresz(2) - .5*(levels(thi) - mean(levels)) , levels(thi) ); 
+      subbar{thi} = 1 + max(0,min(1,dbard - levels(thi) + sulcusPVE)) + max(0,min(1,dbard + sulcusPVE));
+    end
+    % merge parts
+    packmancol = zeros(repmat(spheresz(1),1,3),'single');
+    packmancol(1:ceil(spheresz(1)/2), floor(spheresz(1)/2):end, :) = min( ...
+     subsph{1}(1:ceil(spheresz(1)/2), floor(spheresz(1)/2):end, :), ...
+     subbar{1}(1:ceil(spheresz(1)/2), floor(spheresz(1)/2):end, :));
+    packmancol(1:ceil(spheresz(1)/2), 1:floor(spheresz(1)/2), :) = min( ...
+     subsph{2}(1:ceil(spheresz(1)/2), 1:floor(spheresz(1)/2), :), ...
+     subbar{2}(1:ceil(spheresz(1)/2), 1:floor(spheresz(1)/2), :));
+    packmancol(ceil(spheresz(1)/2)+1:end, 1:ceil(spheresz(1)/2), :) = min( ...
+     subsph{3}(ceil(spheresz(1)/2)+1:end, 1:ceil(spheresz(1)/2), :), ...
+     subbar{3}(ceil(spheresz(1)/2)+1:end, 1:ceil(spheresz(1)/2), :));
+    packmancol(ceil(spheresz(1)/2)+1:end, ceil(spheresz(1)/2):end, :) = min( ...
+     subsph{4}(ceil(spheresz(1)/2)+1:end, ceil(spheresz(1)/2):end, :), ...
+     subbar{4}(ceil(spheresz(1)/2)+1:end, ceil(spheresz(1)/2):end, :));
+
+    %ds('d2','',1,packmancol,packmancol,packmancol/3,packmancol/3,20)
 
     %% loop over methods (and testcases)
     for pbti = 1:size(pbtmethod,1)
@@ -544,13 +566,14 @@ function varargout = compile(comp,test,verb)
       
       %% testsets
       clear rt rmsgmt rmsgmti
-      for casei = [1 2 4] % the sphere (id=3) is borring and the C (id=4) is quite similar
+      for casei = [1 2 4 5] % the sphere (id=3) is borring and the C (id=4) is quite similar
         %% select data
         switch casei
           case 1, dx = d2+1; gmt=4 + .8 + .8;    % very simple case with 4 full voxel and 2 PVE voxels with 1.8 and 2.2 what is .8
           case 2, dx = d5+1; gmt=2;              % complex sulcus case
           case 3, dx = dsphere;  gmt=spheresz(3); 
           case 4, dx = dsphere2; gmt=spheresz(3); 
+          case 5, dx = packmancol; gmt=mean(levels); 
         end
         dxa = cat_vol_approx(dx); dx(isnan(dx))=dxa(isnan(dx)); % have to assume that NANs were replaced before
         %dx  = interp3(dx,ip,'cubic');  gmt = gmt*2;  % extra interpolation
@@ -632,9 +655,13 @@ function varargout = compile(comp,test,verb)
                 fg = gcf; 
                 fg.Position(3:4) = [350 400];
                 ax = gca; 
-                cat_surf_render2('view',ax,'bottom')
-                cat_surf_render2('Clim',ax, [ spheresz(3)-1 spheresz(3)+1 ] )
-                ax.CameraUpVector  = [1 0 0]; 
+                cat_surf_render2('view',ax,'top')
+                if casei == 5
+                  cat_surf_render2('Clim',ax, [ min(levels)-.5 max(levels)+.5 ] )
+                else
+                  cat_surf_render2('Clim',ax, [ floor(gmt-1) ceil(gmt+1) ] )
+                end
+                ax.CameraUpVector  = [-1 0 0]; 
                 ax.CameraPosition = ax.CameraPosition * 1.1;
               end
 
@@ -823,4 +850,12 @@ function use_legacy_mexopts = cat_needs_legacy_maca64_mexopts()
   catch
     use_legacy_mexopts = true;
   end
+end
+
+function Y = sphere( sz , ir , th )
+% create a sphere. spherez = [ vol-size, innerradius thickness ]
+  Y  = zeros(repmat(sz,1,3),'single');
+  Y( ceil(sz/2), ceil(sz/2), ceil(sz/2) ) = 1;
+  D  = cat_vbdist(Y); 
+  Y  = 3 - max(0,min(1,D - (ir + th) - .5)) - max(0,min(1,D - ir - .5));
 end
