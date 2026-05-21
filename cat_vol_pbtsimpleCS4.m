@@ -1,7 +1,7 @@
 function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
 %cat_vol_pbtsimple. Simple cortical thickness/position estimation.  
 % Estimation of voxel-based distances and projection-based thickness (PBT) 
-% and surface position based on a label map. Required isotropic input. 
+% and surface position based on a label map. Requires isotropic input. 
 % 
 % After further optimisation the function becomes more complex again. 
 % Although, the values look quite similar difference in the surface are 
@@ -22,11 +22,49 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
 %    .range (real value <=0.5, good between 0.2 and 0.45; default=0.45)
 %      Limitation of the offset of multiple thickness levels to avoid 
 %      running into partial volume effects with thickness overestimation.
+%      This value defines the limits of the PVE values of the object the
+%      distances are estimated. 
+%
+%    .rangeE (real value <=0.5, good between 0.2 and 0.45; default=0.45)
+%      Limitation of the offset of multiple thickness levels to avoid 
+%      running into partial volume effects with thickness overestimation.
+%      This values limits the range were the thickness is estimated and
+%      corrected. 
 %
 %    .NBVC (0-no, 1-yes; default=1)
 %      Additional, new blood vessel correction based on a WM region growing.
 %
-%   See also cat_vol_pbt, cat_vol_createCS[23].
+%    .gyrusrecon (0-no, 1-yes; default=1)
+%      Besides the reconstruction of sulci also the reconstruction of gyri
+%      can help to improve thickness estimation and avoid overestimations 
+%      by simply using the minimum thickness. The reconstruction of gyri
+%      is in constrast more challanging and can cause severe topological 
+%      defects. The reconstruction is therefore tuned down in noisy data.
+%      
+%    .usemedian (0-use approximation, 1-median+approximation)
+%      As a continuous thickness pattern can be assumed, we use a voxel-based
+%      approximation to fill in missing (non-GM) values but filter the GM
+%      regions. A more explicit median-filter and approximation only in non
+%      GM areas allows more precise modifications (see medfs parameter).
+%
+%    .medfs ([processingResolution filterSize] default [1 2]; 
+%      Lower filter resulions allow fast a stonger filtering of outliers. 
+%    
+%    .verb (0-no, 1-yes)
+%      Be verbose.
+%
+%    .eidist (0-simple voxel-based Euclidean distance, ...
+%             1-quasi-eikonal-based Euclidean distance)
+%      To handle asymetric structures the alignment of the nearest boundary 
+%      requires the Eikonal-based estimation. A this is quite slow, we use 
+%      a quasi-eikonal alignment defined in the vbdist function. 
+%
+%    .wmnoise (real positive value)
+%      High noise, low resolution, or smooth data trend to cause topology 
+%      defects, Hence, these parameters could be used to filter stronger 
+%      and/or reduce the impact of the risky gyrus recon. 
+
+%   See also cat_vol_pbt, cat_vol_createCS[2].
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -40,13 +78,6 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
 
   if ~exist('opt','var'), opt = struct(); end
   
-
-  % Default parameter settings with short impression for some Collins  
-  % processing to roughly quantify the global effect. 
-  %
-  % Values: 
-  %  thickness (mn±sd), surface intensity / position RMSE, SI=self-intersections
-  %
   % Final tests with the following subjects are important : 
   %  Collins, HR075, 4397, OASIS031 (WMHs), BUSS02 (Child), 
   %  BWPT (Phantom), NISALS_UTR (PVEs), ADHD200NYC (LowQuality/Motion)
@@ -62,9 +93,9 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
                               % 1 means estimation for .25 and .75 boundaries
                               % Good values are between 2 and 8.
                               %  
-  def.range            = .45;  % Default value for range extension for *first* boundary (should be between 0.2-0.45)
+  def.range            = .45; % Default value for range extension for *first* boundary (should be between 0.2-0.45)
                               %
-  def.rangeE           = .45;  % Default value for range extension for *second* boundary(should be between 0.2-0.45)
+  def.rangeE           = .45; % Default value for range extension for *second* boundary(should be between 0.2-0.45)
                               %
   def.NBVC             = 1;   % new blood vessel correction 
                               %
@@ -73,9 +104,14 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
                               %
   def.usemedian        = 1;   % GMT filtering setting (0-approx,1-median)
                               %
-  def.medfs            = [1 2]; % [processingResolution filterSize] default [1.5 2]; 
+  def.medfs            = [1 2]; % [processingResolution filterSize] default [1 2]; 
+                              %
+  def.verb             = 0;   % be verbose
                               %
   def.eidist           = 1;   % eikonal distance (not so good yet)
+                              % 
+  def.wmnoise          = 0;   % High noise, low resolution, or smooth data trend to cause topology defect. 
+                              % Hence, we these parameter could be used to reduce the impact of the risky gyrus recon. 
 
   opt = cat_io_checkinopt(opt,def);
   vxs = mean(vx_vol); 
@@ -113,7 +149,7 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
  
 
   % estimate hull to limit eg. gyrus reconstruction 
-  % Yhull = estimateHull(Yp0,vx_vol);
+  %Yhull = estimateHull(Yp0,vx_vol);
 
 
   %% == Estimation of distance measures ==
@@ -185,7 +221,10 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
   % - neutral regions are defined by CSF
   % - next both areas are extend by intensity emphasized values 
   gmt = [cat_stat_nanmedian(Ygmtw0(Ygmtw0(:)>0)) cat_stat_nanstd(Ygmtw0(Ygmtw0(:)>0))]; Ygmt0o=Ygmt0;
-  if opt.gyrusrecon 
+  % integrate general aspects of data quality to avoid topology defects
+  gsr = max(0,min(1,1 - max( [ 0 , opt.wmnoise * 40 , max(0,vxs - 1) , max(0,opt.pvet/2 - 1) ] ))); 
+  if opt.verb, fprintf('\n    gsr=%0.2f (wmnoise=%0.2f, vxs=%0.2f, pve=%0.2f)                   ', gsr, opt.wmnoise, vxs, opt.pvet); end
+  if opt.gyrusrecon && gsr>0
     Ygmt0 = Ygmt0o; 
     % run on 1 mm should be sufficient and other resolution would require further tests
     res = 1; 
@@ -243,13 +282,15 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
     Ypps = min(1, max( 0 , max(Yp0>2.5, (Yp0>1.5) .*       min(Ycd0,Ygmt0-Ywd0) ./ max(eps,Ygmt0))));
     
     % refine Ypps map to avoid blurring of small sulci
-    Yppx = ((cat_vol_smooth3X( Ypps , 2) - Ypps)*2).^2 .*(Ywd0>1) .* (Ycd0>1); %2-Ywd0); 
+    Yppx = ((cat_vol_smooth3X( Ypps , 2) - Ypps)*2).^2 .*(Ywd0>1) .* (Ycd0>1);  
     Ymsk = Ypps<.66 & Yppx>.33; 
     Ypps(Ymsk) = max(0,Ypps(Ymsk) - Yppx(Ymsk)); 
     Ydiv = cat_vol_div(Ypps); 
-    Ypps2 = min(Ypps,smooth3(1-Ydiv*10)); Yppsd = (Ypps - Ypps2)<.01; 
-    Ypps = Ypps2; 
+    Ypps = min(Ypps,smooth3(1-Ydiv*10)); 
     Ygsr = Ygsr .* smooth3(1-Ymsk).^2 .* max(min(1,1-Ydiv*5),cat_vol_smooth3X(Yp0,2)<2.5); % .* Yppsd;
+
+    % integrate general aspects of data quality to avoid topology defects
+    Ygsr = Ygsr .* gsr; 
 
     % final combination 
     Ypp  = Yppg.*Ygsr + (1-Ygsr).*Ypps; 
@@ -262,21 +303,27 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
   %% cleanup of position map
   Ypp = max((Yp0-2), max(Ypp, (Ypp) .* (Ygmt0>gmt(1)*.5) )); % stabize low res fine structures
   Ypp = max(0,min(Yp0-1,Ypp));
+  % PVE correction
+  Ymsk = Ypp>0 & Yp0>2.15; Ypp(Ymsk) = max(Ypp(Ymsk),max(0,Yp0(Ymsk) - 2).^.5);
+  Ymsk = Ypp<1 & Yp0<1.85; Ypp(Ymsk) = min(Ypp(Ymsk),max(0,Yp0(Ymsk) - 1).^2);
+  % light topo correction
   Ypp = min(Ypp,cat_vol_median3(Ypp,smooth3(Ypp)>0 & smooth3(Ypp)<.75, Ypp>-1, .5)); % prefere open
   Ypp = max(Ypp,cat_vol_median3(Ypp,smooth3(Ypp)>0 & Ygmt0>gmt(1), Ypp>-1, .5));     % prefere close
+  % filling _deep_ inner holes (eg. thickness phantom ventricular/subcortical parts)
+  Ypp( cat_vol_morph( cat_vol_morph( Ypp>.8 , 'lc')     ,'de',1,vx_vol) ) = 1; 
+  Ypp( cat_vol_morph( cat_vol_morph( Ypp>.9 , 'ldc', 1) ,'de',1,vx_vol) ) = 1; 
   % use PVE if better?
   Ypp = max(Ypp, max(0,min(.5,Yp0-2.0)*2).^2 );  % ^.5 stronger
   Ypp = min(Ypp, min(1,max(.0,Yp0-1.5)*2).^2 );  % ^2  stronger
-
+ 
   % final scaling of the thickness map
   Ygmt = Ygmt0 * vxs; 
   
 
-  if 0 
+  if 0
     %% only internal tests
-    fprintf('    Median thickness + IQR:        %5.2f ± %4.2f mm\n', ...
-      median( Ygmt( Ypp(:)>.3 & Ypp(:)<.7 )) , iqr( Ygmt( Ypp(:)>.3 & Ypp(:)<.7 ))); 
-  
+    fprintf('    Median thickness + IQR:        %5.2f ± %4.2f mm (gsr=%0.2f)\n', ...
+      median( Ygmt( Ypp(:)>.3 & Ypp(:)<.7 )) , iqr( Ygmt( Ypp(:)>.3 & Ypp(:)<.7 )), gsr); 
     CS    = isosurface(smooth3(1-Ypp),.5,min(5,Ygmt)); cat_surf_render2(CS); 
     cat_surf_render2('clim',[0 6]); 
   end
@@ -347,7 +394,7 @@ function Yp0 = NBVC(Yp0,vx_vol)
   Ywm    = cat_vol_morph(cat_vol_morph(Yp0>2.25,'de',1,vx_vol),'ldo',1,vx_vol) | cat_vol_morph(Yp0>2.75,'l'); 
   % add closest voxels
   [~,Yd] = cat_vol_downcut(single(Ywm), F,0.01); Yd(isnan(Yd))=inf; 
-  Ywm    = Yp0>2.1 & Yd<median(Yd(Yp0(:)>=2.25 & Yp0(:)<2.75 & Yd(:)>0));
+  Ywm    = Yp0>2.1 & Yd<cat_stat_nanmedian([2.5; Yd(Yp0(:)>=2.25 & Yp0(:)<2.75 & Yd(:)>0)]);
 
   %% prepare mask
   [~,Yd] = cat_vol_downcut(single(Ywm), F,-0.001); Yd(isnan(Yd))=inf; %clear Ywm; 
