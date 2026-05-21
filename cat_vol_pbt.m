@@ -461,15 +461,16 @@ YM = max(YM,smooth3(cat_vol_morph(cat_vol_morph(YM,'dc',2/opt.resV),'e'))); % RD
   Ypp(isnan(Ypp)) = 0; 
   Ypp = min(2,max(-1,Ypp)); 
   Ypp = cat_vol_median3(Ypp,Ymf>0 & Ymf<3,true(size(Ymf)),0.2);
-  if 1
-    % extend Ypp to create values for white and pial surface mapping
+  if 0 % RD202605: tests on the C-phantom (compile function) show worse results even after correcting the bug (see comment below)
+    %% extend Ypp to create values for white and pial surface mapping
     %  extimate distance and thickness beyond the GM boundary
     %  keep in mind that this is only to have a well defined CSF/GM boundary at 0 and GM/WM boudnary at 1
-    Ypp(Ypp==0)=-1;
-    YM = Ymf>=1.5 & Ymf<2.5; [Ygmd,YgmdI] = cat_vbdist(single(YM)); 
+    %  RD202605: Although this improved values in most cases, dominant outliers present a major issue!
+    Ypp(Ypp<=0)=-1;
+    YM = Ymf>1.5 & Ymf<2.5; [Ygmd,YgmdI] = cat_vbdist(single(YM)); 
     Ygmtx = Ygmt(YgmdI); 
-    YM = min(1,max(0,3 - Ymf)); YM(Ygmd>4) = nan; Ywmdi  = cat_vol_eidist(YM,ones(size(YM),'single'),[1 1 1],1,1,0,opt.debug);
-    YM = min(1,max(0,Ymf - 1)); YM(Ygmd>4) = nan; Ycsfdi = cat_vol_eidist(YM,ones(size(YM),'single'),[1 1 1],1,1,0,opt.debug);
+    YM = min(1,max(0,3 - Ymf)); YM(Ygmd>4) = nan; Ywmdi  = cat_vol_eidist(YM,ones(size(YM),'single'),[1 1 1],1,1,0,opt.debug)+.01.*(YM<1);
+    YM = min(1,max(0,Ymf - 1)); YM(Ygmd>4) = nan; Ycsfdi = cat_vol_eidist(YM,ones(size(YM),'single'),[1 1 1],1,1,0,opt.debug)+.01.*(YM<1);
     YM = isnan(Ywmdi) & Ygmd>4 & Ypp>=1; Ywmdi(YM) = Ygmd(YM); 
 
     % update Ypp
