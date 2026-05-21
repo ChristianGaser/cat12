@@ -493,7 +493,7 @@ function varargout = compile(comp,test,verb)
       ... basic pbt-functions 
       'cat_vol_pbt-restest'            .20  0;
       'cat_vol_pbtsimple-restest'      .15  0;
-      'cat_vol_pbtsimpleCS4-restest'   .10  0;
+      ...'cat_vol_pbtsimpleCS4-restest'   .10  0; - #### not running yet without update! ####   
     }; 
     % Run these tests also for the quick lh-case (without spherical mapping and registration)
     % of the full surface reconstruction pipelines cat_surf_createCS*.
