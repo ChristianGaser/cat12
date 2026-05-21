@@ -7,8 +7,8 @@ function varargout = compile(comp,test,verb)
 %   [ok_all[,ok_tst,result_tst]] = compile([comp,test,verb])
 %   
 %   comp .. compile functions       ([0|1]; default=1)
-%   test .. test compiled functions ([0|1]; default=1)
-%   verb .. display progress        ([0|1]; default=1)
+%   test .. test compiled functions ([0|1|2]; default=1)
+%   verb .. display progress        ([0|1|2]; default=1)
 %
 %   ok_all .. true if all functions are compiled (and tested if test==1)
 %             successfully
@@ -251,7 +251,7 @@ function varargout = compile(comp,test,verb)
   
   
   %% test c-functions
-  if test==1
+  if test > 0
    
     % testdata 
     % empty image with a NaN voxel
@@ -488,37 +488,46 @@ function varargout = compile(comp,test,verb)
     %    ds('d2','',1,d5/2,(Ygmti)/5,(Ygmt)/5,Yppi,5)
     %    ds('d2','',1,d5/2,Ycsfdi/3,Ywmdi/3,Yppi,5)
     
-    % tested methods with error limit
+    % tested basic PBT methods with error limits
     pbtmethod = {
       ... basic pbt-functions 
-      'cat_vol_pbt-restest'            .40  0;
-      'cat_vol_pbtsimple-restest'      .30  0;
-      'cat_vol_pbtsimpleCS4-restest'   .20  0;
-      ...
-      ... full surface reconstruction functions
-      'cat_surf_createCS'              .10  11; 
-      ...'cat_surf_createCS'              .10  22; % not running
-      'cat_surf_createCS'              .10  23;
-      'cat_surf_createCS'              .10  24;
-      'cat_surf_createCS'              .10  25;
-      ...'cat_surf_createCS'              .10  40; % not running without update 
-      ...'cat_surf_createCS'              .10  42; % not running without update 
-    };
+      'cat_vol_pbt-restest'            .20  0;
+      'cat_vol_pbtsimple-restest'      .15  0;
+      'cat_vol_pbtsimpleCS4-restest'   .10  0;
+    }; 
+    % Run these tests also for the quick lh-case (without spherical mapping and registration)
+    % of the full surface reconstruction pipelines cat_surf_createCS*.
+    if test > 1
+      pbtmethod = [ pbtmethod ; {
+        'cat_surf_createCS'              .05  11; % first classic pipeline
+        'cat_surf_createCS'              .05  22; % rewised classic pipeline
+        ... expertimental non-standard pipelines
+        %'cat_surf_createCS'              .05  23; % rewised classic pipeline with the first pbtsimple
+        %'cat_surf_createCS'              .05  24; % rewised classic pipeline with the new pbtsimpleCS4
+        %'cat_surf_createCS'              .05  25; % rewised classic pipeline with the new pbtsimpleCS4 in full resolution
+        ... new pipelines - #### not running yet without update! ####   
+        %'cat_surf_createCS'              .05  40; % C-based PBT-function 
+        %'cat_surf_createCS'              .05  42; % internal pbtsimpleCS4 function 
+      }];
+    end
   
     % rescale function with basic offset m and interpolation factor i dependend offset n
     rescale = @(Y,mn,i)  max(0,min(10,(Y>.5)  .* (Y  + mn(1) + mn(2)*(1 / 2^(i)) )));
     
-    % spherical test case
+    % spherical test case 
+    % - too small sphere can cause issue in some createCS functions 
     spheresz = [25+10 5.22+5 2.42]; % vol-size, innerradius thickness
     dsphere  = zeros(repmat(spheresz(1),1,3),'single');
     dsphere( ceil(spheresz(1)/2), ceil(spheresz(1)/2), ceil(spheresz(1)/2) ) = 1;
     dsphered = cat_vbdist(dsphere); 
     dsphere  = 3 - max(0,min(1,dsphered - sum(spheresz(2:3))-.5)) - max(0,min(1,dsphered - spheresz(2)-.5));
+    % C-phantom test case
     dbar     = zeros(repmat(spheresz(1),1,3),'single');
     dbar( ceil(spheresz(1)/2), ceil(spheresz(1)/2):end, :) = 1;
     dbard    = cat_vbdist(dbar); 
     dbar     = 1 + max(0,min(1,dbard - spheresz(3)+0.25)) + max(0,min(1,dbard+.5));
     dsphere2 = min(dsphere,dbar);
+    % extend C-phantom to test pipeline with both hemispheres?
 
     %% loop over methods (and testcases)
     for pbti = 1:size(pbtmethod,1)
@@ -535,7 +544,7 @@ function varargout = compile(comp,test,verb)
       
       %% testsets
       clear rt rmsgmt rmsgmti
-      for casei = 1:4
+      for casei = [1 2 4] % the sphere (id=3) is borring and the C (id=4) is quite similar
         %% select data
         switch casei
           case 1, dx = d2+1; gmt=4 + .8 + .8;    % very simple case with 4 full voxel and 2 PVE voxels with 1.8 and 2.2 what is .8
@@ -544,8 +553,8 @@ function varargout = compile(comp,test,verb)
           case 4, dx = dsphere2; gmt=spheresz(3); 
         end
         dxa = cat_vol_approx(dx); dx(isnan(dx))=dxa(isnan(dx)); % have to assume that NANs were replaced before
-        %dx  = interp3(dx,ip,'cubic');  gmt = gmt*2;  % 'linear' (default) | 'nearest' | 'cubic' | 'spline' | 'makima'
-        dxi = interp3(dx,ip,'cubic');
+        %dx  = interp3(dx,ip,'cubic');  gmt = gmt*2;  % extra interpolation
+        dxi = interp3(dx,ip,'cubic'); % 'linear' (default) | 'nearest' | 'cubic' | 'spline' | 'makima'
        
         %% thickness and position estimation with the different pbtmethod
         switch pbtmethod{pbti} 
@@ -571,13 +580,14 @@ function varargout = compile(comp,test,verb)
             mn = [0 0]; % offset correction
              
           case {'cat_surf_createCS'}
+          % call full reconstruction pipeline
             mn = [0 0]; 
-            if casei<=3, continue; end
-
-            %%
-            %pbti = 4;
-            fprintf('\n===CS%02d===',pbtmethod{pbti,3});
+            if casei<3, continue; end
+            
+            % pbti = 10;
+            if verb > 2, fprintf('\n===CS%02d===',pbtmethod{pbti,3}); end
             for di = 0:1
+              % interpolation 
               switch di 
                 case 0, Y = dx;  res = 1; 
                 case 1, Y = dxi; res = 1/2^ip;
@@ -594,33 +604,50 @@ function varargout = compile(comp,test,verb)
               create(N);
               N.dat(:,:,:) = Y;
   
+              % prepare parameters
               V   = spm_vol(fname); 
               opt = struct('trans',struct(), 'interpV',.5, 'SRP',mod(pbtmethod{pbti,3},10), ...
-                      'surf',{{'lh'}}, 'verb', pbtmethod{pbti,3} < 20); 
+                      'surf',{{'lh'}}); 
               job = struct('inv_weighting',0, 'BIDS',cat_io_BIDS(fname,cat_get_defaults), 'subj',1 ,...
                       'extopts', cat_get_defaults('extopts')); 
   
+              % prepare call
               if pbtmethod{pbti,3} >= 40
-                 Ygmtt = cat_surf_createCS4(V,V, Y/3,Y/3, Y>0,Y>3,Y>1, opt,job);
+                cmd = 'Ygmtt = cat_surf_createCS4(V,V, Y/3,Y/3, Y>0,Y>3,Y>1, opt,job);';
               elseif pbtmethod{pbti,3} >= 20
-                 Ygmtt = cat_surf_createCS2(V,V, Y/3, Y>0,Y<0,Y<1, opt,job);
+                cmd = 'Ygmtt = cat_surf_createCS2(V,V, Y/3, Y>0,Y<0,Y<1, opt,job);';
               else 
-                % this takes some minutes!
-                Ygmtt = cat_surf_createCS(V,V, Y/3, Y>0,Y<0, opt,job);
+                cmd = 'Ygmtt = cat_surf_createCS(V,V, Y/3, Y>0,Y<0, opt,job);'; 
+              end
+              if verb < 3
+                txt = evalc(cmd); 
+              else
+                eval(cmd); %#ok<EVLCS>
+              end
+              % close figure
+              if verb<3
+                close(gcf);
+              else
+                %% optimize view
+                fg = gcf; 
+                fg.Position(3:4) = [350 400];
+                ax = gca; 
+                cat_surf_render2('view',ax,'bottom')
+                cat_surf_render2('Clim',ax, [ spheresz(3)-1 spheresz(3)+1 ] )
+                ax.CameraUpVector  = [1 0 0]; 
+                ax.CameraPosition = ax.CameraPosition * 1.1;
               end
 
+              % set output for interpolation type
               switch di 
                 case 0, Ygmt  = Ygmtt; 
                 case 1, Ygmti = Ygmtt;
               end
               clear Ygmtt;
-              
-              %% close figure
-              if verb<3, close(gcf); end
             end
         end 
   
-        %% offset correction
+        % offset correction
         Ygmt  = rescale(Ygmt,  mn, 1);
         Ygmti = rescale(Ygmti, mn, ip);
   
