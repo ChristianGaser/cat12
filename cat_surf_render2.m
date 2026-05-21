@@ -704,7 +704,9 @@ switch lower(action)
           %   >> auwahl von csv-files 
         try
           % volume/surface-based atlas data
-          BIDS = cat_io_BIDS(sinfo1(1).fname, cat_get_defaults);
+          jobd = cat_get_defaults;
+          jobd.extopts.mkBIDSdir = 0; 
+          BIDS = cat_io_BIDS(sinfo1(1).fname, jobd);
           labelfolder = BIDS(1).labeldir;
           mrifolder = BIDS(1).mridir;
           % find xml-files
@@ -854,7 +856,11 @@ switch lower(action)
         % -----------------------------------------------------------------
         c = uimenu(cmenu, 'Label','Volume', 'Interruptible','off'); %, 'Callback',{@myImageSections, H});
         % -- image ---
-        labeldir = cat_io_BIDS(sinfo1(1).fname, cat_get_defaults);
+
+        jobd = cat_get_defaults;
+        jobd.extopts.mkBIDSdir = 0; 
+        BIDS = cat_io_BIDS(sinfo1(1).fname, jobd);
+        labeldir = BIDS(1).labeldir;
        
         % find nii-files
         if exist(labeldir,'dir')
@@ -1151,7 +1157,7 @@ switch lower(action)
               myView([],[],H,[-180 -90]);
             case {'f','front','a','anterior'} 
               myView([],[],H,[-180   0]);
-            case {'ba','back','p','posterior'} 
+            case {'ba','back','p','posterior','cb'} 
               myView([],[],H,[   0   0]);
             otherwise 
               error('cat_surf_render2:view:unknownView',...
@@ -2270,17 +2276,23 @@ function myHist(obj,evt,H)
 objTextures = findobj(get(findobj(get(get(obj,'parent'),'parent'),'Label','Textures'),'Children'),'Checked','on');
 if isfield( H , 'textures')
   currentTexture = cellfun('isempty',strfind( H.textures(:,1) , objTextures.Label ))==0  &  cellfun('length',H.textures(:,1)) ==  length(objTextures.Label); 
-  cat_plot_histogram( H.textures{currentTexture,2}.fname )
+  cat_plot_histogram( H.textures{currentTexture,2}.fname ,struct('winsize',[350 250],'xlim',[0 6]))
 else
-  cat_plot_histogram(  H.cdata );
+  %%
+  cat_plot_histogram(  H.cdata ,struct('winsize',[350 250],'xlim',[0 6]))
+  legend off; 
+  hh = gca; 
   if isfield(H,'axis')
+    %%
     HT = get( H.axis , 'Title' ) ; 
+    FS = get(HT,'FontSize'); 
+    hh.FontSize = FS*.8;
     if ~isempty( HT )
-      title(HT.String);
+      title(HT.String,'Fontsize', FS*.9);
     end
-    HT = get( H.axis , 'Subtitle' ) ; 
+    HT = get( H.axis , 'Subtitle');
     if ~isempty( HT )
-      subtitle(HT.String);
+      subtitle(HT.String,'Fontsize',FS*.8);
     end
   end
 end
