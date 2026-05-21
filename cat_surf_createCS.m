@@ -783,9 +783,9 @@ cstime = clock;
       cat_surf_fun('white',Pcentral);
       cat_surf_fun('pial',Pcentral);
       %% prepare file and directory names
-      [P,mridir,surfdir,ff] = cat_surf_createCS_fun('setFileNames',V0,job,opt); 
-
-      cat_surf_createCS_fun('quickeval',V0,Vpp,Ymfs,Yppi,CS,P,Smat,res,opt,EC0,si,time_sr,2);
+      Psurf = cat_surf_createCS_fun('setFileNames',V0,job,opt); 
+      S.(opt.surf{si}) = struct('faces',CS.faces,'vertices',CS.vertices,'th1',facevertexcdata);
+      cat_surf_createCS_fun('quickeval',V0,Vpp,Ymfs,Yppi,CS,Psurf,Smat,res,opt,EC0,si,time_sr,1);
       return
     end
 
