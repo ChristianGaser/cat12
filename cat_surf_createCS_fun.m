@@ -115,7 +115,8 @@ function [P,mridir,surfdir,ff] = setFileNames(V0,job,opt)
     P(si).Pcentralr  = fullfile(surfdir,sprintf('%s.central.resampled.%s.gii',opt.surf{si},ff));% central .. used in inactive path
     P(si).Ppial      = fullfile(surfdir,sprintf('%s.pial.%s.gii',opt.surf{si},ff));             % pial (GM/CSF)
     P(si).Pwhite     = fullfile(surfdir,sprintf('%s.white.%s.gii',opt.surf{si},ff));            % white (WM/GM)
-    P(si).Pthick     = fullfile(surfdir,sprintf('%s.thickness.%s',opt.surf{si},ff));            % FS thickness / GM depth
+    P(si).Pthick     = fullfile(surfdir,sprintf('%s.thickness.%s',opt.surf{si},ff));            % final thickness / GM depth
+    P(si).Pthickfs   = fullfile(surfdir,sprintf('%s.thicknessFS.%s',opt.surf{si},ff));          % FS thickness / GM depth
     P(si).Pmsk       = fullfile(surfdir,sprintf('%s.msk.%s',opt.surf{si},ff));                  % msk
     P(si).Ppbt       = fullfile(surfdir,sprintf('%s.pbt.%s',opt.surf{si},ff));                  % PBT thickness / GM depth
     P(si).Psphere0   = fullfile(surfdir,sprintf('%s.sphere.nofix.%s.gii',opt.surf{si},ff));     % sphere.nofix
@@ -150,14 +151,16 @@ function quickeval(V0,Vpp,Ymfs,Yppi,CS,P,Smat,res,opt,EC0,si,time_sr,pipeline)
     cat_io_FreeSurfer('write_surf_data',P(si).Pthick,FSthick);  
   end
 
-  cat_surf_fun('white',P(si).Pcentral);
-  cat_surf_fun('pial',P(si).Pcentral);
+  if 0
+    cat_surf_fun('white',P(si).Pcentral);
+    cat_surf_fun('pial',P(si).Pcentral);
+  end
 
   FSthick = cat_io_FreeSurfer('read_surf_data',P(si).Pthick); 
   PBTthick = cat_io_FreeSurfer('read_surf_data',P(si).Ppbt);  
   res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS', ...
     loadSurf(P(si).Pcentral), cat_io_FreeSurfer('read_surf_data',P(si).Ppbt), cat_io_FreeSurfer('read_surf_data',P(si).Pthick), ...
-    Ymfs,Yppi,P(si).Pcentral,Smat.matlabIBB_mm,2,0);
+    Ymfs,Yppi,P(si).Pcentral,Smat.matlabIBB_mm,2,1); % last is the slow self-intersection test
   CS2 = CS; CS2.cdata = PBTthick; H = cat_surf_render2(CS2);
   cat_surf_render2('clim',H,[0 6]); 
   cat_surf_render2('view',H,cat_io_strrep(opt.surf{si},{'lh','rh','ch'},{'right','left','back'})); 
@@ -178,7 +181,7 @@ function quickeval(V0,Vpp,Ymfs,Yppi,CS,P,Smat,res,opt,EC0,si,time_sr,pipeline)
   Porthnames = '{''white'',''pial''}'; 
   fprintf('  Show surfaces in orthview:  %s\n',spm_file(Po ,'link',...
     sprintf('cat_surf_fun(''show_orthview'',%s,''%s'',%s,%s)',Porthfiles,Po,Porthcolor,Porthnames))) ;
-  fprintf('  Show surfaces in orthview:   %s | %s | %s | (%s) | %s \n', ...
+  fprintf('  Show surfaces:              %s | %s | %s | (%s) | %s \n', ...
     spm_file([opt.surf{si} '.pbt'],'link', sprintf('H=cat_surf_display(''%s'');',P(si).Ppbt)), ...
     spm_file([opt.surf{si} '.thick'],'link', sprintf('H=cat_surf_display(''%s'');',P(si).Pthick)), ...
     spm_file('segmentation' ,'link', sprintf('cat_surf_fun(''show_orthview'',%s,''%s'',%s,%s)',Porthfiles,P(si).Pp0, Porthcolor,Porthnames)), ...
