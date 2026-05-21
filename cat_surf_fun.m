@@ -1301,13 +1301,26 @@ function res = cat_surf_evalCS(CS,Tpbt,Tfs,Ym,Ypp,Pcentral,mat,verb,estSI)
   end
   
   M  = spm_mesh_smooth(CS);    % smoothing matrix
-  if exist('Tpbt','var') % thickness in voxel space 
-    try
-      N  = spm_mesh_normals(CS);
-    
-      VI = CS.vertices + N .* repmat(Tpbt / 2 ,1,3); % white surface
-      VO = CS.vertices - N .* repmat(Tpbt / 2 ,1,3); % pial surface
-    end
+  [pp,ff,ee] = spm_fileparts(Pcentral);
+  
+  % define white/pial surfaces
+  Pwhite = fullfile(pp,strrep([ff ee],'central','white'));   
+  Ppial  = fullfile(pp,strrep([ff ee],'central','pial'));   
+  
+  % use existing white/pial surfaces
+  if exist(Pwhite,'file') && exist(Ppial,'file')
+    CI = gifti(Pwhite);
+    VI = CI.vertices; 
+    CO = gifti(Ppial);
+    VO = CO.vertices; 
+  end
+
+  % if white/pial are missing than define them as moving the CS vertices 
+  % along the surface normals by the half thickness
+  if exist('Tpbt','var') && size(VI,1)~=size(VO,1) && size(VI,1)~=size(CS,1)
+    N  = spm_mesh_normals(CS);
+    VI = CS.vertices + N .* repmat(Tpbt / 2 ,1,3); % white surface
+    VO = CS.vertices - N .* repmat(Tpbt / 2 ,1,3); % pial surface
   end
   
   if exist('Pcentral','var') && ischar(Pcentral)
@@ -1422,19 +1435,25 @@ function res = cat_surf_evalCS(CS,Tpbt,Tfs,Ym,Ypp,Pcentral,mat,verb,estSI)
   %  This is very slow and we may want to keep the result. 
   if estSI && exist('Pcentral','var') && ischar(Pcentral)
     [pp,ff,ee] = spm_fileparts(Pcentral);
-    
-    Pwhite = fullfile(pp,strrep([ff ee],'central','whitex'));   
-    Ppial  = fullfile(pp,strrep([ff ee],'central','pialx'));   
+    % Here we have to use the existing surfaces because some surface pipelines
+    % might create highly optimize white/pial surfaces that are not any longer
+    % resprented by an updated central surface! 
+    Pwhite = fullfile(pp,strrep([ff ee],'central','white'));   
+    Ppial  = fullfile(pp,strrep([ff ee],'central','pial'));   
     Pselfw = fullfile(pp,strrep(ff,'central','whiteselfintersect'));
     Pselfp = fullfile(pp,strrep(ff,'central','pialselfintersect'));
     ePwhite = exist(Pwhite,'file'); 
     ePpial  = exist(Ppial, 'file');
     %ePselfw = exist(Pselfw,'file');
     %ePselfp = exist(Pselfp,'file');
-    
-    % save surfaces
-    save(gifti(struct('faces',CS.faces,'vertices',VI)),Pwhite,'Base64Binary');
-    save(gifti(struct('faces',CS.faces,'vertices',VO)),Ppial,'Base64Binary');
+       
+    % save surfaces only if they don't exist!
+    if ~ePwhite
+      save(gifti(struct('faces',CS.faces,'vertices',VI)),Pwhite,'Base64Binary');
+    end
+    if ~ePpial
+      save(gifti(struct('faces',CS.faces,'vertices',VO)),Ppial,'Base64Binary');
+    end
 
     %cmd = sprintf('CAT_SurfDistance -mean "%s" "%s" "%s"',Pwhite,Ppial,Pthick);
     %cat_system(cmd);
@@ -1452,15 +1471,15 @@ function res = cat_surf_evalCS(CS,Tpbt,Tfs,Ym,Ypp,Pcentral,mat,verb,estSI)
 
     res.white_self_interection_area = sum((selfw(:)>0) .* area(:)) / 100;
     res.pial_self_interection_area  = sum((selfp(:)>0) .* area(:)) / 100;
-    res.white_self_interections     = res.white_self_interection_area / sum(area(:)/100) * 100;
-    res.pial_self_interections      = res.pial_self_interection_area  / sum(area(:)/100) * 100;
+    res.white_self_interections     = res.white_self_interection_area / (sum(area(:)/100)) * 100;
+    res.pial_self_interections      = res.pial_self_interection_area  / (sum(area(:)/100)) * 100;
 
     if verb
       fprintf('    Self intersections (white,pial):     '); 
       cat_io_cprintf( color( rate( res.white_self_interections , 0 , 20 )) , ...
-        sprintf('%0.2f%%%% (%0.2f cm%s) ',res.white_self_interections,res.white_self_interection_area,char(178))); 
+        sprintf('%0.2f%% (%0.2f cm%s) ',res.white_self_interections,res.white_self_interection_area,char(178))); 
       cat_io_cprintf( color( rate( res.pial_self_interections , 0 , 20 )) , ...
-        sprintf('%0.2f%%%% (%0.2f cm%s)\n',res.pial_self_interections,res.pial_self_interection_area,char(178))); 
+        sprintf('%0.2f%% (%0.2f cm%s)\n',res.pial_self_interections,res.pial_self_interection_area,char(178))); 
     end
 
     % delete temparary files
@@ -1913,7 +1932,7 @@ function [S,Tn,SI] = cat_surf_collision_correction_ry(S,T,Y,opt)
     selfp = cat_io_FreeSurfer('read_surf_data',Pselfp)>0; 
     
     
-    if opt.ta > 0
+    if 0 % opt.ta > 0
       selfw = selfw .* TAs; 
       selfp = selfp .* TAs; 
     end
@@ -1950,7 +1969,7 @@ function [S,Tn,SI] = cat_surf_collision_correction_ry(S,T,Y,opt)
     VOC = S.vertices - N .* repmat(Tvxp,1,3); 
     VIC = S.vertices + N .* repmat(Tvxw,1,3); 
  
-    if 1
+    if 0
       % extra thickenss smoothing
       Sa   = cat_surf_fun('area',S); 
       Tsw  = repmat( max(0,min(1,max( (Tn-3)/6 , (Tn ./ (Sa * 4) - 3) / 6) )) ,1,3); clear Sa;
@@ -1989,7 +2008,7 @@ function [S,Tn,SI] = cat_surf_collision_correction_ry(S,T,Y,opt)
     SI  = (sum(selfw>0)/2 + sum(selfp>0)/2) / numel(selfw) * 100; 
     if opt.verb
       cat_io_cprintf('g5',sprintf( ...
-        '    Step %2d (SS=%02.0f%%%%, SI=%5.2f%%%%, T=%4.2f%s%4.2f)\n',...
+        '    Step %2d (SS=%02.0f%%, SI=%5.2f%%, T=%4.2f%s%4.2f)\n',...
         i,corrsize*100, (sum(selfw>0)/2 + sum(selfp>0)/2) / numel(selfw) * 100,...
         mean(Tn),native2unicode(177, 'latin1'),std(Tn)));  
       %fprintf('/sprintf('%s',repmat('\b',1,73*2)));
@@ -2150,7 +2169,7 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
   
   % do not correct in regions with extremly high thickness ... 
   % RD20210403: this is still not fully working
-  if opt.ta>0
+  if opt.ta > 0
     %%
     A   = cat_surf_fun('area',S); 
     TA  = T ./ A; 
@@ -2162,7 +2181,7 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
     TAs = ones(size(T),'single'); 
   end
   
-  i   = 0; final = 0; SIO = 1; SI = 90; SIO2 = 100; 
+  i   = 0; final = 0; SIO = .99; SI = 90; SIO2 = 100; 
   if opt.verb, fprintf('\n'); end
   if opt.CS4, SIO2th = 0.98; else, SIO2th = 0.95; end 
   while (i < round(opt.iterfull/2)*2 ) || (SI>0.1 && SI<SIO2*SIO2th && mod(i,2)==1) % more iterations improve the int and especialy the pos and SI values but increase also the thdiff value  
@@ -2226,14 +2245,14 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
       GWth = 1;
       CGth = 0;
 
-      YI = cat_surf_isocolors2(Ypp,VI,opt.mat); YI = min(1,YI + cterm);
-      YO = cat_surf_isocolors2(Ypp,VO,opt.mat); YO = max(0,YO - cterm); 
+      YI = cat_surf_isocolors2(Ypp,VI,opt.mat); YI = min( 2,YI + cterm);
+      YO = cat_surf_isocolors2(Ypp,VO,opt.mat); YO = max(-1,YO - cterm); 
 
       if opt.verb>1, fprintf('  YIC:%5.2f%s%0.2f, YOC:%5.2f%s%0.2f',mean(YI),native2unicode(177, 'latin1'),std(YI),mean(YO),native2unicode(177, 'latin1'),std(YO)); end 
 
       % correction value 
-      YI = max(-1, min(1, ( GWth - YI ) * coristr .* (1-C)   )) .* TAs;
-      YO = max(-1, min(1, ( YO - CGth ) * coristr .* (C+1)/2 )) .* TAs;
+      YI = max(-1, min(2, ( GWth - YI ) * coristr .* (1-C)   )) .* TAs;
+      YO = max(-1, min(2, ( YO - CGth ) * coristr .* (C+1)/2 )) .* TAs;
       
       % test new inner surface position .. balance corrections in both
       % directions to keep the thickness
@@ -2244,6 +2263,11 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
         VIC   = S.vertices + N .* repmat( Tw - (Twc - YI) + (Tpc - YO) ,1,3);    % inner surface 
         VOC   = S.vertices - N .* repmat( Tp - (Tpc - YO) + (Twc - YI) ,1,3);    % outer surface  
       end
+      YVIA = spm_mesh_area(struct('vertices',VIC,'faces',S.faces)); mdVIA = median(YVIA); 
+      YVOA = spm_mesh_area(struct('vertices',VIC,'faces',S.faces)); mdVOA = median(YVOA);  
+
+      VICs = smoothsurf(VIC,.1); VIC(YVIA<mdVIA/2) = VICs(YVIA<mdVIA/2);
+      VOCs = smoothsurf(VOC,.1); VOC(YVOA<mdVOA/2) = VOCs(YVOA<mdVOA/2);
 
       % get values
       YIC   = cat_surf_isocolors2(Ypp,VIC,opt.mat); YIC   = min(1,YIC   + cterm);
@@ -2255,7 +2279,7 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
       YI    = YI .* ( Twc==0 & ...
         abs( GWth - YI ) > abs( GWth - YIC )  & ...
         cat_surf_edgeangle( Vg , VIg ) < opt.alphaYpp & ...
-        ( YppIC > YppI | YppI>GWth) & (YppIC<GWth | YIC<2.9) & YIC<2.95 ); % 0.98 & 2.9
+        ( YppIC > YppI | YppI>GWth) & (YppIC<GWth | YIC<.98) & YIC<.99 ); % 0.98 & 2.9
       clear YppIC YIC YppI VIg; 
       
       % test new outer surface position
@@ -2272,7 +2296,7 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
           YO    = YO .* YppOC .* ( Tpc==0 & ...
             abs( YO - CGth ) > abs( YOC - CGth ) & ...
             cat_surf_edgeangle( Vg , VOg ) < opt.alphaYpp & ...
-            YppOC < YppO & YppOC>CGth & YOC>1.50); % 0.01 & 1.5 
+            YppOC < YppO & YppOC>CGth & YOC>0.01); % 0.01 & 1.5 
         elseif false
           YO  = YO .* (0.5 + 0.5*YppOC) .* ( Tpc==0 & ...
             cat_surf_edgeangle( Vg , VOg ) < opt.alphaYpp & ...
@@ -2293,8 +2317,8 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
     % define minimal sulcal/gyral gap
     % RD20200403: The idea was good but it is not realy helping for the ISs
     %             but lead to strong thickness changes (-0.05). 
-    if 0
-      sulciGyriWidth = 0.0; 
+    if 1
+      sulciGyriWidth = 0.001; 
       Twc(Twc>0) = Twc(Twc>0) + sulciGyriWidth * 2;
       Tpc(Tpc>0) = Tpc(Tpc>0) + sulciGyriWidth;
     end
@@ -2419,7 +2443,7 @@ function [S,Tn,SI] = cat_surf_collision_correction_pbt(S,T,Y,Ypp,opt)
     if corrsize <= opt.accuracy, final = final + 1; end
     if opt.verb
       cat_io_cprintf('g5',sprintf( ...
-        '    Step %2d (SS=%02.0f%%%%, SI=%5.2f%%%%, T=%4.2f%s%4.2f)',...
+        '    Step %2d (SS=%02.0f%%, SI=%5.2f%%, T=%4.2f%s%4.2f)',...
         i,corrsize*100, SI, mean(Tn),native2unicode(177, 'latin1'),std(Tn)));  
       fprintf('\n')
     end
@@ -2708,7 +2732,7 @@ function [SN,TN,E] = cat_surf_collision_correction(S,T,Y,Ypp,Yl4,opt)
     end
     clear NE
     if opt.debug
-      cat_io_cprintf('g5',sprintf('    remove edges by surface (l%d):%8d > %9d (%0.2f%%%%) %9.0fs',...
+      cat_io_cprintf('g5',sprintf('    remove edges by surface (l%d):%8d > %9d (%0.2f%%) %9.0fs',...
         nlevel,nE,size(E,1),size(E,1)./nE,etime(clock,stime)));
     else
       clear nE
@@ -2765,7 +2789,7 @@ function [SN,TN,E] = cat_surf_collision_correction(S,T,Y,Ypp,Yl4,opt)
         NE = NE < .05; %05; %max(eps,mean(NE) - 1*std(NE)); % smaller values > remove less
         E (NE,:) = []; %if exist('ET','var'), ET(NE) = []; end
         if opt.debug
-          cat_io_cprintf('g5',sprintf('\n    remove edges by intensity:            > %9d (%0.2f%%%%) %9.0fs',...
+          cat_io_cprintf('g5',sprintf('\n    remove edges by intensity:            > %9d (%0.2f%%) %9.0fs',...
             size(E,1),size(E,1)./nE,etime(clock,stime))); stime = clock;
         else
           clear NE NEd NEi NEna NEsa
@@ -3118,21 +3142,24 @@ end
 function cat_surf_show_orthview(Psurf,Pm,color,cnames)
   fg = spm_figure('GetWin','Graphics');
   %fg = spm_figure('Create','SurfaceOverlay');%,Psurf);
-  spm_figure('clear')
+  spm_figure('Clear',fg); 
 
   id = 1;
-  global st
+  clearvars -global st; 
+  global st; 
 
+  %%
   [pp,ff,ee] = spm_fileparts(Pm);
-  hhm = spm_orthviews('Image',spm_vol(Pm));
+  hhm = spm_orthviews('Image',spm_vol(Pm),[0.02 0.02 .96 .96],fg);
   spm_orthviews('Caption',hhm,{'m*.nii (Intensity Normalized T1)'},'FontWeight','Bold');
   if ff(1)=='m', spm_orthviews('window',hhm,[0.3 1.03]); caxis([0.3,1.03]); end
   spm_orthviews('AddContext'); % need the context menu for mesh handling
 
+  %%
   ov_mesh = 1; 
   for ix=1:numel(Psurf) 
-    
-    if ov_mesh && exist(Psurf{ix},'file')
+    ex(ix) = exist(Psurf{ix},'file');
+    if ov_mesh && ex(ix)
       try
         spm_ov_mesh('display',id,Psurf{ix});
       catch
@@ -3140,8 +3167,11 @@ function cat_surf_show_orthview(Psurf,Pm,color,cnames)
         ov_mesh = 0;
         continue;
       end
+    else
+      cat_io_cprintf('err','Missing file: %s\n',Psurf{ix}); 
     end
   end
+  if any(~ex), return; end
 
   %% change line style
   if ov_mesh
