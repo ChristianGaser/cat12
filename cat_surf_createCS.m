@@ -782,9 +782,16 @@ cstime = clock;
     if isscalar(opt.surf)
       cat_surf_fun('white',Pcentral);
       cat_surf_fun('pial',Pcentral);
-      %% prepare file and directory names
+      
+      % prepare file and directory names
       Psurf = cat_surf_createCS_fun('setFileNames',V0,job,opt); 
       S.(opt.surf{si}) = struct('faces',CS.faces,'vertices',CS.vertices,'th1',facevertexcdata);
+
+      % write also FreeSurfer data
+      cat_io_FreeSurfer('write_surf_data',Psurf(si).Ppbt,facevertexcdata);
+      cmd = sprintf('CAT_SurfDistance -mean -thickness "%s" "%s" "%s"', Psurf(si).Ppbt, Psurf(si).Pcentral, Psurf(si).Pthick);
+      cat_system(cmd,opt.verb-3);
+
       cat_surf_createCS_fun('quickeval',V0,Vpp,Ymfs,Yppi,CS,Psurf,Smat,res,opt,EC0,si,time_sr,1);
       return
     end

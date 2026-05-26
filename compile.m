@@ -570,6 +570,7 @@ function varargout = compile(comp,test,verb)
 
     if verb>2, ds('d2','',1,packman/3,packmancol1/3,packmancol/3,packmancol2/3,ceil(spheresz(1)/1.75)); end
 
+
     %% loop over methods (and testcases)
     for pbti = 1:size(pbtmethod,1)
       ni           = ni + 1;
@@ -583,6 +584,7 @@ function varargout = compile(comp,test,verb)
                            % only 'cat_vol_pbt-restest'
       Yb = ones(size(d2)); Yb(2:end-1,2:end-1,2:end) = 0; 
       
+
       %% testsets
       clear rt rmsgmt rmsgmti
       for casei = [1 2 4 5 7] % the sphere (id=3) is borring and the C (id=4) is quite similar
@@ -600,6 +602,7 @@ function varargout = compile(comp,test,verb)
         %dx  = interp3(dx,ip,'cubic');  gmt = gmt*2;  % extra interpolation
         dxi = interp3(dx,ip,'cubic'); % 'linear' (default) | 'nearest' | 'cubic' | 'spline' | 'makima'
        
+
         %% thickness and position estimation with the different pbtmethod
         switch pbtmethod{pbti} 
           case 'cat_vol_pbt-restest'
@@ -627,10 +630,20 @@ function varargout = compile(comp,test,verb)
           % call full reconstruction pipeline
             mn = [0 0]; 
             if casei<3, continue; end
-            
-            % pbti = 10;
-            if verb > 2, fprintf('\n===CS%02d===',pbtmethod{pbti,3}); end
+
+            % due to higher processing times we give some basic feedback
+            if verb > 2
+              fprintf('\n===CS%02d===',pbtmethod{pbti,3});
+            else 
+              fprintf('\nTest CS%02d pipeline Testcase %d:  ', pbtmethod{pbti,3}, casei);
+            end
+          
             for di = 0:1
+              stime = datetime('now'); 
+              if verb > 0
+                fprintf('Run %d: ', di+1);
+              end
+              
               % interpolation 
               switch di 
                 case 0, Y = dx;  res = 1; 
@@ -647,6 +660,11 @@ function varargout = compile(comp,test,verb)
               N.descrip = 'testimage';
               create(N);
               N.dat(:,:,:) = Y;
+
+              if ~exist( fname , 'file')
+                cat_io_cprintf('Cannot write temporary file "%s"\n', fname); 
+              end
+
   
               % prepare parameters
               V   = spm_vol(fname); 
@@ -663,11 +681,23 @@ function varargout = compile(comp,test,verb)
               else 
                 cmd = 'Ygmtt = cat_surf_createCS(V,V, Y/3, Y>0,Y<0, opt,job);'; 
               end
-              if verb < 3
-                txt = evalc(cmd); 
-              else
-                eval(cmd); %#ok<EVLCS>
+              
+              try
+                if verb < 3
+                  txt = evalc(cmd); 
+                else
+                  eval(cmd); %#ok<EVLCS>
+                end
+              catch e
+                cat_io_cprintf('err','ERROR! ..'); 
+                Ygmtt = nan(size(Y)); 
               end
+            
+              % allways print time as this can take time
+              dur = datetime('now') - stime; 
+              fprintf('%10s  ',char(duration(dur,'Format','s')));
+            
+
               % close figure
               if verb<3
                 close(gcf);
