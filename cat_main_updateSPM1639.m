@@ -408,7 +408,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   end
   Yb0 = (Ym0 > min(0.5,max(0.25, job.extopts.gcutstr))); clear Ym0
   Yb0 = cat_vol_morph(cat_vol_morph(Yb0,'lo'),'c');
-  Ybb = max( Ybb , uint8( 255 * smooth3(cat_vol_morph(Yb0,'de',5,vx_vol) & Ysrc < WMth*.7)));
+  Ybb = max( cat_vol_ctype(Ybb*255) , uint8( 255 * smooth3(cat_vol_morph(Yb0,'de',5,vx_vol) & Ysrc < WMth*.7)));
 
   
 % RD202010: In some images SPM selects the image BG and brain tisssue as class 4  
