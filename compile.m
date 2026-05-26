@@ -689,7 +689,10 @@ function varargout = compile(comp,test,verb)
                   eval(cmd); %#ok<EVLCS>
                 end
               catch e
-                cat_io_cprintf('err','ERROR! ..'); 
+                cat_io_cprintf('err','ERROR: %s - %s\n',e.identifier,e.message);
+                for si = numel(e.stack):-1:1
+                  cat_io_cprintf('err','  %s:%d\n',e.stack(si).file,e.stack(si).line);
+                end
                 Ygmtt = nan(size(Y)); 
               end
             
