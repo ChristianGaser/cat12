@@ -109,6 +109,7 @@ function varargout = compile(comp,test,verb)
       'cat_vbdist3.c'
       'cat_ornlm.c ornlm_float.c'
       'cat_sanlm.c sanlm_float.c'
+      'cat_surf_smoothr.c'
     };
     % internal c-functions
     % does not yet work for octave
@@ -503,11 +504,11 @@ function varargout = compile(comp,test,verb)
         'cat_surf_createCS'              .05  22; % rewised classic pipeline
         ... expertimental non-standard pipelines
         %'cat_surf_createCS'              .05  23; % rewised classic pipeline with the first pbtsimple
-        %'cat_surf_createCS'              .05  24; % rewised classic pipeline with the new pbtsimpleCS4
+        'cat_surf_createCS'              .05  24; % rewised classic pipeline with the new pbtsimpleCS4
         %'cat_surf_createCS'              .05  25; % rewised classic pipeline with the new pbtsimpleCS4 in full resolution
         ... new pipelines - #### not running yet without update! ####   
-        %'cat_surf_createCS'              .05  40; % C-based PBT-function 
-        %'cat_surf_createCS'              .05  42; % internal pbtsimpleCS4 function 
+        'cat_surf_createCS'              .05  40; % C-based PBT-function 
+        'cat_surf_createCS'              .05  42; % internal pbtsimpleCS4 function 
       }];
     end
   
@@ -516,7 +517,8 @@ function varargout = compile(comp,test,verb)
     
     % spherical test case 
     % - too small sphere can cause issue in some createCS functions 
-    spheresz = [25+10 5.22+5 2.42]; % vol-size, innerradius thickness
+    scaling  = 1; % general scalign to run also the full SPM/CAT preprocessing 
+    spheresz = [25+10 5.22+5 2.42] .* scaling; % vol-size, innerradius thickness
     dsphere  = zeros(repmat(spheresz(1),1,3),'single');
     dsphere( ceil(spheresz(1)/2), ceil(spheresz(1)/2), ceil(spheresz(1)/2) ) = 1;
     dsphered = cat_vbdist(dsphere); 
@@ -526,9 +528,9 @@ function varargout = compile(comp,test,verb)
     dbar( ceil(spheresz(1)/2), ceil(spheresz(1)/2):end, :) = 1;
     dbard    = cat_vbdist(dbar); 
     dbar     = 1 + max(0,min(1,dbard - spheresz(3)+0.25)) + max(0,min(1,dbard+.5));
-    dsphere2 = min(dsphere,dbar);
-    %% extend packman C-phantom to test pipeline with both hemispheres?
-    levels = [1.5 2 2.5 3]; sulcusPVE = .25;
+    packman  = min(dsphere,dbar);
+    % extend packman C-phantom to test pipeline with both hemispheres?
+    levels = [1.5 2 2.5 3] * scaling(end); sulcusPVE = .25;
     subsph = cell(1,numel(levels)); subbar = subsph;
     for thi = 1:numel(levels)
       subsph{thi} = sphere( spheresz(1) , spheresz(2) - .5*(levels(thi) - mean(levels)) , levels(thi) ); 
@@ -548,8 +550,25 @@ function varargout = compile(comp,test,verb)
     packmancol(ceil(spheresz(1)/2)+1:end, ceil(spheresz(1)/2):end, :) = min( ...
      subsph{4}(ceil(spheresz(1)/2)+1:end, ceil(spheresz(1)/2):end, :), ...
      subbar{4}(ceil(spheresz(1)/2)+1:end, ceil(spheresz(1)/2):end, :));
+   
+    % create a challanging version with noise and defects
+    rng(34939);
+    defectbridge = dsphere*0; 
+    defectbridge( :, floor(spheresz(1)*3/4):ceil(spheresz(1)*3/4), ...
+       floor(spheresz(1)/1.75):ceil(spheresz(1)/1.75) ) = 1; 
+    defectbridge = defectbridge .* (dsphere>2.5); 
+    defecthole  = dsphere*0; 
+    defecthole( 1:ceil(spheresz(1)*1/2), floor(spheresz(1)*1/2):ceil(spheresz(1)*1/2), ...
+      floor(spheresz(1)/1.75):ceil(spheresz(1)/1.75) ) = 1; 
+    defecthole  = defecthole .* (dsphere>2.5); 
+    packmancol1 = packmancol; 
+    packmancol1 = min( max( packmancol1 , defectbridge*3) , 3-defecthole); 
+    % add gaussian noise and set limit to simulated noisy segmenation 
+    % we combine here the smoothed and raw gaussian noise to get a more realistice outcome
+    packmancol2 = packmancol1 + smooth3(randn(size(packmancol))) + 0.05*randn(size(packmancol)); 
+    %packmancol2 = min(3,max(1,packmancol2)); 
 
-    %ds('d2','',1,packmancol,packmancol,packmancol/3,packmancol/3,20)
+    if verb>2, ds('d2','',1,packman/3,packmancol1/3,packmancol/3,packmancol2/3,ceil(spheresz(1)/1.75)); end
 
     %% loop over methods (and testcases)
     for pbti = 1:size(pbtmethod,1)
@@ -566,14 +585,16 @@ function varargout = compile(comp,test,verb)
       
       %% testsets
       clear rt rmsgmt rmsgmti
-      for casei = [1 2 4 5] % the sphere (id=3) is borring and the C (id=4) is quite similar
+      for casei = [1 2 4 5 7] % the sphere (id=3) is borring and the C (id=4) is quite similar
         %% select data
         switch casei
           case 1, dx = d2+1; gmt=4 + .8 + .8;    % very simple case with 4 full voxel and 2 PVE voxels with 1.8 and 2.2 what is .8
           case 2, dx = d5+1; gmt=2;              % complex sulcus case
           case 3, dx = dsphere;  gmt=spheresz(3); 
-          case 4, dx = dsphere2; gmt=spheresz(3); 
-          case 5, dx = packmancol; gmt=mean(levels); 
+          case 4, dx = packman; gmt=spheresz(3);      % C-phantom with equal thickness
+          case 5, dx = packmancol; gmt=mean(levels);  % C-phantom with 4 thickness levels
+          case 6, dx = packmancol1; gmt=mean(levels); % C-phantom with 4 thickness levels and topology issues
+          case 7, dx = packmancol2; gmt=mean(levels); % C-phantom with 4 thickness levels, topology issues and noise
         end
         dxa = cat_vol_approx(dx); dx(isnan(dx))=dxa(isnan(dx)); % have to assume that NANs were replaced before
         %dx  = interp3(dx,ip,'cubic');  gmt = gmt*2;  % extra interpolation
@@ -621,7 +642,7 @@ function varargout = compile(comp,test,verb)
               N         = nifti;
               N.dat     = file_array(fname,size(Y),...
                            [spm_type('float32') spm_platform('bigend')],0,1,0);
-              N.mat     = spm_matrix([ round(size(Y)), 0 0 0,  repmat(res,1,3), 0 0 0]);  
+              N.mat     = spm_matrix([ size(Y)/2 , 0 0 0,  repmat(res,1,3), 0 0 0]);  
               N.mat0    = N.mat;
               N.descrip = 'testimage';
               create(N);
@@ -636,7 +657,7 @@ function varargout = compile(comp,test,verb)
   
               % prepare call
               if pbtmethod{pbti,3} >= 40
-                cmd = 'Ygmtt = cat_surf_createCS4(V,V, Y/3,Y/3, Y>0,Y>3,Y>1, opt,job);';
+                cmd = 'Ygmtt = cat_surf_createCS4(V,V, Y/3,Y/3, Y>0,Y>3,smooth3(Y)>.5, opt,job);';
               elseif pbtmethod{pbti,3} >= 20
                 cmd = 'Ygmtt = cat_surf_createCS2(V,V, Y/3, Y>0,Y<0,Y<1, opt,job);';
               else 
@@ -656,7 +677,7 @@ function varargout = compile(comp,test,verb)
                 fg.Position(3:4) = [350 400];
                 ax = gca; 
                 cat_surf_render2('view',ax,'top')
-                if casei == 5
+                if casei >= 5  
                   cat_surf_render2('Clim',ax, [ min(levels)-.5 max(levels)+.5 ] )
                 else
                   cat_surf_render2('Clim',ax, [ floor(gmt-1) ceil(gmt+1) ] )
