@@ -42,7 +42,7 @@ jobs:
             addpath(fullfile(ws, 'spm'));
             cd(fullfile(ws, 'spm', 'toolbox', 'CAT'))
             compile(1, 0, 2);                          % build mex-files for this runner
-            ok1 = compile(0, 1, 2);                    % test compiled c-functions
+            ok1 = compile(0, 2, 2);                    % test compiled c-functions
             [ok2, ~] = cat_tst_unittests(2);           % parsing / option / config unit tests
             if ~(ok1 && ok2), error('CAT:tests', 'CAT12 tests failed.'); end
             disp('All CAT12 tests passed.')
