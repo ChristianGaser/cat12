@@ -142,14 +142,32 @@ stools.values = { ...
 %==========================================================================
 function res = cat_surf_spm_cfg_results 
 % Surface based version of the SPM result function (tiny changes).
-res       = spm_cfg_results;
+try
+  res    = spm_cfg_results;
+catch
+% if SPM was not initialized the function might be not visible
+  curdir = pwd; 
+  cd(fullfile(spm('dir'),'config')); 
+  res    = spm_cfg_results;
+  cd( curdir ); 
+  clear curdir
+end
 res.prog  = @cat_spm_results_ui;
 res.name  = ['Surface ' res.name];
 
 function con = cat_surf_spm_cfg_con
 % Surface based version of the SPM contrast tools that only change the 
 % dependency settings updated here in vout_stats.
-con      = spm_cfg_con;
+try
+  con    = spm_cfg_con;
+catch
+% if SPM was not initialized the function might be not visible
+  curdir = pwd; 
+  cd(fullfile(spm('dir'),'config')); 
+  con    = spm_cfg_con;
+  cd( curdir ); 
+  clear curdir
+end
 con.name = ['Surface ' con.name];
 con.vout = @vout_stats; % gifti rather than nifti output
 
