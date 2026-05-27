@@ -87,9 +87,21 @@ function varargout = cat_parallelize(job,func,datafield)
 
   % If one of the input directories is a BIDS directory than use create a
   % subfolder derivatives/CATxx.#/log to save the log-files there and not
-  % somewhere. A try catch block is used in case of untested input (e.g.,
-  % structures). See also for a similar block in cat_run.
-  BIDS = cat_io_BIDS( data , struct());
+  % somewhere. cat_io_BIDS expects file paths (cell/char). For the
+  % longitudinal call (datafield='subj') "data" is a struct array of
+  % subjects with a .mov cellstr per subject - flatten it. A try/catch
+  % protects against other untested input shapes (the result then just
+  % disables the BIDS log-path detection without aborting the job).
+  if isstruct(data) && isfield(data,'mov')
+    files_for_bids = vertcat(data.mov);
+  else
+    files_for_bids = data;
+  end
+  try
+    BIDS = cat_io_BIDS( files_for_bids , struct());
+  catch
+    BIDS = struct('isBIDS',false);
+  end
   if any( [BIDS.isBIDS] )
     BIDSdir = spm_fileparts( cat_io_BIDS(BIDS(1),'logdir') ); 
     logdir  = cat_io_BIDS(BIDS(1),'logdir'); 
