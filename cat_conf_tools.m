@@ -1635,7 +1635,16 @@ function resize = conf_vol_resize(data,prefix,expert,outdir)
   end
     
   % imcalc interpolation field
-  imcalc            = spm_cfg_imcalc;
+  try
+    imcalc = spm_cfg_imcalc;
+  catch
+    % if SPM was not initialized the function might be not visible
+    curdir = pwd; 
+    cd(fullfile(spm('dir'),'config')); 
+    imcalc = spm_cfg_imcalc;
+    cd( curdir ); 
+    clear curdir
+  end
   if isa(imcalc.val,'function_handle')
     imcalc.val = feval(imcalc.val);
   end

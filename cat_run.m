@@ -48,7 +48,7 @@ if isscalar(job.data), job.nproc = 0; end
 
 % remove higher dimentional input as this is not working with gzipped data
 % and makes filename handling more difficult
-imgnumber = cellfun( @(x) max(isempty(x), str2double(x(2-2*isempty(x):end)) ), spm_file(job.data, 'number')); 
+imgnumber = cellfun( @(x) max(isempty(x), str2double(x(2-1*isempty(x):end)) ), spm_file(job.data, 'number')); 
 if all( imgnumber > 1 )
   error('warning:cat_run','Higher dimentions NIFTIs are not supported as input for CAT preprocessing.');
 end
