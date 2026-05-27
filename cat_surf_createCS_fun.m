@@ -188,8 +188,9 @@ function quickeval(V0,Vpp,Ymfs,Yppi,CS,P,Smat,res,opt,EC0,si,time_sr,pipeline)
     spm_file('ppmap'        ,'link', sprintf('cat_surf_fun(''show_orthview'',%s,''%s'',%s,%s)',Porthfiles,Vpp.fname, Porthcolor,Porthnames)), ...
     spm_file('original'     ,'link', sprintf('cat_surf_fun(''show_orthview'',%s,''%s'',%s,%s)',Porthfiles,Po,        Porthcolor,Porthnames)));
   
-
-  subtitle( strrep( spm_str_manip(P(si).Pcentral,'a90') ,'_','\_'))
+  if exist('subtitle','file') % not available before R2020b 
+    subtitle( strrep( spm_str_manip(P(si).Pcentral,'a90') ,'_','\_'))
+  end
   fprintf('    Runtime:                             %0.0fs\n',etime(clock,time_sr)); 
 
 end

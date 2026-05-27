@@ -2291,7 +2291,7 @@ else
       title(HT.String,'Fontsize', FS*.9);
     end
     HT = get( H.axis , 'Subtitle');
-    if ~isempty( HT )
+    if ~isempty( HT ) && exist('subtitle','file')
       subtitle(HT.String,'Fontsize',FS*.8);
     end
   end
