@@ -890,13 +890,19 @@ function saveSurf(CS,P)
   save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),P,'Base64Binary'); %#ok<USENS>
 end
 %=======================================================================
-function CS1 =loadSurf(P)
-  % add 1s because sometimes surface is not yet ready to read...
+function CS1 = loadSurf(P)
+  % add 5s + 10s because sometimes surface is not yet ready to read (i.e. NAS)
   if ~exist(P,'file')
-    pause(3)
+    pause(5)
     if ~exist(P,'file')
-      pause(1)
-      error('Surface file %s could not be found due to previous processing errors.',P);
+      pause(10+rand(1))
+      try
+        CS = gifti(P);
+        CS1.vertices = CS.vertices; CS1.faces = CS.faces; 
+        if isfield(CS,'cdata'), CS1.cdata = CS.cdata; end
+      catch
+        error('Surface file %s could not be read due to previous processing errors.',P);
+      end
     end 
   end 
   
