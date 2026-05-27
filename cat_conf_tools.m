@@ -263,14 +263,14 @@ function savg = conf_vol_savg(prefix,verb,expert)
   % files per subject 
   subjectdirs         = cfg_files;
   subjectdirs.tag     = 'subjectdirs';
-  subjectdirs.name    = 'Directories';
+  subjectdirs.name    = 'BIDS subject directories';
   subjectdirs.help    = {'Select directories of subjects or sessions that contain (gzipped) NIFTI files (in subdirectories) for averaging.' ''};
   subjectdirs.filter  = 'dir';
   
   sessiondirs         = cfg_files;
   sessiondirs.tag     = 'sessiondirs';
-  sessiondirs.name    = 'Session directories';
-  sessiondirs.help    = {'Select session directories that contain (gzipped)NIFTI files (in subdirectories) for averaging.' ''};
+  sessiondirs.name    = 'BIDS session directories';
+  sessiondirs.help    = {'Select session directories that contain (gzipped) NIFTI files (in subdirectories) for averaging.' ''};
   sessiondirs.filter  = 'dir';
   
   session           = cfg_files;
@@ -279,7 +279,7 @@ function savg = conf_vol_savg(prefix,verb,expert)
   session.name      = 'Session files';
   session.ufilter   = '.*.nii'; 
   session.filter    = 'any'; % also want nii.gz
-  session.help      = {'Select all (gzipped) NIFTI images of this session that should be averaged. '};
+  session.help      = {'Select all (gzipped) NIFTI images (of this session) that should be averaged. '};
 
   subject           = cfg_repeat;
   subject.tag       = 'subject';
@@ -296,7 +296,11 @@ function savg = conf_vol_savg(prefix,verb,expert)
   subjects          = cfg_repeat;
   subjects.tag      = 'subjects';
   subjects.name     = 'Subjects/Sessions';
-  subjects.values   = {subjectdirs,sessiondirs,subject,scans};
+  if expert
+    subjects.values = {subjectdirs,sessiondirs,subject,scans};
+  else
+    subjects.values = {subjectdirs,subject};
+  end
   subjects.val      = {subjectdirs}; 
   subjects.num      = [1 Inf];
   subjects.help     = {
@@ -343,7 +347,7 @@ function savg = conf_vol_savg(prefix,verb,expert)
   % reqlist 
   reqlist                = cfg_entry;
   reqlist.tag            = 'reqlist';
-  reqlist.name           = 'Path selector (EXPERT)';
+  reqlist.name           = 'Path selector'; % (EXPERT)';
   reqlist.strtype        = 's';
   reqlist.num            = [0 Inf];
   %reqlist.hidden         = expert<1; % needed if no BIDS
@@ -373,10 +377,20 @@ function savg = conf_vol_savg(prefix,verb,expert)
   % main field
   limits           = cfg_exbranch;
   limits.tag       = 'limits';
-  limits.name      = 'Data selectors';
+  limits.name      = 'Use selectors';
   limits.val       = {seplist,blacklist,reqlist,reslim,filelim};
   limits.help      = {'Parameters to control the selection of input files. '}; 
   
+  nolimits         = cfg_exbranch;
+  nolimits.tag     = 'nolimits';
+  nolimits.name    = 'No selectors';
+
+  datasel          = cfg_choice; 
+  datasel.tag      = 'limits';
+  datasel.name     = 'Data selectors';
+  datasel.values   = {nolimits limits};
+  datasel.val      = {limits}; 
+
 
   % processing options
   % -----------------------------------------------------------------------
@@ -517,17 +531,19 @@ function savg = conf_vol_savg(prefix,verb,expert)
   savg                = cfg_exbranch;
   savg.tag            = 'savg';
   savg.name           = 'Rescan average';
-  savg.val            = {subjects, limits, opts, output};
   savg.prog           = @cat_vol_savg;
   savg.vout           = @vout_vol_savg;
   savg.help           = {
-    ['Creation of a subject- and session-wise average image of varying protocols, i.e., averaging of rescans to improve SNR. ' ...
+    ['Creation of a subject- and session-wise average image to improve SNR. ' ...
      'The batch considers BIDS and allows the selection of the subject directories (sub-*). ' ...
      'It looks for session-directories (ses-*) and the anatomical data (anat directory). ' ...
-     'The weightings are handled by the "Data separation list" and unwanted files can be excluded by the "Blacklist". ']
+     'The protocols are handled by the "Data separation list" and unwanted files can be excluded by the "Blacklist". ']
+     ''
+    ['If the selected files are irgnored then the selection criterias are maybe to strong. ' ...
+     'Clearing of the "Data separation list" can help as it is used to look for specific string like T1w.']
      ''
     ['It is assumed that rescans are within the same ses-*/anat/ directory (e.g. specified by a run-* entry). ' ...
-     'Otherwise, it is possible to define subjects with sessions directly.']     
+     'Otherwise, it is possible to define "Subjects" with "Session files" or "Subject files" directly.']     
      ''
     ['The processing includes a quick bias-correction and denoising before the data is averaged per session. ' ...
      'In the case of many high-quality rescans, it is also possible to slightly increase the output resolution. ' ...
@@ -717,7 +733,16 @@ function imcalc = conf_vol_imcalc(prefix)
 %conf_vol_imcalc. Like spm_imcalc but to run the same operation for many subjects. 
 
   % get original SPM imcalc function 
-  imcalc            = spm_cfg_imcalc;
+  try
+    imcalc = spm_cfg_imcalc;
+  catch
+    % if SPM was not initialized the function might be not visible
+    curdir = pwd; 
+    cd(fullfile(spm('dir'),'config')); 
+    imcalc = spm_cfg_imcalc;
+    cd( curdir ); 
+    clear curdir
+  end
 
   % update prefix and suffix fileds
   suffix            = prefix; 
@@ -731,7 +756,7 @@ function imcalc = conf_vol_imcalc(prefix)
   data              = cfg_files;
   data.tag          = 'subjects';
   data.name         = 'Volumes';
-  data.filter       = {'image','.*\.(nii.gz)$'};
+  data.filter       = {'image','.*\.(nii.gz,1)$'};
   data.ufilter      = '.*';
   data.num          = [1 Inf];
   data.help         = {'Select the same number and order of subjects for one image class. '};
@@ -1654,8 +1679,8 @@ function shootlong = conf_shoot(expert)
 % -------------------------------------------------------------------------
 
   % get shooting toolbox definition
-  addpath(fullfile(spm('dir'),'toolbox','Shoot'));  
-  shoot = tbx_cfg_shoot; 
+  addpath(fullfile(spm('dir'),'toolbox','Shoot'));
+  shoot = tbx_cfg_shoot;
   
   % find the create template batch
   FN = cell(1,numel(shoot.values)); for fni=1:numel( shoot.values ), FN{fni} = shoot.values{fni}.name; end
@@ -2166,13 +2191,15 @@ return
 function [sanlm,sanlm2] = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert)
 
   % --- update input variables ---
-  data.help         = {'Select images for filtering.'};
+  data.help      = {'Select the images to be filtered. If 4D or 5D images are given (eg. fMRI/dMRI), all 3D subvolumes are filtered independently. '}; 
+  data.filter    = {'image','.*\.(nii.gz,1)$'};
+  data.ufilter   = '.*';
   
   prefix.val        = {'sanlm_'};
   prefix.help       = {
     'Specify the string to be prepended to the filenames of the filtered image file(s). Default prefix is "samlm_". Use the keyword "PARA" to add the name of the filter, e.g., "classic" or "optimized-medium".'
     ''
-  };
+  }; 
   if expert>1
     prefix.help       = {
       'Specify the string to be prepended to the filenames of the filtered image file(s). Default prefix is "samlm_". Use the keyword "PARA" to add the strength of filtering, e.g. "sanlm_PARA" result in "sanlm_NC#_*.nii".'
