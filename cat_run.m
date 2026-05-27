@@ -46,8 +46,21 @@ cat_version('reset');
 % disable parallel processing for only one subject
 if isscalar(job.data), job.nproc = 0; end
 
+% remove higher dimentional input as this is not working with gzipped data
+% and makes filename handling more difficult
+imgnumber = cellfun( @(x) max(isempty(x), str2double(x(2-2*isempty(x):end)) ), spm_file(job.data, 'number')); 
+if all( imgnumber > 1 )
+  error('warning:cat_run','Higher dimentions NIFTIs are not supported as input for CAT preprocessing.');
+end
+job.data = spm_file(job.data, 'number', '');
+clear imgnumber
+
+% use only nii even if a gzipped version is given too (eg. from previous failed processing)
+[ ~, ia]  = unique( cat_io_strrep( job.data, '.nii.gz', '.nii') );
+job.data = job.data( sort(ia) ); % unique is sorting the files, so we have to sort the indices too 
+clear ia;
+
 % create BIDS structur and get BIDSfolder for later evaluation 
-job.data   = spm_file(job.data, 'number', ''); 
 job.BIDS   = cat_io_BIDS( job.data, job );  
 BIDSfolder = cat_io_BIDS( job.BIDS, 'main_BIDSfolder'); 
 logdir     = cat_io_BIDS( job.BIDS(1), 'logdir'); 
@@ -85,14 +98,14 @@ elseif ~isempty(BIDSfolder)
       end
       fnames = sprintf('%s\n%s', fnames, fnamesi ); 
     end
+    if iscell(BIDSfolder), BIDSfolder1 = BIDSfolder{1}; else, BIDSfolder1 = BIDSfolder; end
     error('cat_run:BIDSnotUniqueResults', ...
-       ['You are using CAT''s BIDS output:\n' ...
-        '    %s\n' ...
-        'but the given input does not support a unique output (e.g. same filenames) in %d of %d cases:\n' ...
-        '%s\n' ...
-        'Try to select "Relative Folders" instead of "Relative BIDS Folders".\n'], ...
-        BIDSfolder, numel( cpath ) - numel( cpathu ), numel( cpath ), fnames );
-       
+     ['You are using CAT''s BIDS output:\n' ...
+      '    %s\n' ...
+      'but the given input does not support a unique output (e.g. same filenames) in %d of %d cases:\n' ...
+      '%s\n' ...
+      'Try to select "Relative Folders" instead of "Relative BIDS Folders".\n'], ...
+        BIDSfolder1, numel( cpath ) - numel( cpathu ), numel( cpath ), fnames );
   end
 end
 
