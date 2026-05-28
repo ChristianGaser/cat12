@@ -135,6 +135,10 @@ function [P,mridir,surfdir,ff] = setFileNames(V0,job,opt)
     P(si).Pgwwg      = fullfile(surfdir,sprintf('%s.depthWMg.%s',opt.surf{si},ff));             % gyrus width of the WM / WM depth
     P(si).Psw        = fullfile(surfdir,sprintf('%s.depthCSF.%s',opt.surf{si},ff));             % sulcus width / CSF depth / sulcal span
     P(si).Pdefects0  = fullfile(surfdir,sprintf('%s.defects0.%s',opt.surf{si},ff));             % defects temporary file    
+    P(si).Pdefects0  = fullfile(surfdir,sprintf('%s.defects0.%s',opt.surf{si},ff));             % defects temporary file    
+    % special maps for expert tests
+    P(si).Pwhitesi   = fullfile(surfdir,sprintf('%s.whiteselfintersect.%s',opt.surf{si},ff));             % defects temporary file    
+    P(si).Ppialsi    = fullfile(surfdir,sprintf('%s.pialselfintersect.%s',opt.surf{si},ff));             % defects temporary file    
   end
 end
 %=======================================================================
@@ -160,7 +164,7 @@ function quickeval(V0,Vpp,Ymfs,Yppi,CS,P,Smat,res,opt,EC0,si,time_sr,pipeline)
   PBTthick = cat_io_FreeSurfer('read_surf_data',P(si).Ppbt);  
   res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS', ...
     loadSurf(P(si).Pcentral), cat_io_FreeSurfer('read_surf_data',P(si).Ppbt), cat_io_FreeSurfer('read_surf_data',P(si).Pthick), ...
-    Ymfs,Yppi,P(si).Pcentral,Smat.matlabIBB_mm,2,1); % last is the slow self-intersection test
+    Ymfs,Yppi,P(si).Pcentral,Smat.matlabIBB_mm,2, cat_get_defaults('extopts.expertgui') > 1); % last is the slow self-intersection test
   CS2 = CS; CS2.cdata = PBTthick; H = cat_surf_render2(CS2);
   cat_surf_render2('clim',H,[0 6]); 
   cat_surf_render2('view',H,cat_io_strrep(opt.surf{si},{'lh','rh','ch'},{'right','left','back'})); 
@@ -193,6 +197,11 @@ function quickeval(V0,Vpp,Ymfs,Yppi,CS,P,Smat,res,opt,EC0,si,time_sr,pipeline)
   end
   fprintf('    Runtime:                             %0.0fs\n',etime(clock,time_sr)); 
 
+  % cleanup the here created self-intersection maps
+  if cat_get_defaults('extopts.expertgui') < 2  &&  numel( opt.surf ) > 1
+    if exist( P(si).Pwhitesi , 'file' ), delete( P(si).Pwhitesi ); end
+    if exist( P(si).Ppialsi  , 'file' ), delete( P(si).Ppialsi  ); end
+  end
 end
 %=======================================================================
 function res = addSurfaceQualityMeasures(res,opt)
@@ -335,7 +344,14 @@ function evalProcessing(res,opt,P,V0)
       fprintf('  Show surfaces in orthview:  %s\n',spm_file(Po ,'link',...
         sprintf('cat_surf_fun(''show_orthview'',%s,''%s'',%s,%s)',Porthfiles,Po,Porthcolor,Porthnames))) ;
     end
-
+  end
+  
+  % cleanup the here created self-intersection maps
+  if cat_get_defaults('extopts.expertgui') < 2  &&  numel( opt.surf ) > 1
+    for si = 1:numel( opt.surf )
+      if exist( P(si).Pwhitesi , 'file' ), delete( P(si).Pwhitesi ); end
+      if exist( P(si).Ppialsi  , 'file' ), delete( P(si).Ppialsi  ); end
+    end
   end
 end
 %=======================================================================
