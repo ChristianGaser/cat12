@@ -133,14 +133,16 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
   opt.surf                = cat_io_strrep(opt.surf,'v','');                   % after definition of the 'vol' varialbe we simplify 'surf'
   opt.interpV             = max(0.1,min([opt.interpV,2]));                    % general limitation of the PBT resolution
   opt.reconres            = opt.interpV;                                      % surface reconstruction resolution for marching cubes
-  
+  opt.denoise             = 0;                                                % helps partially but cause problems with local thickness 
+                                                                              % - underestimation in simple phantom cases but
+                                                                              %   gyral overestimation in real data by breaking WM peaks
+                                                                              % - sharpening helps but not sufficient enough
   
   % apply the modified mask from gcut
   % for non-gcut approaches or inverse weighting Yb0 only contains ones
   Yp0 = Yp0 .* (Yb0>0.5);
   Ym  = Ym  .* (Yb0>0.5);
-
-
+  
   % enlarge atlas definition 
   [~,I] = cat_vbdist(single(Ya>0)); Ya=Ya(I); clear I;  
 
@@ -148,41 +150,26 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
   %% denoise to recude artifacts and WM hyperintensities 
   %  quite save with clear improvement in surface creation (less defects and smaller corrections) 
   %  thickness overestimation in real low-quality data in case of overfiltering!
-  [Ywmr,red] = cat_vol_resize(Ym .* (Yp0>2.75/3),'reduceV',vx_vol,2,16,'meanm'); 
+  if opt.SRP > 1  &&  opt.denoise
+    fast = 1; sharp = 1; 
+    Yp0  = denoiseSanlm(Yp0, vx_vol, fast, sharp);
+    Ym   = denoiseSanlm(Ym,  vx_vol, fast, sharp);
+  end
+  
+  % estimate reminding noise
+  Ywmr = cat_vol_resize(Ym .* (Yp0>2.75/3),'reduceV',vx_vol,2,16,'meanm'); 
   Ywmrstd = cat_vol_localstat(Ywmr,Ywmr>0,2,4); clear Ywmr;
-  % in high-res data we need to filter stronger
-  opt.wmnoise = min(1/6,cat_stat_nanmean(Ywmrstd(Ywmrstd>0))) .* prod(red.vx_red) * 1/8; 
-  if opt.SRP > 0
-    % The ornlm Filter modifies the overall intensities and we have to rescale the image!
-    % This rescaling needs also a slight correction for the noise to avoid underestimation 
-    Yp0x = smooth3(Yp0);
-    fprintf('\nDenoising (CNR=%0.2f%%) ',opt.wmnoise * 100); 
-    Yp0s   = cat_ornlm(Yp0,1,1,min(1/4,opt.wmnoise*4 ));
-    Yms    = cat_ornlm(Ym ,1,1,min(1/4,opt.wmnoise*4 ));
-    Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
-    % correct intensities Yp0
-    Tth.T3thx = [ ...
-      median(Yp0s( Yp0toC(Yp0x(:)*3,1)>.5))/2, ...
-      median(Yp0s( Yp0toC(Yp0x(:)*3,1)>.5)), ...
-      median(Yp0s( Yp0toC(Yp0x(:)*3,2)>.5)), ...
-      median(Yp0s( Yp0toC(Yp0x(:)*3,3)>.5)) 4/3]; 
-    Tth.T3thx = Tth.T3thx + 0.1*[-2 -1 0 1 2] .* opt.wmnoise; % shrinking compensation 
-    Tth.T3th = 0:1/3:4/3; 
-    Yp0s = max( cat_vol_morph(cat_vol_morph(Yp0x>2.75/3,'de'),'ldc'), cat_main_gintnormi(Yp0s/3,Tth));
-    Yp0s = min( 1 - 2/3*cat_vol_morph(cat_vol_morph(Yp0x<1.25/3,'de'),'ldc') , Yp0s);
-    % correct intensities Ym
-    Tth.T3thx = [ ...
-      median(Yms( Yp0toC(Yp0x(:)*3,1)>.5)), ...
-      median(Yms( Yp0toC(Yp0x(:)*3,1)>.5)), ...
-      median(Yms( Yp0toC(Yp0x(:)*3,2)>.5)), ...
-      median(Yms( Yp0toC(Yp0x(:)*3,3)>.5)) 4/3]; 
-    Tth.T3thx = Tth.T3thx + 0.1*[-2 -1 0 1 2] .* opt.wmnoise; % shrinking compensation 
-    Tth.T3th = 0:1/3:4/3; 
-    Yms = max( cat_vol_morph(Ym/3,'de'), cat_main_gintnormi(Yms/3,Tth));
-    Yms = min( 1 - 2/3*cat_vol_morph(cat_vol_morph(Yp0x<1.25/3,'de'),'ldc') , Yms);
-    %%
-    Yp0=Yp0s; Ym=Yms; 
-    clear Yp0s Yms yp0x; 
+  opt.wmnoise = min(1/6,cat_stat_nanmean(Ywmrstd(Ywmrstd>0))); 
+  
+  %% The ORNLM filter modifies the overall intensities and we have to rescale the image!
+  % This rescaling needs also a slight correction for the noise to avoid underestimation. 
+  % However, the filtering migh also removes too many details that cause than overestimations
+  % and it is therefore only used in experimental pipeline
+  printcount = 0; fprintf('\n'); 
+  if opt.SRP > 1  &&  opt.denoise
+    fprintf('Denoising (CNR=%0.2f%%) ',opt.wmnoise * 100); 
+    printcount = printcount + 1; 
+    [Yp0,Ym] = cat_surf_createCS_denoise(Yp0, Ym, opt.wmnoise);
   end
 
 
@@ -193,7 +180,9 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     Yd  = max(0,(Yp0 - min(Yp0,Ygc)) .* cat_vol_morph(Yb0,'e')); clear Ygc;
     Yd  = cat_ornlm(Yd,1,1,.05); 
     Yd(smooth3(Yd)<.125) = 0; 
-    fprintf(', BVC (CNR=%0.2f%%)',median(Yd(Yd(:)>.1))*100); 
+    if printcount, mspace = ', '; else, mspace = ''; end
+    fprintf('%sBVC (CNR=%0.2f%%)', mspace, median(Yd(Yd(:)>.1))*100); 
+    printcount = printcount + 1; 
     Yp0 = min(Yp0, max(2,Yp0 - Yd .* ( cat_vol_smooth3X(Yp0,4) > 2.125/3 & Yp0>2.5/3 & cat_vol_smooth3X(Yp0,4)<2.5))); clear Yd;
     Yp0 = min(Yp0,cat_ornlm(Yp0,1,1,opt.wmnoise));
   end
@@ -203,11 +192,11 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
   %  Eg.  NISALS_UTR_SP30T_als3_T1w  dataset with Swiss cheese WM and wmnoise ~ 0.04.
   %  Blood vessels should be already removed here and we should also not apply this in non T1w data! 
   %  This can cause blurring of sulci and is controlled by the wmnoise value!
-  if opt.wmnoise < 0.03  &&  ~job.inv_weighting  &&  opt.SRP>0 
-    fprintf(', WMHC (%0.2f%%)',max(0,min(1,opt.wmnoise*100 - 3))); 
+  if opt.wmnoise < 0.03  &&  ~job.inv_weighting  &&  opt.SRP > 0 
+    if printcount, mspace = ', '; else, mspace = ''; end
+    fprintf('%sWMHC (%0.2f%%)', mspace, max(0,min(1,opt.wmnoise*100 - 3))); 
     Yp0 = closeWMHandPVS(Yp0, Ya, NS, job.extopts.LAB.CB, opt.wmnoise, vx_vol);
   end
-
   
 
   %% simple filling
@@ -233,7 +222,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     useprior = cat_surf_createCS_fun('setupprior',opt, job.BIDS(1).surfdir,P,si);
 
     % reduce for object area
-    iscerebellum = cat_io_contains(opt.surf{si},'cb'); 
+    iscerebellum = cat_io_contains(opt.surf{si},'cb') && exist('suit_amap','file'); 
     Ynocerebrum = ~(NS(Ya,opt.LAB.CB) | NS(Ya,opt.LAB.BV) | NS(Ya,opt.LAB.ON) | NS(Ya,opt.LAB.MB) | NS(Ya,opt.LAB.BS)); 
     switch opt.surf{si}
       case {'lh'}
@@ -261,7 +250,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     Ymfs            = cat_vol_resize(max(1,Ymfs),'interp',V,opt.interpV,'cubic');  
     
 
-    if iscerebellum
+    if iscerebellum 
     % Run cerebellum specific SUIT segmentation to update the tissue 
     % segmenation designed for the 3 cerebelar layer and their partial 
     % volume.  
@@ -311,9 +300,10 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     % denoise position map 
     % Can correct some outliers that might become topology defects.
     % We use the minimum here to avoid sulcal blurring what is more risiky
-    % for the current pipeline.
-    if opt.SRP > 0
-      Yppis = cat_ornlm(Yppi + 1,1,1,min(1/4,opt.wmnoise * 3 * 2 * 8)) - 1;
+    % for the current pipeline. As the last tests showed slighly worse 
+    % results denoising we avoid in the default pipelines.
+    if opt.SRP > 0 
+      Yppis = cat_ornlm(Yppi + 1,1,1,min(1/4,opt.wmnoise / 2)) - 1;
       Yppis = (Yppis - min(Yppis(:))) ./ (max(Yppis(:)) - min(Yppis(:))); 
       Yppi  = min(Yppi,Yppis); clear Yppis
     end
@@ -422,12 +412,16 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         
         % export map
         if opt.SRP > 0
-          % sharpening operation
-          Yppis = smooth3(Yppi);
-          Yppii = ( min(1,max(0,Yppi + (Yppis - ...
-            cat_vol_smooth3X(Yppis,2/mean(vx_vol))/3 - ...
-            cat_vol_smooth3X(Yppis,4/mean(vx_vol))/3 - ...
-            cat_vol_smooth3X(Yppis,8/mean(vx_vol))/3  ))));
+          if opt.SRP > 0
+            % sharpening operation - this improves intensity and position values
+            Yppis = smooth3(Yppi);
+            Yppii = ( min(1,max(0,Yppi + (Yppis - ...
+              cat_vol_smooth3X(Yppis,2/mean(vx_vol))/3 - ...
+              cat_vol_smooth3X(Yppis,4/mean(vx_vol))/3 - ...
+              cat_vol_smooth3X(Yppis,8/mean(vx_vol))/3  ))));
+          else
+            Yppii = Yppi; 
+          end
           opt0  = opt; opt0.reconres = min(0.5,opt.reconres);   % minimum resolution 
           Vppmi = exportPPmap( Yppii .^ max(1,1 + opt.wmnoise*100 ) , Vmfs, opt0); % write temporary file only for surface reconstruction 
           Vp0   = exportPPmap( Yp0fs , Vp0, opt0); % write temporary file only for surface reconstruction 
@@ -448,7 +442,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       for thi = 1:round(8/mean(opt.interpV))  % with this loop we further increase the threshold of the Ypp map by .1 (eg. more WM like surface)
         %% Main initial surface creation with topology correction.
         if exist(P(si).Pcentral,'file'), delete(P(si).Pcentral); end % have to delete it to get useful error messages in case of reprocessing/testing
-        gycon = min(.9, gycon + .04 / opt.interpV * (thi>1) + (opt.wmnoise*2)); % higher threshold in case of noisy data (may issues with PVEs)
+        gycon = min(.9, gycon + .04 / opt.interpV * (thi>1)); % + (opt.wmnoise*2)); % higher threshold in case of noisy data (may issues with PVEs)
  
         % create basic surface to know the real surface geometry
         cmd = sprintf('CAT_VolMarchingCubes  "%s" "%s" -thresh "%0.4f" -fast', Vppmi.fname, P(si).Pcentral, gycon);
@@ -485,18 +479,16 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         res.surferrgt(si,thi) = abs(res.area_tc(si,thi) - res.area_gt(si))     / res.area_gt(si)     * (res.genus(si,thi)+1)/genuserr - (gycon - gth)/16;
         res.ECf(si,thi)       = str2double( txt(max(strfind(txt,':'))+1 : max(strfind(txt,'('))-2) ); 
         res.ECmodvx(si)       = str2double( txt(max(strfind(txt,'('))+1 : max(strfind(txt,'voxel'))-1) );
+        res.SE(si,thi)        = mean( [ res.surferr(si,thi)*100 res.surferrgt(si,thi)*100 res.pie(si,thi) ].^2 ).^.5;
        
         %% evaluate surface characteristics
         if opt.verb>1 && cat_get_defaults('extopts.expertgui')>0
-          cat_io_cprintf([min(1,.5+res.surferr(si,thi)*100) max(0,.5 - res.surferr(si,thi)*100) .5],sprintf( ... 
-            '\n    Run Ypp>%0.2f (EC=%3d, SATE=%6.2f%%, SATE0=%6.2f%%, PIE=%6.3f%%)', ...
-             res.gycon(si,thi), res.ECf(si,thi), res.surferr(si,thi)*100, res.surferrgt(si,thi)*100, res.pie(si,thi) ));
+          cat_io_cprintf([min(1,.5 + .5*res.SE(si,thi)) max(0,.5 - .5*res.SE(si,thi)) .5],sprintf( ... 
+            '\n    Run Ypp>%0.2f (EC=%3d, SE=%6.3f%%)                             ', ...
+             res.gycon(si,thi), res.ECf(si,thi), res.SE(si,thi) ));
         end
         % stop iteration ... value over .8 are critical with dynamic surface thresholding
-        if final || gycon > .8 || ( res.surferr(si,thi) < areaerr  &&  res.surferrgt(si,thi) < areaerr &&  ...
-            res.genus(si,thi) < genuserr  && res.pie(si,thi)<.005)
-          break
-        end
+        if final || gycon > .8 || res.SE(si,thi) < .5, break; end
         % in case we havent stopped for a good reason (low blurring and acceptable euler number),
         % we try to find the best threshold so far and do a final run with further internal interation  
         if gycon > .75 
@@ -509,7 +501,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
 
       % use best surface 
       if thi > 1 
-        err = res.surferr(si,:) + res.surferrgt(si,:) + res.pie(si,:); 
+        err = res.SE(si,:); 
         thi = find( err == min(err), 1, 'first');
         saveSurf( CST{thi} , P(si).Pcentral); 
       end
@@ -535,28 +527,39 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       nCS  = min( size(CS.faces,1) , max( 80000, min( 360000, round(A * 4 / opt.vdist^2) ))); % ###### A * 8 
       nCS  = nCS * (1 + 3*iscerebellum);
    
+      
       % surface reduction 
       % - low surface resolution are highly important for fast processing and smaller disk usage
       % - less critical for thickness but surface quality (intensity/position values) get worse
       % - it is important avoid self-intersetions
-      stimesr = clock;
       if nCS < nCS0 
-        cmd  = sprintf('CAT_SurfReduce -aggr "7" -ratio "%0.2f" "%s" "%s"', nCS/nCS0 , P(si).Pcentral, P(si).Pcentral); 
+        stimer = clock; 
+        cmd = sprintf('CAT_SurfReduce -aggr "7" -ratio "%0.2f" "%s" "%s"', nCS/nCS0 , P(si).Pcentral, P(si).Pcentral); 
         cat_system(cmd ,opt.verb-3);  
         cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f', P(si).Pcentral, P(si).Pcentral, opt.vdist * 2);
         cat_system(cmd ,opt.verb-3);
 
         % load
-        CS   = loadSurf(P(si).Pcentral); 
+        CS  = loadSurf(P(si).Pcentral); 
         CS.facevertexcdata = max(eps,cat_surf_fun('isocolors',Yppi,CS.vertices,Smat.matlabIBB_mm)); % #### for tests
+        nCS1 = size(CS.faces,1); 
+        cat_io_cmd(sprintf('  Reduce surface (nF: %0.0fk > ~%0.0fk)', nCS0/1000, nCS1/1000),'g5','',...
+          opt.verb,stime - [0 0 0 0 0 etime(stimer,stime)]);
+        stime = stimer;
+      
+        % evaluation
+        if nCS1 > nCS * 1.5 
+          cat_io_addwarning('cat_surf_createCS4:ReductionFailed', ...
+            sprintf('Surface reduction incomplete due to topology constrains (%d).',(nCS1/1000-nCS/1000) ./ (nCS0/1000-nCS/1000)),0,[0 1]); 
+        end 
       end
-% == end surface creation == 
+      % == end surface creation == 
 
 
       %% Surface position corretion 
       stime = cat_io_cmd('  Optimize surface','g5','',opt.verb,stime); 
       if opt.SRP > 0
-        exportPPmap( Yppii , Vmfs, opt0); % write temporary file only for surface reconstruction 
+        exportPPmap( Yppi , Vmfs, opt0); % write temporary file only for surface reconstruction 
       end
 
       % Surface deformation: 
@@ -578,7 +581,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         %  The alignment is done by a nearest point search utilizing the dealunay triangulation. 
         %  The problem is that matlab isosurface returns grid-aligned vertices that result in bad
         %  face properties. 
-        if debug, tic, end
+        
         %CSM = isosurface(interp3(Yppi,1),0.5); CSM.vertices = CSM.vertices/2; % interpoltion can further improve but with high comp. costs
         CSM = isosurface(Yppi,0.5); 
         CSM = cat_surf_fun('smat',CSM,Smat.matlabIBB_mm);
@@ -606,7 +609,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         CS.vertices = CS.vertices.*(1-dev) + (dev).*CSM.vertices(NN,:);
         CS.facevertexcdata = max(eps,cat_surf_fun('isocolors',Yppi,CS.vertices,Smat.matlabIBB_mm)); % #### for tests
 
-        if debug, toc; else, clear NN D1 dev CSM; end
+        if ~debug, clear NN D1 dev CSM; end
       end
 
       
@@ -623,17 +626,6 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         Yppi(Ymfs<1.5) = min(Yppi(Ymfs<1.5),(min(1.5,Ymfss(Ymfs<1.5))-1.5)*1); % negative
         Vppm = Vmfs; Vppm.fname = P(si).Pppm; spm_write_vol(Vppm, Yppi);
       end
-
-     
-      nCS1 = size(CS.faces,1); 
-      clear CS
-
-      if nCS1 > nCS * 1.5 
-        cat_io_addwarning('cat_surf_createCS4:ReductionFailed', ...
-          sprintf('Surface reduction incomplete due to topology constrains (%d).',(nCS1/1000-nCS/1000) ./ (nCS0/1000-nCS/1000)),0,[0 1]); 
-      end 
-      cat_io_cmd(sprintf('  Reduce surface (nF: %0.0fk > ~%0.0fk)', nCS0/1000, nCS1/1000),'g5','',opt.verb,stime + (clock - stimesr));
-      stime = stimesr; 
       
     end
 
@@ -660,9 +652,11 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
           %  that use further adaptations/deformations to reduce the self-intersections
 
           % optimize surface for basic self-intersections
-          CS2 = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi, ...
-            struct('optimize',0,'verb',2,'mat',Smat.matlabIBB_mm,'vx_vol',vx_vol,'CS4',1));
-          saveSurf(CS2,P(si).Pcentral);
+          if 1
+            CS2 = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi, ...
+              struct('optimize',0,'verb',0,'mat',Smat.matlabIBB_mm,'vx_vol',vx_vol,'CS4',1));
+            saveSurf(CS2,P(si).Pcentral);
+          end
 
           % (1) create simple boundary surfaces  
           cmd = sprintf('CAT_Central2Pial "%s" "%s" "%s" 0.5',P(si).Pcentral,P(si).Ppbt,P(si).Ppial);
@@ -1257,3 +1251,104 @@ function CS = smoothArt(Yth1i,P,CS,Smat,Vppm,facevertexcdatanocut,si,opt,method,
   CS = loadSurf(P(si).Pcentral);
 end
 %==========================================================================
+function [Yp0s,Yms] = cat_surf_createCS_denoise(Yp0,Ym, wmnoise)
+%cat_surf_createCS_denoise. Apply ORNLM denoising. 
+% The ORNLM filter modifies the overall intensities and we have to rescale the image!
+
+  if wmnoise == 0, Yp0s = Yp0; Yms = Ym; return; end
+
+  Yp0x   = smooth3(Yp0);
+  Yp0s   = cat_ornlm(Yp0,1,1,min(1/4, wmnoise ));
+  Yms    = cat_ornlm(Ym ,1,1,min(1/4, wmnoise ));
+  Yp0toC = @(Yp0,c) 1-min(1,abs(Yp0-c));
+
+  % sharpening
+  fs   = min(.5,wmnoise ); 
+  Yms1 = smooth3(Yms); 
+  Yms2 = cat_vol_smooth3X(Yms,2); 
+  Yms  = Yms  + fs*smooth3(Ym  - Yms1) + fs*smooth3(Ym  - Yms2);
+  Yp0s = Yp0s + fs*smooth3(Yp0 - Yms1) + fs*smooth3(Ym  - Yms2); 
+  clear Yms1 Yms2; 
+
+  % correct intensities Yp0
+  Tth.T3thx = [ ...
+    median(Yp0s( Yp0toC(Yp0x(:)*3,1)>.5))/2, ...
+    median(Yp0s( Yp0toC(Yp0x(:)*3,1)>.5)), ...
+    median(Yp0s( Yp0toC(Yp0x(:)*3,2)>.5)), ...
+    median(Yp0s( Yp0toC(Yp0x(:)*3,3)>.5)) 4/3]; 
+  Tth.T3th  = 0:1/3:4/3; 
+  Yp0s = max( cat_vol_morph(cat_vol_morph(Yp0x>2.75/3,'de'),'ldc'), cat_main_gintnormi(Yp0s/3,Tth));
+  Yp0s = min( 1 - 2/3*cat_vol_morph(cat_vol_morph(Yp0x<1.25/3,'de'),'ldc') , Yp0s);
+  
+  % correct intensities Ym
+  Tth.T3thx = [ ...
+    median(Yms( Yp0toC(Yp0x(:)*3,1)>.5)), ...
+    median(Yms( Yp0toC(Yp0x(:)*3,1)>.5)), ...
+    median(Yms( Yp0toC(Yp0x(:)*3,2)>.5)), ...
+    median(Yms( Yp0toC(Yp0x(:)*3,3)>.5)) 4/3]; 
+  Tth.T3th  = 0:1/3:4/3; 
+  Yms = max( cat_vol_morph(Ym/3,'de'), cat_main_gintnormi(Yms/3,Tth));
+  Yms = min( 1 - 2/3*cat_vol_morph(cat_vol_morph(Yp0x<1.25/3,'de'),'ldc') , Yms);
+
+end
+function [Yms,noise] = denoiseSanlm(Ym,vx_vol,fast,sharpen)
+
+  if ~exist('vx_vol','var'),  vx_vol  = ones(1,3); end
+  if ~exist('fast','var'),    fast    = 1; end
+  if ~exist('sharpen','var'), sharpen = 1; end
+ 
+  Yms = Ym; cat_sanlm(Yms,1,3); 
+  
+  if fast
+    [Ymr,red] = cat_vol_resize(Yms,'reduceV',1,2,16,'meanm'); 
+    Ymrs = Ymr + 0; cat_sanlm(Ymrs,1,3); Ymr = Ymr - Ymrs;
+    Ymr1 = cat_vol_resize(Ymr+1,'dereduceV',red)-1; 
+
+    [Ymr,red] = cat_vol_resize(Yms(2:end,2:end,2:end),'reduceV',1,2,16,'meanm'); 
+    Ymrs = Ymr + 0; cat_sanlm(Ymrs,1,3); Ymr = Ymr - Ymrs;
+    Ymr2 = Ymr1; Ymr2(2:end,2:end,2:end) = cat_vol_resize(Ymr+1,'dereduceV',red)-1; 
+    
+    Yms2 = Yms - Ymr1*4 - Ymr2*4;
+    clear Ymr1 Ymr2
+  else
+    Yms2 = Yms;        
+    for x = 1:2
+      for y = 1:2
+        for z = 1:2
+          [Ymr,red] = cat_vol_resize(Yms(x:end,y:end,z:end),'reduceV',1,2,16,'meanm'); 
+          Ymrs = Ymr + 0; cat_sanlm(Ymrs,1,3); Ymr = Ymr - Ymrs;
+          Yms2(x:end,y:end,z:end) = Yms2(x:end,y:end,z:end) - (cat_vol_resize(Ymr + 1,'dereduceV',red) - 1); 
+          clear Ymr Ymrs
+        end
+      end
+    end
+  end
+  Ymsk  = Yms ~= 0; 
+  cat_sanlm(Yms2,1,3); 
+  Yw    = cat_vol_approx( (Yms>1.5/3 ) .* ( log10(Yms*10) ./ log10(Yms2*10))); 
+  Yw    = Yw ./ cat_stat_nanmean(Yw(Yms(:)>1.5/3)); 
+  Yms2a = Yms*.5 + .5*Yms2 ./ Yw;
+
+  noise = cat_stat_nanmean( (Ym(Ymsk(:)) - Yms2(Ymsk(:))).^2 )^.5; 
+  fs    = min(.5,noise/2); 
+  Yms2  = Yms2a + fs * 2 * smooth3(Ym - cat_vol_smooth3X(Yms2a,2)) + fs * 4 * smooth3(Ym - cat_vol_smooth3X(Yms2a,4)); clear Yms2a
+
+  %% use lowres filtering only for highres data with smooth transition
+  vxmix = .5; % * max(0,min(1,mean(vx_vol)-.5)); % .5 to 1.
+  Yms   = Yms.*(vxmix) + (1-vxmix).*Yms2; clear Yms2 
+
+  cat_sanlm(Yms,1,3); 
+
+  Ymsk  = Yms ~= 0; 
+  noise = cat_stat_nanmean( (Ym(Ymsk(:)) - Yms(Ymsk(:))).^2 )^.5; 
+  clear Ymsk; 
+
+  %% sharpening
+  if sharpen && noise > .001
+    fs    = min(.5,noise); 
+    Yms1  = smooth3(Yms); 
+    Yms2  = cat_vol_smooth3X(Yms,2); 
+    Yms   = Yms  + fs*smooth3(Yms  - Yms1) + fs*2*smooth3(Yms  - Yms2); 
+    clear Yms1 Yms2
+  end
+end
