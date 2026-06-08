@@ -600,7 +600,7 @@ cstime = clock;
       clear Yppisc;
       
       if opt.verb>2 
-        fprintf(txt); 
+        %fprintf(txt); 
         fprintf('%s %4.0fs\n',repmat(' ',1,66),etime(clock,stime)); 
       end
 
@@ -728,7 +728,7 @@ cstime = clock;
       if debug, saveSurf(CS,Pcentral); cat_io_FreeSurfer('write_surf_data',Ppbt,facevertexcdata); tic; end
       
       % call collision correction
-      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,struct('optimize',opt.SRP==2,'verb',verblc,'mat',Smat.matlabIBB_mm,'CS4',0)); 
+      [CS,facevertexcdata] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi,struct('optimize',opt.SRP==2,'verb',verblc,'mat',Smat.matlabIBB_mm,'CS1',0)); 
       if verblc, fprintf('\b\b'); end
       if strcmpi(spm_check_version,'octave') 
         cat_io_addwarning('cat_surf_createCS2:nofullSRP','Fine correction of surface collisions is not yet available under Octave.',2)
