@@ -112,7 +112,7 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
                               % 
   def.wmnoise          = 0;   % High noise, low resolution, or smooth data trend to cause topology defect. 
                               % Hence, we these parameter could be used to reduce the impact of the risky gyrus recon. 
-
+ 
   opt = cat_io_checkinopt(opt,def);
   vxs = mean(vx_vol); 
 
@@ -123,13 +123,20 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
   % estimate partial volume effect size in voxel (with fast option)
   % - used to controle filter size (eg. closing) 
   opt.pvet0 = estimatePVEsize( Yp0 , 0); 
-  opt.pvet  = max(0,min(4 / vxs,opt.pvet0)); 
+  opt.pvet  = max(0,min(4 / vxs, opt.pvet0)); 
 
+  % in smooth/blurry images we have to focus more on the real threshold
+  % to avoid severe thickness overestimation in gyri with blurred high WM 
+  % intensities
+  opt.range  = opt.range  ./ max(1,min(4,opt.pvet-1)); 
+  opt.rangeE = opt.rangeE ./ max(1,min(4,opt.pvet-1)); 
+  
   % correct CSF interpolation artifacts
   % - further corrections were difficult and often caused blurring
-  Yp0 = CS4_desnoise(Yp0); 
+  % - this has only tiny effects
+  %Yp0 = CS4_desnoise(Yp0); 
 
-  if mean(vx_vol) < .75 
+  if 0% mean(vx_vol) < .75 
     % extend hard cuts, by a low value just to have a broader estimate
     % - could be improved by a basic WMD and GMT estimate to assure a
     %   local minimum thickness related to the GMT distance
@@ -162,6 +169,26 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
   Ywd0(isinf(Ywd0)) = 0; Ycd0(isinf(Ycd0)) = 0;
 
 
+  %% ORNLM denoising & resharpening of distance maps
+  if opt.wmnoise > 0
+    Ycd0s = Ycd0; Ycd0s(Ycd0<eps) = nan; 
+    Ycd0s = cat_ornlm(Ycd0s,1,1,min(1,opt.wmnoise * 3));
+    Ymsk  = (Ycd0 ./ Ycd0s)>.5 & (Ycd0 ./ Ycd0s)<2 & Ycd0>1 & Yp0>1.5 & Yp0<2.5; 
+    Ycd0s1 = smooth3(Ycd0s); Ycd0s2 = cat_vol_smooth3X(Ycd0s,2); 
+    Ycd0s = Ycd0s + (opt.wmnoise*5)*smooth3(Ycd0s - Ycd0s1) + (opt.wmnoise*5)*smooth3(Ycd0s - Ycd0s2); 
+    Ycd0  = Ycd0s ./ cat_stat_nanmedian( Ycd0(Ymsk) ./ Ycd0s(Ymsk) );
+    clear Ycd0s Ywd0s Ycd0s1 Ycd0s2 Ymsk;
+  
+    Ywd0s = Ywd0; Ywd0s(Ywd0<eps) = nan; 
+    Ywd0s = cat_ornlm(Ywd0s,1,1,min(1,opt.wmnoise * 3));
+    Ymsk  = (Ywd0 ./ Ywd0s)>.5 & (Ywd0 ./ Ywd0s)<2 & Ywd0>1 & Yp0>1.5 & Yp0<2.5; 
+    Ywd0s1 = smooth3(Ywd0s); Ywd0s2 = cat_vol_smooth3X(Ywd0s,2); 
+    Ywd0s = Ywd0s + (opt.wmnoise*5)*smooth3(Ywd0s - Ywd0s1) + (opt.wmnoise*5)*smooth3(Ywd0s - Ywd0s2); 
+    Ywd0  = Ywd0s ./ cat_stat_nanmedian( Ywd0(Ymsk) ./ Ywd0s(Ymsk) );
+    clear Ywd0s Ywd0s1 Ywd0s2 v; 
+  end
+
+
   %% == Estimation of thickness maps == 
   %  Better to use an artificial ribbon rather than the Yp0 directy
   %  The original aim of handling mapping in PVE regions more specifically failed.
@@ -172,7 +199,14 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
   Yp0(Ygmtw0(:)>10e10) = 1; Yp0(Ygmtc0(:)>10e10)  = 3; 
   Ymsk = Ygmtw0(:)>10e10 | Ygmtc0(:)>10e10;
   Ywd0(Ymsk) = 0; Ycd0(Ymsk) = 0; Ygmtw0(Ymsk) = 0; Ygmtc0(Ymsk) = 0;
-
+  % ORNLM denoising of thickenss maps
+  Ymsk = Ygmtw0(:)>0 | Ygmtc0(:)>0;
+  if opt.wmnoise
+    Ygmtw0(Ygmtw0<eps)=nan; Ygmtw0s = cat_ornlm(Ygmtw0,1,1,opt.wmnoise*10); 
+    Ygmtw0 = Ygmtw0s ./ cat_stat_nanmedian( Ygmtw0(Ymsk) ./ Ygmtw0s(Ymsk) ); Ygmtw0(isnan(Ygmtw0))=0; clear Ygmtw0s
+    Ygmtc0(Ygmtc0<eps)=nan; Ygmtc0s = cat_ornlm(Ygmtc0,1,1,opt.wmnoise*10); 
+    Ygmtc0 = Ygmtc0s ./ cat_stat_nanmedian( Ygmtc0(Ymsk) ./ Ygmtc0s(Ymsk) ); Ygmtc0(isnan(Ygmtc0))=0; clear Ygmtc0s
+  end  
 
   %% Extend areas that are too thin for regular quantification (eg. corpus callosum)
   %  Representation is essential for the following filtering steps!
@@ -206,7 +240,7 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
   % An update of the distance maps is not required and gave worse results!
   if opt.usemedian 
     Ygmt0m = medfilter(Ygmt0, Yp0, opt.medfs(2), opt.medfs(2)/opt.medfs(1), 0, vxs); 
-    Ygmt0  = smooth3( Ygmt0m  +  cat_vol_approx(Ygmt0m,'rec',2) .* (Ygmt0m<.25) ); 
+    Ygmt0  = Ygmt0m .* (Ygmt0m>=.25)  +  cat_vol_approx(Ygmt0m,'rec',2) .* (Ygmt0m<.25); 
   else
     Ygmt0 = cat_vol_approx(Ygmt0,'rec',2);  
   end
@@ -391,7 +425,8 @@ function Yp0 = NBVC(Yp0,vx_vol)
 % that focus on lower intensities in the Yp0 label mapf for GM and CSF. 
 
   F      = min(1,max(0.0,Yp0-2)).^.01; F(Yp0<=1.9) = inf; 
-  Ywm    = cat_vol_morph(cat_vol_morph(Yp0>2.25,'de',1,vx_vol),'ldo',1,vx_vol) | cat_vol_morph(Yp0>2.75,'l'); 
+  % lab-distopen (even .5 mm) can result in broken gyri!
+  Ywm    = cat_vol_morph(cat_vol_morph(Yp0>2.25,'de',1,vx_vol),'l',[1000 .0001]) | cat_vol_morph(Yp0>2.75,'l'); 
   % add closest voxels
   [~,Yd] = cat_vol_downcut(single(Ywm), F,0.01); Yd(isnan(Yd))=inf; 
   Ywm    = Yp0>2.1 & Yd<cat_stat_nanmedian([2.5; Yd(Yp0(:)>=2.25 & Yp0(:)<2.75 & Yd(:)>0)]);
@@ -574,6 +609,7 @@ function Ygmt = medfilter( Ygmtw , Yp0, red, fs, mask, vxs)
   Ygmtwmsk = Ygmtw>0; 
 
   % fill-up
+  Ygmtw = cat_vol_median3(Ygmtw,Ygmtwmsk,Ygmtwmsk); 
   [~,I] = cat_vbdist(single(Ygmtwmsk)); Ygmtw = Ygmtw(I); 
 
   % reduce resolution  
