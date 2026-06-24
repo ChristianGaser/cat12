@@ -1410,28 +1410,14 @@ data_surf_extract.help    = {'Select left surfaces to extract values.'};
 
 % absolute mean curvature
 GI        = cfg_menu;
-if expert>1
-  GI.name   = 'Gyrification (absolute mean curvature)';
-  GI.labels = {'No','Yes (MNI approach)','Yes (Dong approach)'};
-  GI.values = {0,1,2};
-else
-  GI.name = 'Gyrification';
-  GI.labels = {'No','Yes'};
-  GI.values = {0,1};
-end
+GI.name = 'Gyrification';
+GI.labels = {'No','Yes'};
+GI.values = {0,1};
 GI.tag    = 'GI';
 GI.val    = {1};
 GI.help   = {
   'Extract gyrification based on absolute mean curvature. The method is described in Luders et al. NeuroImage, 29: 1224-1230, 2006.'
 };
-if expert>1
-  GI.help = [ GI.help; 
-  {['Because curvature depends on object size a normalization / scaling of the full surface by the radius of sphere with the volume of the hull surface is used. ' ...
-    'The default curvature estimation uses a fast approach that is less robust for the sampling of the surface and a more accurate but slower version is available. ' ...
-    'based on Dong et al. (2005) Curvature estimation on triangular mesh, JZUS.']}];
-end
-
-
 
 
 % ---------------------------------------------------------------------
@@ -1674,7 +1660,7 @@ IS.help   = {
 surfaces        = cfg_branch;
 surfaces.name   = 'Additional surfaces';
 surfaces.tag    = 'surfaces';
-surfaces.hidden = expert<1;
+surfaces.hidden = true;
 surfaces.val    = {IS,OS}; 
 
 
@@ -1749,7 +1735,7 @@ FS_HOME         = cfg_files;
 FS_HOME.tag     = 'FS_HOME';
 FS_HOME.name    = 'FreeSurfer home directory';
 FS_HOME.filter  = 'dir';
-FS_HOME.ufilter = '';
+FS_HOME.ufilter = '.*';
 FS_HOME.num     = [0 1];
 FS_HOME.hidden  = expert<2;
 FS_HOME.help    = {'Select the FreeSurfer home directory.'};

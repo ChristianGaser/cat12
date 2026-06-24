@@ -1,4 +1,4 @@
-function [Yb,Ym0,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th,cutstr)
+function [Yb,Ybb,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th,cutstr)
 % ______________________________________________________________________
 %  Skull-stripping subfunction APRG (adaptive probability region-growing)
 %  of cat_main_updateSPM.
@@ -341,8 +341,7 @@ end
   if cutstr>0; Yb(smooth3(Yb)>0.7) = 1; end % RD202008: V2: a bit closing shoud be also fine ...
   Yb(smooth3(Yb)<0.5)=0;
   Ybb = cat_vol_ctype( max(0,min(1,(Ym - cutstr)/(1-cutstr))) * 256); 
-  Ym0 = Ybb; 
-
+  
   
   %% estimate gradient (edge) and divergence maps
   [Ysrcb,BB] = cat_vol_resize({Ysrc},'reduceBrain',vx_vol,round(6/mean(vx_vol)),Yb);

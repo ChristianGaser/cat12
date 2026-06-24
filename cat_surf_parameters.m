@@ -142,8 +142,7 @@ function varargout = cat_surf_parameters(job)
         
         % dependencies
         % - measures without normalization 
-        PGI     = {fullfile(pp,strrep(ff,'central','gyrification'));       % MNI approach
-                   fullfile(pp,strrep(ff,'central','gyrification2'))};     % new approach (slower and probably not better) - just for developer tests
+        PGI     = fullfile(pp,strrep(ff,'central','gyrification'));     % new approach (slower and probably not better) - just for developer tests
         % also consider pial surfaces for sulcal depth
         if ~isempty(strfind(ff,'pial'))
           PSD     = {fullfile(pp,strrep(ff,'pial','sulc'))};
@@ -281,23 +280,15 @@ function varargout = cat_surf_parameters(job)
         
         if job.GI
           %% gyrification index based on absolute mean curvature
-          for GIi = setdiff( (1:2) .* (job.GI==[1 2] | isinf(job.GI) ) ,0)  % different approaches
-            if ~cat_io_rerun(PGI{GIi},Pname) && job.lazy  
-              if job.verb, fprintf('%sexist - Display %s\n',nstr,spm_file(PGI{GIi},'link','cat_surf_display(''%s'')')); end
-            else
-              stime = clock; 
-              if GIi==2 % Dong 
-                curv = cat_spm_mesh_curvature( export(gifti(Pname),'patch') ,'tri'); 
-                cat_io_FreeSurfer('write_surf_data',PGI{GIi},curv ); clear curv;
-              else % MNI
-                cmd = sprintf('CAT_DumpCurv "%s" "%s" 0 0 1',Pname,PGI{GIi});
-                cat_system(cmd,job.debug,job.trerr);
-              end
-              if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(PGI{GIi},'link','cat_surf_display(''%s'')')); end
-            end
-            if nargout==1 && GIi==1, varargout{1}.([sides{si} 'PGI'  ]){i} = PGI{GIi}; end  
-            if nargout==1 && GIi==2, varargout{1}.([sides{si} 'PGIx' ]){i} = PGI{GIi}; end  
+          if ~cat_io_rerun(PGI,Pname) && job.lazy  
+            if job.verb, fprintf('%sexist - Display %s\n',nstr,spm_file(PGI,'link','cat_surf_display(''%s'')')); end
+          else
+            stime = clock; 
+            cmd = sprintf('CAT_DumpCurv "%s" "%s" 0 0 1',Pname,PGI);
+            cat_system(cmd,job.debug,job.trerr);
+            if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(PGI,'link','cat_surf_display(''%s'')')); end
           end
+          if nargout==1, varargout{1}.([sides{si} 'PGI'  ]){i} = PGI; end  
           measuresi = measuresi + 1; cat_progress_bar('Set',i - 1  + measuresi/measuresn);
         end
 
