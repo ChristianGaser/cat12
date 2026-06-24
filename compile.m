@@ -506,13 +506,20 @@ function varargout = compile(comp,test,verb)
     if test > 1
       pbtmethod = [ pbtmethod ; {
         % method   test-threshhold  CS-pipeline  pbtres
+        'cat_surf_createCS'              .05  22  .5; % rewised classic pipeline
+        ... new pipelines   
+        'cat_surf_createCS'              .05  40  .5; % C-based PBT-function 
+        'cat_surf_createCS'              .05  42  .5; % internal pbtsimpleCS4 function 
+      }];
+    elseif test > 2
+      pbtmethod = [ pbtmethod ; {
+        % method   test-threshhold  CS-pipeline  pbtres
         'cat_surf_createCS'              .05  11  .5; % first classic pipeline
         'cat_surf_createCS'              .05  22  .5; % rewised classic pipeline
         ... expertimental non-standard pipelines
-   ...     'cat_surf_createCS'              .05  23  .5; % rewised classic pipeline with the first pbtsimple
-   ...     'cat_surf_createCS'              .05  24  .5; % rewised classic pipeline with the new pbtsimpleCS4
-        %'cat_surf_createCS'              .05  25  .5; % rewised classic pipeline with the new pbtsimpleCS4 in full resolution
-        ... new pipelines - #### not running yet without update! ####   
+        'cat_surf_createCS'              .05  24  .5; % rewised classic pipeline with the new pbtsimpleCS4
+        'cat_surf_createCS'              .05  25  .5; % rewised classic pipeline with the new pbtsimpleCS4 in full resolution
+        ... new pipelines 
         'cat_surf_createCS'              .05  40  .5; % C-based PBT-function 
         'cat_surf_createCS'              .05  42  .5; % internal pbtsimpleCS4 function 
       }];
@@ -564,11 +571,16 @@ function varargout = compile(comp,test,verb)
     packmanth(ceil(spheresz(1)/2)+1:end, 1:ceil(spheresz(1)/2), :)   = levels(3); 
     packmanth(ceil(spheresz(1)/2)+1:end, ceil(spheresz(1)/2):end, :) = levels(4);  
 
-    % X-phantom test case
+
+    % === X-phantom test case ===
+    % Extention of the packman phantom with major sulci at 0,90,180, and 
+    % 270 and smaller sulci at 45, 135, 225 and 315 degree to test also 
+    % the robustness in keeping thin gyri. 
+    % It is important to enlarge this case a bit to support stable conditions.
     spheresz2 = spheresz .* [1.3 1.5 1]; spheresz2(1) = round(spheresz2(1)); 
     sulcfac = [.35 .33];
     dbars = zeros(repmat(spheresz2(1),1,3),'single');
-    for di = 1:8
+    for di = 1:8 
       if     di==1, dbars( ceil(spheresz2(1)/2), ceil(spheresz2(1)*(1-sulcfac(1))):end, :) = 1;
       elseif di==2, for ddi = ceil(spheresz2(1)*(1-sulcfac(2))):spheresz2(1), dbars(spheresz2(1)+1-ddi,ddi,:) = 1; end
       elseif di==3, dbars( 1:floor(spheresz2(1)*sulcfac(1)) , ceil(spheresz2(1)/2), :) = 1;
@@ -579,6 +591,8 @@ function varargout = compile(comp,test,verb)
       else,         for ddi = ceil(spheresz2(1)*(1-sulcfac(2))):spheresz2(1), dbars(ddi,ddi,:) = 1; end
       end
     end
+    
+    % create some smaller sulci at 45° 
     dbarddi = cat_vbdist(dbars);
     subsph  = cell(1,numel(levels)); subbar = subsph;
     for thi = 1:numel(levels)
@@ -587,6 +601,8 @@ function varargout = compile(comp,test,verb)
       subsph{thi} = sphere( spheresz2(1) , spheresz2(2) - .5*(levels(thi) - mean(levels)) , levels(thi) ); 
       subbar{thi} = 1 + max(0,min(1,dbard - levels(thi) + sulcusPVE)) + max(0,min(1,dbard + sulcusPVE));
     end
+
+    % put all 4-parts together in one phantom 
     shell = zeros(repmat(spheresz2(1),1,3),'single');
     for di = 1:4
       Ymsk = false(size(shell)); 
@@ -598,19 +614,20 @@ function varargout = compile(comp,test,verb)
       shell(Ymsk) = max(shell(Ymsk), min(subsph{di}(Ymsk), dbarss{di}(Ymsk))); 
     end
 
-    %
+    % add specific noise pattern and remove it as do in the full pipeline
     rng(13); shell2 = shell + 0.5*randn(size(shell)); 
     rng(33); shell3 = shell2 + smooth3(randn(size(shell))); 
     shell2 = shell2+0; for i=1:2, cat_sanlm(shell2,1,3); end 
     shell3 = shell3+0; for i=1:2, cat_sanlm(shell3,1,3); end
-    
     rng('default'); 
+
+    % define the ground-truth thickness map
     shellth = zeros(repmat(spheresz2(1),1,3),'single');
     shellth(1:ceil(spheresz2(1)/2), floor(spheresz2(1)/2):end, :)    = levels(1);
     shellth(1:ceil(spheresz2(1)/2), 1:floor(spheresz2(1)/2), :)      = levels(2);
     shellth(ceil(spheresz2(1)/2)+1:end, 1:ceil(spheresz2(1)/2), :)   = levels(3); 
     shellth(ceil(spheresz2(1)/2)+1:end, ceil(spheresz2(1)/2):end, :) = levels(4);  
-    %%
+ 
 
     %% create a challanging version with noise and defects
     rng(34939);
@@ -657,7 +674,12 @@ function varargout = compile(comp,test,verb)
 
       %% testses
       clear rt rmsgmt rmsgmtir
-      for casei = [1 2, 10:14, 20:24] %  the sphere and simple C-phantoms(id=3..5) are quite borring 
+      if test > 2
+        tcases = [1 2,  10:14, 20:24]; 
+      else         
+        tcases = [1 2, 21]; % fast basic text cases
+      end
+      for casei = tcases % the sphere and simple C-phantoms(id=3..5) are quite borring 
         %% select data
         switch casei
           case 1,  cnam{casei} = 'line';   dx = d2+1;    gmt=4 + .8 + .8;         % very simple case with 4 full voxel and 2 PVE voxels with 1.8 and 2.2 what is .8
@@ -674,8 +696,8 @@ function varargout = compile(comp,test,verb)
           case 20, cnam{casei} = 'PX4';    dx = shell;   gmt=mean(levels); % X-phantom with 4 thickness levels
           case 21, cnam{casei} = 'PX4n';   dx = shell2;  gmt=mean(levels); % X-phantom with 4 thickness levels and noise
           case 22, cnam{casei} = 'PX4n2';  dx = shell3;  gmt=mean(levels); % X-phantom with 4 thickness levels and complex noise
-          case 23, cnam{casei} = 'PX4s';   dx = shell+0; spm_smooth(dx,dx,repmat(0.5,1,3)); gmt=mean(levels); % X-phantom with 4 thickness levels, topology issues and complex noise
-          case 24, cnam{casei} = 'PX4s2';  dx = shell+0; spm_smooth(dx,dx,repmat(1.0,1,3)); gmt=mean(levels); % X-phantom with 4 thickness levels, topology issues and complex noise
+          case 23, cnam{casei} = 'PX4s';   dx = shell+0; spm_smooth(dx,dx,repmat(0.5,1,3)); gmt=mean(levels); % X-phantom with 4 thickness levels and complex noise
+          case 24, cnam{casei} = 'PX4s2';  dx = shell+0; spm_smooth(dx,dx,repmat(1.0,1,3)); gmt=mean(levels); % X-phantom with 4 thickness levels and complex noise
         end
         dxa = cat_vol_approx(dx); dx(isnan(dx))=dxa(isnan(dx)); % have to assume that NANs were replaced before
         dxi = interp3(dx,ip,'cubic'); % 'linear' (default) | 'nearest' | 'cubic' | 'spline' | 'makima'
@@ -709,19 +731,22 @@ function varargout = compile(comp,test,verb)
             mn = [0 0]; 
             if casei<3, continue; end
 
-            %% test various PBT resolutions and interpolation 
-            for di = 0:1:4 
+            %% test various PBT resolutions and interpolation
+            if test < 3
+              interpcases = 0:2:2;
+            else
+              interpcases = 0:1:4;
+            end
+            for di = interpcases
 
               % due to higher processing times we give some basic feedback
-              if verb ~= 2
-                fprintf('\n=== CS%02d pipeline testcase %d i%d ===\n', pbtmethod{pbti,3}, casei, di);
-              else 
-                fprintf('\nTest CS%02d pipeline testcase %d i%d:  ', pbtmethod{pbti,3}, casei, di);
+              if verb > 2  &&  di==0
+                fprintf('\n\n=== CS%02d pipeline testcase %d i%d ===\n', pbtmethod{pbti,3}, casei, di);
+              end
+              if verb
+                fprintf('\n  Test CS%02d pipeline testcase %d i%d:  ', pbtmethod{pbti,3}, casei, di);
               end
               stime = datetime('now'); 
-              if verb > 0
-                fprintf('Run %d: ', di+1);
-              end
               
               % interpolation 
               if casei>=20
@@ -888,7 +913,7 @@ function varargout = compile(comp,test,verb)
             fhi = gcf;  fhi.Position(3:4) = [400 400];
           end
           ds('d2','',1,dx/3,Ygmt/(gmt*2) .* Ytr,dxi/3,Ygmti/(gmt*2) .* Ytri,round(size(dx)*2/3))
-          fprintf('%40s-testcase%d: rt=%0.4f, GMTE/GMTEi = %+0.4f / %+0.4f\n', n{ni}, casei, rt(casei), ...
+          fprintf('\n%40s-testcase%02d: rt=%0.4f, GMTE/GMTEi = %+0.4f / %+0.4f', n{ni}, casei, rt(casei), ...
             cat_stat_nanmean(Ygmt(Ytr(:)>0) - gmt),  cat_stat_nanmean(Ygmti(Ytri(:)>0) - gmt));
            
           %%
@@ -905,7 +930,7 @@ function varargout = compile(comp,test,verb)
       r(ni) = cat_stat_nanmean(rt); 
       s(ni) = r(ni) < pbtmethod{pbti,2};
       if verb>2 
-        fprintf('%50s: rt=%0.4f, GMTE/GMTEi = %+0.4f / %+0.4f\n, RMSE(GMT)=%6.2f', n{ni}, r(ni) , ...
+        fprintf('\n%50s: rt=%0.4f, GMTE/GMTEi = %+0.4f / %+0.4f, RMSE(GMT)=%6.2f', n{ni}, r(ni) , ...
               cat_stat_nanmean(rmsgmt),  cat_stat_nanmean(rmsgmti), cat_stat_nanmean(cat_stat_nanmean(rmse_gmt(pbti,:,:))) );
       end
     end
