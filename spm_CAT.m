@@ -38,25 +38,31 @@ catdef = fullfile(catdir,'cat_defaults.m');
 % so we can safely clean up here on first launch after the update.
 toolbox_dir = fileparts(catdir);
 cat12_legacy = fullfile(toolbox_dir, 'cat12');
-if exist(cat12_legacy, 'dir')
-  fprintf('CAT: Removing legacy installation %s ...\n', cat12_legacy);
-  warning('off','MATLAB:rmpath:DirNotFound');
-  % remove every cat12 sub-path from the MATLAB path
-  old_paths = strsplit(path, pathsep);
-  for k = 1:numel(old_paths)
-    if strncmp(old_paths{k}, cat12_legacy, numel(cat12_legacy))
-      rmpath(old_paths{k});
+if exist(cat12_legacy, 'dir') && ~isempty(strfind(cat12_legacy,'toolbox'))
+  if spm_input('Remove old cat12 folder from previous version?','+1','yes|no',[1 0],2) == 1
+    fprintf('CAT: Removing old cat12 installation %s ...\n', cat12_legacy);
+    warning('off','MATLAB:rmpath:DirNotFound');
+    % remove every cat12 sub-path from the MATLAB path
+    old_paths = strsplit(path, pathsep);
+    for k = 1:numel(old_paths)
+      if strncmp(old_paths{k}, cat12_legacy, numel(cat12_legacy))
+        rmpath(old_paths{k});
+      end
     end
+    warning('on','MATLAB:rmpath:DirNotFound');
+
+    try
+      rmdir(cat12_legacy, 's');
+      fprintf('CAT: Legacy cat12 folder removed successfully.\n');
+    catch ME
+      fprintf('CAT: Could not remove %s — %s\n', cat12_legacy, ME.message);
+      fprintf('     Please delete %s it manually and restart MATLAB.\n', cat12_legacy);
+    end
+    rehash toolboxcache;
+  else
+    fprintf('     Please delete %s it manually and restart MATLAB.\n', cat12_legacy);
   end
-  warning('on','MATLAB:rmpath:DirNotFound');
-  try
-    rmdir(cat12_legacy, 's');
-    fprintf('CAT: Legacy cat12 folder removed successfully.\n');
-  catch ME
-    fprintf('CAT: Could not remove %s — %s\n', cat12_legacy, ME.message);
-    fprintf('     Please delete it manually and restart MATLAB.\n');
-  end
-  rehash toolboxcache;
+  
 end
 % ─────────────────────────────────────────────────────────────────────────
 
