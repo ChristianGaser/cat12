@@ -69,7 +69,7 @@ def.xrange         = [];
 def.xlim           = [];
 def.ylim           = [];
 def.dist           = 'kernel';
-def.mean           = n > 12;
+def.mean           = false;
 def.bins           = 500; 
 def.alpha          = 2; % use alpha transparancy (0-1-user defined, *2-auto)
 def.rawline        = 2; % plot fine line/raw data: 0-no, 1-yes, 2-auto (only print <6 lines)
@@ -306,7 +306,13 @@ for j = 1:n
     ES = mn/sd;
     if spmT_found
       TH5 = X0(min(find(cumsum(H0)/sum(H0) > 0.95)));
-      fprintf('%s\tmean=%g\tSD=%g\tES=%g\tTH5=%g\n',legend_str{j},mn,sd,ES,TH5);
+      if j==1
+        fprintf( sprintf('\n%%%ds\t%%10s %%10s %%10s %%10s\n',length_leg), ...
+          'file', 'mean', 'std', 'ES', 'TH5');
+      end
+      fprintf( sprintf('%%%ds\t%%10s %%10s %%10s %%10s\n',length_leg), ...
+        legend_str{j}, sprintf('%8g',mn), ...
+        sprintf('%8g',sd), sprintf('%8g',ES), sprintf('%8g',TH5));
       legend_str{j} = sprintf('TH5=%.4f %s',TH5,legend_str{j});
       out2(j) = struct('name',legend_str{j},'mean',mn,'std',sd,'ES',ES,'TH5',TH5); 
     else
@@ -357,7 +363,7 @@ if opt.norm_frequency
 else
   ylabel('Frequency');
 end
-if numel(legend_str) > 15, legend off; end
+if numel(legend_str) > 20, legend off; end
 
 if ~isempty(opt.xlim) && numel(opt.xlim) == 2
   xlim(opt.xlim)
