@@ -584,8 +584,13 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         
         %CSM = isosurface(interp3(Yppi,1),0.5); CSM.vertices = CSM.vertices/2; % interpoltion can further improve but with high comp. costs
         CSM = isosurface(Yppi,0.5); 
+        % add arificial boundary points to avoid error in delaunayn, eg. in MRART sub-561646_acq-headmotion1_T1w: 
+        %  QH6417 qhull precision error (qh_merge_twisted): twisted facet f4322286 does not contain pinched vertices.  
+        sz  = size(Yppi); 
+        CSM.vertices(end+1:end+8,:) = [sz.*[0 0 0]; sz.*[0 0 1]; sz.*[0 1 0]; sz.*[1 0 0]; 
+                                       sz.*[1 1 1]; sz.*[1 1 0]; sz.*[1 0 1]; sz.*[0 1 1]]; 
         CSM = cat_surf_fun('smat',CSM,Smat.matlabIBB_mm);
-  
+        
         D1  = delaunayn(double(CSM.vertices)); % CSG05
         NN  = dsearchn(double(CSM.vertices),D1,double(CS.vertices)); 
         % We now mix the intial surface and the MATALB isosurface aligned positions.
@@ -593,7 +598,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         dev = repmat( min(1,abs(cat_surf_fun('isocolors',Yppi,CS.vertices,Smat.matlabIBB_mm) - .5)).^.5 , 1,3);
         CS.vertices = CS.vertices.*(1-dev) + (dev).*CSM.vertices(NN,:);
         CS.facevertexcdata = max(eps,cat_surf_fun('isocolors',Yppi,CS.vertices,Smat.matlabIBB_mm)); % #### for tests
-       
+     
 
         % Anyway, we have to filter the surface to avoid bad faces but also noisy surface parts and "wormholes". 
         % - this can maybe partially avoided by the more aggressive surface reduction
