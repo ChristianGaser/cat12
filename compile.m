@@ -841,15 +841,17 @@ function varargout = compile(comp,test,verb)
               fprintf('%10s  ',char(duration(dur,'Format','s')));
             
               % get IE and PE from figure
-              ax    = gca; 
-              title = ax.Title.String;
-              IEid  = strfind(title{2},'IE=') + 3; 
-              PEid  = strfind(title{2},'PE=') + 3; 
-              Tid   = [strfind(title{2},'ptime=') + 6, strfind(title{2},'s,') - 1]; 
-              rmse_IE(pbti, casei, di+1) = str2double(title{2}(IEid:IEid+4));
-              rmse_PE(pbti, casei, di+1) = str2double(title{2}(PEid:PEid+4));
-              ptime(pbti, casei, di+1)   = str2double(title{2}(Tid(1):Tid(2)));
-              rmse_CT(pbti, casei, di+1) = cat_stat_nanmean( (Ygmtt(:) - Ythgt(:)).^2 )^.5;; 
+              try
+                ax    = gca; 
+                title = ax.Title.String;
+                IEid  = strfind(title{2},'IE=') + 3; 
+                PEid  = strfind(title{2},'PE=') + 3; 
+                Tid   = [strfind(title{2},'ptime=') + 6, strfind(title{2},'s,') - 1]; 
+                rmse_IE(pbti, casei, di+1) = str2double(title{2}(IEid:IEid+4));
+                rmse_PE(pbti, casei, di+1) = str2double(title{2}(PEid:PEid+4));
+                ptime(pbti, casei, di+1)   = str2double(title{2}(Tid(1):Tid(2)));
+                rmse_CT(pbti, casei, di+1) = cat_stat_nanmean( (Ygmtt(:) - Ythgt(:)).^2 )^.5;
+              end
               % set output for interpolation type and offset correction
               switch di 
                 case 4,    Ygmti = Ygmtt; Ygmti = rescale(Ygmti, mn, ip);
