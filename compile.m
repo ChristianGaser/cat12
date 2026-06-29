@@ -506,7 +506,7 @@ function varargout = compile(comp,test,verb)
     if test > 1
       pbtmethod = [ pbtmethod ; {
         % method   test-threshhold  CS-pipeline  pbtres
-        'cat_surf_createCS'              .05  22  .5; % rewised classic pipeline
+        'cat_surf_createCS'              .20  22  .5; % rewised classic pipeline
         ... new pipelines   
         'cat_surf_createCS'              .05  40  .5; % C-based PBT-function 
         'cat_surf_createCS'              .05  42  .5; % internal pbtsimpleCS4 function 
@@ -514,11 +514,11 @@ function varargout = compile(comp,test,verb)
     elseif test > 2
       pbtmethod = [ pbtmethod ; {
         % method   test-threshhold  CS-pipeline  pbtres
-        'cat_surf_createCS'              .05  11  .5; % first classic pipeline
-        'cat_surf_createCS'              .05  22  .5; % rewised classic pipeline
+        'cat_surf_createCS'              .20  11  .5; % first classic pipeline
+        'cat_surf_createCS'              .20  22  .5; % rewised classic pipeline
         ... expertimental non-standard pipelines
-        'cat_surf_createCS'              .05  24  .5; % rewised classic pipeline with the new pbtsimpleCS4
-        'cat_surf_createCS'              .05  25  .5; % rewised classic pipeline with the new pbtsimpleCS4 in full resolution
+        'cat_surf_createCS'              .20  24  .5; % rewised classic pipeline with the new pbtsimpleCS4
+        'cat_surf_createCS'              .20  25  .5; % rewised classic pipeline with the new pbtsimpleCS4 in full resolution
         ... new pipelines 
         'cat_surf_createCS'              .05  40  .5; % C-based PBT-function 
         'cat_surf_createCS'              .05  42  .5; % internal pbtsimpleCS4 function 
