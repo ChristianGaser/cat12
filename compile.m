@@ -782,7 +782,7 @@ function varargout = compile(comp,test,verb)
                            [spm_type('float32') spm_platform('bigend')],0,1,0);
               N.mat     = spm_matrix([ size(Y)/2 , 0 0 0,  repmat(res,1,3), 0 0 0]);  
               N.mat0    = N.mat;
-              N.descrip = 'testimage';
+              N.descrip = 'test image';
               create(N);
               N.dat(:,:,:) = Y;
 
@@ -792,7 +792,7 @@ function varargout = compile(comp,test,verb)
                            [spm_type('float32') spm_platform('bigend')],0,1,0);
               N.mat     = spm_matrix([ size(Y)/2 , 0 0 0,  repmat(res,1,3), 0 0 0]);  
               N.mat0    = N.mat;
-              N.descrip = 'testimage';
+              N.descrip = 'test segment';
               create(N);
               N.dat(:,:,:) = Yp0;
 
@@ -824,6 +824,7 @@ function varargout = compile(comp,test,verb)
                   eval(cmd); %#ok<EVLCS>
                 end
               catch e
+                if verb ~= 2, fprintf(txt); end
                 cat_io_cprintf('err','ERROR: %s - %s\n',e.identifier,e.message);
                 for si = numel(e.stack):-1:1
                   cat_io_cprintf('err','  %s:%d\n',e.stack(si).file,e.stack(si).line);
@@ -983,6 +984,7 @@ function varargout = compile(comp,test,verb)
       gmttab{fi,1} = [ gmttab{fi,1}; repmat( {' '} , 1, size(gmttab{fi,1},2)) ];
     end
 
+    Prdir = fullfile(spm('dir'),'toolbox','CAT','internal','compile',char(datetime('now','Format','yyyyMMdd')));            
     cat_io_csv( fullfile( Prdir , 'compile_createCS.csv'),[gmttab{1}; gmttab{2}; gmttab{3};  gmttab{4,1}]);
 
 

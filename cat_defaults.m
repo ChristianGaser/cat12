@@ -183,6 +183,7 @@ if strcmpi(spm_check_version,'octave')
 else
   cat.extopts.nproc      = feature('numcores');
 end
+cat.extopts.nproc        = floor( cat.extopts.nproc / 2); % avoid overuse
 
 %{
 native:
