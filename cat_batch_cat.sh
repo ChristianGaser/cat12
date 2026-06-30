@@ -30,6 +30,7 @@ nicelevel=0
 defaults_tmp=/tmp/defaults$$.m
 no_mwp=0
 no_surf=0
+print=""
 rp=0
 TEST=0
 fg=0
@@ -117,6 +118,11 @@ parse_args ()
         NUMBER_OF_JOBS="-$optarg"
         shift
         ;; 
+      --print* | -pr*)
+        exit_if_empty "$optname" "$optarg"
+        print=$optarg
+        shift
+        ;;
       --processes* | -p*)
         exit_if_empty "$optname" "$optarg"
         NUMBER_OF_JOBS=$optarg
@@ -363,7 +369,11 @@ modifiy_defaults ()
     echo "cat.output.GM.dartel = 2;" >> ${defaults_tmp}
     echo "cat.output.WM.dartel = 2;" >> ${defaults_tmp}
   fi
-  
+
+  if [ -n "$print" ]; then
+    echo "cat.extopts.print = ${print};" >> ${defaults_tmp}
+  fi
+
   if [ -n "$bids_folder" ]; then
     echo "cat.extopts.bids_folder = '${bids_folder}';" >> ${defaults_tmp}
     echo "cat.extopts.bids_yes = 1;" >> ${defaults_tmp}
@@ -596,7 +606,7 @@ cat <<__EOM__
 
 USAGE:
  cat_batch_cat.sh [-m matlab_command] [-d default_file] [-l log_folder] 
-                    [-p number_of_processes] [-tpm TPM-file] [-ns] [-nm] [-rp] [-no output_pattern]
+                    [-p number_of_processes] [-tpm TPM-file] [-ns] [-nm] [-rp] [-pr print_level] [-no output_pattern]
                     [-n nicelevel] [-s shell_command -f files_for_shell] [-c matlab_command] 
                     [-a add_to_defaults] [-t] [-fg] [-noj] filenames|filepattern 
  
@@ -612,6 +622,8 @@ USAGE:
   -ns         | --no-surf               skip surface and thickness estimation
   -nm         | --no-mwp                skip estimating modulated and warped segmentations and ROI measures
   -rp         | --rp                    additionally estimate affine registered segmentations
+  -pr <NUMBER>| --print <NUMBER>        CAT report (PDF/JPG): 0 - off, 1 - volume only, 2 - volume and surfaces
+                                       (use 1 in headless mode where OpenGL surface rendering is not available)
   -no <STRING>| --no-overwrite <STRING> do not overwrite existing results
   -n  <NUMBER>| --nice <NUMBER>         nice level (default 0)
   -s  <STRING>| --shell <STRING>        shell command to call other shell scripts

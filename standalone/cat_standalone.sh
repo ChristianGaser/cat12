@@ -34,6 +34,7 @@ fi
 # default values
 standalone=1
 expert=0
+print=""
 fg=0
 matlab=matlab # you can use other matlab versions by changing the matlab parameter
 matlab_version=""
@@ -131,6 +132,11 @@ parse_args ()
         --add* | -a*)
             exit_if_empty "$optname" "$optarg"
             add_to_batch="$optarg"
+            shift
+            ;;
+        --print* | -pr*)
+            exit_if_empty "$optname" "$optarg"
+            print=$optarg
             shift
             ;;
         --fg* | -fg*)
@@ -350,6 +356,17 @@ run_cat ()
     echo "${add_to_batch}" >> ${TMP}
   fi
 
+  # override the CAT report level (PDF/JPG). The field name (estwrite vs long)
+  # is taken from the batch itself so we only inject it for segmentation batches.
+  if [ -n "$print" ]; then
+    printfield=`grep -a -m 1 -E "extopts\.admin\.print" "$BATCHFILE" | cut -f1 -d'=' | sed -e 's,%,,' -e 's,^[[:space:]]*,,' -e 's,[[:space:]]*$,,'`
+    if [ -n "$printfield" ]; then
+      echo "${printfield} = ${print};" >> ${TMP}
+    else
+      echo "`basename $0`: WARNING: --print ignored, batch file has no extopts.admin.print field." >&2
+    fi
+  fi
+
   if [ $standalone == 1 ]; then
     eval "\"${SPMROOT}/run_spm25.sh\"" $MCRROOT "batch" $TMP
     rm $TMP
@@ -408,7 +425,7 @@ cat <<__EOM__
 USAGE:
    cat_standalone.sh filename(s) [-s spm_standalone_folder] [-m mcr_folder] [-b batch_file] 
                                  [-a1 additional_argument1] [-a2 additional_argument2]
-                                 [-a add_to_batch] [-ns -e -fg]
+                                 [-a add_to_batch] [-pr print_level] [-ns -e -fg]
    
    -s  <DIR>   | --spm <DIR>     SPM folder of standalone version (can be also defined by SPMROOT)
                                  Often you don't need to define that option because the SPM folder
@@ -419,7 +436,10 @@ USAGE:
    -a2 <STRING>| --arg2 <STRING> 2nd additional argument (otherwise use defaults or batch)
    -a3 <STRING>| --arg3 <STRING> 3rd additional argument (otherwise use defaults or batch)
    -a  <STRING>| --add  <STRING> add option to batch file
-   
+   -pr <NUMBER>| --print <NUMBER> CAT report (PDF/JPG): 0 - off, 1 - volume only, 2 - volume and surfaces
+                                 (use 1 in headless mode where OpenGL surface rendering is not available;
+                                  only effective for segmentation batches)
+
    options for calling standard Matlab mode
    -ns         | --no-standalone call the standard Matlab version instead of the standalone version
    -e          | --expert        call CAT in expert mode (needed for using standalone batches!)
