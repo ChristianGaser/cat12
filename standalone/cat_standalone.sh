@@ -46,9 +46,36 @@ main ()
 {
   parse_args ${1+"$@"}
   check_files
+  clear_quarantine
   run_cat
 
   exit 0
+}
+
+########################################################
+# clear macOS Gatekeeper quarantine
+########################################################
+# These scripts call CAT functions directly and never run spm_CAT, so the
+# proactive quarantine clearing there is skipped. The *.mexmaca64 files are
+# loaded directly by MATLAB (not via system()), so they fail silently if still
+# quarantined. Clear it here before MATLAB starts.
+
+clear_quarantine ()
+{
+  [ "`uname`" != "Darwin" ] && return 0
+  local target="${1:-$cat12_dir}"
+  [ -d "$target" ] || return 0
+
+  # check a single representative mex-file for the quarantine attribute
+  local testmex
+  testmex=`ls "${target}"/*.mexmaca64 "${target}"/*.mexmaci64 2>/dev/null | head -n 1`
+  if [ -n "$testmex" ] && xattr -p com.apple.quarantine "$testmex" >/dev/null 2>&1; then
+    echo "Clearing macOS Gatekeeper quarantine from ${target}"
+    if ! xattr -dr com.apple.quarantine "${target}" 2>/dev/null; then
+      echo "WARNING: Could not remove quarantine automatically. Please run:" >&2
+      echo "  sudo xattr -dr com.apple.quarantine \"${target}\"" >&2
+    fi
+  fi
 }
 
 ########################################################
