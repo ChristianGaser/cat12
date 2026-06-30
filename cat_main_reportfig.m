@@ -1822,13 +1822,24 @@ if 1
   end
   warning('off','MATLAB:hg:patch:RGBColorDataNotSupported');
   
-  % the PDF is is an image because openGL is used but -painters would not look good for surfaces ... 
+  % the PDF is is an image because openGL is used but -painters would not look good for surfaces ...
   try % does not work in headless mode without java
     if ~isempty(job.imgprint.fname)
-      print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname); 
+      print(fg, job.imgprint.ftype(job.imgprint.type), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fname);
     end
     if ~isempty(job.imgprint.fnamej)
       print(fg, job.imgprint.ftype('jpeg'), job.imgprint.fdpi(job.imgprint.dpi), job.imgprint.fnamej);
+    end
+  catch printerr
+    % Printing the report figure regularly fails in headless mode (no display
+    % and/or no hardware OpenGL). Report the actual reason rather than failing
+    % silently so the cause can be diagnosed.
+    cat_io_cprintf('err','WARNING: Could not write report figure (%s): %s\n', printerr.identifier, printerr.message);
+    if ~usejava('jvm')
+      cat_io_cprintf('err','         MATLAB was started without the JVM (-nojvm); figure printing needs Java.\n');
+    elseif job.extopts.print>1
+      cat_io_cprintf('err','         Surface rendering needs OpenGL, which is not available in headless mode.\n');
+      cat_io_cprintf('err','         Set cat.extopts.print = 1 (volume-only report) to create the report headless.\n');
     end
   end
 

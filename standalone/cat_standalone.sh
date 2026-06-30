@@ -34,7 +34,7 @@ fi
 # default values
 standalone=1
 expert=0
-print=""
+print=1
 fg=0
 matlab=matlab # you can use other matlab versions by changing the matlab parameter
 matlab_version=""
