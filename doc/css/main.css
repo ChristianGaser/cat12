@@ -1764,3 +1764,7 @@ input, select, textarea {
       margin-top: 0;
       padding-top: 0;
     }
+/* Sub-heading / inline label style (replaces presentational <u>). */
+.subhead {
+  font-weight: bold;
+}
