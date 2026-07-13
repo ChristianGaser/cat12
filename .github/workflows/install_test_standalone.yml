@@ -116,6 +116,42 @@ jobs:
             --exclude='Makefile' \
             ./ spm/toolbox/CAT/
 
+      # Boney is installed as a regular SPM toolbox. spm_make_standalone scans
+      # spm/toolbox/* for '*_cfg_*.m' files, so tbx_cfg_boney.m is picked up and
+      # the toolbox becomes part of the compiled standalone automatically.
+      - name: Checkout Boney into SPM toolbox
+        uses: actions/checkout@v5
+        with:
+          repository: robdahn/boney
+          path: spm/toolbox/boney
+
+      - name: Strip Boney evaluation data
+        shell: bash
+        run: |
+          # Not needed at runtime and would bloat the standalone by >100 MB.
+          rm -rf spm/toolbox/boney/evaluation spm/toolbox/boney/.git
+
+      # Boney expects CAT in spm/toolbox/cat12, but here it is installed as
+      # spm/toolbox/CAT, so the hard-coded paths (CAT check in spm_boney.m,
+      # CAT templates in boney_segment_preprocessing.m) must be redirected.
+      - name: Patch Boney CAT toolbox path
+        shell: bash
+        run: |
+          files=$(grep -rl "'toolbox' *, *'cat12'" spm/toolbox/boney --include='*.m')
+          if [ -z "$files" ]; then
+            echo "ERROR: no hard-coded 'cat12' toolbox path found in Boney - has it been fixed upstream?"
+            exit 1
+          fi
+          for f in $files; do
+            sed -i.bak "s/'toolbox' *, *'cat12'/'toolbox', 'CAT'/g" "$f"
+            rm -f "$f.bak"
+            echo "Patched: $f"
+          done
+          if grep -rn "'toolbox' *, *'cat12'" spm/toolbox/boney --include='*.m'; then
+            echo "ERROR: 'cat12' toolbox path still present after patching"
+            exit 1
+          fi
+
       - name: Cleanup (Linux/Mac)
         if: runner.os != 'Windows'
         run: rm -rf standalone
