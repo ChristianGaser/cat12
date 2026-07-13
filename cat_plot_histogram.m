@@ -7,6 +7,7 @@ function varargout = cat_plot_histogram(data,opt)
 % data            .. char array of input files or data matrix or data cell
 %
 % opt             .. parameter structure
+% .fig            .. figure
 % .color          .. cat_io_colormaps('nejm',size(data,1)) as default, 
 %                    see cat_io_colormaps for more categorical colormaps
 %                    use 4th column for specific alpha
@@ -62,6 +63,7 @@ else
   n = numel(data);
 end
 
+def.fig            = [];
 def.color          = cat_io_colormaps('nejm',n);
 def.norm_frequency = true;
 def.winsize        = [750 500];
@@ -241,7 +243,11 @@ else
   error('Parameter xrange does not consist of two entries');
 end
 
-fig = figure;
+if isempty(opt.fig)
+  fig = figure;
+else
+  fig = figure(opt.fig);
+end
 set(fig,'MenuBar', 'none', 'Position',[100, 0, opt.winsize]);
 
 % get shorter filenames
@@ -465,4 +471,3 @@ mx = max(udat(:));
 mn = min(udat(:));
 
 udat = single(udat);
-

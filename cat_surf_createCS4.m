@@ -673,7 +673,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
           saveSurf(CS,P(si).Pcentral);
         
           cat_io_FreeSurfer('write_surf_data', P(si).Pthick, facevertexcdata);
-          % (2) create refined boudnary surfaces
+          % (2) create refined boundary surfaces
           if useprior
             % no refinement
             cmd = sprintf('CAT_SurfDeform -iter 100 -isovalue 1 -w1 0.0001 -w2 0.01 -w3 1.0 -sigma 0.001 "%s" "%s" "%s"', ...
