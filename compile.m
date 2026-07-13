@@ -653,12 +653,29 @@ function varargout = compile(comp,test,verb)
 
 
     %% loop over methods (and testcases)
-    rmse_gmt = nan( size(pbtmethod,1), 8, 2);
-    rmse_CT  = nan( size(pbtmethod,1), 8, 2);
-    rmse_PE  = nan( size(pbtmethod,1), 8, 2);
-    rmse_IE  = nan( size(pbtmethod,1), 8, 2);
-    ptime    = nan( size(pbtmethod,1), 8, 2);
-    qaCS     = cell(size(pbtmethod,1), 8, 2);
+    % the testcases are identical for all methods and their (sparse) IDs are
+    % used to index the result matrices and the case names cnam
+    if test > 2
+      tcases = [1 2,  10:14, 20:24];
+    else
+      tcases = [1 2, 21]; % fast basic text cases
+    end
+    % PBT resolutions / interpolation levels of the cat_surf_createCS* pipelines,
+    % indexed as di+1 in the third dimension of the result matrices
+    if test < 3
+      interpcases = 0:2:2;
+    else
+      interpcases = 0:1:4;
+    end
+    ncases   = max(tcases);
+    nipol    = max(interpcases) + 1;
+    cnam     = repmat({''}, 1, ncases);
+    rmse_gmt = nan( size(pbtmethod,1), ncases, nipol);
+    rmse_CT  = nan( size(pbtmethod,1), ncases, nipol);
+    rmse_PE  = nan( size(pbtmethod,1), ncases, nipol);
+    rmse_IE  = nan( size(pbtmethod,1), ncases, nipol);
+    ptime    = nan( size(pbtmethod,1), ncases, nipol);
+    qaCS     = cell(size(pbtmethod,1), ncases, nipol);
     for pbti = 1:size(pbtmethod,1)
       ni           = ni + 1;
       if pbtmethod{pbti,3} > 0
@@ -674,12 +691,7 @@ function varargout = compile(comp,test,verb)
 
       %% testses
       clear rt rmsgmt rmsgmtir
-      if test > 2
-        tcases = [1 2,  10:14, 20:24]; 
-      else         
-        tcases = [1 2, 21]; % fast basic text cases
-      end
-      for casei = tcases % the sphere and simple C-phantoms(id=3..5) are quite borring 
+      for casei = tcases % the sphere and simple C-phantoms(id=3..5) are quite borring
         %% select data
         switch casei
           case 1,  cnam{casei} = 'line';   dx = d2+1;    gmt=4 + .8 + .8;         % very simple case with 4 full voxel and 2 PVE voxels with 1.8 and 2.2 what is .8
@@ -732,11 +744,6 @@ function varargout = compile(comp,test,verb)
             if casei<3, continue; end
 
             %% test various PBT resolutions and interpolation
-            if test < 3
-              interpcases = 0:2:2;
-            else
-              interpcases = 0:1:4;
-            end
             for di = interpcases
 
               % due to higher processing times we give some basic feedback
@@ -937,55 +944,61 @@ function varargout = compile(comp,test,verb)
               cat_stat_nanmean(rmsgmt),  cat_stat_nanmean(rmsgmti), cat_stat_nanmean(cat_stat_nanmean(rmse_gmt(pbti,:,:))) );
       end
     end
-    %%
-    gmttab{1,1} = [ 
-      {'RMSE(GMT)'}, cnam; 
-      strcat( pbtmethod(:,1), cellfun(@num2str,pbtmethod(:,3),'UniformOutput',false)) num2cell( mean(rmse_gmt,3)); 
-    ];
-    gmttab{2,1} = [ 
-      {'RMSE(int)'}, cnam; 
-      strcat( pbtmethod(:,1), cellfun(@num2str,pbtmethod(:,3),'UniformOutput',false)) num2cell( mean(rmse_IE,3)); 
-    ];
-    gmttab{3,1} = [ 
-      {'RMSE(pos)'}, cnam; 
-      strcat( pbtmethod(:,1), cellfun(@num2str,pbtmethod(:,3),'UniformOutput',false)) num2cell( mean(rmse_PE,3)); 
-    ];
-    gmttab{4,1} = [ 
-      {'avg(ptime)'}, cnam; 
-      strcat( pbtmethod(:,1), cellfun(@num2str,pbtmethod(:,3),'UniformOutput',false)) num2cell( mean(ptime,3)); 
-    ];
+    %% summary table of the surface pipelines
+    % Only the cat_surf_createCS* pipelines fill the rmse_*/ptime matrices, i.e.
+    % without them (test==1) there is nothing to report and the pruning below
+    % would strip the table down to its header.
+    if any( ~isnan( rmse_gmt(:) ) )
+      gmttab{1,1} = [
+        {'RMSE(GMT)'}, cnam;
+        strcat( pbtmethod(:,1), cellfun(@num2str,pbtmethod(:,3),'UniformOutput',false)) num2cell( cat_stat_nanmean(rmse_gmt,3));
+      ];
+      gmttab{2,1} = [
+        {'RMSE(int)'}, cnam;
+        strcat( pbtmethod(:,1), cellfun(@num2str,pbtmethod(:,3),'UniformOutput',false)) num2cell( cat_stat_nanmean(rmse_IE,3));
+      ];
+      gmttab{3,1} = [
+        {'RMSE(pos)'}, cnam;
+        strcat( pbtmethod(:,1), cellfun(@num2str,pbtmethod(:,3),'UniformOutput',false)) num2cell( cat_stat_nanmean(rmse_PE,3));
+      ];
+      gmttab{4,1} = [
+        {'avg(ptime)'}, cnam;
+        strcat( pbtmethod(:,1), cellfun(@num2str,pbtmethod(:,3),'UniformOutput',false)) num2cell( cat_stat_nanmean(ptime,3));
+      ];
 
-    % remove non-relevant columns and rows
-    rmnan = ...
-      cellfun(@isnan,gmttab{1}(2:end,2:end)) | ...
-      cellfun(@isempty,gmttab{1}(2:end,2:end)) | ...
-      cellfun(@(x) x==0,gmttab{1}(2:end,2:end));
-    
-    for fi = 1:numel(gmttab)
-      for i = flip( find( all(rmnan,1) )+1), gmttab{fi}(:,i) = []; end 
-    end
-    rmnan = ...
-      cellfun(@isnan,gmttab{1}(2:end,2:end)) | ...
-      cellfun(@isempty,gmttab{1}(2:end,2:end)) | ...
-      cellfun(@(x) x==0,gmttab{1}(2:end,2:end));
-    
-    for fi = 1:numel(gmttab)
-      for i = flip( find( all(rmnan,2) )+1), gmttab{fi}(i,:) = []; end 
-    end
-    
-    % add conclusion 
-    for fi = 1:numel(gmttab)
-      gmttab{fi} = [ gmttab{fi,1}, [{'mean'}; num2cell( cat_stat_nanmean( cell2mat( gmttab{fi}(2:end,2:end)) , 2) )]   ];
-      gmttab{fi} = [ gmttab{fi,1}, [{'std'};  num2cell( cat_stat_nanstd(  cell2mat( gmttab{fi}(2:end,2:end)) , 2) )]   ];
-    end
- 
-    % add emptyline
-    for fi = 1:numel(gmttab)
-      gmttab{fi,1} = [ gmttab{fi,1}; repmat( {' '} , 1, size(gmttab{fi,1},2)) ];
-    end
+      % remove non-relevant columns and rows
+      rmnan = ...
+        cellfun(@isnan,gmttab{1}(2:end,2:end)) | ...
+        cellfun(@isempty,gmttab{1}(2:end,2:end)) | ...
+        cellfun(@(x) x==0,gmttab{1}(2:end,2:end));
 
-    Prdir = fullfile(spm('dir'),'toolbox','CAT','internal','compile',char(datetime('now','Format','yyyyMMdd')));            
-    cat_io_csv( fullfile( Prdir , 'compile_createCS.csv'),[gmttab{1}; gmttab{2}; gmttab{3};  gmttab{4,1}]);
+      for fi = 1:numel(gmttab)
+        for i = flip( find( all(rmnan,1) )+1), gmttab{fi}(:,i) = []; end
+      end
+      rmnan = ...
+        cellfun(@isnan,gmttab{1}(2:end,2:end)) | ...
+        cellfun(@isempty,gmttab{1}(2:end,2:end)) | ...
+        cellfun(@(x) x==0,gmttab{1}(2:end,2:end));
+
+      for fi = 1:numel(gmttab)
+        for i = flip( find( all(rmnan,2) )+1), gmttab{fi}(i,:) = []; end
+      end
+
+      % add conclusion
+      for fi = 1:numel(gmttab)
+        gmttab{fi} = [ gmttab{fi,1}, [{'mean'}; num2cell( cat_stat_nanmean( cell2mat( gmttab{fi}(2:end,2:end)) , 2) )]   ];
+        gmttab{fi} = [ gmttab{fi,1}, [{'std'};  num2cell( cat_stat_nanstd(  cell2mat( gmttab{fi}(2:end,2:end)) , 2) )]   ];
+      end
+
+      % add emptyline
+      for fi = 1:numel(gmttab)
+        gmttab{fi,1} = [ gmttab{fi,1}; repmat( {' '} , 1, size(gmttab{fi,1},2)) ];
+      end
+
+      Prdir = fullfile(spm('dir'),'toolbox','CAT','internal','compile',char(datetime('now','Format','yyyyMMdd')));
+      if ~exist(Prdir,'dir'), mkdir(Prdir); end
+      cat_io_csv( fullfile( Prdir , 'compile_createCS.csv'),[gmttab{1}; gmttab{2}; gmttab{3};  gmttab{4,1}]);
+    end
 
 
 
