@@ -216,7 +216,7 @@ cdep(end).tgt_spec   = cfg_findspec({{'filter','jpg','strtype','e'}});
 
 % CAT report XML file
 cdep(end+1) = cfg_dep;
-cdep(end).sname      = 'CAT Report';
+cdep(end).sname      = 'CAT Report XML';
 cdep(end).src_output = substruct('.','catxml','()',{':'});
 cdep(end).tgt_spec   = cfg_findspec({{'filter','catreport','strtype','e'}});
 

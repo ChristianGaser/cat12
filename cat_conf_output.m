@@ -391,14 +391,11 @@ function [output,output_spm] = cat_conf_output(expert)
   ''
   };
   grey_spm      = grey;
-  if expert
-    grey.val      = {native warped modulated dartel};
-    grey_spm.val  = {warped modulated dartel};
-  else
-    grey.val      = {native modulated dartel};
-    grey_spm.val  = {modulated dartel};
-  end
-
+  warpedhidden  = warped; 
+  warpedhidden.hidden = expert<1; 
+  grey.val      = {native warpedhidden modulated dartel};
+  grey_spm.val  = {warped modulated dartel};
+  
   native.def    = @(val)cat_get_defaults('output.WM.native', val{:});
   warped.def    = @(val)cat_get_defaults('output.WM.warped', val{:});
   modulated.def = @(val)cat_get_defaults('output.WM.mod',    val{:});
@@ -410,13 +407,8 @@ function [output,output_spm] = cat_conf_output(expert)
   ''
   };
   white_spm     = white;
-  if expert
-    white.val      = {native warped modulated dartel};
-    white_spm.val  = {warped modulated dartel};
-  else
-    white.val      = {native modulated dartel};
-    white_spm.val  = {modulated dartel};
-  end
+  white.val      = {native warpedhidden modulated dartel};
+  white_spm.val  = {warped modulated dartel};
 
 
   native.def    = @(val)cat_get_defaults('output.CSF.native', val{:});

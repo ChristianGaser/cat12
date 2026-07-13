@@ -2167,106 +2167,116 @@ dep(1).tgt_spec   = cfg_findspec({{'filter','xml','strtype','e'}});
 function dep = vout_surf_resamp(job)
 
 if isfield(job,'sample') && isfield(job,'data_surf_mixed')
-if isfield(job,'sample') 
-  if isfield(job,'data_surf')
-    job.data_surf = [job.sample.data_surf_mixed];
-  else
-    job.data_surf = {'<UNDEFINED>'};
-  end
-end
-% simple version with mixed input
-dep = cfg_dep; 
-if job.merge_hemi
-  dep(end).sname      = 'Merged resampled';
-  dep(end).src_output = substruct('.','sample','()',{1},'.','Psdata'); %,'()',{':'});
-  dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-else
-  dep(end).sname      = 'Left resampled';
-  dep(end).src_output = substruct('.','sample','()',{1},'.','lPsdata'); %,'()',{':'});
-  dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-end
-else
-if isfield(job,'sample') 
-  if isfield(job,'data_surf')
-    job.data_surf = [job.sample.data_surf];
-  else
-    job.data_surf = {'<UNDEFINED>'};
-  end
-end
-% First we have to catch possible dependency definition problems.
-if 0 % RD202211: should be ok to allow it and also a warning is not really required
-  % if isobject(job.data_surf) && numel(job.data_surf)>1 % simple file input 
-  error('cat_surf_resamp:FileDepError',...
-   ['CAT resample and smooth support only one dependency per file input \n' ...
-    'to support further separate processing. ']); 
-elseif iscell(job.data_surf)
-  nDEP = zeros(numel(job.data_surf));
-  for i = 1:numel(job.data_surf)
-    if isobject(job.data_surf{i}) && numel(job.data_surf{i})>1
-      nDEP(i) = numel(job.data_surf{i});
-    end
-  end
-  msg = ['The CAT batch "Resample and Smooth Surface Data" supports only one \n' ...
-    'dependency per input sample to support further separate processing. '];
-  for i = 1:numel(job.data_surf)
-    if nDEP(i)>1
-      msg = [msg sprintf('\n  Sample %d has %d dependencies.',i,nDEP(i))]; %#ok<AGROW>
-    end
-  end
-  if sum(nDEP)>0
-    error('cat_surf_resamp:SampleDepError',msg); 
-  end
-end
-
-%% here we have to extract the texture name to have useful output names
-mname = repmat({''},1,numel(job.data_surf));
-if isobject(job.data_surf) 
-  sep       = strfind(job.data_surf(1).sname,':');
-  if numel(job.data_surf) > 1
-    mname{1}  = [ job.data_surf(1).sname 'multiple measures' ]; 
-  else
-    mname{1}  = spm_str_manip( cat_io_strrep( job.data_surf.sname(sep+1:end) , {' ','Left'} ,{'' ''}) ); 
-  end
-elseif iscell(job.data_surf) 
-  for i=1:numel(job.data_surf)
-    if isobject(job.data_surf{i})
-      sep       = strfind(job.data_surf{i}.sname,':');
-      mname{i}  = spm_str_manip( cat_io_strrep( job.data_surf{i}.sname(sep+1:end) , {' ','Left'} ,{'' ''}) ); 
+  if isfield(job,'sample') 
+    if isfield(job,'data_surf')
+      job.data_surf = [job.sample.data_surf_mixed];
     else
-      sinfo = cat_surf_info(job.data_surf{i});
-      mname{1} = sinfo.texture; 
+      job.data_surf = {'<UNDEFINED>'};
     end
   end
-% else is empty initialization
-end
-
-%%
-if iscell(job.data_surf) && ( iscell( job.data_surf{1} ) || isobject(job.data_surf{1} ) )
-% this differentiation is important otherwise it has problemes with cellstrings
-  for di = 1:numel(job.data_surf)
-    if ~exist('dep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
-    if job.merge_hemi
-      dep(end).sname      = ['Merged resampled ' mname{di}];
-      dep(end).src_output = substruct('.','sample','()',{di},'.','Psdata'); %,'()',{':'});
-      dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-    else
-      dep(end).sname      = ['Left resampled ' mname{di}];
-      dep(end).src_output = substruct('.','sample','()',{di},'.','lPsdata'); %,'()',{':'});
-      dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
-    end
-  end
-else % file input - just one texture type 
+  % simple version with mixed input
   dep = cfg_dep; 
   if job.merge_hemi
-    dep(end).sname      = ['Merged resampled ' mname{1}];
+    dep(end).sname      = 'Merged resampled';
     dep(end).src_output = substruct('.','sample','()',{1},'.','Psdata'); %,'()',{':'});
     dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
   else
-    dep(end).sname      = ['Left resampled ' mname{1}];
+    dep(end).sname      = 'Left resampled';
     dep(end).src_output = substruct('.','sample','()',{1},'.','lPsdata'); %,'()',{':'});
     dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
   end
-end
+else
+  if isfield(job,'sample') 
+    if isfield(job,'data_surf')
+      job.data_surf = [job.sample.data_surf];
+    else
+      job.data_surf = {'<UNDEFINED>'};
+    end
+  end
+  % First we have to catch possible dependency definition problems.
+  if 0 % RD202211: should be ok to allow it and also a warning is not really required
+    % if isobject(job.data_surf) && numel(job.data_surf)>1 % simple file input 
+    error('cat_surf_resamp:FileDepError',...
+     ['CAT resample and smooth support only one dependency per file input \n' ...
+      'to support further separate processing. ']); 
+  elseif iscell(job.data_surf)
+    nDEP = zeros(numel(job.data_surf));
+    for i = 1:numel(job.data_surf)
+      if isobject(job.data_surf{i}) && numel(job.data_surf{i})>1
+        nDEP(i) = numel(job.data_surf{i});
+      end
+    end
+    msg = ['The CAT batch "Resample and Smooth Surface Data" supports only one \n' ...
+      'dependency per input sample to support further separate processing. '];
+    for i = 1:numel(job.data_surf)
+      if nDEP(i)>1
+        msg = [msg sprintf('\n  Sample %d has %d dependencies.',i,nDEP(i))]; %#ok<AGROW>
+      end
+    end
+    if sum(nDEP)>0
+      error('cat_surf_resamp:SampleDepError',msg); 
+    end
+  end
+  
+  %% here we have to extract the texture name to have useful output names
+  mname = repmat({''},1,numel(job.data_surf));
+  if isobject(job.data_surf) 
+    sep       = strfind(job.data_surf(1).sname,':');
+    if numel(job.data_surf) > 1
+      mname{1}  = [ job.data_surf(1).sname 'multiple measures' ]; 
+    else
+      mname{1}  = cat_io_strrep( job.data_surf.sname(sep(end)+1:end) , {' ','Left'} ,{'' ''} ); 
+    end
+  elseif iscell(job.data_surf) 
+    for i=1:numel(job.data_surf)
+      if isobject(job.data_surf{i})
+        sep       = strfind(job.data_surf{i}.sname,':');
+        mname{i}  = spm_str_manip( cat_io_strrep( job.data_surf{i}.sname(sep(end)+1:end) , {' ','Left'} ,{'' ''}) ); 
+      else
+        sinfo = cat_surf_info(job.data_surf{i});
+        mname{1} = sinfo.texture; 
+      end
+    end
+  % else is empty initialization
+  end
+  
+  
+  %%
+  isdep = isobject(job.data_surf); 
+  if iscell(job.data_surf) && ( iscell( job.data_surf{1} ) || isobject(job.data_surf{1} ) )
+  % this differentiation is important otherwise it has problemes with cellstrings
+    for di = 1:numel(job.data_surf)
+      if ~exist('dep','var'), dep = cfg_dep; else, dep(end+1) = cfg_dep; end %#ok<AGROW>
+      if job.merge_hemi
+        dep(end).sname      = ['Merged resampled ' mname{di}];
+        dep(end).src_output = substruct('.','sample','()',{di},'.','Psdata'); %,'()',{':'});
+        if ~isdep
+          dep(end).tgt_spec = cfg_findspec({{'filter','gifti','strtype','e'}});
+        end
+      else
+        dep(end).sname      = ['Left resampled ' mname{di}];
+        dep(end).src_output = substruct('.','sample','()',{di},'.','lPsdata'); %,'()',{':'});
+        if ~isdep
+          dep(end).tgt_spec = cfg_findspec({{'filter','gifti','strtype','e'}});
+        end
+      end
+    end
+  else % file input - just one texture type 
+    dep = cfg_dep; 
+    if job.merge_hemi
+      dep(end).sname      = ['Merged resampled ' mname{1}];
+      dep(end).src_output = substruct('.','sample','()',{1},'.','Psdata'); %,'()',{':'});
+      if ~isdep
+        dep(end).tgt_spec = cfg_findspec({{'filter','gifti','strtype','e'}});
+      end
+    else
+      dep(end).sname      = ['Left resampled ' mname{1}];
+      dep(end).src_output = substruct('.','sample','()',{1},'.','lPsdata'); %,'()',{':'});
+      if ~isdep
+        dep(end).tgt_spec   = cfg_findspec({{'filter','gifti','strtype','e'}});
+      end
+    end
+  end
 end
 %==========================================================================  
 function dep = vout_cat_surf_calc(job)
