@@ -399,7 +399,11 @@ if fit_poly
     if isempty(color)
       pl{i} = plot(xfit,yfit{i},'k');
     else
-      pl{i} = plot(xfit,yfit{i},'Color',color(i,:));
+      if size(color,1) == n_groups
+        pl{i} = plot(xfit,yfit{i},'Color',color(i,:));
+      else
+        pl{i} = plot(xfit,yfit{i},'k');
+      end
     end
     lh = [lh pl{i}];
     set(pl{i},'LineWidth',1)
