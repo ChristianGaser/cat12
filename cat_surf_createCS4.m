@@ -516,15 +516,18 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
           res.surferr(si,thi),opt.surf{si}), 1,[1 2]);
       end
       
-      % load and check surface and define lower surface resolution based on the surface area of the subject.
-      % Use 80000 as lower limit what is similar to vdist=4.
-      % More vertices will increase the number of self-intersections in folded parts.
-      % Hence, less vertices are not just faster but also cause less conflicts.
+      % Load and check surface and define lower surface resolution based on the surface area of the subject.
+      %  - Use 80k/360k faces as lower/upper limit what is similar to vdist=4.
+      %  - More vertices/faces will increase the number of self-intersections in folded parts.
+      %    Hence, less vertices/faces are not just faster but also cause less conflicts.
+      %  - However, less vertices/faces (eg. 100k) result in less accurate/robust measures! 
+      %    200k support slighly more visual details and smoother thickness histogram (cost +1 min).
+      %    400k allow further tiny improvements but with significant higher cost (+5 min).
       CS   = loadSurf(P(si).Pcentral); 
       CS.facevertexcdata = max(eps,cat_surf_fun('isocolors',Yppi,CS.vertices,Smat.matlabIBB_mm)); 
       A    = sum( cat_surf_fun( 'area', CS )); % in mm2 
       nCS0 = size(CS.faces,1); 
-      nCS  = min( size(CS.faces,1) , max( 80000, min( 360000, round(A * 4 / opt.vdist^2) ))); % ###### A * 8 
+      nCS  = min( size(CS.faces,1) , max( 80000, min( 360000, round(A * 8 / opt.vdist^2) ))); % # A * 8 / .. result in about 200k faces what was optimal 
       nCS  = nCS * (1 + 3*iscerebellum);
    
       
@@ -575,12 +578,14 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       CS = loadSurf(P(si).Pcentral); 
       CS.facevertexcdata = max(eps,cat_surf_fun('isocolors',Yppi,CS.vertices,Smat.matlabIBB_mm)); % #### for tests
       if opt.SRP > 0
+% ############# longitudinal case is ignored !!!! , e.g., in the long pipeline the CS will fit worse to .5        
         %% ==== Conceptual solution of the issue that the surface creation is biased ====
         %  To move the vertices to their correct position, we utilize the MATLAB isosurface function. 
         %  We cannot use the CSG05 as this is meandering to strong representing incorrect isovalues.
         %  The alignment is done by a nearest point search utilizing the dealunay triangulation. 
         %  The problem is that matlab isosurface returns grid-aligned vertices that result in bad
         %  face properties. 
+        %  This is quite slow (1 min/hemi) but helps especially in the insula, where otherwise the inner surface runs 2 mm inside the WM.
         
         %CSM = isosurface(interp3(Yppi,1),0.5); CSM.vertices = CSM.vertices/2; % interpoltion can further improve but with high comp. costs
         CSM = isosurface(Yppi,0.5); 
@@ -658,8 +663,11 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
 
           % optimize surface for basic self-intersections
           if 1
-            CS2 = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi, ...
+            [CS2,facevertexcdata2] = cat_surf_fun('collisionCorrectionPBT',CS,facevertexcdata,Ymfs,Yppi, ...
+              struct('optimize',2,'verb',0,'mat',Smat.matlabIBB_mm,'vx_vol',vx_vol,'CS4',1));
+            [CS2,facevertexcdata2] = cat_surf_fun('collisionCorrectionPBT',CS2,facevertexcdata2,Ymfs,Yppi, ...
               struct('optimize',0,'verb',0,'mat',Smat.matlabIBB_mm,'vx_vol',vx_vol,'CS4',1));
+            cat_io_FreeSurfer('write_surf_data',P(si).Ppbt,facevertexcdata2);
             saveSurf(CS2,P(si).Pcentral);
           end
 
@@ -805,14 +813,13 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     if ~useprior && ~opt.skip_registration
       % spherical surface mapping of the final corrected surface with minimal areal smoothing
       stime = cat_io_cmd('  Spherical mapping with areal smoothing','g5','',opt.verb,stime); 
-      cmd = sprintf('CAT_Surf2Sphere "%s" "%s" %d',P(si).Pcentral,P(si).Psphere, ... 
-        round( (5 + round( sqrt( size(CS.faces,1) / 10000 ) + 1 ))) ); % use dynamic filter interations depending on surface size (300k with value 10)
+      cmd = sprintf('CAT_Surf2Sphere "%s" "%s" %d',P(si).Pcentral,P(si).Psphere,6); % no adaptation required here compared to CS2!
       cat_system(cmd,opt.verb-3);
       
       % spherical registration to fsaverage template
       stime = cat_io_cmd('  Spherical registration','g5','',opt.verb,stime); 
-      cmd = sprintf('CAT_SurfWarp -steps 2 -avg -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"', ...
-        P(si).Pcentral,P(si).Psphere,P(si).Pfsavg,P(si).Pfsavgsph,P(si).Pspherereg);
+      cmd = sprintf('CAT_SurfWarp -steps 2 -avg -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"', ...   
+        P(si).Pcentral,P(si).Psphere,P(si).Pfsavg,P(si).Pfsavgsph,P(si).Pspherereg); 
       cat_system(cmd,opt.verb-3);
       if opt.verb, fprintf('%5.0fs',etime(clock,stime)); end %#ok<*DETIM>
     end  
@@ -1054,6 +1061,7 @@ function Vppm = exportPPmap( Yppi, Vmfs, opt)
   if exist('Vppm','var') && exist(Vppm.fname,'file'), delete(Vppm.fname); end
   spm_write_vol(Vppm, Ytx );
   Vppm = spm_vol(Vppm.fname); 
+  %spm_smooth(Vppm,Vppm,repmat(.2,1,3)); % ############# add again?
 end
 % ======================================================================
 function pvet = estimatePVEsize( Yp0 , fast ) 
