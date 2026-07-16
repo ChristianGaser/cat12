@@ -1261,14 +1261,19 @@ function job = update_job(job,verbatlas)
       tissue(i).ngaus = job.opts.ngaus(i);
       tissue(i).tpm = [fullfile(pth,[nam ext]) ',' num2str(i)];
     end
-  elseif clsn==7 && strcmp(nam,'BlaiottaTPM')
+  elseif clsn>6 && cat_io_contains(nam,'BlaiottaTPM')
     % set Blaiotta TPM defaults for [ GM WM CSF , muscle fat/BV bone/air , BG ]
     % see batch in SPM/tpm directory
-    job.opts.ngaus = [ 1 1 1, 3 1 2, 3 ];
+    switch clsn
+      case  7, job.opts.ngaus = [ 1 1 1, 3 1, 2,        3 ]; % GM-WM-CSF, mid-high, bone, BG
+      case  8, job.opts.ngaus = [ 1 1 1, 2 1, 1 1,      3 ]; % GM-WM-CSF, mid-high, bonetable-bonemarrow, BG
+      case  9, job.opts.ngaus = [ 1 1 1, 3 2, 1 1, 1,   3 ]; % GM-WM-CSF, mid-high, bonetable-bonemarrow,low, BG
+      case 10, job.opts.ngaus = [ 1 1 1, 3 2, 1 1, 1 1, 3 ]; % GM-WM-CSF, mid-high, bonetable-bonemarrow,low, BG
+    end
     tissue = struct();
     for i=1:clsn
       tissue(i).ngaus = job.opts.ngaus(i);
-      tissue(i).tpm = [fullfile(pth,[nam ext]) ',' num2str(i)];
+      tissue(i).tpm = [fullfile(pth,[nam ext]) ',' num2str(i,'%02d')]; % %02d is required to support char conversation in case of >9 TPM classes
     end
   else
     % Although it would be possible to set undefined classes to one, 

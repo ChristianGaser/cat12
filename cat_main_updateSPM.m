@@ -455,7 +455,7 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
       Ym0 = single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255;
     end
     Ym0 = cat_vol_smooth3X(Ym0,4/mean(vx_vol)); 
-    if ~isempty( strfind( job.opts.tpm , 'BlaiottaTPM') )
+    if cat_io_contains( job.opts.tpm , 'BlaiottaTPM')
       Ym0 = max( Ym0 , .51 * Yb); 
       % cleanup of low intensity head structures within the brain 
       P(:,:,:,3)     = max(P(:,:,:,3), uint8(255 * (cat_vol_morph( Yb>.5 ,'de',2,vx_vol) & Ysrc < WMth*.5))); 
@@ -567,12 +567,43 @@ function [Ysrc,Ycls,Yb,Yb0,Yy,job,res,trans,T3th,stime2] = cat_main_updateSPM(Ys
         P(:,:,:,end) = P(:,:,:,end) + sumP .* uint8( Ybg>=0.5 & ~Yb );
         clear Ybg sumP;
         
-        if ~isempty( strfind( job.opts.tpm , 'BlaiottaTPM') ) && size(P,4)==7
-          % simplify Blaiotta TPM 
-          P(:,:,:,5) = sum(P(:,:,:,4:5),4); % head
-          P(:,:,:,4) = P(:,:,:,6); % bone
-          P(:,:,:,6) = P(:,:,:,7); % background
-          P(:,:,:,7) = [];        
+        if cat_io_contains( job.opts.tpm , 'BlaiottaTPM')
+          %% Simplify Blaiotta TPM to bone (4) and head (5):
+          %  RD202607: In case of the original BlaiottaTPM the low class 6  
+          %  would need to be separated by bone, skin, and air/background.  
+          %  Moreover, fatty bone-marrow would have to be mapped from class 5
+          %  to class 4 (same in principle for the origial SPM TPM). 
+          %
+          %  RD202607: Besides tissue maps maybe also other thresholds would require updates!
+          PO = P; 
+
+          % combine extraventricular and ventricular CSF
+          if size(P,4) == 10
+            P(:,:,:,3) = PO(:,:,:,3) + PO(:,:,:,9);
+          end
+
+          % bone
+          switch size(P,4) 
+            case 7
+              P(:,:,:,4) = PO(:,:,:,6); % bone
+            case {8,9}
+              P(:,:,:,4) = sum(PO(:,:,:,6:7),4); % bonetable + bonemarrow
+          end
+          
+          % head
+          switch size(P,4)
+            case {7,8}
+              P(:,:,:,5) = sum(PO(:,:,:,4:5),4); % mid-high
+            case 9
+              P(:,:,:,5) = sum(PO(:,:,:,[4:5 8]),4); % mid-high-low
+          end
+
+          % background
+          P(:,:,:,6) = PO(:,:,:,end); 
+
+          % remove additional classes
+          P(:,:,:,7:end) = [];      
+          clear PO; 
         end
       
         %% head to WM 
