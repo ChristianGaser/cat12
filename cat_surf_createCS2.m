@@ -717,17 +717,23 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
       if opt.SRP > 4
         %% new version similar to CS4        
         CS   = loadSurf(P(si).Pcentral); 
-        CS.vertices = double(CS.vertices); CS.faces = double(CS.faces);
+        CS.vertices = double(CS.vertices); CS.faces = double(CS.faces); 
         A    = sum( cat_surf_fun( 'area', CS )); % in mm2 
         nCS  = min( size(CS.faces,1) , max( 80000, min( 360000, round(A * 4 / opt.vdist^2) ))); 
         %nCS  = 81920 / (1 + (opt.vdist>2)) * (1 + 0*iscerebellum);
         nCS0 = size(CS.faces,1); 
         saveSurf(CS,P(si).Pcentral); 
-        cat_io_cmd(sprintf('  Reduce surface (nF: %0.0fk > ~%0.0fk)', nCS0/1000, nCS/1000),'g5','',opt.verb,stime);
-        cmd  = sprintf('CAT_SurfReduce -aggr "7" -ratio "%0.2f" "%s" "%s"', nCS/nCS0 , P(si).Pcentral, P(si).Pcentral); 
-        cat_system(cmd ,opt.verb-3);  
-        CS = loadSurf(P(si).Pcentral); 
-        
+        if nCS/nCS0 < 1
+          % minimal smoothing to have unique positions
+          cmd  = sprintf('CAT_BlurSurfHK "%s" "%s" "%0.2f"', P(si).Pcentral, P(si).Pcentral, .25); 
+          cat_system(cmd ,opt.verb-3);  
+          % reduction
+          cat_io_cmd(sprintf('  Reduce surface (nF: %0.0fk > ~%0.0fk)', nCS0/1000, nCS/1000),'g5','',opt.verb,stime);
+          cmd  = sprintf('CAT_SurfReduce -aggr "5" -ratio "%0.2f" "%s" "%s"', nCS/nCS0 , P(si).Pcentral, P(si).Pcentral); 
+          cat_system(cmd ,opt.verb-3);  
+          CS = loadSurf(P(si).Pcentral); 
+        end
+
         % remove artifacts 
         % - this can maybe partially avoided by the more aggressive surface reduction
         % - although the filter reduces some artefacts in problematic cases the surface values are worse and the issue are still not fully solved
@@ -748,17 +754,28 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
           elseif  opt.reduce_mesh == 7
             CS = cat_surf_fun('reduce',CS, 81920 / (1 + (opt.vdist>2)) * (1 + 0*iscerebellum) ); 
           elseif  opt.reduce_mesh == 8
-            nCS0 = size(CS.faces,1); 
+            nCS0 = size(CS.faces,1);  
             nCS  = 81920 / (1 + (opt.vdist>2)) * (1 + 0*iscerebellum);
-            saveSurf(CS,P(si).Pcentral); 
-            cmd  = sprintf('CAT_SurfReduce -aggr "5" -ratio "%0.2f" "%s" "%s"', nCS/nCS0 , P(si).Pcentral, P(si).Pcentral); %5-0.05*opt.reconres);
-            cat_system(cmd ,opt.verb-3);
-            CS = loadSurf(P(si).Pcentral); 
+            if nCS/nCS0 < 1
+              % minimal smoothing to have unique positions
+              saveSurf(CS,P(si).Pcentral);  
+              cmd  = sprintf('CAT_BlurSurfHK "%s" "%s" "%0.2f"', P(si).Pcentral, P(si).Pcentral, .25); 
+              cat_system(cmd ,opt.verb+4);  
+              % reduction
+              cmd  = sprintf('CAT_SurfReduce -aggr "5" -ratio "%0.2f" "%s" "%s"', nCS/nCS0 , P(si).Pcentral, P(si).Pcentral); %5-0.05*opt.reconres);
+              cat_system(cmd ,opt.verb-3);
+              CS = loadSurf(P(si).Pcentral);
+            end
           end  
           % remove bad faces 
           CS = correctReducePatch(CS);
+          saveSurf(CS,P(si).Pcentral); 
+          saveSurf(CS,P(si).Praw); 
         end
-      
+
+        % detection and correction for flipped faces to have always the same normal direction
+        flipped = cat_surf_fun('checknormaldir',CS); 
+        if flipped, CS.faces = [CS.faces(:,1) CS.faces(:,3) CS.faces(:,2)]; end
       
         % remove unconnected meshes
         saveSurf(CS,P(si).Praw);
@@ -802,7 +819,8 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
   
         % evaluate and save results
         if isempty(stime), stime = clock; end
-        fprintf('%5.0fs',etime(clock,stime)); stime = []; if debug, fprintf('\n'); end
+        if opt.verb, fprintf('%5.0fs',etime(clock,stime)); stime = []; end 
+        if debug, fprintf('\n'); end
         if debug 
           % save surface for further evaluation 
           cat_surf_fun('saveico',CS,cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm),P(si).Pcentral,sprintf('createCS_1_init_pbtres%0.2fmm_vdist%0.2fmm',opt.interpV,opt.vdist),Ymfs,Smat.matlabIBB_mm); 
@@ -830,9 +848,16 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
         % cerebellum needs maybe more due to severe topology defects.
         % To fine is to slow ...
         cmd = sprintf('CAT_Surf2Sphere "%s" "%s" %d',P(si).Praw,P(si).Psphere0,...
-          5 + round( sqrt( size(CS.faces,1) / 10000 * (1 + 3*iscerebellum) ) )); 
+          6 + round( sqrt( size(CS.faces,1) / 10000 * (1 + 3*iscerebellum) ) )); % minimum 6!
         cat_system(cmd,opt.verb-3);
-  
+        CSS = loadSurf(P(si).Psphere0);
+        if numel(CSS.vertices)*.98 > numel(unique(CSS.vertices,'rows'))
+          % in these cases the spherical mapping failes due to topological defects (eg. packman phantom)
+          % less smoothing might be still sufficent for the follow topology correction
+          cmd = sprintf('CAT_Surf2Sphere "%s" "%s" %d',P(si).Praw,P(si).Psphere0,4); % 5 elepsoid 
+          cat_system(cmd,opt.verb-3);
+        end
+        
         % estimate size of topology defects 
         cmd = sprintf('CAT_MarkDefects "%s" "%s" "%s"',P(si).Praw,P(si).Psphere0,P(si).Pdefects0); 
         cat_system(cmd);
@@ -922,7 +947,7 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
           elseif  opt.reduce_mesh == 7
             CS = cat_surf_fun('reduce',CS,rfaces); 
           elseif  opt.reduce_mesh == 8
-            cmd  = sprintf('CAT_SurfReduce -aggr "7" -ratio "%0.2f" "%s" "%s"', rfaces , P(si).Pcentral, P(si).Pcentral); 
+            cmd  = sprintf('CAT_SurfReduce -aggr "7" -ratio "%0.2f" "%s" "%s"', rfaces/size(CS.vertices,1) , P(si).Pcentral, P(si).Pcentral); 
             cat_system(cmd ,opt.verb-3);
             % extra refine
             cmd = sprintf('CAT_RefineMesh "%s" "%s" %0.2f', P(si).Pcentral, P(si).Pcentral, opt.vdist );
@@ -1039,7 +1064,7 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
     cat_io_FreeSurfer('write_surf_data',P(si).Ppbt,facevertexcdata);
    
     % evaluate and save results
-    fprintf('%5.0fs\n',etime(clock,stime)); stime = [];  
+    if opt.verb, fprintf('%5.0fs\n',etime(clock,stime)); stime = []; end 
     
 
     if opt.SRP > 0 && opt.SRP < 6 % slow but we need it to avoid strong collisions
@@ -1107,7 +1132,8 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
       
       %% evaluate and save results
       if verblc, cat_io_cmd(' ','g5','',opt.verb);  end
-      fprintf('%5.0fs',etime(clock,min([stime2;stime],[],1))); if ~debug, stime = []; end
+      if opt.verb>2, fprintf('%5.0fs',etime(clock,min([stime2;stime],[],1))); end
+      if ~debug, stime = []; end
       saveSurf(CS,P(si).Pcentral); cat_io_FreeSurfer('write_surf_data',P(si).Ppbt,facevertexcdata);
       fprintf('\n');
       
@@ -1149,11 +1175,13 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
     stime = cat_io_cmd('  Create pial and white surface','g5','',opt.verb,stime); 
     cat_surf_fun('white',P(si).Pcentral);
     cat_surf_fun('pial',P(si).Pcentral);
-    fprintf('%5.0fs\n',etime(clock,stime));
-
+    
 
     % Test without surface registration - just a shortcut for manual tests! 
     if isscalar(opt.surf)
+      if opt.verb>2, fprintf('%5.0fs\n',etime(clock,stime)); end
+      cmd = sprintf('CAT_SurfDistance -mean -thickness "%s" "%s" "%s"', P(si).Ppbt, P(si).Pcentral, P(si).Pthick);
+      cat_system(cmd,opt.verb-3);
       cat_surf_createCS_fun('quickeval',V0,Vpp,Ymfs,Yppi,CS,P,Smat,res,opt,EC0,si,time_sr,2);
       return
     end
@@ -1175,6 +1203,8 @@ function [Yth,S,P,EC,defect_size,res] = cat_surf_createCS2(V,V0,Ym,Ya,YMF,Ytempl
       cmd = sprintf('CAT_WarpSurf -steps 2 -avg -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"', ...
         P(si).Pcentral,P(si).Psphere,P(si).Pfsavg,P(si).Pfsavgsph,P(si).Pspherereg);
       cat_system(cmd,opt.verb-3);
+      if opt.verb>2, fprintf('%5.0fs\n',etime(clock,stime)); end
+      %cat_io_cmd(' ','g5','',opt.verb,stime);
     end  
    
     
