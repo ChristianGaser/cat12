@@ -181,7 +181,7 @@ function varargout = cat_vol_headtrimming(job)
   for si = 1:numel(job.images)
     if job.verb, fprintf('%58s: ',spm_str_manip(job.images{si}{1},'ra57')); end
     
-    if ~job.lazy || any( cat_io_rerun( job.images{si}, job.images2{si} ) )
+    if ~job.lazy || any( cat_io_rerun( job.images2{si} , job.images{si} ) )
       %% estimate trimming parameter
       V = spm_vol(char(job.images{si})); % there could be more than one image per subject!
       Y = single(spm_read_vols(V(1))); % here we use only the first image

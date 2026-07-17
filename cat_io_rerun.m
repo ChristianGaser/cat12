@@ -1,5 +1,5 @@
 function run = cat_io_rerun(files,filedates,verb,force)
-%cat_io_rerun(f1,fd). Test if a file f1 is newer than another file/date fd.  
+%cat_io_rerun(f1,fd). Test if a file f1 is older than another file/date fd.  
 % This function is used to estimated if a file is newer than another given 
 % file or date. For instance file is the result of another file that was 
 % changed in the meantime, it has to be reprocessed. 
@@ -16,7 +16,7 @@ function run = cat_io_rerun(files,filedates,verb,force)
 %
 % Examples: 
 %  1) Is the working directory younger/newer than the SPM dir?
-%     cat_io_rerun(pwd,spm('dir'); 
+%     cat_io_rerun(pwd,spm('dir')); 
 %
 %  2) Is the working directory younger/newer than one month?
 %     cat_io_rerun(pwd,clock - [0 1 0 0 0 0]) 
@@ -33,13 +33,13 @@ function run = cat_io_rerun(files,filedates,verb,force)
 % ______________________________________________________________________
 % $Id$
   
-  if ~exist('verb','var'),  verb  = 0.5; end
+  if ~exist('verb','var'),  verb  = 0; end
   if ~exist('force','var'), force = 0; end
   files = cellstr(files);
 
   % only use that function in developer mode because it's simply too dangerous
   % if files are not processed if already existing and parameter changed
-  if force>=0 && (cat_get_defaults('extopts.expertgui') < 2 || force~=0)
+  if force>=0 && (cat_get_defaults('extopts.expertgui') < 1 || force~=0)
     if verb, cat_io_cprintf([0.5 0.0 0.0],' Reprocessing! \n'); end
     run = ones(size(files));
     return
@@ -47,7 +47,7 @@ function run = cat_io_rerun(files,filedates,verb,force)
   
   if iscellstr(filedates) || ischar(filedates)
     filedates = cellstr(filedates);
-    if numel(filedates) == 1
+    if isscalar(filedates)
       filedates = repmat(filedates,numel(files),1);
     else
       if ~isempty(filedates) && numel(files) ~= numel(filedates)
@@ -88,21 +88,21 @@ function run = cat_io_rerun(files,filedates,verb,force)
         if exist(filedates{fi},'file')
           fdata2 = dir(filedates{fi});
           if numel(fdata)>1
-            run(fi) = [fdata(:).datenum] >= fdata2.datenum;
+            run(fi) = [fdata(:).datenum] < fdata2.datenum;
           else
-            run(fi) = fdata.datenum >= fdata2.datenum;
+            run(fi) = fdata.datenum < fdata2.datenum;
           end
 
           % be verbose only if verb>=1 or if no reprocessing is required  
           if verb >= 1 || (verb && ~( (iscell(run) && any(cell2mat(run))) || ( ismatrix(run) && any(run) ) ))
             if fi==1, fprintf('\n'); end
-            if numel(files)==1 && numel(filedates)==1
+            if isscalar(files) && isscalar(filedates)
               fprintf(' Input file 1: %80s: %s\n',spm_str_manip( fdata.name , 'a80'),datestr(fdata.datenum) ); 
               fprintf(' Input file 2: %80s: %s -',spm_str_manip( fdata2.name, 'a80'),datestr(fdata2.datenum));
             elseif numel(files) == numel(filedates)
               fprintf(' Input file %02d-1: %80s: %s\n',fi,spm_str_manip( fdata.name ,'a80'),datestr(fdata.datenum) ); 
               fprintf(' Input file %02d-2: %80s: %s -',fi,spm_str_manip( fdata2.name,'a80'),datestr(fdata2.datenum));
-            elseif numel(files) == 1
+            elseif isscalar(files)
               if fi == 1
                 fprintf(' Input file 1-%02d: %80s: %s\n',fi,spm_str_manip( fdata.name ,'a80'),datestr(fdata.datenum) ); 
               end
@@ -113,7 +113,7 @@ function run = cat_io_rerun(files,filedates,verb,force)
             if run(fi), cat_io_cprintf([0.5 0.0 0.0],' reprocess\n'); else, cat_io_cprintf([0.0 0.5 0.0],' do not process\n'); end
           end
         elseif verb > 1
-          if numel(files)==1 && numel(filedates)==1
+          if isscalar(files) && isscalar(filedates)
             cat_io_cprintf([0.5 0.0 0.0],' Input file 2: %80s: %s\n',spm_str_manip( filedates{fi}, 'a80'),'missing');          
           elseif numel(files) == numel(filedates)
             cat_io_cprintf([0.5 0.0 0.0],' Input file %02d-1: %80s: %s\n',fi,spm_str_manip( files{fi}    ,'a80'),datestr(fdata.datenum) ); 
@@ -124,9 +124,9 @@ function run = cat_io_rerun(files,filedates,verb,force)
         end
       elseif ~isempty(filedates) && isdatetime( filedates(fi,:) )
         if numel(fdata)>1
-          run{fi} = [fdata(:).datenum] >= datenum( filedates(fi,:) );
+          run{fi} = [fdata(:).datenum] < datenum( filedates(fi,:) );
         else
-          run(fi) = fdata.datenum >= datenum( filedates(fi,:) );
+          run(fi) = fdata.datenum < datenum( filedates(fi,:) );
         end
       else
         if numel(fdata)>1

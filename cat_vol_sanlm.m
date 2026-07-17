@@ -262,7 +262,7 @@ function varargout = cat_vol_sanlm_file(job)
     % == prepare filtering of higher dimensions == 
     % To filter higher dimentions, we just filter every 3D subvolume within the file.
     [data1,id] = unique(spm_file(job.data,'number',''));
-    rerun1     = repmat( ~job.lazy, size(data1)) | cat_io_rerun( job.data , varargout{1} );
+    rerun1     = repmat( ~job.lazy, size(data1)) | cat_io_rerun( varargout{1}, job.data  );
     iszipped   = cellfun( @(x) strcmp(x,'gz') , spm_file( data1, 'ext' ) );
     varargout1{1} = varargout{1}(id);
     

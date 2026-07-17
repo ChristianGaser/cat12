@@ -100,7 +100,7 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull,onlytmp)
   end
   
   % nothing to do - just return filename 
-  if ~cat_io_rerun(Ptpm,Phull,0,0), return; end
+  if ~cat_io_rerun(Phull,Ptpm,0,0), return; end
     
 
   % if the file is not existing we have to (temporary) create it 
@@ -109,7 +109,7 @@ function Phull = cat_surf_create_TPM_hull_surface(tpm,human,skull,onlytmp)
     Phull = fullfile(tempdir,sprintf('bh.headbrain%s.%s.gii',species,Pname));
 
     % if we have already done it in this matlab session then just return filename 
-    if ~cat_io_rerun(Ptpm,Phull,0,0), return; end
+    if ~cat_io_rerun(Phull,Ptpm,0,0), return; end
   end
   
   

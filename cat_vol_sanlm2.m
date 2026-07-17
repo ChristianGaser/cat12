@@ -271,7 +271,7 @@ function varargout = cat_vol_sanlm_file(job)
     spm_progress_bar('Init',numel(job.data),'SANLM-Filtering','Volumes Complete');
 
     for i = 1:numel(job.data)
-      if ~job.lazy || cat_io_rerun( job.data{1} , varargout{1}{i} )
+      if ~job.lazy || cat_io_rerun( varargout{1}{i}, job.data{1} )
         cat_vol_sanlm_filter(job,V,i);
       end
     end
