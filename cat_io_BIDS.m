@@ -438,6 +438,70 @@ function create_resultdirs(BIDS,job)
       end
     end
   end
+
+  % BIDS input add-on (fork, not upstream): mark the derivatives folder
+  % itself as a valid BIDS-Derivatives dataset, which upstream CAT12 never
+  % did. See write_dataset_description below.
+  write_dataset_description(BIDS);
+end
+%==========================================================================
+function write_dataset_description(BIDS)
+%write_dataset_description. Write dataset_description.json for the
+% derivatives root(s) touched by this call, per the BIDS-Derivatives spec
+% (Name, BIDSVersion, DatasetType, GeneratedBy, SourceDatasets).
+%
+% ADD-ON (fork, not upstream). Only BIDS derivative folders are written to
+% (BIDS(fi).isBIDS), an existing file is never overwritten (so a
+% hand-edited description survives reruns), and one dataset can hold
+% several CAT versions/derivatives folders over time, each getting its own
+% file when first created.
+
+  written = {};   % avoid writing the same folder twice within one call
+  for fi = 1:numel(BIDS)
+    % isBIDS can be true while BIDSdir is still '' (resdircase==0 with a
+    % bids_folder set); in that case the "derivatives root" would equal
+    % the raw dataset root, and writing a description there would corrupt
+    % the raw dataset instead of describing a derivatives folder.
+    if ~BIDS(fi).isBIDS || isempty(BIDS(fi).BIDSdir), continue; end
+
+    derivroot = fullfile( BIDS(fi).rawdir, BIDS(fi).BIDSdir );
+    if any(strcmp(derivroot,written)), continue; end
+    written{end+1} = derivroot; %#ok<AGROW>
+
+    descfile = fullfile(derivroot,'dataset_description.json');
+    if exist(descfile,'file') || ~exist(derivroot,'dir'), continue; end
+
+    try
+      catver = cat_version;
+    catch
+      catver = 'unknown';
+    end
+
+    fid = fopen(descfile,'w');
+    if fid < 0, continue; end
+    fprintf(fid, '{\n');
+    fprintf(fid, '  "Name": "CAT12 derivatives",\n');
+    fprintf(fid, '  "BIDSVersion": "1.8.0",\n');
+    fprintf(fid, '  "DatasetType": "derivative",\n');
+    fprintf(fid, '  "GeneratedBy": [\n');
+    fprintf(fid, '    {\n');
+    fprintf(fid, '      "Name": "CAT12",\n');
+    fprintf(fid, '      "Version": "%s",\n', jesc(catver));
+    fprintf(fid, '      "CodeURL": "https://github.com/ChristianGaser/cat12"\n');
+    fprintf(fid, '    }\n');
+    fprintf(fid, '  ],\n');
+    fprintf(fid, '  "SourceDatasets": [\n');
+    fprintf(fid, '    { "URI": "file://%s" }\n', jesc(BIDS(fi).rawdir));
+    fprintf(fid, '  ]\n');
+    fprintf(fid, '}\n');
+    fclose(fid);
+  end
+end
+%==========================================================================
+function s = jesc(s)
+%jesc. Escape a string for verbatim placement inside a JSON string value.
+  s = strrep(s,'\','\\');
+  s = strrep(s,'"','\"');
 end
 %==========================================================================
 function job = updateJob(job)
