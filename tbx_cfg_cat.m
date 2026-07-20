@@ -114,6 +114,7 @@ opts                = cat_conf_opts(expert);
 [output,output_spm] = cat_conf_output(expert); 
 long                = cat_conf_long;
 factorial_design    = cat_conf_factorial(expert);
+bidsinput           = cat_conf_BIDSinput(expert);  % BIDS input add-on (fork, not upstream)
 
 %% ------------------------------------------------------------------------
 estwrite        = cfg_exbranch;
@@ -153,9 +154,9 @@ cat.tag    = 'cat';
 if exist('cat_conf_catsimple','file')
   [catsimple,catsimple_long] = cat_conf_catsimple(expert);
   catsimple_long.hidden = expert<2;
-  cat.values = {estwrite long catsimple catsimple_long estwrite_spm factorial_design tools stools stoolsexp};
+  cat.values = {bidsinput estwrite long catsimple catsimple_long estwrite_spm factorial_design tools stools stoolsexp};
 else
-  cat.values = {estwrite long estwrite_spm factorial_design tools stools stoolsexp};
+  cat.values = {bidsinput estwrite long estwrite_spm factorial_design tools stools stoolsexp};
 end
 %------------------------------------------------------------------------
 
