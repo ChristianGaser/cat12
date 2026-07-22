@@ -12,6 +12,7 @@ function out = cat_vol_avg(job)
 % job.write_med - Write median map (for atlases). 
 % job.output    - output name
 % job.outdir    - output directory
+% job.omitnan   - omit NaNs (default=1); 
 %
 % out           - output name
 % ______________________________________________________________________
@@ -77,14 +78,29 @@ else
   weighting = repmat( 1/length(N) , 1, length(N));
 end 
 
+if isfield(job,'omitnan'), omitnan = job.omitnan; else, omitnan = 1; end
+
 
 % write average map
 avg = zeros(d);
-
+if omitnan, wg = zeros(d); end
 for i = 1:length(N)
   for j = 1:d(4)
     for k = 1:d(5)
-      avg(:,:,:,j,k) = avg(:,:,:,j,k) + N(i).dat(:,:,:,j,k) * weighting(i) ;
+      img             = N(i).dat(:,:,:,j,k) * weighting(i);
+      if omitnan
+        wg              = wg + (~isnan(img)); 
+        img(isnan(img)) = 0; 
+      end
+      avg(:,:,:,j,k)  = avg(:,:,:,j,k) + img;
+      clear img
+    end
+  end
+end
+if omitnan
+  for j = 1:d(4)
+    for k = 1:d(5)
+       avg(:,:,:,j,k)  = avg(:,:,:,j,k) ./ ( max(1/length(N),wg) / length(N)); 
     end
   end
 end
@@ -108,9 +124,15 @@ if isfield(job,'write_var') && job.write_var > 0
   for i = 1:length(N)
     for j = 1:d(4)
       for k = 1:d(5)
-        varvol         = (avg(:,:,:,j,k) - N(i).dat(:,:,:,j,k)).^2 * weighting(i); 
-        out.avgvar(i)  = out.avgvar(i) + mean(varvol(:).^2).^.5; 
-        var(:,:,:,j,k) = var(:,:,:,j,k)  +  varvol;
+        img             = N(i).dat(:,:,:,j,k); 
+        avg2            = avg(:,:,:,j,k); 
+        if omitnan
+          avg2(isnan(img)) = 0; 
+          img(isnan(img))  = 0; 
+        end
+        varvol          = (avg2 - img).^2 * weighting(i); 
+        out.avgvar(i)   = out.avgvar(i) + cat_stat_nanmean(varvol(:).^2).^.5; 
+        var(:,:,:,j,k)  = var(:,:,:,j,k)  +  varvol;
       end
     end
   end
