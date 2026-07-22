@@ -733,16 +733,7 @@ function imcalc = conf_vol_imcalc(prefix)
 %conf_vol_imcalc. Like spm_imcalc but to run the same operation for many subjects. 
 
   % get original SPM imcalc function 
-  try
-    imcalc = spm_cfg_imcalc;
-  catch
-    % if SPM was not initialized the function might be not visible
-    curdir = pwd; 
-    cd(fullfile(spm('dir'),'config')); 
-    imcalc = spm_cfg_imcalc;
-    cd( curdir ); 
-    clear curdir
-  end
+  imcalc            = spm_cfg_imcalc;
 
   % update prefix and suffix fileds
   suffix            = prefix; 
@@ -756,7 +747,7 @@ function imcalc = conf_vol_imcalc(prefix)
   data              = cfg_files;
   data.tag          = 'subjects';
   data.name         = 'Volumes';
-  data.filter       = {'image','.*\.(nii.gz,1)$'};
+  data.filter       = {'image','.*\.(nii.gz)$'};
   data.ufilter      = '.*';
   data.num          = [1 Inf];
   data.help         = {'Select the same number and order of subjects for one image class. '};
@@ -1635,16 +1626,7 @@ function resize = conf_vol_resize(data,prefix,expert,outdir)
   end
     
   % imcalc interpolation field
-  try
-    imcalc = spm_cfg_imcalc;
-  catch
-    % if SPM was not initialized the function might be not visible
-    curdir = pwd; 
-    cd(fullfile(spm('dir'),'config')); 
-    imcalc = spm_cfg_imcalc;
-    cd( curdir ); 
-    clear curdir
-  end
+  imcalc            = spm_cfg_imcalc;
   if isa(imcalc.val,'function_handle')
     imcalc.val = feval(imcalc.val);
   end
@@ -2200,15 +2182,13 @@ return
 function [sanlm,sanlm2] = conf_vol_sanlm(data,intlim,spm_type,prefix,suffix,lazy,expert)
 
   % --- update input variables ---
-  data.help      = {'Select the images to be filtered. If 4D or 5D images are given (eg. fMRI/dMRI), all 3D subvolumes are filtered independently. '}; 
-  data.filter    = {'image','.*\.(nii.gz,1)$'};
-  data.ufilter   = '.*';
+  data.help         = {'Select images for filtering.'};
   
   prefix.val        = {'sanlm_'};
   prefix.help       = {
     'Specify the string to be prepended to the filenames of the filtered image file(s). Default prefix is "samlm_". Use the keyword "PARA" to add the name of the filter, e.g., "classic" or "optimized-medium".'
     ''
-  }; 
+  };
   if expert>1
     prefix.help       = {
       'Specify the string to be prepended to the filenames of the filtered image file(s). Default prefix is "samlm_". Use the keyword "PARA" to add the strength of filtering, e.g. "sanlm_PARA" result in "sanlm_NC#_*.nii".'
@@ -4649,6 +4629,14 @@ function avg_img = conf_vol_average(data,outdir)
   weighting.num     = [0 Inf];
   weighting.help    = {'Weighting vector for input files that has to have the same number of entries as selected images. The weighing is normalized, e.g., a weighting [1 2 3] for 3 images means that the last image three counts 50%, image two 33.33% and image one 16.67%. If you want to use weighting maps see mimcalc batch.'};
 
+  omitnan         = cfg_menu;
+  omitnan.tag     = 'omitnan';
+  omitnan.name    = 'Omit NaNs';
+  omitnan.labels  = {'No','Yes'};
+  omitnan.values  = {0 1};
+  omitnan.def     = @(val) 1;
+  omitnan.help    = {'Omit NaN values.' ''};
+ 
   write_var         = cfg_menu;
   write_var.tag     = 'write_var';
   write_var.name    = 'Save variance map';
@@ -4661,7 +4649,7 @@ function avg_img = conf_vol_average(data,outdir)
   avg_img         = cfg_exbranch;
   avg_img.tag     = 'avg_img';
   avg_img.name    = 'Image Average';
-  avg_img.val     = {data weighting write_var output outdir};
+  avg_img.val     = {data weighting omitnan write_var output outdir};
   avg_img.help    = {'This function is for calculating the average of a set of images, which should be of same dimension and voxel size (i.e. after spatial registration).'};
   avg_img.prog    = @cat_vol_avg;
   avg_img.vout    = @vout_avg;
