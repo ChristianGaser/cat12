@@ -83,7 +83,7 @@ if isfield(job,'omitnan'), omitnan = job.omitnan; else, omitnan = 1; end
 
 % write average map
 avg = zeros(d);
-if omitnan, wg = zeros(d); end
+if omitnan, wg = zeros(d(1:3)); end
 for i = 1:length(N)
   for j = 1:d(4)
     for k = 1:d(5)
