@@ -4,8 +4,8 @@
 
 .PHONY: clean install zip docs update cp_binaries archive check_pipeline release standalone tests
 
-OLDVERSION="CAT26.0.rc2"
-NEWVERSION="CAT26.0.rc3"
+OLDVERSION="CAT26.0.rc3"
+NEWVERSION="CAT26.0.rc4"
 REVISION=`git rev-list --count HEAD`
 DATE=`git log --date short |grep "Date:"|head -1|cut -f2 -d':'|sed -e s'/ //g'`
 VERSION=`echo ${NEWVERSION} | sed -e 's/CAT//g'`
@@ -110,7 +110,7 @@ zip: update clean
 	-@test ! -d CAT || rm -r CAT
 	-@mkdir CAT
 	-@cp -rp ${FILES} CAT
-	-@gzip -d CAT/templates_MNI152NLin2009cAsym/*.nii.gz
+	-@gzip -df CAT/templates_MNI152NLin2009cAsym/*.nii.gz
 	-@bash update_revision.sh
 	-@zip ${ZIPFILE} -rm CAT
 
