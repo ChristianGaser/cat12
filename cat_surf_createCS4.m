@@ -431,7 +431,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       end
      
       % create "gold-standard" surface 
-      cmd = sprintf('CAT_VolMarchingCubes  "%s" "%s" -thresh "%0.2f" -fast', Vppmi.fname, P(si).Pcentral,gth);
+      cmd = sprintf('CAT_VolMarchingCubes "%s" "%s" -thresh "%0.2f" -fast', Vppmi.fname, P(si).Pcentral,gth);
       cat_system(cmd ,opt.verb-3);  
       CSG05 = loadSurf(P(si).Pcentral);
       res.area_gt(si) = sum(cat_surf_fun('area',CSG05)) / 100; 
@@ -451,11 +451,11 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
 
         if iscerebellum
           % RD202603: just as quick placeholder ...
-          cmd = sprintf('CAT_VolMarchingCubes  "%s" "%s"  -thresh "%0.4f" -iter 1 -median-filter "%d"',  ...
+          cmd = sprintf('CAT_VolMarchingCubes -verbose "%s" "%s"  -thresh "%0.4f" -iter 1 -median-filter "%d"',  ...
             Vppmi.fname, P(si).Pcentral, gycon, 0); %#ok<NASGU>
           txt = evalc('cat_system(cmd ,3)');
         else
-          cmd = sprintf('CAT_VolMarchingCubes  "%s" "%s"  -thresh "%0.4f" -iter %d -label "%s" -median-filter "%d"',  ...
+          cmd = sprintf('CAT_VolMarchingCubes  -verbose "%s" "%s"  -thresh "%0.4f" -iter %d -label "%s" -median-filter "%d"',  ...
             Vppmi.fname, P(si).Pcentral, gycon, 1+final, Vp0.fname, min(1,floor( .5 / opt.interpV ) )); %#ok<NASGU>
           txt = evalc('cat_system(cmd ,3)'); 
         end
@@ -472,7 +472,8 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         res.ie(si,thi)        = cat_stat_nanmean(ie.^2).^.5; clear ie; 
         res.pie(si,thi)       = (cat_stat_nanmean(ppe < -0.1) + cat_stat_nanmean(iie < -0.1))/2 * 100; clear ppe iie;
         res.gycon(si,thi)     = gycon; 
-        res.genus(si,thi)     = abs(str2double( txt(max(strfind(txt,':'))+1 : max(strfind(txt,'('))-2) ) - 2); 
+        res.genus(si,thi)     = abs(str2double( txt(max(strfind(txt,':'))+1 : max(strfind(txt,'('))-2) ) - 2);
+        if isnan(res.genus(si,thi)), res.genus(si,thi) = 1000; end % ensure that genus is finite fif something fails
         res.area_tc(si,thi)   = sum(cat_surf_fun('area',CST{thi})) / 100;
         res.area_uc(si,thi)   = sum(cat_surf_fun('area',CSG{thi})) / 100;
         res.surferr(si,thi)   = abs(res.area_tc(si,thi) - res.area_uc(si,thi)) / res.area_uc(si,thi) * (res.genus(si,thi)+1)/genuserr;
@@ -818,7 +819,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       
       % spherical registration to fsaverage template
       stime = cat_io_cmd('  Spherical registration','g5','',opt.verb,stime); 
-      cmd = sprintf('CAT_SurfWarp -steps 2 -avg -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"', ...   
+      cmd = sprintf('CAT_SurfSphericalDemon -i "%s" -is "%s" -t "%s" -ts "%s" -ws "%s"', ...   
         P(si).Pcentral,P(si).Psphere,P(si).Pfsavg,P(si).Pfsavgsph,P(si).Pspherereg); 
       cat_system(cmd,opt.verb-3);
       if opt.verb, fprintf('%5.0fs',etime(clock,stime)); end %#ok<*DETIM>
