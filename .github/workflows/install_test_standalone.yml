@@ -131,6 +131,33 @@ jobs:
           # Not needed at runtime and would bloat the standalone by >100 MB.
           rm -rf spm/toolbox/boney/evaluation spm/toolbox/boney/.git
 
+      # TFCE becomes a regular SPM toolbox as well, so that tbx_cfg_tfce.m is
+      # picked up and standalone/cat_standalone_tfce.m (spm.tools.tfce_estimate)
+      # actually works in the compiled version. The repository keeps the m-files
+      # in matlab/ and the shared C core in c/, while an installed toolbox is a
+      # single flat folder -- hence the rename below, which reproduces the layout
+      # of the released tfce zip.
+      - name: Checkout TFCE
+        uses: actions/checkout@v5
+        with:
+          repository: ChristianGaser/tfce
+          path: tfce_src
+
+      - name: Install TFCE in SPM toolbox
+        shell: bash
+        run: |
+          mv tfce_src/matlab spm/toolbox/tfce
+          # Shipped so that compile.m can rebuild the mex-files from the
+          # installed folder; it looks for the core beside itself first.
+          cp tfce_src/c/tfce_maxtree.h \
+             tfce_src/c/tfce_batch.h \
+             tfce_src/c/tfce_threads.h \
+             spm/toolbox/tfce/
+          # Development-only scripts, not part of the released toolbox.
+          rm -rf spm/toolbox/tfce/validation
+          rm -rf tfce_src
+          ls -la spm/toolbox/tfce
+
       - name: Cleanup (Linux/Mac)
         if: runner.os != 'Windows'
         run: rm -rf standalone
@@ -184,6 +211,25 @@ jobs:
             savepath;
             cd('config');
             spm_make_standalone
+
+      # spm_make_standalone freezes the list of toolbox configurations into
+      # spm_cfg_static_tools.m. If TFCE is missing there, the standalone compiles
+      # fine but spm.tools.tfce_estimate does not exist at runtime, so check it
+      # here rather than in the much later test job.
+      - name: Verify toolboxes are registered
+        shell: bash
+        run: |
+          STATIC=spm/config/spm_cfg_static_tools.m
+          echo "Registered toolbox configurations:"
+          cat "$STATIC"
+          missing=0
+          for cfg in tbx_cfg_cat tbx_cfg_boney tbx_cfg_tfce; do
+            if ! grep -qw "$cfg" "$STATIC"; then
+              echo "ERROR: $cfg is not registered in $STATIC"
+              missing=1
+            fi
+          done
+          exit $missing
 
       - name: Compress standalone to ZIP
         shell: bash
@@ -264,6 +310,34 @@ jobs:
           echo "Extracting CTF archive..."
           cat_standalone/spm25 function exit || true
           echo "CAT standalone setup complete"
+
+      # The CTF archive is unpacked by the setup step above, so the toolbox files
+      # that were compiled in can be inspected on disk.
+      - name: Verify TFCE toolbox in standalone
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          TFCE_DIR=$(find cat_standalone -type d -name tfce | head -n 1)
+          if [ -z "$TFCE_DIR" ]; then
+            echo "ERROR: TFCE toolbox folder not found in standalone"
+            find cat_standalone -type d -name toolbox
+            exit 1
+          fi
+          echo "Found TFCE toolbox: $TFCE_DIR"
+          missing=0
+          for f in tbx_cfg_tfce.m spm_TFCE.m tfce_estimate_stat.m tfceMex_maxtree.mexa64; do
+            if [ -f "$TFCE_DIR/$f" ]; then
+              echo "ok: $f"
+            else
+              echo "MISSING: $TFCE_DIR/$f"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "Contents of $TFCE_DIR:"
+            ls -la "$TFCE_DIR"
+          fi
+          exit $missing
 
       - name: Checkout SPM canonical test data
         uses: actions/checkout@v5
