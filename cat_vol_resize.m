@@ -593,9 +593,10 @@ function varargout = reduceBrain(Y,varargin)
       SSUM = sum(sum(M,3),1);  BB(3) = max(1,find(SSUM>0,1,'first')-d(3)); BB(4) = min(size(M,2),find(SSUM>0,1,'last')+d(4));
       SSUM = sum(sum(M,2),1);  BB(5) = max(1,find(SSUM>0,1,'first')-d(5)); BB(6) = min(size(M,3),find(SSUM>0,1,'last')+d(6));
     else
-      BB(1) = 1; BB(2) = max(2,size(Y,1));
-      BB(3) = 1; BB(4) = max(2,size(Y,2));
-      BB(5) = 1; BB(6) = max(2,size(Y,3));
+      % no object found (e.g. empty mask) > keep the full volume
+      BB(1) = 1; BB(2) = max(1,size(Y{1},1));
+      BB(3) = 1; BB(4) = max(1,size(Y{1},2));
+      BB(5) = 1; BB(6) = max(1,size(Y{1},3));
     end
   end
   

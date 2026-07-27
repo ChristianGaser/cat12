@@ -28,7 +28,18 @@ function [Affine2,Yb,Ymi,Ym0] = cat_run_job_APRGs(Ysrc,Ybg,VF,Pb,Pbt,Affine,vx_v
   if isfield(VFa,'dat'), VFa = rmfield(VFa,'dat'); end
   [Vmsk,Yb0] = cat_vol_imcalc([VFa,spm_vol(Pb)],Pbt,'i2',...
     struct('interp',2,'verb',0,'mask',-1)); clear Vmsk %#ok<ASGLU>
-  
+
+  % The brain mask has to overlap with the image, otherwise the initial
+  % affine registration failed and all following steps would work on a
+  % degenerated bounding box that results in unspecific index errors.
+  if ~any(Yb0(:) > 0.5)
+    error('cat_run_job_APRGs:emptyBrainmask',[...
+      'The affine registration failed and the brain mask does not overlap \n' ...
+      'with the image. Please check the orientation (sform/qform matrix) and \n' ...
+      'the field of view of the input image, e.g. by using SPM''s display \n' ...
+      'function to set the origin close to the anterior commissure. ']);
+  end
+
   % remove areas far away from the brain and use low resolution
   Ymi  = Ysrc; 
   [Ysrc,BB] = cat_vol_resize(Ysrc,'reduceBrain',vx_vol,round(20/mean(vx_vol)),Yb0);
