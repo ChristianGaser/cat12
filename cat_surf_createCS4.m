@@ -596,15 +596,23 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         CSM.vertices(end+1:end+8,:) = [sz.*[0 0 0]; sz.*[0 0 1]; sz.*[0 1 0]; sz.*[1 0 0]; 
                                        sz.*[1 1 1]; sz.*[1 1 0]; sz.*[1 0 1]; sz.*[0 1 1]]; 
         CSM = cat_surf_fun('smat',CSM,Smat.matlabIBB_mm);
-        
-        D1  = delaunayn(double(CSM.vertices)); % CSG05
-        NN  = dsearchn(double(CSM.vertices),D1,double(CS.vertices)); 
-        % We now mix the intial surface and the MATALB isosurface aligned positions.
-        % We move vertices based on their deviation from the ideal popsition, avoiding so loosing of nice face properties of the initial mesh.  
-        dev = repmat( min(1,abs(cat_surf_fun('isocolors',Yppi,CS.vertices,Smat.matlabIBB_mm) - .5)).^.5 , 1,3);
-        CS.vertices = CS.vertices.*(1-dev) + (dev).*CSM.vertices(NN,:);
+
+        % The delaunay triangulation of this dense point cloud is by far the
+        % most memory demanding operation of the whole surface pipeline and
+        % failed with "MATLAB:nomem" on systems with limited RAM. Hence, the
+        % triangulation is created by a helper that thins out the point cloud
+        % if required and gives up (D1 = []) rather than stopping the subject.
+        [CSM.vertices,D1] = isoNNgraph(CSM.vertices); % CSG05
+
+        if ~isempty(D1)
+          NN  = dsearchn(double(CSM.vertices),D1,double(CS.vertices));
+          % We now mix the intial surface and the MATLAB isosurface aligned positions.
+          % We move vertices based on their deviation from the ideal popsition, avoiding so loosing of nice face properties of the initial mesh.
+          dev = repmat( min(1,abs(cat_surf_fun('isocolors',Yppi,CS.vertices,Smat.matlabIBB_mm) - .5)).^.5 , 1,3);
+          CS.vertices = CS.vertices.*(1-dev) + (dev).*CSM.vertices(NN,:);
+        end
         CS.facevertexcdata = max(eps,cat_surf_fun('isocolors',Yppi,CS.vertices,Smat.matlabIBB_mm)); % #### for tests
-     
+
 
         % Anyway, we have to filter the surface to avoid bad faces but also noisy surface parts and "wormholes". 
         % - this can maybe partially avoided by the more aggressive surface reduction
@@ -615,9 +623,11 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         CS  = smoothArt(Yth1i,P,CS,Smat,Vppm,1,si,opt,1,0); % last options - method & refine
 
         % After removing problematic parts it is again possible to fit to the closest position (causing some but less issues as before)
-        dev = repmat( min(1,abs(cat_surf_fun('isocolors',Yppi,CS.vertices,Smat.matlabIBB_mm) - .5)).^.5 , 1,3);
-        NN  = dsearchn(double(CSM.vertices),D1,double(CS.vertices)); 
-        CS.vertices = CS.vertices.*(1-dev) + (dev).*CSM.vertices(NN,:);
+        if ~isempty(D1)
+          dev = repmat( min(1,abs(cat_surf_fun('isocolors',Yppi,CS.vertices,Smat.matlabIBB_mm) - .5)).^.5 , 1,3);
+          NN  = dsearchn(double(CSM.vertices),D1,double(CS.vertices));
+          CS.vertices = CS.vertices.*(1-dev) + (dev).*CSM.vertices(NN,:);
+        end
         CS.facevertexcdata = max(eps,cat_surf_fun('isocolors',Yppi,CS.vertices,Smat.matlabIBB_mm)); % #### for tests
 
         if ~debug, clear NN D1 dev CSM; end
@@ -895,6 +905,60 @@ end
 %=======================================================================
 function saveSurf(CS,P)
   save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),P,'Base64Binary'); %#ok<USENS>
+end
+%=======================================================================
+function [V,T] = isoNNgraph(V)
+%isoNNgraph. Robust delaunay graph of the MATLAB isosurface for dsearchn.
+%
+%  [V,T] = isoNNgraph(V)
+%
+%  V .. vertices of the MATLAB isosurface (in/out), where the last 8 points
+%       are the artificial boundary points and where the returned points are
+%       thinned out if this was required to create the graph
+%  T .. delaunay triangulation for a faster dsearchn, that is empty if the
+%       triangulation was not possible within the available memory
+%
+%  delaunayn of the (very dense) MATLAB isosurface is the most memory
+%  demanding operation of the surface pipeline and runs out of memory
+%  ("MATLAB:nomem") on systems with limited RAM. As only the vertex
+%  positions (and not the faces) of the isosurface are used afterwards, the
+%  point cloud can simply be thinned out, which costs a bit of accuracy but
+%  reduces the memory demands clearly stronger than linear. If even the
+%  thinnest version fails, an empty T is returned and the caller has to skip
+%  the optional position refinement, i.e. the surface is a bit less accurate
+%  (mostly in the insula) but still valid.
+
+  V0 = V; T = []; errmess = '';
+
+  % less than 4 points do not define a volume
+  if size(V0,1) < 4, V = V0; return; end
+
+  for thin = [1 2 4 8]
+    % the artificial boundary points (last 8 entries) avoid qhull precision
+    % errors and have to be kept in any case
+    V = [ V0(1:thin:max(1,size(V0,1)-8),:) ; V0(max(1,size(V0,1)-7):end,:) ];
+    try
+      T = delaunayn(double(V));
+      break
+    catch err
+      T = []; errmess = err.message;
+      % only memory problems can be solved by using less points
+      if ~strcmp(err.identifier,'MATLAB:nomem'), break; end
+    end
+  end
+
+  if isempty(T)
+    V = V0;
+    mess = sprintf( ...
+      ['Triangulation of the MATLAB isosurface failed (%s) - skip surface position refinement ' ...
+       '(slightly less accurate surfaces).'], strtrim(regexprep(errmess,'\s+',' ')));
+    % cat_io_addwarning uses the message as sprintf format string
+    mess = strrep(strrep(mess,'\','\\'),'%','%%');
+    cat_io_addwarning('cat_surf_createCS4:isoNNgraphFailed',mess,1,[0 1]);
+  elseif thin > 1
+    cat_io_addwarning('cat_surf_createCS4:isoNNgraphReduced', sprintf( ...
+      'Reduced MATLAB isosurface points by factor %d to avoid memory problems.',thin),0,[0 1]);
+  end
 end
 %=======================================================================
 function CS1 = loadSurf(P)
