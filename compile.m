@@ -109,6 +109,7 @@ function varargout = compile(comp,test,verb)
       'cat_ornlm.c ornlm_float.c'
       'cat_sanlm.c sanlm_float.c'
       'cat_surf_smoothr.c'
+      'cat_bwdist.c'
     };
     % internal c-functions
     % does not yet work for octave
