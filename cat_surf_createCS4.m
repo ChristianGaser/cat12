@@ -583,29 +583,28 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         %% ==== Conceptual solution of the issue that the surface creation is biased ====
         %  To move the vertices to their correct position, we utilize the MATLAB isosurface function. 
         %  We cannot use the CSG05 as this is meandering to strong representing incorrect isovalues.
-        %  The alignment is done by a nearest point search utilizing the dealunay triangulation. 
+        %  The alignment is done by a nearest point search (see nnGrid).
         %  The problem is that matlab isosurface returns grid-aligned vertices that result in bad
-        %  face properties. 
-        %  This is quite slow (1 min/hemi) but helps especially in the insula, where otherwise the inner surface runs 2 mm inside the WM.
+        %  face properties.
+        %  This helps especially in the insula, where otherwise the inner surface runs 2 mm inside the WM.
         
         %CSM = isosurface(interp3(Yppi,1),0.5); CSM.vertices = CSM.vertices/2; % interpoltion can further improve but with high comp. costs
-        CSM = isosurface(Yppi,0.5); 
-        % add arificial boundary points to avoid error in delaunayn, eg. in MRART sub-561646_acq-headmotion1_T1w: 
-        %  QH6417 qhull precision error (qh_merge_twisted): twisted facet f4322286 does not contain pinched vertices.  
-        sz  = size(Yppi); 
-        CSM.vertices(end+1:end+8,:) = [sz.*[0 0 0]; sz.*[0 0 1]; sz.*[0 1 0]; sz.*[1 0 0]; 
-                                       sz.*[1 1 1]; sz.*[1 1 0]; sz.*[1 0 1]; sz.*[0 1 1]]; 
+        CSM = isosurface(Yppi,0.5);
         CSM = cat_surf_fun('smat',CSM,Smat.matlabIBB_mm);
 
-        % The delaunay triangulation of this dense point cloud is by far the
-        % most memory demanding operation of the whole surface pipeline and
-        % failed with "MATLAB:nomem" on systems with limited RAM. Hence, the
-        % triangulation is created by a helper that thins out the point cloud
-        % if required and gives up (D1 = []) rather than stopping the subject.
-        [CSM.vertices,D1] = isoNNgraph(CSM.vertices); % CSG05
+        % The nearest point search was done by dsearchn with a delaunay
+        % triangulation of this dense point cloud before, which was by far
+        % the most memory demanding operation of the whole surface pipeline
+        % (>7 GB/hemisphere) and caused out-of-memory errors on systems with
+        % limited RAM. nnGrid gives the same result by simple binning of the
+        % points, with linear memory demands and about 100 times faster.
+        % The isosurface points are equally distributed with about the voxel
+        % size of Yppi, that defines the optimal bin size.
+        csmbs  = mean( sqrt(sum( Smat.matlabIBB_mm(1:3,1:3).^2 ,1)) );
+        useCSM = ~isempty(CSM.vertices); % CSG05
 
-        if ~isempty(D1)
-          NN  = dsearchn(double(CSM.vertices),D1,double(CS.vertices));
+        if useCSM
+          NN  = nnGrid(CSM.vertices,CS.vertices,csmbs);
           % We now mix the intial surface and the MATLAB isosurface aligned positions.
           % We move vertices based on their deviation from the ideal popsition, avoiding so loosing of nice face properties of the initial mesh.
           dev = repmat( min(1,abs(cat_surf_fun('isocolors',Yppi,CS.vertices,Smat.matlabIBB_mm) - .5)).^.5 , 1,3);
@@ -623,14 +622,14 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         CS  = smoothArt(Yth1i,P,CS,Smat,Vppm,1,si,opt,1,0); % last options - method & refine
 
         % After removing problematic parts it is again possible to fit to the closest position (causing some but less issues as before)
-        if ~isempty(D1)
+        if useCSM
           dev = repmat( min(1,abs(cat_surf_fun('isocolors',Yppi,CS.vertices,Smat.matlabIBB_mm) - .5)).^.5 , 1,3);
-          NN  = dsearchn(double(CSM.vertices),D1,double(CS.vertices));
+          NN  = nnGrid(CSM.vertices,CS.vertices,csmbs);
           CS.vertices = CS.vertices.*(1-dev) + (dev).*CSM.vertices(NN,:);
         end
         CS.facevertexcdata = max(eps,cat_surf_fun('isocolors',Yppi,CS.vertices,Smat.matlabIBB_mm)); % #### for tests
 
-        if ~debug, clear NN D1 dev CSM; end
+        if ~debug, clear NN dev CSM csmbs useCSM; end
       end
 
       
@@ -907,58 +906,132 @@ function saveSurf(CS,P)
   save(gifti(struct('faces',CS.faces,'vertices',CS.vertices)),P,'Base64Binary'); %#ok<USENS>
 end
 %=======================================================================
-function [V,T] = isoNNgraph(V)
-%isoNNgraph. Robust delaunay graph of the MATLAB isosurface for dsearchn.
+function [NN,D] = nnGrid(P,Q,bs,maxpair)
+%nnGrid. Exact nearest neighbour search by regular spatial binning.
 %
-%  [V,T] = isoNNgraph(V)
+%  [NN,D] = nnGrid(P,Q[,bs,maxpair])
 %
-%  V .. vertices of the MATLAB isosurface (in/out), where the last 8 points
-%       are the artificial boundary points and where the returned points are
-%       thinned out if this was required to create the graph
-%  T .. delaunay triangulation for a faster dsearchn, that is empty if the
-%       triangulation was not possible within the available memory
+%  NN      .. index of the closest point of P for each point of Q (m x 1,
+%             0 if P is empty)
+%  D       .. distance to this closest point (m x 1)
+%  P       .. reference points (n x 3), e.g. the MATLAB isosurface vertices
+%  Q       .. query points (m x 3), e.g. the vertices of the central surface
+%  bs      .. bin size in units of P/Q (default 1). Use the voxel size if P
+%             was created by isosurface of a volume, as the points are then
+%             equally distributed with about this distance.
+%  maxpair .. maximum number of point pairs that are processed at once to
+%             control the memory demands (default 2e6, ie. about 150 MB)
 %
-%  delaunayn of the (very dense) MATLAB isosurface is the most memory
-%  demanding operation of the surface pipeline and runs out of memory
-%  ("MATLAB:nomem") on systems with limited RAM. As only the vertex
-%  positions (and not the faces) of the isosurface are used afterwards, the
-%  point cloud can simply be thinned out, which costs a bit of accuracy but
-%  reduces the memory demands clearly stronger than linear. If even the
-%  thinnest version fails, an empty T is returned and the caller has to skip
-%  the optional position refinement, i.e. the surface is a bit less accurate
-%  (mostly in the insula) but still valid.
+%  This is a drop-in replacement of
+%
+%    NN = dsearchn(P,delaunayn(P),Q)
+%
+%  that avoids the delaunay tetrahedralisation. delaunayn creates about 7
+%  tetrahedra per point and required >7 GB of memory and about 50 s for the
+%  ~1.3 million vertices of the MATLAB isosurface of one hemisphere, which
+%  was the reason for out-of-memory errors ("MATLAB:nomem") on systems with
+%  limited RAM. Here the reference points are only sorted into a regular
+%  grid of bins and the bins around a query point are tested shell by shell
+%  until the closest point found so far is closer than the border of the
+%  already tested region. Hence, the result is identical to dsearchn (up to
+%  the selection between points with exactly the same distance) but the
+%  memory demands are linear and the search is about 100 times faster.
 
-  V0 = V; T = []; errmess = '';
+  if ~exist('bs','var')      || isempty(bs),      bs      = 1;   end
+  if ~exist('maxpair','var') || isempty(maxpair), maxpair = 2e6; end
 
-  % less than 4 points do not define a volume
-  if size(V0,1) < 4, V = V0; return; end
+  P = double(P); Q = double(Q);
+  n = size(P,1); m = size(Q,1);
+  NN = zeros(m,1); D = inf(m,1);
+  if n == 0 || m == 0, return; end
 
-  for thin = [1 2 4 8]
-    % the artificial boundary points (last 8 entries) avoid qhull precision
-    % errors and have to be kept in any case
-    V = [ V0(1:thin:max(1,size(V0,1)-8),:) ; V0(max(1,size(V0,1)-7):end,:) ];
-    try
-      T = delaunayn(double(V));
-      break
-    catch err
-      T = []; errmess = err.message;
-      % only memory problems can be solved by using less points
-      if ~strcmp(err.identifier,'MATLAB:nomem'), break; end
+  % == sort the reference points into bins of a regular grid ==
+  % The bin index is used as sorting key, ie. ord lists the points of the
+  % first occupied bin, followed by the points of the second one, etc.,
+  % where ia/cnt define the first entry and the number of points of a bin.
+  org  = min(P,[],1) - bs;
+  dim  = floor( (max(P,[],1) - org) / bs ) + 2;
+  bin  = binindex(P,org,bs,dim);
+  [sbin,ord] = sort(bin);
+  isnew = [true; diff(sbin)~=0];
+  ubin  = sbin(isnew);                      % occupied bins (sorted)
+  ia    = find(isnew);                      % first point of each bin in ord
+  cnt   = diff([ia; n+1]);                  % number of points of each bin
+  clear bin sbin isnew
+
+  % Process the query points blockwise, where the block size is defined by
+  % the maximum number of points per bin to limit the memory peak.
+  qsub = floor( (Q - repmat(org,m,1)) / bs ) + 1;
+  qbs  = max(1000, min(m, floor( maxpair / double(max(cnt)) )));
+
+  for qi = 1:qbs:m
+    qix = qi:min(m,qi+qbs-1);
+    Qc  = Q(qix,:); qsc = qsub(qix,:); nq = numel(qix);
+    Dc  = inf(nq,1); NNc = zeros(nq,1);
+    open = true(nq,1);                      % query points without final result
+
+    for r = 0:16
+      % offsets of the new shell of bins with a chebychev distance of r
+      [ox,oy,oz] = ndgrid(-r:r,-r:r,-r:r);
+      off = [ox(:) oy(:) oz(:)]; clear ox oy oz
+      off = off( max(abs(off),[],2) == r ,:);
+
+      for oi = 1:size(off,1)
+        oq = find(open);
+        s  = qsc(oq,:) + repmat(off(oi,:),numel(oq),1);
+        ok = all(s>=1,2) & all(s<=repmat(dim,numel(oq),1),2);
+        oq = oq(ok); s = s(ok,:);
+        if isempty(oq), continue; end
+
+        [tf,loc] = ismember( binindex(s,0,1,dim) , ubin );  % s is already a subscript
+        if ~any(tf), continue; end
+        oq = oq(tf); st = ia(loc(tf)); c = cnt(loc(tf));
+
+        % expand the variable number of points per bin to a list of pairs
+        gs  = cumsum([1; c(1:end-1)]);       % first pair of each bin
+        rep = zeros(sum(c),1); rep(gs) = 1;
+        rep = cumsum(rep);                   % bin of each pair
+        pos = (1:sum(c))' - gs(rep) + 1;     % position within this bin
+        cnd = ord( st(rep) + pos - 1 );      % candidate point of P
+        qq  = oq(rep);                       % related query point
+
+        % keep the closest candidate per query point, where the descending
+        % sort assures that the minimum is written last
+        [ds,so] = sort( sum( (P(cnd,:) - Qc(qq,:)).^2 ,2) ,'descend');
+        dm = inf(nq,1); km = zeros(nq,1);
+        dm(qq(so)) = ds; km(qq(so)) = so;
+        upd = dm < Dc;
+        Dc(upd) = dm(upd); NNc(upd) = cnd(km(upd));
+      end
+
+      % A point is final if the closest point found so far is closer than
+      % the border of the tested region, that is at least r bins away.
+      open = open & ~( Dc <= (r*bs)^2 );
+      if ~any(open), break; end
     end
+
+    % Fallback for (very rare) query points far outside the point cloud.
+    if any(open)
+      oq = find(open);
+      for oi = 1:numel(oq)
+        [Dc(oq(oi)),NNc(oq(oi))] = min( sum( (P - repmat(Qc(oq(oi),:),n,1)).^2 ,2) );
+      end
+    end
+
+    NN(qix) = NNc; D(qix) = Dc;
   end
 
-  if isempty(T)
-    V = V0;
-    mess = sprintf( ...
-      ['Triangulation of the MATLAB isosurface failed (%s) - skip surface position refinement ' ...
-       '(slightly less accurate surfaces).'], strtrim(regexprep(errmess,'\s+',' ')));
-    % cat_io_addwarning uses the message as sprintf format string
-    mess = strrep(strrep(mess,'\','\\'),'%','%%');
-    cat_io_addwarning('cat_surf_createCS4:isoNNgraphFailed',mess,1,[0 1]);
-  elseif thin > 1
-    cat_io_addwarning('cat_surf_createCS4:isoNNgraphReduced', sprintf( ...
-      'Reduced MATLAB isosurface points by factor %d to avoid memory problems.',thin),0,[0 1]);
+  D = sqrt(D);
+end
+%=======================================================================
+function bi = binindex(V,org,bs,dim)
+%nnGrid>binindex. Linear index of the bin of each point (see nnGrid).
+  if isequal(org,0) && isequal(bs,1)
+    s = V;                                  % V is already a bin subscript
+  else
+    s = floor( (V - repmat(org,size(V,1),1)) / bs ) + 1;
   end
+  bi = s(:,1) + (s(:,2)-1)*dim(1) + (s(:,3)-1)*dim(1)*dim(2);
 end
 %=======================================================================
 function CS1 = loadSurf(P)
