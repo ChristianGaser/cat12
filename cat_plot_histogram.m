@@ -18,7 +18,13 @@ function varargout = cat_plot_histogram(data,opt)
 % .ylim           .. [];
 % .dist           .. 'kernel' (normal, gamma, rician, rayleigh, poisson, weibull)
 %                    see fitdist for all distributions
-% .mean           .. plot average histogram of all data
+% .mean           .. plot average histogram of all data with shaded
+%                    standard error area in an own figure (11). Repeated
+%                    calls with "hold on" overlay their averages using the
+%                    next color of the color order and have to be labeled
+%                    by the caller (e.g. legend(names) with one name per
+%                    average), because the shaded areas are skipped for
+%                    automatic legends
 % .out            .. histogram values
 % .out2           .. statistic of histogram values
 % .alpha          .. use alpha transparancy (0-1-user defined, *2-auto)
@@ -243,6 +249,18 @@ else
   error('Parameter xrange does not consist of two entries');
 end
 
+% reserve an own figure for the average histogram before the figure of the data
+% histograms is created, because otherwise repeated calls could use different
+% figures for their averages
+if opt.mean
+  fignum = 11;
+  if ~isempty(opt.fig)
+    if isnumeric(opt.fig), fignr = opt.fig; else, fignr = get(opt.fig,'Number'); end
+    if isequal(fignr,fignum), fignum = fignum + 1; end
+  end
+  figmean = figure(fignum);
+end
+
 if isempty(opt.fig)
   fig = figure;
 else
@@ -390,15 +408,62 @@ if isempty(opt.dist)
 end
 
 if opt.mean
-  figure(11)
-  HP = plot(X(1,2:end-1)', mean(H(:,2:end-1))');  
-  legend('Average histogram')
-  if ~isempty(opt.xlim) && numel(opt.xlim) == 2
-    xlim(opt.xlim)
+
+  % use the reserved figure for the average histogram
+  figure(figmean);
+  axm = gca;
+
+  % keep hold state to allow overlaying the averages of repeated calls
+  holdstate = ishold(axm);
+
+  % use size(H,1) because n is overwritten inside the loop above
+  nH  = size(H,1);
+  Xm  = X(1,2:end-1)';
+  Hm  = mean(H(:,2:end-1),1)';
+  SEm = std(H(:,2:end-1),0,1)'/sqrt(nH);
+
+  % keep the automatic color order, so that repeated calls (hold on) use
+  % different colors for their averages
+  HPm = plot(axm, Xm, Hm, 'LineWidth', 1, 'DisplayName','Average histogram');
+  hold(axm,'on');
+
+  % standard error as shaded area in the color of its average, but transparent
+  if nH > 1 && any(SEm > 0)
+    HSE = fill([Xm; flipud(Xm)], [Hm-SEm; flipud(Hm+SEm)], get(HPm,'Color'), ...
+      'EdgeColor','none','FaceAlpha',0.2,'Parent',axm, ...
+      'DisplayName','Standard error');
+    % draw shaded area behind all average curves and skip it for automatic
+    % legends, so that repeated calls can be labeled with one entry per average
+    uistack(HSE,'bottom');
+    set(get(get(HSE,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
   end
-  
+
+  % only label the first average, because for repeated calls the legend has to
+  % be defined by the caller (e.g. legend(names) with one name per average)
+  if numel(findobj(axm,'Type','line')) == 1
+    if exist('HSE','var')
+      legend(axm,[HPm HSE],{'Average histogram','Standard error'});
+    else
+      legend(axm,HPm,{'Average histogram'});
+    end
+  end
+
+  % restore hold state of the figure
+  if holdstate, hold(axm,'on'); else, hold(axm,'off'); end
+
+  grid(axm,'on');
+  if opt.norm_frequency
+    ylabel(axm,'Normalized Frequency');
+  else
+    ylabel(axm,'Frequency');
+  end
+
+  if ~isempty(opt.xlim) && numel(opt.xlim) == 2
+    xlim(axm,opt.xlim)
+  end
+
   if ~isempty(opt.ylim) && numel(opt.ylim) == 2
-    ylim(opt.ylim)
+    ylim(axm,opt.ylim)
   end
 end
 
