@@ -440,9 +440,11 @@ run_cat12 ()
     FILE=$(echo "$FILE" | sed -e 's/ /\\ /g')
     
     # check whether processed files exist if no-overwrite flag is used
+    processed=""
     if [ -n "${no_overwrite}" ]; then
       dn=$(dirname "$FILE")
-      bn=$(basename "$FILE" |cut -f1 -d'.')
+      # only strip the image extension and keep any dots inside the filename
+      bn=$(basename "$FILE" | sed -E 's/\.(nii|img|hdr|mnc)(\.gz)?$//')
       processed=`eval ls "${dn}/${no_overwrite}${bn}*" 2>/dev/null`
     fi
 
