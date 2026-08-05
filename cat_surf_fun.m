@@ -223,7 +223,7 @@ function varargout = cat_surf_fun(action,S,varargin)
       [varargout{1},varargout{2}] = cat_surf_collision_correction(S,varargin{:});
 
     case 'collisioncorrectionry'
-    % CAT_SelfIntersect-based correction of surface self-intersections   
+    % CAT_SurfSelfIntersect-based correction of surface self-intersections   
       if nargin<2, help cat_surf_fun>show_orthview; return; end
       [varargout{1},varargout{2},varargout{3}] = cat_surf_collision_correction_ry(S,varargin{:});
     
@@ -1431,7 +1431,7 @@ function res = cat_surf_evalCS(CS,Tpbt,Tfs,Ym,Ypp,Pcentral,mat,verb,estSI)
   
   
   
-  %% CAT_SelfIntersect 
+  %% CAT_SurfSelfIntersect 
   %  This is very slow and we may want to keep the result. 
   if estSI && exist('Pcentral','var') && ischar(Pcentral)
     [pp,ff,ee] = spm_fileparts(Pcentral);
@@ -1459,9 +1459,9 @@ function res = cat_surf_evalCS(CS,Tpbt,Tfs,Ym,Ypp,Pcentral,mat,verb,estSI)
     %cat_system(cmd);
     
     % write self intersection maps
-    cmd = sprintf('CAT_SelfIntersect "%s" "%s"',Pwhite,Pselfw); 
+    cmd = sprintf('CAT_SurfSelfIntersect "%s" "%s"',Pwhite,Pselfw); 
     cat_system(cmd,0);
-    cmd = sprintf('CAT_SelfIntersect "%s" "%s"',Ppial,Pselfp); 
+    cmd = sprintf('CAT_SurfSelfIntersect "%s" "%s"',Ppial,Pselfp); 
     cat_system(cmd,0);
     
     selfw = cat_io_FreeSurfer('read_surf_data',Pselfw);
@@ -1662,9 +1662,9 @@ function cat_surf_saveICO(S,Tpbt,Pcs,subdir,Pm,mat,writeTfs,writeSI,writeL4,writ
 
   % write self intersection maps
   if writeSI
-    cmd = sprintf('CAT_SelfIntersect "%s" "%s"',Pwhite,Pselfw); 
+    cmd = sprintf('CAT_SurfSelfIntersect "%s" "%s"',Pwhite,Pselfw); 
     cat_system(cmd,0);
-    cmd = sprintf('CAT_SelfIntersect "%s" "%s"',Ppial,Pselfp); 
+    cmd = sprintf('CAT_SurfSelfIntersect "%s" "%s"',Ppial,Pselfp); 
     cat_system(cmd,0);
   end
   
@@ -1923,9 +1923,9 @@ function [S,Tn,SI] = cat_surf_collision_correction_ry(S,T,Y,opt)
     save(gifti(struct('faces',S.faces,'vertices',VO)),Ppial ,'Base64Binary');
 
     % call self-intersection function 
-    cmd = sprintf('CAT_SelfIntersect "%s" "%s"',Pwhite,Pselfw); 
+    cmd = sprintf('CAT_SurfSelfIntersect "%s" "%s"',Pwhite,Pselfw); 
     cat_system(cmd,0);
-    cmd = sprintf('CAT_SelfIntersect "%s" "%s"',Ppial,Pselfp); 
+    cmd = sprintf('CAT_SurfSelfIntersect "%s" "%s"',Ppial,Pselfp); 
     cat_system(cmd,0);
 
     selfw = cat_io_FreeSurfer('read_surf_data',Pselfw)>0; 

@@ -117,13 +117,13 @@ zip: update clean
 # copy binaries after cross-compiling
 cp_binaries: 
 	-@echo copy binaries matching $(BIN)
-	-@for file in ~/Dropbox/GitHub/CAT-Surface/build-*/Progs/*.o; do \
+	-@for file in ~/GitHub/CAT-Surface/build-*/Progs/*.o; do \
 			[ -f "$$file" ] && rm "$$file"; \
 	done
-	-@for i in CAT.glnx86/$(BIN); do cp ~/Dropbox/GitHub/CAT-Surface/build-x86_64-pc-linux/Progs/`basename $${i}` CAT.glnx86/ ; done
-	-@for i in CAT.w32/$(BIN); do cp ~/Dropbox/GitHub/CAT-Surface/build-x86_64-w64-mingw32/Progs/`basename $${i}` CAT.w32/ ; done
-	-@for i in CAT.maci64/$(BIN); do cp ~/Dropbox/GitHub/CAT-Surface/build-native/Progs/`basename $${i}` CAT.maci64/ ; done
-	-@for i in CAT.maca64/$(BIN); do cp ~/Dropbox/GitHub/CAT-Surface/build-native-arm64/Progs/`basename $${i}` CAT.maca64/ ; done
+	-@for i in CAT.glnx86/$(BIN); do cp ~/GitHub/CAT-Surface/build-x86_64-pc-linux/Progs/`basename $${i}` CAT.glnx86/ ; done
+	-@for i in CAT.w32/$(BIN); do cp ~/GitHub/CAT-Surface/build-x86_64-w64-mingw32/Progs/`basename $${i}` CAT.w32/ ; done
+	-@for i in CAT.maci64/$(BIN); do cp ~/GitHub/CAT-Surface/build-native/Progs/`basename $${i}` CAT.maci64/ ; done
+	-@for i in CAT.maca64/$(BIN); do cp ~/GitHub/CAT-Surface/build-native-arm64/Progs/`basename $${i}` CAT.maca64/ ; done
 
 # print check list for releasing
 release: checklist
@@ -193,5 +193,5 @@ tests:
 check_pipeline: update install
 	-@echo Check pipeline
 	-@cd /Volumes/UltraMax/check_pipeline/
-	-@/Users/gaser/Dropbox/GitHub/cat12/check_pipeline.sh -d /Volumes/UltraMax/check_pipeline/ -s ~/spm/spm12 -bg 8 -f /Volumes/UltraMax/check_pipeline/check_pipeline_files.txt -l /Volumes/UltraMax/check_pipeline/check_pipeline_files_long.txt
+	-@/Users/gaser/GitHub/cat12/check_pipeline.sh -d /Volumes/UltraMax/check_pipeline/ -s ~/spm/spm12 -bg 8 -f /Volumes/UltraMax/check_pipeline/check_pipeline_files.txt -l /Volumes/UltraMax/check_pipeline/check_pipeline_files_long.txt
 	-@echo 1. cd /Volumes/UltraMax/check_pipeline/ 2. Call post-processing with the resp. pid: check_pipeline.sh -p pid

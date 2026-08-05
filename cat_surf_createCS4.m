@@ -857,12 +857,19 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
     fprintf('\n');
     
 
-    % final surface evaluation 
-    Vppm = spm_vol(P(si).Pppm); Yppi = spm_read_vols(Vppm); 
+    % final surface evaluation
+    %  The self-intersection test (last argument) calls CAT_SurfSelfIntersect twice
+    %  (white and pial surface) and its runtime grows faster than linear with the
+    %  number of faces, i.e. it is by far the most expensive part of the evaluation
+    %  for dense meshes (in particular the cerebellum that uses a 4 times higher
+    %  face limit). It is therefore only estimated for developers, as in the other
+    %  surface pipelines (see cat_surf_createCS2/cat_surf_createCS_fun).
+    estSI = cat_get_defaults('extopts.expertgui') > 1;
+    Vppm = spm_vol(P(si).Pppm); Yppi = spm_read_vols(Vppm);
     res.(opt.surf{si}).createCS_final = cat_surf_fun('evalCS', ...
       loadSurf(P(si).Pcentral), cat_io_FreeSurfer('read_surf_data',P(si).Ppbt), cat_io_FreeSurfer('read_surf_data',P(si).Pthick), ...
-      Ymfs, Yppi, P(si).Pcentral, Smat.matlabIBB_mm, debug + (cat_get_defaults('extopts.expertgui')>1), 1);
-    clear Yppi; 
+      Ymfs, Yppi, P(si).Pcentral, Smat.matlabIBB_mm, debug + (cat_get_defaults('extopts.expertgui')>1), estSI);
+    clear Yppi;
 
     % average final values
     FNres = fieldnames( res.(opt.surf{si}).createCS_final );
@@ -1361,7 +1368,7 @@ function CS = smoothArt(Yth1i,P,CS,Smat,Vppm,facevertexcdatanocut,si,opt,method,
   saveSurf(CS,P(si).Pcentral); 
   cmd = sprintf('CAT_SurfDeform "%s" "%s" "%s"', Vppm.fname, P(si).Pcentral, P(si).Pcentral);
   cat_system(cmd,opt.verb-3);
-  cmd = sprintf('CAT_SurfRemoveIntersections "%s" "%s"',P(si).Pcentral,P(si).Pcentral);
+  cmd = sprintf('CAT_SurfFixSelfIntersect "%s" "%s"',P(si).Pcentral,P(si).Pcentral);
   cat_system(cmd,opt.verb-3);
   cmd = sprintf('CAT_SurfDeform "%s" "%s" "%s"', Vppm.fname, P(si).Pcentral, P(si).Pcentral);
   cat_system(cmd,opt.verb-3);
