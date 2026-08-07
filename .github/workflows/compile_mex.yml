@@ -148,18 +148,29 @@ jobs:
         if: runner.os == 'Linux'
         shell: bash
         run: |
+          # GitHub runs this with -e -o pipefail. Every pipeline whose failure is
+          # expected therefore has to be neutralised explicitly, or the step dies
+          # with no message: a grep that matches nothing returns 1, pipefail hands
+          # that to the assignment, and -e ends the job. sed -n 1p rather than
+          # head -1 for the same reason -- head closes the pipe early and leaves
+          # the writer with a broken pipe.
           max_allowed=2.14
-          echo "builder: $(ldd --version | head -1)"
+          echo "builder: $(ldd --version | sed -n 1p)"
           status=0
           for f in $(find spm/toolbox/CAT -type f -name "*.mexa64" | sort); do
+            name=$(basename "$f")
             imports=$(objdump -T "$f" |
                       sed -nE 's/.*\(GLIBC_([0-9][0-9.]*)\)[[:space:]]+([A-Za-z_][A-Za-z0-9_]*)$/\1 \2/p' |
                       sort -uV)
+            if [ -z "$imports" ]; then
+              echo "ok: $name imports no versioned glibc symbol"
+              continue
+            fi
             highest=$(printf '%s\n' "$imports" | tail -n1 | cut -d' ' -f1)
             if [ "$(printf '%s\n%s\n' "$max_allowed" "$highest" | sort -V | tail -n1)" = "$max_allowed" ]; then
-              echo "ok: $(basename "$f") needs at most GLIBC_$highest"
+              echo "ok: $name needs at most GLIBC_$highest"
             else
-              echo "::error::$(basename "$f") needs GLIBC_$highest, above the GLIBC_$max_allowed floor"
+              echo "::error::$name needs GLIBC_$highest, above the GLIBC_$max_allowed floor"
               printf '%s\n' "$imports" | sed 's/^/    GLIBC_/'
               status=1
             fi
@@ -171,8 +182,10 @@ jobs:
           # distributions. Reported, not gated -- the sources need only the base
           # GLIBCXX_3.4 today, and a threshold here would be a guess.
           for f in $(find spm/toolbox/CAT -type f -name "*.mexa64" | sort); do
-            cxx=$(objdump -T "$f" | grep -oE '(GLIBCXX|CXXABI)_[0-9.]+' | sort -uV | tr '\n' ' ')
-            [ -n "$cxx" ] && echo "c++ abi: $(basename "$f") needs $cxx"
+            cxx=$(objdump -T "$f" | grep -oE '(GLIBCXX|CXXABI)_[0-9.]+' | sort -uV | tr '\n' ' ') || true
+            if [ -n "$cxx" ]; then
+              echo "c++ abi: $(basename "$f") needs $cxx"
+            fi
           done
           exit $status
 
