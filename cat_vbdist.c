@@ -38,6 +38,7 @@
  */
 
 #include "mex.h"   
+#include "cat_glibc_compat.h"
 #include "math.h"
 /* #include "matrix.h" */
 #include "float.h"

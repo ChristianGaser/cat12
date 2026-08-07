@@ -22,6 +22,7 @@
  * Comments to raja@cns.mpg.de, 15.10.96
  */
 
+#include "cat_glibc_compat.h"
 #include <stdio.h>
 #include <math.h>
 #include "Amap.h"

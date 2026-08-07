@@ -43,6 +43,7 @@
  *  Pages 171-179, New York, USA, September 2008                           *
  ***************************************************************************/
 
+#include "cat_glibc_compat.h"
 #include "math.h"
 #include <stdlib.h>
 

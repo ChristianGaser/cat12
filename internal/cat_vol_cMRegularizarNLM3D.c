@@ -11,6 +11,8 @@
  * %
  **************************************************************************/
 
+/* ../ because this one is compiled from the internal/ directory. */
+#include "../cat_glibc_compat.h"
 #include "math.h"
 #include "mex.h"
 #include <stdlib.h>

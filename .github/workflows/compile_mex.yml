@@ -132,6 +132,50 @@ jobs:
             exit 1
           fi
 
+      # A mex-file inherits the glibc symbol versions of the machine it was built
+      # on, and the loader treats them as a hard minimum: built against the
+      # runner's glibc, it is refused by MATLAB on every older system with
+      # "version `GLIBC_2.34' not found" -- RHEL/Rocky 8, Ubuntu 20.04, Debian
+      # 10/11. Nothing on the build machine notices, which is why this is checked
+      # rather than assumed. cat_glibc_compat.h pins the symbols that would
+      # otherwise raise the floor, and the floor below is what is left once it has
+      # done its work. A source that starts calling exp/log/pow or the pthread
+      # functions without including that header shows up here.
+      #
+      # Raise the floor only deliberately: it is the oldest Linux CAT still runs
+      # on. The fix for a failure is normally the missing include, not a new floor.
+      - name: Check the glibc floor of the mex-files
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          max_allowed=2.14
+          echo "builder: $(ldd --version | head -1)"
+          status=0
+          for f in $(find spm/toolbox/CAT -type f -name "*.mexa64" | sort); do
+            imports=$(objdump -T "$f" |
+                      sed -nE 's/.*\(GLIBC_([0-9][0-9.]*)\)[[:space:]]+([A-Za-z_][A-Za-z0-9_]*)$/\1 \2/p' |
+                      sort -uV)
+            highest=$(printf '%s\n' "$imports" | tail -n1 | cut -d' ' -f1)
+            if [ "$(printf '%s\n%s\n' "$max_allowed" "$highest" | sort -V | tail -n1)" = "$max_allowed" ]; then
+              echo "ok: $(basename "$f") needs at most GLIBC_$highest"
+            else
+              echo "::error::$(basename "$f") needs GLIBC_$highest, above the GLIBC_$max_allowed floor"
+              printf '%s\n' "$imports" | sed 's/^/    GLIBC_/'
+              status=1
+            fi
+          done
+
+          # The C++ mex-files carry a second, independent floor: libstdc++. MATLAB
+          # preloads its own, which is usually older than the runner's, so a high
+          # GLIBCXX requirement fails inside MATLAB itself rather than only on old
+          # distributions. Reported, not gated -- the sources need only the base
+          # GLIBCXX_3.4 today, and a threshold here would be a guess.
+          for f in $(find spm/toolbox/CAT -type f -name "*.mexa64" | sort); do
+            cxx=$(objdump -T "$f" | grep -oE '(GLIBCXX|CXXABI)_[0-9.]+' | sort -uV | tr '\n' ' ')
+            [ -n "$cxx" ] && echo "c++ abi: $(basename "$f") needs $cxx"
+          done
+          exit $status
+
       - name: Install zip on Windows
         if: runner.os == 'Windows'
         run: choco install zip -y

@@ -69,6 +69,7 @@
  
 
 #include "mex.h"   
+#include "cat_glibc_compat.h"
 #include "math.h"
 #include "float.h"
 #include "limits.h"
