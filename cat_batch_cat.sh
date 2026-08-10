@@ -39,6 +39,14 @@ bids_folder=
 nojvm=""
 NUMBER_OF_JOBS=-1
 matlab_version=""
+progress=1
+# absolute path is needed because we change into the cat12 folder before the
+# progress bar is called
+progress_bar=$(cd "$(dirname "$0")" && pwd)/cat_progress_bar_multi.sh
+PROGRESS_DIR=
+progress_pid=
+progress_update_pid=
+n_progress_jobs=0
 
 ########################################################
 # run main
@@ -103,6 +111,9 @@ parse_args ()
     optarg="`echo $2`"
     paras="$paras $optname $optarg"
     case "$1" in
+      --no-progress* | -nopb*)
+        progress=0
+        ;;
       --matlab* | -m*)
         exit_if_empty "$optname" "$optarg"
         matlab=$optarg
@@ -398,6 +409,86 @@ modifiy_defaults ()
 }
 
 ########################################################
+# progress bar
+########################################################
+# The progress bar (adopted from T1Prep) is fed by job*.progress files that
+# contain "done/total". Since the CAT12 pipeline runs inside MATLAB we derive
+# the number of finished volumes of each job from its log-file by counting the
+# "CAT preprocessing takes ..." entries that are printed after each volume.
+# This is the same marker that cat_run.m uses to monitor its own child jobs.
+
+# register a background job for progress monitoring:
+# $1 - index of the file list ${TMP}${1}, $2 - number of the log-file
+register_progress_job ()
+{
+  pjob=""
+  [ "$use_progress" -eq 1 ] || return 0
+
+  pjob=$n_progress_jobs
+  progress_log[$pjob]="${vbmlog}_${2}.log"
+  progress_total[$pjob]=`wc -l < "${TMP}${1}" | tr -d ' '`
+  if [ ! -n "${progress_total[$pjob]}" ] || [ "${progress_total[$pjob]}" -lt 1 ]; then
+    progress_total[$pjob]=1
+  fi
+  echo "0/${progress_total[$pjob]}" > "${PROGRESS_DIR}/job${pjob}.progress"
+  ((n_progress_jobs++))
+}
+
+# translate the log-files of all registered jobs into job*.progress files until
+# every job has written its job*.exit file
+update_progress ()
+{
+  local k finished done_items total status
+
+  while true; do
+    finished=1
+    k=0
+    while [ "$k" -lt "$n_progress_jobs" ]; do
+      total="${progress_total[$k]}"
+      done_items=0
+      if [ -f "${progress_log[$k]}" ]; then
+        done_items=`grep -c 'CAT preprocessing takes' "${progress_log[$k]}" 2>/dev/null`
+      fi
+      [ -n "$done_items" ] || done_items=0
+
+      if [ -f "${PROGRESS_DIR}/job${k}.exit" ]; then
+        status=`cat "${PROGRESS_DIR}/job${k}.exit" 2>/dev/null`
+        [ -n "$status" ] || status=0
+        echo "$status" > "${PROGRESS_DIR}/job${k}.status"
+        done_items=$total
+      else
+        finished=0
+      fi
+
+      [ "$done_items" -gt "$total" ] && done_items=$total
+      echo "${done_items}/${total}" > "${PROGRESS_DIR}/job${k}.progress"
+      ((k++))
+    done
+
+    [ "$finished" -eq 1 ] && break
+    sleep 2
+  done
+}
+
+cleanup_progress ()
+{
+  if [ -n "$progress_update_pid" ]; then
+    kill "$progress_update_pid" 2>/dev/null
+    progress_update_pid=
+  fi
+  if [ -n "$progress_pid" ]; then
+    kill "$progress_pid" 2>/dev/null
+    progress_pid=
+    # restore cursor that was hidden by the progress bar
+    [ -t 1 ] && printf '\033[?25h'
+  fi
+  if [ -n "$PROGRESS_DIR" ] && [ -d "$PROGRESS_DIR" ]; then
+    rm -rf "$PROGRESS_DIR"
+  fi
+  PROGRESS_DIR=
+}
+
+########################################################
 # run cat
 ########################################################
 
@@ -496,6 +587,26 @@ run_cat12 ()
     vbmlog=${pwd}/${vbmlog}
   fi
 
+  # keep track of the exit codes of the background jobs and show a progress bar
+  # with the number of finished volumes. Both is only possible for the default
+  # matlab call that is run in the background, because the number of finished
+  # volumes is obtained from the log-files of the CAT12 pipeline.
+  # The progress bar is skipped without terminal (e.g. redirected output),
+  # because it would otherwise repeatedly print the bar to the output.
+  use_progress=0
+  show_progress=0
+  if [ "$fg" -eq 0 ] && [ "$TEST" -eq 0 ] && \
+     [ ! -n "$matlabcommand" ] && [ ! -n "$shellcommand" ]; then
+    use_progress=1
+    PROGRESS_DIR=/tmp/cat_progress_$$
+    mkdir -p "$PROGRESS_DIR"
+    trap 'cleanup_progress; exit 1' INT TERM HUP
+    trap cleanup_progress EXIT
+    if [ "$progress" -eq 1 ] && [ -t 1 ] && [ -f "$progress_bar" ]; then
+      show_progress=1
+    fi
+  fi
+
   i=0
   while [ "$i" -lt "$NUMBER_OF_JOBS" ]; do
     if [ -n "${ARG_LIST[$i]}" ] && [ "$TEST" -eq 0 ]; then
@@ -545,7 +656,17 @@ run_cat12 ()
 
         # do nohup in background or not
         if [ "$fg" -eq 0 ]; then
-          nohup nice -n $nicelevel ${matlab} "$nojvm" $matlab_params "$COMMAND" >> "${vbmlog}_${j}.log" 2>&1 &
+          register_progress_job "$i" "$j"
+          exitfile=""
+          [ -n "$pjob" ] && exitfile="${PROGRESS_DIR}/job${pjob}.exit"
+          # the exit code is saved to indicate the end of that job to the
+          # progress monitor and to report failed jobs
+          (
+            nohup nice -n $nicelevel ${matlab} "$nojvm" $matlab_params "$COMMAND" >> "${vbmlog}_${j}.log" 2>&1
+            status=$?
+            [ -n "$exitfile" ] && echo "$status" > "$exitfile"
+            exit $status
+          ) &
           child_pids+=("$!")
         else
           nohup nice -n $nicelevel ${matlab} "$nojvm" $matlab_params "$COMMAND" >> "${vbmlog}_${j}.log" 2>&1
@@ -566,8 +687,40 @@ run_cat12 ()
   done
 
   if [ "$fg" -eq 0 ] && [ "${#child_pids[@]}" -gt 0 ]; then
-    echo "Wait for all ${#child_pids[@]} background job(s) to finish..."
+    if [ "$show_progress" -eq 1 ] && [ "$n_progress_jobs" -gt 0 ]; then
+      update_progress &
+      progress_update_pid=$!
+      "$progress_bar" "$n_progress_jobs" "$PROGRESS_DIR" 40 "CAT12 volumes" &
+      progress_pid=$!
+    else
+      echo "Wait for all ${#child_pids[@]} background job(s) to finish..."
+    fi
+
     wait "${child_pids[@]}"
+
+    if [ "$use_progress" -eq 1 ] && [ "$n_progress_jobs" -gt 0 ]; then
+      # ensure that the monitor also finishes if a job died unexpectedly
+      k=0
+      while [ "$k" -lt "$n_progress_jobs" ]; do
+        [ -f "${PROGRESS_DIR}/job${k}.exit" ] || echo 1 > "${PROGRESS_DIR}/job${k}.exit"
+        ((k++))
+      done
+      if [ "$show_progress" -eq 1 ]; then
+        wait "$progress_update_pid" 2>/dev/null
+        wait "$progress_pid" 2>/dev/null
+      fi
+
+      # report jobs that did not finish successfully
+      k=0
+      while [ "$k" -lt "$n_progress_jobs" ]; do
+        status=`cat "${PROGRESS_DIR}/job${k}.exit" 2>/dev/null`
+        if [ -n "$status" ] && [ "$status" -ne 0 ]; then
+          echo "ERROR: Job $(($k+1)) failed with exit code ${status}. Check ${progress_log[$k]}" >&2
+        fi
+        ((k++))
+      done
+      cleanup_progress
+    fi
     echo "All background jobs finished."
   fi
 
@@ -609,8 +762,8 @@ cat <<__EOM__
 USAGE:
  cat_batch_cat.sh [-m matlab_command] [-d default_file] [-l log_folder] 
                     [-p number_of_processes] [-tpm TPM-file] [-ns] [-nm] [-rp] [-pr print_level] [-no output_pattern]
-                    [-n nicelevel] [-s shell_command -f files_for_shell] [-c matlab_command] 
-                    [-a add_to_defaults] [-t] [-fg] [-noj] filenames|filepattern 
+                    [-n nicelevel] [-s shell_command -f files_for_shell] [-c matlab_command]
+                    [-a add_to_defaults] [-t] [-fg] [-noj] [-nopb] filenames|filepattern
  
   -m  <FILE>  | --matlab <FILE>         matlab command (matlab version) (default $matlab)
   -d  <FILE>  | --defaults <FILE>       optional default file (default ${cat12_dir}/cat_defaults.m)
@@ -636,7 +789,12 @@ USAGE:
   -b          | --bids                  use default BIDS path (i.e. 'derivatives/CAT12.x_rxxxx' at dataset root)
   -bf <STRING>| --bids_folder <STRING>  define BIDS path
   -nj         | --nojvm                 supress call of jvm using the -nojvm flag
- 
+  -nopb       | --no-progress           disable progress bar and print the plain output
+
+ A progress bar with the overall number of finished volumes and the estimated
+ remaining time is shown while the background jobs are running. It is not
+ available for the options -fg, -t, -c, and -s.
+
  Only one filename or pattern is allowed. This can be either a single file or a pattern
  with wildcards to process multiple files. 
 
@@ -695,6 +853,7 @@ OUTPUT:
 
 USED FUNCTIONS:
  cat_batch_cat.m
+ cat_progress_bar_multi.sh
  CAT12 toolbox
  SPM12
 
