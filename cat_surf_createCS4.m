@@ -438,7 +438,11 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       if ~debug, clear CSG05; end 
 
       %% Iterative runs to create the central surface.
-      stime = cat_io_cmd(sprintf('  Create initial surface (%0.2f mm)',opt.interpV),'g5','',opt.verb,stime); 
+      %  The surfaces of the runs are buffered in CSG/CST and have to be
+      %  removed here, as they would otherwise still contain the surfaces of
+      %  the previous hemisphere if this one requires less runs (see below).
+      CSG = {}; CST = {};
+      stime = cat_io_cmd(sprintf('  Create initial surface (%0.2f mm)',opt.interpV),'g5','',opt.verb,stime);
       for thi = 1:round(8/mean(opt.interpV))  % with this loop we further increase the threshold of the Ypp map by .1 (eg. more WM like surface)
         %% Main initial surface creation with topology correction.
         if exist(P(si).Pcentral,'file'), delete(P(si).Pcentral); end % have to delete it to get useful error messages in case of reprocessing/testing
@@ -492,19 +496,25 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         if final || gycon > .8 || res.SE(si,thi) < .5, break; end
         % in case we havent stopped for a good reason (low blurring and acceptable euler number),
         % we try to find the best threshold so far and do a final run with further internal interation  
-        if gycon > .75 
-          err = res.surferr(si,:) + res.surferrgt(si,:); 
+        if gycon > .75
+          err = res.surferr(si,1:thi) + res.surferrgt(si,1:thi); % only the runs of this surface (see below)
           thi = find( err == min(err), 1, 'first'); %#ok<FXSET>
-          final = 1; 
+          final = 1;
         end
       end
       
 
-      % use best surface 
-      if thi > 1 
-        err = res.SE(si,:); 
+      % use best surface
+      %  Only the runs of this surface (1:thi) are allowed here! res.* is a
+      %  (surface x run) matrix that MATLAB pads with zeros if a previous
+      %  hemisphere required more runs than this one. Those padding zeros are
+      %  the minimum of the row and would select a CST entry (i.e. a surface)
+      %  of the previous hemisphere, which is then silently saved as the
+      %  central surface of this hemisphere.
+      if thi > 1
+        err = res.SE(si,1:thi);
         thi = find( err == min(err), 1, 'first');
-        saveSurf( CST{thi} , P(si).Pcentral); 
+        saveSurf( CST{thi} , P(si).Pcentral);
       end
       res.EC(si)  = res.ECf(si,thi); 
       res.thi(si) = thi; 

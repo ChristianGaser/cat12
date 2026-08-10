@@ -161,7 +161,7 @@ cat.extopts.WMHC         = 2;    % Correction of WM hyperintensities:         0 
 cat.extopts.WMHCstr      = 0.5;  % Strength of WM hyperintensity correction:  0 to 1; default 0.5
 cat.extopts.SLC          = 0;    % Stroke lesion correction (SLC):            0 - no correction, 1 - handling of manual lesion that have to be set to zero!
                                  %                                            2 - automatic lesion detection (in development)
-cat.extopts.mrf          = 1;    % MRF weighting:                             0 to 1; <1 - weighting, 1 - auto; default 1
+cat.extopts.mrf          = 0;    % MRF weighting:                             0 to 1; <1 - weighting, 1 - auto; default 1
 
 % resolution option
 cat.extopts.restype      = 'optimal';    % resolution handling: 'native','fixed','best', 'optimal'
