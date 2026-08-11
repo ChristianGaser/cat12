@@ -95,6 +95,7 @@ function varargout = cat_surf_results(action, varargin)
 %  * cat_surf_results('invert_contrast',0..1);
 %  Invert contrast (1) to display the inverse effects (i.e. neg. T- or
 %  TFCE-values) as positive effects or use the original contrast (0).
+%  Only available if a threshold was selected and inverse effects are found.
 %  Toggles without input.
 %
 %  * cat_surf_results('print',fpart); 
@@ -162,6 +163,7 @@ switch lower(action)
     y              = [];
     H.clip         = [];
     H.clim         = [];
+    H.clim_min     = [];
     H.XTick        = [];
     H.bkg_col      = [0 0 0];
     H.show_inv     = 0;
@@ -181,6 +183,7 @@ switch lower(action)
     H.fixscl       = 0;
     H.col          = [.8 .8 .8; 1 .5 .5];
     H.cmap_col     = jet(256);
+    H.cmap_base    = H.cmap_col;
     H.FS           = cat_get_defaults('extopts.fontsize');
         
     clearvars -global OV
@@ -478,7 +481,7 @@ switch lower(action)
       'Style', 'CheckBox', 'HorizontalAlignment', 'center', ...
       'Callback', {@checkbox_invcontrast}, ...
       'FontSize',H.FS,...
-      'ToolTipString', 'Invert contrast to display inverse effects (neg. T- or TFCE-values) as positive effects', ...
+      'ToolTipString', 'Invert contrast to display inverse effects (neg. T- or TFCE-values) as positive effects (only available for a selected threshold)', ...
       'Interruptible', 'on', 'Enable', 'off');
 
     % white background
@@ -1270,7 +1273,7 @@ switch lower(action)
   %======================================================================
   case 'showfilename'
     if nargin>1
-      if varargin{1} ~= get(H.bkg, 'Value')==0  
+      if varargin{1} ~= get(H.info, 'Value')
         cat_surf_results('showfilename');
       end
     else
@@ -1283,7 +1286,8 @@ switch lower(action)
   %======================================================================
   case 'transparency'
     if nargin>1
-      if varargin{1} ~= get(H.transp, 'Value')==0  
+      % the checkbox disables transparency, thus the value is inverted
+      if varargin{1} == get(H.transp, 'Value')
         cat_surf_results('transparency');
       end
     else
@@ -1296,7 +1300,7 @@ switch lower(action)
   %======================================================================
   case 'invcolormap'
     if nargin>1
-      if varargin{1} ~= get(H.inv, 'Value')==0  
+      if varargin{1} ~= get(H.inv, 'Value')
         cat_surf_results('invcolormap');
       end
     else
@@ -1319,7 +1323,7 @@ switch lower(action)
   %======================================================================
   case 'hide_neg'
     if nargin>1
-      if varargin{1} ~= get(H.hide_neg, 'Value')==0  
+      if varargin{1} ~= get(H.hide_neg, 'Value')
         cat_surf_results('hide_neg');
       end
     else
@@ -1331,6 +1335,12 @@ switch lower(action)
   %- invert contrast to show inverse effects
   %======================================================================
   case 'invert_contrast'
+    % inverting is only meaningful if inverse effects are found for the
+    % selected threshold
+    if strcmp(get(H.invcontrast, 'Enable'), 'off')
+      fprintf('Inverting the contrast is only possible if a threshold is selected and inverse effects are found.\n');
+      return
+    end
     if nargin>1
       if varargin{1} ~= get(H.invcontrast, 'Value')
         cat_surf_results('invert_contrast');
@@ -1440,7 +1450,8 @@ function Ho = select_thresh(thresh)
 global H OV
 
 H.thresh_value = thresh;
-H.clip = [true -thresh thresh];
+H.no_neg = get(H.hide_neg, 'Value');
+H.clip = get_clip(thresh);
 
 if ~H.isvol
   mn = min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:)));
@@ -1464,15 +1475,16 @@ else
 %  set(H.hide_neg, 'Value', 0);
 end
 
-if mn > H.clip(2) && mx < H.clip(3)
-  set(H.slider{1}, 'Visible', 'off');
-  set(H.slider{2}, 'Visible', 'off');
-else
-  set(H.slider{1}, 'Visible', 'on');
-  set(H.slider{2}, 'Visible', 'on');
+% sliders are only available for a single surface
+if isfield(H,'slider') && numel(H.slider) > 1
+  if mn > H.clip(2) && mx < H.clip(3)
+    set(H.slider{1}, 'Visible', 'off');
+    set(H.slider{2}, 'Visible', 'off');
+  else
+    set(H.slider{1}, 'Visible', 'on');
+    set(H.slider{2}, 'Visible', 'on');
+  end
 end
-
-H.no_neg = get(H.hide_neg, 'Value');
 
 clim = getappdata(H.patch(1), 'clim');
 if H.logP(H.results_sel)
@@ -1480,41 +1492,21 @@ if H.logP(H.results_sel)
   clim(3) = ceil(clim(3));
 end
 
-% rather use NaN values for zero threshold
-if thresh == 0
-  H.clip = [false NaN NaN];
-end
-
-if H.no_neg
-  H.clip = [true -Inf thresh];
-  clim = [true 0 clim(3)];
-  set(H.slider_min, 'Min', 0);
-  set(H.slider_max, 'Min', 0);
-end
-
-if (thresh > 0)
-  set(H.slider_min, 'Value', thresh)
-  set(H.str_min, 'String', sprintf('%g',thresh));
-end
-
-if mn > -thresh
+% the lower limit is defined by the threshold if neg. results are hidden or
+% if there are no values below the neg. threshold
+if H.no_neg || mn > -thresh
   H.clim = [true thresh clim(3)];
-  set(H.slider_min, 'Value', thresh);
-  set(H.str_min, 'String', sprintf('%g',thresh));
 else
   H.clim = [true -clim(3) clim(3)];
-  set(H.slider_min, 'Min', -clim(3));
-  set(H.slider_min, 'Value', -clim(3));
-  set(H.str_min, 'String', sprintf('%g',-clim(3)));
 end
-  
+
+% the color limits are newly defined and a previously rescued lower limit
+% is not valid anymore
+H.clim_min = [];
+
+update_sliders;
+
 for ind = 1:5
-  if mn > -thresh
-    setappdata(H.patch(ind), 'clim', [true thresh clim(3)]);
-  elseif thresh == 0
-    setappdata(H.patch(ind), 'clim', [true -clim(3) clim(3)]);
-  end
-  
   setappdata(H.patch(ind), 'clip', H.clip);
   setappdata(H.patch(ind), 'clim', H.clim);
   col = getappdata(H.patch(ind), 'col');
@@ -1602,6 +1594,12 @@ switch cmap
     end
 end
 
+% rescue the selected colormap and apply the inversion that is defined by
+% the "Invert colormap" checkbox
+H.cmap_base = col;
+if H.show_inv
+  col = flipud(col);
+end
 H.cmap_col = col;
 
 for ind = 1:5
@@ -1618,7 +1616,6 @@ if isfield(H,'Pvol_sel')
   H = update_slice_overlay(H);
 end
 
-H.cmap_col = col;
 if nargout, Ho = H; end
 
 %==========================================================================
@@ -1815,6 +1812,17 @@ end
 
 mn = H.S{1}.min;
 
+H.n_surf = 1;
+
+% the state of "Hide neg. results" is kept for the new result as long as
+% neg. values exist, but has to be reset otherwise to keep H.no_neg in sync
+if mn < 0
+  set(H.hide_neg, 'Enable', 'on');
+else
+  set(H.hide_neg, 'Enable', 'off', 'Value', 0);
+  H.no_neg = 0;
+end
+
 % deal with neg. values
 if H.S{1}.min < 0
   mnx = max(abs([H.S{1}.min, H.S{1}.max]));
@@ -1830,8 +1838,9 @@ else
   H.S{1}.min = round(900 * H.S{1}.min) / 1000;
 end
 
-% correct lower clim to "0" if no values are exceeding threshold
-if mn > -H.thresh_value
+% correct lower clim to "0" if neg. results are hidden or if no values are
+% exceeding the neg. threshold
+if H.no_neg || mn > -H.thresh_value
   H.clim = [true H.thresh_value H.S{1}.max];
 else
   H.clim = [true H.S{1}.min H.S{1}.max];
@@ -1842,27 +1851,11 @@ if H.logP(H.results_sel)
   H.clim(3) = ceil(H.clim(3));
 end
 
-% only apply thresholds that are slightly larger than zero
-if H.S{1}.thresh > 0.00015 && H.thresh_value == 0
-  H.clip = [true -H.S{1}.thresh H.S{1}.thresh];
-else
-  H.clip = [true -H.thresh_value H.thresh_value];
-end
+% the color limits are newly defined and a previously rescued lower limit
+% is not valid anymore
+H.clim_min = [];
 
-% rather use NaN values for zero threshold
-if H.thresh == 0
-  H.clip = [false NaN NaN];
-end
-
-if H.no_neg
-  H.clip = [true -Inf H.clip(3)];
-  set(H.slider_min, 'Value', 0);
-  set(H.str_min, 'String', 0);
-  set(H.slider_min, 'Min', 0);
-  set(H.slider_max, 'Min', 0);
-end
-
-H.n_surf = 1;
+H.clip = get_clip(H.thresh_value);
 
 for ind = 1:5
   if H.S{1}.thresh > 0.00015
@@ -1884,32 +1877,14 @@ for ind = 1:5
   H = updateTexture(H, ind, d, col, H.show_transp);
 end
 
-% correct value of slider if no values are exceeding threshold
-if H.S{1}.min > - H.thresh_value
-  set(H.slider_min, 'Value', 0);
-  set(H.str_min, 'String', 0);
-  set(H.slider_min, 'Min', 0);
-  set(H.slider_max, 'Min', 0);
-end
-
 % update sliders for non-fixed scaling
 if ~H.fixscl
   if H.logP(H.results_sel)
     H.clim(2) = floor(H.clim(2));
     H.clim(3) = ceil(H.clim(3));
   end
-  
-  set(H.slider_min, 'Value', H.clim(2));
-  set(H.slider_max, 'Value', H.clim(3));
-  if H.clim(2) > 0
-    set(H.slider_min, 'Min', ceil(0.5*H.clim(2)), 'Max', ceil(2*H.clim(3)));
-    set(H.slider_max, 'Min', ceil(0.5*H.clim(2)), 'Max', ceil(2*H.clim(3)));
-  else
-    set(H.slider_min, 'Min', ceil(2*H.clim(2)), 'Max', ceil(2*H.clim(3)));
-    set(H.slider_max, 'Min', ceil(2*H.clim(2)), 'Max', ceil(2*H.clim(3)));
-  end
-  set(H.str_min, 'String', sprintf('%g',H.clim(2)));
-  set(H.str_max, 'String', sprintf('%g',H.clim(3)));
+
+  update_sliders;
 end
 
 % update file information and colorbar
@@ -1921,14 +1896,6 @@ if H.logP(H.results_sel) && (H.S{1}.thresh < -log10(0.05))
   set(H.thresh, 'Enable', 'on');
 else
   set(H.thresh, 'Enable', 'off');
-end
-
-if min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0 && H.n_surf == 1
-  set(H.hide_neg, 'Enable', 'on');
-  set(H.hide_neg, 'Value', 0);
-else
-  set(H.hide_neg, 'Enable', 'off');
-  set(H.hide_neg, 'Value', 0);
 end
 
 % only allow inverted contrast if inverse effects are found in the new result
@@ -2418,8 +2385,9 @@ end
 
 if min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0 && H.n_surf == 1
   set(H.hide_neg, 'Enable', 'on');
-  set(H.hide_neg, 'Value', 0);
 end
+set(H.hide_neg, 'Value', 0);
+H.no_neg = 0;
 
 % only allow inverted contrast if inverse effects are found
 H = update_invcontrast;
@@ -3256,17 +3224,23 @@ end
 function checkbox_inv(obj, event_obj)
 global H
 
+% only apply the inversion if the state has changed because the colormap
+% would otherwise be flipped again for repeated calls
+if get(H.inv, 'Value') == H.show_inv
+  return
+end
+
 H.show_inv = get(H.inv, 'Value');
 
 for ind = 1:5
   setappdata(H.patch(ind), 'clip', H.clip);
-  col = getappdata(H.patch(ind), 'col');
-  setappdata(H.patch(ind), 'col', flipud(col));
+  col = flipud(getappdata(H.patch(ind), 'col'));
+  setappdata(H.patch(ind), 'col', col);
   d = getappdata(H.patch(ind), 'data');
-  H = updateTexture(H, ind, d, flipud(col), H.show_transp);
+  H = updateTexture(H, ind, d, col, H.show_transp);
 end
 
-H.cmap_col = flipud(col);
+H.cmap_col = col;
 
 if isfield(H,'Pvol_sel')
   H = update_slice_overlay(H);
@@ -3283,51 +3257,98 @@ global H
 H.fixscl = get(H.fix, 'Value');
 
 %==========================================================================
+function clip = get_clip(thresh)
+% Define the range that is not displayed with colors. If no threshold is
+% selected the smallest (absolute) value of the data is used as long as it
+% is larger than zero. Negative results are hidden by clipping the whole
+% negative range.
+global H
+
+if thresh > 0
+  clip = [true -thresh thresh];
+elseif H.S{1}.thresh > 0.00015
+  thresh = H.S{1}.thresh;
+  clip = [true -thresh thresh];
+else
+  thresh = 0;
+  clip = [false NaN NaN];
+end
+
+if H.no_neg
+  clip = [true -Inf thresh];
+end
+
+%==========================================================================
+function update_sliders
+% Update range, value, text field and range labels of both overlay sliders
+% w.r.t. the current color limits. The range has always to be defined
+% before the values are changed because values outside of the range are
+% not allowed.
+global H
+
+if ~isfield(H,'slider_min') || ~isfield(H,'slider_max'), return; end
+if ~all(ishandle([H.slider_min H.slider_max])) || numel(H.clim) < 3, return; end
+
+% allow the sliders a more extended range
+mx = ceil(2 * max(abs(H.clim(2:3))));
+if mx == 0, mx = 1; end
+if H.clim(2) < 0
+  mn = -mx;
+else
+  mn = 0;
+end
+
+sl  = {H.slider_min, H.slider_max};
+str = {H.str_min,    H.str_max};
+
+for i = 1:2
+  val = min(max(H.clim(i + 1), mn), mx);
+  set(sl{i}, 'Min', mn, 'Max', mx, 'Value', val);
+  % the edit field of sliderPanel also rescues its value in 'UserData'
+  set(str{i}, 'String', sprintf('%g',val), 'UserData', sprintf('%g',val));
+  % update the labels that indicate the slider range
+  lab = findobj(H.slider{i}, 'Style', 'text');
+  set(findobj(lab, 'HorizontalAlignment', 'left'),  'String', mn);
+  set(findobj(lab, 'HorizontalAlignment', 'right'), 'String', mx);
+end
+
+%==========================================================================
 function Ho = checkbox_hide_neg(obj, event_obj)
 global H
 
 H.no_neg = get(H.hide_neg, 'Value');
 
 thresh = H.thresh_value;
-clip = getappdata(H.patch(1), 'clip');
 clim = getappdata(H.patch(1), 'clim');
 
 % get min value for both hemispheres
 mn = min(min(min(getappdata(H.patch(1), 'data'))), min(min(getappdata(H.patch(3), 'data'))));
 
+H.clip = get_clip(thresh);
+
 if H.no_neg
-  H.clip = [true -Inf thresh];
+  % rescue the lower limit to restore it if neg. results are shown again
+  H.clim_min = clim(2);
   H.clim = [true thresh clim(3)];
-  set(H.slider_min, 'Value', 0);
-  set(H.str_min, 'String', 0);
-  set(H.slider_min, 'Min', 0);
-  set(H.slider_max, 'Min', 0);
+elseif isfield(H,'clim_min') && ~isempty(H.clim_min)
+  % restore the lower limit that was used before neg. results were hidden
+  H.clim = [true H.clim_min clim(3)];
+  H.clim_min = [];
+elseif mn >= -thresh
+  % the lower limit is only extended to the neg. range if such values exist
+  H.clim = [true thresh clim(3)];
 else
-  H.clip = [true -thresh thresh];
-  if mn < -thresh
-    H.clim = [true -clim(3) clim(3)];
-    set(H.slider_min, 'Value', -clim(3));
-    set(H.str_min, 'String', sprintf('%g',-clim(3)));
-    set(H.slider_min, 'Min', ceil(-2*clim(3)));
-    set(H.slider_max, 'Min', ceil(-2*clim(3)));
-  end
+  H.clim = [true -clim(3) clim(3)];
 end
+
+update_sliders;
 
 for ind = 1:5
   setappdata(H.patch(ind), 'clip', H.clip);
   setappdata(H.patch(ind), 'clim', H.clim);
   col = getappdata(H.patch(ind), 'col');
   d = getappdata(H.patch(ind), 'data');
-  mn = min(mn, min(d(:)));
   H = updateTexture(H, ind, d, col, H.show_transp);
-end
-
-% correct value of slider if no values are exceeding threshold
-if mn > -thresh && H.n_surf == 1
-  set(H.slider_min, 'Value', 0);
-  set(H.str_min, 'String', 0);
-  set(H.slider_min, 'Min', 0);
-  set(H.slider_max, 'Min', 0);
 end
 
 if ~H.isvol(H.results_sel)
@@ -3373,9 +3394,10 @@ if nargout, Ho = H; end
 
 %==========================================================================
 function Ho = update_invcontrast
-% Enable the "Invert contrast" checkbox only if inverse effects (i.e. neg.
-% T- or TFCE-values) survive the selected threshold. An already inverted
-% contrast is restored if these effects are not found anymore.
+% Enable the "Invert contrast" checkbox only if a threshold was selected and
+% if inverse effects (i.e. neg. T- or TFCE-values) survive that threshold.
+% An already inverted contrast is restored if these effects are not found
+% anymore.
 global H
 
 if ~isfield(H,'invcontrast') || ~ishandle(H.invcontrast)
@@ -3383,7 +3405,7 @@ if ~isfield(H,'invcontrast') || ~ishandle(H.invcontrast)
   return
 end
 
-if found_inverse_effects && H.n_surf == 1
+if H.thresh_value > 0 && found_inverse_effects && H.n_surf == 1
   set(H.invcontrast, 'Enable', 'on');
 else
   % restore original contrast because inverse effects are not found anymore
