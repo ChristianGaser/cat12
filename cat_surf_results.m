@@ -92,6 +92,11 @@ function varargout = cat_surf_results(action, varargin)
 %  * cat_surf_results('hide_neg',0..1); 
 %  Hide negative results (1) or show everything (0). Toggles without input.
 %
+%  * cat_surf_results('invert_contrast',0..1);
+%  Invert contrast (1) to display the inverse effects (i.e. neg. T- or
+%  TFCE-values) as positive effects or use the original contrast (0).
+%  Toggles without input.
+%
 %  * cat_surf_results('print',fpart); 
 %  Save render as png image file. The parameter fpart has to be a structure
 %  with the fields 'outdir','prefix', and 'suffix' but can be optionally
@@ -161,6 +166,7 @@ switch lower(action)
     H.bkg_col      = [0 0 0];
     H.show_inv     = 0;
     H.no_neg       = 0;
+    H.invert_contrast = 0;
     H.show_transp  = 1; 
     H.n_surf       = 1;
     H.thresh_value = 0;
@@ -218,6 +224,7 @@ switch lower(action)
       'nocbar', [0.050 0.600 0.425 0.050],'transp',  [0.525 0.600 0.425 0.050],... 
       'info',   [0.050 0.550 0.425 0.050],'bkg',     [0.525 0.550 0.425 0.050],... 
       'inv',    [0.050 0.500 0.425 0.050],'hide_neg',[0.525 0.500 0.425 0.050],...
+      'invcontrast', [0.050 0.450 0.425 0.050],...
       'xy',     [0.050 0.325 0.425 0.100],'trans',   [0.525 0.325 0.425 0.100],...
       'labels', [0.050 0.345 0.425 0.030],'str3',    [0.525 0.345 0.100 0.030],'slice',   [0.625 0.345 0.310 0.030],...
       'fixscl', [0.050 0.220 0.425 0.050],'scaling', [0.050 0.220 0.425 0.050],...
@@ -461,7 +468,19 @@ switch lower(action)
       'FontSize',H.FS,...
       'ToolTipString', 'Hide neg. results', ...
       'Interruptible', 'on', 'Enable', 'off');
-    
+
+    % invert contrast to show inverse effects (i.e. neg. T- or TFCE-values)
+    % as positive effects (only enabled if inverse effects are found)
+    H.invcontrast = uicontrol(H.panel(2), ...
+      'String', 'Invert contrast', 'Units', 'normalized', ...
+      'BackgroundColor',H.col(1,:),...
+      'Position', H.pos{2}.invcontrast, ...
+      'Style', 'CheckBox', 'HorizontalAlignment', 'center', ...
+      'Callback', {@checkbox_invcontrast}, ...
+      'FontSize',H.FS,...
+      'ToolTipString', 'Invert contrast to display inverse effects (neg. T- or TFCE-values) as positive effects', ...
+      'Interruptible', 'on', 'Enable', 'off');
+
     % white background
     H.bkg = uicontrol(H.panel(2), ...
       'String', 'White background', 'Units', 'normalized', ...
@@ -1307,8 +1326,21 @@ switch lower(action)
       set(H.hide_neg, 'Value', ~get(H.hide_neg, 'Value') );
       checkbox_hide_neg;
     end
-   
-    
+
+
+  %- invert contrast to show inverse effects
+  %======================================================================
+  case 'invert_contrast'
+    if nargin>1
+      if varargin{1} ~= get(H.invcontrast, 'Value')
+        cat_surf_results('invert_contrast');
+      end
+    else
+      set(H.invcontrast, 'Value', ~get(H.invcontrast, 'Value') );
+      checkbox_invcontrast;
+    end
+
+
   %- SPM/CAT batch mode
   %======================================================================
   case 'batch'
@@ -1416,6 +1448,8 @@ if ~H.isvol
 else
   mn = H.Pvol_mn{H.results_sel};
   mx = H.Pvol_mx{H.results_sel};
+  % volume data are not inverted, thus swap min/max for inverted contrast
+  if H.invert_contrast, [mn, mx] = deal(-mx, -mn); end
 end
 
 if H.logP(H.results_sel) && (H.S{1}.thresh < -log10(0.05))
@@ -1491,6 +1525,9 @@ end
 if ~H.isvol(H.results_sel)
   set(H.atlas, 'Enable', 'on');
 end
+
+% only allow inverted contrast if inverse effects survive the new threshold
+H = update_invcontrast;
 
 if ~H.disable_cbar
   H = show_colorbar(H);
@@ -1745,6 +1782,12 @@ H.S{2}.name = H.S2.name(sel, :);
 H.S{1}.Y = H.S1.Y(:, sel);
 H.S{2}.Y = H.S2.Y(:, sel);
 
+% keep inverted contrast for the newly selected result
+if H.invert_contrast
+  H.S{1}.Y = -H.S{1}.Y;
+  H.S{2}.Y = -H.S{2}.Y;
+end
+
 H.S{1}.info = cat_surf_info(H.S{1}.name, 1);          
 H.S{2}.info = H.S{1}.info;            
 H.S{1}.info(1).side = 'lh';
@@ -1888,6 +1931,9 @@ else
   set(H.hide_neg, 'Value', 0);
 end
 
+% only allow inverted contrast if inverse effects are found in the new result
+H = update_invcontrast;
+
 % enable/disable atlas widget
 if H.isvol(sel)
   H.Pvol_sel = H.Pvol{sel};
@@ -1998,6 +2044,12 @@ if ~isempty(H.clip) && H.clip(2) ~= H.clip(3)
   OV.func = sprintf('i1(i1>%f & i1<%f)=NaN;',OV.clip(1),OV.clip(2));
 else
   OV.func = 'i1(i1==0)=NaN;';
+end
+
+% invert sign of volume data for inverted contrast because clipping and
+% range are already defined for the inverted data
+if H.invert_contrast
+  OV.func = ['i1 = -i1;' OV.func];
 end
 
 if isfield(H,'cmap_col')
@@ -2368,6 +2420,9 @@ if min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:))) < 0 && H.n_surf == 1
   set(H.hide_neg, 'Enable', 'on');
   set(H.hide_neg, 'Value', 0);
 end
+
+% only allow inverted contrast if inverse effects are found
+H = update_invcontrast;
 
 if H.n_surf == 1 && ~H.isvol(H.results_sel)
   % get sure that image is thresholded and there are at least 20% zero/NaN areas
@@ -3288,6 +3343,89 @@ if isfield(H,'Pvol_sel')
 end
 
 if nargout, Ho = H; end
+
+%==========================================================================
+function Ho = checkbox_invcontrast(obj, event_obj)
+global H
+
+H.invert_contrast = get(H.invcontrast, 'Value');
+
+% invert sign of data of both hemispheres to display the inverse effects
+% (i.e. neg. T- or TFCE-values) as positive effects
+H.S{1}.Y = -H.S{1}.Y;
+H.S{2}.Y = -H.S{2}.Y;
+
+for ind = 1:5
+  col = getappdata(H.patch(ind), 'col');
+  d = -getappdata(H.patch(ind), 'data');
+  H = updateTexture(H, ind, d, col, H.show_transp);
+end
+
+if ~H.disable_cbar
+  H = show_colorbar(H);
+end
+
+if isfield(H,'Pvol_sel')
+  H = update_slice_overlay(H);
+end
+
+if nargout, Ho = H; end
+
+%==========================================================================
+function Ho = update_invcontrast
+% Enable the "Invert contrast" checkbox only if inverse effects (i.e. neg.
+% T- or TFCE-values) survive the selected threshold. An already inverted
+% contrast is restored if these effects are not found anymore.
+global H
+
+if ~isfield(H,'invcontrast') || ~ishandle(H.invcontrast)
+  if nargout, Ho = H; end
+  return
+end
+
+if found_inverse_effects && H.n_surf == 1
+  set(H.invcontrast, 'Enable', 'on');
+else
+  % restore original contrast because inverse effects are not found anymore
+  if H.invert_contrast
+    set(H.invcontrast, 'Value', 0);
+    H = checkbox_invcontrast;
+  end
+  set(H.invcontrast, 'Enable', 'off');
+end
+
+if nargout, Ho = H; end
+
+%==========================================================================
+function found = found_inverse_effects
+% Check whether inverse effects (i.e. neg. T- or TFCE-values) of the current
+% result exceed the selected threshold. For an inverted contrast these
+% effects are found in the positive range.
+global H
+
+found = false;
+
+if ~isfield(H,'S') || ~isfield(H.S{1},'Y') || isempty(H.S{1}.Y), return; end
+
+% for volumes use the range of the volume data because the surface
+% projection is restricted to the cortical band
+if isfield(H,'Pvol_mn') && H.isvol(H.results_sel)
+  mn = H.Pvol_mn{H.results_sel};
+  mx = H.Pvol_mx{H.results_sel};
+  % volume data are not inverted, thus swap min/max for inverted contrast
+  if H.invert_contrast, [mn, mx] = deal(-mx, -mn); end
+else
+  mn = min(min(H.S{1}.Y(:)), min(H.S{2}.Y(:)));
+  mx = max(max(H.S{1}.Y(:)), max(H.S{2}.Y(:)));
+end
+
+if isempty(mn) || isempty(mx), return; end
+
+if H.invert_contrast
+  found = mx > H.thresh_value;
+else
+  found = mn < -H.thresh_value;
+end
 
 %==========================================================================
 function checkbox_transp(obj, event_obj)
