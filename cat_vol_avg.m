@@ -79,6 +79,7 @@ else
 end 
 
 if isfield(job,'omitnan'), omitnan = job.omitnan; else, omitnan = 1; end
+if numel(d)>4 && d(5)>1, omitnan = 0; end % avoid issues in deformation files (eg. negative values)
 
 % write average map
 avg = zeros(d);
