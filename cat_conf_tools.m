@@ -1629,7 +1629,11 @@ function resize = conf_vol_resize(data,prefix,expert,outdir)
   end
     
   % imcalc interpolation field
-  imcalc            = spm_cfg_imcalc;
+  if exist('spm_cfg_imcalc','file')
+    imcalc          = spm_cfg_imcalc; % was not found in Github test script
+  else
+    imcalc          = cat_spm_cfg_imcalc; 
+  end  
   if isa(imcalc.val,'function_handle')
     imcalc.val = feval(imcalc.val);
   end
