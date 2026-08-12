@@ -733,8 +733,11 @@ function imcalc = conf_vol_imcalc(prefix)
 %conf_vol_imcalc. Like spm_imcalc but to run the same operation for many subjects. 
 
   % get original SPM imcalc function 
-  imcalc            = spm_cfg_imcalc;
-
+  if exist('spm_cfg_imcalc','file')
+    imcalc          = spm_cfg_imcalc; % was not found in Github test script
+  else
+    imcalc          = cat_spm_cfg_imcalc; 
+  end
   % update prefix and suffix fileds
   suffix            = prefix; 
   suffix.tag        = 'suffix';

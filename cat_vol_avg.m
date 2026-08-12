@@ -79,7 +79,6 @@ else
 end 
 
 if isfield(job,'omitnan'), omitnan = job.omitnan; else, omitnan = 1; end
-if numel(d)>4 && d(5)>1, omitnan = 0; end % avoid issues in deformation files
 
 % write average map
 avg = zeros(d);
@@ -89,18 +88,11 @@ for i = 1:length(N)
     for k = 1:d(5)
       img             = N(i).dat(:,:,:,j,k) * weighting(i);
       if omitnan
-        wg              = wg + (~isnan(img)); 
+        wg              = wg + (~isnan(img)) / prod(d); 
         img(isnan(img)) = 0; 
       end
       avg(:,:,:,j,k)  = avg(:,:,:,j,k) + img;
       clear img
-    end
-  end
-end
-if omitnan
-  for j = 1:d(4)
-    for k = 1:d(5)
-       avg(:,:,:,j,k)  = avg(:,:,:,j,k) ./ ( max(1/length(N),wg) / length(N)); 
     end
   end
 end
