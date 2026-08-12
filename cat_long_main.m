@@ -950,7 +950,7 @@ end
 
 
 
-if any(longreport) % && spm_get_defaults('job.extopts.expertgui') > 1  
+if exist('longreport','var') && any(longreport) % && spm_get_defaults('job.extopts.expertgui') > 1  
   for ci = 1:2 % + write_CSF
     for modi = 1:2
       if longreport(ci) && mbfdef(modi,ci)>0
