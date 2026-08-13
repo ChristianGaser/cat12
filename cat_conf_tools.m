@@ -736,7 +736,7 @@ function imcalc = conf_vol_imcalc(prefix)
   if exist('spm_cfg_imcalc','file')
     imcalc          = spm_cfg_imcalc; % was not found in Github test script
   else
-    imcalc          = cat_spm_cfg_imcalc; 
+    imcalc          = cat_conf_spm_imcalc;
   end
   % update prefix and suffix fileds
   suffix            = prefix; 
@@ -1632,8 +1632,8 @@ function resize = conf_vol_resize(data,prefix,expert,outdir)
   if exist('spm_cfg_imcalc','file')
     imcalc          = spm_cfg_imcalc; % was not found in Github test script
   else
-    imcalc          = cat_spm_cfg_imcalc; 
-  end  
+    imcalc          = cat_conf_spm_imcalc;
+  end
   if isa(imcalc.val,'function_handle')
     imcalc.val = feval(imcalc.val);
   end

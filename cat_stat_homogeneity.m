@@ -1008,7 +1008,7 @@ else
     % estimate product between structural quality rating (SIQR) and quartic mean Z-score 
     H.xml.QMzscore = H.X(:,1).*H.X(:,2);
     str{i+3} = 'SIQR (grad) x Quartic Mean Z-score';
-    show_QMzscore(H.X,4, H.userps); % show SIQR on x-axis
+    show_QMzscore(H.X,4, -H.userps); % show SIQR on x-axis
   else
     show_QMzscore(H.X,0, H.userps); % show file order on x-axis
   end

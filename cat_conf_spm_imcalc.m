@@ -1,5 +1,12 @@
-function imcalc = spm_cfg_imcalc
-% SPM Configuration file for ImCalc
+function imcalc = cat_conf_spm_imcalc
+% Local copy of the SPM Configuration file for ImCalc, used as fallback if
+% spm_cfg_imcalc is not on the MATLAB path.
+%
+% IMPORTANT: Do not rename this file to a "*_cfg_*.m" pattern! SPM scans the
+% toolbox directories for files matching '^[^(._)].*_cfg_.*\.m$' (see
+% spm_cfg.m) and would register this file as an own toolbox in spm.tools.
+% Its lazy ".val = @imcalc_cfg" definition is not supported by the SPM12
+% matlabbatch and would break the initialisation of *every* batch job.
 %__________________________________________________________________________
 
 % Copyright (C) 2008-2022 Wellcome Centre for Human Neuroimaging
