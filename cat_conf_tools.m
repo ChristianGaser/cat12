@@ -177,7 +177,7 @@ function tools = cat_conf_tools(expert)
   calcroi                     = conf_roi_fun(outdir);
   [~,~,ROIsum]                = cat_conf_ROI(expert);
   resize                      = conf_vol_resize(data,prefix,expert,outdir);
-  avg_img                     = conf_vol_average(data,outdir);
+  avg_img                     = conf_vol_average(data,outdir,expert);
   savg                        = conf_vol_savg(prefix,verb,expert);
   realign                     = conf_vol_series_align(data,expert);
   shootlong                   = conf_shoot(expert); 
@@ -4606,7 +4606,7 @@ function boxplot = conf_io_boxplot(outdir,subdir,name,expert)
 return
  
 %_______________________________________________________________________
-function avg_img = conf_vol_average(data,outdir)
+function avg_img = conf_vol_average(data,outdir,expert)
 % image average
 % -------------------------------------------------------------------------
 
@@ -4647,16 +4647,29 @@ function avg_img = conf_vol_average(data,outdir)
   write_var         = cfg_menu;
   write_var.tag     = 'write_var';
   write_var.name    = 'Save variance map';
-  write_var.labels  = {'No','Yes'};
-  write_var.values  = {0 1};
+  if expert
+    write_var.labels  = {'No','Yes','Yes-normalized'};
+    write_var.values  = {0 1 2};
+  else
+    write_var.labels  = {'No','Yes'};
+    write_var.values  = {0 1};
+  end
   write_var.def     = @(val) 0;
   write_var.help    = {'Save (weighted) variance map with suffix "_var".' ''};
+  
+  write_med         = cfg_menu;
+  write_med.tag     = 'write_med';
+  write_med.name    = 'Save median map';
+  write_med.labels  = {'No','Yes'};
+  write_med.values  = {0 1};
+  write_med.def     = @(val) 0;
+  write_med.help    = {'Save (weighted) median map with suffix "_md".' ''};
   
   % main
   avg_img         = cfg_exbranch;
   avg_img.tag     = 'avg_img';
   avg_img.name    = 'Image Average';
-  avg_img.val     = {data weighting omitnan write_var output outdir};
+  avg_img.val     = {data weighting omitnan write_var write_med output outdir};
   avg_img.help    = {'This function is for calculating the average of a set of images, which should be of same dimension and voxel size (i.e. after spatial registration).'};
   avg_img.prog    = @cat_vol_avg;
   avg_img.vout    = @vout_avg;
@@ -5053,12 +5066,34 @@ return;
 function dep = vout_avg(job)
   dep            = cfg_dep;
   if ~ischar(job.output) || strcmp(job.output, '<UNDEFINED>')
-      dep.sname  = 'Average Image';
+      dep.sname  = 'Avg';
   else
-      dep.sname  = sprintf('Average Image %s', job.output);
+      dep.sname  = sprintf('Avg %s', job.output);
   end
-  dep.src_output = substruct('.','files');
+  dep.src_output = substruct('.','files','()',{':'});
   dep.tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+
+  if job.write_var > 0
+    dep(2) = cfg_dep;
+    if ~ischar(job.output) || strcmp(job.output, '<UNDEFINED>')
+        dep(2).sname  = 'Var';
+    else
+        dep(2).sname  = sprintf('Var %s', job.output);
+    end
+    dep(2).src_output = substruct('.','files_var','()',{':'});
+    dep(2).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end
+
+  if job.write_var > 1
+    dep(3) = cfg_dep;
+    if ~ischar(job.output) || strcmp(job.output, '<UNDEFINED>')
+        dep(3).sname  = 'NormVar Image';
+    else
+        dep(3).sname  = sprintf('NormVar  %s', job.output);
+    end
+    dep(3).src_output = substruct('.','files_nvar','()',{':'});
+    dep(3).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  end
 return
 
 %------------------------------------------------------------------------

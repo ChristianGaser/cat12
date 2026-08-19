@@ -632,12 +632,12 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       case 'affine'
         dispmat = res.Affine; 
         warning('off')
-        try spm_orthviews('BB', res.bb*0.95 ); end
+       % try spm_orthviews('BB', res.bb*0.95 ); end
         warning('on')
       case 'rigid'
         % this does not work so good... AC has a little offset ...
         aff = spm_imatrix(res.Affine);  scale = aff(7:9); 
-        try spm_orthviews('BB', res.bb ./ mean(scale)); end
+       % try spm_orthviews('BB', res.bb ./ mean(scale)); end
         dispmat = R; 
     end
   else
@@ -1404,7 +1404,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
             if ~strcmpi(spm_check_version,'octave'), renderer = get(fg,'Renderer'); else, renderer = 'volume'; end
 
             % only add contours if OpenGL is found (to prevent crashing on clusters)
-            if strcmpi(renderer,'opengl') && job.extopts.report.renderer < 1
+            if strcmpi(renderer,'opengl') && job.extopts.report.renderer < 2
               hSD = cat_surf_display(struct('data',Psurf(id1).Pthick,'readsurf',0,'expert',2,...
                 'multisurf',1,'view','s','menu',0,...
                 'parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
@@ -1521,7 +1521,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
           end
           %% hrange      = srange(1) + boxwidth/2:boxwidth:srange(2);
           if job.output.surface > 10, addcb = 1; else, addcb = 0; end
-          if strcmpi(renderer,'opengl') && job.extopts.report.renderer < 1
+          if strcmpi(renderer,'opengl') && job.extopts.report.renderer < 2
             try
               i=1; hSD{i} = cat_surf_display(struct('data',PCS{i},'readsurf',0,'expert',2,...
                 'multisurf',1 + 2*addcb,'view',sview{i},'menu',0,'parent',hCS{i},'verb',0,'caxis',srange,'imgprint',struct('do',0))); 

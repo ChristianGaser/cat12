@@ -134,19 +134,21 @@ if isfield(job,'write_var') && job.write_var > 0
     % write output
     Nout = N(1);
     if xi==1
-      out.files{xi+1} = spm_file( out.files{1}, 'suffix', '_var');
+      files{xi+1} = spm_file( out.files{1}, 'suffix', '_var');
       var2 = var;
+      out.files_var{1} = files{xi+1};
     else
-      out.files{xi+1} = spm_file( out.files{1}, 'suffix', '_vardivavg');
+      files{xi+1} = spm_file( out.files{1}, 'suffix', '_vardivavg');
       var2 = var ./ max(eps,abs(avg));
+      out.files_nvar{1} = files{xi+1};
     end
-    Nout.dat.fname = out.files{xi+1};
+    Nout.dat.fname = files{xi+1};
     create(Nout);
     Nout.dat(:,:,:,:,:) = var2;
     
     % cmd line output
     cmd = 'spm_image(''display'',''%s'')';
-    fprintf('Variance Image: %s\n', spm_file( out.files{xi+1} , 'link', cmd) );
+    fprintf('Variance Image: %s\n', spm_file( files{xi+1} , 'link', cmd) );
   end
 end
 
@@ -170,11 +172,11 @@ if isfield(job,'write_med') && job.write_med
   Nout.dat.fname = spm_file( out.files{1}, 'suffix', '_md');
   create(Nout);
   Nout.dat(:,:,:,:,:) = avg;
-  out.files{3} = Nout.dat.fname;
+  out.files_med{1} = Nout.dat.fname;
 
   % cmd line output
   cmd = 'spm_image(''display'',''%s'')';
-  fprintf('Median Image:   %s\n', spm_file( out.files{3} , 'link', cmd) );
+  fprintf('Median Image:   %s\n', spm_file( out.files_med{1} , 'link', cmd) );
 
   if isfield(job,'write_var') && job.write_var
     var = zeros(d,'single'); % as image
@@ -187,15 +189,15 @@ if isfield(job,'write_med') && job.write_med
     end
   
     Nout = N(1);
-    Nout.dat = file_array(spm_file( out.files{1}, 'suffix', 'mdov'), ...
+    Nout.dat = file_array(spm_file( out.files{1}, 'suffix', '_mdvar'), ...
                   Nout.dat.dim(1:3),[spm_type('FLOAT32'), spm_platform('bigend')],0,1,0);
     create(Nout);
     Nout.dat(:,:,:,:,:) = var;
-    out.files{4} = Nout.dat.fname;
+    out.files_medvar{1} = Nout.dat.fname;
 
     % cmd line output
     cmd = 'spm_image(''display'',''%s'')';
-    fprintf('Med-Diff Image: %s\n', spm_file( out.files{4} , 'link', cmd) );
+    fprintf('Med-Diff Image: %s\n', spm_file( out.files_medvar{1} , 'link', cmd) );
   end
 end
 
