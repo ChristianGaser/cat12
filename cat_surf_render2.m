@@ -411,8 +411,12 @@ switch lower(action)
         material(H.figure,'dull');
 
         % default lighting
-        if 1 && ismac, H.catLighting = 'inner'; else H.catLighting = 'cam'; end
-
+        mv = version;
+        if ismac && str2double(mv(1:2))<26
+          H.catLighting = 'inner'; 
+        else 
+          H.catLighting = 'cam'; 
+        end
         
         [caz,cel]  = view;
         H.light(1) = camlight('headlight','infinite'); 
@@ -427,6 +431,11 @@ switch lower(action)
             for pi=1:numel(H.patch)
               set(H.patch(pi),'BackFaceLighting','unlit');
             end
+          otherwise
+            % switch off local light (camlight)
+            set(H.light(1),'visible','off');
+
+            myLighting('','',H,H.catLighting)
         end
        
         
@@ -2091,9 +2100,9 @@ switch newcatLighting
       case 'set3'
         H.light(2) = light('Position',[ 1  0  0],'Color',repmat(0.8,1,3),'parent',H.axis,'Style','infinite'); 
         H.light(3) = light('Position',[-1  0  0],'Color',repmat(0.8,1,3),'parent',H.axis,'Style','infinite'); 
-        H.light(4) = light('Position',[ 0  1  1],'Color',repmat(0.2,1,3),'parent',H.axis,'Style','infinite');
+        H.light(4) = light('Position',[ 0  1  1],'Color',repmat(0.2,1,3),'parent',H.axis,'Style','infinite'); 
         H.light(5) = light('Position',[ 0 -1  1],'Color',repmat(0.2,1,3),'parent',H.axis,'Style','infinite'); 
-        H.light(6) = light('Position',[ 0  0 -1],'Color',repmat(0.1,1,3),'parent',H.axis,'Style','infinite');   
+        H.light(6) = light('Position',[ 0  0 -1],'Color',repmat(0.1,1,3),'parent',H.axis,'Style','infinite'); 
       case 'cam'
         %pause(0.01); % this is necessary to remove lights of previous used lightset ... don't know why, but without it didn't work!
         camlight(H.light(1),'headlight','infinite');

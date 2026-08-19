@@ -363,8 +363,12 @@ switch lower(action)
         material(H.figure,'dull');
         
         % default lighting
-        if ismac, H.catLighting = 'inner'; else H.catLighting = 'cam'; end
-        %H.catLighting = 'cam';
+        mv = version;
+        if ismac && str2double(mv(1:2))<26
+          H.catLighting = 'inner'; 
+        else 
+          H.catLighting = 'cam'; 
+        end
         
         H.light(1) = camlight('headlight','infinite'); set(H.light(1),'Parent',H.axis,'Tag','camlight'); 
         switch H.catLighting
@@ -375,6 +379,11 @@ switch lower(action)
             % set inner light
             H.light(2) = light('Position',[0 0 0],'Tag','centerlight'); 
             set(H.patch,'BackFaceLighting','unlit');
+          otherwise
+            % switch off local light (camlight)
+            set(H.light(1),'visible','off');
+            
+            myLighting('','',H,H.catLighting)            
         end
         
         set(H.axis,'Visible','On');

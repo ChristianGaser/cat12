@@ -65,6 +65,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   def.extopts.report.useoverlay   = 2;  % different p0 overlays, described below in the Yp0 print settings
                                         % (0 - no, 1 - red mask, 2 - blue BG, red BVs, WMHs [default] ... )
   def.extopts.report.type         = 2;  % (1 - Yo,Ym,Yp0,CS-top, 2 - Yo,Yp0,CS-left-right-top) 
+  def.extopts.report.renderer     = 1;  % (1 - opengl, 2 - volume render)
   def.extopts.report.color        = cat_get_defaults('extopts.report.color'); 
                                         % background gray level that focus on: white, black, gray
                                         % [] - current figure, 0.95 - light gray
@@ -137,6 +138,10 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     case {'MACI','MACI64'},   fontsize = 9;
     otherwise,                fontsize = 9;
   end
+  % adjust fontsize for newer matlab versions
+  mv = version;
+  if double(mv(1:2))>25, fontsize = fontsize * .9; end
+
   % the size of the figure is adapted to screen size but we must also update the font size
   PaperSize = get(fg,'PaperSize');
   spm_figure_scale = get(fg,'Position'); spm_figure_scale = spm_figure_scale(4)*PaperSize(2)/1000; 
@@ -1399,7 +1404,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
             if ~strcmpi(spm_check_version,'octave'), renderer = get(fg,'Renderer'); else, renderer = 'volume'; end
 
             % only add contours if OpenGL is found (to prevent crashing on clusters)
-            if strcmpi(renderer,'opengl')
+            if strcmpi(renderer,'opengl') && job.extopts.report.renderer < 1
               hSD = cat_surf_display(struct('data',Psurf(id1).Pthick,'readsurf',0,'expert',2,...
                 'multisurf',1,'view','s','menu',0,...
                 'parent',hCS,'verb',0,'caxis',[0 6],'imgprint',struct('do',0)));
@@ -1416,7 +1421,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
               if strcmpi(spm_check_version,'octave'), colormap(cmap);
               else, colormap(fg,cmap); end
               set(hSD{1}.colourbar,'visible','off');
-            else
+            elseif job.extopts.report.renderer > 0
               %%
               for i = 1:numel(Psurf)
                 if i == 1 
@@ -1516,7 +1521,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
           end
           %% hrange      = srange(1) + boxwidth/2:boxwidth:srange(2);
           if job.output.surface > 10, addcb = 1; else, addcb = 0; end
-          if strcmpi(renderer,'opengl')
+          if strcmpi(renderer,'opengl') && job.extopts.report.renderer < 1
             try
               i=1; hSD{i} = cat_surf_display(struct('data',PCS{i},'readsurf',0,'expert',2,...
                 'multisurf',1 + 2*addcb,'view',sview{i},'menu',0,'parent',hCS{i},'verb',0,'caxis',srange,'imgprint',struct('do',0))); 
@@ -1546,7 +1551,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
               end
               for i = 1:numel(hSD), colormap(fg,cmap);  set(hSD{i}{1}.colourbar,'visible','off'); end
             end
-          else
+          elseif job.extopts.report.renderer > 1
             try
               if 1
                 % just the first draft
@@ -1613,7 +1618,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
               % each dimension. Values of 1.0 - 1.4 are quite fast (but not fine enough 
               % for standard zoom-in) and 2.4 (120s) suits better.   
               interp = 2.45; 
-              
+             
               hSD{1}{1} = cat_surf_renderv(CS ,[],struct('view',sview{1},'mat',spm_imatrix(res.Affine),'h',hCS{1},'interp',interp)); 
               cat_surf_renderv(CSl,[],struct('view',sview{2},'mat',spm_imatrix(res.Affine),'h',hCS{2},'interp',interp*0.9));
               cat_surf_renderv(CSr,[],struct('view',sview{3},'mat',spm_imatrix(res.Affine),'h',hCS{3},'interp',interp*0.9));
