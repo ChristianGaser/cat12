@@ -599,7 +599,7 @@ function [SUB, SES, ANA, RUN, MOD, isSUB, isSES, isANA, isRUN, isMOD, ...
     % more tolerant defintion
     if ~isSES && ~isSUB
       subcan = cat_io_contains(lower(sdirs(1:end-1)),{'sub-','sub_'});
-      for si = sort(find(subcan),'des')
+      for si = sort(find(subcan),'descend')
         isSUB = (numel(sdirs) - si) * any(cat_io_contains(lower(sdirs{si}(1:min(4,numel(sdirs{si})))),{'sub-','sub_'})); 
         if isSUB>0, break; end
       end
