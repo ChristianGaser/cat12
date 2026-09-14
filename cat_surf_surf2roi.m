@@ -94,7 +94,7 @@ function varargout = cat_surf_surf2roi(job)
         [vertices, lrdata, colortable, lrcsv] = cat_io_FreeSurfer('read_annotation',job.rdata{ri});
         [vertices, rrdata, colortable, rrcsv] = cat_io_FreeSurfer('read_annotation',Prdata_rh);
         clear vertices colortable;
-      case 'gii'
+      case '.gii'
         % gifti and csv-files
         lrdata = gifti(job.rdata{ri});
         rrdata = gifti(char(cat_surf_rename(rinfo,'side','rh'))); 
