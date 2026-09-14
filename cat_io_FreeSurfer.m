@@ -902,8 +902,8 @@ function [vertices, label, colortable] = read_annotation(filename, varargin)
   end;
   
   if(fp < 0)
-     if verbosity, disp('Annotation file cannot be opened'); end;
-     return;
+     error('cat_io_FreeSurfer:read_annotation', ...
+       'Annotation file "%s" cannot be opened.', filename);
   end
   
   A = fread(fp, 1, 'int');
