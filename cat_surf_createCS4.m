@@ -714,7 +714,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
             % this function refines the surface
             Vp0 = Vmfs; Vp0.fname = spm_file(P(si).Pp0,'suffix','_tmp'); 
             spm_write_vol(Vp0, Yp0fs);
-            cmd = sprintf('CAT_Surf2PialWhite "%s" "%s" "%s" "%s" "%s"', ...
+            cmd = sprintf('CAT_Surf2PialWhite -remove_intersect "%s" "%s" "%s" "%s" "%s"', ...
               P(si).Pcentral, P(si).Pthick, Vp0.fname, P(si).Ppial, P(si).Pwhite);
             cat_system(cmd,opt.verb-3);
             delete(Vp0.fname); 
@@ -743,7 +743,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         facevertexcdatafs = min(6,max(eps, cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm))); 
         cat_io_FreeSurfer('write_surf_data', P(si).Pthick, facevertexcdatafs);
         spm_write_vol(Vmfs, Yp0fs);
-        cmd = sprintf('CAT_Surf2PialWhite "%s" "%s" "%s" "%s" "%s"', ...
+        cmd = sprintf('CAT_Surf2PialWhite -remove_intersect "%s" "%s" "%s" "%s" "%s"', ...
           P(si).Pcentral, P(si).Pthick, Vp0.fname, P(si).Ppial, P(si).Pwhite);
         cat_system(cmd,opt.verb-3); 
         delete(Vp0.fname); 
