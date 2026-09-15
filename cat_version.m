@@ -6,6 +6,10 @@ function [CATrel, CATver, CATdate]  = cat_version(varargin)
 % FORMAT CATver = cat_version % short version
 % FORMAT cat_version('[ss]fnbanner'[,str,ver]) % display banner
 % 
+% [~] = cat_version('reset') to reset.
+% [~] = cat_version('gitver') to use the github version if the catdir 
+%   is a repository.
+%
 % This function will retrieve the CAT release and version and is a
 % modified version of spm('version')
 % ______________________________________________________________________
@@ -19,6 +23,7 @@ function [CATrel, CATver, CATdate]  = cat_version(varargin)
 
 persistent CAT_VER;
 if nargin==1 && strcmp(varargin{1},'reset'), CAT_VER = []; end 
+if nargin==1 && strcmp(varargin{1},'gitver'), CAT_VER = []; gitver = 1; else, CAT_VER = []; gitver = 1; end
 v = CAT_VER;
 
 if isempty(CAT_VER)
@@ -56,6 +61,18 @@ if isempty(CAT_VER)
         end
     catch
         error('Can''t obtain CAT Revision information.');
+    end
+    try
+      catdir = fileparts(which('cat12')); 
+      % get revision number
+      cmd   = sprintf('git -C "%s" rev-list --count HEAD;', catdir); 
+      [st,t] = system(cmd); if ~st & ischar(t),  v.Version = deblank(t); end
+      % get date
+      cmd = sprintf('git -C "%s" --no-pager log -1 --date=short --format=%%cd', catdir);
+      [st,t] = system(cmd); if ~st & ischar(t),  v.Date    = deblank(t); end
+      % branch name?
+      %cmd = sprintf('git -C "%s" branch --show-current', catdir);
+      %[st,t] = system(cmd); if ~st & ischar(t),  v.Release = [ v.Release '_GIT' deblank(t) ]; end
     end
     CAT_VER = v;
 end
