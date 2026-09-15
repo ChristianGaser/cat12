@@ -214,9 +214,12 @@ function varargout = resize_job(job)
       % higher dimension data requires different reading
       if isfield(V,'private') 
         dims = ndims(V.private.dat);
-        if dims>4 %##########
+        if dims>4 % Templates, TPMs, 5D data
           Nii = nifti(V.fname);
           Y   = single(Nii.dat(:,:,:,:,:));
+        elseif dims>3 % fMRI, dMRI, 4D data
+          Nii = nifti(V.fname);
+          Y   = single(Nii.dat(:,:,:,:));
         else
           Y  = spm_read_vols(V);
         end
