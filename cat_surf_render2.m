@@ -1490,8 +1490,11 @@ switch lower(action)
             updateTexture(H,d,pi);
           end
         end
-        
-    %-Register
+
+    case 'hist'
+      myHist([],[],gcf)
+    
+      %-Register
     %======================================================================
     case 'register'
         if isempty(varargin), varargin{1} = gca; end
@@ -2282,6 +2285,14 @@ set(get(get(obj,'parent'),'children'),'Checked','off');
 set(obj,'Checked','on');
 %==========================================================================
 function myHist(obj,evt,H)
+if isempty(obj) && ~isfield( H,'cdata')
+  if strcmp(get(H,'type'),'figure')
+    CM = findobj(get(H,'Children'),'Type','uicontextmenu');
+    CS = findobj(get(CM,'Children'),'Label','Surface Information'); 
+    CH = findobj(get(CS,'Children'),'Label','Histogram'); 
+    H = CH.MenuSelectedFcn{2}; 
+  end
+end
 objTextures = findobj(get(findobj(get(get(obj,'parent'),'parent'),'Label','Textures'),'Children'),'Checked','on');
 if isfield( H , 'textures')
   currentTexture = cellfun('isempty',strfind( H.textures(:,1) , objTextures.Label ))==0  &  cellfun('length',H.textures(:,1)) ==  length(objTextures.Label); 
@@ -2291,6 +2302,9 @@ else
   cat_plot_histogram(  H.cdata ,struct('winsize',[350 250],'xlim',[0 6]))
   legend off; 
   hh = gca; 
+  try
+    hh.Parent.Position(1:2) = H.figure.Position(1:2) - [0  hh.Parent.Position(4)];
+  end
   if isfield(H,'axis')
     %%
     HT = get( H.axis , 'Title' ) ; 
