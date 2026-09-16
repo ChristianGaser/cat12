@@ -721,17 +721,19 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
           end
           CSw1 = loadSurf(P(si).Pwhite);
           CSp1 = loadSurf(P(si).Ppial);
-     
-          % (3) mix simple and refined boundary surfaces
-          %     0 .. 1 - mixing value from simple to enhanced boundary reconstruction
-          %              The simple version often has good intensity/position values
-          %              but also many (small) self-intersections. 
-          mix = .5; %.5; 
-          CSw0.vertices = CSw0.vertices.*(1-mix) + mix.*CSw1.vertices;
-          CSp0.vertices = CSp0.vertices.*(1-mix) + mix.*CSp1.vertices;
           
-          saveSurf(CSw0,P(si).Pwhite); 
-          saveSurf(CSp0,P(si).Ppial); 
+          if 0 % not useful anymore since CAT_Surf2PialWhite was improved
+            % (3) mix simple and refined boundary surfaces
+            %     0 .. 1 - mixing value from simple to enhanced boundary reconstruction
+            %              The simple version often has good intensity/position values
+            %              but also many (small) self-intersections. 
+            mix = .5; %.5; 
+            CSw0.vertices = CSw0.vertices.*(1-mix) + mix.*CSw1.vertices;
+            CSp0.vertices = CSp0.vertices.*(1-mix) + mix.*CSp1.vertices;
+            
+            saveSurf(CSw0,P(si).Pwhite); 
+            saveSurf(CSp0,P(si).Ppial); 
+          end
         end
 
       else % if 2 (refine but do not update thickness) or 3 (refine and update)
