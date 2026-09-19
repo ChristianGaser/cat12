@@ -122,7 +122,11 @@ function out = cat_vol_mimcalc(job)
     end
   end
 
-  out.Pname(cellfun('isempty',out.Pname)==1) = [];  
+  if isfield(out,'Pname')
+    out.Pname(cellfun('isempty',out.Pname)==1) = [];  
+  else
+    out.Pname = {};
+  end
   
   % spm banner
   if job.verb
