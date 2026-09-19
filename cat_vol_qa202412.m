@@ -686,10 +686,6 @@ function varargout = cat_vol_qa202412(action,varargin)
       QAS.software.markdefs     = which('cat_stat_marks');
       QAS.software.qamethod     = action; 
       QAS.software.date         = datestr(clock,'yyyymmdd-HHMMSS');
-      warning off
-      QAS.software.opengl       = opengl('INFO');
-      QAS.software.opengldata   = opengl('DATA');
-      warning on
  
       %QAS.parameter             = opt.job; 
       if isfield(opt,'job') 

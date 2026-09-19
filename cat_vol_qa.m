@@ -79,6 +79,18 @@ function varargout = cat_vol_qa(action,varargin)
       if ~isfield(job,'job')
         job = struct('job',job);
       end
+    elseif strcmp(action,'p0')  
+      if nargin>4
+        fname = varargin{1};
+        job   = varargin{6};
+        Pp0   = varargin{1};
+        Po    = varargin{2}; 
+        Pm    = varargin{2};
+      else
+        fname = varargin{1};
+        Pp0   = varargin{1};
+        job   = varargin{2};
+      end
     elseif strcmp(action,'cat12')
       fname = varargin{2};
       job   = varargin{6};
@@ -990,6 +1002,7 @@ function [QAS,QAR] = cat12err(opt,mridir,reportdir)
   else
     vx_vol = [0 0 0];
   end
+  V = V(1);
   if ~exist('vx_vol','var')
     vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
   end
