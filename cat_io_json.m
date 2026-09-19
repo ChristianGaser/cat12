@@ -35,8 +35,11 @@ function S = readjson(varargin)
       raw = fread(fid,inf); 
       str = char(raw'); 
       fclose(fid); 
-      val = jsondecode(str);
-  
+      try
+        val = jsondecode(str);
+      catch e
+        error('cat_io_json:readjson','Error in file "%s".\n%s', files{fi}, e.message);
+      end
       if fi == 1
         S = val; 
       else
@@ -70,18 +73,16 @@ function writejson(varargin)
   if ~strcmp( spm_file( varargin{1} , 'ext') ,'json')
     error('File extension has to be .json');
   end
-
   if ~isstruct( varargin{2} ) 
     error('Second argument has to be a structure.')
   end
-
   if ~exist( spm_fileparts( varargin{1}), 'dir') 
     mkdir( spm_fileparts( varargin{1}) );
   end
 
   % write data
   f0  = fopen( varargin{1} ,'w');
-  txt = jsonencode(varargin{2}); %,'PrettyPrint', true);
+  txt = jsonencode(varargin{2}, 'PrettyPrint', true);
   fwrite( f0, txt); 
   fclose( f0 );
 
