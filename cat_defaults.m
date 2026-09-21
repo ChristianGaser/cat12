@@ -29,13 +29,13 @@ cat.opts.affreg    = 'mni';                   % Affine regularisation (SPM defau
 cat.opts.warpreg   = [0 0.001 0.5 0.05 0.2];  % Warping regularisation (SPM default) - no useful modification found
 cat.opts.tol       = 1e-4;                    % SPM preprocessing accuracy (CAT only!) - 1e-2 very low accuracy (fast); 1e-4 default; 1e-6 very high accuracy (slow)
 cat.opts.accstr    = 0.5;                     % SPM preprocessing accuracy (CAT only!) - 0 very low accuracy (fast) .. 1 very high accuracy (slow); default = 0.5
-cat.opts.biasstr   = 0.5;                     % Strength of the bias correction that controls the biasreg and biasfwhm parameter (CAT only!)
+cat.opts.biasstr   = 0.75;                     % Strength of the bias correction that controls the biasreg and biasfwhm parameter (CAT only!)
                                               %   0 - use SPM parameter; eps - ultralight, 0.25 - light, 0.5 - medium, 0.75 - strong, and 1 - heavy corrections
                                               %   job.opts.biasreg	= min(  10 , max(  0 , 10^-(job.opts.biasstr*2 + 2) ));
-                                              %   job.opts.biasfwhm	= min( inf , max( 30 , 30 + 60*job.opts.biasstr ));  
+                                              %   job.opts.biasfwhm	= min( inf , max( 30 , 30 + 60*(1-job.opts.biasstr) ));  
 cat.opts.biasreg   = 0.001;                   % Bias regularisation (cat.opts.biasstr has to be 0!) - 10,1,0.1,...,0.00001
                                               %   smaller values for stronger bias fields
-cat.opts.biasfwhm  = 60;                      % Bias FWHM (cat.opts.biasstr has to be 0!) - 30:10:120,inf 
+cat.opts.biasfwhm  = 45;                      % Bias FWHM (cat.opts.biasstr has to be 0!) - 30:10:120,inf 
                                               %   lower values for strong bias fields, but check for overfitting of the thalamus (values <45 mm)
 cat.opts.samp      = 3;                       % Sampling distance - alternative: 1.5 
                                               %   Initial SPM segmentation resolution, whereas the AMAP runs on the full or specified resolution
