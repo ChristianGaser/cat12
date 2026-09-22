@@ -285,7 +285,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         'NVBC',~iscerebellum, 'denoise',~iscerebellum, 'wmnoise', opt.wmnoise)); 
       Vppm = Vmfs; Vppm.fname = P(si).Pppm; spm_write_vol(Vppm, Yppi);
     else 
-      cmd = sprintf('CAT_VolThicknessPbt  -range 0.45  -correct-voxelsize 0  "%s" "%s" "%s"', Vmfs.fname, P(si).Pgmt, P(si).Pppm);
+      cmd = sprintf('CAT_VolThicknessPbt  -range 0.45  -correct-thickness 0  "%s" "%s" "%s"', Vmfs.fname, P(si).Pgmt, P(si).Pppm);
       cat_system(cmd,3);
       Vgmt  = spm_vol(P(si).Pgmt); Yth1i = spm_read_vols(Vgmt); 
       % correction of general offset in mm 
@@ -1285,7 +1285,7 @@ function Yp0 = myelincorrection(Yp0,vx_vol,opt,P,Vmfs,si,quick)
     % alternative save but slow version (45s)
     %[Vmfs,Smat] = createOutputFileStructures(V,V0,resI,BB,opt,mridir,ff,si); 
     Vmfs.dt = [16 1]; spm_write_vol(Vmfs, Yp0 );
-    cmd = sprintf('CAT_VolThicknessPbt  -correct-voxelsize 0   -median-filter 2   -downsample 0 "%s" "%s" "%s"', Vmfs.fname, P(si).Pgmt, P(si).Pppm);
+    cmd = sprintf('CAT_VolThicknessPbt  -correct-thickness 0   -median-filter 2   -downsample 0 "%s" "%s" "%s"', Vmfs.fname, P(si).Pgmt, P(si).Pppm);
     cat_system(cmd,opt.verb-3);
     Vgmt0  = spm_vol(P(si).Pgmt); Ygmt0 = spm_read_vols(Vgmt0); 
     Ygmt0  = max(0,Ygmt0 - 0.56*mean(opt.interpV) ); 
