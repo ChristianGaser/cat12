@@ -1814,7 +1814,7 @@ function [Pr,QM] = runQC(P, type, opts, Pprotocols)
       Pr = P; 
     end
    
-    if V.dim(3) < 5
+    if V(1).dim(3) < 5
       % spectroscopy overview image
       QM = struct('NSR',[],'ISR',[],'RES',[],'BSM',[],'WSM',[],'vx_vol',[],'SQR',[]);  
       cat_io_cprintf('blue','spectroscopy preview?\n'); 
