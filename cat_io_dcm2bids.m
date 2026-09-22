@@ -1,48 +1,58 @@
 function cat_io_dcm2bids(job)
+%cat_io_dcm2bids. Batch definition to convert DICOM to BIDS. 
 %
+% This batch uses DCM2NIIX to convert DICOM into NIFTI images with JSON  
+% sidecars. It stores the converted data and reorganize the output in BIDS. 
+% It allows to filter for specific MRI protocols within a directory that 
+% outline relevant MR parameters within a JSON file.
+%
+% Please check out the CAT sub-directory DCM2BIDS/DZPG3T for an example, 
+% that include the definition for structural, functional, and diffusion 
+% scans used by the DZPG (German Center for Mental Health, https://www.dzpg.org/).
+%
+% The batch also applies the SPM anonymizing routine and runs a basic image
+% quality control. 
 %
 
-% QUESTIONS: 
+
+% DEVELOPMENT DOCUMENTATION 
+% =========================================================================
+% DESIGN QUESTIONS: 
 % * Use own subjectIDs ? 
 %   No  - to avoid misalignment
 %   Yes - to avoid human error - as number using private.tsv >> function 
 %       - we will need this at least for the strong anonymizing setting
-%       - a subject.tsv would also allow to integrate essential phenotypical  
-%         data for groups or timepoints 
+%       - a subject.tsv would also allow to integrate essential   
+%         phenotypical data for groups or time-points 
 %
 % * Flexibility
 %   - tolerance parameter? but what about ordinary variables
 %   - fallback option?
-%
-%
-% TODO: 
-% *** flag to write non-conform data or only protocols? 
-%     eg. to extract only T1w data (see also recursive calls)
-%     ... GUI done
-%
-% *** flag to extract only protocols (1) [and jsons (2)?] for protocol setup 
-%     >> extract protocols!!! >> noQC, noPP, noAnon 
-%
-% *** QC (realignment) is slow ... maybe a flag ... 
-%     if you have different levels you would need separation of files
-%     0-no QC, 1-basic QC (just a subset or fast things?), 2-extend QC (full), 3-extend QC (for optimization/pp)
+%   >> maybe later, first focus on the hard setting
 %
 % * Addition protocol set directories?
+%   Not sure what my idea was ... 
+%   Maybe together with a flag like "only complete protocols"? 
+%   
 %      protocols        anat1, ..., fMRI1...
 %   >> study-defined    
 %   >> subject-defined
 %   >> session-defined
 %
-%
-% *** overview dirs: 
-%   * Protocols ... subdirs
+% * Overview directories: 
+%   * Protocols with subdires
 %   * Studies (one-file with subjects and protocol-names)
 %      JE2: subjects, images, StudyID
 %   *** create a quality file based on the first scans (n>5)?  
 %
-% * Recursive calls / already converted/sorted data (i.e., nii/json import)
 %
-% * Non-conform/unknown protocol handling
+% TODO: 
+% =========================================================================
+%
+% * Add read-me in the catDCM2NIIdb and catDM2NIIx directories 
+%   as well as each result directory that explains what this is!
+%
+% * Recursive calls / already converted/sorted data (i.e., nii/json import)
 %
 % * Report Files (sub/scan) ****
 %
@@ -55,16 +65,14 @@ function cat_io_dcm2bids(job)
 %   - slice timing
 %   - # slices
 %   - head position ?
+%
 % * QC-test: head-orientation ?
 %
-%
-% TODO-BONUS:
 % * Anonymizing 
-%   * own sub-ids
-%   * avoid scan-dates on level 2.
+%   * sub: define own sub-ids on level 2 or 3?
+%   * ses: avoid scan-dates on level 1, use studyID on level 2
 %   * json-checks ...
-%   * 4D call ******
-%   - setting ... probably combine to keep it simple
+%   * combine the options in one powerful parameter
 %      - naming:  site: difficult as federated 
 %                 sub:  0-sub-id,    1-sub-id,  2-new-id
 %                 ses:  0-date-time, 1-date,    2-TP (order issues?)
@@ -75,33 +83,39 @@ function cat_io_dcm2bids(job)
 % * Further data: 
 % =========================================================================
 %   - spectroscopy
-%   - MPM processing
+%   - MPM processing (not required so far)
 %
 %
 % * Basic preprocessing, QC and anonymizing of (un)organized data?
 % =========================================================================
-%   - Preprocessing is a very complex issue that need general consensus! 
+%   * Preprocessing is a very complex issue that need general consensus! 
 %     Yes, but we can make a basic suggestion that can be extended later. 
 %     However, this might be irrelevant if things are done by the DZNE!
 %     However, it should be an external batch that could be flagged here.
+%
+%   * Basic prerocessing for data overview not analysis!
 %       - T1w/T2w: SPM/CAT
 %       - MPMs:    hMRI
 %       - dMRI:    diffusion TB
 %       - fMRI:    SPM
-%   - Basic processing to detect neurological outliers?
+%
+%   * Basic processing to detect neurological outliers?
 %     This requires a normative model. 
-%     It presents a logical step when the preprocessing is established!
-%   - Basic optimization and inter-modality optimization/harmonization. 
+%     It presents a logical step in case of preprocessing!
+%
+%   * Basic optimization and inter-modality optimization/harmonization. 
 %     This can be seen as additional part to further improve preprocessing, 
 %     i.e., after preprocessing is established.
 %       1) bias
 %       2) denoising
 %       3) contrast ("global mean")
 %      (4) reorient & BB (rigid registration to MNI-space)
-%   - How to add the data?
+%
+%   * How to add the data?
 %     >> derivatives/TOOL/...
 %     >> derivatives/catDCM2NII/../anat/[m|c0|mc1|y]*.nii(.gz) ... qc-files?
 %                                  func/r*..
+%
 %
 % * write report tables
 % =========================================================================
@@ -122,21 +136,20 @@ function cat_io_dcm2bids(job)
 % * Features
 % =========================================================================
 %   - parallelization 
-%   - import timer (subject-wise)
 %
 %
 % * ISSUES & BUGS:
 % =========================================================================
 %  * BUG: handling of multiple runs ...
-%  * avoid some read_vol for speed? 
 %  * no qc-file message
-%  * copy also qc-file for fits
+%  * copy also qc-file if a protocol fits
 %
 %
 % * TOTEST:
 % =========================================================================
 %   - get BIDS test cases
 %   - QC Tests (MR-ART?, DZPG samples)
+
 
   def.data                  = {};    % input DCM directories (add JSON/NII input later)
   def.outdir                = {pwd}; % main output directory
@@ -169,15 +182,14 @@ function cat_io_dcm2bids(job)
   if ~exist('job','var'), job = struct(); end
   job = cat_io_checkinopt(job,def); 
 
-  job.opts.gzipi             = 1; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+  
   
 
   %% ======================================================================
   if 0
     % my quick non-GUI test
     Pdcmdir      = {'/Users/robertdahnke/MRData/20260819 - CIRC-CAT - DCM2BIDS/DCM'};
-    Pprodictdirs = {'/Users/robertdahnke/MRData/20260819 - CIRC-CAT - DCM2BIDS/protocols/DZPG'};
+    %Pprodictdirs = {'/Users/robertdahnke/MRData/20260819 - CIRC-CAT - DCM2BIDS/protocols/DZPG'};
     Pcenterdict  = {'/Users/robertdahnke/MRData/20260819 - CIRC-CAT - DCM2BIDS/protocols/cites.json'}; 
     Pstudydict   = {'/Users/robertdahnke/MRData/20260819 - CIRC-CAT - DCM2BIDS/protocols/studies.json'}; 
     %Psubjdict    = {''}; 
@@ -185,10 +197,10 @@ function cat_io_dcm2bids(job)
     tol          = 1; 
   else
     Pdcmdir      = job.data;
-    Pprodictdirs = job.dicts.Pprotocoldirs;
+    %Pprodictdirs = job.dicts.Pprotocoldirs;
     Pcenterdict  = job.dicts.Pcenterdict;
     Pprodictdirs = job.dicts.Pprotocoldirs;
-    Pstudydict   = job.dicts.Pstudydict;
+    %Pstudydict   = job.dicts.Pstudydict;
     %Psubjdict    = job.dicts.Psubjdict;
     Poutdir      = fullfile(job.outdir{1},job.subdir); 
     tol          = job.opts.tolerance;
@@ -198,6 +210,7 @@ function cat_io_dcm2bids(job)
   Pdbdirnam = 'catDCM2NIIdb';
   Popts = fullfile(Poutdir,Pdbdirnam,'catdcm2bids.mat');
   if ~checkPreviousSetting(Popts,job), return; end
+  checkGzipi(fullfile(Poutdir,Pdbdirnam),job.opts.gzipi); 
   clear Popts; 
 
   % read site-names and protocol definitions
@@ -223,13 +236,17 @@ function cat_io_dcm2bids(job)
   
   if ~exist(Pdatadir,'dir'),     mkdir(Pdatadir); end
   if ~exist(Pprotocoldir,'dir'), mkdir(Pprotocoldir); end
-  
+
   % DB lists 
-  Pscantable     = spm_file(fullfile(Pdatadir,'scans'),'ext',job.opts.tableformat); 
+  %Pscantable     = spm_file(fullfile(Pdatadir,'scans'),'ext',job.opts.tableformat); % useless
+  %Psessiontable  = spm_file(fullfile(Pdatadir,'sessions'),'ext',job.opts.tableformat); %useless
   Pstudytable    = spm_file(fullfile(Pdatadir,'studies'),'ext',job.opts.tableformat); 
-  Psessiontable  = spm_file(fullfile(Pdatadir,'sessions'),'ext',job.opts.tableformat); 
   Psubjecttable  = spm_file(fullfile(Pdatadir,'subjects'),'ext',job.opts.tableformat); 
   Pprotocoltable = spm_file(fullfile(Pprotocoldir,'protocols'),'ext',job.opts.tableformat); 
+
+
+ 
+    
 
 
   %% basic initialization that might have to be extended
@@ -245,7 +262,7 @@ function cat_io_dcm2bids(job)
     
     % Convert DCM: 
     % =====================================================================
-    Pdirfi = dcm2niix( Pdcmdirs{fi} , Pdcmdirs0{fi}, Poutdir, job.opts.Pdcm2nii, job.opts); 
+    Pdirfi = dcm2niix( Pdcmdirs{fi} , Poutdir, job.opts.Pdcm2nii, job.opts.gzipi, job.opts.rerun); 
 %%%%% else gzip or gunzip depending all files
 %%%%% special case of the internal database directories: DCM2NIIX case
 
@@ -331,8 +348,15 @@ function cat_io_dcm2bids(job)
         sprintf('snr-%03d', Vjson{jsoni}.SeriesNumber)); 
 
       % update 
-      Pconv = spm_file(Pjson{fj},'ext',niiext,'path', Pdbdirpath{jsoni}); 
-      if exist(Pconv,'file'), Pjson{fj} = Pconv; Pjson{fj} = Pconv; Pnii{fj} = spm_file(Pjson{fj},'ext',niiext); end
+      Pdbdirpath{jsoni} = fullfile(Poutdir,Pdbdirnam, Pdbdir{jsoni}); 
+      if ~exist( spm_file(Pnii{fj},'path',Pdbdirpath{jsoni}), 'file') && ~exist(Pnii{fj},'file')
+        dcm2niix( Pdcmdirs{fi} , Poutdir, job.opts.Pdcm2nii, job.opts.gzipi, 1); 
+        continue
+      end
+      Pconvj = spm_file(Pjson{fj},'path', Pdbdirpath{jsoni}); 
+      if exist(Pconvj,'file'), Pjson{fj} = Pconvj; end
+      Pconvn = spm_file(Pjson{fj},'ext',niiext,'path', Pdbdirpath{jsoni}); 
+      if exist(Pconvn,'file'), Pjson{fj} = Pconvn; end
       ProcedureStepDescription = getFileString(Vjson{jsoni}.ProcedureStepDescription);
 
       % SCAN-LIST:
@@ -431,9 +455,9 @@ function cat_io_dcm2bids(job)
 
       % import files
       Pdbdirpath{jsoni} = fullfile(Poutdir,Pdbdirnam, Pdbdir{jsoni}); 
-      if ~exist(Pdbdirpath{jsoni},'dir')
-        mkdir(Pdbdirpath{jsoni}); 
-        ext = {'.nii','.nii.gz','.bval','.bvec'};  
+      if ~exist(Pdbdirpath{jsoni},'dir') || ~exist( spm_file(Pnii{fj},'path',Pdbdirpath{jsoni}), 'file')
+        if ~exist(Pdbdirpath{jsoni},'dir'), mkdir(Pdbdirpath{jsoni}); end
+        ext = {niiext,'.bval','.bvec'};
         for ei = 1:numel(ext)
           if exist(spm_file(Pjson{fj},'ext',ext{ei}),'file') 
             if ~exist( spm_file(Pjson{fj},'ext',ext{ei},'path', Pdbdirpath{jsoni}),'file')
@@ -443,7 +467,9 @@ function cat_io_dcm2bids(job)
             end
           end
         end
-        copyfile( Pjson{fj} , Pdbdirpath{jsoni} );
+        if ~exist( spm_file(Pjson{fj},'path',Pdbdirpath{jsoni}), 'file')
+          copyfile( Pjson{fj} , Pdbdirpath{jsoni} );
+        end
       end
 
 
@@ -653,6 +679,31 @@ function cat_io_dcm2bids(job)
   end
 
 end
+function checkGzipi(Pdbdir,gzipi)
+  verb = 1; 
+  if exist(Pdbdir,'dir') 
+    if gzipi
+      Punpacked = cat_vol_findfiles(Pdbdir,'*.nii'); 
+      for fi = 1:numel(Punpacked)
+        if ~exist([Punpacked{fi} '.gz'],'file')
+          if verb, fprintf('Updating database storing gzipped NIFTIs... '); verb = 0; end
+          gzip(Punpacked{fi});
+        end
+        delete(Punpacked{fi}); 
+      end
+    else
+      Ppacked = cat_vol_findfiles(Pdbdir,'*.nii.gz'); 
+      for fi = 1:numel(Ppacked)
+        if ~exist([Ppacked{fi}(1:end-3)],'file')
+          if verb, fprintf('Updating database storing NIFTIs... '); verb = 0; end
+          gunzip(Ppacked{fi});
+        end
+        delete(Ppacked{fi}); 
+      end
+    end
+  end
+  fprintf(' done.\n'); 
+end
 % =========================================================================
 function T = structEqual(S1,S2)
   if ~isstruct(S1), T = false; return; end
@@ -814,13 +865,13 @@ function P = getDCM2NIIX
   end
 end
 % =========================================================================
-function tmpdir = dcm2niix( Pdcmdirs , Pdcmdir, Poutdir, Pdcm2niix, opts)
+function tmpdir = dcm2niix( Pdcmdirs , Poutdir, Pdcm2niix, gzipi, rerun)
   %tmpdir = strrep( Pdcmdirs , Pdcmdir, fullfile(Poutdir,'DCM2NIIX') ); 
   tmpdir = fullfile(Poutdir,'catDCM2NIIx',Pdcmdirs); 
-  if ~exist(tmpdir,'dir') || opts.rerun
-    mkdir(tmpdir); 
+  if ~exist(tmpdir,'dir') || rerun
+    if ~exist(tmpdir,'dir'), mkdir(tmpdir); end
   
-    if opts.gzipi, gz = '-z'; else, gz = ''; end
+    if gzipi, gz = '-z'; else, gz = ''; end
 
     % convert DCM in directory
     % - use = as more unique separator 
@@ -829,7 +880,7 @@ function tmpdir = dcm2niix( Pdcmdirs , Pdcmdir, Poutdir, Pdcm2niix, opts)
     [status,cmdout] = system(cmd); %#ok<ASGLU>
   end
 
-  if opts.gzipi
+  if gzipi
     P = cat_vol_findfiles( tmpdir , '*.nii' ,struct('depth',1)); 
     for fi=1:numel(P), gzip(P{fi}); delete(P{fi}); end
   else
@@ -1763,6 +1814,13 @@ function [Pr,QM] = runQC(P, type, opts, Pprotocols)
       Pr = P; 
     end
    
+    if V.dim(3) < 5
+      % spectroscopy overview image
+      QM = struct('NSR',[],'ISR',[],'RES',[],'BSM',[],'WSM',[],'vx_vol',[],'SQR',[]);  
+      cat_io_cprintf('blue','spectroscopy preview?\n'); 
+      return
+    end
+
     Y = single(spm_read_vols(V));
     sig75 = nan(1,size(Y,4)); 
     for di = 1:size(Y,4)

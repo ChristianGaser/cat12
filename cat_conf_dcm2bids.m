@@ -12,9 +12,33 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   datadir.filter   = 'dir';
   datadir.ufilter  = '.*';
   datadir.num      = [1 Inf];
-  datadir.help     = {'Select directory with DICOM or NII/JSON data.'}; 
+  datadir.help     = {'Select directory with DICOM or BIDS data.'}; 
 % what do I do in case of already imported data those raw files are not available any longer?
 % >> selection of internal DCM2NIIX dir >> need special handling
+
+  % output directory
+  outdir            = cfg_files;
+  outdir.tag        = 'outdir';
+  outdir.name       = 'Output directory';
+  outdir.filter     = 'dir';
+  outdir.ufilter    = '.*';
+  outdir.num        = [1 1];
+  outdir.help       = {[ ...
+    'Select a directory where files are written to. ' ...
+    'The batch will create a protocoll-conform and a non-conform BIDS structure, and a (temporary) subdirectory with converted NIFTI/JSON data. ' ...
+    'It will also create a subdirectory with used MR protocols and final reports. ']};
+  
+  subdir            = cfg_entry;
+  subdir.tag        = 'subdir';
+  subdir.name       = 'Project Name';
+  subdir.strtype    = 's';
+  subdir.num        = [0 Inf];
+  subdir.val        = {'CATBIDS'};
+  subdir.help       = {
+    'The directory is created within the choosen output directory. If no name is given no subdirecty is created. ' ''};
+
+
+
 
   % Dictionaries 
   % =======================================================================
@@ -26,8 +50,8 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   protocoldir.ufilter  = '.*';
   protocoldir.val      = {{''}};
   protocoldir.num      = [0 Inf];
-  protocoldir.help     = {[ ...
-    'Select directory with JSON files with specified DICOM entries to filter for relevant protocols. ' ...
+  protocoldir.help     = {
+   ['Select directories with JSON files with specified DICOM entries to filter for relevant protocols. ' ...
     'If no directory is specified then all data will be exported to a BIDS directory. ' ...
     'The file name of the JSON filter file together with the sequence number ' ...
     'will be used to specify the BIDS acquisition filed "acq-###-FILENAME"']
@@ -44,77 +68,38 @@ function dcm2bids = cat_conf_dcm2bids(expert)
     ''
    ['It is possible to define a quality file with additional prefix "qc" that ' ...
     'define the range of the following quality measures:']
+   ... ['To convert the quality measures into a standardized rating, each protocol JSON file ' ...
+   ... 'requires an addition file with prefix "qc" that includes the scaling range for each ' ...
+   ... 'quality measure ranging from perfect to unacceptable quality: ']
     ''
+    'Eg. a "qcmyt1w.json" with:'
     '  {'
-    '    "SeriesDescription":                   "mprage_sag_0p8mm",'
-    '    "SliceThickness":                      0.8,'
-    '    "EchoTime":                            0.00222,'
-    '    "RepetitionTime":                      2.4,'
-    '    "InversionTime":                       1.03,'
-    '    "FlipAngle":                           8'
+    '    "BSM": NaN,'
+  	'  	 "WSM": NaN,'
+  	'  	 "ISR": [0.10, 0.30],'
+  	'    "NSR": [0.03, 0.09],'
+  	'  	 "RES": [0.80, 1.00]'
     '  }'
+    ''
+   ['with Between Scan Movement (BSM), Within Scan Movement (WSM) for highdimentional data ' ...
+    '(e.g., function and diffusion data but also anatomical rescans); ' ...
+    'Inhomogeneity Signal Ratio (ISR), Noise Signal Ratio (NSR), and ' ...
+    'RMS resolution value RES of the voxel dimention. ']
     }; 
   
 
   % define directory with protocol filter
+  %%%%%% NOT FULLY IMPLEMENTED YET  
   studydict          = cfg_files;
   studydict.tag      = 'Pstudydict';
-  studydict.name     = 'Study Dictonary File';
+  studydict.name     = 'Study Dictonary File (expert)';
   studydict.filter   = 'any';
   studydict.ufilter  = '.*\.json$';
   studydict.val      = {{''}};
   studydict.num      = [0 Inf];
   studydict.hidden   = expert<1;
   studydict.help     = {
-    [ ...
-      'In case of multiple studies it is posible to include this into the subject code. ' ...
-      'Define and link a json file that specify your "DeviceSerialNumber" and defines the wished "InstitutionAbbreviation". ' ...
-    ] 
-    ''
-    'Eg. a "mysites.json" with:'
-    '  ['
-    '    {'
-    '      "DeviceSerialNumber":           "000815",'
-    '      "InstitutionAbbreviation":      "JE"'
-    '    }'
-    '    {'
-    '      "DeviceSerialNumber":           "000007",'
-    '      "InstitutionAbbreviation":      "NA"'
-    '    }'
-    '  ]'
-    ''
-    }; 
-
-  % define directory with protocol filter
-  subjectdict          = cfg_files;
-  subjectdict.tag      = 'Psubjectdict';
-  subjectdict.name     = 'Subject Dictonary Table';
-  subjectdict.filter   = 'any';
-  subjectdict.ufilter  = '.*\.csv$';
-  subjectdict.val      = {{''}};
-  subjectdict.num      = [0 Inf];
-  subjectdict.hidden   = expert<1;
-  subjectdict.help     = {
-    'Integration of phenotypical data by CSV tables with subject-specific "PatientID" or session-specific "StudyNumber".'
-    ''
-    'Eg. a "subjects.csv" with:'
-    'PatientID, MMSE, GROUP'
-    '000000001, 30,   0'
-    '000000002, 12,   1'
-    ''
-    }; 
-
-  % select files with study information 
-  centerdict          = cfg_files;
-  centerdict.tag      = 'Pcenterdict';
-  centerdict.name     = 'Center Dictonary File';
-  centerdict.filter   = 'any';
-  centerdict.ufilter  = '.*\.json$';
-  centerdict.val      = {{''}};
-  centerdict.num      = [0 Inf];
-  centerdict.help     = {
-    ['In case of multiple studies it is posible to add this to improve ' ...
-    'readability by short names that could be used a variable. ' ...
+    ['In case of multiple centers it is posible to add this to the BIDS subject code to improve readability. ' ...
     'Define and link a json file that specify your "StudySerialNumber" ' ...
     'and defines the wished "StudyAbbreviation". '] 
     ''
@@ -130,13 +115,63 @@ function dcm2bids = cat_conf_dcm2bids(expert)
     '    }'
     '  ]'
     ''
+    };   
+
+  % Subject table
+  % csv file to redefine IDs and add further data 
+  %
+  subjectdict          = cfg_files;
+  subjectdict.tag      = 'Psubjectdict';
+  subjectdict.name     = 'Subject Dictonary Table (expert)';
+  subjectdict.filter   = 'any';
+  subjectdict.ufilter  = '.*\.csv$';
+  subjectdict.val      = {{''}};
+  subjectdict.num      = [0 Inf];
+  subjectdict.hidden   = expert<1;
+  subjectdict.help     = {
+    'Integration of phenotypical data by CSV tables with subject-specific "PatientID" or session-specific "StudyNumber".'
+    ''
+    'Eg. a "subjects.csv" with:'
+    'PatientID, MMSE, GROUP'
+    '000000001, 30,   0'
+    '000000002, 12,   1'
+    ''
     }; 
 
+  % select files with center information 
+  centerdict          = cfg_files;
+  centerdict.tag      = 'Pcenterdict';
+  centerdict.name     = 'Center Dictonary File';
+  centerdict.filter   = 'any';
+  centerdict.ufilter  = '.*\.json$';
+  centerdict.val      = {{''}};
+  centerdict.num      = [0 Inf];
+  centerdict.help     = {
+    [ ...
+    'In case of multiple centers it is posible to include a centerID into ' ...
+    'the subject code to avoid overlap of center specific subject IDs. ' ...
+    'Define and link a json file that specify your "DeviceSerialNumber" ' ...
+    'and defines the wished "InstitutionAbbreviation". ' ...
+    ] 
+    ''
+    'Eg. a "mysites.json" with:'
+    '  ['
+    '    {'
+    '      "DeviceSerialNumber":           "000815",'
+    '      "InstitutionAbbreviation":      "JE"'
+    '    }'
+    '    {'
+    '      "DeviceSerialNumber":           "000007",'
+    '      "InstitutionAbbreviation":      "NA"'
+    '    }'
+    '  ]'
+    ''
+    }; 
+    
 
+
+  % Options:
   % =======================================================================
-
-  % subjecttable ?
-  % csv file to redefine IDs and add other phenotypical data 
 
   % subjectIDsetup?
   %  sub-ID
@@ -178,33 +213,7 @@ function dcm2bids = cat_conf_dcm2bids(expert)
     };
 
 
-  
-
-
-  % output directory
-  outdir            = cfg_files;
-  outdir.tag        = 'outdir';
-  outdir.name       = 'Output directory';
-  outdir.filter     = 'dir';
-  outdir.ufilter    = '.*';
-  outdir.num        = [1 1];
-  %outdir.val{1}     = {''};
-  outdir.help       = {[ ...
-    'Select a directory where files are written to. ' ...
-    'The batch will create a protocoll-conform and a non-conform BIDS structure, and a (temporary) subdirectory with converted NIFTI/JSON data. ' ...
-    'It will also create a subdirectory with used MR protocols and final reports. ']};
-
-  subdir            = cfg_entry;
-  subdir.tag        = 'subdir';
-  subdir.name       = 'Project Name';
-  subdir.strtype    = 's';
-  subdir.num        = [0 Inf];
-  subdir.val        = {'CATBIDS'};
-  subdir.help       = {
-    'The directory is created within the choosen output directory. If no name is given no subdirecty is created. ' ''};
-
-
-  % === not implemented yet ===
+    % === not implemented yet ===
   ProtocolFileName         = cfg_menu;
   ProtocolFileName.tag     = 'ProtocolFileName';
   ProtocolFileName.name    = 'Use Fitting Protocol Filter File Name';
@@ -277,33 +286,33 @@ function dcm2bids = cat_conf_dcm2bids(expert)
     'Overview + BIDS of Known Protocols/Studies (2)', ...
     'Overview + BIDS of All Protocols/Studies (3)'};
   output.values    = {0,1,2,3};
-  output.val       = {1};
+  output.val       = {2};
   output.help      = {
-   ['Use option 0 to get an overview of (a subset) of your data with DICOM ' ...
-    'convertion but without further processing and BIDS output. The reported ' ...
-    'protocols can then be used to define ones own protocol filter sets. '] 
+   ['Use option 0 to get an overview of (a subset) of your DICOM data that ' ...
+    'import the data into but without further processing and BIDS output. ' ...
+    'The reported protocols can then be used to define ones own protocol filter sets. '] 
     'Option 1 and 2 allows then prepare the BIDS data for the given protocol sets. '
     ''
     };
-
-  % avoid BIDS field
-  
 
   % anonymize .. always required !
   anonymize         = cfg_menu;
   anonymize.tag     = 'anonymize';
   if expert
     anonymize.name    = 'Anonymization level (expert)';
-    anonymize.labels  = {'No','Yes - basic','Yes - extensive'};
-    anonymize.values  = {0,1,2};
+    anonymize.labels  = {'No','Yes - basic','Yes - extensive','Yes - extreme'}; 
+    anonymize.values  = {0,1,2,3};
   else
     anonymize.name    = 'Anonymization level';
     anonymize.labels  = {'Basic','Extensive'};
     anonymize.values  = {1,2};
   end
   anonymize.val     = {1};
-  anonymize.hidden  = expert<0;
   anonymize.help    = {'Strength of the anonymization of DICOM header and image information. '};
+ 
+  % avoid BIDS field
+  %%%%%%%%  
+
 
   % optimize .. denoise, bias-corrected, realign?-BB? ...
   % ... we are not doing this yet
@@ -312,7 +321,11 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   % ... not yet, but for instance full packages "SPM-CAT-diff-..."
 
   % QC .. create derivatives directory with BIDS structure and write their the QC values as JSON
-  
+ 
+
+
+  % main fields
+  % =======================================================================
   dicts            = cfg_branch;
   dicts.tag        = 'dicts';
   dicts.name       = 'Dictonary files';
@@ -325,24 +338,28 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   opts.val        = {ProtocolFileName, studies, deltemp, anonymize, gzipi, gzipe, verbose, output, subIDform};
   opts.help       = {'Parameters to control the selection of input files. '}; 
 
-  % main field
+
+  % batch
+  % =======================================================================
   dcm2bids        = cfg_exbranch;
   dcm2bids.tag    = 'dcm2bids';
   dcm2bids.name   = 'DICOM2BIDS';
   dcm2bids.prog   = @cat_io_dcm2bids;
-  %dcm2bids.vout   = @vout_io_dcm2nii;
+  %dcm2bids.vout   = @vout_io_dcm2nii; % not ready yet
   dcm2bids.val    = {datadir, outdir, subdir, dicts, opts}; 
-  dcm2bids.help   = {[ ...
-   ['Convert DICOM via dcm2niix into NIFTI with JSON sidecar. ' ...
-    'Reorganize the converted data into BIDS and filter for given protocols specified by JSON files. ' ...
-    'Select your consensus protocols (eg. DZPG) or extract available protocols from your DICOMs and ' ...
-    'define your own default protocol set(s) by using the output option 0 that stopts after DICOM import. '] ...
-    'For data quality control basic image quality measures are extracted that can be used to define protocol-' ...
-    'specific ranges to create ratings that can simply be averaged.' 
-    ]}; 
+  dcm2bids.help   = { ...
+   ['This batch uses DCM2NIIX to convert DICOM into NIFTI images with JSON sidecars. ' ...
+    'It stores the converted data and reorganize the output in BIDS. ' ...
+    'It allows to filter for specific MRI protocols within a directory that outline relevant MR parameters within a JSON file. '] 
+    ''
+   ['Please check out the CAT subdirectory DCM2BIDS/DZPG3T for an example, that include the definition for ' ...
+    'structural, functional, and diffusion scans used by the DZPG (German Center for Mental Health, https://www.dzpg.org/). ']
+    ''
+    'The batch also applies the SPM anonymization routine and runs a basic image quality control. ' ...
+    }; 
 end
 function cdep = vout_io_dcm2nii
-% connect to BIDS2PP batch
+% connect to BIDS2PP batch ( NOT READY YET )
   cdep = cfg_dep;
 
   cdep(end).sname      = 'conform BIDS';
