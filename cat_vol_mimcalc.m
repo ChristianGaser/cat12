@@ -127,7 +127,7 @@ function out = cat_vol_mimcalc(job)
   else
     out.Pname = {};
   end
-
+  
   % spm banner
   if job.verb
     spm_progress_bar('Clear')

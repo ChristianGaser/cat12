@@ -245,6 +245,16 @@ else
     if length(style)>3, style=double(style(1:3)); end
   end
   % #### end extended styles ####
+
+  if exist('cprintf','file')
+    if nargin>2
+      cprintf(style,format,varargin{:});
+    else
+      cprintf(style,format);
+    end
+    return
+  end
+  
   if isa(style,'string'), style = char(style); end
   if all(ishandle(style)) && length(style)~=3
       dumpElement(style);

@@ -1,0 +1,22 @@
+[
+  {
+    "DeviceSerialNumber":           "000815",
+    "InstitutionAbbreviation":      "Site01",
+    "InstitutionName":              "Hospital",
+    "InstitutionalDepartmentName":  "Neurologie",
+    "InstitutionAddress":           "Street,City,Country,Post",
+    "MagneticFieldStrength":        3,
+    "Manufacturer":                 "Siemens",
+    "ManufacturersModelName":       "Prisma"
+  },
+  {
+    "DeviceSerialNumber":           "000816",
+    "InstitutionAbbreviation":      "Site02",
+    "InstitutionName":              "Hospital",
+    "InstitutionalDepartmentName":  "Neurologie",
+    "InstitutionAddress":           "Street,City,Country,Post",
+    "MagneticFieldStrength":        7,
+    "Manufacturer":                 "Siemens",
+    "ManufacturersModelName":       "7TPlus"
+  }
+]

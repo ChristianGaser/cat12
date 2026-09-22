@@ -92,7 +92,7 @@ switch bartype
               end
               %}
 
-              if nargin > 1 
+              if nargin > 1 && ~isempty(varargin{2})
                 arg2 = varargin{2};
                 if ~strcmp(bartype,'bar') && arg2(end)~=':'
                   arg2(end+1) = ':'; 
