@@ -78,15 +78,23 @@ function varargout = cat_surf_surf2roi(job)
     %% load atlas map
     %  load the cdata that describe the ROIs of each hemisphere and
     %  read the ROIs IDs and names from the csv or annot files
-    rinfo = cat_surf_info(job.rdata{ri},0); 
-    
+    rinfo = cat_surf_info(job.rdata{ri},0);
+
+    % skip atlas maps whose lh or rh file is missing (e.g. wrong CAT path in the defaults)
+    Prdata_rh = char(cat_surf_rename(job.rdata{ri},'side','rh'));
+    if ~exist(job.rdata{ri},'file') || ~exist(Prdata_rh,'file')
+      cat_io_cprintf('warn',sprintf(['\n  Surface atlas file "%s" or "%s" not found. ' ...
+        'Skip surface ROI estimation for this atlas.\n'],job.rdata{ri},Prdata_rh));
+      continue
+    end
+
     switch rinfo.ee
       case '.annot'
         % FreeSurfer annotation files
         [vertices, lrdata, colortable, lrcsv] = cat_io_FreeSurfer('read_annotation',job.rdata{ri});
-        [vertices, rrdata, colortable, rrcsv] = cat_io_FreeSurfer('read_annotation',char(cat_surf_rename(job.rdata{ri},'side','rh')));
+        [vertices, rrdata, colortable, rrcsv] = cat_io_FreeSurfer('read_annotation',Prdata_rh);
         clear vertices colortable;
-      case 'gii'
+      case '.gii'
         % gifti and csv-files
         lrdata = gifti(job.rdata{ri});
         rrdata = gifti(char(cat_surf_rename(rinfo,'side','rh'))); 

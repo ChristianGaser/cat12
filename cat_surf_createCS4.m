@@ -285,7 +285,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         'NVBC',~iscerebellum, 'denoise',~iscerebellum, 'wmnoise', opt.wmnoise)); 
       Vppm = Vmfs; Vppm.fname = P(si).Pppm; spm_write_vol(Vppm, Yppi);
     else 
-      cmd = sprintf('CAT_VolThicknessPbt  -range 0.45  -correct-voxelsize 0  "%s" "%s" "%s"', Vmfs.fname, P(si).Pgmt, P(si).Pppm);
+      cmd = sprintf('CAT_VolThicknessPbt  -range 0.45  -correct-thickness 0  "%s" "%s" "%s"', Vmfs.fname, P(si).Pgmt, P(si).Pppm);
       cat_system(cmd,3);
       Vgmt  = spm_vol(P(si).Pgmt); Yth1i = spm_read_vols(Vgmt); 
       % correction of general offset in mm 
@@ -455,11 +455,11 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
 
         if iscerebellum
           % RD202603: just as quick placeholder ...
-          cmd = sprintf('CAT_VolMarchingCubes -verbose "%s" "%s"  -thresh "%0.4f" -iter 1 -median-filter "%d"',  ...
+          cmd = sprintf('CAT_VolMarchingCubes -strength-sulci 1 -verbose "%s" "%s"  -thresh "%0.4f" -iter 1 -median-filter "%d"',  ...
             Vppmi.fname, P(si).Pcentral, gycon, 0); %#ok<NASGU>
           txt = evalc('cat_system(cmd ,3)');
         else
-          cmd = sprintf('CAT_VolMarchingCubes  -verbose "%s" "%s"  -thresh "%0.4f" -iter %d -label "%s" -median-filter "%d"',  ...
+          cmd = sprintf('CAT_VolMarchingCubes  -strength-sulci 1 -verbose "%s" "%s"  -thresh "%0.4f" -iter %d -label "%s" -median-filter "%d"',  ...
             Vppmi.fname, P(si).Pcentral, gycon, 1+final, Vp0.fname, min(1,floor( .5 / opt.interpV ) )); %#ok<NASGU>
           txt = evalc('cat_system(cmd ,3)'); 
         end
@@ -714,24 +714,26 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
             % this function refines the surface
             Vp0 = Vmfs; Vp0.fname = spm_file(P(si).Pp0,'suffix','_tmp'); 
             spm_write_vol(Vp0, Yp0fs);
-            cmd = sprintf('CAT_Surf2PialWhite "%s" "%s" "%s" "%s" "%s"', ...
+            cmd = sprintf('CAT_Surf2PialWhite -remove_intersect "%s" "%s" "%s" "%s" "%s"', ...
               P(si).Pcentral, P(si).Pthick, Vp0.fname, P(si).Ppial, P(si).Pwhite);
             cat_system(cmd,opt.verb-3);
             delete(Vp0.fname); 
           end
           CSw1 = loadSurf(P(si).Pwhite);
           CSp1 = loadSurf(P(si).Ppial);
-     
-          % (3) mix simple and refined boundary surfaces
-          %     0 .. 1 - mixing value from simple to enhanced boundary reconstruction
-          %              The simple version often has good intensity/position values
-          %              but also many (small) self-intersections. 
-          mix = .5; %.5; 
-          CSw0.vertices = CSw0.vertices.*(1-mix) + mix.*CSw1.vertices;
-          CSp0.vertices = CSp0.vertices.*(1-mix) + mix.*CSp1.vertices;
           
-          saveSurf(CSw0,P(si).Pwhite); 
-          saveSurf(CSp0,P(si).Ppial); 
+          if 0 % not useful anymore since CAT_Surf2PialWhite was improved
+            % (3) mix simple and refined boundary surfaces
+            %     0 .. 1 - mixing value from simple to enhanced boundary reconstruction
+            %              The simple version often has good intensity/position values
+            %              but also many (small) self-intersections. 
+            mix = .5; %.5; 
+            CSw0.vertices = CSw0.vertices.*(1-mix) + mix.*CSw1.vertices;
+            CSp0.vertices = CSp0.vertices.*(1-mix) + mix.*CSp1.vertices;
+            
+            saveSurf(CSw0,P(si).Pwhite); 
+            saveSurf(CSp0,P(si).Ppial); 
+          end
         end
 
       else % if 2 (refine but do not update thickness) or 3 (refine and update)
@@ -743,7 +745,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         facevertexcdatafs = min(6,max(eps, cat_surf_fun('isocolors',Yth1i,CS.vertices,Smat.matlabIBB_mm))); 
         cat_io_FreeSurfer('write_surf_data', P(si).Pthick, facevertexcdatafs);
         spm_write_vol(Vmfs, Yp0fs);
-        cmd = sprintf('CAT_Surf2PialWhite "%s" "%s" "%s" "%s" "%s"', ...
+        cmd = sprintf('CAT_Surf2PialWhite -remove_intersect "%s" "%s" "%s" "%s" "%s"', ...
           P(si).Pcentral, P(si).Pthick, Vp0.fname, P(si).Ppial, P(si).Pwhite);
         cat_system(cmd,opt.verb-3); 
         delete(Vp0.fname); 
@@ -1283,7 +1285,7 @@ function Yp0 = myelincorrection(Yp0,vx_vol,opt,P,Vmfs,si,quick)
     % alternative save but slow version (45s)
     %[Vmfs,Smat] = createOutputFileStructures(V,V0,resI,BB,opt,mridir,ff,si); 
     Vmfs.dt = [16 1]; spm_write_vol(Vmfs, Yp0 );
-    cmd = sprintf('CAT_VolThicknessPbt  -correct-voxelsize 0   -median-filter 2   -downsample 0 "%s" "%s" "%s"', Vmfs.fname, P(si).Pgmt, P(si).Pppm);
+    cmd = sprintf('CAT_VolThicknessPbt  -correct-thickness 0   -median-filter 2   -downsample 0 "%s" "%s" "%s"', Vmfs.fname, P(si).Pgmt, P(si).Pppm);
     cat_system(cmd,opt.verb-3);
     Vgmt0  = spm_vol(P(si).Pgmt); Ygmt0 = spm_read_vols(Vgmt0); 
     Ygmt0  = max(0,Ygmt0 - 0.56*mean(opt.interpV) ); 
