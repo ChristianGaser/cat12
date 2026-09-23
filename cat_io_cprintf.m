@@ -248,7 +248,9 @@ else
 
   if exist('cprintf','file')
     if nargin>2
+      warning off
       cprintf(style,format,varargin{:});
+      warning on
     else
       cprintf(style,format);
     end
