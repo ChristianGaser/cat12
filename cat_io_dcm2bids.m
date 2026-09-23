@@ -14,6 +14,29 @@ function cat_io_dcm2bids(job)
 % quality control. 
 %
 
+% RECENT BUGS: 
+%  * better organization of DB and report directories 
+%     - private/db...
+%     - reports/
+%     - protocols/
+%     - .....
+%     * add readme files in all created directories!
+% 
+%     
+%  * try to replace incorrectly introduced German letters
+%  * Improve DCM2NII message
+%  * add simpler test-protocols rather then the DZPG things
+%  * BUG: 
+%     - use minimum age for participant.tsv - (min)age
+%     - use real age in time-point file
+%  * more precise QM values %0.2f
+%  * BUG: 
+%     - sites with different entries > cell rather then struct !
+%  * BUG: 
+%     - no acquisition duration in standard protocols !
+%  * BUG: 
+%     - nii BIDS export issue
+% 
 
 % DEVELOPMENT DOCUMENTATION 
 % =========================================================================
@@ -154,13 +177,14 @@ function cat_io_dcm2bids(job)
   def.data                  = {};    % input DCM directories (add JSON/NII input later)
   def.outdir                = {pwd}; % main output directory
   def.subdir                = 'CATDCM2NII'; % default
+  def.BIDSdir               = 'BIDS';
   
-  def.dicts.Pprotocoldirs   = {};    % input DCM protocol directories
+  def.dicts.Ptbldirs        = {};    % input DCM protocol directories
   def.dicts.Pcenterdict     = {};    % dictionary for center names (otherwise scanner ID)
   def.dicts.Pstudydict      = {};    % not implemented yet
   def.dicts.Psubjdict       = {};    % not implemented yet
 
-  def.opts.ProtocolFileName = 1;     % replace protocol name by the filenames of the evaluation protocols under Pprotocoldirs 
+  def.opts.ProtocolFileName = 1;     % replace protocol name by the filenames of the evaluation protocols under Ptbldirs 
   def.opts.gzipi            = 1;     % internal use of nii.gz (save disk space but maybe a bit slower) 
   def.opts.gzipe            = 1;     % external use of nii.gz (save disk space but nonoptimal for SPM processing)
   def.opts.tolerance        = 0;     % tolerance in percent for MR parameters (does not help for ordinal variables)
@@ -178,6 +202,11 @@ function cat_io_dcm2bids(job)
   def.opts.hrrealign        = 0;     % highres-realignment for further use
   def.opts.rerun            = 0;     % rerun - overwrite existing
   def.opts.tableformat      = 'csv'; % csv/tsv 
+  def.opts.longDBnames      = 1; 
+  def.opts.checkgzipi       = 1; 
+  def.opts.runqc            = 1; 
+  def.opts.segment          = 0; 
+  def.opts.denoise          = 0;
   
   if ~exist('job','var'), job = struct(); end
   job = cat_io_checkinopt(job,def); 
@@ -197,7 +226,6 @@ function cat_io_dcm2bids(job)
     tol          = 1; 
   else
     Pdcmdir      = job.data;
-    %Pprodictdirs = job.dicts.Pprotocoldirs;
     Pcenterdict  = job.dicts.Pcenterdict;
     Pprodictdirs = job.dicts.Pprotocoldirs;
     %Pstudydict   = job.dicts.Pstudydict;
@@ -207,17 +235,35 @@ function cat_io_dcm2bids(job)
   end
   if ~exist(Poutdir,'dir'), mkdir(Poutdir); end
 
-  Pdbdirnam = 'catDCM2NIIdb';
-  Popts = fullfile(Poutdir,Pdbdirnam,'catdcm2bids.mat');
-  if ~checkPreviousSetting(Popts,job), return; end
-  checkGzipi(fullfile(Poutdir,Pdbdirnam),job.opts.gzipi); 
-  clear Popts; 
+
+  % main DB directory
+  Pdbdirnam = 'catDCM2NIIdb'; 
+
+  % check the gzip-status of the database
+  % e.g. in case of user interruptions in previous imports
+  checkGzipi(fullfile(Poutdir,Pdbdirnam), job.opts.gzipi, job.opts.checkgzipi); 
+
+
+  % check BIDS output settings
+  if job.opts.output > 0
+    for pdi = 1:numel(Pprodictdirs)
+      Popts = fullfile(Poutdir,job.BIDSdir,spm_file(Pprodictdirs{pdi},'basename'),[Pdbdirnam '.mat']);
+      [same, job] = checkPreviousSetting(Popts,job);
+      if ~same, return; end 
+      clear Popts; 
+    end
+  end
+  
 
   % read site-names and protocol definitions
   sites     = getSites(Pcenterdict);
+  protocols = getProtocols(Pprodictdirs);  
   %studies   = getStudies(Pstudydict);  %%%%%%%%%%%%
   %subj      = getSubjects(Psubjdict);  %%%%%%%%%%%%
-  protocols = getProtocols(Pprodictdirs);  
+ 
+
+  %%%%% special case of the internal database directories: DCM2NIIX case
+
 
   % get all sub-directories
   Pdcmdirs = {}; Pdcmdirs0 = {};
@@ -228,29 +274,16 @@ function cat_io_dcm2bids(job)
     Pdcmdirs   = [Pdcmdirs;  Pdcmdirsdi]; %#ok<AGROW>
     Pdcmdirs0  = [Pdcmdirs0; repmat(Pdcmdir(di),size(Pdcmdirsdi))]; %#ok<AGROW>
   end
-  
-  %%%%% special case of the internal database directories: DCM2NIIX case
+
   % DB subdirs
-  Pdatadir     = fullfile(Poutdir,Pdbdirnam,'+data'); 
-  Pprotocoldir = fullfile(Poutdir,Pdbdirnam,'+protocols'); 
+  Pmdbdir = fullfile(Poutdir,Pdbdirnam); 
+  Ptbldir = fullfile(Poutdir,[Pdbdirnam '-tables']); 
+  if ~exist(Pmdbdir,'dir'), mkdir(Pmdbdir); end
+  if ~exist(fullfile(Ptbldir,'protocols'),'dir'), mkdir(fullfile(Ptbldir,'protocols')); end
+
   
-  if ~exist(Pdatadir,'dir'),     mkdir(Pdatadir); end
-  if ~exist(Pprotocoldir,'dir'), mkdir(Pprotocoldir); end
-
-  % DB lists 
-  %Pscantable     = spm_file(fullfile(Pdatadir,'scans'),'ext',job.opts.tableformat); % useless
-  %Psessiontable  = spm_file(fullfile(Pdatadir,'sessions'),'ext',job.opts.tableformat); %useless
-  Pstudytable    = spm_file(fullfile(Pdatadir,'studies'),'ext',job.opts.tableformat); 
-  Psubjecttable  = spm_file(fullfile(Pdatadir,'subjects'),'ext',job.opts.tableformat); 
-  Pprotocoltable = spm_file(fullfile(Pprotocoldir,'protocols'),'ext',job.opts.tableformat); 
-
-
- 
-    
-
-
   %% basic initialization that might have to be extended
-  Vjson = cell(1,numel(Pdcmdirs)); jsoni = 0;
+  Vjson = cell(1,numel(Pdcmdirs)); sci = 0;
   sub = Vjson; ses = Vjson; datatype = Vjson; pro = Vjson; acq = Vjson; 
   run = Vjson; task = Vjson; suffix = Vjson; site = Vjson; 
   Panon = Vjson; Pp0 = Vjson; Pwc1 = Vjson; Pdbdir = Vjson;
@@ -258,11 +291,11 @@ function cat_io_dcm2bids(job)
   BIDSpath = Vjson; BIDSdir = Vjson; BIDSfile = Vjson;
   PID = ''; sni = 0; stime = datetime('now'); 
   QM = struct('NSR',[],'ISR',[],'RES',[],'BSM',[],'WSM',[],'vx_vol',[],'SQR',[]); 
-  for fi = 1:numel(Pdcmdirs)
+  for fdiri = 1:numel(Pdcmdirs)
     
     % Convert DCM: 
     % =====================================================================
-    Pdirfi = dcm2niix( Pdcmdirs{fi} , Poutdir, job.opts.Pdcm2nii, job.opts.gzipi, job.opts.rerun); 
+    Pdirfi = dcm2niix( Pdcmdirs{fdiri} , Pmdbdir, job.opts.Pdcm2nii, job.opts.gzipi, job.opts.rerun); 
 %%%%% else gzip or gunzip depending all files
 %%%%% special case of the internal database directories: DCM2NIIX case
 
@@ -272,57 +305,58 @@ function cat_io_dcm2bids(job)
     if job.opts.gzipi, niiext = '.nii.gz'; else, niiext = '.nii'; end
     Pjson  = cat_vol_findfiles(Pdirfi,'*.json',struct('depth',1));
     Pnii   = spm_file(Pjson,'ext',niiext); 
-    for fj = 1:numel(Pnii) % for every scan
-      jsoni = jsoni + 1;
-  
+    for fscni = 1:numel(Pnii) % for every scan
+      sci = sci + 1;
 
       % get nii2dcm information 
-      Vjson{jsoni} = cat_io_json(Pjson{fj});
-      if isfield( Vjson{jsoni} , 'ImageTypeText')
-        Vjson{jsoni}.ImageType = unique([Vjson{jsoni}.ImageType; Vjson{jsoni}.ImageTypeText ]); 
+      Vjson{sci} = cat_io_json(Pjson{fscni});
+      if isfield( Vjson{sci} , 'ImageTypeText')
+        Vjson{sci}.ImageType = unique([Vjson{sci}.ImageType; Vjson{sci}.ImageTypeText ]); 
       end
-      Vjson{jsoni} = assurePatientDCMfields(Vjson{jsoni});
-      fnameparts   = strsplit(spm_file(Pjson{fj},'basename'),'='); 
-      Vjson{jsoni}.ProtocolName = fnameparts{2};
+      Vjson{sci} = assurePatientDCMfields(Vjson{sci});
+      fnameparts = strsplit(spm_file(Pjson{fscni},'basename'),'='); 
+      Vjson{sci}.ProtocolName = fnameparts{2};
 
       % ignore localizer and scout scans
       if any(cat_io_contains(lower(fnameparts),{'localizer','scout'}))
         continue; 
       end
       % ignore 2D data
-      if exist(Pnii{fj},'file')
-        Vsz = dir(Pnii{fj});
+      if exist(Pnii{fscni},'file')
+        Vsz = dir(Pnii{fscni});
         if isempty(Vsz) || ~isfield(Vsz,'bytes'), continue; end
         if Vsz.bytes/1024 < 1000 
-          evalc('V = spm_vol(Pnii{fj});'); 
+          evalc('V = spm_vol(Pnii{fjson});'); 
           if numel(V.dim)>2 && any(V.dim < 2), continue; end
         end
       end
 
       % create table header
-      if ~strcmp(PID, Vjson{jsoni}.PatientID)
+      if ~strcmp(PID, Vjson{sci}.PatientID)
         sni = sni + 1;
 
-        if jsoni>1
+        if sci>1
           fprintf('%s\n',repmat('-',1,154)); 
           fprintf('%154s\n',['duration: ' char(duration(datetime('now') - stime))]); 
           stime = datetime('now'); 
         end
 
         cat_io_cprintf([0 0.2 .8],'\n%-45s',sprintf('%4d) %s', sni, ...
-          spm_str_manip(sprintf('sub-%s-%s',Vjson{jsoni}.DeviceSerialNumber, ...
-            strrep(Vjson{jsoni}.PatientID,'_','')),'a38')));
+          spm_str_manip(sprintf('sub-%s-%s',Vjson{sci}.DeviceSerialNumber, ...
+            strrep(Vjson{sci}.PatientID,'_','')),'a38')));
         if job.opts.output
           if isempty(Pprodictdirs) || isempty(Pprodictdirs{1})
-            fprintf('%-15s : %-50s%10s %5s%5s%5s%5s%5s%5s\n','dicom-protocol', ...
+            fprintf('%15s : %-50s%10s %5s%5s%5s%5s%5s%5s\n','dicom-protocol', ...
               ' ',' ','BSM','WSM','ISR','NSR','RES','SQR'); 
           else
-            fprintf('%-15s : %-50s%10s %5s%5s%5s%5s%5s%5s\n','dicom-protocol', ...
-              'matching-protocol','dismatch','BSM','WSM','ISR','NSR','RES','SQR'); 
+            fprintf('%15s : %-50s%10s %5s%5s%5s%5s%5s%5s\n','dicom-protocol', ...
+              'matching-protocol','mismatch','BSM','WSM','ISR','NSR','RES','SQR'); 
           end
+        else
+          fprintf('%15s : %-50s\n','dicom-protocol','matching-protocol'); 
         end
         fprintf('%s\n',repmat('-',1,154)); 
-        PID = Vjson{jsoni}.PatientID; 
+        PID = Vjson{sci}.PatientID; 
       end
 
 
@@ -341,149 +375,18 @@ function cat_io_dcm2bids(job)
       %   and series-number. It might be possible to extend the IDs by 
       %   name, date, protocol for human readability but let's start simple.
       % ===================================================================
-      
-      Pdbdir{jsoni} = fullfile( ...
-        sprintf('sub-%s',   Vjson{jsoni}.PatientID), ...
-        sprintf('ses-%s',   Vjson{jsoni}.StudyID), ...
-        sprintf('snr-%03d', Vjson{jsoni}.SeriesNumber)); 
+      [Pdbdirpath{sci},Pdbdir{sci}] = importScan( ...
+        Vjson{sci}, Pjson{fscni}, Pnii{fscni}, Pdcmdirs{fdiri}, ... 
+        Pmdbdir, Ptbldir, fnameparts, niiext, job.opts );
 
-      % update 
-      Pdbdirpath{jsoni} = fullfile(Poutdir,Pdbdirnam, Pdbdir{jsoni}); 
-      if ~exist( spm_file(Pnii{fj},'path',Pdbdirpath{jsoni}), 'file') && ~exist(Pnii{fj},'file')
-        dcm2niix( Pdcmdirs{fi} , Poutdir, job.opts.Pdcm2nii, job.opts.gzipi, 1); 
-        continue
-      end
-      Pconvj = spm_file(Pjson{fj},'path', Pdbdirpath{jsoni}); 
-      if exist(Pconvj,'file'), Pjson{fj} = Pconvj; end
-      Pconvn = spm_file(Pjson{fj},'ext',niiext,'path', Pdbdirpath{jsoni}); 
-      if exist(Pconvn,'file'), Pjson{fj} = Pconvn; end
-      ProcedureStepDescription = getFileString(Vjson{jsoni}.ProcedureStepDescription);
-
-      % SCAN-LIST:
-      %  - to avoid double entries ... but what to do ...
-      %  - a flag (keep old / take new)
-%%%%%%%  * this grows too strong >> internal variable + mat     
-      if 0
-        Thdr    = {'SeriesInstanceUID','DBpath'}; %,'IMPORTpath'}; 
-        Tnewrow = {Vjson{jsoni}.SeriesInstanceUID, Pdbdir{jsoni}}; %, Pjson{fj}}; 
-        updateTable(Pscantable,Thdr,Tnewrow,1,job.opts.rerun);
-      end
-
-      % SESSION-LIST:
-      %  - to avoid double entries ... but what to do ...
-      %  - a flag (keep old / take new)
-%%%%%%%  * this one is usesless      
-      if 0
-        Thdr    = {'StudyInstanceUID','DBpath','ProcedureStepDescription'}; %,'IMPORTpath'}; 
-        Tnewrow = {Vjson{jsoni}.StudyInstanceUID, spm_fileparts(Pdbdir{jsoni}), Vjson{jsoni}.ProcedureStepDescription}; %, Pjson{fj}}; 
-        updateTable(Psessiontable,Thdr,Tnewrow,1,job.opts.rerun);
-      end
-
-      % SUBJECT-LIST ("constant" data):
-%%%%%%%  * this one is nice but a session counter would be nice 
-%%%%%%%  * maybe the scan period 
-%%%%%%%  * import path (not robust :/)
-      Thdr    = {'PatientID','PatientName', 'PatientSex','PatientBirthDate'}; 
-      Tnewrow = {Vjson{jsoni}.PatientID, Vjson{jsoni}.PatientName, ...
-                 Vjson{jsoni}.PatientSex, Vjson{jsoni}.PatientBirthDate}; 
-      updateTable(Psubjecttable,Thdr,Tnewrow,1,job.opts.rerun);
-      
-      % STUDY-LIST (defined by ProcedureStepDescription with additional list of subjects):
-      % - ProcedureStepDescription with subjects
-      Pstudysubtable = spm_file(fullfile(Pdatadir,'study_subject_lists',ProcedureStepDescription),'ext',job.opts.tableformat); 
-      Thdr    = {'Subjects'}; 
-      Tnewrow = {Vjson{jsoni}.PatientID}; 
-      nsub    = updateTable(Pstudysubtable,Thdr,Tnewrow,1,job.opts.rerun);
-      % - study-list with number of subjects
-      Thdr    = {'ProcedureStepDescription','nSubjects'}; 
-      Tnewrow = {ProcedureStepDescription,nsub}; 
-      updateTable(Pstudytable,Thdr,Tnewrow,1,job.opts.rerun);
-% with counters for anat, func, fmap, dwi ?      
-      
-      % PROTOCOLS-LIST:
-      datatype0         = setupDatatype(Vjson{jsoni}.ProtocolName); 
-      ProtocolName      = getFileString(strrep(fnameparts{2},'_','-'));
-      %Pprotocolsubtable = spm_file(fullfile(Pprotocoldir,ProcedureStepDescription,datatype0,ProtocolName),'ext',job.opts.tableformat); 
-      Pprotocolsubtable = spm_file(fullfile(Pprotocoldir,datatype0,ProtocolName),'ext',job.opts.tableformat); 
-
-      % save shorted protocol as json to be used as filter
-      Vjson0 = cleanupVjson(Vjson{jsoni},'protocol'); 
-      Pjson0 = spm_file( Pprotocolsubtable,'ext','.json'); 
-      ProtocolName0 = ProtocolName; 
-      if ~exist(Pjson0,'file')
-        cat_io_json( Pjson0, Vjson0); 
-      else
-        %Pjsons = cat_vol_findfiles( fullfile(Pprotocoldir,ProcedureStepDescription,datatype0)  , '*.json');
-        Pjsons = cat_vol_findfiles( fullfile(Pprotocoldir,datatype0)  , '*.json');
-        Pfit = false(size(Pjsons)); 
-        for pi = 1:numel(Pjsons)
-          Vjson1 = cat_io_json( Pjsons{pi} ); 
-          Pfit(pi) = structEqual(Vjson0,Vjson1); 
-        end
-        if ~any( Pfit )
-          ci = 0;
-          while exist(Pjson0,'file')
-            ci = ci+1;
-            Pjson0 = spm_file(Pprotocolsubtable,'suffix',sprintf('_%d',ci),'ext','.json'); 
-            ProtocolName0 = spm_file(ProtocolName,'suffix',sprintf('_%d',ci)); 
-          end
-          cat_io_json( Pjson0, Vjson0); 
-        end
-      end
-      Thdr    = {'Subjects'}; 
-      Tnewrow = {Vjson{jsoni}.PatientID}; 
-      nsub    = updateTable(Pprotocolsubtable,Thdr,Tnewrow,1,job.opts.rerun);
-
-      % - study-list with number of subjects
-      Thdr    = {'ProtocolName','nSubjects','ProcedureStepDescription', ...
-                 'MRAcquisitionType','ScanningSequence', 'SequenceVariant', ...
-                 'RepetitionTime', 'EchoTime', ...
-                 'FlipAngle', 'SliceThickness', 'ImageType'}; 
-      Vjson0 = Vjson{jsoni}; 
-      for fni = 1:numel(Thdr)
-        if ~isfield(Vjson0,Thdr{fni}), Vjson0.(Thdr{fni}) = ''; end
-        if iscell(Vjson0.(Thdr{fni}))
-          Vjson0.(Thdr{fni}) = strjoin(Vjson0.(Thdr{fni})); 
-        end
-      end
-      Tnewrow = {sprintf('%s_%s',datatype0,ProtocolName0),nsub, Vjson0.ProcedureStepDescription, ...
-        Vjson0.MRAcquisitionType, Vjson0.ScanningSequence,  Vjson0.SequenceVariant, ...
-        Vjson0.RepetitionTime, Vjson0.EchoTime, ...
-        Vjson0.FlipAngle, Vjson0.SliceThickness, Vjson0.ImageType}; 
-      updateTable(Pprotocoltable,Thdr,Tnewrow,1,job.opts.rerun);
-
-
-      % import files
-      Pdbdirpath{jsoni} = fullfile(Poutdir,Pdbdirnam, Pdbdir{jsoni}); 
-      if ~exist(Pdbdirpath{jsoni},'dir') || ~exist( spm_file(Pnii{fj},'path',Pdbdirpath{jsoni}), 'file')
-        if ~exist(Pdbdirpath{jsoni},'dir'), mkdir(Pdbdirpath{jsoni}); end
-        ext = {niiext,'.bval','.bvec'};
-        for ei = 1:numel(ext)
-          if exist(spm_file(Pjson{fj},'ext',ext{ei}),'file') 
-            if ~exist( spm_file(Pjson{fj},'ext',ext{ei},'path', Pdbdirpath{jsoni}),'file')
-              movefile( spm_file(Pjson{fj},'ext',ext{ei}) , Pdbdirpath{jsoni} );
-            else
-              delete( spm_file(Pjson{fj},'ext',ext{ei}) );
-            end
-          end
-        end
-        if ~exist( spm_file(Pjson{fj},'path',Pdbdirpath{jsoni}), 'file')
-          copyfile( Pjson{fj} , Pdbdirpath{jsoni} );
-        end
-      end
-
-
-      if job.opts.output == 0
-        continue
-      end
-      Pjson{fj} = spm_file(Pjson{fj},'path', Pdbdirpath{jsoni});
-      Pnii{fj}  = spm_file(Pnii{fj}, 'path', Pdbdirpath{jsoni});
+      Pjson{fscni} = spm_file(Pjson{fscni},'path', Pdbdirpath{sci});
+      Pnii{fscni}  = spm_file(Pnii{fscni}, 'path', Pdbdirpath{sci});
 
       % test protocols
-      [match,pname,dismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson{fj},Vjson{jsoni},protocols,tol,job,sites);
-  
+      [match,pname,mismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson{fscni},Vjson{sci},Ptbldir,protocols,tol,job,sites);
+    
       % site definition 
-      site{jsoni} = setupSites(Vjson{jsoni},sites);
+      site{sci} = setupSites(Vjson{sci},sites);
   
 
       % main BIDS fields (subject, session, datatype, weighting, ...)
@@ -491,64 +394,65 @@ function cat_io_dcm2bids(job)
       % subject
       switch job.opts.subIDform
         case 1 % sub-PID
-          sub{jsoni} = sprintf('sub-%s', strrep(Vjson{jsoni}.PatientID,'_','')); %#ok<*SAGROW>
+          sub{sci} = sprintf('sub-%s', strrep(Vjson{sci}.PatientID,'_','')); %#ok<*SAGROW>
         case 2 % sub-SITE-PID
-          sub{jsoni} = sprintf('sub-%s-%s', site{jsoni}, strrep(Vjson{jsoni}.PatientID,'_','')); %#ok<*SAGROW>
+          sub{sci} = sprintf('sub-%s-%s', site{sci}, strrep(Vjson{sci}.PatientID,'_','')); %#ok<*SAGROW>
       end
 
       % session
       if job.opts.anonymize > 1 % ses-StudyID
-        ses{jsoni}  = sprintf('ses-%s',Vjson{jsoni}.StudyID);
+        ses{sci}  = sprintf('ses-%s',Vjson{sci}.StudyID);
       else % ses-date
-        ses{jsoni}  = sprintf('ses-%s',fnameparts{3}(1:min(8,numel(fnameparts{3}))));
+        ses{sci}  = sprintf('ses-%s',fnameparts{3}(1:min(8,numel(fnameparts{3}))));
       end
       if numel(fnameparts{3}) > 8  &&  job.opts.anonymize==0
-        ses{jsoni}  = sprintf('%s-%s',ses{jsoni},fnameparts{3}(9:end)); 
+        ses{sci}  = sprintf('%s-%s',ses{sci},fnameparts{3}(9:end)); 
       end
 
       % protocol directory 
+      
       if match
-        BIDSsubdir  = sprintf('BIDS-%s',spm_file(protocols{match,1},'basename'));
-        pro{jsoni}  = pname;
+        BIDSsubdir = fullfile(job.BIDSdir,spm_file(protocols{match,1},'basename'));
+        pro{sci}   = pname;
       else
         if isempty(Pprodictdirs) || isempty( Pprodictdirs{1} )
-          BIDSsubdir  = 'BIDS';
-          pro{jsoni}  = strrep(fnameparts{2},'_','-'); 
+          BIDSsubdir  = job.BIDSdir;
+          pro{sci}    = strrep(fnameparts{2},'_','-'); 
         else
-          BIDSsubdir  = 'BIDS-dismatch';
-          pro{jsoni}  = strrep(fnameparts{2},'_','-'); 
+          BIDSsubdir  = fullfile(job.BIDSdir,'mismatch');
+          pro{sci}    = strrep(fnameparts{2},'_','-'); 
         end
       end
 
       % evaluate protocols
-      datatype{jsoni} = setupDatatype(pro{jsoni}); 
-      task{jsoni}     = setupTask(pro{jsoni} );
+      datatype{sci} = setupDatatype(pro{sci}); 
+      task{sci}     = setupTask(pro{sci} );
       % %%%%%%%%%%%%%%%%%%%%%%%%%% refine run definition 
-      run{jsoni}      = sprintf('%03.0f',str2double(Vjson{jsoni}.SeriesNumber)); % fnameparts{4})); 
-      acq{jsoni}      = sprintf('acq-%s-%s', run{jsoni}, pro{jsoni}); 
+      run{sci}      = sprintf('%03.0f',str2double(Vjson{sci}.SeriesNumber)); % fnameparts{4})); 
+      acq{sci}      = sprintf('acq-%s-%s', run{sci}, pro{sci}); 
       % get suffix 
-      [suffix{jsoni},acq{jsoni}] = setupSuffix(datatype{jsoni}, acq{jsoni}, Vjson{jsoni}.SeriesDescription);
+      [suffix{sci},acq{sci}] = setupSuffix(datatype{sci}, acq{sci}, Vjson{sci}.SeriesDescription);
       
 
       % define BIDS naming
       % ===================================================================
-      BIDSdir{jsoni}  = fullfile(sub{jsoni}, ses{jsoni}, datatype{jsoni}); 
-      BIDSpath{jsoni} = fullfile(Poutdir, BIDSsubdir, BIDSdir{jsoni}); 
-      BIDSfile{jsoni} = sprintf('%s_%s_%s%s_%s.json', ...
-        sub{jsoni}, ses{jsoni}, acq{jsoni}, task{jsoni}, suffix{jsoni});
+      BIDSdir{sci}  = fullfile(sub{sci}, ses{sci}, datatype{sci}); 
+      BIDSpath{sci} = fullfile(Poutdir, BIDSsubdir, BIDSdir{sci}); 
+      BIDSfile{sci} = sprintf('%s_%s_%s%s_%s.json', ...
+        sub{sci}, ses{sci}, acq{sci}, task{sci}, suffix{sci});
       if ~match && ~isempty(protocols) && ~isempty(protocols{1})
         for pfi = 1:numel(Pnfailedid)
           %spm_file(char(Pprodictdir{Pnfailedid(pfi)}),'basename');
-          pdir      = fullfile( BIDSpath{jsoni} , 'matchfiles' );
+          pdir      = fullfile( BIDSpath{sci} , 'matchfiles' );
           if ~exist(pdir,'dir'), mkdir(pdir); end
-          acq2      = sprintf('acq-%s-%s', run{jsoni}, pro{jsoni}); 
+          acq2      = sprintf('acq-%s-%s', run{sci}, pro{sci}); 
           BIDSfile2 = sprintf('%s_%s_%s%s_%s.csv', ...
-            sub{jsoni}, ses{jsoni}, acq2, task{jsoni}, suffix{jsoni});
+            sub{sci}, ses{sci}, acq2, task{sci}, suffix{sci});
 
           try
-            cat_io_csv( fullfile( pdir, BIDSfile2) , [{'field','is','should'}; dismatchstr{ Pnfailedid(pfi) }] ); 
+            cat_io_csv( fullfile( pdir, BIDSfile2) , [{'field','current','required'}; mismatchstr{ Pnfailedid(pfi) }] ); 
           catch
-            cat_io_csv( fullfile( pdir, BIDSfile2) , [{'field','is','should'}; {dismatchstr(Pnfailedid(pfi),1),'mlt. values','mlt. values'}] ); 
+            cat_io_csv( fullfile( pdir, BIDSfile2) , [{'field','current','required'}; {mismatchstr(Pnfailedid(pfi),1),'mlt. values','mlt. values'}] ); 
           end
         end
       end
@@ -561,34 +465,31 @@ function cat_io_dcm2bids(job)
 % - anonymizing, basic-preprocessing, QC .. all outputs are  and would have to be packed 
       
       
-      
-      
-
 
       %% (anonymized) input file for internal processing (not zippered!) 
       if job.opts.output > 1
-        Panon{fj} = anomize(Pnii{fj}, job.opts, datatype{jsoni}); 
-      end    
+        Panon{fscni} = anomize(Pnii{fscni}, job.opts, datatype{sci}); 
+        
 
+        %% Basic QC:
+        %  - NSR: Noise to Signal Ratio
+        %  - ISR: Inhomogeneity to Signal Ratio
+        %  - BSM: Between Scan Motion
+        %  - RES: Resolution rating
+        if job.opts.runqc
+          [Prnii{fscni},QM(fscni)] = runQC(spm_file(Panon{fscni}), datatype{sci}, job.opts, Pfname); %#ok<AGROW>
+        end
+        
 
-      %% Basic QC:
-      %  - NSR: Noise to Signal Ratio
-      %  - ISR: Inhomogeneity to Signal Ratio
-      %  - BSM: Between Scan Motion
-      %  - RES: Resolution rating
-      if job.opts.output > 1
-        [Prnii{fj},QM(fj)] = runQC(spm_file(Panon{fj}), datatype{jsoni}, job.opts, Pfname); 
+        %% Basic preprocessing 
+        % segment anatomical scan ... what to do otherwise? how to save/fill data?
+        if strcmp(datatype{sci},'anat')
+          [Pm{fscni},Pp0{fscni},Pwc1{fscni}] = segmentanat(Panon{fscni}, datatype{sci}, job.opts); %#ok<AGROW>
+        end
       else
         fprintf('\n');
       end
-
-
-      %% Basic preprocessing 
-      % segment anatomical scan ... what to do otherwise? how to save/fill data?
-      if job.opts.output > 1  &&  strcmp(datatype{jsoni},'anat')
-        [Pm{fj},Pp0{fj},Pwc1{fj}] = segmentanat(Panon{fj}, datatype{jsoni}, job.opts);
-      end
-
+      if job.opts.output == 0, continue; end
 
       
       % write private and participant data
@@ -597,11 +498,10 @@ function cat_io_dcm2bids(job)
       % processing such as the real Patient name and his birth data etc. 
       % It might be saved in another directory to avoid unwanted uploading?
       % ===================================================================
-      writeScanReportTSV(Vjson{jsoni},sub{jsoni},site{jsoni},Poutdir,BIDSsubdir,'report'); %%%%%%%%%%
-      writePrivateTSV(Vjson{jsoni},sub{jsoni},Poutdir,BIDSsubdir,'private')
-      writeParticipantTSV(Vjson{jsoni},sub{jsoni},Poutdir,BIDSsubdir);
+      writeParticipantTSV(Vjson{sci},sub{sci},Poutdir,BIDSsubdir);
+      writeScanReportTSV(Vjson{sci},sub{sci},site{sci},Poutdir,BIDSsubdir,'report'); %%%%%%%%%%
+      writePrivateTSV(Vjson{sci},sub{sci},fullfile(Poutdir,strrep(BIDSsubdir,filesep,['-private' filesep]))); %strrep(BIDSsubdir,filesep,'-'));
     
-
   % TODO: Create time point data file
   % Ptimepoints = fullfile(Poutdir,'timepoints.tsv');
  
@@ -611,14 +511,14 @@ function cat_io_dcm2bids(job)
       % create result dir and copy files
       % ===================================================================
       if job.opts.output > 0
-        if ~exist(BIDSpath{jsoni},'dir'), mkdir(BIDSpath{jsoni}); end
+        if ~exist(BIDSpath{sci},'dir'), mkdir(BIDSpath{sci}); end
         if job.opts.output > 1
           ext = {niiext,'.bval','.bvec'};  
           for ei = 1:numel(ext)
-            if exist( spm_file(Pjson{fj},'ext',ext{ei}) , 'file' )
-              if ~exist(BIDSpath{jsoni},'dir'), mkdir(BIDSpath{jsoni}); end
+            if exist( spm_file(Pjson{fscni},'ext',ext{ei}) , 'file' )
+              if ~exist(BIDSpath{sci},'dir'), mkdir(BIDSpath{sci}); end
   
-              file = spm_file(Pjson{fj},'ext',ext{ei}); 
+              file = spm_file(Pjson{fscni},'ext',ext{ei}); 
               if exist( spm_file(file,'prefix','anon_'),'file')
                 file = spm_file(file,'prefix','anon_'); 
               end
@@ -626,34 +526,34 @@ function cat_io_dcm2bids(job)
               if strcmp(ext{ei},niiext)
               % in case of niftis we try to avoid to copy to save time  
                 if job.opts.gzipe
-                  if ~exist(spm_file( fullfile(BIDSpath{jsoni},BIDSfile{jsoni}),'ext','.nii.gz'),'file')
+                  if ~exist(spm_file( fullfile(BIDSpath{sci},BIDSfile{sci}),'ext','.nii.gz'),'file')
                     if ~job.opts.gzipi
                       gzip( file )
-                      movefile( [file '.gz'], spm_file( fullfile(BIDSpath{jsoni},BIDSfile{jsoni}),'ext','.nii.gz')); 
+                      movefile( [file '.gz'], spm_file( fullfile(BIDSpath{sci},BIDSfile{sci}),'ext','.nii.gz')); 
                     else
-                      copyfile( file, spm_file( fullfile(BIDSpath{jsoni},BIDSfile{jsoni}),'ext','.nii.gz')); 
+                      copyfile( file, spm_file( fullfile(BIDSpath{sci},BIDSfile{sci}),'ext','.nii.gz')); 
                     end
                   end
                 else
-                  if ~exist(spm_file( fullfile(BIDSpath{jsoni},BIDSfile{jsoni}),'ext','.nii'),'file')
+                  if ~exist(spm_file( fullfile(BIDSpath{sci},BIDSfile{sci}),'ext','.nii'),'file')
                     if job.opts.gzipi
                       gunzip( file )
-                      movefile( [file(1:end-3)], spm_file( fullfile(BIDSpath{jsoni},BIDSfile{jsoni}),'ext','.nii')); 
+                      movefile( [file(1:end-3)], spm_file( fullfile(BIDSpath{sci},BIDSfile{sci}),'ext','.nii')); 
                     else
-                      copyfile( file, spm_file( fullfile(BIDSpath{jsoni},BIDSfile{jsoni}),'ext','.nii')); 
+                      copyfile( file, spm_file( fullfile(BIDSpath{sci},BIDSfile{sci}),'ext','.nii')); 
                     end
                   end
                 end
               else
-                copyfile( file, spm_file( fullfile(BIDSpath{jsoni},BIDSfile{jsoni}),'ext',ext{ei})); 
+                copyfile( file, spm_file( fullfile(BIDSpath{sci},BIDSfile{sci}),'ext',ext{ei})); 
               end
             end
           end
         end
 
         % anonymize and save json file
-        Vjson{jsoni} = cleanupVjson(Vjson{jsoni}); %%%%%%%%%%%%%%%%%%%%%%%
-        cat_io_json( spm_file( fullfile(BIDSpath{jsoni},BIDSfile{jsoni}),'ext','.json'), Vjson{jsoni}); 
+        Vjson{sci} = cleanupVjson(Vjson{sci}); %%%%%%%%%%%%%%%%%%%%%%%
+        cat_io_json( spm_file( fullfile(BIDSpath{sci},BIDSfile{sci}),'ext','.json'), Vjson{sci}); 
 
 
         %%%% all protocols
@@ -679,14 +579,165 @@ function cat_io_dcm2bids(job)
   end
 
 end
-function checkGzipi(Pdbdir,gzipi)
-  verb = 1; 
-  if exist(Pdbdir,'dir') 
+% =========================================================================
+function [Pdbdirpath,Pdbdir] = importScan( Vjson, Pjson, Pnii, Pdcmdirs, Pmdbdir, Ptbldir, fnameparts, niiext, opts )
+%
+
+%datetime( Vjson.AcquisitionDateTime , 'Format','yyyyMMdd-hhmmss'))
+
+  % DB lists 
+  Pstudytable    = spm_file(fullfile(Ptbldir,'studies'),  'ext', opts.tableformat); 
+  Psubjecttable  = spm_file(fullfile(Ptbldir,'subjects'), 'ext', opts.tableformat); 
+  Pprotocoltable = spm_file(fullfile(Ptbldir,'protocols'),'ext', opts.tableformat); 
+
+  if opts.longDBnames
+    Pdbdir = fullfile( ...
+      sprintf('sub-%s',      Vjson.PatientID), ...
+      sprintf('ses-%s-%s',   Vjson.StudyID, datetime( Vjson.ScanDate , 'Format','yyyyMMdd')), ...
+      sprintf('snr-%04d-%s', Vjson.SeriesNumber, Vjson.ProtocolName)); 
+  else
+    Pdbdir = fullfile( ...
+      sprintf('sub-%s',   Vjson.PatientID), ...
+      sprintf('ses-%s',   Vjson.StudyID), ...
+      sprintf('snr-%04d', Vjson.SeriesNumber)); 
+  end
+
+  % update 
+  Pdbdirpath = fullfile(Pmdbdir, Pdbdir); 
+  if ~exist( spm_file(Pnii,'path',Pdbdirpath), 'file') && ~exist(Pnii,'file')
+    dcm2niix( Pdcmdirs , Pmdbdir, opts.Pdcm2nii, opts.gzipi, 1); 
+    return
+  end
+  Pconvj = spm_file(Pjson,'path', Pdbdirpath); 
+  if exist(Pconvj,'file'), Pjson = Pconvj; end
+  Pconvn = spm_file(Pjson,'ext',niiext,'path', Pdbdirpath); 
+  if exist(Pconvn,'file'), Pjson = Pconvn; end
+  ProcedureStepDescription = getFileString(Vjson.ProcedureStepDescription);
+
+  % SCAN-LIST:
+  %  - to avoid double entries ... but what to do ...
+  %  - a flag (keep old / take new)
+%%%%%%%  * this grows too strong >> internal variable + mat     
+  if 0
+    Thdr    = {'SeriesInstanceUID','DBpath'}; %,'IMPORTpath'}; 
+    Tnewrow = {Vjson.SeriesInstanceUID, Pdbdir}; %, Pjson}; 
+    updateTable(Pscantable,Thdr,Tnewrow,1,opts.rerun);
+  end
+
+  % SESSION-LIST:
+  %  - to avoid double entries ... but what to do ...
+  %  - a flag (keep old / take new)
+%%%%%%%  * this one is usesless      
+  if 0
+    Thdr    = {'StudyInstanceUID','DBpath','ProcedureStepDescription'}; %,'IMPORTpath'}; 
+    Tnewrow = {Vjson.StudyInstanceUID, spm_fileparts(Pdbdir), Vjson.ProcedureStepDescription}; %, Pjson}; 
+    updateTable(Psessiontable,Thdr,Tnewrow,1,opts.rerun);
+  end
+
+  % SUBJECT-LIST ("constant" data):
+%%%%%%%  * this one is nice but a session counter would be nice 
+%%%%%%%  * maybe the scan period 
+%%%%%%%  * import path (not robust :/)
+  Thdr    = {'PatientID','PatientName', 'PatientSex','PatientBirthDate'}; 
+  Tnewrow = {Vjson.PatientID, Vjson.PatientName, ...
+             Vjson.PatientSex, Vjson.PatientBirthDate}; 
+  updateTable(Psubjecttable,Thdr,Tnewrow,1,opts.rerun);
+  
+  % STUDY-LIST (defined by ProcedureStepDescription with additional list of subjects):
+  % - ProcedureStepDescription with subjects
+  Pstudysubtable = spm_file(fullfile(Ptbldir,'study_subject_lists',ProcedureStepDescription),'ext',opts.tableformat); 
+  Thdr    = {'Subjects'}; 
+  Tnewrow = {Vjson.PatientID}; 
+  nsub    = updateTable(Pstudysubtable,Thdr,Tnewrow,1,opts.rerun);
+  % - study-list with number of subjects
+  Thdr    = {'ProcedureStepDescription','nSubjects'}; 
+  Tnewrow = {ProcedureStepDescription,nsub}; 
+  updateTable(Pstudytable,Thdr,Tnewrow,1,opts.rerun);
+% with counters for anat, func, fmap, dwi ?      
+  
+  % PROTOCOLS-LIST:
+  datatype0         = setupDatatype(Vjson.ProtocolName); 
+  ProtocolName      = getFileString(strrep(fnameparts{2},'_','-'));
+  %Pprotocolsubtable = spm_file(fullfile(Ptbldir,ProcedureStepDescription,datatype0,ProtocolName),'ext',opts.tableformat); 
+  Pprotocolsubtable = spm_file(fullfile(Ptbldir,'protocols',datatype0,ProtocolName),'ext',opts.tableformat); 
+
+  % save shorted protocol as json to be used as filter
+  Vjson0 = cleanupVjson(Vjson,'protocol'); 
+  Pjson0 = spm_file( Pprotocolsubtable,'ext','.json'); 
+  ProtocolName0 = ProtocolName; 
+  if ~exist(Pjson0,'file')
+    cat_io_json( Pjson0, Vjson0); 
+  else
+    %Pjsons = cat_vol_findfiles( fullfile(Ptbldir,ProcedureStepDescription,datatype0)  , '*.json');
+    Pjsons = cat_vol_findfiles( fullfile(Ptbldir,'protocols',datatype0)  , '*.json');
+    Pfit = false(size(Pjsons)); 
+    for pi = 1:numel(Pjsons)
+      Vjson1 = cat_io_json( Pjsons{pi} ); 
+      Pfit(pi) = structEqual(Vjson0,Vjson1); 
+    end
+    if ~any( Pfit )
+      ci = 0;
+      while exist(Pjson0,'file')
+        ci = ci+1;
+        Pjson0 = spm_file(Pprotocolsubtable,'suffix',sprintf('_%d',ci),'ext','.json'); 
+        ProtocolName0 = spm_file(ProtocolName,'suffix',sprintf('_%d',ci)); 
+      end
+      cat_io_json( Pjson0, Vjson0); 
+    end
+  end
+  Thdr    = {'Subjects'}; 
+  Tnewrow = {Vjson.PatientID}; 
+  nsub    = updateTable(Pprotocolsubtable,Thdr,Tnewrow,1,opts.rerun);
+
+  % - study-list with number of subjects
+  Thdr    = {'ProtocolName','nSubjects','ProcedureStepDescription', ...
+             'MRAcquisitionType','ScanningSequence', 'SequenceVariant', ...
+             'RepetitionTime', 'EchoTime', ...
+             'FlipAngle', 'SliceThickness', 'ImageType'}; 
+  Vjson0 = Vjson; 
+  for fni = 1:numel(Thdr)
+    if ~isfield(Vjson0,Thdr{fni}), Vjson0.(Thdr{fni}) = ''; end
+    if iscell(Vjson0.(Thdr{fni}))
+      Vjson0.(Thdr{fni}) = strjoin(Vjson0.(Thdr{fni})); 
+    end
+  end
+  Tnewrow = {sprintf('%s_%s',datatype0,ProtocolName0),nsub, Vjson0.ProcedureStepDescription, ...
+    Vjson0.MRAcquisitionType, Vjson0.ScanningSequence,  Vjson0.SequenceVariant, ...
+    Vjson0.RepetitionTime, Vjson0.EchoTime, ...
+    Vjson0.FlipAngle, Vjson0.SliceThickness, Vjson0.ImageType}; 
+  updateTable(Pprotocoltable,Thdr,Tnewrow,1,opts.rerun);
+
+
+  % import files
+  Pdbdirpath = fullfile(Pmdbdir, Pdbdir); 
+  if ~exist(Pdbdirpath,'dir') || ~exist( spm_file(Pnii,'path',Pdbdirpath), 'file')
+    if ~exist(Pdbdirpath,'dir'), mkdir(Pdbdirpath); end
+    ext = {niiext,'.bval','.bvec'};
+    for ei = 1:numel(ext)
+      if exist(spm_file(Pjson,'ext',ext{ei}),'file') 
+        if ~exist( spm_file(Pjson,'ext',ext{ei},'path', Pdbdirpath),'file')
+          movefile( spm_file(Pjson,'ext',ext{ei}) , Pdbdirpath );
+        else
+          delete( spm_file(Pjson,'ext',ext{ei}) );
+        end
+      end
+    end
+    if ~exist( spm_file(Pjson,'path',Pdbdirpath), 'file')
+      copyfile( Pjson , Pdbdirpath );
+    end
+  end
+
+end
+% =========================================================================
+function checkGzipi(Pdbdir, gzipi, run)
+% gzipunzipOutputdata. Assure the internal nifti gz-status defined by gzipi
+  pverb = 1; 
+  if exist(Pdbdir,'dir') && run
     if gzipi
       Punpacked = cat_vol_findfiles(Pdbdir,'*.nii'); 
       for fi = 1:numel(Punpacked)
         if ~exist([Punpacked{fi} '.gz'],'file')
-          if verb, fprintf('Updating database storing gzipped NIFTIs... '); verb = 0; end
+          if pverb, fprintf('Updating database storing gzipped NIFTIs... '); pverb = 0; end
           gzip(Punpacked{fi});
         end
         delete(Punpacked{fi}); 
@@ -695,14 +746,14 @@ function checkGzipi(Pdbdir,gzipi)
       Ppacked = cat_vol_findfiles(Pdbdir,'*.nii.gz'); 
       for fi = 1:numel(Ppacked)
         if ~exist([Ppacked{fi}(1:end-3)],'file')
-          if verb, fprintf('Updating database storing NIFTIs... '); verb = 0; end
+          if pverb, fprintf('Updating database storing NIFTIs... '); pverb = 0; end
           gunzip(Ppacked{fi});
         end
         delete(Ppacked{fi}); 
       end
     end
   end
-  fprintf(' done.\n'); 
+  if pverb == 0, fprintf(' done.\n'); end % if something was printed before 
 end
 % =========================================================================
 function T = structEqual(S1,S2)
@@ -783,51 +834,57 @@ function str = getFileString(str)
   str(strd>122) = 'X';
 end
 % =========================================================================
-function same = checkPreviousSetting(Popts,job)
-  same = 1; 
+function [same,job] = checkPreviousSetting(Popts,job)
+%checkPreviousSetting. Test if settings are identical to previous runs.
   if exist(Popts,'file')
     load(Popts,'opts','dicts');
-    FNopts = fieldnames(job.opts);
-    for fni = 1:numel(FNopts)
-      if ~isfield(opts,FNopts{fni})
-        if isscalar(job.opts.(FNopts{fni})) && isscalar(opts.(FNopts{fni}))
-          if job.opts.(FNopts{fni}) ~= opts.(FNopts{fni}), same = 0; end
-        elseif isstring(job.opts.(FNopts{fni})) && isstring(opts.(FNopts{fni}))
-          if ~strcmp(job.opts.(FNopts{fni}), opts.(FNopts{fni})), same = 0; end
-        else
-          same = 0; 
-        end
-      end
-    end
-    FNopts = fieldnames(job.dicts);
-    for fni = 1:numel(FNopts)
-      if ~isfield(dicts,FNopts{fni})
-        if isscalar(job.dicts.(FNopts{fni})) && isscalar(dicts.(FNopts{fni}))
-          if job.dicts.(FNopts{fni}) ~= dicts.(FNopts{fni}), same = 0; end
-        elseif isstring(job.dicts.(FNopts{fni})) && isstring(dicts.(FNopts{fni}))
-          if ~strcmp(job.dicts.(FNopts{fni}), dicts.(FNopts{fni})), same = 0; end
-        else
-          same = 0; 
-        end
-      end
-    end
-    if ~same 
+    RMFN   = setxor(fieldnames(job.opts),{'ProtocolFileName','anonymize'});
+    jopts0 = rmfield(job.opts,intersect(fieldnames(job.opts),RMFN));  
+    opts0  = rmfield(job.opts,intersect(fieldnames(opts),RMFN));  
+    same = structEqual(jopts0,opts0) && structEqual(job.dicts,dicts);
+    if ~same
       cat_io_cprintf('err', ...
-        ['Error the underlying structure of the directory does not fit to the current settings. \n', ...
-        'Use previous parameters or or change the output directory. \nMove on with prevous paramters?']);
-    end
-    %%
+        ['  Error the underlying structure of the BIDS directory does not fit to the current settings. \n', ...
+         '  Use previous parameters or or change the output directory! \n\n']);
+      if ~structEqual(jopts0,opts0)
+        cat_io_cprintf('blue','    Old opts:\n'); 
+        disp(opts); 
+      end
+      if ~structEqual(job.dicts,dicts)
+        cat_io_cprintf('blue','    Old dicts:\n'); 
+        disp(dicts); 
+      end
+      
+      % Request user interaction 
+      p = spm_input('Different BIDS setup detected. Select how to go on.',1,'m', ...
+        {'Stop processing to update settings','Use old BIDS settings','Replace old BIDS directory'},[0 1 2],1); 
+      if p == 1
+        same     = 1;
+        job.opts = opts; 
+        job.dict = dict; 
+      elseif p == 2
+        p = spm_input('Realy replace old directory?',1,'Yes|No',[1 0],2); 
+        if p
+          same = 1; 
+          rmdir(spm_file(Popts,'path'),'Recursive',true)
+          mkdir(spm_file(Popts,'path')); 
+          opts = job.opts; dicts = job.dicts; 
+          save(Popts,'opts','dicts');
+        end
+      end
+    end  
   else
     if ~exist(spm_file(Popts,'path'),'dir'), mkdir(spm_file(Popts,'path')); end
     opts = job.opts; dicts = job.dicts; 
     save(Popts,'opts','dicts');
-    clear opts dicts; 
+    same = 1; 
   end
 end
 % =========================================================================
 function gzipunzipOutputdata(Poutdir,opts)
+%gzipunzipOutputdata. Assure the internal .nii.gz status defined by gzipi
   BIDSsubdirs = cat_vol_findfiles( Poutdir , 'BIDS*', struct('dirs',1)); 
-  if opts.gzipi == 1  &&  opts.gzipe == 0
+  if opts.gzipi == 1  &&  opts.gzipe == 0  &&  ~isempty(BIDSsubdirs)
     % gunzip all files in the result directory
     fprintf('DCM2NII - gunzip BIDS output data')
     for bi = 1:numel(BIDSsubdirs)
@@ -835,7 +892,7 @@ function gzipunzipOutputdata(Poutdir,opts)
       for fi = 1:numel(Pniigz), gunzip(Pniigz{fi}); delete(Pniigz{fi}); end
     end
     fprintf('done.\n')
-  elseif opts.gzipi == 0  &&  opts.gzipe == 1
+  elseif opts.gzipi == 0  &&  opts.gzipe == 1  &&  ~isempty(BIDSsubdirs)
     % gzip all files in the result directory
     fprintf('DCM2NII - gzip BIDS output data')
     for bi = 1:numel(BIDSsubdirs)
@@ -859,15 +916,17 @@ function P = getDCM2NIIX
   end
   P = deblank(P); 
   if ~exist(P,'file')
-    error('Cannot find dcm2niix. Please install it from: \n  "%s"', ... 
+    %%%%%%% maybe use input path or include it in CAT?
+    error('cat_io_dcm2bids:noDcm2niix', ...
+      'Cannot find dcm2niix. Please install from: \n  %s\n\n', ... 
       spm_file('https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage' , ...
         'link', 'https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage')); 
   end
 end
 % =========================================================================
 function tmpdir = dcm2niix( Pdcmdirs , Poutdir, Pdcm2niix, gzipi, rerun)
-  %tmpdir = strrep( Pdcmdirs , Pdcmdir, fullfile(Poutdir,'DCM2NIIX') ); 
-  tmpdir = fullfile(Poutdir,'catDCM2NIIx',Pdcmdirs); 
+%dcm2niix. Import and convert DICOM data 
+  tmpdir = fullfile(Poutdir,'+catDCM2NIIimportpath',Pdcmdirs); 
   if ~exist(tmpdir,'dir') || rerun
     if ~exist(tmpdir,'dir'), mkdir(tmpdir); end
   
@@ -889,7 +948,7 @@ function tmpdir = dcm2niix( Pdcmdirs , Poutdir, Pdcm2niix, gzipi, rerun)
   end
 end
 % =========================================================================
-function [match,pname,dismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,protocols,tol,job,sites)
+function [match,pname,mismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,Ptbldir,protocols,tol,job,sites)
 % test protocols
 
   if isempty(protocols{1,1})
@@ -900,14 +959,14 @@ function [match,pname,dismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,
     Pfname          = ''; 
     pmatchs         = inf; 
     pmatch          = 0; 
-    dismatchstr{1}  = cell(0,3); 
+    mismatchstr{1}  = cell(0,3); 
     
   else
     pmatch      = ones(1,size(protocols,1)); 
     pmatchs     = zeros(1,size(protocols,1)); 
-    dismatchstr = cell(1,size(protocols,1)); 
+    mismatchstr = cell(1,size(protocols,1)); 
     for pri = 1:size(protocols,1)
-      dismatchstr{pri} = cell(0,3); 
+      mismatchstr{pri} = cell(0,3); 
       FNpi = fieldnames(protocols{pri,3});
       FNpi(cat_io_contains(FNpi,{'ConsistencyInfo','PulseSequenceDetails', ...
         'ImageComments','SequenceName','ProtocolName','SeriesDescription'})) = []; 
@@ -959,7 +1018,7 @@ function [match,pname,dismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,
                   size(protocols{pri,3}.(FNpi{fni}),2), class(protocols{pri,3}.(FNpi{fni}))); 
               end
             end
-            dismatchstr{pri} = [ dismatchstr{pri}; {FNpi{fni} tstr1 tstr2 }]; 
+            mismatchstr{pri} = [ mismatchstr{pri}; {FNpi{fni} tstr1 tstr2 }]; 
             
           end
         end
@@ -976,7 +1035,7 @@ function [match,pname,dismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,
                 strrep(char(Vjson.ScanDate),'-',''), Vjson.ProtocolName),'__','_'),'l55'));
   if all( ~pmatch )
   % unknown protocol  
-    Pnfailed   = cellfun(@(x) size(x,1),dismatchstr);
+    Pnfailed   = cellfun(@(x) size(x,1),mismatchstr);
     Pnfailedid = find(Pnfailed == min(Pnfailed) & Pnfailed < 6);
     pname      = Vjson.ProtocolName; 
     Pfname     = ''; 
@@ -1043,7 +1102,7 @@ function [match,pname,dismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,
 
 
   site     = setupSites(Vjson,sites);
-  Pprodir  = fullfile(job.outdir{1},job.subdir,'MRprotocols',datatype,proSubdir,proname);
+  Pprodir  = fullfile(Ptbldir,'protocols-details',datatype,proSubdir,proname);
   if ~exist(Pprodir,'dir'), mkdir(Pprodir); end
 
   Vjsonc   = cleanupVjson(Vjson); 
@@ -1068,7 +1127,7 @@ function [match,pname,dismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,
 
         Pprofiled = fullfile(Pprosubdir,sprintf('%s-%s-diff.csv', ...
           spm_file(protocols{Pnfailedid(fi),2},'basename'),site));
-        cat_io_csv(Pprofiled,dismatchstr{pri});
+        cat_io_csv(Pprofiled,mismatchstr{pri});
 
         Pqc = spm_file(protocols{Pnfailedid(fi),2},'prefix','qc');
         if exist(Pqc,'file')
@@ -1462,12 +1521,12 @@ return
   % subreports
 end
 % =========================================================================
-function writePrivateTSV(Vjson,sub,Poutdir,BIDSsubdir,subdir)
+function writePrivateTSV(Vjson,sub,Poutdir)
 % private and participant data
 % The private.tsv should contain fields that are removed in the BIDS
 % processing such as the real Patient name and his birth data etc. 
 % It might be saved in another directory to avoid unwanted uploading?
-  Pprivate   = fullfile(Poutdir,subdir,'private.tsv');
+  Pprivate   = fullfile(Poutdir,sprintf('private_participants.tsv'));
   if exist(Pprivate,'file')
     Tprivate = cat_io_csv(Pprivate, '','', struct('delimiter','\t')); 
     pidnum   = find(cellfun(@isnumeric,Tprivate(:,2))); 
@@ -1516,9 +1575,20 @@ function Po = prepNii(Pi,opts,del)
     end
     Po = Pi; 
     for fi = 1:numel(Pi)
-      if ~strcmp( spm_file(Pi{fi},'ext'),'nii') 
+      if ~strcmp( spm_file(Pi{fi},'ext'),'nii')
         Po{fi} = spm_file(Pi{fi},'ext',''); 
         if ~exist(Po{fi},'file') && exist(Pi{fi},'file')
+          try
+            gunzip(Pi{fi});
+          catch
+            Po = ''; 
+          end
+          if exist('del','var') && del
+            delete(Pi{fi}); 
+          end
+        end
+      else
+        if ~exist(Po{fi},'file') && exist([Pi{fi} '.gz'],'file')
           try
             gunzip(Pi{fi});
           catch
@@ -1622,6 +1692,7 @@ function Pout = anomize(Pin,opts,datatype)
 end
 % =========================================================================
 function matlabbatch = SPMsegment(Pfiles,opts)
+%SPMsegment. Run SPM segmentation for anatomical data
 
   if exist( spm_file(Pfiles, 'prefix', 'l0'), 'file')
     return
@@ -1630,8 +1701,8 @@ function matlabbatch = SPMsegment(Pfiles,opts)
   Pfiles = prepNii(Pfiles,opts,0);
 
   % TPM setting 
-  if 0
-    PTPM = fullfile(spm('dir'),'TPM','TPM.nii'); ngaus = [1 1 2 3 4 2];
+  if exist(fullfile(spm('dir'),'TPM','mni0R1p5_TPM7blr.nii'),'file')
+    Ptpm = fullfile(spm('dir'),'TPM','TPM.nii'); ngaus = [1 1 2 3 4 2];
   else
     Ptpm = fullfile(spm('dir'),'TPM','mni0R1p5_TPM7blr.nii'); ngaus = [1 1 1 2 1 1 3];
   end
@@ -2029,9 +2100,7 @@ end
 function [Pm,Pc0,Pwc1] = segmentanat(Pin,datatype,opts)
   
   %% segment on anonymized data!
-  opts.segment = 0; 
-  opts.denoise = 0;
-
+  
   if (strcmp( datatype, 'anat') || opts.segment > 1) 
  
     if opts.denoise
@@ -2049,21 +2118,25 @@ function [Pm,Pc0,Pwc1] = segmentanat(Pin,datatype,opts)
         cat_vol_sanlm(struct('data', Pin,'opts.verb',0));
       end
   
-      if opts.denoise
-        SPMsegment( spm_file(Pin,'prefix','sanlm'),opts );
-      else
-        SPMsegment( Pin ,opts);
+      if opts.segment
+        % run SPM segmentation  
+        if opts.denoise
+          SPMsegment( spm_file(Pin,'prefix','sanlm'),opts );
+        else
+          SPMsegment( Pin ,opts);
+        end
+
+        %% CAT QC 
+        if opts.runqc > 1
+          qcversion = 'cat_vol_qa201901x';
+          %qcversion = 'cat_vol_qa202412';
+          if opts.denoise, prefix = 'c0sanlm_'; else, prefix = 'c0'; end
+          Pin2 = prepNii(spm_file({Pin},'prefix',prefix),opts,0);
+          cat_vol_qa('p0',Pin2,Pin2,Pin2,'','',...
+            struct('prefix',[qcversion '_'],'version',qcversion,'rerun',0,'verb',0) );
+        end
       end
-  
-      %% QC 
-      qcversion = 'cat_vol_qa201901x';
-      %qcversion = 'cat_vol_qa202412';
-      if opts.denoise, prefix = 'c0sanlm_'; else, prefix = 'c0'; end
-      %%
-      Pin2 = prepNii(spm_file({Pin},'prefix',prefix),opts,0);
-      cat_vol_qa('p0',Pin2,Pin2,Pin2,'','',...
-        struct('prefix',[qcversion '_'],'version',qcversion,'rerun',0,'verb',0) );
-  
+
       %% gzipi
       if opts.gzipi
         prefixes = {'c0','wc0','wc1','l0','wl0','m','y_'};
