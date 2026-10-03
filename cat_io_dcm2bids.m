@@ -617,8 +617,8 @@ function cat_io_dcm2bids(job)
         end
 
         % anonymize and save json file
-        Vjson0{sci} = cleanupVjson(Vjson{sci}); %%%%%%%%%%%%%%%%%%%%%%%
-        cat_io_json( spm_file( fullfile(BIDSpath{sci},BIDSfile{sci}),'ext','.json'), Vjson0{sci}); 
+        Vjson{sci} = cleanupVjson(Vjson{sci},'protocol'); 
+        cat_io_json( spm_file( fullfile(BIDSpath{sci},BIDSfile{sci}),'ext','.json'), Vjson{sci}); 
 
 
         %%%% all protocols
@@ -1106,27 +1106,31 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,
     for pri = 1:size(protocols,1)
       mismatchstr{pri} = cell(0,3); 
       FNpi = fieldnames(protocols{pri,3});
-      FNpi(cat_io_contains(FNpi,{'ConsistencyInfo','PulseSequenceDetails', ...
-        'ImageComments','SequenceName','ProtocolName','SeriesDescription'})) = []; 
-      pmatchn = 1; 
+     % FNpi(cat_io_contains(FNpi,{'ConsistencyInfo','PulseSequenceDetails', ...
+     %   'ImageComments','SequenceName','ProtocolName','SeriesDescription'})) = []; 
+      
       pmatchs(pri) = numel(FNpi); 
       for fni = 1:numel(FNpi)
         if isfield( Vjson, FNpi{fni} ) 
+          pmatchn = 1; 
           if strcmp(FNpi{fni}(1:2),'x_'), continue; end % comment
           
           if ( islogical( Vjson.(FNpi{fni})) || isnumeric( Vjson.(FNpi{fni})) ) && ...
              ( islogical( protocols{pri,3}.(FNpi{fni})) || isnumeric( protocols{pri,3}.(FNpi{fni})) )
             if numel( Vjson.(FNpi{fni}) ) == numel( protocols{pri,3}.(FNpi{fni}))
-              %pmatchn =  all( Vjson.(FNpi{fni}) >= protocols{pri,3}.(FNpi{fni})*(1-tol/100) & ...
-              %                Vjson.(FNpi{fni}) <= protocols{pri,3}.(FNpi{fni})/(1-tol/100)); 
-              mismatchcnt(pri) = mismatchcnt(pri) + max(0,min(1, 0.5 * ...
-                  abs( Vjson.(FNpi{fni}) - protocols{pri,3}.(FNpi{fni}) ) - (protocols{pri,3}.(FNpi{fni})*tol/100) )); 
-              pmatchn = mismatchcnt(pri) > 1;
+              matstr =  all( Vjson.(FNpi{fni}) >= protocols{pri,3}.(FNpi{fni})*(1-tol/100) & ...
+                             Vjson.(FNpi{fni}) <= protocols{pri,3}.(FNpi{fni})/(1-tol/100)); 
+              %matstr = max(0,min(1, max(0,abs( Vjson.(FNpi{fni}) - protocols{pri,3}.(FNpi{fni}) ) - (protocols{pri,3}.(FNpi{fni})*tol/100) ))); 
+              mismatchcnt(pri) = mismatchcnt(pri) + (1-matstr) * .5; 
+              pmatchn = matstr;
             else
+              mismatchcnt(pri) = mismatchcnt(pri) + 0.5;
               pmatchn = 0; 
             end
           elseif ischar( Vjson.(FNpi{fni}) ) && ischar( protocols{pri,3}.(FNpi{fni}) )
-            pmatchn = strcmp( Vjson.(FNpi{fni}) , protocols{pri,3}.(FNpi{fni}) ); 
+            matstr = strcmp( Vjson.(FNpi{fni}) , protocols{pri,3}.(FNpi{fni}) );
+            mismatchcnt(pri) = mismatchcnt(pri) + (1-matstr);
+            pmatchn = matstr; 
           elseif iscell( Vjson.(FNpi{fni}) ) && iscell( protocols{pri,3}.(FNpi{fni}) )
             %pmatchn = strcmp( char(sort(protocols{pri,3}.(FNpi{fni}(:)))) , char(sort(Vjson.(FNpi{fni}(:)))) ); 
             matstr  = 0; 
@@ -1138,9 +1142,10 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,
               matstr = matstr + ...
                 (1 - max([0;cat_io_contains(Vjson.(FNpi{fni}),protocols{pri,3}.(FNpi{fni})(pmi))])); 
             end
-            mismatchcnt(pri) = mismatchcnt(pri) + max(0,matstr - tol/2);
-            pmatchn = mismatchcnt(pri) > 1;
+            mismatchcnt(pri) = mismatchcnt(pri) + max(0,matstr); % - tol/2);
+            pmatchn = mismatchcnt(pri) < 1;
           else
+            mismatchcnt(pri) = mismatchcnt(pri) + 1;
             pmatchn = 0; 
             % need refinement ! ... image type             
           end
@@ -1148,8 +1153,8 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,
   
           if ~pmatchn
             if iscell( Vjson.(FNpi{fni}) ) 
-              tstr1 = join(Vjson.(FNpi{fni}));
-              tstr2 = join(protocols{pri,3}.(FNpi{fni})); 
+              tstr1 = char(join(sort(Vjson.(FNpi{fni}))));
+              tstr2 = char(join(sort(protocols{pri,3}.(FNpi{fni})))); 
             else
               if isscalar(Vjson.(FNpi{fni}))
                 tstr1 = Vjson.(FNpi{fni});
@@ -1185,7 +1190,7 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,
   if all( mismatchcnt > 0.05 )
   % unknown protocol  
     Pnfailed   = mismatchcnt; %cellfun(@(x) size(x,1),mismatchstr);
-    Pnfailedid = find(Pnfailed == min(Pnfailed) & Pnfailed < 6);
+    Pnfailedid = find(Pnfailed == min(Pnfailed));% & Pnfailed < 6);
     pname      = Vjson.ProtocolName; 
     Pfname     = ''; 
     if job.opts.verb
@@ -1386,9 +1391,14 @@ function Vjson = cleanupVjson(Vjson,type)
     case 'basic'
       % negative list, i.e. remove these entries
       RFn = {
-        ... 'SeriesInstanceUID'; 'StudyInstanceUID'; 'StudyID'; 
+        'SeriesInstanceUID'; 'StudyInstanceUID'; 'StudyID'; 
+        'InstitutionName'; 'InstitutionalDepartmentName'; 'InstitutionAddress'; 
+        'StationName'; 
         ... 'ProcedureStepDescription'; 
         'BodyPartExamined';
+        'AcquisitionTime'; 
+        ... 'AcquisitionDateTime'
+        'ShimSetting'; 'TxRefAmp'; 
         }; 
     case 'protocol'
       % positive list, i.e. keep only these entries
@@ -1426,7 +1436,6 @@ function Vjson = cleanupVjson(Vjson,type)
         'ReconMatrixPE';
         'InPlanePhaseEncodingDirectionDICOM';
         'DerivedVendorReportedEchoSpacing';
-        'DwellTime';
         ... 
         'PulseSequenceName'; 
         'ProcedureStepDescription';
@@ -1443,7 +1452,7 @@ function Vjson = cleanupVjson(Vjson,type)
         'EchoTrainLength';
         'MultibandAccelerationFactor';
         }; 
-      RFn = setdiff( fieldnames(Vjson), RFn ); 
+      RFn = setdiff( fieldnames(Vjson), RFn );   
   end
   RFn   = intersect( RFn , fieldnames(Vjson) ); 
   Vjson = rmfield(Vjson,RFn); 
@@ -1899,9 +1908,9 @@ function matlabbatch = SPMsegment(Pfiles,opts)
 
   % TPM setting 
   if exist(fullfile(spm('dir'),'TPM','mni0R1p5_TPM7blr.nii'),'file')
-    Ptpm = fullfile(spm('dir'),'TPM','TPM.nii'); ngaus = [1 1 2 3 4 2];
-  else
     Ptpm = fullfile(spm('dir'),'TPM','mni0R1p5_TPM7blr.nii'); ngaus = [1 1 1 2 1 1 3];
+  else
+    Ptpm = fullfile(spm('dir'),'TPM','TPM.nii'); ngaus = [1 1 2 3 4 2];
   end
   Vtpm = spm_vol(Ptpm);
 
@@ -2155,10 +2164,15 @@ function [Pr,QM,Pqc] = runQC(P, type, opts, Pprotocols)
       movefile( spm_file(P,'ext','.mat') , spm_file(P,'ext','.mat','prefix','rp_'));  
     end
   
-    %% 0-none, 1-run for QC, 2-keep
+
+    %% main QC estimation 
+    %  - special options: 0-none, 1-run for QC, 2-keep
+    %  - this needs further work to run quick or use data permanently 
+    %  
     opts.sliceMotionCor = 1; 
     opts.biasCor        = 1; 
     opts.denoise        = 1; 
+    opts.tlim           = min(size(Y,4),8); 
     for run = 1%:1 + strcmp(type,'dwi')
       Vr = spm_vol(Pr);
       if strcmp(type,'dwi')
@@ -2171,26 +2185,67 @@ function [Pr,QM,Pqc] = runQC(P, type, opts, Pprotocols)
       else
         Yr = single(spm_read_vols(Vr));
       end
-  
-      Ym = real(single(cat_stat_nanmean(abs(Yr),4)));     % mean image
-      s0 = prctile(Ym(:),75);   % signal intensity 
-      Yb = Ym > s0 & (cat_vol_grad(cat_vol_median3(Ym))./Ym < .3);
-      s1 = prctile(Ym(Yb(:)),90); 
-      Yb = cat_vol_morph(Yb,'lo',2); 
-      Yw = cat_vol_approx( abs(Yr(:,:,:,1)) .*  Yb); 
-      Yw = cat_vol_smooth3X(Yw,8./vx_vol); 
-  
-      %% average images
-      if strcmp(type,'dwi')
-        if run==1, epiids = find(~isepi); else, epiids = find(isepi); end
-        Yd = zeros(size(Yr),'single'); 
-        Yr = single(spm_read_vols(Vr(epiids)));
+ 
+      % basic segmentation of object/background
+      % Ym  .. mean image
+      % Ybb .. boundary map
+      % Yb  .. brain/head/object mask - non-noise area
+      % Yw  .. bias map
+      % Yg  .. gradient/edge/noise map
+      % g0  .. threshold in Yg
+      % s1  .. signal intensity in Ym (for GM-WM intensity)
+      Ym  = real(single(cat_stat_nanmean(Yr,4)));
+      bbs = min(4,size(Ym)/4); 
+      Ybb = true(size(Ym)); Ybb(bbs(1):end-bbs(1),bbs(2):end-bbs(2),bbs(3):end-bbs(3)) = false; 
+      if  nnz(Ym(:)<0) ./ numel(Ym)  < .3 %~strcmp(type,'fmap')  &&  (
+        %% typical image with mostly positive values and high intensity object
+        Yg  = cat_vol_grad(Ym) ./ Ym; % this function has issues with negative non-noise structures
+        g0  = prctile(Yg(:),10) * 2;
+        Yb  = ~cat_vol_morph(Yg > g0*2,'ldc',2); 
+        g0  = prctile(Yg(~Yb(:)),10) * 2;
+        s0  = prctile(Ym(Yg(:) < g0 & Ym(:) > prctile(Ym(:),80) & Ym(:) < prctile(Ym(:),95)),80); 
+        Yo  = Yg < g0  &  Ym > s0*.4  &  Ym < s0*1.5;
+        Yw  = cat_vol_smooth3X(cat_vol_approx( abs(Yr(:,:,:,1)) .* Yo),4); 
+        Yb  = cat_vol_morph(Yg .* (Ym./Yw) > g0,'ldc',2); 
+        Ynr = cat_vol_localstat(Ym./Yw,Yb,1,4); nr = cat_stat_nanmean(Ynr(Yb(:)))*2; 
+        Ywm = cat_vol_morph(Yg<g0*2 & (Ym./Yw)>.8-nr & (Ym./Yw)<1.2+nr,'ldo',0);
+        s1  = prctile(Ym(Ywm(:)),90); 
+      else
+        %% typical fieldmap with positive and negative values
+        %  - here the bias is the information (so no correction) surrounded 
+        %    by heavy noise that defines the signal intensity 
+        Yg  = cat_vol_localstat(Ym,true(size(Ym)),2,4) ./ ...
+              cat_vol_localstat(cat_vol_smooth3X(abs(Ym),1),true(size(Ym)),1,4);
+        g0  = prctile(Yg(:),10) * 2;
+        Yb  = cat_vol_morph( cat_vol_morph(Yg < g0 & ~Ybb,'ldo',1), 'ldc', 4); 
+        s1  = prctile(Ym(~Yb(:)),90);
+        Yw  = ones(size(Yg)) * s1;
+      end  
+      clear Yg g0 Ybb 
+      
+
+
+      %% 4D data data evaluation
+      if ~strcmp(type,'anat') %strcmp(type,'dwi') &&  strcmp(type,'func')
+        if strcmp(type,'dwi') 
+          % in case of dwi, we need to split between the EPI images and
+          % direction weighted scans
+          if run==1, epiids = find(~isepi); else, epiids = find(isepi); end
+        else
+          epiids = 1:opts.tlim;
+        end
+
+        Yd  = zeros(size(Yr),'single'); 
+        Yr  = single(spm_read_vols(Vr(epiids)));
         WSM = nan(1,size(Yr,4));
-        for vi = 1:size(Yr,4)
+        for vi = 1:min(size(Yr,4),opts.tlim)
+        % for each time-point / direction apply the general bias correction
           Ya  = Yr(:,:,:,vi) ./ Yw;
     
+
+          % If the data was realigned, we can correct for slice-wise motion
+          % artifacts and interpret this as within-slice motion (WSM).
           if opts.sliceMotionCor 
-            %%
             Yw1 = Yw;
             for zi = 1:size(Yr,3)
               if zi == 1
@@ -2204,38 +2259,43 @@ function [Pr,QM,Pqc] = runQC(P, type, opts, Pprotocols)
               Yw1(:,:,zi) = Ytmp(:,:,1);
             end
             Yas = Ya - Yw1 .* abs(Yw1).^.25;
-            Yas(Ya==0) = 0; % defacing
+            Yas(Ya==0) = 0; % apply defacing
             WSM(vi) = cat_stat_nanmean( (Yas(:) - Ya(:)).^2 ).^.5; 
             if opts.sliceMotionCor > 2, Ya = Yas; end
           end
     
+
+          % Denoising of a single slice to quantify the amount of noise 
+          % in the difference image
           Yas = Ya + 0; if opts.denoise, cat_sanlm(Yas,1,3); end
-          
           Vrr = Vr; Vrr(epiids(vi)).fname = spm_file(Vrr(epiids(vi)).fname,'prefix','c'); 
           if opts.biasCor
             spm_write_vol(Vrr(epiids(vi)),Yas .* Yw); 
           else
             spm_write_vol(Vrr(epiids(vi)),Yas .* mean(Yw(:))); 
           end
-  
-          if run==1
-            Yd(:,:,:,vi) = sqrt( (Ya-Yas).^2 * 2 ); % Rician noise
-          end
+          %if run==1 % why only run 1?
+          Yd(:,:,:,vi) = sqrt( (Ya-Yas).^2 * 2 ); % Rician noise
+          %end
         end
     
-        if run==1
-          Yn   = mean(Yd,4);
+        if run==1 % why only run 1?
+          Yn   = mean(Yd(1:min(size(Yr,4),opts.tlim)), 4);
           Yns  = cat_vol_approx(cat_vol_median3(Yn)); 
         end
       end
     end
-  
-  
+    
+
     % do measurements
     %Ym  = Ym ./ Yw; % bias corrected
     Ys  = cat_stat_nanstd(Yr,4) ./ Yw; 
-    Yss = cat_vol_approx(cat_vol_median3(Ys)); 
-    
+    try
+      Yss = cat_vol_approx(cat_vol_median3(Ys)); 
+    catch
+      Yss = cat_vol_approx(smooth3(Ys)); 
+    end
+
     % get motion parameters
     Pm  = spm_file(P,'prefix','rp_','ext','.txt');
     if exist(Pm,'file'), rp = load(Pm); else, rp = NaN; end
@@ -2243,30 +2303,38 @@ function [Pr,QM,Pqc] = runQC(P, type, opts, Pprotocols)
     % final measures
     QM.BSM  = cat_stat_nanmean(cat_stat_nanstd(rp,1).^2).^.5; % average motion (between scan movement)
     QM.ISR  = cat_stat_nanstd(Yw(Yb(:))) ./ s1;   % homogeneity to signal rating
-    if strcmp(type,'dwi') && exist('Yns','var') && mean(Yns(:))~=0 
+    if exist('Yns','var') && mean(Yns(:))~=0 % (strcmp(type,'dwi') || strcmp(type,'func')) && 
       QM.NSR = cat_stat_nanmean(Yns(Yb(:)));      % noise to signal rating based on the denoising
-      QM.WSM = cat_stat_nanmean(WSM.^2).^.5;      % within slice motion 
-    elseif isscalar(V)
-      [Ya,Ybr]  = cat_vol_resize({Yr./Yw,single(Yb)},'reduceV',1,2,32,'meanm');
+      QM.WSM = cat_stat_nanmean(WSM(1:min(numel(WSM),opts.tlim)).^2).^.5;      % within slice motion 
+    
+
+    elseif   strcmp(type,'anat')  &&  ( nnz(Ym(:)<0) ./ numel(Ym)  < .3 ) 
+      [Ya,Ybr]  = cat_vol_resize({mean(Yr,4)./Yw,single(Yb)},'reduceV',vx_vol,2,32,'meanm');
       
-      % measure variance in background an WM
-      Yg     = cat_vol_grad(Ya)./Ya; 
-      Ybg    = cat_vol_morph(cat_vol_morph(cat_vol_morph(Yg./Ya>prctile(Yg(:),75),'lc',1),'lo',2),'de',2);
-      Ytis   = cat_vol_morph(cat_vol_morph(cat_vol_morph(Yg<prctile(Yg(Ybr(:)>.5),5) & Ya>.8 & Ya<1.2 & Ybr>.5,'lc',1),'lo',1),'de',1);
-      [Ygr,Ybgr,Ytisr] = cat_vol_resize({Ya,Ybg,Ytis},'reduceV',1,1,32,'medianm');
+      % measure variance in background and foreground
+      Yg     = abs(cat_vol_grad(Ya+min(Ya(:)))) ./ abs(Ya+min(Ya(:))); 
+      Ytis   = Yg<prctile(Yg(Ybr(:)>.5),50) & Ya>.5 & Ya<1.5 & Ybr>.5; 
+      Ytis   = cat_vol_morph(cat_vol_morph(cat_vol_morph(Ytis,'l',1),'lc',1),'de',1);
+      Ytis   = Yg<prctile(Yg(Ytis(:)>.5),50) & Ya>.5 & Ya<1.5 & Ybr>.5; 
+      Ytis   = cat_vol_morph(Ytis,'ldo',1);
+      [Ygr,Ybgr,Ytisr] = cat_vol_resize({Ya,~Ybr,Ytis},'reduceV',1,2,32,'meanm');
       NSRbg  = cat_vol_localstat(Ygr,Ybgr>.9,2,4);  NSRbg  = cat_stat_nanmedian(NSRbg(Ybgr(:)>.9)); 
       NSRtis = cat_vol_localstat(Ygr,Ytisr>.9,2,4); NSRtis = cat_stat_nanmedian(NSRtis(Ytisr(:)>.9)); 
-      QM.NSR = cat_stat_nanmean([NSRbg,NSRtis]);       % noise to signal rating based on the approximated 
+      QM.NSR = min([NSRbg,NSRtis]);       % noise to signal rating based on the approximated 
   
-      % estimate denoising difference
+      %% estimate denoising difference
       Yas = Ya + 0; if opts.denoise, cat_sanlm(Yas,1,3); end
   
       % average
-      QM.NSR = max( QM.NSR , cat_stat_nanmean((Ya(:) - Yas(:)).^2).^.5 );       % noise to signal rating based on the approximated 
-      QM.WSM = NaN; 
+      QM.NSR = QM.NSR; % , cat_stat_nanmean((Ya(:) - Yas(:)).^2).^.5 );       % noise to signal rating based on the approximated 
+      QM.WSM = cat_stat_nanmean((Ya(:) - Yas(:)).^2).^.5; 
     else
-      QM.NSR = cat_stat_nanmean(Yss(Yb(:)));       % noise to signal rating based on the approximated 
-      QM.WSM = NaN; 
+      QM.NSR = cat_stat_nanmean(Yss(Yb(:)));       % noise to signal rating based on the approximated bias field
+      if exist('WSM','var') 
+        QM.WSM = cat_stat_nanmean(WSM(1:opts.tlim).^2).^.5;
+      else
+        QM.WSM = NaN; 
+      end
     end
     QM.vx_vol = vx_vol; 
     QM.RES    = cat_stat_nanmean(QM.vx_vol.^2).^.5;   % RESolution rating

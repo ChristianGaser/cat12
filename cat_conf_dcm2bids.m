@@ -195,13 +195,7 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   % Options:
   % =======================================================================
 
-  % subjectIDsetup?
-  %  sub-ID
-  %  sub-CITE-SID
-  %  sub-STUDY-SID
-  %  sub-CITE-STUDY-SID % omni-center
-  %  sub-STUDY-CITE-SID % multi-center 
-  % >>>> add both to participants
+  % subjectID definition
   subIDform         = cfg_menu;
   subIDform.tag     = 'subIDform';
   subIDform.name    = 'Subject ID form (expert)';
@@ -362,15 +356,19 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   protocolsubdirs.name    = 'Use subdirectories to separate protocols';
   protocolsubdirs.labels  = {'No','Yes'}; 
   protocolsubdirs.values  = {0,1};
-  protocolsubdirs.val     = {1};
+  protocolsubdirs.val     = {0};
   protocolsubdirs.help    = { ...
     'Use subdirectories to separate the protocols of the main protocol directories. '
     };
 
 
-
-  % avoid BIDS field ??
-  % asso ... remove fields in jsons ...
+  % further possible parameter:
+  %%%%%%%%  
+  % - avoid/add BIDS field in the JSON files to further specify anonymizing settings?
+  %   as string with +SubjectID or -SubjectID 
+  % - use the Database as Project name also in the SubjectID
+  %   > handling of multiple studies by dictionary
+  % - flat to recode subjectIDs 
   %%%%%%%%  
  
 
