@@ -12,9 +12,10 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   datadir.filter   = 'dir';
   datadir.ufilter  = '.*';
   datadir.num      = [1 Inf];
-  datadir.help     = {'Select directory with DICOM or BIDS data.'}; 
+  datadir.help     = {'Select directory with DICOM data directories.'}; 
 % what do I do in case of already imported data those raw files are not available any longer?
-% >> selection of internal DCM2NIIX dir >> need special handling
+% >> empty input to output just all internal files?
+% >> selection of internal DCM2NIIX directories with extra handling
 
   % output directory
   outdir            = cfg_files;
@@ -23,6 +24,8 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   outdir.filter     = 'dir';
   outdir.ufilter    = '.*';
   outdir.num        = [1 1];
+  % box-drawing characters for the directory tree (├─ entry, └─ last entry, │ continuation)
+  b = [char(9500) char(9472) ' ']; e = [char(9492) char(9472) ' ']; v = [char(9474) '  ']; s = '   ';
   outdir.help       = {[ ...
     'Select a directory where files are written to. ' ...
     'The batch will create a subdirectory "catDCM2BIDS" with converted NIFTI/JSON data. ' ...
@@ -30,32 +33,33 @@ function dcm2bids = cat_conf_dcm2bids(expert)
     'It will also create a subdirectory with used MR protocols and final reports. ']
     ''
     'outputdir/studyDBdir/'
-   ['  ' char(763) 'BIDS ']
-   ['    ' char(763) 'BIDS[-protocoldirs] ']
-   ['     [' char(763) 'BIDS-protocoldir] ']
-   ['       [' char(763) 'derivatives ] ' ]
-   ['          ' char(763) 'catDCM2BIDS] ' ]
-   ['            ' char(763) 'sub-[siteID-]patientID ' ]
-   ['              ' char(763)  'ses-[date|seriesID] ' ]
-   ['                ' char(763)  '{anat|dwi|func|fmaps|...} ' ]
-   ['                  ' char(763)  '*sub-*_ses-*_*.{nii|json} .. processed data' ]
-   ['        ' char(763) 'sub-[siteID-]patientID']
-   ['          ' char(763)  'ses-[date|seriesID]']
-   ['            ' char(763)  '{anat|dwi|func|fmaps|...}']
-   ['              ' char(763)  'sub-*_ses-*_*.{nii|json} .. raw images' ]
-   ['  ' char(763) 'BIDS-private .. critical patient information (name, day of birth)']
-   ['  ' char(763) 'BIDS-report  .. overview tables ']
-   ['  ' char(763) 'catDB2BIDS   .. main "database" ']
-   ['  ' char(763) 'catDB2BIDS-tables  .. main database overview tables ']
+   ['  ' b 'BIDS']
+   ['  ' v e 'BIDS[-protocoldirs]']
+   ['  ' v s e '[BIDS-protocoldir]']
+   ['  ' v s s b '[derivatives']
+   ['  ' v s s v e 'catDCM2BIDS]']
+   ['  ' v s s v s e 'sub-[siteID-]patientID']
+   ['  ' v s s v s s e 'ses-[date|seriesID]']
+   ['  ' v s s v s s s e '{anat|dwi|func|fmaps|...}']
+   ['  ' v s s v s s s s e '*sub-*_ses-*_*.{nii|json} .. processed data']
+   ['  ' v s s e 'sub-[siteID-]patientID']
+   ['  ' v s s s e 'ses-[date|seriesID]']
+   ['  ' v s s s s e '{anat|dwi|func|fmaps|...}']
+   ['  ' v s s s s s e 'sub-*_ses-*_*.{nii|json} .. raw images']
+   ['  ' b 'BIDS-private          .. critical patient information (name, day of birth)']
+   ['  ' b 'BIDS-report           .. overview tables']
+   ['  ' b 'catDCM2BIDSdb         .. main "database"']
+   ['  ' e 'catDCM2BIDSdb-tables  .. main database overview tables']
    ''
     };
+  clear b e v s;
   
   subdir            = cfg_entry;
   subdir.tag        = 'subdir';
-  subdir.name       = 'Study/Database Dicectory';
+  subdir.name       = 'Study Directory';
   subdir.strtype    = 's';
   subdir.num        = [0 Inf];
-  subdir.val        = {'CATBIDS'};
+  subdir.val        = {'study'};
   subdir.help       = {
     'The directory is created within the chosen output directory. If no name is given no subdirectory is created. ' ''};
 
@@ -165,7 +169,7 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   centerdict.tag      = 'Pcenterdict';
   centerdict.name     = 'Center Dictionary File';
   centerdict.filter   = 'any';
-  centerdict.ufilter  = '.*\.json$';
+  centerdict.ufilter  = 'site.*\.json$';
   centerdict.val      = {{''}};
   centerdict.num      = [0 Inf];
   centerdict.help     = {
@@ -199,7 +203,19 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   subIDform         = cfg_menu;
   subIDform.tag     = 'subIDform';
   subIDform.name    = 'Subject ID form (expert)';
-  if expert > 1
+  subIDform.help    = {
+    ['Definition of the BIDS subject ID with PatientID (PID) only or as combination ' ...
+    'with the SITE, as DeviceSerialNumber or recoded by a fitting entry in the ' ...
+    '"Center Dictionary File". The SITE entry is used by default as the PID is given ' ...
+    'by a center and might be not unique in multicenter studies. ']
+    };
+  subIDform.labels  = {
+    'sub-PID', ...
+    'sub-SITE-PID', ...
+    };
+  subIDform.values  = {1,2};
+  if expert > 1 % extended version 
+    % to run multiple studies a study dictionary json/tsv file could be used
     subIDform.name    = 'Subject ID form (developer)';
     subIDform.labels  = {
       'sub-PID', ...
@@ -209,47 +225,26 @@ function dcm2bids = cat_conf_dcm2bids(expert)
       'sub-STUDY-SITE-PID'
       };
     subIDform.values  = {1,2,3,4,5};
-    subIDform.help    = {
-      'PID=PatientID, SITE=ScannerID, STUDY=StudyID .'
-      };
-  else
-    subIDform.labels  = {
-      'sub-PID', ...
-      'sub-SITE-PID', ...
-      };
-    subIDform.values  = {1,2};
+    subIDform.help    = [subIDform.help; {
+      'The STUDY is defined by the GUI entry here. '; 
+      }];
   end
   subIDform.val     = {2};
   subIDform.hidden  = expert<1;
-  subIDform.help    = {
-   ['Definition of the BIDS subject ID with PatientID (PID) only or as combination ' ...
-    'with the SITE, as DeviceSerialNumber or recoded by a fitting entry in the ' ...
-    '"Center Dictionary File". The SITE entry is used by default as the PID is given ' ...
-    'by a center and might be not unique in multicenter studies. ']
-    };
 
 
-    % === not implemented yet ===
+
+  % === not implemented yet ===
   ProtocolFileName         = cfg_menu;
   ProtocolFileName.tag     = 'ProtocolFileName';
   ProtocolFileName.name    = 'Use Fitting Protocol Filter File Name';
   ProtocolFileName.labels  = {'Yes','No'};
   ProtocolFileName.values  = {1,0};
   ProtocolFileName.val     = {1};
-  ProtocolFileName.hidden  = expert<1;
+  ProtocolFileName.hidden  = true; %expert<1;
   ProtocolFileName.help    = {
     'Redefine the name of a protocol by the filename of the fitting protocol filter.'
     };
-
-  % not really needed as the temp-dir is in principle the internal data-base
-  deltemp         = cfg_menu;
-  deltemp.tag     = 'deltemp';
-  deltemp.name    = 'Delete Temporary Files';
-  deltemp.labels  = {'Yes','No'};
-  deltemp.values  = {1,0};
-  deltemp.val     = {0};
-  deltemp.hidden  = expert<1;
-  deltemp.help    = {''};
 
   % study selector/filter - NOT WORKING YET
   studies         = cfg_entry;
@@ -258,7 +253,7 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   studies.strtype = 's';
   studies.num     = [0 Inf];
   studies.val     = {''};
-  studies.hidden  = expert<1;
+  studies.hidden  = true; %expert<1;
   studies.help    = {
     'Specify the export of specific studies by studyID or the defined study abbreviations.' ''};
 
@@ -281,17 +276,6 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   gzipe.hidden     = expert<0;
   gzipe.help       = {'GZIP output NIFTI files in the BIDS directories.'};
 
-  verbose          = cfg_menu;
-  verbose.tag      = 'verbose';
-  verbose.name     = 'Be verbose (expert)';
-  verbose.labels   = {'No','Yes'};
-  verbose.values   = {0,1};
-  verbose.val      = {1};
-  verbose.hidden   = expert<1;
-  verbose.help     = {
-   ['Command line output level as one row per scan (basic) or with additional ' ...
-    'processing information (extensive) for debugging. ']};
- 
   % limit output
   output           = cfg_menu;
   output.tag       = 'output';
@@ -304,10 +288,10 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   output.values    = {0,1,2,3};
   output.val       = {2};
   output.help      = {
-   ['Use option 0 to get an overview of (a subset) of your DICOM data that ' ...
-    'import the data into but without further processing and BIDS output. ' ...
-    'The reported protocols can then be used to define ones own protocol filter sets. '] 
-    'Option 1 and 2 allows then prepare the BIDS data for the given protocol sets. '
+   ['Use option 0 to import a subset of the data without running further processing and BIDS output ' ...
+    'to get an overview of the used protocols and prepare your own protocol filter sets. '] 
+    'Option 1 and 2 allows then prepare the output the only data that fits the defined protocols. ' 
+    'Option 3 exports all Data to BIDS. '
     ''
     };
 
@@ -333,13 +317,14 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   preprocessing.labels  = {'No','Yes','Yes (export to derivatives)'}; 
   preprocessing.values  = {0,1,2};
   preprocessing.val     = {1};
-  preprocessing.hidden  = true; 
+  preprocessing.hidden  = expert<1; 
   preprocessing.help    = { ...
-   ['Run SPM preprocessing to estimate brain tissue volumes (anat), ' ....
+   ['Run SPM preprocessing to estimate brain tissue volumes (anat), ' ...
     'diffusivity (FA/AD) and functional connectivity using SPM. ' ...
     'Export realigned maps. ']};
 
-  % denoising, bias-correction?, resampling to MNI 
+  % optimizing: denoising, bias-correction?, resampling to MNI with specific BB
+  %{
   optimizing         = cfg_menu;
   optimizing.tag     = 'optimizing';
   optimizing.name    = 'Run optimization (expert)';
@@ -348,7 +333,8 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   optimizing.val     = {0};
   optimizing.hidden  = expert<1; 
   optimizing.help    = { ...
-    'Run denoising.'};
+    'Run optimization with denoising, slice-motion/bias-correction, and resampling in MNI.'};
+  %}
 
   % preprocessing
   protocolsubdirs         = cfg_menu;
@@ -384,9 +370,10 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   opts            = cfg_branch;
   opts.tag        = 'opts';
   opts.name       = 'Options';
-  opts.val        = {ProtocolFileName, studies, deltemp, anonymize, ...
-    preprocessing, gzipi, gzipe, verbose, output, protocolsubdirs, subIDform};
-  opts.help       = {'Parameters to control the selection of input files. '}; 
+  opts.val        = {ProtocolFileName, studies, anonymize, preprocessing, ...
+                      gzipi, gzipe, output, protocolsubdirs, subIDform};
+  opts.help       = {['Parameters to control the processing and output of ' ...
+                      'the converted data and its export to BIDS. ']}; 
 
 
   % batch
@@ -395,7 +382,7 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   dcm2bids.tag    = 'dcm2bids';
   dcm2bids.name   = 'DICOM2BIDS';
   dcm2bids.prog   = @cat_io_dcm2bids;
-  %dcm2bids.vout   = @vout_io_dcm2nii; % not ready yet
+  %dcm2bids.vout   = @vout_io_dcm2bids; % not ready yet
   dcm2bids.val    = {datadir, outdir, subdir, dicts, opts}; 
   dcm2bids.help   = { ...
    ['This batch uses DCM2NIIX to convert DICOM into NIFTI images with JSON sidecars. ' ...

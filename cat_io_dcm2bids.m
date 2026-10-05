@@ -18,18 +18,17 @@ function cat_io_dcm2bids(job)
 % if it is still there then something went wrong or the process was interupted
 % this is also required in case of 4d data!
 
-%     
-%  * try to replace incorrectly introduced German letters in Names?
-%  * add simpler test-protocols rather then the DZPG things
-%  * BUG: 
+%  Minor points:    
+%  . Try to replace incorrectly introduced German letters in Names?
+%    >> maybe better via the csv/json read/write functions
+%  . Add simpler test-protocols rather then the DZPG things in CAT as 
+%    example?
+%  . no acquisition duration in standard protocols !
+%    but nice to have otherwise could be done by dime diff.
+%
+%  * BUGS: 
 %     - use minimum age for participant.tsv - (min)age
-%  * BUG: 
 %     - sites with different entries > cell rather then struct !
-%  * BUG: 
-%     - no acquisition duration in standard protocols !
-%     - but nice to have otherwise
-%  * BUG: 
-%     - nii BIDS export issue? >> test .nii.gz
 %  * feature:
 %     - add separate protocols tables by BIDS type?
 % 
@@ -172,23 +171,23 @@ function cat_io_dcm2bids(job)
 %   - get BIDS test cases
 %   - QC Tests (MR-ART?, DZPG samples)
 
-
+ 
   def.data                  = {};    % input DCM directories (add JSON/NII input later)
   def.outdir                = {pwd}; % main output directory
-  def.subdir                = 'catDCM2BIDS'; % default
+  def.subdir                = 'study'; % default
   def.BIDSdir               = 'BIDS';
   
-  def.dicts.Ptbldirs        = {};    % input DCM protocol directories
+  def.dicts.Pprotocoldirs   = {};    % input DCM protocol directories
   def.dicts.Pcenterdict     = {};    % dictionary for center names (otherwise scanner ID)
   def.dicts.Pstudydict      = {};    % not implemented yet
   def.dicts.Psubjdict       = {};    % not implemented yet
 
   def.opts.ProtocolFileName = 1;     % replace protocol name by the filenames
-                                     % of the evaluation protocols under Ptbldirs 
+                                     % of the evaluation protocols under protocol directories 
   def.opts.gzipi            = 1;     % internal use of nii.gz (save disk space but maybe a bit slower) 
   def.opts.gzipe            = 1;     % external use of nii.gz (save disk space but nonoptimal for SPM processing)
   def.opts.tolerance        = 5;     % tolerance in percent for MR parameters (does not help for ordinal variables)
-  def.opts.Pdcm2nii         = getDCM2NIIX; 
+  def.opts.Pdcm2nii         = getDCM2NIIX; % detect DCM2NIIX installation directory
   def.opts.verb             = 1;     % 0-no, 1-yes
   def.opts.output           = 2;     % 0-no, 1-only json, 2-json+nii (input protocols), 3-full
   %def.opts.studies          = '';    % study filter >> file
@@ -210,33 +209,23 @@ function cat_io_dcm2bids(job)
   def.opts.preprocessing    = 1;     % run segmentation (anat) 
   def.opts.denoise          = 0;     % do denoising
   def.opts.ignoreScouts     = 1;     % remove localizer/scouts ASAP
-  def.opts.protocolsubdirs  = 1; 
+  def.opts.protocolsubdirs  = 0;     % use additional sub-directories to separate between protocols
+  def.opts.BIDSsep          = '-';   % Use extra BIDS-incompatible separator 
   
   if ~exist('job','var'), job = struct(); end
   job = cat_io_checkinopt(job,def); 
-
+  if isempty(job.data), return; end
   
   
 
   %% ======================================================================
-  if 0
-    % my quick non-GUI test
-    Pdcmdir      = {'/Users/robertdahnke/MRData/20260819 - CIRC-CAT - DCM2BIDS/DCM'};
-    Pprodictdirs = {'/Users/robertdahnke/MRData/20260819 - CIRC-CAT - DCM2BIDS/protocols/DZPG'};
-    Pcenterdict  = {'/Users/robertdahnke/MRData/20260819 - CIRC-CAT - DCM2BIDS/protocols/cites.json'}; 
-    Pstudydict   = {'/Users/robertdahnke/MRData/20260819 - CIRC-CAT - DCM2BIDS/protocols/studies.json'}; 
-    %Psubjdict    = {''}; 
-    Poutdir      = '/Users/robertdahnke/MRData/20260819 - CIRC-CAT - DCM2BIDS/TMP5'; 
-    tol          = 1; 
-  else
-    Pdcmdir      = job.data;
-    Pcenterdict  = job.dicts.Pcenterdict;
-    Pprodictdirs = job.dicts.Pprotocoldirs;
-    %Pstudydict   = job.dicts.Pstudydict;
-    %Psubjdict    = job.dicts.Psubjdict;
-    Poutdir      = fullfile(job.outdir{1},job.subdir); 
-    tol          = job.opts.tolerance;
-  end
+  Pdcmdir      = job.data;
+  Pcenterdict  = job.dicts.Pcenterdict;
+  Pprodictdirs = job.dicts.Pprotocoldirs;
+  %Pstudydict   = job.dicts.Pstudydict;
+  %Psubjdict    = job.dicts.Psubjdict;
+  Poutdir      = fullfile(job.outdir{1},job.subdir); 
+  tol          = job.opts.tolerance;
   if ~exist(Poutdir,'dir'), mkdir(Poutdir); end
 
   % main DB directory
@@ -285,7 +274,8 @@ function cat_io_dcm2bids(job)
   Pdcmdirs = {}; Pdcmdirs0 = {};
   for di = 1:numel(Pdcmdir)
     Pdcmdirsdi = cat_vol_findfiles(Pdcmdir{di},'*',struct('dirs',1));
-    Pdcmdirsdi(cellfun(@(x) numel(x)>1,strfind(Pdcmdirsdi,Pdbdirnam))) = []; 
+    %Pdcmdirsdi(cellfun(@(x) numel(x)>1,strfind(Pdcmdirsdi,Pdbdirnam))) = []; 
+    Pdcmdirsdi(cat_io_contains(Pdcmdirsdi,Pdbdirnam)) = []; 
     if job.opts.ignoreScouts
       if di==1, cat_io_cprintf('blue','\n  Skip all localizer and scouts!\n\n'); end
       Pdcmdirsdi(cat_io_contains(lower(Pdcmdirsdi),{'localizer','scout'})) = []; 
@@ -318,11 +308,11 @@ function cat_io_dcm2bids(job)
   %% basic initialization that might have to be extended
   Vjson = cell(1,numel(Pdcmdirs)); sci = 0;
   sub = Vjson; ses = Vjson; datatype = Vjson; pro = Vjson; acq = Vjson; 
-  run = Vjson; task = Vjson; suffix = Vjson; site = Vjson; 
+  sn = Vjson; task = Vjson; suffix = Vjson; site = Vjson; scankey = Vjson;
   Panon = Vjson; Pp0 = Vjson; Pwc1 = Vjson; Pdbdir = Vjson;
   Pdbdirpath = Vjson; BIDSpathd = Vjson;
   BIDSpath = Vjson; BIDSdir = Vjson; BIDSfile = Vjson;
-  PID = ''; sni = 0; stime = datetime('now'); SNR = 0;
+  PID = ''; sni = 0; stime = datetime('now'); 
   QM = struct('NSR',[],'ISR',[],'RES',[],'BSM',[],'WSM',[],'vx_vol',[],'SQR',[]); 
   for fdiri = 1:numel(Pdcmdirs)
     
@@ -384,35 +374,29 @@ function cat_io_dcm2bids(job)
 
       % ignore localizer and scout scans
       % ===================================================================
-      if SNR ~= Vjson{sci}.SeriesNumber %&& job.opts.ignoreScouts
-        SNR = Vjson{sci}.SeriesNumber;
-        fname1 = sprintf('%3d) %s', Vjson{sci}.SeriesNumber, spm_str_manip(strrep(sprintf('%s_%s_%s', ...
-          strrep(Vjson{sci}.PatientID, strrep(char(Vjson{sci}.ScanDate),'-',''),''), ...
-          strrep(char(Vjson{sci}.ScanDate),'-',''), Vjson{sci}.ProtocolName),'__','_'),'l55'));
-        if any(cat_io_contains(lower(fnameparts),{'localizer','scout'}))
-          cat_io_cprintf([.5 .5 .5],'%60s : ignore localizer/scout\n',fname1); 
+      fname1 = sprintf('%3d) %s', Vjson{sci}.SeriesNumber, spm_str_manip(strrep(sprintf('%s_%s_%s', ...
+        strrep(Vjson{sci}.PatientID, strrep(char(Vjson{sci}.ScanDate),'-',''),''), ...
+        strrep(char(Vjson{sci}.ScanDate),'-',''), Vjson{sci}.ProtocolName),'__','_'),'l55'));
+      if any(cat_io_contains(lower(fnameparts),{'localizer','scout'}))
+        cat_io_cprintf([.5 .5 .5],'%60s : ignore localizer/scout\n',fname1); 
+        continue; 
+      end
+      % ignore 2D data
+      if exist(Pnii{fscni},'file')
+        Vsz = dir(Pnii{fscni});
+        if isempty(Vsz) || ~isfield(Vsz,'bytes')
+          cat_io_cprintf([.5 .5 .5],'%60s : ignore 2D data\n',fname1); 
           continue; 
         end
-        % ignore 2D data
-        if exist(Pnii{fscni},'file')
-          Vsz = dir(Pnii{fscni});
-          if isempty(Vsz) || ~isfield(Vsz,'bytes')
+        if Vsz.bytes/1024 < 1000 
+          evalc('V = spm_vol(Pnii{fscni});'); 
+          if numel(V(1).dim)>2 && any(V(1).dim < 5) 
             cat_io_cprintf([.5 .5 .5],'%60s : ignore 2D data\n',fname1); 
             continue; 
           end
-          if Vsz.bytes/1024 < 1000 
-            evalc('V = spm_vol(Pnii{fscni});'); 
-            if numel(V.dim)>2 && any(V.dim < 5) 
-              cat_io_cprintf([.5 .5 .5],'%60s : ignore 2D data\n',fname1); 
-              continue; 
-            end
-          end
         end
-      else
-        continue
       end
-
-
+    
 
 
       %% create DB structure
@@ -444,17 +428,25 @@ function cat_io_dcm2bids(job)
       % site definition 
       site{sci} = setupSites(Vjson{sci},sites);
   
-
+      % study definition %%% need later refinement
+      studynam = job.subdir;
 
 
       % main BIDS fields (subject, session, datatype, weighting, ...)
       % ===================================================================
       % subject
+      bs = def.opts.BIDSsep; 
       switch job.opts.subIDform
         case 1 % sub-PID
           sub{sci} = sprintf('sub-%s', strrep(Vjson{sci}.PatientID,'_','')); %#ok<*SAGROW>
         case 2 % sub-SITE-PID
-          sub{sci} = sprintf('sub-%s-%s', site{sci}, strrep(Vjson{sci}.PatientID,'_','')); %#ok<*SAGROW>
+          sub{sci} = sprintf('sub-%s%s%s', site{sci}, bs, strrep(Vjson{sci}.PatientID,'_','')); %#ok<*SAGROW>
+        case 3 % sub-STUDY-PID
+          sub{sci} = sprintf('sub-%s%s%s', studynam, bs, strrep(Vjson{sci}.PatientID,'_','')); %#ok<*SAGROW>
+        case 4 % sub-SITE-STUDY-PID
+          sub{sci} = sprintf('sub-%s%s%s%s%s', site{sci}, bs, studynam, bs, strrep(Vjson{sci}.PatientID,'_','')); %#ok<*SAGROW>
+        case 5 % sub-STUDY-SITE-PID
+          sub{sci} = sprintf('sub-%s%s%s%s%s', studynam, bs, site{sci}, bs, strrep(Vjson{sci}.PatientID,'_','')); %#ok<*SAGROW>
       end
 
       % session
@@ -464,11 +456,11 @@ function cat_io_dcm2bids(job)
         ses{sci}  = sprintf('ses-%s',fnameparts{3}(1:min(8,numel(fnameparts{3}))));
       end
       if numel(fnameparts{3}) > 8  &&  job.opts.anonymize==0
-        ses{sci}  = sprintf('%s-%s',ses{sci},fnameparts{3}(9:end)); 
+        ses{sci}  = sprintf('%s%s%s',ses{sci}, bs, fnameparts{3}(9:end)); 
       end
 
       % protocol directory 
-      if match > .5
+      if match > 0
         if job.opts.protocolsubdirs
           BIDSsubdir = fullfile(job.BIDSdir, job.BIDSsubdir, spm_file(protocols{match,1},'basename'));
         else
@@ -487,10 +479,36 @@ function cat_io_dcm2bids(job)
 
       % evaluate protocols
       datatype{sci} = setupDatatype(pro{sci}); 
-      task{sci}     = setupTask(pro{sci} );
+      series = pro{sci}; 
+      FN = {'ProtocolName', 'SeriesDescription', 'SequenceName'};
+      for fni = 1:numel(FN)
+        if isfield(Vjson{sci},FN{fni}), series = [series ' ' Vjson{sci}.(FN{fni})]; end %#ok<AGROW>
+      end
+      task{sci}     = setupTask(datatype{sci}, series );
       % %%%%%%%%%%%%%%%%%%%%%%%%%% refine run definition 
-      run{sci}      = sprintf('%03.0f',Vjson{sci}.SeriesNumber); % fnameparts{4})); 
-      acq{sci}      = sprintf('acq-%s-%s', run{sci}, pro{sci}); 
+      % Instead of the acq-series number it would be nice to have a run variable.
+      % I would like to have it all but only necessary cases, e.g. counting
+      % from 1 to 2 if there are more equal scans. However, this is typically
+      % only clear with the second but not the first scan ...
+      sn{sci}       = sprintf('%03.0f',Vjson{sci}.SeriesNumber); % fnameparts{4})); 
+      % Count scans of the same subject, session and series (e.g., fieldmap
+      % magnitude/phase or multi-echo images). The keys are stored because
+      % cleanupVjson later removes the Patient fields from Vjson.
+      scankey{sci} = scanKey(Vjson{sci});
+      run  = sum( strcmp( scankey(1:sci) , scankey{sci} ) );
+      % look ahead to the next file to detect a series with further images
+      runs = run;
+      if numel(Pjson) > fscni
+        Pjsonnext = spm_file(Pjson{fscni+1},'path',Pdirfi); % not yet imported
+        if exist(Pjsonnext,'file')
+          runs = runs + strcmp( scanKey(cat_io_json(Pjsonnext)) , scankey{sci} );
+        end
+      end
+      if runs > 1
+        acq{sci}    = sprintf('acq-%s%s%d%s%s', sn{sci}, bs, run, bs, pro{sci}); 
+      else
+        acq{sci}    = sprintf('acq-%s%s%s', sn{sci}, bs, pro{sci}); 
+      end
       % get suffix 
       [suffix{sci},acq{sci}] = setupSuffix(datatype{sci}, acq{sci}, Vjson{sci}.SeriesDescription);
       
@@ -502,12 +520,11 @@ function cat_io_dcm2bids(job)
       BIDSpathd{sci} = fullfile(Poutdir, BIDSsubdir, 'derivatives', BIDSdir{sci}); 
       BIDSfile{sci}  = sprintf('%s_%s_%s%s_%s.json', ...
         sub{sci}, ses{sci}, acq{sci}, task{sci}, suffix{sci});
-      if match < 1 && ~isempty(protocols) && ~isempty(protocols{1})
+      if ~match && ~isempty(protocols) && ~isempty(protocols{1})
         for pfi = 1:numel(Pnfailedid)
-          %spm_file(char(Pprodictdir{Pnfailedid(pfi)}),'basename');
           pdir      = fullfile( BIDSpath{sci} , 'matchfiles' );
           if ~exist(pdir,'dir'), mkdir(pdir); end
-          acq2      = sprintf('acq-%s-%s', run{sci}, pro{sci}); 
+          acq2      = sprintf('acq-%s%s%s', sn{sci}, bs, pro{sci}); 
           BIDSfile2 = sprintf('%s_%s_%s%s_%s.csv', ...
             sub{sci}, ses{sci}, acq2, task{sci}, suffix{sci});
 
@@ -617,8 +634,8 @@ function cat_io_dcm2bids(job)
         end
 
         % anonymize and save json file
-        Vjson{sci} = cleanupVjson(Vjson{sci},'protocol'); 
-        cat_io_json( spm_file( fullfile(BIDSpath{sci},BIDSfile{sci}),'ext','.json'), Vjson{sci}); 
+        Vjsonp = cleanupVjson(Vjson{sci},'protocol'); 
+        cat_io_json( spm_file( fullfile(BIDSpath{sci},BIDSfile{sci}),'ext','.json'), Vjsonp); 
 
 
         %%%% all protocols
@@ -650,7 +667,7 @@ function cat_io_dcm2bids(job)
   end
   fprintf('\nDCM2BIDS - import done.\n')
 
-  if job.opts.output > 0
+  if job.opts.output > 0  &&  isfield(job,'BIDSsubdir')
     % create final report form result dir
     %spm_file(Pprodictdirs,'basename')
     % study||protocol||subjectID|sex|minage|maxage||#anat/sub|#dwi/sub|#func/sub||aQR|dQR|fQR|SQR||Vgm|Vwm|Vcsf|TIV|mnFA|mn...
@@ -669,6 +686,7 @@ function cat_io_dcm2bids(job)
     %  - dwi:      AD,FD, ...
     %
     Psubjecttable = fullfile(Poutdir,[job.BIDSdir '-report'],sprintf('report_%s.%s', job.BIDSsubdir, job.opts.tableformat));
+    if exist(Psubjecttable,'file'), delete(Psubjecttable); end
     if job.opts.protocolsubdirs
       Pdirs = cat_vol_findfiles( fullfile(Poutdir,job.BIDSdir,job.BIDSsubdir),'*',struct('depth',1,'dirs',1)); 
     else
@@ -681,12 +699,15 @@ function cat_io_dcm2bids(job)
       else
         Pparticipants = fullfile(Poutdir,job.BIDSdir,job.BIDSsubdir,'participants.tsv');
       end
-      if exist(Psubjecttable,'file'), delete(Psubjecttable); end
-      Tparticipants = cat_io_csv(Pparticipants);
       Thdr = {'project', 'protocol','#subjects', '#sessions/subject', ...
-              '#anat/subjects', '#dwi/subjects', '#func/subjects', ...
-              '%males', 'mean(age)', 'std(age)', 'min(age)', 'max(age)' }; 
-
+        '#anat/subjects', '#dwi/subjects', '#func/subjects', ...
+        '%males', 'mean(age)', 'std(age)', 'min(age)', 'max(age)' }; 
+      if ~exist(Pparticipants,'file')
+        Tparticipants = Thdr;
+      else
+        Tparticipants = cat_io_csv(Pparticipants,'','',struct('delimiter','\t'));
+      end
+      
       % look for available data
       if ~exist(Pdirs{pdi},'dir'), continue; end
       subjects = cat_vol_findfiles( Pdirs{pdi}, 'sub-*', struct('depth',1,'dirs',1));
@@ -696,11 +717,13 @@ function cat_io_dcm2bids(job)
       dwi      = cat_vol_findfiles( Pdirs{pdi}, 'dwi',   struct('depth',3,'dirs',1));
 
       % add row
-      Tnewrow = {job.subdir, Protocol, numel(subjects), numel(sessions)/numel(subjects), ...
-        numel(anat)/numel(subjects), numel(dwi)/numel(subjects), numel(func)/numel(subjects), ...
-        mean(cellfun(@(x) x=='M', Tparticipants(2:end,2))), mean(cell2mat(Tparticipants(2:end,3))), ...
-        std(cell2mat(Tparticipants(2:end,3))), min(cell2mat(Tparticipants(2:end,3))), max(cell2mat(Tparticipants(2:end,3))), ...
-        }; 
+      if size(Tparticipants,1)>1
+        Tnewrow = {job.subdir, Protocol, numel(subjects), numel(sessions)/numel(subjects), ...
+          numel(anat)/numel(subjects), numel(dwi)/numel(subjects), numel(func)/numel(subjects), ...
+          mean(cellfun(@(x) strcmp(x,'M'), Tparticipants(2:end,2))), mean(cell2mat(Tparticipants(2:end,3))), ...
+          std(cell2mat(Tparticipants(2:end,3))), min(cell2mat(Tparticipants(2:end,3))), max(cell2mat(Tparticipants(2:end,3))), ...
+          }; 
+      end
       
       %
       updateTable(Psubjecttable,Thdr,Tnewrow,pdi,0);
@@ -714,7 +737,17 @@ function cat_io_dcm2bids(job)
 
 end
 % =========================================================================
-function [Pdbdirpath,Pdbdir] = importScan( Vjson, Pjson, Pnii, Pdcmdirs, Pmdbdir, Ptbldir, fnameparts, niiext, opts )
+function key = scanKey(V)
+%scanKey. Subject/session/series identifier to count images of one series.
+  if ~isfield(V,'SeriesNumber') || isempty(V.SeriesNumber), key = ''; return; end
+  key = sprintf('%d',V.SeriesNumber);
+  FN  = {'PatientID','StudyInstanceUID'};
+  for fni = 1:numel(FN)
+    if isfield(V,FN{fni}), key = [key '|' char(string(V.(FN{fni})))]; end %#ok<AGROW>
+  end
+end
+% =========================================================================
+function [Pdbdirpath,Pdbdir] = importScan(Vjson, Pjson, Pnii, Pdcmdirs, Pmdbdir, Ptbldir, fnameparts, niiext, opts )
 %
 
 %datetime( Vjson.AcquisitionDateTime , 'Format','yyyyMMdd-hhmmss'))
@@ -908,11 +941,11 @@ function T = structEqual(S1,S2)
   for fni = 1:numel(FN1)
     if (isnumeric( S1.(FN1{fni}) ) && isnumeric( S2.(FN1{fni}) )) || ...
        (islogical( S1.(FN1{fni}) ) && islogical( S2.(FN1{fni}) ))
-      T = T & (S1.(FN1{fni}) == S2.(FN1{fni})); 
+      T = T & isequal(S1.(FN1{fni}),S2.(FN1{fni})); 
     elseif ischar( S1.(FN1{fni}) ) && ischar( S2.(FN1{fni}) ) 
       T = T & (strcmp(S1.(FN1{fni}),S2.(FN1{fni})));
     elseif isstruct( S1.(FN1{fni}) ) && isstruct( S2.(FN1{fni}) ) 
-      T = T & structEqual(S1,S2);
+      T = T & structEqual(S1.(FN1{fni}),S2.(FN1{fni}));
     elseif iscellstr( S1.(FN1{fni}) ) && iscellstr( S2.(FN1{fni}) )   %#ok<ISCLSTR>
       T = T & strcmp(char(join(S1.(FN1{fni}))),char(join(S2.(FN1{fni})))); 
     elseif iscell( S1.(FN1{fni}) ) && iscell( S2.(FN1{fni}) )  
@@ -998,9 +1031,9 @@ function [same,job] = checkPreviousSetting(Popts,job)
       p = spm_input('Different BIDS setup detected. Select how to go on.',1,'m', ...
         {'Stop processing to update settings','Use old BIDS settings','Replace old BIDS directory'},[0 1 2],1); 
       if p == 1
-        same     = 1;
-        job.opts = opts; 
-        job.dict = dict; 
+        same      = 1;
+        job.opts  = opts; 
+        job.dicts = dicts; 
       elseif p == 2
         spm_figure('Clear',spm_figure('FindWin','Interactive'));
         p = spm_input('Realy replace old directory?',1,'Yes|No',[1 0],2); 
@@ -1060,21 +1093,21 @@ function P = getDCM2NIIX
     error('cat_io_dcm2bids:noDcm2niix', ...
       'Cannot find dcm2niix. Please install from: \n  %s\n\n', ... 
       spm_file('https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage' , ...
-        'link', 'https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage')); 
+        'link','https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage')); 
   end
 end
 % =========================================================================
 function tmpdir = dcm2niix( Pdcmdirs , Poutdir, Pdcm2niix, gzipi, rerun)
 %dcm2niix. Import and convert DICOM data 
-  tmpdir = fullfile(Poutdir,'+catDCM2BIDSimportpath',Pdcmdirs); 
+  tmpdir = fullfile(Poutdir,'catDCM2BIDSimportpath',Pdcmdirs); 
   if ~exist(tmpdir,'dir') || rerun
     if ~exist(tmpdir,'dir'), mkdir(tmpdir); end
   
-    if gzipi, gz = '-z'; else, gz = ''; end
+    if gzipi, gz = 'y'; else, gz = 'n'; end
 
     % convert DCM in directory
     % - use = as more unique separator 
-    cmd = sprintf('%s -f "%%f=%%p=%%t=%%s" -p n %s y -ba n -o "%s" "%s"', ...
+    cmd = sprintf('%s -f "%%f=%%p=%%t=%%s" -p n -z %s -ba n -o "%s" "%s"', ...
       Pdcm2niix, gz, tmpdir,  Pdcmdirs); 
     [status,cmdout] = system(cmd); %#ok<ASGLU>
   end
@@ -1091,8 +1124,8 @@ end
 function [match,pname,mismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,Ptbldir,protocols,tol,job,sites)
 % test protocols
 
-  if isempty(protocols{1,1})
-  % no given protocols  
+  if isempty(protocols) || isempty(protocols{1,1})
+  % no given protocols
     pmatchs         = inf; 
     pmatch          = 0; 
     mismatchstr{1}  = cell(0,3); 
@@ -1112,7 +1145,6 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,
       pmatchs(pri) = numel(FNpi); 
       for fni = 1:numel(FNpi)
         if isfield( Vjson, FNpi{fni} ) 
-          pmatchn = 1; 
           if strcmp(FNpi{fni}(1:2),'x_'), continue; end % comment
           
           if ( islogical( Vjson.(FNpi{fni})) || isnumeric( Vjson.(FNpi{fni})) ) && ...
@@ -1175,9 +1207,10 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,
             end
             mismatchstr{pri} = [ mismatchstr{pri}; {FNpi{fni} tstr1 tstr2 }]; 
           end
+
+          pmatch(pri) = pmatch(pri) & pmatchn; 
         end
       end
-      pmatch(pri) = pmatch(pri) & pmatchn; 
     end
   end
 %% always print session 
@@ -1187,19 +1220,28 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,
   fname1     = sprintf('%3d) %s', Vjson.SeriesNumber, spm_str_manip(strrep(sprintf('%s_%s_%s', ...
                 strrep(Vjson.PatientID, strrep(char(Vjson.ScanDate),'-',''),''), ...
                 strrep(char(Vjson.ScanDate),'-',''), Vjson.ProtocolName),'__','_'),'l55'));
-  if all( mismatchcnt > 0.05 )
-  % unknown protocol  
+  if isempty(protocols) || isempty(protocols{1,1})
+  % no given protocols: no match but use the DICOM protocol name
+    match      = 0;
+    Pnfailedid = [];
+    pname      = Vjson.ProtocolName;
+    Pfname     = '';
+    if job.opts.verb
+      fprintf('%60s : ',fname1);
+      datatype = setupDatatype(pname);
+      cat_io_cprintf([0 0 0.5],sprintf('%-50s%10s ', [datatype filesep pname], ''));
+    end
+    return
+  elseif all( mismatchcnt > 0.05 )
+  % unknown protocol
     Pnfailed   = mismatchcnt; %cellfun(@(x) size(x,1),mismatchstr);
     Pnfailedid = find(Pnfailed == min(Pnfailed));% & Pnfailed < 6);
-    pname      = Vjson.ProtocolName; 
-    Pfname     = ''; 
+    pname      = Vjson.ProtocolName;
+    Pfname     = '';
     if job.opts.verb
-      fprintf('%60s : ',fname1); 
-      pname0 = spm_file(protocols{Pnfailedid(1),2},'basename'); 
-      if isempty(protocols{1,1})
-        datatype = setupDatatype(pname); 
-        cat_io_cprintf([0 0 0.5],sprintf('%-50s%10s ', [datatype filesep pname], ''));
-      elseif min(Pnfailed) < 1 
+      fprintf('%60s : ',fname1);
+      pname0 = spm_file(protocols{Pnfailedid(1),2},'basename');
+      if min(Pnfailed) < 1
         % very close protocol
         Pfname     = protocols{Pnfailedid(1),2}; 
         cat_io_cprintf([.5 .5 0],sprintf('%-50s%10s ',pname0,'~'));
@@ -1209,11 +1251,12 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,
         cat_io_cprintf([1 .5 0],sprintf('%-50s%10s ', ...
           pname0, sprintf('%2.0f/%2.0f',min(Pnfailed), numel(Pnfailed))));
       else
+        datatype = setupDatatype(pname);
         cat_io_cprintf([.7 0 0],sprintf('%-50s%10s ', ...
-          'Unknown protocol', sprintf('%2.0f/%2.0f',min(Pnfailed), numel(Pnfailed))));
+          sprintf('Unknown %s protocol',datatype), ...
+          sprintf('%2.0f/%2.0f',min(Pnfailed), numel(Pnfailed))));
       end
     end
-    match = 1 - min(mismatchcnt);
   else
     Pnfailedid = {}; 
     %pname  = spm_file(protocols{find(pmatch==1 & max(pmatchs.*pmatch)==pmatchs,1,'first'),2},'basename'); 
@@ -1225,9 +1268,10 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,
       fprintf('%60s : ',fname1); 
       cat_io_cprintf([0 .5 0],sprintf('%-50s%10s ',pname0,''));
     end
-    match = 1 - min(mismatchcnt); 
   end
-  if isempty(protocols{1,1}), return; end
+  % match = 0 for no fitting protocol, otherwise the index of the fitting protocol
+  [mincnt,matchid] = min(mismatchcnt);
+  match = (mincnt <= 0.05) * matchid;
 
   % save non-fitting protocols
   % =======================================================================
@@ -1241,9 +1285,9 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,
   %% Pjson,Vjson,protocols,tol,opts
   if isempty(protocols{1,1})
     proSubdir = 'undefined'; 
-  elseif match > .95
+  elseif max(0,1 - min(mismatchcnt)) > .95
     proSubdir = 'conform';
-  elseif match > .5
+  elseif max(0,1 - min(mismatchcnt)) > .5
     proSubdir = 'accepted';
   elseif min(Pnfailed) < 6
     proSubdir = 'semiconform';
@@ -1263,7 +1307,7 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,
   if ~exist(Pprodir,'dir'), mkdir(Pprodir); end
 
   Vjsonc   = cleanupVjson(Vjson); 
-  if match <= 0.5  &&  ~isempty(protocols{1,1})
+  if ~match
     if min(Pnfailed) < 6
     % semi-match 
       for fi = 1:numel(Pnfailedid)
@@ -1280,11 +1324,11 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,
         for fni = 1:numel(FNpi)
           Vjson3.(FNpi{fni}) = Vjson.(FNpi{fni});
         end
-        cat_io_json(Pprofile,Vjson3);
+        cat_io_json(Pprofile,Vjson3); clear Vjson3;
 
         Pprofiled = fullfile(Pprosubdir,sprintf('%s-%s-diff.csv', ...
           spm_file(protocols{Pnfailedid(fi),2},'basename'),site));
-        cat_io_csv(Pprofiled,mismatchstr{pri});
+        cat_io_csv(Pprofiled,mismatchstr{Pnfailedid(fi)});
 
         Pqc = spm_file(protocols{Pnfailedid(fi),2},'prefix','qc');
         if exist(Pqc,'file')
@@ -1343,6 +1387,7 @@ end
 % =========================================================================
 function protocols = getProtocols(Pprodictdirs)
   protocols = cell(numel(Pprodictdirs),3); pdi = 0; 
+  if isempty(Pprodictdirs) || isempty(Pprodictdirs{1}), return; end
   for di = 1:numel(Pprodictdirs)
     if isempty(Pprodictdirs{di}), continue; end  
     if ~exist(Pprodictdirs{di},'dir')
@@ -1350,6 +1395,9 @@ function protocols = getProtocols(Pprodictdirs)
     end
     Pprodictsubdirs = cat_vol_findfiles(Pprodictdirs{di},'*.json');
     Pprodictsubdirs(cat_io_contains(Pprodictsubdirs,[filesep 'qc'])) = []; 
+    if isempty(Pprodictsubdirs) % 'cat_io_dcm2bids:noProtocols',
+      cat_io_cprintf('warn','No protocols found in:\n  %s\n',Pprodictdirs{di});
+    end
     for fi = 1:numel(Pprodictsubdirs)
       pdi = pdi + 1; 
       protocols{pdi,1} = spm_file(Pprodictdirs{di},'basename'); 
@@ -1357,9 +1405,10 @@ function protocols = getProtocols(Pprodictdirs)
       protocols{pdi,3} = cat_io_json(Pprodictsubdirs{fi});
     end
   end
-  if size(protocols,1)<1
-    Pstr = ''; for di = 1:numel(Pprodictdirs), Pstr = sprintf('%s  %s\n',Pprodictdirs{di}); end 
-    error('cat_io_dcm2bids:noProtocols','No Protocols found in:\n %s',Pstr);
+  protocols = protocols(1:max(1,pdi),:); % remove empty rows of directories without protocols
+  if isempty(protocols{1}) % 'cat_io_dcm2bids:noProtocols',
+    cat_io_cprintf('warn','No protocols found in any protocol directory:\n  %s\n', ...
+      strjoin(Pprodictdirs(:)',sprintf('\n  ')));
   end
 end
 % =========================================================================
@@ -1490,14 +1539,13 @@ function V = assurePatientDCMfields(V)
     end
   end
 
-  % estimate age if not given but possible 
-  if ~isfield(V,'PatientAge') && isfield(V,'PatientBirthDate') && ...
-      isfield(V,'ScanDate') 
+  % (re)estimate age
+  if isfield(V,'PatientBirthDate') && isfield(V,'ScanDate') 
     ScanDate     = datetime(V.ScanDate,'Format','uuuu-MM-dd');
     BirthDate    = datetime(V.PatientBirthDate,'Format','uuuu-MM-dd');
     V.PatientAge = char(duration( ScanDate - BirthDate, 'Format','y'));
     V.PatientAge = str2double(V.PatientAge(1:end-4)); 
-  else
+  elseif ~isfield(V,'PatientAge') 
     V.PatientAge = NaN;
   end
 
@@ -1524,7 +1572,7 @@ function datatype = setupDatatype(pro)
     datatype  = 'fmap';
   else
     % unknown protocols
-    cat_io_cprintf('red', sprintf('\n  Unkown BIDS datatype (anat/func/...) for protocol "%s"\n', lower(pro)) ) 
+    cat_io_cprintf('red', sprintf('\n  Unknown BIDS datatype (anat/func/...) for protocol "%s"\n', lower(pro)) ) 
     datatype = 'other';
   end
 end
@@ -1825,12 +1873,12 @@ function Po = prepNiigz(Pi,opts)
     for fi = 1:numel(Pi)
       if ~cat_io_contains( spm_file(Pi{fi},'ext') ,'gz') 
         Po{fi} = spm_file(Pi{fi},'ext','nii.gz');
-        if ~exist(Pi{fi},'file')
+        if ~exist(Po{fi},'file')
           gzip(Pi{fi});
           delete(Pi{fi}); 
         end
       else
-        if ~exist(Pi{fi},'file') && exist(spm_file(Pi{fi},'ext',''),'file')
+        if ~exist(Po{fi},'file') && exist(spm_file(Pi{fi},'ext',''),'file')
           gzip(spm_file(Pi{fi},'ext',''));
           delete(spm_file(Pi{fi},'ext',''));
         end
@@ -1904,7 +1952,7 @@ function matlabbatch = SPMsegment(Pfiles,opts)
     return
   end
 
-  Pfiles = prepNii(Pfiles,opts,0);
+  Pfiles = cellstr(prepNii(Pfiles,opts,0));
 
   % TPM setting 
   if exist(fullfile(spm('dir'),'TPM','mni0R1p5_TPM7blr.nii'),'file')
@@ -2033,9 +2081,10 @@ function QR = qualityRating(QM,Pprotocols)
     if isfield(QM,FN{fni}) && all(~(isnan(QCP.(FN{fni})))) && all(~isnan(QM.(FN{fni})))
       if numel(QCP.(FN{fni}))==2 && abs(diff(QCP.(FN{fni}))) > 0.001
         for i=1:numel(QM.(FN{fni}))
-          QR.(FN{fni}) = max(0.5,min(10.5, (QM.(FN{fni})(i) - QCP.(FN{fni})(1) ) / ...
+          QR.(FN{fni})(i) = max(0.5,min(10.5, (QM.(FN{fni})(i) - QCP.(FN{fni})(1) ) / ...
             ( QCP.(FN{fni})(2)*5/6 - QCP.(FN{fni})(1) ) * 10 + 1)); 
         end
+        QR.(FN{fni}) = mean( QR.(FN{fni}).^2 )^.5;  
       else
         QR.(FN{fni}) = 10.5 - 9.5*(abs(QM.(FN{fni}) - QCP.(FN{fni})(1))<.001);
       end
@@ -2280,7 +2329,7 @@ function [Pr,QM,Pqc] = runQC(P, type, opts, Pprotocols)
         end
     
         if run==1 % why only run 1?
-          Yn   = mean(Yd(1:min(size(Yr,4),opts.tlim)), 4);
+          Yn   = mean(Yd(:,:,:,1:min(size(Yr,4),opts.tlim)), 4);
           Yns  = cat_vol_approx(cat_vol_median3(Yn)); 
         end
       end
@@ -2341,31 +2390,27 @@ function [Pr,QM,Pqc] = runQC(P, type, opts, Pprotocols)
     QM.SQR    = nan; 
   end
 
-  if opts.verb == 1
-    printvals = isempty(Pprotocols); 
-    QR = qualityRating(QM,Pprotocols);
-    for fni = 1:numel(FNQC)
-      if (~printvals && isnan(QR.(FNQC{fni}))) || ...
-         ( printvals && isnan(QM.(FNQC{fni})))
-        fprintf('    -')
-      else
-        if printvals % original values
-          fprintf('%5.2f',QM.(FNQC{fni}));
-        else % ratings 
-          cat_io_cprintf(col2mark(QR.(FNQC{fni})),'%5.1f',QR.(FNQC{fni}));
-        end
-      end
-    end
-    if isnan(QR.SQR)
+  QR = qualityRating(QM,Pprotocols);
+  printvals = isempty(Pprotocols); 
+  for fni = 1:numel(FNQC)
+    if (~printvals && isnan(QR.(FNQC{fni}))) || ...
+       ( printvals && isnan(QM.(FNQC{fni})))
       fprintf('    -')
     else
-      cat_io_cprintf(col2mark(QR.SQR),'%5.1f',QR.SQR);
+      if printvals % original values
+        fprintf('%5.2f',QM.(FNQC{fni}));
+      else % ratings 
+        cat_io_cprintf(col2mark(QR.(FNQC{fni})),'%5.1f',QR.(FNQC{fni}));
+      end
     end
-    fprintf(' \n');
-  else
-    cat_io_cprintf('blue','BSM/WSM/ISR/NSR/RES: %4.2f %4.2f %4.2f %4.2f %4.2fmm\n', ...
-      QM.BSM,QM.WSM,QM.ISR,QM.NSR,QM.RES); 
   end
+  if isnan(QR.SQR)
+    fprintf('    -')
+  else
+    cat_io_cprintf(col2mark(QR.SQR),'%5.1f',QR.SQR);
+  end
+  fprintf(' \n');
+
   save(Pqc,'QM');
   cat_io_json(Pqcj,struct('qualitymeasures',QM,'qualityrating',QR)); 
 
@@ -2379,97 +2424,86 @@ function [Pm,Pc0,Pwc1,Pseg] = segmentanat(Pin,datatype,opts)
   %% segment on anonymized data!
   Pm = ''; Pc0 = ''; Pwc1 = ''; Pseg = ''; 
 
+  if ~opts.preprocessing, return; end
+
   if (strcmp( datatype, 'anat') || opts.preprocessing > 1) 
- 
-    if opts.denoise
-      Pm   = spm_file(Pin,'prefix','msanlm'); 
-      Pc0  = spm_file(Pin,'prefix','c0sanlm'); 
-      Pwc1 = spm_file(Pin,'prefix','wc1sanlm'); 
-      Pmat = spm_file(strrep(Pin,'.nii.gz','.nii'),'prefix','sanlm','suffix','_seg8','ext','mat'); 
-    else
-      Pm   = spm_file(Pin,'prefix','ms'); 
-      Pc0  = spm_file(Pin,'prefix','c0');
-      Pwc1 = spm_file(Pin,'prefix','wc1'); 
-      Pmat = spm_file(strrep(Pin,'.nii.gz','.nii'),'prefix','','suffix','_seg8','ext','mat'); 
-    end
+    if opts.denoise, prefn = 'sanlm_'; else, prefn = ''; end
+
+    Pm   = spm_file(Pin,'prefix',['m' prefn]); 
+    Pc0  = spm_file(Pin,'prefix',['c0' prefn]); 
+    Pwc1 = spm_file(Pin,'prefix',['wc1' prefn]); 
+    Pmat = spm_file(strrep(Pin,'.nii.gz','.nii'),'prefix',prefn,'suffix','_seg8','ext','mat'); 
     Pseg = spm_file(strrep(strrep(Pin,'.nii.gz','.nii'),[filesep 'anon_'], filesep), ...
       'prefix','catDCM2BIDSsegus_','ext','json');
 
     if ~exist( Pc0, 'file') || opts.rerun
-  
-      if opts.denoise && ~exist( spm_file(Pin,'prefix','sanlm'), 'file')
-        cat_vol_sanlm(struct('data', Pin,'opts.verb',0));
+      % denoising
+      if opts.denoise && ~exist( spm_file(Pin,'prefix',prefn), 'file')
+        cat_vol_sanlm(struct('data', {{Pin}},'verb',0,'prefix',prefn));
       end
   
-      if opts.preprocessing
-        % run SPM segmentation  
-        if opts.denoise, Pin2 = spm_file(Pin,'prefix','sanlm'); else, Pin2 = Pin; end
-        SPMsegment( Pin2 ,opts);
 
-        %% CAT QC 
-        if opts.runqc > 1
-          qcversion = 'cat_vol_qa201901x';
-          %qcversion = 'cat_vol_qa202412';
-          if opts.denoise, prefix = 'c0sanlm_'; else, prefix = 'c0'; end
-          Pin2 = prepNii(spm_file({Pin},'prefix',prefix),opts,0);
-          cat_vol_qa('p0',Pin2,Pin2,Pin2,'','',...
-            struct('prefix',[qcversion '_'],'version',qcversion,'rerun',0,'verb',0) );
+      % run SPM segmentation  
+      if opts.denoise, Pin2 = spm_file(Pin,'prefix',prefn); else, Pin2 = Pin; end
+      SPMsegment( Pin2 ,opts);
+
+
+      % CAT QC 
+      if opts.runqc > 1 
+        qcversion = 'cat_vol_qa201901x';
+        if opts.denoise, prefix = ['c0' prefn]; else, prefix = 'c0'; end
+        Pin2 = prepNii(spm_file({Pin},'prefix',prefix),opts,0);
+        cat_vol_qa('p0',Pin2,Pin2,Pin2,'','',...
+          struct('prefix',[qcversion '_'],'version',qcversion,'rerun',opts.rerun,'verb',0) );
+      end
+    
+   
+      % evaluate segmentation  
+      seg8 = load(Pmat);
+      if strcmp(spm_file(Pc0,'ext'),'gz') && exist(Pc0,'file')
+        try
+          evalc('V = spm_vol( Pc0 );'); 
+        catch
+          SPMsegment( Pin2 ,opts);
+          evalc('V = spm_vol( spm_file(Pc0,''ext'','''' ));'); 
+        end
+      elseif exist(spm_file(Pc0,'ext',''),'file')
+        try 
+          evalc('V = spm_vol( spm_file(Pc0,''ext'','''' ));'); 
+        catch
+          SPMsegment( Pin2 ,opts);
+          evalc('V = spm_vol( spm_file(Pc0,''ext'','''' ));'); 
         end
       end
-    end
-    if 1
-      if 1
-        %% eval SPM 
-        if exist(Pseg,'file')
-          %spmus = cat_io_json(Pseg); % not required yet
-        else
-          seg8 = load(Pmat);
-          if strcmp(spm_file(Pc0,'ext'),'gz') && exist(Pc0,'file')
-            try
-              evalc('V = spm_vol( Pc0 );'); 
-            catch
-              SPMsegment( Pin2 ,opts);
-              evalc('V = spm_vol( spm_file(Pc0,''ext'','''' );'); 
-            end
-          elseif exist(spm_file(Pc0,'ext',''),'file')
-            try 
-              evalc('V = spm_vol( spm_file(Pc0,''ext'','''' ) );'); 
-            catch
-              SPMsegment( Pin2 ,opts);
-              evalc('V = spm_vol( spm_file(Pc0,''ext'','''' );'); 
-            end
-          end
-          Y = spm_read_vols(V); 
-  
-          vx_vol      = sqrt(sum(V(1).mat(1:3,1:3).^2));
-          % tissue volumes
-          spmus.TIV   = nnz(Y(:)>0.5) * prod(vx_vol) / 1000;
-          spmus.aGMV  = nnz(round(Y(:))==2) * prod(vx_vol) / 1000; 
-          spmus.aWMV  = nnz(round(Y(:))==3) * prod(vx_vol) / 1000; 
-          spmus.aCSFV = nnz(round(Y(:))==1) * prod(vx_vol) / 1000; 
-          spmus.rGMV  = spmus.aGMV  ./ spmus.TIV; 
-          spmus.rWMV  = spmus.aWMV  ./ spmus.TIV; 
-          spmus.rCSFV = spmus.aCSFV ./ spmus.TIV; 
-          
-          % tissue intensities
-          spmus.iGM   = seg8.mn(seg8.lkp==1) * seg8.mg(seg8.lkp==1);
-          spmus.iWM   = max(seg8.mn(seg8.lkp==2));
-          spmus.iCSF  = min(seg8.mn(seg8.lkp==3));
-  
-          % QC like parameters
-          %   ll  = log-likelihood
-          %   NCR = noise-to-contrast-ratio as minimum brain tissue variance 
-          %         divided by the average tissue contrast
-          spmus.qc.TPMll  = seg8.ll;
-          spmus.qc.NCR    = min( shiftdim(seg8.vr(seg8.lkp(:)<4).^.5) ) ./ ...
-                            mean( [ abs(spmus.aGMV-spmus.aWMV) abs(spmus.aGMV-spmus.aCSFV) ...
-                                    abs(spmus.aWMV-spmus.aCSFV)] * 2 * 3); 
-     
-          cat_io_json(Pseg,spmus);
-        end
-      end
+      Y      = spm_read_vols(V); 
+      vx_vol = sqrt(sum(V(1).mat(1:3,1:3).^2));
 
-      %% gzipi
+      % tissue volumes
+      spmus.TIV   = nnz(Y(:)>0.5) * prod(vx_vol) / 1000;
+      spmus.aGMV  = nnz(round(Y(:))==2) * prod(vx_vol) / 1000; 
+      spmus.aWMV  = nnz(round(Y(:))==3) * prod(vx_vol) / 1000; 
+      spmus.aCSFV = nnz(round(Y(:))==1) * prod(vx_vol) / 1000; 
+      spmus.rGMV  = spmus.aGMV  ./ spmus.TIV; 
+      spmus.rWMV  = spmus.aWMV  ./ spmus.TIV; 
+      spmus.rCSFV = spmus.aCSFV ./ spmus.TIV; 
+      
+      % tissue intensities
+      spmus.iGM   = seg8.mn(seg8.lkp==1) * seg8.mg(seg8.lkp==1);
+      spmus.iWM   = max(seg8.mn(seg8.lkp==2));
+      spmus.iCSF  = min(seg8.mn(seg8.lkp==3));
+
+      % QC like parameters
+      %   ll  = log-likelihood
+      %   NCR = noise-to-contrast-ratio as minimum brain tissue variance 
+      %         divided by the average tissue contrast
+      spmus.qc.TPMll  = seg8.ll;
+      spmus.qc.NCR    = min( shiftdim(seg8.vr(seg8.lkp(:)<4).^.5) ) ./ ...
+                        mean( [ abs(spmus.iGM-spmus.iWM) abs(spmus.iGM-spmus.iCSF) ...
+                                abs(spmus.iWM-spmus.iCSF)] * 2 * 3); 
+      cat_io_json(Pseg,spmus);
+      
+    
+      % gzipi
       if opts.gzipi
         prefixes = {'c0','wc0','wc1','l0','wl0','m','y_'};
         for pri=1:numel(prefixes)
@@ -2477,8 +2511,6 @@ function [Pm,Pc0,Pwc1,Pseg] = segmentanat(Pin,datatype,opts)
           if exist(file,'file'), gzip( file ); end
         end
       end
-
-      
     end
   end
 end
