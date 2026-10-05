@@ -16,6 +16,9 @@ function varargout = cat_io_csv(filename,varargin)
 %      .komma           = '.' 
 %      .linedelimiter   = '\n' 
 %      .format          = '%0.4f'
+%      .convert2double  = convert numbers to double if possible (default=1)
+%                         use positive indices to convert specific columns 
+%                         use negative indices to exclude specific columns 
 %
 % Examples:
 %   cat_io_csv('test',{'Hallo','Welt';1,2.4})
@@ -73,6 +76,7 @@ function varargout = cat_io_csv(filename,varargin)
   def.linedelimiter   = '\n'; 
   def.format          = '%0.4f';
   def.finaldelimiter  = 0;
+  def.convert2double     = 1; 
   
   opt = cat_io_checkinopt(opt,def);
   opt.delimiter = cat_io_strrep(opt.delimiter,{'t','n','\\'},{'\t','\n','\'});
@@ -199,8 +203,23 @@ function C=readcsv(filename,sheet,pos,opt)
 
   % if a field could be interpreted as a number, then convert it to a float 
   % ??? if there is a comma otherwise to integer???
-  for i=1:numel(C), if ~isnan(str2double(C{i})) || strcmpi(C{i},'nan'), id=strfind(C{i},','); C{i}(id)='.'; C{i} = str2double(C{i}); end; end
-
+  if opt.convert2double
+    range = 1:numel(C); 
+    if ~isscalar(opt.convert2double)
+      if any(opt.convert2double < -1)
+        range2 = opt.convert2double(opt.convert2double>0);
+        range2 = setiff(range2, opt.convert2double(opt.convert2double<0)); 
+      end
+      range = interesect(range,range2);  
+    end
+    for i=range
+      if ~isnan(str2double(C{i})) || strcmpi(C{i},'nan')
+        id = strfind(C{i}, ','); 
+        C{i}(id) = '.'; 
+        C{i} = str2double(C{i}); 
+      end 
+    end
+  end
 end
 
 function writecsv(filename,C,sheet,pos,opt)
