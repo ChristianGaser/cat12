@@ -61,7 +61,11 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   subdir.num        = [0 Inf];
   subdir.val        = {'study'};
   subdir.help       = {
-    'The directory is created within the chosen output directory. If no name is given no subdirectory is created. ' ''};
+   ['The directory is created within the chosen output directory. ' ...
+    'To use it also in BIDS use only letters and digits. ' ...
+    'If no name is given no subdirectory is created. ']
+    ''
+    };
 
 
 
@@ -274,7 +278,7 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   gzipe.values     = {1,0};
   gzipe.val        = {1};
   gzipe.hidden     = expert<0;
-  gzipe.help       = {'GZIP output NIFTI files in the BIDS directories.'};
+  gzipe.help       = {'GZIP output NIFTI files in the BIDS directories. This might help in case of further SPM preprocesing.'};
 
   % limit output
   output           = cfg_menu;
@@ -347,6 +351,105 @@ function dcm2bids = cat_conf_dcm2bids(expert)
     'Use subdirectories to separate the protocols of the main protocol directories. '
     };
 
+  tolerance          = cfg_entry;   
+  tolerance.tag      = 'tolerance';
+  tolerance.name     = 'Tolerance';
+  tolerance.help     = {
+      'Tolerance level of input parameters in percent. E.g., if the TR time should be 2.1 but is 2.2.'
+    };
+  tolerance.strtype  = 'e';
+  tolerance.num      = [1 1];
+  tolerance.val      = {5};
+
+  % rendering of one slice per scan (BIDS-report/render/...)
+  % only the on/off choice is visible for default users, the subfields
+  % are expert options
+  rsource         = cfg_menu;
+  rsource.tag     = 'source';
+  rsource.name    = 'Data (expert)';
+  rsource.labels  = {'Raw BIDS data','Derivatives (catDCM2BIDS)','Both'};
+  rsource.values  = {1,2,3};
+  rsource.val     = {3};
+  rsource.hidden  = expert<1;
+  rsource.help    = {
+    'Render the raw BIDS images, the derivatives (e.g. the segmentation), or both. '};
+
+  rsessions         = cfg_menu;
+  rsessions.tag     = 'sessions';
+  rsessions.name    = 'Sessions (expert)';
+  rsessions.labels  = {'Only first session per subject','All sessions'};
+  rsessions.values  = {1,0};
+  rsessions.val     = {0};
+  rsessions.hidden  = expert<1;
+  rsessions.help    = {
+    'Render only the first session of each subject (one tile per subject) or all sessions. '};
+
+  rtiles          = cfg_menu;
+  rtiles.tag      = 'tiles';
+  rtiles.name     = 'Tiles per page (expert)';
+  rtiles.labels   = {'3x4','4x5','5x7','6x8'};
+  rtiles.values   = {[3 4],[4 5],[5 7],[6 8]};
+  rtiles.val      = {[4 5]};
+  rtiles.hidden   = expert<1;
+  rtiles.help     = {
+    'Number of tiles (columns x rows) per page in A4 portrait format. '};
+
+  rorient         = cfg_menu;
+  rorient.tag     = 'orient';
+  rorient.name    = 'Orientation (expert)';
+  rorient.labels  = {'Axial','Coronal','Sagittal'};
+  rorient.values  = {3,2,1};
+  rorient.val     = {3};
+  rorient.hidden  = expert<1;
+  rorient.help    = {
+    'Orientation of the rendered slice in world space. '};
+
+  rslicemode        = cfg_menu;
+  rslicemode.tag    = 'slicemode';
+  rslicemode.name   = 'Slice position (expert)';
+  rslicemode.labels = {'World space','Image center'};
+  rslicemode.values = {'world','center'};
+  rslicemode.val    = {'world'};
+  rslicemode.hidden = expert<1;
+  rslicemode.help   = {
+   ['The slice is defined in world space (by the image orientation matrix ' ...
+    'without registration) and therefore shows positioning differences. ' ...
+    'Alternatively, the slice is placed through the center of each image, ' ...
+    'which is better to compare anatomy and image quality. ']};
+
+  rslice          = cfg_entry;
+  rslice.tag      = 'slice';
+  rslice.name     = 'Slice [mm] (expert)';
+  rslice.strtype  = 'r';
+  rslice.num      = [1 1];
+  rslice.val      = {0};
+  rslice.hidden   = expert<1;
+  rslice.help     = {
+    'Position of the slice in mm (in world space or relative to the image center). '};
+
+  norender        = cfg_const;
+  norender.tag    = 'norender';
+  norender.name   = 'No';
+  norender.val    = {0};
+  norender.help   = {'No rendering. '};
+
+  dorender        = cfg_branch;
+  dorender.tag    = 'render';
+  dorender.name   = 'Yes';
+  dorender.val    = {rsource, rsessions, rtiles, rorient, rslicemode, rslice};
+  dorender.help   = {'Render one slice per scan. '};
+
+  render          = cfg_choice;
+  render.tag      = 'render';
+  render.name     = 'Render slices';
+  render.values   = {norender, dorender};
+  render.val      = {dorender};
+  render.help     = {
+   ['Render one slice of each scan into tiled PNG pages in the BIDS-report directory ' ...
+    '(BIDS-report/render/[protocol/]datatype/subtype/) as quick visual check. ' ...
+    'Each tile shows the subject, session and overall quality rating. ' ...
+    '4D data is represented by its first volume. ']};
+
 
   % further possible parameter:
   %%%%%%%%  
@@ -370,8 +473,8 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   opts            = cfg_branch;
   opts.tag        = 'opts';
   opts.name       = 'Options';
-  opts.val        = {ProtocolFileName, studies, anonymize, preprocessing, ...
-                      gzipi, gzipe, output, protocolsubdirs, subIDform};
+  opts.val        = {ProtocolFileName, studies, anonymize, tolerance, preprocessing, ...
+                      gzipi, gzipe, output, protocolsubdirs, subIDform, render};
   opts.help       = {['Parameters to control the processing and output of ' ...
                       'the converted data and its export to BIDS. ']}; 
 
@@ -382,7 +485,7 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   dcm2bids.tag    = 'dcm2bids';
   dcm2bids.name   = 'DICOM2BIDS';
   dcm2bids.prog   = @cat_io_dcm2bids;
-  %dcm2bids.vout   = @vout_io_dcm2bids; % not ready yet
+  dcm2bids.vout   = @vout_io_dcm2bids;
   dcm2bids.val    = {datadir, outdir, subdir, dicts, opts}; 
   dcm2bids.help   = { ...
    ['This batch uses DCM2NIIX to convert DICOM into NIFTI images with JSON sidecars. ' ...
@@ -395,17 +498,30 @@ function dcm2bids = cat_conf_dcm2bids(expert)
     'The batch also applies the SPM anonymization routine and runs a basic image quality control. ' ...
     }; 
 end
-function cdep = vout_io_dcm2nii
-% connect to BIDS2PP batch ( NOT READY YET )
-  cdep = cfg_dep;
+function cdep = vout_io_dcm2bids(job)
+%vout_io_dcm2bids. Dependencies for the converted raw BIDS images.
+%  SPM defines the dependencies before the batch runs, i.e. without knowing
+%  the data. Therefore, a fixed list of BIDS datatypes and suffixes is used
+%  (see cat_io_dcm2bids('outputs')) that may also be empty after processing.
+%  4D images are given as files (no volume expansion). 
 
-  cdep(end).sname      = 'conform BIDS';
-  cdep(end).src_output = substruct('.','avg','()',{':'});
-  cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  % gzipped output files (CAT can read them, but most SPM functions not)
+  gz = '';
+  try
+    if job.opts.gzipe, gz = ' (.gz)'; end
+  end
 
-  cdep(end+1) = cfg_dep;
-  cdep(end).sname      = 'unconform BIDS';
-  cdep(end).src_output = substruct('.','avg','()',{':'});
-  cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-
+  out  = cat_io_dcm2bids('outputs'); 
+  cdep = cfg_dep; ci = 0; 
+  dts  = fieldnames(out); 
+  for di = 1:numel(dts)
+    sxs = fieldnames(out.(dts{di})); 
+    for si = 1:numel(sxs)
+      ci = ci + 1; 
+      if ci > 1, cdep(ci) = cfg_dep; end
+      cdep(ci).sname      = sprintf('%s %s%s', dts{di}, sxs{si}, gz);
+      cdep(ci).src_output = substruct('.',dts{di},'.',sxs{si});
+      cdep(ci).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+    end
+  end
 end

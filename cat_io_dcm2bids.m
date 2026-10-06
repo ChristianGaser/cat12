@@ -1,4 +1,4 @@
-function cat_io_dcm2bids(job)
+function out = cat_io_dcm2bids(job)
 %cat_io_dcm2bids. Batch definition to convert DICOM to BIDS. 
 %
 % This batch uses DCM2NIIX to convert DICOM into NIFTI images with JSON  
@@ -15,25 +15,25 @@ function cat_io_dcm2bids(job)
 %
 
 % ADD control file that is removed at the end. 
-% if it is still there then something went wrong or the process was interupted
+% if it is still there then something went wrong or the process was interrupted
 % this is also required in case of 4d data!
 
 %  Minor points:    
 %  . Try to replace incorrectly introduced German letters in Names?
 %    >> maybe better via the csv/json read/write functions
-%  . Add simpler test-protocols rather then the DZPG things in CAT as 
+%  . Add simpler test-protocols rather than the DZPG things in CAT as 
 %    example?
 %  . no acquisition duration in standard protocols !
-%    but nice to have otherwise could be done by dime diff.
+%    but nice to have otherwise could be done by time diff.
 %
 %  * BUGS: 
 %     - use minimum age for participant.tsv - (min)age
-%     - sites with different entries > cell rather then struct !
+%     - sites with different entries > cell rather than struct !
 %  * feature:
 %     - add separate protocols tables by BIDS type?
 % 
 %  * Separate the QC processing into a separate function/batch
-%  * Connect to OHBM DGKN and Esteban 2026
+
 
 
 % DEVELOPMENT DOCUMENTATION 
@@ -45,9 +45,10 @@ function cat_io_dcm2bids(job)
 %       - we will need this at least for the strong anonymizing setting
 %       - a subject.tsv would also allow to integrate essential   
 %         phenotypical data for groups or time-points 
+%       - BIDS conformity might require rename anyway eg. of - and _
 %
 % * Flexibility
-%   - tolerance parameter? but what about ordinary variables
+%   - tolerance parameter? but what about ordinal variables
 %   - fallback option?
 %   >> maybe later, first focus on the hard setting
 %
@@ -171,6 +172,10 @@ function cat_io_dcm2bids(job)
 %   - get BIDS test cases
 %   - QC Tests (MR-ART?, DZPG samples)
 
+  % output structure with the BIDS datatypes and suffixes (also used by the 
+  % batch dependencies, i.e. out = cat_io_dcm2bids('outputs'))
+  out = BIDSoutputs; 
+  if exist('job','var') && ischar(job) && strcmp(job,'outputs'), return; end
  
   def.data                  = {};    % input DCM directories (add JSON/NII input later)
   def.outdir                = {pwd}; % main output directory
@@ -196,7 +201,7 @@ function cat_io_dcm2bids(job)
                                      % (3) add also StudyName, i.e. sub-STUDY-SITE-PID 
                                      % (4) i.e. sub-SITE-STUDY-PID 
   def.opts.anonymize        = 1;     % imaging data: 0-no, 1-light-anat-only,  2-strong-all, 3-skull-strip-light?
-                                     % meta data:    0-no, 1-basic-reduced,    2-strong-onlycodeds
+                                     % meta data:    0-no, 1-basic-reduced,    2-strong-only-coded
   def.opts.deletetmp        = 0;     % remove temporary directory (better not)
   
   def.opts.hrrealign        = 0;     % highres-realignment for further use? difficult to keep this persistent 
@@ -210,11 +215,29 @@ function cat_io_dcm2bids(job)
   def.opts.denoise          = 0;     % do denoising
   def.opts.ignoreScouts     = 1;     % remove localizer/scouts ASAP
   def.opts.protocolsubdirs  = 0;     % use additional sub-directories to separate between protocols
-  def.opts.BIDSsep          = '-';   % Use extra BIDS-incompatible separator 
-  
+  def.opts.BIDSsep          = '';    % Use extra BIDS-incompatible separator such as - to separate the site 
+                                     % sub-SITE-SUBJECT 
+  % render one slice per scan into BIDS-report/render/... (see renderImg)
+  def.opts.render.run       = 1;       % render images
+  def.opts.render.source    = 3;       % 1-raw, 2-derivatives, 3-both
+  def.opts.render.sessions  = 0;       % 1-only first session per subject, 0-all sessions
+  def.opts.render.tiles     = [4 5];   % tiles per page [x y]: [3 4], [4 5], [5 7], or [6 8]
+  def.opts.render.orient    = 3;       % orientation: 3-axial, 2-coronal, 1-sagittal
+  def.opts.render.slicemode = 'world'; % 'world' - plane in world space, 'center' - image center
+  def.opts.render.slice     = 0;       % z-position in mm (offset in 'center' mode)
+
   if ~exist('job','var'), job = struct(); end
-  job = cat_io_checkinopt(job,def); 
+  job = cat_io_checkinopt(job,def);
   if isempty(job.data), return; end
+
+  % GUI render choice: "norender" or "render" with the (expert) subfields
+  if isfield(job.opts.render,'norender')
+    job.opts.render     = rmfield(job.opts.render,'norender');
+    job.opts.render.run = 0;
+  elseif isfield(job.opts.render,'render')
+    job.opts.render     = cat_io_updateStruct(rmfield(job.opts.render,'render'), job.opts.render.render);
+    job.opts.render.run = 1;
+  end
   
   
 
@@ -250,12 +273,12 @@ function cat_io_dcm2bids(job)
    
     % readme file for each protocol dir
     for pdi = 1:numel(Pprodictdirs)
-      txt = {'catDCIM2BIDS BIDS export sub-directory with protocol-(mis)matching specific subdirectories.'};
+      txt = {'catDCM2BIDS BIDS export sub-directory with protocol-(mis)matching specific subdirectories.'};
       cat_io_csv(fullfile(Poutdir, job.BIDSdir, job.BIDSsubdir, 'readme.txt'),txt);
     end
 
     % readme file for the main BIDS dir
-    txt = {'catDCIM2BIDS main BIDS export directory protocol-directory dependent subdirectories. '};
+    txt = {'catDCM2BIDS main BIDS export directory protocol-directory dependent subdirectories. '};
     cat_io_csv(fullfile(Poutdir, job.BIDSdir, 'readme.txt'),txt);
   end
   
@@ -291,16 +314,19 @@ function cat_io_dcm2bids(job)
   if ~exist(fullfile(Ptbldir,'protocols'),'dir'), mkdir(fullfile(Ptbldir,'protocols')); end
   % readme file
   txt = {
-    'catDCIM2BIDS batch main "database" directory. Here we store the imported DICOM images as NIFTI. '; 
+    'catDCM2BIDS batch main "database" directory. Here we store the imported DICOM images as NIFTI. '; 
     'The images are organized similar to BIDS with subject/session/scan: ';
     '  sub-PatientID/ses-StudyID-StudyDate/ser-SeriesNumber-ProtocolName';
-    sprintf(['The sub-directory "+%s" store the original import path, where ' ...
-      'only the JSON files stay to detect DICOM reimports from the same source. '],Pdbdirnam);  
+    ''
+    ['The sub-directory "catDCM2BIDSimportpath" stores the original import path, where ' ...
+      'only the JSON files stay to detect DICOM reimports from the same source. '];  
+    ''
     'Be careful with edits!'
   };
   cat_io_csv(fullfile(Pmdbdir,'readme.txt'),txt);
   txt = {
-    'Overview directory of files in the database directory. '};
+    'Overview directory of files in the database directory.'
+    'Can be deleted in case of problems to be recreated in the next run. '};
   cat_io_csv(fullfile(Ptbldir,'readme.txt'),txt);
   
 
@@ -334,7 +360,12 @@ function cat_io_dcm2bids(job)
       % get nii2dcm information 
       Vjson{sci} = cat_io_json(Pjson{fscni});
       if isfield( Vjson{sci} , 'ImageTypeText')
-        Vjson{sci}.ImageType = unique([Vjson{sci}.ImageType; Vjson{sci}.ImageTypeText ]); 
+        if isfield( Vjson{sci} , 'ImageType')
+          Vjson{sci}.ImageType = unique([reshape(cellstr(Vjson{sci}.ImageType),[],1); ...
+                                         reshape(cellstr(Vjson{sci}.ImageTypeText),[],1)]); 
+        else
+          Vjson{sci}.ImageType = Vjson{sci}.ImageTypeText; 
+        end
       end
       Vjson{sci} = assurePatientDCMfields(Vjson{sci});
       fnameparts = strsplit(spm_file(Pjson{fscni},'basename'),'='); 
@@ -416,39 +447,40 @@ function cat_io_dcm2bids(job)
       % ===================================================================
       [Pdbdirpath{sci},Pdbdir{sci}] = importScan( ...
         Vjson{sci}, Pjson{fscni}, Pnii{fscni}, Pdcmdirs{fdiri}, ... 
-        Pmdbdir, Ptbldir, fnameparts, niiext, job.opts );
+        Pmdbdir, Ptbldir, fnameparts, niiext, sites, job.opts );
 
       Pjson{fscni} = spm_file(Pjson{fscni},'path', Pdbdirpath{sci});
       Pnii{fscni}  = spm_file(Pnii{fscni}, 'path', Pdbdirpath{sci});
 
       % test protocols
       [match,pname,mismatchstr,Pnfailedid,Pfname] = ...
-        testProtcols(Pjson{fscni},Vjson{sci},Ptbldir,protocols,tol,job,sites);
+        testProtocols(Pjson{fscni},Vjson{sci},Ptbldir,protocols,tol,job,sites);
     
       % site definition 
       site{sci} = setupSites(Vjson{sci},sites);
   
       % study definition %%% need later refinement
-      studynam = job.subdir;
+      studynam = bidsLabel(job.subdir);
 
 
       % main BIDS fields (subject, session, datatype, weighting, ...)
       % ===================================================================
       % subject
-      bs = def.opts.BIDSsep; 
+      bs   = job.opts.BIDSsep; 
+      NPID = bidsLabel(Vjson{sci}.PatientID); 
       switch job.opts.subIDform
         case 1 % sub-PID
-          sub{sci} = sprintf('sub-%s', strrep(Vjson{sci}.PatientID,'_','')); %#ok<*SAGROW>
+          sub{sci} = sprintf('sub-%s', strrep(NPID,'_','')); %#ok<*SAGROW>
         case 2 % sub-SITE-PID
-          sub{sci} = sprintf('sub-%s%s%s', site{sci}, bs, strrep(Vjson{sci}.PatientID,'_','')); %#ok<*SAGROW>
+          sub{sci} = sprintf('sub-%s%s%s', bidsLabel(site{sci}), bs, strrep(NPID,'_','')); %#ok<*SAGROW>
         case 3 % sub-STUDY-PID
-          sub{sci} = sprintf('sub-%s%s%s', studynam, bs, strrep(Vjson{sci}.PatientID,'_','')); %#ok<*SAGROW>
+          sub{sci} = sprintf('sub-%s%s%s', studynam, bs, strrep(NPID,'_','')); %#ok<*SAGROW>
         case 4 % sub-SITE-STUDY-PID
-          sub{sci} = sprintf('sub-%s%s%s%s%s', site{sci}, bs, studynam, bs, strrep(Vjson{sci}.PatientID,'_','')); %#ok<*SAGROW>
+          sub{sci} = sprintf('sub-%s%s%s%s%s', site{sci}, bs, studynam, bs, strrep(NPID,'_','')); %#ok<*SAGROW>
         case 5 % sub-STUDY-SITE-PID
-          sub{sci} = sprintf('sub-%s%s%s%s%s', studynam, bs, site{sci}, bs, strrep(Vjson{sci}.PatientID,'_','')); %#ok<*SAGROW>
+          sub{sci} = sprintf('sub-%s%s%s%s%s', studynam, bs, site{sci}, bs, strrep(NPID,'_','')); %#ok<*SAGROW>
       end
-
+      
       % session
       if job.opts.anonymize > 1 % ses-StudyID
         ses{sci}  = sprintf('ses-%s',Vjson{sci}.StudyID);
@@ -470,11 +502,12 @@ function cat_io_dcm2bids(job)
       else
         if isempty(Pprodictdirs) || isempty( Pprodictdirs{1} ) || ~job.opts.protocolsubdirs
           BIDSsubdir  = fullfile(job.BIDSdir, job.BIDSsubdir);
-          pro{sci}    = strrep(fnameparts{2},'_','-'); 
+          pro{sci}    = strrep(fnameparts{2},'_',job.opts.BIDSsep); 
         else
           BIDSsubdir  = fullfile(job.BIDSdir, job.BIDSsubdir, 'mismatch');
-          pro{sci}    = strrep(fnameparts{2},'_','-'); 
+          pro{sci}    = strrep(fnameparts{2},'_',job.opts.BIDSsep); 
         end
+        pro{sci} = bidsLabel(pro{sci});
       end
 
       % evaluate protocols
@@ -509,6 +542,7 @@ function cat_io_dcm2bids(job)
       else
         acq{sci}    = sprintf('acq-%s%s%s', sn{sci}, bs, pro{sci}); 
       end
+      acq{sci} = bidsLabel(acq{sci},1);
       % get suffix 
       [suffix{sci},acq{sci}] = setupSuffix(datatype{sci}, acq{sci}, Vjson{sci}.SeriesDescription);
       
@@ -548,9 +582,9 @@ function cat_io_dcm2bids(job)
       
 
 
-      %% (anonymized) input file for internal processing (not zippered!) 
+      %% (anonymized) input file for internal processing (not zipped!) 
       if job.opts.output > 1
-        Panon{fscni} = anomize(Pnii{fscni}, job.opts, datatype{sci}); 
+        Panon{fscni} = anonymize(Pnii{fscni}, job.opts, datatype{sci}); 
         
 
         % Basic QC with 
@@ -668,7 +702,8 @@ function cat_io_dcm2bids(job)
   fprintf('\nDCM2BIDS - import done.\n')
 
   if job.opts.output > 0  &&  isfield(job,'BIDSsubdir')
-    % create final report form result dir
+    
+    % create final report from result dir
     %spm_file(Pprodictdirs,'basename')
     % study||protocol||subjectID|sex|minage|maxage||#anat/sub|#dwi/sub|#func/sub||aQR|dQR|fQR|SQR||Vgm|Vwm|Vcsf|TIV|mnFA|mn...
     writeSubReportTSV(Poutdir,BIDSsubdir,'report'); 
@@ -682,7 +717,7 @@ function cat_io_dcm2bids(job)
     %  - anat/func/dwi/fmap/total
     % subject-measures: 
     %  - anat:     TIV, rGMV, rWMV, rCSFV, GMT,
-    %  - func-rs:  network conectivity
+    %  - func-rs:  network connectivity
     %  - dwi:      AD,FD, ...
     %
     Psubjecttable = fullfile(Poutdir,[job.BIDSdir '-report'],sprintf('report_%s.%s', job.BIDSsubdir, job.opts.tableformat));
@@ -705,7 +740,7 @@ function cat_io_dcm2bids(job)
       if ~exist(Pparticipants,'file')
         Tparticipants = Thdr;
       else
-        Tparticipants = cat_io_csv(Pparticipants,'','',struct('delimiter','\t'));
+        Tparticipants = cat_io_csv(Pparticipants,'','',struct('delimiter','\t','convert2double',-1));
       end
       
       % look for available data
@@ -728,13 +763,106 @@ function cat_io_dcm2bids(job)
       %
       updateTable(Psubjecttable,Thdr,Tnewrow,pdi,0);
     % create/extend BIDS csv files ???
+
+      
     end
   
   %%
     % handling GZIP in output directory
     gzipunzipOutputdata(Poutdir,job.opts)
+
+    % render one slice per scan for each datatype/subtype
+    if job.opts.render.run
+      fprintf('\nDCM2BIDS - Render BIDS NIFTIs.\n')
+
+      renderImg( fullfile(Poutdir,job.BIDSdir,job.BIDSsubdir), ...
+        fullfile(Poutdir,[job.BIDSdir '-report'],'render',job.BIDSsubdir), job.opts.render);
+      
+      fprintf('\nDCM2BIDS - Render BIDS NIFTIs done.\n')
+    end
+
+    % converted raw BIDS images for the batch dependencies
+    out = getBIDSoutputs( fullfile(Poutdir,job.BIDSdir,job.BIDSsubdir), out ); 
   end
 
+end
+% =========================================================================
+function label = bidsLabel(str,camelCase)
+%bidsLabel. Assure BIDS conform labels.
+  if ~exist('camelCase','var'), camelCase = 0; end
+  str = char(str);
+  
+  % convert german characters
+  map = { char(228),'ae'; char(246),'oe'; char(252),'ue'; ...   % ä ö ü
+          char(196),'Ae'; char(214),'Oe'; char(220),'Ue'; ...   % Ä Ö Ü
+          char(223),'ss' };                                      % ß
+  for k = 1:size(map,1)
+      str = strrep(str, map{k,1}, map{k,2});
+  end
+  
+  % other chars
+  if usejava('jvm')
+    form = javaMethod('valueOf', 'java.text.Normalizer$Form', 'NFD');
+    str  = char(java.text.Normalizer.normalize(java.lang.String(str), form));
+    % remove combining diacritical marks (U+0300 to U+036F)
+    c = double(str);
+    str = char(c(~(c >= 768 & c <= 879)));
+  end
+  
+  % 
+  if camelCase
+    str = regexprep(str, '[\s_-]+(\w)', '${upper($1)}');
+  end
+
+  % remove unsupported characters
+  label = regexprep(str, '[^a-zA-Z0-9]', '');
+  
+  if isempty(label) & ~isempty(str)
+    error('bidsLabel:empty', 'No BIDS-conform characters in label "%s".', str);
+  end
+end
+% =========================================================================
+function out = BIDSoutputs
+%BIDSoutputs. Fixed list of BIDS datatypes and (lower case) suffixes that is
+%  used for the output structure and the batch dependencies. It covers the 
+%  suffixes defined by setupDatatype and setupSuffix. 
+%
+%  This list might fit well into the defaults file. 
+
+  % for now, we keep this a bit shorter
+  list = { 
+    'anat', {'t1w','t2w','flair','pdw'}; %,'t2star','t1map','t2map','t2starmap','pdt2','mt','mtr'};
+    'func', {'bold'}, %,'sbref'};
+    'dwi',  {'dwi'}; %,'sbref'};
+    'fmap', {'epi'}, %,'fieldmap','phase'};
+    };
+  out = struct(); 
+  for di = 1:size(list,1)
+    for si = 1:numel(list{di,2})
+      out.(list{di,1}).(list{di,2}{si}) = {};
+    end
+  end
+end
+% =========================================================================
+function out = getBIDSoutputs(PBIDS,out)
+%getBIDSoutputs. Add the raw BIDS images (all sessions, also from protocol 
+%  and mismatch subdirectories but no derivatives) to out.datatype.suffix. 
+%  Suffixes that are not in the fixed list are added as further fields. 
+  if ~exist(PBIDS,'dir'), return; end
+  P = cat_vol_findfiles(PBIDS,'sub-*.nii*'); 
+  P = P( ~cellfun('isempty',regexp(P,'\.nii(\.gz)?$','once')) ); 
+  P = P( ~cat_io_contains(P,[filesep 'derivatives' filesep]) ); 
+  for fi = 1:numel(P)
+    [pp,ff] = fileparts(P{fi}); 
+    ff      = regexprep(ff,'\.nii$',''); 
+    parts   = strsplit(ff,'_'); 
+    dt      = spm_file(pp,'basename'); 
+    sx      = lower(parts{end}); 
+    if isvarname(dt) && isvarname(sx) 
+      if ~isfield(out,dt) || ~isfield(out.(dt),sx), out.(dt).(sx) = {}; end
+      out.(dt).(sx){end+1,1} = P{fi}; 
+    end
+  end
 end
 % =========================================================================
 function key = scanKey(V)
@@ -747,7 +875,7 @@ function key = scanKey(V)
   end
 end
 % =========================================================================
-function [Pdbdirpath,Pdbdir] = importScan(Vjson, Pjson, Pnii, Pdcmdirs, Pmdbdir, Ptbldir, fnameparts, niiext, opts )
+function [Pdbdirpath,Pdbdir] = importScan(Vjson, Pjson, Pnii, Pdcmdirs, Pmdbdir, Ptbldir, fnameparts, niiext, sites, opts )
 %
 
 %datetime( Vjson.AcquisitionDateTime , 'Format','yyyyMMdd-hhmmss'))
@@ -771,9 +899,10 @@ function [Pdbdirpath,Pdbdir] = importScan(Vjson, Pjson, Pnii, Pdcmdirs, Pmdbdir,
 
   % update 
   Pdbdirpath = fullfile(Pmdbdir, Pdbdir); 
-  if ~exist( spm_file(Pnii,'path',Pdbdirpath), 'file') && ~exist(Pnii,'file')
+  if ~exist( spm_file(Pnii,'path',Pdbdirpath), 'file') && ~exist(Pnii,'file') && ~isfield(opts,'noDCM2NIIX')
     dcm2niix( Pdcmdirs , Pmdbdir, opts.Pdcm2nii, opts.gzipi, 1); 
-    [Pdbdirpath,Pdbdir] = importScan( Vjson, Pjson, Pnii, Pdcmdirs, Pmdbdir, Ptbldir, fnameparts, niiext, opts );
+    opts0 = opts; opts0.noDCM2NIIX; % avoid recursion 
+    [Pdbdirpath,Pdbdir] = importScan( Vjson, Pjson, Pnii, Pdcmdirs, Pmdbdir, Ptbldir, fnameparts, niiext, sites, opts0 );
     return
   end
   Pconvj = spm_file(Pjson,'path', Pdbdirpath); 
@@ -798,22 +927,26 @@ function [Pdbdirpath,Pdbdir] = importScan(Vjson, Pjson, Pnii, Pdcmdirs, Pmdbdir,
   % SESSION-LIST:
   %  - to avoid double entries ... but what to do ...
   %  - a flag (keep old / take new)
-%%%%%%%  * this one is usesless      
+%%%%%%%  * this one is useless      
   if 0
     Thdr    = {'StudyInstanceUID','DBpath','ProcedureStepDescription'}; %,'IMPORTpath'}; 
     Tnewrow = {Vjson.StudyInstanceUID, spm_fileparts(Pdbdir), Vjson.ProcedureStepDescription}; %, Pjson}; 
     updateTable(Psessiontable,Thdr,Tnewrow,1,opts.rerun);
   end
 
+
   % SUBJECT-LIST ("constant" data):
 %%%%%%%  * this one is nice but a session counter would be nice 
 %%%%%%%  * maybe the scan period 
 %%%%%%%  * import path (not robust :/)
-  Thdr    = {'PatientID','PatientName', 'PatientSex','PatientBirthDate'}; 
+  site    = setupSites(Vjson,sites);
+  Thdr    = {'PatientID','PatientName', 'PatientSex','PatientBirthDate','SiteID'}; 
   Tnewrow = {Vjson.PatientID, Vjson.PatientName, ...
-             Vjson.PatientSex, Vjson.PatientBirthDate}; 
+             Vjson.PatientSex, Vjson.PatientBirthDate, ...
+             site}; 
   updateTable(Psubjecttable,Thdr,Tnewrow,1,opts.rerun);
   
+
   % STUDY-LIST (defined by ProcedureStepDescription with additional list of subjects):
   % - ProcedureStepDescription with subjects
   Pstudysubtable = spm_file(fullfile(Ptbldir,'study_subject_lists',ProcedureStepDescription),'ext',opts.tableformat); 
@@ -826,16 +959,19 @@ function [Pdbdirpath,Pdbdir] = importScan(Vjson, Pjson, Pnii, Pdcmdirs, Pmdbdir,
   updateTable(Pstudytable,Thdr,Tnewrow,1,opts.rerun);
 % with counters for anat, func, fmap, dwi ?      
   
+
   % PROTOCOLS-LIST:
   datatype0         = setupDatatype(Vjson.ProtocolName); 
   ProtocolName      = getFileString(strrep(fnameparts{2},'_','-'));
   %Pprotocolsubtable = spm_file(fullfile(Ptbldir,ProcedureStepDescription,datatype0,ProtocolName),'ext',opts.tableformat); 
   Pprotocolsubtable = spm_file(fullfile(Ptbldir,'protocols',datatype0,ProtocolName),'ext',opts.tableformat); 
 
-  % save shorted protocol as json to be used as filter
+  % save shortened protocol as json to be used as filter
   Vjson0 = cleanupVjson(Vjson,'protocol'); 
   Pjson0 = spm_file( Pprotocolsubtable,'ext','.json'); 
   ProtocolName0 = ProtocolName; 
+  BFN = {'ProcedureStepDescription'};
+  Vjson0 = rmfield(Vjson0,intersect(fieldnames(Vjson0),BFN)); 
   if ~exist(Pjson0,'file')
     cat_io_json( Pjson0, Vjson0); 
   else
@@ -843,7 +979,8 @@ function [Pdbdirpath,Pdbdir] = importScan(Vjson, Pjson, Pnii, Pdcmdirs, Pmdbdir,
     Pjsons = cat_vol_findfiles( fullfile(Ptbldir,'protocols',datatype0)  , '*.json');
     Pfit = false(size(Pjsons)); 
     for pi = 1:numel(Pjsons)
-      Vjson1 = cat_io_json( Pjsons{pi} ); 
+      Vjson1   = cat_io_json( Pjsons{pi} ); 
+      Vjson1   = rmfield(Vjson1,intersect(fieldnames(Vjson1),BFN)); 
       Pfit(pi) = structEqual(Vjson0,Vjson1); 
     end
     if ~any( Pfit )
@@ -861,10 +998,24 @@ function [Pdbdirpath,Pdbdir] = importScan(Vjson, Pjson, Pnii, Pdcmdirs, Pmdbdir,
   nsub    = updateTable(Pprotocolsubtable,Thdr,Tnewrow,1,opts.rerun);
 
   % - study-list with number of subjects
-  Thdr    = {'ProtocolName','nSubjects','ProcedureStepDescription', ...
-             'MRAcquisitionType','ScanningSequence', 'SequenceVariant', ...
-             'RepetitionTime', 'EchoTime', ...
-             'FlipAngle', 'SliceThickness', 'ImageType'}; 
+  Thdr    = {'ProtocolName', 'nSubjects', ...
+             'MagneticFieldStrength', 'Manufacturer', 'SoftwareVersions' ...
+             'ProcedureStepDescription', ... % quite variant but may be useful to name the studies in future
+             ...'PulseSequenceName', ... % quite variant
+             'MRAcquisitionType', 'ScanningSequence', 'SequenceVariant', ...
+             'ScanOptions', ...
+             'ImageType', ...
+             'NonlinearGradientCorrection',...
+             'RepetitionTime', 'InversionTime', 'EchoTime', ...
+             'FlipAngle', ...
+             'BaseResolution', 'CoilString', 'CoilCombinationMethod', ...
+             'MatrixCoilMode', 'ParallelReductionFactorInPlane', ...
+             'PercentPhaseFOV','PercentSampling', ...
+             'AcquisitionMatrixPE', 'ReconMatrixPE', ...
+             'PixelBandwidth', 'DwellTime', ...
+             'PhaseEncodingDirection', 'EchoTrainLength' ...
+             ... 'BandwidthPerPixelPhaseEncode', 'EffectiveEchoSpacing'; 
+             }; 
   Vjson0 = Vjson; 
   for fni = 1:numel(Thdr)
     if ~isfield(Vjson0,Thdr{fni}), Vjson0.(Thdr{fni}) = ''; end
@@ -872,10 +1023,24 @@ function [Pdbdirpath,Pdbdir] = importScan(Vjson, Pjson, Pnii, Pdcmdirs, Pmdbdir,
       Vjson0.(Thdr{fni}) = strjoin(Vjson0.(Thdr{fni})); 
     end
   end
-  Tnewrow = {sprintf('%s_%s',datatype0,ProtocolName0),nsub, Vjson0.ProcedureStepDescription, ...
-    Vjson0.MRAcquisitionType, Vjson0.ScanningSequence,  Vjson0.SequenceVariant, ...
-    Vjson0.RepetitionTime, Vjson0.EchoTime, ...
-    Vjson0.FlipAngle, Vjson0.SliceThickness, Vjson0.ImageType}; 
+  
+  % add voxel size
+  if 1
+    Pniifile0 = Pnii; 
+    Pniifile1 = spm_file(Pniifile0,'path',fullfile(Pmdbdir, Pdbdir)); 
+    if exist(Pniifile0,'file')
+      vx = niiVoxelSize(Pniifile0);
+    elseif exist(Pniifile1,'file')
+      vx = niiVoxelSize(Pniifile1); 
+    else
+      vx = nan(1,3); 
+    end
+    Thdr{end+1} = 'vxSize'; 
+    Vjson0.vxSize = sprintf('%0.2fx%0.2fx%0.2f',vx);
+  end
+
+  Tnewrow = {sprintf('%s_%s',datatype0,ProtocolName0),nsub}; 
+  for fni = 3:numel(Thdr), Tnewrow{fni} = Vjson0.(Thdr{fni}); end
   updateTable(Pprotocoltable,Thdr,Tnewrow,1,opts.rerun);
 
 
@@ -898,6 +1063,41 @@ function [Pdbdirpath,Pdbdir] = importScan(Vjson, Pjson, Pnii, Pdcmdirs, Pmdbdir,
     end
   end
 
+end
+% =========================================================================
+function vx = niiVoxelSize(P)
+%niiVoxelSize. Voxel size from the NIfTI header without reading the image 
+%  data, i.e., for .nii.gz files only the header is decompressed. 
+  vx = nan(1,3); 
+  try
+    if numel(P) > 3 && strcmpi(P(end-2:end),'.gz')
+      gis = java.util.zip.GZIPInputStream(java.io.FileInputStream(P)); 
+      hdr = zeros(1,540,'uint8'); 
+      for i = 1:540
+        v = gis.read(); if v < 0, break; end
+        hdr(i) = v; 
+      end
+      gis.close(); 
+    else
+      fid = fopen(P,'r'); hdr = fread(fid,540,'*uint8')'; fclose(fid); 
+    end
+    hsz  = typecast(hdr(1:4),'int32');           % 348 (NIfTI-1) or 540 (NIfTI-2)
+    swap = ~any(hsz == [348 540]); 
+    if swap, hsz = swapbytes(hsz); end
+    if hsz == 348
+      pd = typecast(hdr(77:108),'single');       % pixdim at byte offset 76
+    else
+      pd = typecast(hdr(105:168),'double');      % pixdim at byte offset 104
+    end
+    if swap, pd = swapbytes(pd); end
+    vx = double(abs(pd(2:4))); 
+  catch
+    % fallback that reads the image 
+    try
+      evalc('V = spm_vol(spm_file(P,''number'',1));'); 
+      vx = sqrt(sum(V(1).mat(1:3,1:3).^2)); 
+    end
+  end
 end
 % =========================================================================
 function checkGzipi(Pdbdir, gzipi, run)
@@ -960,7 +1160,7 @@ end
 % =========================================================================
 function entries = updateTable(Ptable,Thdr,Tnewrow,id,reimport)
   if exist(Ptable,'file')
-    Tfiles = cat_io_csv(Ptable);
+    Tfiles = cat_io_csv(Ptable,'','',struct('convert2double',0));
     entries = size(Tfiles,1)-1;
     
     % check if first ID entry already exists
@@ -1017,7 +1217,7 @@ function [same,job] = checkPreviousSetting(Popts,job)
     if ~same
       cat_io_cprintf('err', ...
         ['  Error the underlying structure of the BIDS directory does not fit to the current settings. \n', ...
-         '  Use previous parameters or or change the output directory! \n\n']);
+         '  Use previous parameters or change the output directory! \n\n']);
       if ~structEqual(jopts0,opts0)
         cat_io_cprintf('blue','    Old opts:\n'); 
         disp(opts); 
@@ -1036,7 +1236,7 @@ function [same,job] = checkPreviousSetting(Popts,job)
         job.dicts = dicts; 
       elseif p == 2
         spm_figure('Clear',spm_figure('FindWin','Interactive'));
-        p = spm_input('Realy replace old directory?',1,'Yes|No',[1 0],2); 
+        p = spm_input('Really replace old directory?',1,'Yes|No',[1 0],2); 
         if p
           same = 1; 
           rmdir(spm_file(Popts,'path'),'Recursive',true)
@@ -1121,7 +1321,7 @@ function tmpdir = dcm2niix( Pdcmdirs , Poutdir, Pdcm2niix, gzipi, rerun)
   end
 end
 % =========================================================================
-function [match,pname,mismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,Ptbldir,protocols,tol,job,sites)
+function [match,pname,mismatchstr,Pnfailedid,Pfname] = testProtocols(Pjson,Vjson,Ptbldir,protocols,tol,job,sites)
 % test protocols
 
   if isempty(protocols) || isempty(protocols{1,1})
@@ -1145,7 +1345,7 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,
       pmatchs(pri) = numel(FNpi); 
       for fni = 1:numel(FNpi)
         if isfield( Vjson, FNpi{fni} ) 
-          if strcmp(FNpi{fni}(1:2),'x_'), continue; end % comment
+          if strncmp(FNpi{fni},'x_',2), continue; end % comment
           
           if ( islogical( Vjson.(FNpi{fni})) || isnumeric( Vjson.(FNpi{fni})) ) && ...
              ( islogical( protocols{pri,3}.(FNpi{fni})) || isnumeric( protocols{pri,3}.(FNpi{fni})) )
@@ -1276,8 +1476,8 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,
   % save non-fitting protocols
   % =======================================================================
   % This should support central integration of protocols. 
-  % So we create a directory with the full and a shorted version of the protocol. 
-  % The shorted version includes all fields used so far in existing protocols. 
+  % So we create a directory with the full and a shortened version of the protocol. 
+  % The shortened version includes all fields used so far in existing protocols. 
   % In case of close protocols we copy and adapt these and create a difference table.
   % Moreover, we create a list of all cases to see how often the protocol is used.
   % =======================================================================
@@ -1344,7 +1544,7 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,
   % create a list of cases to see how often the protocol is used
   Pprofilec = fullfile(Pprodir,sprintf('%s-%s-list.csv',proname,site));
   if exist(Pprofilec,'file')
-    Yc = cat_io_csv(Pprofilec);
+    Yc = cat_io_csv(Pprofilec,'','',struct('convert2double',0));
     Yc{end+1,1} = Pjson;
     Yc = unique(Yc);
   else
@@ -1356,7 +1556,7 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname] = testProtcols(Pjson,Vjson,
   Pprofilel = fullfile(Pprodir,sprintf('%s-%s-long.json',proname,site));
   cat_io_json(Pprofilel,Vjsonc);
 
-  % save a shorted version as starting point   
+  % save a shortened version as starting point   
   Pprofile  = fullfile(fileparts(Pjson),sprintf('%s-%s.json',proname,site));
   Pprofile2 = fullfile(Pprodir,sprintf('%s-%s.json',proname,site));
   FN = cellfun(@(x) fieldnames(x), protocols(:,3) , 'UniformOutput', false );
@@ -1377,7 +1577,7 @@ function sites = getSites(Pcenterdict)
     for di = 1 % to support more you would have to match the fields 
       if ~isempty(Pcenterdict{di}) 
         if ~exist(Pcenterdict{di},'file')
-          error('cat_io_dcm2bids:Pcenterdict','Center dictonary file "%s" is not existing.', Pcenterdict{di});
+          error('cat_io_dcm2bids:Pcenterdict','Center dictionary file "%s" is not existing.', Pcenterdict{di});
         end
         sites = [sites; struct2cell(cat_io_json(Pcenterdict{1}))']; %#ok<AGROW>
       end
@@ -1423,6 +1623,7 @@ function site = setupSites(Vjson,sites)
   else
     site = Vjson.DeviceSerialNumber; 
   end
+  site = bidsLabel(site,1); 
 end
 % =========================================================================
 function Vjson = cleanupVjson(Vjson,type)
@@ -1486,7 +1687,7 @@ function Vjson = cleanupVjson(Vjson,type)
         'InPlanePhaseEncodingDirectionDICOM';
         'DerivedVendorReportedEchoSpacing';
         ... 
-        'PulseSequenceName'; 
+        ... 'PulseSequenceName'; % not always and operator specific
         'ProcedureStepDescription';
         ...
         'PhaseEncodingDirection';
@@ -1522,29 +1723,47 @@ function V = assurePatientDCMfields(V)
   end
 
   
-  %% text fields
-  FN = {'PatientSex'};
-  for fni = 1:numel(FN)
-    if ~isfield(V,FN{fni})
-      V.(FN{fni}) = 'NA';
+  %% fields that are required later but may be missing (e.g. in case of 
+  %  already anonymized DICOMs)
+  % subject ID: use the name or the study UID if no PatientID is available,
+  % to avoid that different subjects get the same ID
+  if ~isfield(V,'PatientID') || isempty(V.PatientID)
+    if isfield(V,'PatientName') && ~isempty(V.PatientName)
+      V.PatientID = regexprep(char(V.PatientName),'[^a-zA-Z0-9]','');
+    elseif isfield(V,'StudyInstanceUID') && ~isempty(V.StudyInstanceUID)
+      uid = regexprep(char(V.StudyInstanceUID),'[^0-9]',''); 
+      V.PatientID = ['UID' uid(max(1,end-9):end)];
+    else
+      V.PatientID = 'NA'; 
     end
+  end
+  if isnumeric(V.PatientID), V.PatientID = num2str(V.PatientID); end
+  
+  % numeric fields
+  FN = {'SeriesNumber'}; 
+  for fni = 1:numel(FN)
+    if ~isfield(V,FN{fni}) || isempty(V.(FN{fni})), V.(FN{fni}) = 0; end
   end
 
   % need this for the session
   if ~isfield(V,'ScanDate') 
-    if isfield(V,'AcquisitionDateTime')
+    try
       V.ScanDate = datetime(V.AcquisitionDateTime,'Format','uuuu-MM-dd');
-    else
-      V.ScanDate = 'NaN';
+    catch
+      V.ScanDate = NaT('Format','uuuu-MM-dd'); % missing or unreadable date
     end
   end
 
   % (re)estimate age
-  if isfield(V,'PatientBirthDate') && isfield(V,'ScanDate') 
-    ScanDate     = datetime(V.ScanDate,'Format','uuuu-MM-dd');
-    BirthDate    = datetime(V.PatientBirthDate,'Format','uuuu-MM-dd');
-    V.PatientAge = char(duration( ScanDate - BirthDate, 'Format','y'));
-    V.PatientAge = str2double(V.PatientAge(1:end-4)); 
+  if isfield(V,'PatientBirthDate') && ~isempty(V.PatientBirthDate)
+    try
+      ScanDate     = datetime(V.ScanDate,'Format','uuuu-MM-dd');
+      BirthDate    = datetime(V.PatientBirthDate,'Format','uuuu-MM-dd');
+      V.PatientAge = char(duration( ScanDate - BirthDate, 'Format','y'));
+      V.PatientAge = str2double(V.PatientAge(1:end-4)); 
+    catch
+      V.PatientAge = NaN; 
+    end
   elseif ~isfield(V,'PatientAge') 
     V.PatientAge = NaN;
   end
@@ -1552,15 +1771,22 @@ function V = assurePatientDCMfields(V)
   % numeric fields
   FN = {'PatientAge', 'PatientWeight'}; %, 'PatientHeight'};
   for fni = 1:numel(FN)
-    if ~isfield(V,FN{fni})
-      V.(FN{fni}) = NaN;
-    end
+    if ~isfield(V,FN{fni}) || isempty(V.(FN{fni})), V.(FN{fni}) = NaN; end
+  end
+
+  % text fields (after the age estimation that uses the PatientBirthDate)
+  FN = {'PatientSex','PatientName','PatientBirthDate','AcquisitionDateTime', ...
+        'StudyID','DeviceSerialNumber','SeriesDescription'};
+  for fni = 1:numel(FN)
+    if ~isfield(V,FN{fni}) || isempty(V.(FN{fni})), V.(FN{fni}) = 'NA'; end
+    if isnumeric(V.(FN{fni})), V.(FN{fni}) = num2str(V.(FN{fni})); end
   end
 end
 % =========================================================================
 function datatype = setupDatatype(pro)
 % first level
-  if cat_io_contains( lower(pro) , {'mpr','mp2r','t1w','t2w','pdw','flair','inv','uni','t1','t2','tse'} )
+  if cat_io_contains( lower(pro) , {'mpr','mp2r','t1w','t2w','pdw','flair','inv','uni','t1','t2','tse'} ) && ...
+    ~cat_io_contains( lower(pro) , {'fmri','rest','bold','func','rmri','dti','dwi','diff','dmri','field',} )
     datatype  = 'anat'; 
   elseif cat_io_contains( lower(pro) , {'fmri','rest','bold','func','rmri','rs','tb'} )
     datatype  = 'func'; 
@@ -1568,7 +1794,7 @@ function datatype = setupDatatype(pro)
     datatype  = 'dwi';
   elseif cat_io_contains( lower(pro) , {'mrs'} )
     datatype  = 'mrs';
-  elseif cat_io_contains( lower(pro) , {'field','fieldmap','mag','b0','b1'} )
+  elseif cat_io_contains( lower(pro) , {'field','fieldmap','mag','b0','b1','phase'} )
     datatype  = 'fmap';
   else
     % unknown protocols
@@ -1615,6 +1841,8 @@ function [suffix,pro] = setupSuffix(datatype,pro,ser)
   elseif strcmp( datatype , 'fmap')
     if cat_io_contains( lower(pro) , {'fieldmap'})
       suffix = 'fieldmap'; 
+    elseif cat_io_contains( lower(pro) , {'phase'})
+      suffix = 'phase'; 
     else
       suffix = 'epi'; 
     end
@@ -1689,7 +1917,7 @@ return
   Preport = fullfile(Poutdir, subdir, ...
     sprintf('scanreport_site-%s_study-%s_protocoldir-%s.tsv', site, BIDSsubdir));
   if exist(Preport,'file')
-    Treport = cat_io_csv(Preport, '','', struct('delimiter','\t')); 
+    Treport = cat_io_csv(Preport, '','', struct('delimiter','\t','convert2double',0)); 
     pidpa = find(matches( Treport(2:end,1) , sub )) + 1;
     if isempty(pidpa) || pidpa<=0, pidpa = size(Treport,1) + 1; end
     
@@ -1722,7 +1950,7 @@ return
   Preport = fullfile(Poutdir, subdir, ...
     sprintf('subjectreport_site-%s_study-%s_protocoldir-%s.tsv', Vjson.center, BIDSsubdir));
   if exist(Preport,'file')
-    Treport = cat_io_csv(Preport, '','', struct('delimiter','\t')); 
+    Treport = cat_io_csv(Preport, '','', struct('delimiter','\t','convert2double',0)); 
     pidpa = find(matches( Treport(2:end,1) , sub )) + 1;
     if isempty(pidpa) || pidpa<=0, pidpa = size(Treport,1) + 1; end
   else
@@ -1751,7 +1979,7 @@ function writePrivateTSV(Vjson,sub,Poutdir)
 % It might be saved in another directory to avoid unwanted uploading?
   Pprivate   = fullfile(Poutdir,sprintf('private_participants.tsv'));
   if exist(Pprivate,'file')
-    Tprivate = cat_io_csv(Pprivate, '','', struct('delimiter','\t')); 
+    Tprivate = cat_io_csv(Pprivate, '','', struct('delimiter','\t','convert2double',-2)); 
     pidnum   = find(cellfun(@isnumeric,Tprivate(:,2))); 
     Tprivate(pidnum,2) = cellfun(@num2str,Tprivate(pidnum,2),'UniformOutput',false); 
     pidpa    = find( matches( Tprivate(2:end,1) , sub ) ) + 1;
@@ -1776,7 +2004,7 @@ function writeParticipantTSV(Vjson,sub,Poutdir,BIDSsubdir,anon)
 % Create participant file (eg. OpenNeuro) 
   Pparticipants = fullfile(Poutdir,BIDSsubdir,'participants.tsv');
   if exist(Pparticipants,'file')
-    Tparticipants = cat_io_csv(Pparticipants, '','', struct('delimiter','\t')); 
+    Tparticipants = cat_io_csv(Pparticipants, '','', struct('delimiter','\t','convert2double',-2)); 
     pidpa = find(matches( Tparticipants(2:end,1) , sub )) + 1;
     if isempty(pidpa) || pidpa<=0, pidpa = size(Tparticipants,1) + 1; end
   else
@@ -1794,7 +2022,7 @@ function writeSubjectTSV(Vjson,sub,ses,Poutdir,BIDSsubdir,anon)
 % Create subject-wise file with session-specific data 
   Psubject = fullfile(Poutdir,BIDSsubdir,sub,sprintf('%s.tsv',sub));
   if exist(Psubject,'file')
-    Tsubject = cat_io_csv(Psubject, '','', struct('delimiter','\t')); 
+    Tsubject = cat_io_csv(Psubject, '','', struct('delimiter','\t','convert2double',-1)); 
     pidpa = find(matches( Tsubject(2:end,1) , ses )) + 1;
     if isempty(pidpa) || pidpa<=0, pidpa = size(Tsubject,1) + 1; end
   else
@@ -1863,36 +2091,27 @@ function Po = prepNii(Pi,opts,del)
 end
 % =========================================================================
 function Po = prepNiigz(Pi,opts)
-  if opts.gzipi
-    waschar = 0; 
-    if ischar(Pi)
-      waschar = 1; 
-      Pi = cellstr(Pi); 
+%prepNiigz. (Re)zip NIfTIs in case of opts.gzipi and remove the unzipped 
+%  version. An existing .nii.gz is only updated if the .nii is newer (as 
+%  gunzip keeps the file time, this is only the case for modified files). 
+  if ~opts.gzipi, Po = Pi; return; end
+
+  waschar = ischar(Pi); 
+  if waschar, Pi = cellstr(Pi); end
+  Po = Pi; 
+  for fi = 1:numel(Pi)
+    Pnii   = regexprep(Pi{fi},'\.gz$',''); 
+    Po{fi} = [Pnii '.gz']; 
+    if exist(Pnii,'file')
+      Dnii = dir(Pnii); Dgz = dir(Po{fi}); 
+      if isempty(Dgz) || Dnii.datenum > Dgz.datenum, gzip(Pnii); end
+      delete(Pnii); 
     end
-    Po = Pi; 
-    for fi = 1:numel(Pi)
-      if ~cat_io_contains( spm_file(Pi{fi},'ext') ,'gz') 
-        Po{fi} = spm_file(Pi{fi},'ext','nii.gz');
-        if ~exist(Po{fi},'file')
-          gzip(Pi{fi});
-          delete(Pi{fi}); 
-        end
-      else
-        if ~exist(Po{fi},'file') && exist(spm_file(Pi{fi},'ext',''),'file')
-          gzip(spm_file(Pi{fi},'ext',''));
-          delete(spm_file(Pi{fi},'ext',''));
-        end
-      end
-    end
-    if waschar
-      Po = char(Po); 
-    end
-  else
-    Po = Pi; 
-  end 
+  end
+  if waschar, Po = char(Po); end
 end
 % =========================================================================
-function Pout = anomize(Pin,opts,datatype) 
+function Pout = anonymize(Pin,opts,datatype) 
   
   if (~strcmp( datatype, 'anat') && opts.anonymize < 2) || opts.anonymize == 0
     Pout = Pin; 
@@ -1939,9 +2158,9 @@ function Pout = anomize(Pin,opts,datatype)
     %%% mark as failed?
   end
 
-  % re-zip raw input file
+  % zip the output and remove the unzipped copy of the raw input file
   Pout = prepNiigz(Pout,opts);
-  if opts.gzipi, gzip(spm_file(strrep(Pin,'.nii.gz','.nii'))); end
+  prepNiigz(Pin,opts); 
 
 end
 % =========================================================================
@@ -1964,7 +2183,7 @@ function matlabbatch = SPMsegment(Pfiles,opts)
 
   % SPM segmentation 
   mi = 1; 
-  matlabbatch{mi}.spm.spatial.preproc.channel.vols     = {Pfiles}; 
+  matlabbatch{mi}.spm.spatial.preproc.channel.vols     = Pfiles; 
   matlabbatch{mi}.spm.spatial.preproc.channel.biasreg  = 0.001;
   % in general a bit more is better 
   matlabbatch{mi}.spm.spatial.preproc.channel.biasfwhm = 45;  % default = 60 
@@ -2122,7 +2341,14 @@ function [Pr,QM,Pqc] = runQC(P, type, opts, Pprotocols)
     [pp,ff,ee] = spm_fileparts(P); 
     Pr = cat_vol_findfiles( pp, ['r' ff ee]);
     load(Pqc,'QM'); QM.SQR = nan; 
-  else
+    % test if the structure fits
+    QM0 = struct('NSR',[],'ISR',[],'RES',[],'BSM',[],'WSM',[],'vx_vol',[],'SQR',[]);  
+    run = ~strcmp( char(join(sort(fieldnames(QM0)))) ,char(join(sort(fieldnames(QM)))) );
+  else 
+    run = 1; 
+  end
+
+  if run
     % gunzip 
     try
       P = prepNii(P,opts,0);
@@ -2151,12 +2377,16 @@ function [Pr,QM,Pqc] = runQC(P, type, opts, Pprotocols)
 
     try
       Y = single(spm_read_vols(V));
-    catch 
-      %if cat_io_contains(spm_file(P,'basename'),'anan_')
-      %if opts.gzipi && exist([P '.gz'],'file'), delete([P '.gz']); else; delete(P); end
-      rmdir(fileparts(P),'Recursive',true);
-      error('cat_io_dcm2bids:runQC','Remove "%s" to reimport. Please rerun!\n',P); 
-      %end
+    catch e
+      if cat_io_contains(e.message,'Unknown datatype.')
+        cat_io_cprintf('err','Cannot read Nifti.\n');
+        Pr = P; 
+        QM = struct('NSR',[],'ISR',[],'RES',[],'BSM',[],'WSM',[],'vx_vol',[],'SQR',[]);  
+        cat_io_cprintf([0.5 0 0],'QC-failed\n');
+        return
+      end
+      %rmdir(fileparts(P),'Recursive',true);
+      %error('cat_io_dcm2bids:runQC','Remove "%s" to reimport. Please rerun!\n',P); 
     end
     sig75 = nan(1,size(Y,4)); 
     for di = 1:size(Y,4)
@@ -2328,6 +2558,10 @@ function [Pr,QM,Pqc] = runQC(P, type, opts, Pprotocols)
           %end
         end
     
+        % remove the temporary corrected volumes (not used further)
+        Pc = spm_file(Vr(1).fname,'prefix','c'); 
+        if exist(Pc,'file'), delete(Pc); end
+
         if run==1 % why only run 1?
           Yn   = mean(Yd(:,:,:,1:min(size(Yr,4),opts.tlim)), 4);
           Yns  = cat_vol_approx(cat_vol_median3(Yn)); 
@@ -2414,7 +2648,7 @@ function [Pr,QM,Pqc] = runQC(P, type, opts, Pprotocols)
   save(Pqc,'QM');
   cat_io_json(Pqcj,struct('qualitymeasures',QM,'qualityrating',QR)); 
 
-  %P = prepNiigz(P ,opts);
+  prepNiigz(P ,opts); % repack
   Pr = prepNiigz(Pr,opts);
 
 end
@@ -2503,14 +2737,260 @@ function [Pm,Pc0,Pwc1,Pseg] = segmentanat(Pin,datatype,opts)
       cat_io_json(Pseg,spmus);
       
     
-      % gzipi
+      % zip the segmentation outputs and remove all unzipped copies (also 
+      % of the input and denoised image, and the unzipped c0 of the CAT QC)
       if opts.gzipi
-        prefixes = {'c0','wc0','wc1','l0','wl0','m','y_'};
-        for pri=1:numel(prefixes)
-          file = spm_file(strrep(Pin,'.nii.gz','.nii'),'prefix',prefixes{pri}) ; 
-          if exist(file,'file'), gzip( file ); end
+        prefixes = {'','c0','wc0','wc1','mwc1','l0','wl0','m','y_'};
+        prefns   = unique({'',prefn}); 
+        for pri = 1:numel(prefixes)
+          for pfi = 1:numel(prefns)
+            file = spm_file(strrep(Pin,'.nii.gz','.nii'),'prefix',[prefixes{pri} prefns{pfi}]); 
+            if exist(file,'file'), prepNiigz(file,opts); end
+          end
         end
       end
     end
   end
+end
+% =========================================================================
+function renderImg(PBIDS,Preport,ropts)
+%renderImg. Render one axial slice per scan of a BIDS directory as tiles.
+%
+%  The images are sampled in world space (by their own mat), i.e., without
+%  registration but independent of the matrix size and slice orientation. 
+%  The function runs without user interaction and writes PNG pages to 
+%    Preport/[dataset/]datatype/subtype/render_subtype_p##.png
+%  where dataset is the protocol subdirectory (if used), datatype the BIDS 
+%  datatype (anat, func, ...), and subtype the lower-case BIDS suffix (t1w,
+%  bold, ...) extended by the derivative prefix (e.g. t1w_c0).
+%
+%  renderImg(PBIDS,Preport,ropts)
+%
+%  PBIDS     .. main BIDS directory (e.g. outdir/study/BIDS/BIDS)
+%  Preport   .. output directory (e.g. outdir/study/BIDS-report/render/BIDS)
+%  ropts     .. render options
+%   .source    .. 1-raw data, 2-derivatives (catDCM2BIDS), 3-both  (default 1)
+%   .sessions  .. 1-only the first session per subject, 0-all sessions (1)
+%   .tiles     .. [x y] tiles per page: [3 4], [4 5], [5 7], or [6 8] ([4 5])
+%   .orient    .. slice orientation: 3-axial, 2-coronal, 1-sagittal (3)
+%   .slicemode .. 'world'  - plane at slice mm in world space that
+%                            shows positioning differences (default)
+%                 'center' - plane through the center of each image
+%   .slice     .. position in mm along the slice normal (x for sagittal,
+%                 y for coronal, z for axial; offset to the center in
+%                 'center' mode) (0)
+%   .fov       .. in-plane field of view in mm (240)
+%   .res       .. in-plane resolution in mm (1)
+%   .dpi       .. print resolution (150)
+%
+%  4D data is represented by its first volume. Each tile shows the subject 
+%  and session and the overall quality rating SQR (0.5-10.5) if available. 
+%  In 'world' mode, tiles marked by '*' were empty in the world plane and 
+%  are shown at the image center. Unreadable (e.g. corrupted) files give a
+%  black tile marked by '(read error)'.
+
+  def.source    = 1; 
+  def.sessions  = 1; 
+  def.tiles     = [4 5];
+  def.orient    = 3;
+  def.slicemode = 'center'; 
+  def.slice     = 0; 
+  def.fov       = 200; 
+  def.res       = 1; 
+  def.dpi       = 150; 
+  if ~exist('ropts','var'), ropts = struct(); end
+  ropts = cat_io_checkinopt(ropts,def); 
+
+  tilesets = [3 4; 4 5; 5 7; 6 8];
+  tileid   = find( all( tilesets == ropts.tiles(:)' , 2 ) ); 
+  if isempty(tileid)
+    error('cat_io_dcm2bids:renderImg:tiles','Tiles has to be [3 4], [4 5], [5 7], or [6 8].');
+  end
+  fs = [8 7 6 5]; fs = fs(tileid); % font size
+  if ~any(ropts.orient == 1:3)
+    error('cat_io_dcm2bids:renderImg:orient','Orient has to be 3 (axial), 2 (coronal), or 1 (sagittal).');
+  end
+  orientnam = {'sagittal','coronal','axial'}; axisnam = 'xyz';
+  if ~exist(PBIDS,'dir'), return; end
+  
+  % quality colors (similar to the command line output)
+  MarkColor = cat_io_colormaps('marks+',40); 
+  col2mark  = @(val) MarkColor(min(size(MarkColor,1)-3,max(1,floor( val/9.5 * size(MarkColor,1)))),:); 
+
+
+  %% find and describe images 
+  P = cat_vol_findfiles(PBIDS,'*sub-*.nii*'); 
+  P = P( ~cellfun('isempty',regexp(P,'\.nii(\.gz)?$','once')) ); 
+  isderiv = cat_io_contains(P,[filesep 'derivatives' filesep]); 
+  switch ropts.source
+    case 1, P = P(~isderiv); isderiv = isderiv(~isderiv);
+    case 2, P = P( isderiv); isderiv = isderiv( isderiv);
+  end
+  if isempty(P), return; end
+
+  F = struct('file',P,'sub','','ses','','datatype','','subtype','','group','','SQR',nan); 
+  for fi = 1:numel(P)
+    [pp,ff]  = fileparts(P{fi}); 
+    ff       = regexprep(ff,'\.nii$',''); 
+    si       = strfind(ff,'sub-'); 
+    prefix   = regexprep(ff(1:si(1)-1),'_$',''); 
+    bidsname = ff(si(1):end);
+    
+    % BIDS entities
+    tok = regexp(bidsname,'sub-([^_]+)','tokens','once'); F(fi).sub = ['sub-' tok{1}]; 
+    tok = regexp(bidsname,'ses-([^_]+)','tokens','once'); 
+    if ~isempty(tok), F(fi).ses = ['ses-' tok{1}]; end
+    parts = strsplit(bidsname,'_'); 
+    F(fi).datatype = spm_file(pp,'basename'); 
+    F(fi).subtype  = lower(parts{end}); 
+    if ~isempty(prefix), F(fi).subtype = [F(fi).subtype '_' prefix]; end
+
+    % dataset (protocol subdirectory) relative to the main BIDS directory
+    si     = strfind(P{fi},[filesep 'sub-']); 
+    root   = P{fi}(1:si(1)-1); 
+    reldir = pp(numel(root)+2:end); 
+    if isderiv(fi), droot = root; else, droot = fullfile(root,'derivatives'); end
+    dataset = regexprep(root(min(numel(root),numel(PBIDS)+2):end), ...
+      ['(^|' regexptranslate('escape',filesep) ')derivatives.*$'],''); 
+    if strcmp(root,PBIDS), dataset = ''; end
+    F(fi).group = fullfile(dataset,F(fi).datatype,F(fi).subtype); 
+
+    % overall quality rating 
+    Pqc = fullfile(droot,reldir,['catDCM2BIDSqc_' bidsname '.json']); 
+    if exist(Pqc,'file')
+      try
+        QC = cat_io_json(Pqc); 
+        SQR = QC.qualityrating.SQR; 
+        if isnumeric(SQR) && isscalar(SQR) && isfinite(SQR), F(fi).SQR = double(SQR); end % e.g. empty if QC failed
+      end
+    end
+  end
+
+
+  %% render each group
+  % To keep the graphics load low (the interactive desktop crashed with many
+  % axes), all tiles of a page are composed into one RGB image that is shown
+  % in one axes, and one invisible figure is used for all pages. 
+  nx = ropts.tiles(1); ny = ropts.tiles(2); nt = nx*ny; 
+  mg = 0.002; ht = 0.02; % margin and title height (normalized)
+  pw = 21; ph = 29.7;    % A4 portrait (as the SPM graphics window) in cm
+  tw = (1 - 2*mg) / nx * pw; th = (1 - 2*mg - ht) / ny * ph; % tile size in cm
+  n  = round(ropts.fov / ropts.res);                         % slice size in pixel
+  % free header above each slice for about two text lines to reduce the 
+  % overlay of the labels (sub, ses, SQR) with the image
+  hd = round(2 * 1.2 * fs/72*2.54 * n/min(tw,th));            % header in pixel
+  cw = round(max(n, (n+hd)*tw/th)); ch = round(max(n+hd, n*th/tw)); % tile size in pixel 
+  fh = figure('Visible','off','Color','k','MenuBar','none', ...
+    'ToolBar','none','Units','centimeters','Position',[1 1 pw ph], ...
+    'PaperUnits','centimeters','PaperSize',[pw ph],'PaperPosition',[0 0 pw ph]); 
+  fhclean = onCleanup(@() close(fh)); 
+
+  [groups,~,gid] = unique({F.group}); 
+  for gi = 1:numel(groups)
+    Fg = F(gid==gi); 
+    [~,so] = sort( strcat({Fg.sub},'_',{Fg.ses},'_',{Fg.file}) ); Fg = Fg(so); 
+    if ropts.sessions % only the first session of each subject
+      [~,ui] = unique({Fg.sub},'first'); Fg = Fg(sort(ui)); 
+    end
+
+    % prepare output directory (remove old pages)
+    Pout = fullfile(Preport,groups{gi}); 
+    if ~exist(Pout,'dir'), mkdir(Pout); end
+    Pold = cat_vol_findfiles(Pout,'render_*.png',struct('depth',0)); 
+    for oi = 1:numel(Pold), delete(Pold{oi}); end
+    subtype = Fg(1).subtype; 
+    np      = ceil(numel(Fg)/nt); 
+
+    for pgi = 1:np
+      clf(fh); 
+      
+      % page title 
+      ax = axes('Parent',fh,'Position',[mg 1-mg-ht 1-2*mg ht],'Color','k','Visible','off'); 
+      text(ax,0,0.5,sprintf('%s  (%s, %s, %s=%0.0fmm, page %d/%d)', groups{gi}, ...
+        orientnam{ropts.orient}, ropts.slicemode, axisnam(ropts.orient), ropts.slice, pgi, np), ...
+        'Color','w','FontSize',fs+1, ...
+        'Interpreter','none','VerticalAlignment','middle'); 
+
+      % compose all tiles of the page into one image (each tile scaled to [0 1])
+      ntp  = min(nt, numel(Fg) - (pgi-1)*nt); 
+      page = zeros(ny*ch, nx*cw, 'single'); 
+      lab  = cell(1,ntp); pos = zeros(ntp,2); 
+      for ti = 1:ntp
+        fi = (pgi-1)*nt + ti; 
+        try
+          [Ys,fallback] = renderSlice(Fg(fi).file,ropts); readerr = 0; 
+        catch
+          Ys = zeros(n); fallback = 0; readerr = 1; % e.g. corrupted files
+        end
+        clim = [prctile(Ys(Ys(:)~=0),1) prctile(Ys(Ys(:)~=0),99)]; 
+        if ~(numel(clim)==2 && all(isfinite(clim)) && diff(clim)>0), clim = [0 max(1,max(Ys(:)))]; end
+        Ys = min(1,max(0,(Ys - clim(1)) / diff(clim))); 
+
+        % slice below the header and centered in the remaining space 
+        [ix,iy]   = ind2sub([nx ny],ti); 
+        pos(ti,:) = [(ix-1)*cw, (iy-1)*ch]; % upper left corner of the tile
+        page(pos(ti,2) + hd + floor((ch-hd-n)/2) + (1:n), pos(ti,1) + floor((cw-n)/2) + (1:n)) = Ys; 
+
+        % labels: subject, session and quality rating in separate rows
+        lab{ti} = {Fg(fi).sub}; 
+        if fallback, lab{ti}{1} = [lab{ti}{1} ' *']; end
+        if readerr,  lab{ti}{1} = [lab{ti}{1} ' (read error)']; end
+        if ~isempty(Fg(fi).ses), lab{ti}{end+1} = Fg(fi).ses; end
+        if ~isnan(Fg(fi).SQR),   lab{ti}{end+1} = sprintf('SQR: %0.1f',Fg(fi).SQR); end
+      end
+      ax = axes('Parent',fh,'Position',[mg mg 1-2*mg 1-2*mg-ht],'Color','k'); 
+      image(ax,repmat(page,1,1,3)); axis(ax,'image','off'); 
+
+      % labels (in page coordinates) colored by the quality rating (white if not available)
+      for ti = 1:ntp
+        fi = (pgi-1)*nt + ti; 
+        if isnan(Fg(fi).SQR), col = [1 1 1]; else, col = min(1,max(0,col2mark(Fg(fi).SQR))); end
+        text(ax,pos(ti,1) + cw*0.02,pos(ti,2) + 1,lab{ti},'Color',col,'FontSize',fs, ...
+          'Interpreter','none','VerticalAlignment','top');
+      end
+
+      % print page and give the graphics system time to finish 
+      Ppng = fullfile(Pout,sprintf('render_%s_p%02d.png',subtype,pgi)); 
+      print(fh, Ppng, '-dpng', sprintf('-r%d',ropts.dpi));
+      drawnow; 
+    end
+    cat_io_cprintf('blue',sprintf('  Rendered %4d images in %d page(s): %s\n', ...
+      numel(Fg), np, Pout)); 
+  end
+end
+% =========================================================================
+function [Ys,fallback] = renderSlice(P,ropts) %#ok<INUSD>
+%renderSlice. Slice of the first volume of P sampled in world space.
+%  The slice normal is the world axis ropts.orient (1-x sagittal, 2-y coronal,
+%  3-z axial), the in-plane axes are the other two world axes.
+  txt = evalc('V = spm_vol([P '',1'']);'); %#ok<NASGU> % avoid gz-messages
+  V   = V(1); %#ok<NODEF>
+  n   = round(ropts.fov / ropts.res);
+  vc  = V.mat * [(V.dim(1:3)+1)/2 1]'; % image center in world space
+  an  = ropts.orient;        % normal axis
+  ap  = setdiff(1:3,an);     % in-plane axes (horizontal, vertical)
+
+  fallback = 0;
+  for mode = 1:2
+    if strcmp(ropts.slicemode,'center') || mode == 2
+      c = vc(1:3); c(an) = c(an) + ropts.slice;
+    else
+      c = zeros(3,1); c(an) = ropts.slice;
+    end
+    % slice voxel (i,j,1) to world (mm) and then to image voxel coordinates
+    Mw = zeros(4); Mw(4,4) = 1;
+    Mw(ap(1),1) = ropts.res; Mw(ap(1),4) = c(ap(1)) - (n+1)/2*ropts.res;
+    Mw(ap(2),2) = ropts.res; Mw(ap(2),4) = c(ap(2)) - (n+1)/2*ropts.res;
+    Mw(an,3)    = 1;         Mw(an,4)    = c(an) - 1;
+    Ys = spm_slice_vol(V, V.mat \ Mw, [n n], [1 NaN]);
+    if strcmp(ropts.slicemode,'center') || nnz(Ys(:)~=0 & ~isnan(Ys(:))) > 0.05*n^2 || mode == 2
+      break
+    end
+    fallback = 1; 
+  end
+  Ys(isnan(Ys)) = 0; 
+  % first in-plane axis left to right and second upwards, i.e., axial with
+  % anterior on top (neurological view), coronal/sagittal with superior on
+  % top (sagittal with anterior on the right)
+  Ys = rot90(Ys);
 end
