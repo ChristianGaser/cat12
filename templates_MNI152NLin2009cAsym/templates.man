@@ -66,5 +66,15 @@
 % A more tight brainmask for GM VBM analysis derived from Template_?_GS.nii 
 % with the following thresholds:
 % GM > 0.2 & (GM+WM)>0.1
+%
+% TPM_Age11.5.nii
+% ------------------------------
+% -created with the Template-O-Matic (TOM) toolbox (Wilke et al., 2008)
+% mean age of 11.5 years estimated from all 404 children from NIH MRI Study of 
+% Normal Brain Development (Pediatric MRI Data Repository, Brain Development 
+% Cooperative Group; Evans et al., 2006), objective 1
+% sex: 191 male (47.3 %), 213 female (52.7 %)
+% age: 4.75–18.58 years (mean 10.7 ± 3.9 years)
+
 --------------------------------------------------------------------------------
 $Id$
