@@ -415,6 +415,7 @@ function cat_run_job(job,tpm,subj)
           sum([ppe.affreg.skullstrippedpara(1)>0.8 F0vol<1500 F0std<0.4])>1; % or 2 extreme values
         % not automatic detection in animals
         ppe.affreg.skullstripped = ppe.affreg.skullstripped && strcmp(job.extopts.species,'human') && job.extopts.gcutstr<10;
+        ppe.affreg.forceSS       = job.extopts.gcutstr>=10; % forced skull-stripping (gcutstr is reduced by mod(gcutstr,10) below)
         %% high intensity background (MP2Rage)
         ppe.affreg.highBGpara = [ ...
           cat_stat_nanmedian( YFm( YBG(:) > 1/3 )) ... normal background

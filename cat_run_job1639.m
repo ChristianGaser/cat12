@@ -406,6 +406,7 @@ function cat_run_job1639(job,tpm,subj)
         if ~debug, clear YFC F0vol F0std numo numi; end 
         % not automatic detection in animals
         ppe.affreg.skullstripped = ppe.affreg.skullstripped && strcmp(job.extopts.species,'human') && job.extopts.gcutstr<10;
+        ppe.affreg.forceSS       = job.extopts.gcutstr>=10; % forced skull-stripping (gcutstr is reduced by mod(gcutstr,10) below)
         
         
         %% high intensity background (MP2Rage)

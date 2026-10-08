@@ -749,17 +749,18 @@ gcutstr.help      = {
   'Method of initial skull-stripping before AMAP segmentation. The SPM approach works quite stable for the majority of data. However, in some rare cases parts of GM (i.e. in frontal lobe) might be cut. If this happens the GCUT approach is a good alternative. GCUT is a graph-cut/region-growing approach starting from the WM area. '
   'APRG (adaptive probability region-growing) is a new method that refines the probability maps of the SPM approach by region-growing techniques of the gcut approach with a final surface-based optimization strategy. This is currently the method with the most accurate and reliable results. '
   'If you use already skull-stripped data you can turn off skull-stripping although this is automatically detected in most cases. '
+  'The "force skull-stripping" options apply the selected method even if the image was detected as already skull-stripped or strongly masked (e.g. by defacing). They do not change the strength of the skull-stripping, i.e. images with skull will result in the same segmentation as the corresponding standard option. '
   'Please note that the choice of the skull-stripping method will also influence the estimation of TIV, because the methods mainly differ in the handling of the outer CSF around the cortical surface. '
   ''
 };
 if ~expert
   gcutstr.labels  = {'none (already skull-stripped)' 'SPM approach' 'GCUT approach' 'APRG approach' 'APRG approach (force skull-stripping)' };
-  gcutstr.values  = {-1 0 0.50 2 20};
+  gcutstr.values  = {-1 0 0.50 2 12};
 else
   gcutstr.labels  = {'none (post-mortem CSF~BG) (-2)','none (already skull-stripped) (-1)', ...
     'SPM approach (0)','GCUT medium (0.50)','APRG approach (2)',...
     'APRG approach V2 (2.5)','APRG approach V2 wider (2.1)','APRG approach V2 tighter (2.9)', ...
-    'SPM approach (force skull-stripping, 0)', 'GCUT approach (force skull-stripping, 10.5)', 'APRG approach (force skull-stripping, 12)'};
+    'SPM approach (force skull-stripping, 10)', 'GCUT approach (force skull-stripping, 10.5)', 'APRG approach (force skull-stripping, 12)'};
   gcutstr.values  = {-2 -1 , 0 0.50 2 , 2.5 2.1 2.9 , 10 10.5 12};
 end
 gcutstr.hidden  = expert<1;
