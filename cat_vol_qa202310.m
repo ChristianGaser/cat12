@@ -175,7 +175,7 @@ function varargout = cat_vol_qa202310(action,varargin)
 
   %QAS.parameter             = opt.job; 
   if isfield(opt,'job') && isfield(opt.job,'opts'),    QAS.parameter.opts        = opt.job.opts; end
-  if isfield(opt,'job') && isfield(opt.job,'extopts'), QAS.parameter.opts        = opt.job.extopts; end
+  if isfield(opt,'job') && isfield(opt.job,'extopts'), QAS.parameter.extopts     = opt.job.extopts; end
   if exist('res','var')
     rf = {'Affine','Affine0','lkp','mg','mn','vr','ll'}; % important SPM preprocessing variables
     for rfi=1:numel(rf)

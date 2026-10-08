@@ -684,23 +684,25 @@ end
 H.sites = sites; 
 
 
-% save the rating
-Pcsv = fullfile(pwd, sprintf('CheckSampleHomogeneity_%0.0fsubjects_%0.0fsites_%s.csv', ...
-  numel(H.files.fname), numel(unique(sites)), char(datetime('now','format','yyyyMMdd-HHmm')) )); 
-if H.isxml
-  tab = [ 
-    {'fname', 'site', 'res_RMS', 'SIQR','nSIQR','zscore'};
-    H.files.fname, num2cell(sites), num2cell(res_RMS), num2cell(SIQR), num2cell(NSIQR), num2cell(H.data.avg_abs_zscore);
+% save the rating (not in silent mode, e.g., if called by cat_long_report)
+if job.verb
+  Pcsv = fullfile(pwd, sprintf('CheckSampleHomogeneity_%0.0fsubjects_%0.0fsites_%s.csv', ...
+    numel(H.files.fname), numel(unique(sites)), char(datetime('now','format','yyyyMMdd-HHmm')) ));
+  if H.isxml
+    tab = [
+      {'fname', 'site', 'res_RMS', 'SIQR','nSIQR','zscore'};
+      H.files.fname, num2cell(sites), num2cell(res_RMS), num2cell(SIQR), num2cell(NSIQR), num2cell(H.data.avg_abs_zscore);
+      ];
+  else
+    tab = [
+      {'fname', 'site', 'zscore'};
+      H.files.fname, num2cell(sites), num2cell(H.data.avg_abs_zscore);
     ];
-else
-  tab = [ 
-    {'fname', 'site', 'zscore'};
-    H.files.fname, num2cell(sites), num2cell(H.data.avg_abs_zscore);
-  ];
+  end
+  cat_io_csv(Pcsv,tab);
+  fprintf('Write csv-table:\n');
+  cat_io_cprintf('blue',sprintf('  %s\n',Pcsv));
 end
-cat_io_csv(Pcsv,tab);
-fprintf('Write csv-table:\n'); 
-cat_io_cprintf('blue',sprintf('  %s\n',Pcsv)); 
 
 
 

@@ -368,8 +368,10 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     %  --------------------------------------------------------------------
     
     % measures to display
-    if isfield(res.long,'change_qar_IQR')
-      IQR  = res.long.change_qar_IQR; 
+    % (cat_long_report uses the SIQR since 2026/03, older versions the IQR)
+    if isfield(res.long,'qar_SIQR'), qarFN = 'SIQR'; else, qarFN = 'IQR'; end
+    if isfield(res.long,['change_qar_' qarFN])
+      IQR  = res.long.(['change_qar_' qarFN]);
     else
       IQR  = nan; 
     end
@@ -377,16 +379,17 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
     RMSE = (min(res.long.vres.RMSEidiff) - res.long.vres.RMSEidiff )';
     
     % text to display (header + main measures)
-    if isfield(res.long,'qar_IQR')
-      IQRE = (max(res.long.qar_IQR) - min(res.long.qar_IQR)) + 0.5; 
+    if isfield(res.long,['qar_' qarFN])
+      qar  = res.long.(['qar_' qarFN]);
+      IQRE = (max(qar) - min(qar)) + 0.5;
     else
       IQRE = nan; 
     end
     htext(2,1,1) = text(0.01,0.52 - (0.05 * 1), '\bfImage and preprocessing quality changes (best to worst):', ...
       'FontName',fontname,'FontSize',fontsize,'color',fontcolor,'Interpreter','tex','Parent',ax);
-    if isfield(res.long,'qar_IQR')
-      lstr{1}(1) = struct('name','\bf\color[rgb]{.6 0  0}IQR:' , ...
-        'value',  marks2str(min(res.long.qar_IQR),   sprintf('%0.2f%%' ,mark2rps(min(res.long.qar_IQR) )) ), ... ,mark2grad(min(res.long.qar_IQR)
+    if isfield(res.long,['qar_' qarFN])
+      lstr{1}(1) = struct('name',['\bf\color[rgb]{.6 0  0}' qarFN ':'] , ...
+        'value',  marks2str(min(qar),   sprintf('%0.2f%%' ,mark2rps(min(qar) )) ), ... ,mark2grad(min(qar)
         'value2', marks2str( (IQRE - 0.5) * 2 + 0.5, sprintf('%+0.2fpp',mark2rps(IQRE) - 100)));
     else
       lstr{1}(1) = struct('name','','value','','value2','');
@@ -449,9 +452,9 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
       end
     end
     if ~any(isnan(ZSCORE)) && numel(res.long.files) > 2
-      leg    = [leg {'dIQR/100','dZSCORE','dRMSE'}];
+      leg    = [leg {['d' qarFN '/100'],'dZSCORE','dRMSE'}];
     else
-      leg    = [leg {'dIQR/100'}]; 
+      leg    = [leg {['d' qarFN '/100']}]; 
     end
     % plot lines
     pt = plot( axi(1), IQR/100 ); set(pt,'Color',tcmap(1,:),'Marker',marker{2}, ...

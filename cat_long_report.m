@@ -621,7 +621,11 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
       xmlavg.S = xml(1); 
     end
     ppjob.opts    = xmlavg.S.parameter.opts;    
-    ppjob.extopts = xmlavg.S.parameter.opts;   
+    if isfield(xmlavg.S.parameter,'extopts')
+      ppjob.extopts = xmlavg.S.parameter.extopts;
+    else % older cat_vol_qa versions saved the extopts as parameter.opts
+      ppjob.extopts = xmlavg.S.parameter.opts;
+    end
     
     % get catlong parameter setting 
     try
@@ -649,6 +653,18 @@ function [str,ppjob,ppres,qa] = cat_get_xml(job,Psurf)
       model      = long.model;
     end
     
+    % TPM that was used for the average (the time points use the longTPM)
+    if isfield(xmlavg.S.parameter,'extopts') && isfield(ppjob.opts,'tpm')
+      Ptpm = char(ppjob.opts.tpm);
+    elseif isfield(ppjob,'lopts') && isfield(ppjob.lopts,'opts') && isfield(ppjob.lopts.opts,'tpm')
+      Ptpm = char(ppjob.lopts.opts.tpm);
+    else
+      Ptpm = '';
+    end
+    if ~isempty(Ptpm)
+      ppres.tpm = struct('fname',spm_file(deblank(Ptpm(1,:)),'number',''));
+    end
+
     try
       str = cat_main_reportstr(ppjob,ppres,qa);
     catch

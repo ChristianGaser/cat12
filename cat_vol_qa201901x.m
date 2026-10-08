@@ -724,9 +724,8 @@ function varargout = cat_vol_qa201901x(action,varargin)
 % ### need for long?      
       %QAS.parameter             = opt.job; 
       
-      QAS.parameter.vbm =  rmfield(cat_get_defaults,'output');
       if isfield(opt,'job') && isfield(opt.job,'opts'),    QAS.parameter.opts        = opt.job.opts; end
-      if isfield(opt,'job') && isfield(opt.job,'extopts'), QAS.parameter.opts        = opt.job.extopts; end
+      if isfield(opt,'job') && isfield(opt.job,'extopts'), QAS.parameter.extopts     = opt.job.extopts; end
       if exist('res','var')
         % add important SPM preprocessing variables
         rf = {'Affine','Affine0','lkp','mg','mn','vr','ll'}; 

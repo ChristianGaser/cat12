@@ -1764,10 +1764,11 @@ function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
     FNopts      = fieldnames(job.opts); 
     FNextopts   = fieldnames(job.extopts);
     FNok        = 1; 
-    FNextopts   = setxor(FNextopts,{'LAB','lazy','mrf','NCstr','resval','ignoreErrors'});
+    % ignore some fields and internal fields that are updated during processing 
+    FNextopts   = setdiff(FNextopts,{'LAB','lazy','mrf','NCstr','resval','ignoreErrors','templates','reg','shootingT1'});
     if job.extopts.lazy > 0 % ingnore paths that can change when copied 
-      FNopts    = setxor(FNopts,{'tpm'});
-      FNextopts = setxor(FNextopts,{'brainmask','T1','cat12atlas','darteltpm','darteltpms','shootingtpm','shootingtpms','atlas','satlas'});
+      FNopts    = setdiff(FNopts,{'tpm'});
+      FNextopts = setdiff(FNextopts,{'brainmask','T1','cat12atlas','darteltpm','darteltpms','shootingtpm','shootingtpms','atlas','satlas'});
     end
     
     %% check opts
@@ -1780,92 +1781,25 @@ function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
         if ~isfield(xml.parameter.opts,FNopts{fni})
           FNok = 2; break
         end
-        if ischar(xml.parameter.opts.(FNopts{fni}))
-          if ischar(job.opts.(FNopts{fni}))
-            if ~strcmp(xml.parameter.opts.(FNopts{fni}),job.opts.(FNopts{fni}))
-              FNok = 3; break
-            end
-          else
-            if ~strcmp(xml.parameter.opts.(FNopts{fni}),job.opts.(FNopts{fni}){1})
-              FNok = 4; break
-            end
-          end
-        else
-          if isnumeric(job.opts.(FNopts{fni}))
-            if strcmp(FNopts{fni},'ngaus') && numel(xml.parameter.opts.(FNopts{fni}))==4
-              % nothing to do (skull-stripped case)
-            else
-              try
-                if xml.parameter.opts.(FNopts{fni}) ~= job.opts.(FNopts{fni})
-                  FNok = 5; break
-                end
-              catch
-                FNok = 5; break
-              end
-            end
-          elseif ischar(job.opts.(FNopts{fni}))
-            if ~strcmp(xml.parameter.opts.(FNopts{fni}),job.opts.(FNopts{fni})) 
-              FNok = 5; break
-            end
-          end
+        if strcmp(FNopts{fni},'ngaus') && numel(xml.parameter.opts.(FNopts{fni}))==4
+          % nothing to do (skull-stripped case)
+        elseif ~isequalpara(job.opts.(FNopts{fni}),xml.parameter.opts.(FNopts{fni}))
+          FNok = 5; break
         end
       end
       if FNok~=1 % different opts
         return
       end
 
-      %% check extopts
+      %% check extopts 
+      %  numerical fields are not compared because some of them are updated during processing
       for fni=1:numel(FNextopts)
         if ~isfield(xml.parameter.extopts,FNextopts{fni})
           FNok = 6; break
         end
-        if ischar(xml.parameter.extopts.(FNextopts{fni}))
-          if ischar(job.extopts.(FNextopts{fni}))
-            if ~strcmp(xml.parameter.extopts.(FNextopts{fni}),job.extopts.(FNextopts{fni}))
-              FNok = 7; break
-            end
-          else
-            if ~strcmp(xml.parameter.extopts.(FNextopts{fni}),job.extopts.(FNextopts{fni}){1})
-              FNok = 8; break
-            end
-          end
-        elseif iscell(xml.parameter.extopts.(FNextopts{fni}))
-          if numel(xml.parameter.extopts.(FNextopts{fni}))~=numel(job.extopts.(FNextopts{fni}))
-            FNok = 9; break
-          end
-          for fnic = 1:numel(xml.parameter.extopts.(FNextopts{fni}))
-            if iscell(xml.parameter.extopts.(FNextopts{fni}){fnic})
-              for fnicc = 1:numel(xml.parameter.extopts.(FNextopts{fni}){fnic})
-                if xml.parameter.extopts.(FNextopts{fni}){fnic}{fnicc} ~= job.extopts.(FNextopts{fni}){fnic}{fnicc}
-                  FNok = 10; break
-                end
-              end
-              if FNok==10; break; end
-            else
-              try
-                if any(xml.parameter.extopts.(FNextopts{fni}){fnic} ~= job.extopts.(FNextopts{fni}){fnic})
-                  FNok = 11; break
-                end
-              catch
-                  FNok = 11;
-              end
-              if FNok==11; break; end
-            end
-            if FNok==11 || FNok==10; break; end
-          end
-        elseif isstruct(xml.parameter.extopts.(FNextopts{fni}))
-          FNX = fieldnames(xml.parameter.extopts.(FNextopts{fni}));
-          for fnic = 1:numel(FNX)
-            if any(xml.parameter.extopts.(FNextopts{fni}).(FNX{fnic}) ~= job.extopts.(FNextopts{fni}).(FNX{fnic}))
-              FNok = 12; break
-            end
-            if FNok==12; break; end
-          end
-        else
-          % this did not work anymore due to the GUI subfields :/
-          %if any(xml.parameter.extopts.(FNextopts{fni}) ~= job.extopts.(FNextopts{fni}))
-          %  FNok = 13; break
-          %end
+        if ~isnumeric(job.extopts.(FNextopts{fni})) && ~islogical(job.extopts.(FNextopts{fni})) && ...
+           ~isequalpara(job.extopts.(FNextopts{fni}),xml.parameter.extopts.(FNextopts{fni}))
+          FNok = 12; break
         end
       end
       if FNok~=1 % different extopts
@@ -1934,5 +1868,34 @@ function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
  
   if lazy 
     cat_io_cprintf('warn','  "%s" \n',job.data{subj});
+  end
+return
+
+%=======================================================================
+function eq = isequalpara(a,b)
+%isequalpara. Robust comparison of a job parameter with its version saved 
+% in the XML file (that may differ in type, e.g., cell vs. char).
+  if isstruct(a) && isstruct(b)
+    FN = fieldnames(a);
+    eq = all(isfield(b,FN));
+    for fni = 1:numel(FN)
+      if ~eq, break; end
+      eq = isequalpara(a.(FN{fni}),b.(FN{fni}));
+    end
+  elseif iscell(a) || iscell(b)
+    if ~iscell(a), a = {a}; end
+    if ~iscell(b), b = {b}; end
+    eq = numel(a) == numel(b);
+    for ci = 1:numel(a)
+      if ~eq, break; end
+      eq = isequalpara(a{ci},b{ci});
+    end
+  elseif ischar(a) || ischar(b)
+    eq = ischar(a) && ischar(b) && strcmp(a,b);
+  elseif (isnumeric(a) || islogical(a)) && (isnumeric(b) || islogical(b))
+    a = double(a(:)); b = double(b(:));
+    eq = numel(a) == numel(b) && all( abs(a - b) <= 1e-6 * max(1,abs(a)) | (isnan(a) & isnan(b)) );
+  else
+    eq = isequal(a,b);
   end
 return

@@ -592,9 +592,8 @@ function varargout = cat_vol_qa201602(action,varargin)
       %             I think cat defaults would be enought for the beginning.  
       %             Furhter data will only be excess baggage for the cat*.xml file. 
       %QAS.parameter.spm = spm_get_defaults;
-      QAS.parameter.vbm =  rmfield(cat_get_defaults,'output');
       if isfield(opt,'job') && isfield(opt.job,'opts'),    QAS.parameter.opts        = opt.job.opts; end
-      if isfield(opt,'job') && isfield(opt.job,'extopts'), QAS.parameter.opts        = opt.job.extopts; end
+      if isfield(opt,'job') && isfield(opt.job,'extopts'), QAS.parameter.extopts     = opt.job.extopts; end
       if exist('res','var')
         rf = {'Affine','Affine0','lkp','mg','mn','vr','ll'}; % important SPM preprocessing variables
         for rfi=1:numel(rf)

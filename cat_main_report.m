@@ -173,6 +173,11 @@ function out = cat_main_report(job)
 
 
     % prepare CAT report variables as good as possible
+    % (older cat_vol_qa versions saved the extopts as parameter.opts)
+    isnewxml = isfield(xml.parameter,'extopts');
+    if ~isnewxml && isfield(xml.parameter,'opts') && isfield(xml.parameter.opts,'gcutstr')
+      xml.parameter.extopts = xml.parameter.opts;
+    end
     xmljob          = xml.parameter;
     xmljob.files    = job.files(fi);  
     xmljob.extopts.print    = job.print;
@@ -202,6 +207,10 @@ function out = cat_main_report(job)
     xmlres.stime      = clock; 
     xmlres.image      = Vmi;
     xmlres.image0     = Vmi; 
+    if isnewxml && isfield(xml.parameter,'opts') && isfield(xml.parameter.opts,'tpm')
+      Ptpm = xml.parameter.opts.tpm; if iscell(Ptpm), Ptpm = Ptpm{1}; end
+      xmlres.tpm      = struct('fname',spm_file(Ptpm,'number',''));
+    end
     if isfield(xml.parameter,'vbm') && ~isfield(xml.parameter,'extopts')
       xml.parameter.extopts = xml.parameter.vbm.extopts;
     end
