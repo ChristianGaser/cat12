@@ -375,6 +375,8 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
     [Yb,Ybb,Yg,Ydiv] = cat_main_updateSPM_gcut0(Ysrc,P,vx_vol,T3th);
   elseif job.extopts.gcutstr==2
     [Yb,Ybb,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th);
+  elseif job.extopts.gcutstr>2 && job.extopts.gcutstr<3
+    [Yb,Ybb,Yg,Ydiv] = cat_main_APRG(Ysrc,P,res,T3th,job.extopts.gcutstr); % APRG V2 with width parameter
   else
     [Yb,Ybb,Yg,Ydiv] = cat_main_updateSPM_gcutold(Ysrc,P,res,vx_vol,T3th);
   end
