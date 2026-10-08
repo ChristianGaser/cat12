@@ -4,20 +4,37 @@ function out = cat_vol_savg(job)
 %  out = cat_vol_savg(job)
 %
 %  job          .. SPM job structure
-%   .subjects   .. cell of subjects with a cell of input files  
-%   .ref        .. coregistration reference image filenames
-%   .reslim     .. resolution limitation of input images [inslice slice]
-%   .filelim    .. limitation of input file number [low high]
-%   .sanlm      .. apply denoising (0-no*,1-yes) 
-%   .seg        .. segmenation approach (SPM|CAT) 
-%   .res        .. output resolution of the final average
-%   .bias       .. bias-fwhm for preprocessing and image-wise correction
-%   .norm       .. intensity normalization approach (none,...)
-%   .mcon       .. average contrast limitation (e.g., 0.05 - 0.3)
-%   .cleanup    .. remove temporary files
-%   .verb       .. be verbose (0-no,1-subject,2-details)
+%   .subjects   .. cell of subjects defined by BIDS subject or session
+%                  directories, by sessions of a subject, or by files
+%   .limits     .. data selectors (or .limits.limits/.limits.nolimits
+%                  of the batch)
+%    .seplist   .. keywords to separate files, e.g., '_T1w _T2w' or
+%                  BIDS entities like 'acq-mprage' (empty = all files)
+%    .blacklist .. keywords to exclude files
+%    .reqlist   .. keywords required in the path, e.g., '/anat/'
+%    .reslim    .. resolution limitation of input images
+%                  [deviation inslice slicethickness]
+%    .filelim   .. limitation of the number of scans and sessions
+%   .opts       .. processing options
+%    .bias      .. bias correction (0-no, 2-yes)
+%    .sanlm     .. apply denoising (0-no*,1-yes)
+%    .sharpen   .. sharpening before averaging (0-no, 1-light, 2-strong)
+%    .reduce    .. reduce bounding box (0-no, 1-yes)
+%    .res       .. output resolution of the final average (0-input)
+%    .avgmethod .. averaging method (1-savg, 2-CAT long., 3-SPM long.)
+%    .seg       .. segmenation approach (SPM|CAT) of avgmethod 1
+%    .norm      .. intensity normalization approach (none,...)
+%   .output     .. output options
+%    .BIDSdir   .. output directory (e.g., derivatives/catavg)
+%    .prefix    .. filename prefix of the results
+%    .suffix    .. filename suffix of the results
+%    .cleanup   .. remove temporary files
+%    .verb      .. be verbose (0-no,1-subject,2-details)
 %
-%  out.avg      .. output filenames for batch dependency
+%  out          .. output filenames for batch dependency
+%   .sesavg     .. session averages (or the processed scan of sessions
+%                  without rescans)
+%   .subavg     .. subject averages over all sessions (ses-avg)
 %
 % ______________________________________________________________________
 % $Id: cat_surf_parameters.m 1901 2021-10-26 10:25:52Z gaser $
@@ -115,7 +132,8 @@ function out = cat_vol_savg(job)
   if isfield(job,'process_index'), spm('FnBanner',mfilename,SVNid); end
 
   methodstr = {'CATavg','CATlong','SPMlong','Brudfors'};
-  out.savg = {}; 
+  out.sesavg = {}; 
+  out.subavg = {}; 
   %% main loop for all subjects
   %  ======================================================================
   for si = 1:numel( subjects ) 
@@ -133,85 +151,77 @@ function out = cat_vol_savg(job)
       %% ===================================================================
       % (1) Average per session
       % ===================================================================
+      sesavg   = {}; % results of each session
+      sesfiles = {}; % input files of all sessions (for the naming of the subject average) 
+      seqstr   = [job.limits.seplist{seqi} repmat(' ',1,~isempty(job.limits.seplist{seqi}))]; % for messages
       for sesi = 1:numel( subjects{si}{seqi} )
-        if isempty( subjects{si}{seqi}{sesi} )
-          out.savg{si}{seqi}{sesi,1} = ''; continue
-        end
-
-        % handle zipped BIDS 
-        subjects{si}{seqi}{sesi} = prepareBIDSgz(subjects{si}{seqi}{sesi}, sBIDS(si), devdir{si}{seqi}{sesi});
+        % copy (and unzip) the scans to the output directory, as they are modified by the preprocessing
+        files = prepareFiles(subjects{si}{seqi}{sesi}, devdir{si}{seqi}{sesi});
+        if isempty( files ), continue; end
  
         % bias correction and intensity normalization 
         if job.opts.bias > 0
-          biascorrection(subjects{si}{seqi}{sesi}, job)
+          biascorrection(files, job)
         end
 
         % denoising for all methods
         if job.opts.sanlm ~= 0
-          denoise(subjects{si}{seqi}{sesi}, job)
+          denoise(files, job)
         end
         
-        % no rescans?
-        if isscalar( subjects{si}{seqi}{sesi} ) 
-          out.savg{si}{seqi}(sesi,1)= subjects{si}{seqi}{sesi}; continue
-        end
+        if isscalar( files ) 
+          % no rescans - use the processed scan 
+          sesavg{end+1,1} = spm_file(files{1},'prefix',job.output.prefix,'suffix',job.output.suffix); %#ok<AGROW>
+          if ~strcmp(sesavg{end},files{1}), movefile(files{1},sesavg{end}); end
+        else
+          if job.opts.verb > 1
+            cat_io_cprintf([0.2 0.2 .5],'=== Subject %d - session %d: Average %d %srescans ===\n', ...
+              si, sesi, numel( files ), seqstr );
+          elseif job.opts.verb
+            cat_io_cprintf([0.2 0.2 .5],'  Average %d %srescans in session %d.\n', ...
+              numel( files ), seqstr , sesi );
+          end
+      
+          avgfile = runavg(files, job, methodstr);
+          
+          % BIDS like naming of the session average (e.g. sub-01_ses-1_run-avg_T1w.nii)
+          if ~isempty(avgfile)
+            sesavg{end+1,1} = fullfile( spm_fileparts(files{1}), ...
+              [job.output.prefix avgname(files,0) job.output.suffix '.nii'] ); %#ok<AGROW>
+            movefile(avgfile, sesavg{end});
+          end
 
-        if job.opts.verb > 1
-          cat_io_cprintf([0.2 0.2 .5],'=== Subject %d - session %d: Average %d %s rescans ===\n', ...
-            si, sesi, numel( subjects{si}{seqi}{sesi} ), job.limits.seplist{seqi} );
-        elseif job.opts.verb
-          cat_io_cprintf([0.2 0.2 .5],'  Average %d %s-rescans in session %d.\n', ...
-            numel( subjects{si}{seqi}{sesi} ), job.limits.seplist{seqi} , sesi );
+          % remove the temporary copies of the rescans 
+          if job.output.cleanup
+            cleanupfiles( setdiff( files, [out.sesavg; sesavg] ) );
+          end
+          if isempty(avgfile), continue; end
         end
-    
-        switch job.opts.avgmethod
-          case 1
-            % MNI space using SPM (co)registration 
-            [out.savg{si}{seqi}{sesi,1}, out.sesra{si}] = savg(subjects{si}{seqi}{sesi},1, methodstr{1}, job, seqi);
-          case 2
-            % CAT longitudinal averaging function (rigid) 
-            [out.savg{si}{seqi}{sesi,1}, out.sesra{si}] = catlong(subjects{si}{seqi}{sesi}, methodstr{2}, job, seqi);
-          case 3
-            % SPM longitudinal averaging function (rigid) 
-            out.savg{si}{seqi}{sesi,1} = spmlong(subjects{si}{seqi}{sesi}, methodstr{3}, job, seqi); 
-          case 4
-            % Brudfors averaging function (rigid)   
-            out.savg{si}{seqi}{sesi,1} = brudfors(subjects{si}{seqi}{sesi}, methodstr{4}, job, seqi);
-        end
-        
+        sesfiles = [sesfiles; files(:)]; %#ok<AGROW>
       end
+      out.sesavg = [out.sesavg; sesavg];
     
 
       % (2) average per subject
       % ===================================================================
-      if numel( out.savg ) < si || numel( out.savg{si} ) < seqi, continue; end
-      if isempty( out.savg{si}(seqi) ) || isempty( out.savg{si}{seqi} )  ||  ...
-         isempty( out.savg{si}{seqi}{1} )  ||  isscalar(  out.savg{si}{seqi} ) 
-        out.subavg{si}{seqi,1} = ''; continue;
-      end
+      if numel( sesavg ) < 2, continue; end
 
       if job.opts.verb > 1
-        cat_io_cprintf([0 0 1],'  Subject %d: Average %d %s-sessions.\n\n', ...
-          si, numel(out.savg{si}{seqi}), job.limits.seplist{seqi}), 
+        cat_io_cprintf([0 0 1],'  Subject %d: Average %d %ssessions.\n\n', ...
+          si, numel(sesavg), seqstr), 
       else
-        cat_io_cprintf([0 0 1],'  Average %d %s-sessions.\n', ...
-          numel(out.savg{si}{seqi}), job.limits.seplist{seqi}), 
+        cat_io_cprintf([0 0 1],'  Average %d %ssessions.\n', ...
+          numel(sesavg), seqstr), 
       end
 
-      switch job.opts.avgmethod
-        case 1
-          % MNI space using SPM (co)registration 
-          [out.subavg{si}{seqi,1}, out.sesra{si}{seqi}] = savg(out.savg{si}{seqi},1, methodstr{1}, job, seqi, 1);
-        case 2
-          % CAT longitudinal averaging function (rigid) 
-          [out.subavg{si}{seqi,1}, out.sesra{si}{seqi}] = catlong(out.savg{si}{seqi}, methodstr{2}, job, seqi, 1);
-        case 3
-          % SPM longitudinal averaging function (rigid) 
-          out.subavg{si}{seqi,1} = spmlong(out.savg{si}{seqi}, methodstr{3}, job, seqi, 1); 
-        case 4
-          % Brudfors averaging function (rigid)   
-          out.subavg{si}{seqi,1} = brudfors(out.savg{si}{seqi}, methodstr{4}, job, seqi, 1);
-      end
+      avgfile = runavg(sesavg, job, methodstr);
+      if isempty(avgfile), continue; end
+
+      % BIDS like naming of the subject average (e.g. ses-avg/anat/sub-01_ses-avg_T1w.nii)
+      out.subavg{end+1,1} = fullfile( sesavgdir(sesavg{1}), ...
+        [job.output.prefix avgname(sesfiles,1) job.output.suffix '.nii'] );
+      if ~exist(spm_fileparts(out.subavg{end}),'dir'), mkdir(spm_fileparts(out.subavg{end})); end
+      movefile(avgfile, out.subavg{end});
     end
 
     %% algin to MNI ? 
@@ -221,6 +231,37 @@ function out = cat_vol_savg(job)
     %%
     cat_io_cmd(' ','g5','',job.opts.verb>1); 
     fprintf('%5.0fs\n',etime(clock,stime)); 
+  end
+end
+%--------------------------------------------------------------------------
+function avgfile = runavg(files, job, methodstr)
+%runavg. Average the files by the selected method and return the filename 
+%  of the average (or an empty string if the method found no usable files).
+  switch job.opts.avgmethod
+    case 1
+      % MNI space using SPM (co)registration 
+      avgfile = savg(files, methodstr{1}, job);
+    case 2
+      % CAT longitudinal averaging function (rigid) 
+      avgfile = catlong(files, methodstr{2}, job);
+    case 3
+      % SPM longitudinal averaging function (rigid) 
+      avgfile = spmlong(files, methodstr{3}, job); 
+    case 4
+      % Brudfors averaging function (rigid)   
+      avgfile = brudfors(files, methodstr{4}, job);
+    otherwise
+      error('cat_vol_savg:unknownMethod','Unknown averaging method %d.',job.opts.avgmethod); 
+  end
+  if ~isempty(avgfile) && ~exist(avgfile,'file')
+    error('cat_vol_savg:missingAverage','The average "%s" was not created.',avgfile);
+  end
+end
+%--------------------------------------------------------------------------
+function cleanupfiles(files)
+%cleanupfiles. Delete existing files.
+  for fi = 1:numel(files)
+    if exist(files{fi},'file'), delete(files{fi}); end
   end
 end
 %--------------------------------------------------------------------------
@@ -323,9 +364,12 @@ function Y = spm_smooth3(Y,sx)
 end
 %--------------------------------------------------------------------------
 function [sfiles,sfilesBIDS,BIDSsub,devdir] = checkBIDS(sfiles,BIDSdir) 
-
-% * what about longitudinal 
-% * what about derivates subdir?
+%checkBIDS. Detect BIDS files and define their output directories.
+%  In case of BIDS (sub-*[/ses-*]/anat), only files of the anat directory  
+%  are used and the results are written into the BIDSdir of the dataset, 
+%  e.g., derivatives/catavg/sub-*/ses-*/anat. Input files of another 
+%  derivatives directory are handled like raw data. Without BIDS, the 
+%  results are written into the BIDSdir relative to the input directory.
 
   sfilesBIDS  = false(size(sfiles)); 
   BIDSsub     = ''; 
@@ -334,85 +378,39 @@ function [sfiles,sfilesBIDS,BIDSsub,devdir] = checkBIDS(sfiles,BIDSdir)
   %% if BIDS structure is detectected than use only the anat directory 
   for sfi = numel(sfiles):-1:1
     %% detect BIDS directories 
-    sdirs = strsplit(sfiles{sfi},filesep); 
-    if strcmpi(sdirs{end-1}(1:min(4,numel(sdirs{end-1}))),'anat'), ana = 1; else, ana = 0; end
-    if strcmpi(sdirs{end-2}(1:min(4,numel(sdirs{end-2}))),'ses-'), ses = 1; else, ses = 0; end
-    if ses==0
-      if strcmpi(sdirs{end-2}(1:min(4,numel(sdirs{end-2}))),'sub-'), sub = 1; else, sub = 0; end
+    sdirs = strsplit(spm_fileparts(sfiles{sfi}),filesep); 
+    ana   = numel(sdirs) > 0 && strncmpi(sdirs{end},'anat',4);
+    ses   = numel(sdirs) > 1 && strncmpi(sdirs{end-1},'ses-',4);
+    sub   = numel(sdirs) > 1 + ses && strncmpi(sdirs{end-1-ses},'sub-',4); 
+
+    %% differentiate between BIDS and other cases
+    if sub
+      if ~ana, sfiles(sfi) = []; sfilesBIDS(sfi) = []; devdir(sfi) = []; continue; end
+      devi    = numel(sdirs) - 1 - ses; % sub directory
+      BIDSsub = sdirs{devi}; 
+
+      % remove the derivatives directory of the input (e.g. derivatives/fmriprep)
+      dev = find( strcmpi( sdirs(1:devi-1) , 'derivatives' ) , 1 ,'last');
+      if ~isempty(dev), sdirs(dev:devi-1) = []; devi = dev; end
+      
+      devdir{sfi} = strjoin( [ sdirs(1:devi-1) , {BIDSdir} , sdirs(devi:end) ] , filesep); 
     else
-      if strcmpi(sdirs{end-3}(1:min(4,numel(sdirs{end-3}))),'sub-'), sub = 1; else, sub = 0; end
+      devdir{sfi} = fullfile( strjoin( sdirs , filesep ) , BIDSdir ); 
     end
-    dev = strmatch('derivatives',sdirs);
-    sdirs(dev:dev+1) = []; 
-    
-    %% differentiate between cross and long cases
-    if ~ana, sfiles(sfi) = []; sfilesBIDS(sfi) = []; devdir(sfi) = []; continue; end
-    if  ses && sub && ~ana, sfiles(sfi) = []; sfilesBIDS(sfi) = []; devdir(sfi) = []; continue; end
-    if  ses && sub, BIDSsub = sdirs{end-3}; devi = numel(sdirs)-3; end % long
-    if ~ses && sub, BIDSsub = sdirs{end-2}; devi = numel(sdirs)-2; end % cross
     sfilesBIDS(sfi) = sub; 
-
-    % setup result directory - without BIDS the default is used
-    devdir{sfi}     = '';
-    for di = 2:numel(sdirs)-1
-      if sub && di == devi, devdir{sfi} = [devdir{sfi} filesep BIDSdir]; end % add some directories inbetween
-      devdir{sfi} = [devdir{sfi} filesep sdirs{di}]; 
-    end
   end
-end
-%--------------------------------------------------------------------------
-function [subjects,sname,sBIDS,devdir] = checksubjectfiles(sfiles,jobblacklist,jobseplist,BIDSdir)
-  [sfiles,BIDS,BIDSsub,devdir]   = checkBIDS(sfiles,BIDSdir);     
-  sBIDS                          = all(BIDS);  
-  if any(BIDS) 
-    sname = BIDSsub;  
-  else
-    sname = '';
-  end
-  
-  % check blacklist
-  blacklist = false(size(sfiles)); 
-  if ~isempty(jobblacklist)
-    for sni = 1:numel(sfiles)
-      for ji = 1:numel(jobblacklist)
-        if any( cellfun( 'isempty' , strfind(sfiles, jobblacklist{ji} ))==0 )
-          blacklist(sni) = 0; 
-        end
-      end
-    end
-  end
-
-  % check seplist
-  %{
-  seplist = true(size(sfiles)); 
-  if ~isempty(jobseplist)
-    for sni = 1:numel(sfiles)
-      seplist(sni) = any( cellfun( 'isempty' , strfind(sfiles, jobseplist ))==0 ); 
-    end
-  end
-  %}
-  seplist = 0; 
-
-  % apply lists
-  subjects = sfiles(seplist | ~blacklist); 
-  
-  % devdir
-  devdir = devdir(seplist | ~blacklist); 
 end
 %--------------------------------------------------------------------------
 function job = get_defaults(job)
 %cat_vol_savg_get_defaults. Default settings
 
-  % update this field from char to cell
+  % the batch defines the data selectors as choice between "limits" and 
+  % "nolimits", whereas scripts may define the limits fields directly
   if isfield(job,'limits') 
-    if isfield(job.limits,'seplist')
-      job.limits.seplist = strsplit(job.limits.seplist); 
-    end
-    if isfield(job.limits,'blacklist')
-      job.limits.blacklist = strsplit(job.limits.blacklist); 
-    end
-    if isfield(job.limits,'reqlist') 
-      job.limits.reqlist = strsplit(job.limits.reqlist); 
+    if isfield(job.limits,'nolimits')
+      job.limits = struct('seplist','','blacklist','','reqlist','','reslim',[inf inf inf],'filelim',inf); 
+    elseif isfield(job.limits,'limits')
+      job.limits = job.limits.limits; 
     end
   end
 
@@ -422,7 +420,7 @@ function job = get_defaults(job)
   % == limits ==
     def.limits.filelim        = inf;     % testvar
     def.limits.mcon           = 0.1;     % expert - define minimum contrast
-  def.limits.seplist        = {'T1w','T2w','PD','FLAIR'};      % expert - T1w, T2w, PD, FLAIR
+  def.limits.seplist        = {'_T1w','_T2w','_PD','_FLAIR'};  % expert - T1w, T2w, PD, FLAIR
   def.limits.blacklist      = {};      % avoid specific strings in filename ... 
   def.limits.reqlist        = {[filesep 'anat' filesep]}; % expert - requirements for bids?
   def.limits.reslim         = [2 2 8]; % expert - resolution limitation do not use images with lower resolution as [ deviation sliceres slicethickness ]
@@ -433,6 +431,8 @@ function job = get_defaults(job)
     def.opts.nproc            = 0; % run multiple MATLAB processes
   def.opts.sanlm            = 0; % all 
   def.opts.trimming         = 1; 
+  def.opts.reduce           = 1; % reduce bounding box (CAT long)
+  def.opts.sharpen          = 1; % sharpening before averaging (CAT long)
   def.opts.cleanup          = 1; % remove temporary files
   
   % == anyavg / CAT
@@ -462,6 +462,7 @@ function job = get_defaults(job)
   %def.usesubdirs     = 0;       % create same subdirecty structure from common directoy
   %def.useBIDS        = 0;       % .. use only anat dir if ... database
   def.output.prefix           = ''; 
+  def.output.suffix           = ''; 
   def.output.BIDSdir          = ['derivatives' filesep 'catavg'];
   def.output.writeRescans     = 0; 
     def.output.writeLabelmap  = 0; 
@@ -474,6 +475,19 @@ function job = get_defaults(job)
 
   % update job variable
   job = cat_io_checkinopt(job,def); 
+
+  % update these fields from char to cell (without empty entries) 
+  for fn = {'seplist','blacklist','reqlist'}
+    if ischar(job.limits.(fn{1}))
+      job.limits.(fn{1}) = strsplit( strtrim( job.limits.(fn{1}) ) ); 
+    end
+    job.limits.(fn{1})( cellfun('isempty',job.limits.(fn{1})) ) = []; 
+  end
+  % without separation keywords all files are averaged together 
+  if isempty(job.limits.seplist), job.limits.seplist = {''}; end
+
+  % processing in the input directory would modify the input files
+  if isempty(job.output.BIDSdir), job.output.BIDSdir = def.output.BIDSdir; end
 
   % inner field
   job.opts.verb = job.output.verb;
@@ -490,267 +504,201 @@ function job = get_defaults(job)
 end
 %--------------------------------------------------------------------------
 %--------------------------------------------------------------------------
-function subject = prepareBIDSgz(subject,sBIDS,devdir)
-% handle zipped BIDS 
-  if all( sBIDS )
-    for ri = numel(subject):-1:1
-      [~,ff,ee] = spm_fileparts(subject{ri});
-      if strcmp(ee,'.gz')
-        try
-          gunzip(subject{ri},devdir{ri});
-          subject{ri} = fullfile( devdir{ri} , ff);  %%#ok<AGROW>
-        catch
-          subject(ri) = []; 
+function files = prepareFiles(files,devdir)
+%prepareFiles. Copy (and unzip) the files into their output directories, 
+%  as the preprocessing (bias correction, denoising) modifies them. 
+  for fi = numel(files):-1:1
+    if strcmp( spm_fileparts(files{fi}) , devdir{fi} )
+      cat_io_cprintf('warn',sprintf(['  Skip "%s" that is already in the output directory. ' ...
+        'Use another output directory to process it.\n'],files{fi})); 
+      files(fi) = []; continue
+    end
+    if ~exist(devdir{fi},'dir'), mkdir(devdir{fi}); end
+    if strcmp( spm_file(files{fi},'ext') , 'gz' )
+      try
+        files(fi) = gunzip(files{fi},devdir{fi});
+      catch
+        cat_io_cprintf('warn',sprintf('  Skip "%s" that could not be unzipped.\n',files{fi})); 
+        files(fi) = []; 
+      end
+    else
+      copyfile(files{fi},devdir{fi});
+      files{fi} = fullfile( devdir{fi} , spm_file(files{fi},'filename') ); 
+    end
+  end
+end
+%--------------------------------------------------------------------------
+function name = avgname(files,subavg)
+%avgname. BIDS like name of the average of the given files.
+%  Entities with different values in the files (e.g. acq-*) are removed, 
+%  whereas the run entity of a session average (subavg=0) or the session 
+%  entity of a subject average (subavg=1) is set to "avg", e.g., 
+%  sub-01_ses-1_run-avg_T1w or sub-01_ses-avg_T1w. 
+%  Without BIDS the common beginning of the filenames is used, e.g., 
+%  scan_run-avg. 
+
+  if subavg, tag = {'ses','avg'}; else, tag = {'run','avg'}; end
+  names = regexprep( spm_file(files,'filename') , '\.nii(\.gz)?$' , '' );
+
+  if all( strncmp( names , 'sub-' , 4 ) )
+    % split BIDS names into entities (key-value pairs) and suffix
+    ent = cell(numel(names),1); suffix = cell(numel(names),1); 
+    for ni = 1:numel(names)
+      tok = strsplit(names{ni},'_'); 
+      if isempty( strfind( tok{end} , '-' ) ), suffix{ni} = tok{end}; tok(end) = []; else, suffix{ni} = ''; end
+      ent{ni} = regexp(tok','^([^-]*)-?(.*)$','tokens','once'); 
+      ent{ni} = vertcat(ent{ni}{:}); 
+    end
+
+    % keep only entities with the same value in all files
+    keys = ent{1}(:,1); vals = ent{1}(:,2); keep = true(size(keys)); 
+    for ki = 1:numel(keys)
+      if strcmp(keys{ki},tag{1}) || ( subavg && strcmp(keys{ki},'run') )
+        keep(ki) = false; 
+      else
+        for ni = 2:numel(names)
+          vi = find( strcmp( ent{ni}(:,1) , keys{ki} ) , 1);
+          if isempty(vi) || ~strcmp( ent{ni}{vi,2} , vals{ki} ), keep(ki) = false; end
         end
-      elseif ~strcmp(spm_fileparts(subject{ri}),devdir{ri})
-        if ~exist(devdir{ri},'dir'), mkdir(devdir{ri}); end
-        copyfile(subject{ri},devdir{ri});
-        subject{ri} = fullfile( devdir{ri} , [ff ee]); %%#ok<AGROW>
       end
     end
+    keys = keys(keep); vals = vals(keep); 
+
+    % add run-avg or ses-avg at its BIDS position
+    order       = {'sub','ses','task','acq','ce','trc','rec','dir','run','mod','echo', ...
+                   'flip','inv','mt','part','chunk','space','res','den','label','desc'}; 
+    [~,rank]    = ismember(keys,order); rank(rank==0) = numel(order) + 1; 
+    pos         = find( rank > find(strcmp(order,tag{1})) , 1); 
+    if isempty(pos), pos = numel(keys) + 1; end
+    keys        = [keys(1:pos-1); tag(1); keys(pos:end)]; 
+    vals        = [vals(1:pos-1); tag(2); vals(pos:end)]; 
+
+    % use the most frequent suffix 
+    [usuffix,~,ui] = unique(suffix); 
+    [~,mi]         = max( accumarray(ui(:),1) ); 
+    if numel( usuffix ) > 1
+      cat_io_cprintf('warn',sprintf('  Averaged files with different suffixes (%s).\n', ...
+        strjoin( usuffix , ', ' ))); 
+    end
+    name = strjoin( [ strcat(keys,'-',vals)' , usuffix(mi) ] , '_'); 
+    name = regexprep(name,'_$',''); 
+  else
+    % common beginning of the filenames
+    name = names{1}; 
+    for ni = 2:numel(names)
+      n    = min( numel(name) , numel(names{ni}) );
+      name = name( 1 : find( [ name(1:n) ~= names{ni}(1:n) , true ] , 1) - 1 ); 
+    end
+    name = regexprep(name,'[_\-\.\s]+$','');
+    if isempty(name), name = names{1}; end
+    name = sprintf('%s_%s-%s',name,tag{:}); 
   end
 end
 %--------------------------------------------------------------------------
-function [subAVGname,stime] = prepareAVGname(subject,si,sesi,seqi,sname,job)
-  % main directory of this subject
-  if numel(subject) > 1
-    [~,px]    = spm_str_manip(  subject ,'C'); 
-  else
-    [pp,ff,ee] = spm_fileparts(subject{1});
-    runi = strfind(ff,'run-');
-    if isempty(runi)
-      px.s = ff; 
-      px.m = {''}; 
-      px.e = ee;
-    else
-      rune = min(numel(ff) , runi + strfind(ff(runi:end),'_') - 1);
-      px.s = fullfile(pp,ff(1:runi+3));
-      px.m = ff(runi+4:rune-1);
-      px.e = [ff(rune:end) ee];
-    end
-  end
-  [~,ffs] = spm_fileparts(px.s);
-  [~  ,ffe] = spm_fileparts(px.e); 
-  if isempty(ffs) && isempty(ffe), [~,mi] = min( cellfun('length',px.m) ); ffs = px.m{mi}; end 
-  if isempty(sname)
-    subAVGname = ffs; 
-    subAVGname = [ cat_io_strrep(subAVGname(1),{'_','.','-'},'') ...
-      subAVGname(2:end-1) cat_io_strrep(subAVGname(end),{'_','.','-'},'') ]; 
-  else
-    subAVGname = sname; 
-  end
-
-
-% ############
-% USE OUTPUT DIR AND SUBDIR
-% ############
-  stime  = cat_io_cmd(sprintf('Subject %4d - Session %3d/%3d - Sequence %d: %s', ...
-    si, numel(subject), sesi, seqi, subAVGname), 'b','',job.opts.verb); 
-  if (job.opts.avgmethod == 1 && job.opts.verb>1) || (job.opts.avgmethod == 4 && job.opts.verb>1)
-    fprintf('\n'); 
-  end
-   
-end
-%--------------------------------------------------------------------------
-function newname = update_outname(subjects,job,methodstr,seqi,subavg)
-
-  if job.opts.res
-    resstr = sprintf('%0.2fmm_',job.opts.res); 
-  else
-    resstr = '_'; 
-  end
-
-  orgname = spm_file(subjects{1},'prefix','avg_'); 
-  newname = [methodstr resstr spm_file(subjects{1},'basename') '.nii'];
-  newname = cat_io_strrep( newname ,strcat('_',job.limits.seplist), ''); % remove weigthing (add again later)
-  newname = fullfile( spm_file(subjects{1},'path'),newname); 
-  
-  if subavg % average over sessions
-    % replace ses-* by ses-avg in the path as well as the filename
-    newname = cat_io_strrep( newname ,'_run-avg', ''); % remove run-avg if exist
-    sesdir = strfind(spm_file(orgname,'path'),[filesep 'ses-']); 
-
-    if ~isempty(sesdir)
-      afterses  = strfind(newname(sesdir(end)+1:end), filesep); 
-      sesdir(2) = sesdir(1) + afterses(1); 
-      sesname   = newname(sesdir(1)+1: sesdir(2)-1);
-      newname   = [newname(1:sesdir(1)), 'ses-avg', newname(sesdir(2):end)];
-      newname   = strrep(newname,['_' sesname],'_ses-avg'); 
-    else
-      % nothing to do as the we also use the average
-    end
-    
-  else % average within session
-    % If the rescans were defined by the run tag within the filename 
-    % otherwise we add _run-avg as tag.
-    runtag = strfind(spm_file(newname,'basename'),'_run-');
-    
-    if ~isempty(runtag)
-      runtag    = numel(spm_file(newname,'basename')) + 1 + runtag; 
-      afterrun  = strfind(newname(runtag(end)+1:end), '_');
-      runtag(2) = runtag(1) + afterrun(1); 
-      runname   = newname(runtag(1)+1: runtag(2)-1);
-      newname   = strrep(newname,['_' runname],'_run-avg'); 
-    else
-      newname   = spm_file(newname,'suffix','_run-avg'); 
-    end
-  end
-  newname = spm_file( newname ,'suffix', ['_' job.limits.seplist{seqi} ]); 
-
-  % create dir
-  if subavg
-    pp = spm_fileparts(newname);
-    if ~exist(pp,'dir'), mkdir(pp); end
-  end
-
-  % move file
-  if exist(orgname,'file')
-    movefile(orgname,newname);   
-  end
+function sdir = sesavgdir(file)
+%sesavgdir. Output directory of the subject average, i.e., the ses-* 
+%  directory of the file is replaced by ses-avg (if available).
+  sdirs = strsplit( spm_fileparts(file) , filesep); 
+  sesi  = find( strncmpi( sdirs , 'ses-' , 4 ) , 1 , 'last');
+  if ~isempty(sesi), sdirs{sesi} = 'ses-avg'; end
+  sdir  = strjoin( sdirs , filesep );
 end
 %--------------------------------------------------------------------------
 function [subjects,sBIDS,sname,devdir] = getFiles(job)
 %% search files in case of input directories
-  subjects = {}; sBIDS = []; sname = {}; devdir = {}; subi = 0; 
+%  subjects{subject}{sequence}{session} are the files of a session that 
+%  include the sequence keyword (job.limits.seplist)
+
+  % (1) collect the files of each subject and session
+  sesfiles = {}; 
   for si = 1:numel( job.subjects )
-    for fi = 1:numel( job.subjects{si} )
-      FN = fieldnames( job.subjects{si} ); 
-      for fni = 1:numel(FN)
-        if strcmp(FN{fni},'subjectdirs') ||  strcmp(FN{fni},'BIDSsubjects') 
-          if ~isempty(job.subjects{si}.(FN{fni}))
-            for di = 1:numel( job.subjects{si}.(FN{fni}) )
-              subi = subi + 1; 
-              if  exist( job.subjects{si}.(FN{fni}){di} ,'dir')
-               % run for each sequence
-               for seqi = 1:numel(job.limits.seplist)
-
-                  % find sessions
-                  if job.limits.sessionwise
-                    sesdir = cat_vol_findfiles( job.subjects{si}.(FN{fni}){di} , 'ses-*' , struct('dirs',1,'depth',1));
-                    sesdir = spm_file(sesdir,'basename'); 
-                  else
-                    sesdir = {''}; 
-                  end
-  
-                  % run for each session 
-                  for sesi = 1:numel(sesdir)                
-                 
-                    %if seqi > numel(job.limits.seplist) && ~isempty(sfiles), break; end
-
-                    anyAVGfiles = cat_vol_findfiles( fullfile(job.subjects{si}.(FN{fni}){di},sesdir{sesi}) , ['*' job.output.prefix '*' job.limits.seplist{seqi} '.nii']); 
-                    sfiles      = cat_vol_findfiles( fullfile(job.subjects{si}.(FN{fni}){di},sesdir{sesi}) , ['*' job.limits.seplist{seqi} '.nii']); 
-                    sfiles      = [sfiles; cat_vol_findfiles( fullfile(job.subjects{si}.(FN{fni}){di},sesdir{sesi}) , ['*' job.limits.seplist{seqi} '.nii.gz'])];  %#ok<AGROW>  
-                    sfiles      = setdiff(sfiles,anyAVGfiles);
-                    
-                    if isfield(job.limits,'blacklist') && ~isempty(job.limits.blacklist)
-                      sfiles( cat_io_contains( sfiles , job.limits.blacklist ) ) = []; 
-                    end
-            
-                    if isfield(job.limits,'reqlist') && ~isempty(job.limits.reqlist)
-                      sfiles( ~cat_io_contains( sfiles , job.limits.reqlist ) ) = []; 
-                    end
-
-                    % only run (=add to list) if required
-                    [subjects{subi}{seqi}{sesi}, sname{subi}, sBIDS(subi), devdir{subi}{seqi}{sesi}] = ... ,sesname{si}{sesi}
-                      checksubjectfiles(sfiles,job.limits.blacklist,job.limits.seplist,job.output.BIDSdir); %#ok<AGROW> 
-                  end
-                end
-              end
+    FN = fieldnames( job.subjects{si} ); 
+    for fni = 1:numel(FN)
+      switch FN{fni}
+        case {'subjectdirs','BIDSsubjects'}
+          % each directory is a subject with ses-* directories (or without sessions)
+          for di = 1:numel( job.subjects{si}.(FN{fni}) )
+            sdir = job.subjects{si}.(FN{fni}){di}; 
+            if ~exist(sdir,'dir'), continue; end
+            sesdir = {};
+            if job.limits.sessionwise
+              sesdir = cat_vol_findfiles( sdir , 'ses-*' , struct('dirs',1,'depth',1));
+              sesdir( strcmpi( spm_file(sesdir,'basename') , 'ses-avg' ) ) = []; % results 
             end
-          end  
-        elseif strcmp(FN{fni},'subject') % 'subjects') 
-          subi = subi + 1; 
-          if iscell( job.subjects{si}.(FN{fni}) ) 
-            for sesi = 1:numel( job.subjects{si}.(FN{fni}) ) 
-              for seqi = 1:numel(job.limits.seplist)
-                %%
-                if isfield( job.subjects{si}.(FN{fni}){sesi} , 'session')
-                  sfiles = job.subjects{si}.(FN{fni}){sesi}.session;
-                else
-                  anyAVGfiles = cat_vol_findfiles( job.subjects{si}.(FN{fni}){sesi}.sessiondirs{sesi} , ['*' job.output.prefix '*' job.limits.seplist{seqi} '.nii']); 
-                  sfiles      = cat_vol_findfiles( job.subjects{si}.(FN{fni}){sesi}.sessiondirs{sesi} , ['*' job.limits.seplist{seqi} '.nii']); 
-                  sfiles      = [sfiles; cat_vol_findfiles( job.subjects{si}.(FN{fni}){sesi}.sessiondirs{sesi} , ['*' job.limits.seplist{seqi} '.nii.gz'])];  %#ok<AGROW>  
-                  sfiles      = setdiff(sfiles,anyAVGfiles);
-                  
-                end
-
-                for sii = numel(sfiles):-1:1
-                  [pp,ff,ee] = spm_fileparts(sfiles{sii});
-                  sfiles{sii} = fullfile(pp,[ff ee]); 
-                end
-          
-                if isfield(job.limits,'blacklist') && ~isempty(job.limits.blacklist)
-                  sfiles( cat_io_contains( sfiles , job.limits.blacklist ) ) = []; 
-                end
-        
-                if isfield(job.limits,'reqlist') && ~isempty(job.limits.reqlist)
-                  sfiles( ~cat_io_contains( sfiles , job.limits.reqlist ) ) = []; 
-                end
-
-                sfiles( ~cat_io_contains( sfiles , job.limits.seplist{seqi}) ) = []; 
-                [subjects{subi}{seqi}{sesi}, sname{subi}, sBIDS(subi), devdir{subi}{seqi}{sesi}] = ...
-                  checksubjectfiles(sfiles, job.limits.blacklist, job.limits.seplist, job.output.BIDSdir); %#ok<AGROW>  
+            if isempty(sesdir), sesdir = {sdir}; end 
+            sesfiles{end+1} = cellfun( @(d) findNifti(d,job) , sesdir(:)' , 'UniformOutput' , false); %#ok<AGROW>
+          end
+        case 'sessiondirs'
+          % each directory is a session (without subject average) 
+          for di = 1:numel( job.subjects{si}.sessiondirs )
+            sesfiles{end+1} = { findNifti( job.subjects{si}.sessiondirs{di} , job) }; %#ok<AGROW>
+          end
+        case 'subject'
+          % sessions of a subject defined by files or directories
+          sfiles = {}; 
+          for sesi = 1:numel( job.subjects{si}.subject )
+            if isfield( job.subjects{si}.subject{sesi} , 'session' )
+              sfiles{end+1} = job.subjects{si}.subject{sesi}.session; %#ok<AGROW>
+            else
+              for di = 1:numel( job.subjects{si}.subject{sesi}.sessiondirs )
+                sfiles{end+1} = findNifti( job.subjects{si}.subject{sesi}.sessiondirs{di} , job); %#ok<AGROW>
               end
-            end
-          else
-            sesi = 1; 
-            for seqi = 1:numel(job.limits.seplist)
-              sfiles = job.subjects{si}.(FN{fni});
-              for sii = numel(sfiles):-1:1
-                [pp,ff,ee] = spm_fileparts(sfiles{sii});
-                sfiles{sii} = fullfile(pp,[ff ee]); 
-              end
-
-              if isfield(job.limits,'blacklist') && ~isempty(job.limits.blacklist)
-                sfiles( cat_io_contains( sfiles , job.limits.blacklist ) ) = []; 
-              end
-      
-              if isfield(job.limits,'reqlist') && ~isempty(job.limits.reqlist)
-                sfiles( ~cat_io_contains( sfiles , job.limits.reqlist ) ) = []; 
-              end
-              
-              sfiles( ~cat_io_contains( sfiles , job.limits.seplist{seqi}) ) = []; 
-              [subjects{si}{seqi}{sesi}, sname{si}, sBIDS(si), devdir{si}{seqi}{sesi}] = ...
-                checksubjectfiles(sfiles, job.limits.blacklist, job.limits.seplist, job.output.BIDSdir); %#ok<AGROW>  
             end
           end
-        else
-          subi = subi + 1; 
-          sesi = 1; 
-          for seqi = 1:numel(job.limits.seplist)
-            sfiles = job.subjects{si}.session; 
-
-            if isfield(job.limits,'blacklist') && ~isempty(job.limits.blacklist)
-              sfiles( cat_io_contains( sfiles , job.limits.blacklist ) ) = []; 
-            end
-    
-            if isfield(job.limits,'reqlist') && ~isempty(job.limits.reqlist)
-              sfiles( ~cat_io_contains( sfiles , job.limits.reqlist ) ) = []; 
-            end
-
-            sfiles( ~cat_io_contains( sfiles , job.limits.seplist{seqi}) ) = []; 
-            [subjects{subi}{seqi}{sesi}, sname{subi}, sBIDS(subi), devdir{subi}{seqi}{sesi}] = ...
-              checksubjectfiles(sfiles, job.limits.blacklist, job.limits.seplist, job.output.BIDSdir); %#ok<AGROW>  
-          end
-        end
+          sesfiles{end+1} = sfiles; %#ok<AGROW>
+        case 'session'
+          % files of a subject 
+          sesfiles{end+1} = { job.subjects{si}.session }; %#ok<AGROW>
       end
     end
   end
 
-  % remove empty run and subjects but not sessions!
-  for si = numel( subjects ):-1:1
-    for seqi = numel( subjects{si} ):-1:1
-      for runi = numel( subjects{si}{seqi} ):-1:1
-        if isempty(subjects{si}{seqi}{runi})
-          devdir{si}{seqi}(runi)   = []; 
-          subjects{si}{seqi}(runi) = [];
+
+  % (2) select the files of each sequence and session
+  subjects = cell(1,numel(sesfiles)); devdir = subjects; 
+  sname    = repmat({''},1,numel(sesfiles)); sBIDS = false(1,numel(sesfiles)); 
+  for subi = 1:numel( sesfiles )
+    for seqi = 1:numel( job.limits.seplist )
+      for sesi = 1:numel( sesfiles{subi} )
+        sfiles = cellstr( sesfiles{subi}{sesi} ); 
+        sfiles = sfiles( ~cellfun('isempty',sfiles) ); 
+        sfiles = spm_file( sfiles(:) , 'number' , '' ); % remove frame number ",1"
+
+        if ~isempty(job.limits.blacklist)
+          sfiles( cat_io_contains( sfiles , job.limits.blacklist ) ) = []; 
         end
+        
+        if ~isempty(job.limits.reqlist)
+          sfiles( ~cat_io_contains( sfiles , job.limits.reqlist ) ) = []; 
+        end
+
+        sfiles = sfiles( hasKeyword( sfiles , job.limits.seplist{seqi} ) ); 
+
+        [subjects{subi}{seqi}{sesi}, isBIDS, BIDSsub, devdir{subi}{seqi}{sesi}] = ...
+          checkBIDS( sort(sfiles) , job.output.BIDSdir ); 
+        if isempty( sname{subi} ), sname{subi} = BIDSsub; end
+        sBIDS(subi) = sBIDS(subi) | any(isBIDS); 
       end
     end
-    if isempty(subjects{si})
+  end
+
+  % remove empty sessions and subjects 
+  for si = numel( subjects ):-1:1
+    for seqi = 1:numel( subjects{si} )
+      empty = cellfun( 'isempty' , subjects{si}{seqi} );
+      devdir{si}{seqi}(empty)   = []; 
+      subjects{si}{seqi}(empty) = [];
+    end
+    if all( cellfun( 'isempty' , subjects{si} ) )
       devdir(si)   = []; 
       subjects(si) = [];
+      sname(si)    = []; 
+      sBIDS(si)    = []; 
     end
+  end
+  if isempty( subjects )
+    cat_io_cprintf('warn',['  No input files found! Check the input directories and the data selectors ' ...
+      '(e.g., the data separation list, blacklist, and path selector).\n']); 
   end
 
   % limit number of sessions and runs for quick tests
@@ -775,6 +723,27 @@ function [subjects,sBIDS,sname,devdir] = getFiles(job)
   
 end
 %--------------------------------------------------------------------------
+function files = findNifti(sdir,job)
+%findNifti. Find (gzipped) NIFTI files in the directory (and subdirectories)
+%  without files of the output directory (e.g., results of a previous run). 
+  files = [ cat_vol_findfiles( sdir , '*.nii' ) ; cat_vol_findfiles( sdir , '*.nii.gz' ) ]; 
+  files( cat_io_contains( files , [filesep job.output.BIDSdir filesep] ) ) = []; 
+end
+%--------------------------------------------------------------------------
+function TF = hasKeyword(files,keyword)
+%hasKeyword. Test if the filenames include the keyword followed by "_", "." 
+%  or the end of the name, e.g., "_T1w" or "acq-mprage" (but not "acq-mp") 
+%  for "sub-01_acq-mprage_T1w.nii.gz". 
+  if isempty(keyword)
+    TF = true(size(files)); 
+  elseif isempty(files)
+    TF = false(size(files)); 
+  else
+    TF = ~cellfun('isempty', regexp( spm_file(files,'filename') , ...
+      [regexptranslate('escape',keyword) '([_\.]|$)'] , 'once') ); 
+  end
+end
+%--------------------------------------------------------------------------
 function denoise(subject,job)
 %% denoising for all methods ? 
 %  --------------------------------------------------------------------
@@ -787,14 +756,13 @@ function denoise(subject,job)
   if job.opts.verb>1, fprintf('%5.0fs\n',etime(clock,stime)); end 
 end
 %--------------------------------------------------------------------------
-function [catlong,outcatra] = catlong(subject,methodstr,job,seqi,subavg)
+function [catlong,outcatra] = catlong(subject,methodstr,job)
 %% CAT longitudinal averaging function (rigid) 
 %  --------------------------------------------------------------------
 %  cat_vol_series_align
 %  CAT longitudinal processing pipeline with setting of COM and final 
 %  timming to reduce useless air around the head.
 %  --------------------------------------------------------------------
-  if ~exist('subavg','var'), subavg = 0; end
 
   stime  = cat_io_cmd(sprintf(' CAT Longitudinal Averaging'),'g9','',isinf(job.opts.avgmethod)); 
   
@@ -806,7 +774,7 @@ function [catlong,outcatra] = catlong(subject,methodstr,job,seqi,subavg)
   matlabbatch{1}.spm.tools.cat.tools.series.noise             = 0; % not here
   matlabbatch{1}.spm.tools.cat.tools.series.write_avg         = 1; 
   matlabbatch{1}.spm.tools.cat.tools.series.sharpen           = job.opts.sharpen; 
-  matlabbatch{1}.spm.tools.cat.tools.series.write_rimg        = 1 - job.output.writeRescans;
+  matlabbatch{1}.spm.tools.cat.tools.series.write_rimg        = job.output.writeRescans;
   matlabbatch{1}.spm.tools.cat.tools.series.data              = subject;
   matlabbatch{1}.spm.tools.cat.tools.series.isores            = job.opts.res;
   if job.opts.verb > 2
@@ -816,8 +784,8 @@ function [catlong,outcatra] = catlong(subject,methodstr,job,seqi,subavg)
   end
   clear matlabbatch;
   
-  % handle avg file
-  catlong = update_outname(subject,job,methodstr,seqi,subavg);
+  % avg file (renamed by the main function)
+  catlong = spm_file(subject{1},'prefix','avg_');
 
   % handle rescans
   catra = cell(numel(subject),1); outcatra = catra;
@@ -834,13 +802,12 @@ function [catlong,outcatra] = catlong(subject,methodstr,job,seqi,subavg)
   if isinf(job.opts.avgmethod), fprintf('%5.0fs\n',etime(clock,stime)); end %#ok<*CLOCK,*DETIM>
 end
 %--------------------------------------------------------------------------
-function spmlong = spmlong(subject,methodstr,job,seqi,subavg)
+function spmlong = spmlong(subject,~,job)
 %% SPM longitudinal averaging function (rigid) 
 %  --------------------------------------------------------------------
 %  spm_series_align
 % 
 %  --------------------------------------------------------------------
-  if ~exist('subavg','var'), subavg = 0; end
 
   stime  = cat_io_cmd(sprintf(' SPM Longitudinal Averaging'),'g9','',isinf(job.opts.avgmethod)); 
   
@@ -865,8 +832,8 @@ function spmlong = spmlong(subject,methodstr,job,seqi,subavg)
   end
   clear matlabbatch;
 
-  % handle average
-  spmlong = char( update_outname(subject,job,methodstr,seqi,subavg) );
+  % avg file (renamed by the main function)
+  spmlong = spm_file(subject{1},'prefix','avg_');
   
   % handle rescans ... these files are not created and it is not our goal to do so ... 
   if job.output.writeRescans
@@ -876,12 +843,11 @@ function spmlong = spmlong(subject,methodstr,job,seqi,subavg)
   if isinf(job.opts.avgmethod), fprintf('%5.0fs\n',etime(clock,stime)); end
 end
 %--------------------------------------------------------------------------
-function brudfors = brudfors(subject,methodstr,job,seqi,subavg)
+function brudfors = brudfors(subject,~,job)
 %% Brudfors averaging function (rigid) 
 %  --------------------------------------------------------------------
 %  cat_vol_series_align
 %  --------------------------------------------------------------------
-  if ~exist('subavg','var'), subavg = 0; end
 
   stime  = cat_io_cmd(sprintf(' Brudfors Superres'),'g9','',isinf(job.opts.avgmethod)); 
   
@@ -889,21 +855,22 @@ function brudfors = brudfors(subject,methodstr,job,seqi,subavg)
     if job.opts.verb>2
       spm_superres( {char( subject )},struct('Verbose',job.opts.verb>2,'VoxSize',job.opts.res));
     else
-      evalc('spm_superres( {char( subjects{si})},struct(''Verbose'',job.opts.verb>2,''VoxSize'',job.opts.res));');
+      evalc('spm_superres( {char( subject )},struct(''Verbose'',job.opts.verb>2,''VoxSize'',job.opts.res));');
     end
-  catch e
+  catch
     fprintf('\n');
     cat_io_cprintf('err',sprintf('Memory error in Brudfors superres. Use default resolution: \n%s','')); 
     if job.opts.verb>2 
       spm_superres( {char( subject )},struct('Verbose',job.opts.verb>2));
     else
-      evalc('spm_superres( {char( subjects{si})},struct(''Verbose'',job.opts.verb>2,''VoxSize'',job.opts.res));');
+      evalc('spm_superres( {char( subject )},struct(''Verbose'',job.opts.verb>2));');
     end
     fprintf('\n');
     cat_io_cmd(' ','g5','',job.opts.verb>2);
   end
   
-  brudfors = char( update_outname(pm_file(subject{1},'prefix','y'),job,methodstr,seqi,subavg) );
+  % avg file (renamed by the main function)
+  brudfors = spm_file(subject{1},'prefix','y');
   
   if isinf(job.opts.avgmethod), fprintf('%5.0fs\n',etime(clock,stime)); end
 end
@@ -923,9 +890,13 @@ function [V,vx_vol,use,stime] = removeLowRes(subject,job)
       vx_dim(vi,:) = V(vi).dim;
     end
   end
-  mdvx = cat_stat_nanmedian(vx_vol(:)) + cat_stat_nanstd(vx_vol(:)) * job.limits.reslim(1);
+  if isfinite( job.limits.reslim(1) )
+    mdvx = cat_stat_nanmedian(vx_vol(:)) + cat_stat_nanstd(vx_vol(:)) * job.limits.reslim(1);
+  else
+    mdvx = inf; % no limitation (avoid 0*inf)
+  end
   for vi = 1:numel(V)
-    use(vi) = prod(vx_vol(vi,:)) <= mdvx^3  & ... % remove due to deviation
+    use(vi) = prod(vx_vol(vi,:)) <= mdvx^3 * 1.01  & ... % remove due to deviation (with rounding tolerance)
       min(vx_vol(vi,:)) <= job.limits.reslim(2) & ...    % remove due to slice resolution 
       max(vx_vol(vi,:)) <= job.limits.reslim(3) & ...    % remove due to slice thickness
       min(vx_dim(vi,:)) >= 4;                     % remove due to low number of slices
@@ -938,7 +909,7 @@ function [V,vx_vol,use,stime] = removeLowRes(subject,job)
   if job.opts.verb>1
     cat_io_cprintf('g7',sprintf('  Select %d of %d scans for evaluation.\n',sum(use),numel(V))); 
   end
-  stime = clock; 
+  stime = []; % no open processing step 
   clear usen useni vx_vols vx_voli mdvx;  
 
 end
@@ -1050,7 +1021,7 @@ function [Vmni0,Vavg0,cormat,stime] = createAVG0(V,Vtbc,job,regres,pps,subAVGnam
   stime  = cat_io_cmd(sprintf('  %0.2f mm registration of MNI templates',lfs(lfsi)),'g7','',job.opts.verb>1,stime); 
  
   Vref   = spm_vol( char( job.opts.ref ) ); 
-  tpm    = spm_load_priors8(fullfile(spm('dir'),'TPM','TPM.nii'));
+  tpm    = spm_load_priors8(fullfile(spm('dir'),'tpm','TPM.nii'));
  
   for vi = 1:numel(Vmni0)
     if vi==1
@@ -1124,7 +1095,6 @@ function [Vmni1,stime] = correg2AVG0(V,Vtbc,Vmni0,Vavg0,cormat,job,regres,ihistc
     Vtbc(vi)      = spm_vol(Vtbc(vi).fname); 
     Vtbc(vi).mat  = Vmni0(vi).mat;
     
-    pp = spm_fileparts(V(vi).fname); cd(pp)
     if vi==1
       if job.opts.verb>2, fprintf('\n'); end
       stime2 = cat_io_cmd(sprintf('    Scan %d',vi),'g5','',job.opts.verb>2); 
@@ -1146,30 +1116,32 @@ function [Vmni1,stime] = correg2AVG0(V,Vtbc,Vmni0,Vavg0,cormat,job,regres,ihistc
       catch
         fprintf('.');
         evalc( sprintf(['cormats{vi} = spm_coreg( Vavg0 , Vtbc(vi) , ' ...
-           'struct( ''sep'' , %g , ''fwhm'' , [7 7] , ''params'' , ' ...
-           'cormat{vi} , ''graphics'' , %d ) );'],...
+           'struct( ''sep'' , %g , ''fwhm'' , [7 7] , ''graphics'' , %d ) );'],...
            max(min(vx_vol(:)),min(job.opts.res*1.5,regres*1.5)), ...
            job.opts.verb>2) );  % #### use final res? ###
+        % the Vtbc orientation already includes the MNI registration (cormat)
         if any( isnan( cormats{vi}(:) ) )
-          Vmni1(vi).mat = spm_matrix(cormat{vi}) * eval(sprintf('%s.mat',vstr{1+exist('Vtbc','var')})); %V(vi).mat; 
+          Vmni1(vi).mat = Vtbc(vi).mat; 
           %use(vi) = false; 
         else
-          Vmni1(vi).mat = spm_matrix(cormats{vi}) * eval(sprintf('%s.mat',vstr{1+exist('Vtbc','var')})); %V(vi).mat; 
+          Vmni1(vi).mat = spm_matrix(cormats{vi}) \ Vtbc(vi).mat; 
         end
       end
     else
       evalc( sprintf(['cormats{vi} = spm_coreg( Vavg0 , Vtbc(vi) , ' ...
-           'struct( ''sep'' , [8 4 %s] , ''fwhm'' , [7 7] , ''params'' , ' ...
-           'cormat{vi} , ''graphics'' , %d , ' ...
+           'struct( ''sep'' , [8 4 %g] , ''fwhm'' , [7 7] , ' ...
+           '''graphics'' , %d , ' ...
            '''tol'', [%g %g %g %g %g %g]', ...
            ') );'],...
            max(min(vx_vol(:)),min(job.opts.res*1.5,regres)), ...
            job.opts.verb>2,[0.02 0.02 0.02 0.001 0.001 0.001] * regres ));  % #### use final res? ###
+      % the Vtbc orientation already includes the MNI registration (cormat), 
+      % so we start with the current position and apply the result like spm_run_coreg 
       if any( isnan( cormats{vi}(:) ) )
-        Vmni1(vi).mat = spm_matrix(cormat{vi}) * eval(sprintf('%s.mat','Vtbc(vi)')); %V(vi).mat; 
+        Vmni1(vi).mat = Vtbc(vi).mat; 
         %use(vi) = false; 
       else
-        Vmni1(vi).mat = spm_matrix(cormats{vi}) * eval(sprintf('%s.mat','Vtbc(vi)')); %V(vi).mat; 
+        Vmni1(vi).mat = spm_matrix(cormats{vi}) \ Vtbc(vi).mat; 
       end
     end  
     
@@ -1185,23 +1157,18 @@ function [Vmni2,Vavg1,stime] = reslice(V,Vmni1,job,pps,subAVGname,stime)
   Vavg1 = V(1); 
   Vavg1.fname        = fullfile(pps,[job.output.prefix 'avg1_' subAVGname '.nii']); %sprintf('avghri_n%d.nii',sum(use)));
   
+  % resize the reference into the subject directory (and not in the SPM directory)
   resjob.data{1}     = job.opts.ref{1}; 
   resjob.verb        = 0;
   resjob.restype.res = job.opts.res;
   resjob.prefix      = [job.output.prefix 'r'];
-  for i=1:10
-    try
-      cat_vol_resize(resjob);   
-      movefile(spm_file(resjob.data{1},'prefix',[job.output.prefix 'r']),Vavg1.fname); % bug where the file is not existing?
-      Vavg1 = spm_vol(Vavg1.fname);  Y = spm_read_vols(Vavg1); 
-      Vavg1.dt(1) = 16; spm_write_vol(Vavg1,zeros(size(Y))); 
-      break;
-    catch
-      pause(rand(1)*5); 
-    end
-  end
+  resjob.outdir      = {pps}; 
+  resjob             = cat_vol_resize(resjob);   
+  movefile(resjob.res{1},Vavg1.fname); 
+  Vavg1 = spm_vol(Vavg1.fname);  Y = spm_read_vols(Vavg1); 
+  Vavg1.dt(1) = 16; spm_write_vol(Vavg1,zeros(size(Y))); 
   if isfield(Vmni1,'dat') && ~isfield(Vavg1,'dat')
-    Vavg1.dat = spm_read_vols(spm_vol(Vlravg.fname)); 
+    Vavg1.dat = spm_read_vols(Vavg1); 
   end
   %if 1
     evalc('spm_reslice( [Vavg1;Vmni1] , struct(''which'',1,''mean'',1,''mask'',0,''interp'',5,''prefix'',[job.output.prefix ''r'']) );');  
@@ -1407,20 +1374,28 @@ function Ycls = segment(Vavg1,job)
 
 end
 %--------------------------------------------------------------------------
-function out = savg(subjects,si,methodstr,job,seqstr)
+function [avg,rfiles] = savg(subject,~,job)
+%% MNI space averaging using SPM (co)registration 
+%  --------------------------------------------------------------------
+%  Rigid registration of the scans to the MNI space (TPM), coregistration 
+%  to a first average, and reslicing to create the final average. 
+%  --------------------------------------------------------------------
+
+  avg = ''; rfiles = {}; 
+  job.output.prefix = ''; % the user prefix is only used for the final results 
 
   % optimize input
-  [V,vx_vol,use,stime] = removeLowRes(subjects{si},job);
+  [V,vx_vol,use,stime] = removeLowRes(subject,job);
   
   pps = spm_fileparts(V(1).fname);
 
   if sum(use)==0
-    cat_io_printf('err',['\nError: Non of the %d input files survived the first check. ' ...
-      'Go on with d next subject. \n']); 
+    cat_io_cprintf('err',sprintf('\nError: None of the %d input files survived the first check.\n',numel(V))); 
     return
   else 
-    V = V(use); 
+    V = V(use); vx_vol = vx_vol(use,:); use = true(1,numel(V)); 
   end
+  subAVGname = spm_file(V(1).fname,'basename'); 
 
   if job.opts.res == 0
     job.opts.res = min(vx_vol(:)); 
@@ -1469,8 +1444,8 @@ function out = savg(subjects,si,methodstr,job,seqstr)
 
   % use = checkdata(Vmni1,job,stime);
   if sum(use)==0
-    cat_io_printf('err',['\nError: Non of the %d input files survived the second check. ' ...
-      'Go on with next subject. \n']); 
+    cat_io_cprintf('err',sprintf('\nError: None of the %d input files survived the second check.\n',numel(V))); 
+    avg = ''; 
 % ###### USE FIRST AVERAGE ? ##########      
     return;
   end
@@ -1480,16 +1455,16 @@ function out = savg(subjects,si,methodstr,job,seqstr)
   
 
   %%
-  out.avg{si}   = fullfile(pps,sprintf('%s%s%d_%s%s.nii',job.output.prefix,'allw' ,sum(use),subAVGname,ffe)); 
-  out.avgt1{si} = ''; t1pref = 'allt1w'; 
-  out.avgt2{si} = ''; t2pref = 'allt2w';
+  avg   = spm_file(V(1).fname,'prefix','avg_'); % renamed by the main function
+  avgt1 = ''; t1pref = 'allt1w'; 
+  avgt2 = ''; t2pref = 'allt2w';
   if isempty(Ycls)
     stime = cat_io_cmd('  No segmentation > no bias correction, no intensity normalization','g7','',job.opts.verb>1,stime);
     
   elseif strcmp(job.opts.norm,'none')
     stime = cat_io_cmd('  Use SPM bias correction','g7','',job.opts.verb>1,stime);
     % without normalization everything is fine and we can use the current average
-    movefile(spm_file( Vavg1.fname ,'prefix','m'),out.avg{si});
+    movefile(spm_file( Vavg1.fname ,'prefix','m'),avg);
   else
     %% normalize avg
     stime  = cat_io_cmd('  Bias correction and intensity normalization','g7','',job.opts.verb>1,stime);
@@ -1591,28 +1566,28 @@ function out = savg(subjects,si,methodstr,job,seqstr)
       Ym = Ym ./ Yw; 
 
       Vavg = Vm(1); 
-      Vavg.fname = out.avg{si};
+      Vavg.fname = avg;
       spm_write_vol( Vavg , Ym); 
     else
       % final average
       Vm = spm_vol( spm_file( char( ({Vmni1(use).fname})' ) ,'prefix',['m' job.output.prefix 'r']) ); 
       evalc(['spm_reslice( spm_file( subjects{si}( use ) ,''prefix'',[''m'' job.output.prefix ''r'']), ' ...
              'struct(''which'',0,''mean'',1,''mask'',0,''interp'',1) )']);  
-      movefile( spm_file( Vm( find(use>0,1,'first') ).fname,'prefix','mean'),  out.avg{si}); 
+      movefile( spm_file( Vm( find(use>0,1,'first') ).fname,'prefix','mean'),  avg); 
     end
   else
     % final average
     Vm = spm_vol( spm_file( char( ({Vmni1(use).fname})' ) ,'prefix',[job.output.prefix 'r']) ); 
     evalc(['spm_reslice( Vm ,' ... spm_file( subjects{si}( use ) ,''prefix'',[job.output.prefix ''r'']), ' ... 
            'struct(''which'',0,''mean'',1,''mask'',0,''interp'',1) )']);  
-    movefile( spm_file( Vm( find(use>0,1,'first') ).fname,'prefix','mean'),  out.avg{si}); 
+    movefile( spm_file( Vm( find(use>0,1,'first') ).fname,'prefix','mean'),  avg); 
   end
     
 
 %%
   if job.output.writeSDmap && ~isempty(Ycls) && ~isempty(job.opts.norm)
     %% std
-    Vavg = spm_vol(out.avg{si}); 
+    Vavg = spm_vol(avg); 
     Yavg = spm_read_vols(Vavg); 
     Ystd = zeros(size(Yavg),'single'); 
     for vi = find(use) 
@@ -1620,7 +1595,7 @@ function out = savg(subjects,si,methodstr,job,seqstr)
       Ym   = spm_read_vols( Vm ); 
       Ystd = Ystd + ( (Ym - Yavg)).^2; 
     end
-    Vmsd = spm_vol( out.avg{si} ); Vmsd.fname = fullfile(pps,[job.output.prefix 'sd_' subAVGname '.nii']);
+    Vmsd = spm_vol( avg ); Vmsd.fname = fullfile(pps,[job.output.prefix 'sd_' subAVGname '.nii']);
     cat_io_writenii(Vmsd,Ystd,'','','intnorm','single',[0 1],struct('native',1,'warped',0,'dartel',0),trans);
   end
   %{
@@ -1635,7 +1610,7 @@ function out = savg(subjects,si,methodstr,job,seqstr)
   %% not useful without normalization
   if job.output.writeSDmap
     %%
-    Vmsd = spm_vol( out.avg{si} ); Vmsd.fname = fullfile(pps,[job.output.prefix 'sd_' subAVGname '.nii']);
+    Vmsd = spm_vol( avg ); Vmsd.fname = fullfile(pps,[job.output.prefix 'sd_' subAVGname '.nii']);
     cat_vol_imcalc( spm_file( subjects{si}( use ) ,'prefix',['m' job.output.prefix 'r']) , Vmsd , ...
       'std(X)',struct('mask',0,'interp',1,'dmtx',1,'dtype',16));
      ... 'max(abs(i1-i2),max(abs(i1-i3),abs(i2-i3)))',struct('mask',0,'interp',1,'dtype',16));% 'dmtx',1,
@@ -1645,52 +1620,33 @@ function out = savg(subjects,si,methodstr,job,seqstr)
   if ~isempty(Ycls)
     stime = cat_io_cmd('  Create final average','g7','',job.opts.verb>1,stime);
     if t1n>0 && t2n>0
-      out.avgt1{si} = fullfile(pps,sprintf('%s%s%d_%s%s.nii',job.output.prefix,t1pref,t1n,subAVGname,ffe)); 
+      avgt1 = fullfile(pps,sprintf('%s%s%d_%s%s.nii',job.output.prefix,t1pref,t1n,subAVGname,ffe)); 
       cat_io_writenii(Vavg1,Yt1,'',t1pref,'t1 weighted average','single', ...
         [0 1],struct('native',1,'warped',0,'dartel',0),trans);
-      movefile( spm_file(Vavg1.fname,'prefix',t1pref),out.avgt1{si}); 
+      movefile( spm_file(Vavg1.fname,'prefix',t1pref),avgt1); 
     end
     if t2n>0
-      out.avgt2{si} = fullfile(pps,sprintf('%s%s%d_%s%s.nii',job.output.prefix,t2pref,t2n,subAVGname,ffe));
+      avgt2 = fullfile(pps,sprintf('%s%s%d_%s%s.nii',job.output.prefix,t2pref,t2n,subAVGname,ffe));
       cat_io_writenii(Vavg1,Yt2,'',t2pref,'t2 weighted average','single', ...
         [0 1],struct('native',1,'warped',0,'dartel',0),trans); 
-      movefile( spm_file(Vavg1.fname,'prefix',t2pref),out.avgt2{si}); 
+      movefile( spm_file(Vavg1.fname,'prefix',t2pref),avgt2); 
     end
   end
 
 
-  %%
-  if 0 %job.output.cleanup
-    for vi = find(use) 
-      file = spm_file( subjects{si}{ vi } ,'prefix',[job.output.prefix 'r']); 
-      if exist(file,'file'), delete(file); end
-    end
-
+  %% cleanup temporary files 
+  rfiles = cellstr( spm_file( char({Vmni1(use).fname}) ,'prefix','r') ); 
+  if job.output.cleanup
     if ~job.output.writeRescans
-      for vi = find(use)
-        file = spm_file( subjects{si}{ vi } ,'prefix',['m' job.output.prefix 'r']); 
-        if exist(file,'file'), delete(file); end
-      end
+      cleanupfiles( rfiles ); 
+      cleanupfiles( cellstr( spm_file( char({Vmni1(use).fname}) ,'prefix','mr') ) ); 
+      rfiles = {}; 
     end
-
-    %% first avg
-    file = fullfile(pps,[job.output.prefix 'avg1_' subAVGname '.nii']);
-    if exist(file,'file'), delete(file); end
-    file = fullfile(pps,['m' job.output.prefix 'avg1_' subAVGname '.nii']);
-    if exist(file,'file'), delete(file); end
-
-    %% delete unpacked files 
-    if all( sBIDS(si) )
-      for ri = 1:numel(subjects{si})
-        if exist(subjects{si}{ri},'file'), delete(subjects{si}{ri}); end
-      end
-    end
-
+    cleanupfiles( { Vavg1.fname ; spm_file(Vavg1.fname,'prefix','m') } ); 
   end
 
   if job.opts.verb>1 
-    cat_io_cmd(' ','g5','',job.opts.verb>1,stime); 
-%    fprintf('%5.0fs\n',etime(clock,stimea)); 
+    cat_io_cmd('','','',job.opts.verb>1,stime); % time of the last step
   end
   %% display something 
 % #########################

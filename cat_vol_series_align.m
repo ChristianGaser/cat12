@@ -166,15 +166,19 @@ end
 % RD202510: move and cleanup interpolated data
 if any( cellfun(@isempty,tempimgs) == 0 )
   % if the first file had to be interpolated we have to move it from the tmp dir
-  if ~strcmp( spm_file( out.avg{1} ,'path') , fileparts( job.data{1} ) )
+  if isfield( out , 'avg' ) && iscell( out.avg ) && ~strcmp( spm_file( out.avg{1} ,'path') , fileparts( job.data{1} ) )
     movefile( out.avg{1} , spm_file( out.avg{1} ,'path', fileparts( job.data{1} ) ) ); 
+    out.avg{1} = spm_file( out.avg{1} ,'path', fileparts( job.data{1} ) );
   end
-  if isfield( out , 'rimg' )
-    for vi=1:numel(tempimgs)
+  for vi=1:numel(tempimgs)
+    if isempty( tempimgs{vi} ), continue; end
+    if isfield( out , 'rimg' )
       % move realigned images if they where template
       movefile( out.rimg{vi} , spm_file( out.rimg{vi} ,'path', fileparts( job.data{vi} ) ) ); 
-      delete(tempimgs{vi}); 
+      out.rimg{vi} = spm_file( out.rimg{vi} ,'path', fileparts( job.data{vi} ) );
     end
+    % remove temporary (interpolated) images
+    delete(tempimgs{vi}); 
   end
 end
 

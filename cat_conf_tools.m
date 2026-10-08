@@ -332,7 +332,10 @@ function savg = conf_vol_savg(prefix,verb,expert)
   seplist.val            = {'_T1w _T2w _PD _inv1-T2w _inv2-T1w _unic-T1w _FLAIR _T2star' }; % 'T1w T2w PD inv1 inv2' 
   seplist.help           = {
    ['Enter keywords to separate files in the averaging process, e.g., to separate protocols (T1w,T2w etc.). ' ...
-    'Use empty field to avage all available images that fullfile the other constraints. ']
+    'Each keyword defines a group of images that are averaged separately. ' ...
+    'Keywords can be BIDS suffixes (e.g., "_T1w") or entities (e.g., "acq-mprage") and have to be followed by "_" or the file extension in the filename, ' ...
+    'i.e., "acq-mp" does not select "acq-mprage". ' ...
+    'Use empty field to average all available images that fulfill the other constraints. ']
     ''};
   
   % blacklist
@@ -342,7 +345,7 @@ function savg = conf_vol_savg(prefix,verb,expert)
   blacklist.strtype      = 's';
   blacklist.num          = [0 Inf];
   blacklist.val          = {''};
-  blacklist.help         = {'Enter strings to excluded files, e.g., protocols you don''t want to include. ' ''};
+  blacklist.help         = {'Enter strings to exclude files, e.g., protocols you don''t want to include (e.g., "acq-lowres" or "_FLAIR"). ' ''};
 
   % reqlist 
   reqlist                = cfg_entry;
@@ -469,7 +472,10 @@ function savg = conf_vol_savg(prefix,verb,expert)
   avgmethod.val          = {2}; 
   avgmethod.hidden       = expert<1; 
   avgmethod.help         = {
-    'Select averaging method. '
+    'Select averaging method: '
+    '  SPMavg - SPM longitudinal registration (rigid)'
+    '  CATavg - CAT longitudinal registration (rigid)'
+    '  savg   - SPM (co)registration in MNI space (rigid)'
     };
 
   % opts field
@@ -496,10 +502,12 @@ function savg = conf_vol_savg(prefix,verb,expert)
   % udpate of default fields
   prefix.val              = {''}; 
   prefix.hidden           = expert<2; % automatic defined .. need further implementation and test
+  prefix.help             = {'Filename prefix of the results. ' ''}; 
 
   suffix                  = prefix;
   suffix.tag              = 'suffix';
   suffix.name             = 'Filename suffix';
+  suffix.help             = {'Filename suffix of the results. ' ''}; 
   
   BIDSdir                 = cfg_entry;
   BIDSdir.tag             = 'BIDSdir';
@@ -508,7 +516,11 @@ function savg = conf_vol_savg(prefix,verb,expert)
   BIDSdir.num             = [0 inf];
   BIDSdir.val             = {['derivatives' filesep 'catavg'];}; 
   BIDSdir.help            = {
-    'Output directory. '
+   ['Output directory. For BIDS data, the directory is created in the main BIDS directory, ' ...
+    'e.g., derivatives/catavg/sub-01/ses-1/anat/sub-01_ses-1_run-avg_T1w.nii for the average of the rescans of a session and ' ...
+    'derivatives/catavg/sub-01/ses-avg/anat/sub-01_ses-avg_T1w.nii for the average of all sessions. ' ...
+    'BIDS entities that differ between the averaged files (e.g., acq-*) are removed. ' ...
+    'Otherwise, the directory is created relative to the input directory. ']
     ''
     };
 
@@ -518,7 +530,7 @@ function savg = conf_vol_savg(prefix,verb,expert)
   verb.values          = {0,1,2};
   verb.val             = {1}; 
   verb.hidden          = false; 
-  verb.help            = {'Remove temporary files from processing. ' ''}; 
+  verb.help            = {'Be verbose and print processing details. ' ''}; 
   
   % opts field
   output              = cfg_exbranch;
@@ -531,6 +543,7 @@ function savg = conf_vol_savg(prefix,verb,expert)
   savg                = cfg_exbranch;
   savg.tag            = 'savg';
   savg.name           = 'Rescan average';
+  savg.val            = {subjects, datasel, opts, output};
   savg.prog           = @cat_vol_savg;
   savg.vout           = @vout_vol_savg;
   savg.help           = {
@@ -5223,26 +5236,15 @@ else
     dep = [];
 end
 return 
-function dep = vout_vol_savg(job)
-% list of average images
-% list of correced images ?
+function dep = vout_vol_savg(varargin)
+% list of session and subject average images
 
-  cdep = cfg_dep;
-
-  cdep(end).sname      = 'AnyAvg Average Map';
-  cdep(end).src_output = substruct('.','avg','()',{':'});
-  cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-
-  if isfield(job,'writeLabelmap') && job.writeLabelmap
-    cdep(end).sname      = 'AnyAvg Label Map';
-    cdep(end).src_output = substruct('.','Yp0','()',{':'});
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-  end
-  if isfield(job,'writeLabelmap') && job.writeBrainmask
-    cdep(end).sname      = 'AnyAvg Brain Mask';
-    cdep(end).src_output = substruct('.','Yb','()',{':'});
-    cdep(end).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
-  end
-  
-  dep = cdep;
+  dep(1)            = cfg_dep;
+  dep(1).sname      = 'Session averages';
+  dep(1).src_output = substruct('.','sesavg','()',{':'});
+  dep(1).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
+  dep(2)            = cfg_dep;
+  dep(2).sname      = 'Subject averages';
+  dep(2).src_output = substruct('.','subavg','()',{':'});
+  dep(2).tgt_spec   = cfg_findspec({{'filter','image','strtype','e'}});
 return
