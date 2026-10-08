@@ -158,9 +158,17 @@ end
 % (optimal)
 try
   out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask, reduce, setCOM, isores);
-catch
-  fprintf('Recall cat_vol_groupwise_ls again with more isotropic spatial resolution.\n')
-  out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask, reduce, setCOM, 3);
+catch e
+  fprintf('Recall cat_vol_groupwise_ls again with more isotropic spatial resolution (%s).\n',e.message)
+  try
+    out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, b_settings, s_settings, ord, use_brainmask, reduce, setCOM, 3);
+  catch e
+    % last attempt without the bias field model of the registration (the
+    % final images are still corrected by the bias correction to the average)
+    if ~all(isfinite(b_settings(:))), rethrow(e); end
+    fprintf('Recall cat_vol_groupwise_ls again without bias field estimation (%s).\n',e.message)
+    out = cat_vol_groupwise_ls(Nii, output, prec, w_settings, Inf(size(b_settings)), s_settings, ord, use_brainmask, reduce, setCOM, 3);
+  end
 end
 
 % RD202510: move and cleanup interpolated data

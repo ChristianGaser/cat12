@@ -242,7 +242,18 @@ for level=nlevels:-1:1 % Loop over resolutions, starting with the lowest
         clear param
         bias_est = zeros(numel(Nii),1);
         for i=numel(Nii):-1:1
-            bias_est(i) = log(mean(mean(mean(img(i).f))));
+            mean_f = mean(mean(mean(img(i).f)));
+            if ~(isfinite(mean_f) && mean_f > 0)
+                % The log of a non-positive mean (e.g. due to negative background
+                % values) would result in a complex bias field that cannot be
+                % processed by spm_diffeo. Use the mean of positive values instead.
+                cat_io_cprintf('warn',sprintf(['Non-positive mean intensity in "%s".\n' ...
+                  'Check the image for negative values. \n'], Nii(i).dat.fname));
+                mean_f = mean(img(i).f(img(i).f(:) > 0));
+            end
+            if isfinite(mean_f) && mean_f > 0
+                bias_est(i) = log(mean_f);
+            end
         end
         bias_est = bias_est - mean(bias_est);
         for i=numel(Nii):-1:1
