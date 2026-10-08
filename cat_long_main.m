@@ -665,6 +665,19 @@ if exist('extopts','var') && ~isempty(extopts)
       matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.LASstr = LASstr;
     end
   end  
+
+  % The affine registration of the time points is either taken from the
+  % average (priors) or estimated with the longTPM that was created from the
+  % affine registered average segmentation. In both cases the modification
+  % of the affine scaling (affmod) of the average is already included and
+  % must not be applied a second time.
+  if longTPM || ( useprior && longmodel > 0 && longmodel < 4 )
+    if isfield(extopts,'segmentation') && isfield(extopts.segmentation,'affmod')
+      matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.segmentation.affmod = 0;
+    elseif isfield(extopts,'affmod')
+      matlabbatch{mbi}.spm.tools.cat.estwrite.extopts.affmod = 0;
+    end
+  end
 end
 
 if exist('output','var') && ~isempty(output)
