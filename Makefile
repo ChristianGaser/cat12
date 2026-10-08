@@ -102,7 +102,6 @@ update: docs copy_longmode
 	-@perl -p -i -e "s/${OLDVERSION}/${NEWVERSION}/g" spm_CAT.m
 	-@perl -p -i -e "s/${OLDVERSION}/${NEWVERSION}/g" cat_batch_bids.sh
 	-@cp cat12.m CAT.m
-	-@chmod a+x CAT.*/*
 
 # zip release
 zip: update clean
@@ -124,6 +123,7 @@ cp_binaries:
 	-@for i in CAT.w32/$(BIN); do cp ~/GitHub/CAT-Surface/build-x86_64-w64-mingw32/Progs/`basename $${i}` CAT.w32/ ; done
 	-@for i in CAT.maci64/$(BIN); do cp ~/GitHub/CAT-Surface/build-native/Progs/`basename $${i}` CAT.maci64/ ; done
 	-@for i in CAT.maca64/$(BIN); do cp ~/GitHub/CAT-Surface/build-native-arm64/Progs/`basename $${i}` CAT.maca64/ ; done
+	-@chmod a+x CAT.*/*
 
 # print check list for releasing
 release: checklist

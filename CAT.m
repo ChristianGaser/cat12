@@ -164,8 +164,8 @@ end
 % This creates the 'background' image
 handles.ma = axes('parent',handles.CAT,'units','pixels','position',[1 1 sz]);
 imagesc(cat_bg,'parent',handles.ma); 
-axis('off'); 
-text(sz(1)/20,sc*80,'Computational Anatomy Toolbox','Color',[1 1 1],'Fontsize',FS+5,'Fontweight','bold');
+axis(handles.ma,'off'); 
+text(handles.ma,sz(1)/20,sc*80,'Computational Anatomy Toolbox','Color',[1 1 1],'Fontsize',FS+5,'Fontweight','bold');
 
 switch species
   case 'human',           speciesdisp = ''; 
@@ -181,8 +181,8 @@ switch species
   otherwise,              speciesdisp = ''; 
 end
 switch expert
-  case 1, text(sz(1)/20,sc*105,['Expert Mode'    speciesdisp],'Color',[0.1 0.7 1.0],'Fontsize',FS+3,'Fontweight','bold'); 
-  case 2, text(sz(1)/20,sc*105,['Developer Mode' speciesdisp],'Color',[1.0 0.0 0.0],'Fontsize',FS+3,'Fontweight','bold');
+  case 1, text(handles.ma,sz(1)/20,sc*105,['Expert Mode'    speciesdisp],'Color',[0.1 0.7 1.0],'Fontsize',FS+3,'Fontweight','bold'); 
+  case 2, text(handles.ma,sz(1)/20,sc*105,['Developer Mode' speciesdisp],'Color',[1.0 0.0 0.0],'Fontsize',FS+3,'Fontweight','bold');
 end
 guidata(hObject, handles);
 
