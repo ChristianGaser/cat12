@@ -237,7 +237,7 @@ function varargout = cat_surf_renderv(S,facevertexcdata,opt)
   bgm = cat_vol_morph( bgm ,'o');
   
   % normalize range to 255 for RGB convertation
-  imgtn   = min(255,max(0,round( ( imgc - opt.clim(1)  ) / opt.clim(2)                * 255 ))); clear imgc;
+  imgtn   = min(255,max(0,round( ( imgc - opt.clim(1)  ) / diff(opt.clim)            * 255 ))); clear imgc;
   imgzn   = min(255,max(0,round( ( imgz - min(imgz(:)) ) / max( imgz(imgz(:)<inf ) )  * 255 ))); %clear imgz;
   imgnn   = min(255,max(0,round( ( imgn - min(imgn(:)) ) / max( imgn(imgn(:)<inf ) )  * 255 ))); clear imgn;
 
@@ -262,8 +262,10 @@ function varargout = cat_surf_renderv(S,facevertexcdata,opt)
   imgnRGB = ind2rgb( imgnn , gray(256) ); clear imgnn; 
 
   % set background
+  % (ishghandle also supports numeric handles of Octave or older MATLAB versions)
+  isaxes = ~isempty( opt.h ) && ishghandle( opt.h(1) ) && strcmp( get( opt.h(1) ,'type') , 'axes' ); 
   img  = min(255,max(0,imgRGB .* (0.2 + max(0,imgnRGB*1.05 - 0.05).^0.5 * 1.0) - (imgzRGB/8))) ; 
-  if ~isempty( opt.h ) && isa(opt.h, 'matlab.graphics.axis.Axes')
+  if isaxes
     bgc  = get(opt.h,'color'); 
     bg   = cat(3,bgc(1) * ones( size(imgz)), bgc(2) * ones( size(imgz)), bgc(3) * ones( size(imgz)) ); 
     img  = img.*(1-bgm) + bg.*bgm; 
@@ -274,7 +276,7 @@ function varargout = cat_surf_renderv(S,facevertexcdata,opt)
   end
 
   % set output
-  if ~isempty( opt.h ) && isa(opt.h, 'matlab.graphics.axis.Axes')
+  if isaxes
     image( opt.h , img ); 
     axis(opt.h,'equal','off'); 
      

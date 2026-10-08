@@ -65,7 +65,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
   def.extopts.report.useoverlay   = 2;  % different p0 overlays, described below in the Yp0 print settings
                                         % (0 - no, 1 - red mask, 2 - blue BG, red BVs, WMHs [default] ... )
   def.extopts.report.type         = 2;  % (1 - Yo,Ym,Yp0,CS-top, 2 - Yo,Yp0,CS-left-right-top) 
-  def.extopts.report.renderer     = 1;  % (1 - opengl, 2 - volume render)
+  def.extopts.report.renderer     = 1;  % (0 - OpenGL only, 1 - OpenGL or software rendering without OpenGL, 2 - software rendering)
   def.extopts.report.color        = cat_get_defaults('extopts.report.color'); 
                                         % background gray level that focus on: white, black, gray
                                         % [] - current figure, 0.95 - light gray
@@ -1402,6 +1402,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
             % this is strange but a 3:4 box property results in a larger brain scaling 
             hCS = subplot('Position',[0.52 0.037*(~sidehist) 0.42 0.31+0.02*sidehist],'visible','off'); 
             if ~strcmpi(spm_check_version,'octave'), renderer = get(fg,'Renderer'); else, renderer = 'volume'; end
+            % software OpenGL (e.g. on servers without graphics hardware) is handled like no OpenGL 
+            if strcmpi(renderer,'opengl') && softwareOpenGL(hCS), renderer = 'software OpenGL'; end
 
             % only add contours if OpenGL is found (to prevent crashing on clusters)
             if strcmpi(renderer,'opengl') && job.extopts.report.renderer < 2
@@ -1440,7 +1442,7 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
                 end
               end
               CS = export(CS,'patch');
-              hSD{i} = cat_surf_renderv(CS,[],struct('rot','t','interp',1,'h',hCS));
+              hSD{1} = cat_surf_renderv(CS,[],struct('view','t','interp',1,'h',hCS));
             end
             
             if ~sidehist
@@ -1502,6 +1504,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
           hCS{4} = subplot('Position',[0.02 0.01 0.30 0.17],'Parent',fg,'visible','off'); PCS{4} = Psurf(id1).Pthick; sview{4} = 'r';
           hCS{5} = subplot('Position',[0.68 0.01 0.30 0.17],'Parent',fg,'visible','off'); PCS{5} = Psurf(id2).Pthick; sview{5} = 'l';
           if ~strcmpi(spm_check_version,'octave'), renderer = get(fg,'Renderer'); else, renderer = 'volume'; end
+          % software OpenGL (e.g. on servers without graphics hardware) is handled like no OpenGL 
+          if strcmpi(renderer,'opengl') && softwareOpenGL(hCS{1}), renderer = 'software OpenGL'; end
  
           % only add contours if OpenGL is found (to prevent crashing on clusters)
           if isfield(res,'long')
@@ -1521,16 +1525,22 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
           end
           %% hrange      = srange(1) + boxwidth/2:boxwidth:srange(2);
           if job.output.surface > 10, addcb = 1; else, addcb = 0; end
-          if strcmpi(renderer,'opengl') && job.extopts.report.renderer < 2
+          useOpenGL = strcmpi(renderer,'opengl') && job.extopts.report.renderer < 2; 
+          if useOpenGL
+            glerr = ''; 
             try
               i=1; hSD{i} = cat_surf_display(struct('data',PCS{i},'readsurf',0,'expert',2,...
                 'multisurf',1 + 2*addcb,'view',sview{i},'menu',0,'parent',hCS{i},'verb',0,'caxis',srange,'imgprint',struct('do',0))); 
+            catch e
+              glerr = e.message; 
             end
 
             for i = 2:numel(hCS)
               try
                 hSD{i} = cat_surf_display(struct('data',PCS{i},'readsurf',0,'expert',2,...
                   'multisurf',0 + 3*addcb,'view',sview{i},'menu',0,'parent',hCS{i},'verb',0,'caxis',srange,'imgprint',struct('do',0))); 
+              catch e
+                glerr = e.message; 
               end
             end
             
@@ -1540,7 +1550,8 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
             else
               Rigid = eye(4);
             end
-            if exist('hSD','var')
+            if exist('hSD','var') && numel(hSD) == numel(hCS) && ...
+               all( cellfun( @(h) iscell(h) && ~isempty(h) && isstruct(h{1}) && isfield(h{1},'patch'), hSD ) )
               for i = 1:numel(hSD)
                 for ppi = 1:numel(hSD{i}{1}.patch)
                   try
@@ -1549,9 +1560,20 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
                   end
                 end
               end
-              for i = 1:numel(hSD), colormap(fg,cmap);  set(hSD{i}{1}.colourbar,'visible','off'); end
+              for i = 1:numel(hSD), colormap(fg,cmap);  try, set(hSD{i}{1}.colourbar,'visible','off'); end; end
+            else
+              % OpenGL rendering failed (e.g. on servers) - remove partial results and use software rendering
+              cat_io_cprintf('warn','WARNING: OpenGL surface rendering failed (%s) - use software rendering.\n',glerr);
+              if exist('hSD','var')
+                for i = 1:numel(hSD), try, delete(hSD{i}{1}.colourbar); end; end
+                clear hSD; 
+              end
+              for i = 1:numel(hCS), cla(hCS{i},'reset'); set(hCS{i},'visible','off'); end
+              useOpenGL = false; 
             end
-          elseif job.extopts.report.renderer > 1
+          end
+          if ~useOpenGL && job.extopts.report.renderer > 0
+            % software rendering, e.g., in headless mode without (hardware) OpenGL (see also report type 1)
             try
               if 1
                 % just the first draft
@@ -1633,115 +1655,119 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
           
           %% To do: filter thickness values on the surface ...
           
-          % sometimes hSD is not defined here because of mysterious errors on windows systems
-          if ~exist('hSD','var'), return; end
-
-          if ~isfield(hSD{1}{1},'cdata'), return; end
-
-          % colormap
-          side  = hSD{1}{1}.cdata; 
-          
-          % histogram 
-          if strcmpi(spm_check_version,'octave')
-            axes('Position',[0.36 0.0245 0.28 0.030],'Parent',fg,...
-              'visible','off', 'tag','cat_surf_results_hist', ...
-              'xcolor',fontcolor,'ycolor',fontcolor); 
-            cc{5} = gca; 
+          % sometimes hSD is not defined here because of mysterious errors on windows systems,
+          % or no surface was rendered (e.g., without OpenGL and software rendering) - in this
+          % case we skip the histogram but still print the report 
+          if ~exist('hSD','var') || ~iscell(hSD) || isempty(hSD) || ~iscell(hSD{1}) || isempty(hSD{1}) || ...
+             ~isstruct(hSD{1}{1}) || ~isfield(hSD{1}{1},'cdata')
+            cat_io_cprintf('warn','WARNING: No surface data for the thickness histogram - print report without it.\n');
           else
-            cc{5} = axes('Position',[0.36 0.0245 0.28 0.030],'Parent',fg,...
-              'visible','off', 'tag','cat_surf_results_hist', ...
-              'xcolor',fontcolor,'ycolor',fontcolor); 
-          end
-          % boxes
-          if isfield(res,'long')
-            [d,h] = hist( side(~isinf(side(:)) & ~isnan(side(:)) ), ...&  side(:)<srange(2) & side(:)>srange(1)) , ...
-                      srange(1)+boxwidth/2:boxwidth:srange(2)-boxwidth/2); 
-          else
-            [d,h] = hist( side(~isinf(side(:)) & ~isnan(side(:)) &  side(:)<srange(2) & side(:)>srange(1)) , ...
-                      srange(1)+boxwidth/2:boxwidth:srange(2)-boxwidth/2);    
-          end
-          dmax  = max(d) * 1.4; % 15% extra for the line plot (use thickness phantom to set this value)
-          % histogram line
-          [dl,hl] = hist( side(~isinf(side(:)) & ~isnan(side(:)) &  side(:)<srange(2) & side(:)>srange(1)) , ...
-            srange(1)+boxwidth/2:boxwidth/10:srange(2)-boxwidth/2); %hl = hl + 0.02/2; 
-          try dl = smooth(dl,2); catch, dl = (dl + [0 dl(1:end-1)] + [dl(2:end) 0])/3; end % smooth requires Curve Fitting Toolbox
-          dl = dl / (dmax/10); % 10 times smaller boxes
-          % boxplot values
-          q0 = median(side); q1 = median(side(side<q0)); q2 = median(side(side>q0)); 
-          d = d / dmax;
-          if 0%isfield(res,'long') % make outlier vissible in the histogram
-            hx  = srange(1)+boxwidth/2:boxwidth:srange(2)-boxwidth/2; 
-            hlx = srange(1)+boxwidth/10:boxwidth/10:srange(2)-boxwidth/2; 
-            d   = min(1, d  .* max(0,2.^((abs(hx  * 20).^1)))); 
-            dl  = min(1, dl .* max(0,2.^((abs(hlx * 20).^1)))); 
-          end
+
+            % colormap
+            side  = hSD{1}{1}.cdata; 
           
-          
-          %% print histogram
-          hold(cc{5},'on');  
-          for bi = 1:numel(d)
-            outlier0 = h(bi) < q0 - 3*(q0-q1)  &  d(bi)>0.01  &  d(bi)>0.9*d(min(numel(d),bi+1)); 
-            outlier1 = h(bi) > q0 + 3*(q2-q0)  &  d(bi)>0.01  &  d(bi)>0.9*d(max(1,bi-1));
-            b(bi) = bar(cc{5},h(bi),d(bi),boxwidth); 
-            if outlier0 || outlier1, ecol = [1 0 0]; else, ecol = fontcolor; end % mark outlier
-            set(b(bi),'Facecolor',cmap3(min(surfcolors,round(bi * surfcolors/numel(d) )),:),'Edgecolor',ecol)
-          end
-          try
-            line(cc{5},hl,dl,'color',mean([fontcolor;[0.9 0.3 0.3]]));
-            outlier0 = hl < q0 - 3*(q0-q1) &  d(bi)/max(d)>0.01; 
-            outlier1 = hl > q0 + 3*(q2-q0) &  d(bi)/max(d)>0.01;
-            if ~isempty(outlier0), line(cc{5},hl( outlier0 ),dl( outlier0 ),'color',[1 0 0 ]); end
-            if isfield(res,'long')
-              if ~isempty(outlier1), line(cc{5},hl( outlier1 ),dl( outlier1 ),'color',[0 0 1 ]); end
+            % histogram 
+            if strcmpi(spm_check_version,'octave')
+              axes('Position',[0.36 0.0245 0.28 0.030],'Parent',fg,...
+                'visible','off', 'tag','cat_surf_results_hist', ...
+                'xcolor',fontcolor,'ycolor',fontcolor); 
+              cc{5} = gca; 
             else
-              if ~isempty(outlier1), line(cc{5},hl( outlier1 ),dl( outlier1 ),'color',[1 0 0 ]); end
+              cc{5} = axes('Position',[0.36 0.0245 0.28 0.030],'Parent',fg,...
+                'visible','off', 'tag','cat_surf_results_hist', ...
+                'xcolor',fontcolor,'ycolor',fontcolor); 
             end
-            xlim(srange); ylim([0 1]);
-          end
+            % boxes
+            if isfield(res,'long')
+              [d,h] = hist( side(~isinf(side(:)) & ~isnan(side(:)) ), ...&  side(:)<srange(2) & side(:)>srange(1)) , ...
+                        srange(1)+boxwidth/2:boxwidth:srange(2)-boxwidth/2); 
+            else
+              [d,h] = hist( side(~isinf(side(:)) & ~isnan(side(:)) &  side(:)<srange(2) & side(:)>srange(1)) , ...
+                        srange(1)+boxwidth/2:boxwidth:srange(2)-boxwidth/2);    
+            end
+            dmax  = max(d) * 1.4; % 15% extra for the line plot (use thickness phantom to set this value)
+            % histogram line
+            [dl,hl] = hist( side(~isinf(side(:)) & ~isnan(side(:)) &  side(:)<srange(2) & side(:)>srange(1)) , ...
+              srange(1)+boxwidth/2:boxwidth/10:srange(2)-boxwidth/2); %hl = hl + 0.02/2; 
+            try dl = smooth(dl,2); catch, dl = (dl + [0 dl(1:end-1)] + [dl(2:end) 0])/3; end % smooth requires Curve Fitting Toolbox
+            dl = dl / (dmax/10); % 10 times smaller boxes
+            % boxplot values
+            q0 = median(side); q1 = median(side(side<q0)); q2 = median(side(side>q0)); 
+            d = d / dmax;
+            if 0%isfield(res,'long') % make outlier vissible in the histogram
+              hx  = srange(1)+boxwidth/2:boxwidth:srange(2)-boxwidth/2; 
+              hlx = srange(1)+boxwidth/10:boxwidth/10:srange(2)-boxwidth/2; 
+              d   = min(1, d  .* max(0,2.^((abs(hx  * 20).^1)))); 
+              dl  = min(1, dl .* max(0,2.^((abs(hlx * 20).^1)))); 
+            end
           
           
-          %% print colormap and boxplot on top of the bar/line histogramm to avoid that the line run into it 
-          cc{4} = axes('Position',[0.36 0.018 0.28 0.007],'Parent',fg); xlim([1 surfcolors]); 
-          image((121:1:120+surfcolors),'Parent',cc{4}); hold on; 
+            %% print histogram
+            hold(cc{5},'on');  
+            for bi = 1:numel(d)
+              outlier0 = h(bi) < q0 - 3*(q0-q1)  &  d(bi)>0.01  &  d(bi)>0.9*d(min(numel(d),bi+1)); 
+              outlier1 = h(bi) > q0 + 3*(q2-q0)  &  d(bi)>0.01  &  d(bi)>0.9*d(max(1,bi-1));
+              b(bi) = bar(cc{5},h(bi),d(bi),boxwidth); 
+              if outlier0 || outlier1, ecol = [1 0 0]; else, ecol = fontcolor; end % mark outlier
+              set(b(bi),'Facecolor',cmap3(min(surfcolors,round(bi * surfcolors/numel(d) )),:),'Edgecolor',ecol)
+            end
+            try
+              line(cc{5},hl,dl,'color',mean([fontcolor;[0.9 0.3 0.3]]));
+              outlier0 = hl < q0 - 3*(q0-q1) &  d(bi)/max(d)>0.01; 
+              outlier1 = hl > q0 + 3*(q2-q0) &  d(bi)/max(d)>0.01;
+              if ~isempty(outlier0), line(cc{5},hl( outlier0 ),dl( outlier0 ),'color',[1 0 0 ]); end
+              if isfield(res,'long')
+                if ~isempty(outlier1), line(cc{5},hl( outlier1 ),dl( outlier1 ),'color',[0 0 1 ]); end
+              else
+                if ~isempty(outlier1), line(cc{5},hl( outlier1 ),dl( outlier1 ),'color',[1 0 0 ]); end
+              end
+              xlim(srange); ylim([0 1]);
+            end
+          
+          
+            %% print colormap and boxplot on top of the bar/line histogramm to avoid that the line run into it 
+            cc{4} = axes('Position',[0.36 0.018 0.28 0.007],'Parent',fg); xlim([1 surfcolors]); 
+            image((121:1:120+surfcolors),'Parent',cc{4}); hold on; 
          
-          try
-            if isfield(res,'long')
-              if     srange(2)>2.00, cfontcolor = [0.8 0 0]; 
-              elseif srange(2)>1.00, cfontcolor = [0.4 0 0];
-              else                 , cfontcolor = fontcolor; 
-              end 
-              set(cc{4},'XTick',1:(surfcolors-1)/4:surfcolors,'xcolor',cfontcolor,'ycolor',fontcolor,'XTickLabel',...
-                   {sprintf('%.2f',srange(1)),sprintf('%.2f',srange(1)/2),'0',...
-                    sprintf('%+.2f',srange(2)/2),...
-                    sprintf('                                                  %+.2f %s changes (smoothed %d times)',...
-                    srange(2),res.long.measure,round(res.long.smoothsurf))},...
-                  'YTickLabel','','YTick',[],'TickLength',[0.01 0],'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal','XTickLabelRotation',0); 
-            else
-              set(cc{4},'XTick',1:(surfcolors-1)/6:surfcolors,'xcolor',fontcolor,'ycolor',fontcolor,'XTickLabel',...
-                  {'0','1','2','3','4','5',[repmat(' ',1,10) '6 mm']},...
-                  'YTickLabel','','YTick',[],'TickLength',[0.01 0],'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal','XTickLabelRotation',0); 
-            end
-          
-            % boxplot
-            % sometimes it's crashing on windows systems for no reason...
             try
               if isfield(res,'long')
-                %%
-                line(cc{4},surfcolors/2 + surfcolors/2 * [(q0 - 1.5*(q0-q1)) q1 ], [ 1 1] , 'Color',[0 0 0],'LineWidth',0.75); 
-                line(cc{4},surfcolors/2 + surfcolors/2 * [q2 (q0 + 1.5*(q2-q0)) ], [ 1 1] , 'Color',[0 0 0],'LineWidth',0.75); 
-                fill(cc{4},surfcolors/2 + surfcolors/2 * [q1 q2 q2 q1], [ 0.8 0.8 1.2 1.2],[1 1 1],'LineWidth',0.5,'FaceAlpha',0.7); 
-                line(cc{4},surfcolors/2 + surfcolors/2 * repmat(mean(side),1,2), [ 0.6 1.4 ] , 'Color',[0 0 0],'LineWidth',0.75); 
-                line(cc{4},surfcolors/2 + surfcolors/2 * repmat(q0,1,2), [ 0.6 1.4 ] , 'Color',[1 0 0],'LineWidth',1.5); 
+                if     srange(2)>2.00, cfontcolor = [0.8 0 0]; 
+                elseif srange(2)>1.00, cfontcolor = [0.4 0 0];
+                else                 , cfontcolor = fontcolor; 
+                end 
+                set(cc{4},'XTick',1:(surfcolors-1)/4:surfcolors,'xcolor',cfontcolor,'ycolor',fontcolor,'XTickLabel',...
+                     {sprintf('%.2f',srange(1)),sprintf('%.2f',srange(1)/2),'0',...
+                      sprintf('%+.2f',srange(2)/2),...
+                      sprintf('                                                  %+.2f %s changes (smoothed %d times)',...
+                      srange(2),res.long.measure,round(res.long.smoothsurf))},...
+                    'YTickLabel','','YTick',[],'TickLength',[0.01 0],'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal','XTickLabelRotation',0); 
               else
-                line(cc{4},(surfcolors-1)/6 * [(q0 - 1.5*(q0-q1)) q1 ], [ 1 1] , 'Color',[0 0 0],'LineWidth',0.75); 
-                line(cc{4},(surfcolors-1)/6 * [q2 (q0 + 1.5*(q2-q0)) ], [ 1 1] , 'Color',[0 0 0],'LineWidth',0.75); 
-                fill(cc{4},(surfcolors-1)/6 * [q1 q2 q2 q1], [ 0.8 0.8 1.2 1.2],[1 1 1],'LineWidth',0.5,'FaceAlpha',0.7); 
-                line(cc{4},(surfcolors-1)/6 * repmat(mean(side),1,2), [ 0.6 1.4 ] , 'Color',[0 0 0],'LineWidth',0.75); 
-                line(cc{4},(surfcolors-1)/6 * repmat(q0,1,2), [ 0.6 1.4 ] , 'Color',[1 0 0],'LineWidth',1.5); 
+                set(cc{4},'XTick',1:(surfcolors-1)/6:surfcolors,'xcolor',fontcolor,'ycolor',fontcolor,'XTickLabel',...
+                    {'0','1','2','3','4','5',[repmat(' ',1,10) '6 mm']},...
+                    'YTickLabel','','YTick',[],'TickLength',[0.01 0],'FontName',fontname,'FontSize',fontsize-2,'FontWeight','normal','XTickLabelRotation',0); 
               end
-            end
-            hold off; 
-          end        
+          
+              % boxplot
+              % sometimes it's crashing on windows systems for no reason...
+              try
+                if isfield(res,'long')
+                  %%
+                  line(cc{4},surfcolors/2 + surfcolors/2 * [(q0 - 1.5*(q0-q1)) q1 ], [ 1 1] , 'Color',[0 0 0],'LineWidth',0.75); 
+                  line(cc{4},surfcolors/2 + surfcolors/2 * [q2 (q0 + 1.5*(q2-q0)) ], [ 1 1] , 'Color',[0 0 0],'LineWidth',0.75); 
+                  fill(cc{4},surfcolors/2 + surfcolors/2 * [q1 q2 q2 q1], [ 0.8 0.8 1.2 1.2],[1 1 1],'LineWidth',0.5,'FaceAlpha',0.7); 
+                  line(cc{4},surfcolors/2 + surfcolors/2 * repmat(mean(side),1,2), [ 0.6 1.4 ] , 'Color',[0 0 0],'LineWidth',0.75); 
+                  line(cc{4},surfcolors/2 + surfcolors/2 * repmat(q0,1,2), [ 0.6 1.4 ] , 'Color',[1 0 0],'LineWidth',1.5); 
+                else
+                  line(cc{4},(surfcolors-1)/6 * [(q0 - 1.5*(q0-q1)) q1 ], [ 1 1] , 'Color',[0 0 0],'LineWidth',0.75); 
+                  line(cc{4},(surfcolors-1)/6 * [q2 (q0 + 1.5*(q2-q0)) ], [ 1 1] , 'Color',[0 0 0],'LineWidth',0.75); 
+                  fill(cc{4},(surfcolors-1)/6 * [q1 q2 q2 q1], [ 0.8 0.8 1.2 1.2],[1 1 1],'LineWidth',0.5,'FaceAlpha',0.7); 
+                  line(cc{4},(surfcolors-1)/6 * repmat(mean(side),1,2), [ 0.6 1.4 ] , 'Color',[0 0 0],'LineWidth',0.75); 
+                  line(cc{4},(surfcolors-1)/6 * repmat(q0,1,2), [ 0.6 1.4 ] , 'Color',[1 0 0],'LineWidth',1.5); 
+                end
+              end
+              hold off; 
+            end        
+          end
       else
         cat_io_cprintf('warn','WARNING: Surface rending without openGL is deactivated to prevent zoombie processes on servers!\n',VT.fname);   
 % render warning on figure        
@@ -1843,8 +1869,7 @@ if 1
     if ~usejava('jvm')
       cat_io_cprintf('err','         MATLAB was started without the JVM (-nojvm); figure printing needs Java.\n');
     elseif job.extopts.print>1
-      cat_io_cprintf('err','         Surface rendering needs OpenGL, which is not available in headless mode.\n');
-      cat_io_cprintf('err','         Set cat.extopts.print = 1 (volume-only report) to create the report headless.\n');
+      cat_io_cprintf('err','         Set cat.extopts.print = 1 (volume-only report) if the surface rendering causes problems.\n');
     end
   end
 
@@ -1942,3 +1967,23 @@ end
     try,spm_ov_mesh('redraw',1);end
   end  
 end
+%==========================================================================
+function sw = softwareOpenGL(ax)
+%softwareOpenGL. True if MATLAB uses software OpenGL, e.g., on servers 
+%  without graphics hardware, where the surface rendering by OpenGL fails.
+%  rendererinfo is available since MATLAB R2019a but does not work for 
+%  invisible figures in some versions, whereas opengl was removed later. 
+  sw = false; 
+  try
+    info = rendererinfo(ax); 
+    sw   = ~isempty( strfind( lower(info.GraphicsRenderer) , 'software') ) || ...
+           ( isfield(info,'Details') && isfield(info.Details,'HardwareSupportLevel') && ...
+             strcmpi(info.Details.HardwareSupportLevel,'none') ); 
+    return
+  end
+  ws = warning('off','all'); 
+  try
+    info = opengl('data'); 
+    sw   = info.Software; 
+  end
+  warning(ws); 
