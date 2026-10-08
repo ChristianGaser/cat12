@@ -1768,12 +1768,13 @@ function cat_main_reportfig(Ym,Yp0,Yl1,Psurf,job,qa,res,str)
               hold off; 
             end        
           end
-      else
-        cat_io_cprintf('warn','WARNING: Surface rending without openGL is deactivated to prevent zoombie processes on servers!\n',VT.fname);   
+        else
+          cat_io_cprintf('warn','WARNING: Surface rending without openGL is deactivated to prevent zoombie processes on servers!\n',VT.fname);   
 % render warning on figure        
+        end
       end
     end
-  end
+  end % job.extopts.print>1 (the report is also printed for the volume only setting)
 
 
 if 1
@@ -1966,7 +1967,6 @@ end
     set(cclp,'Color', [1 0 0]); % overlay legend
     try,spm_ov_mesh('redraw',1);end
   end  
-end
 %==========================================================================
 function sw = softwareOpenGL(ax)
 %softwareOpenGL. True if MATLAB uses software OpenGL, e.g., on servers 
