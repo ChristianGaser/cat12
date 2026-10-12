@@ -135,7 +135,7 @@ checklist:
 	'1. Make unittests' \
 	'   make tests' \
 	'' \
-	21. Check Pipeline' \
+	'2. Check Pipeline' \
 	'   make check_pipeline' \
 	'   check_pipeline.sh -p pid' \
 	'   check_all_matrix.sh' \
@@ -164,9 +164,9 @@ checklist:
 	'   cat12_all.m in /Volumes/UltraMax/validate_skullstripping_withT12' \
 	'   calc_kappa_c0_SPM12_T12.m' \
 	'' \
-	'8. Check thickness phantom' \
+	'9. Check thickness phantom' \
 	'' \
-	'9. Make fork from new version!'
+	'10. Make fork from new version!'
 
 # print help for standalone
 standalone:
