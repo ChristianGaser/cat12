@@ -99,12 +99,13 @@ end
 if isxml
   if mesh_detected
     QM = ones(n_subjects,5);
-    QM_names = char('Noise','Bias','Weighted overall image quality (IQR)','Euler number','Size of topology defects');
+    QM_names = char('Noise','Bias','Structural image quality rating (SIQR)','Euler number','Size of topology defects');
   else
     QM = ones(n_subjects,3);
-    QM_names = char('Noise','Bias','Weighted overall image quality (IQR)');
+    QM_names = char('Noise','Bias','Structural image quality rating (SIQR)');
   end
-  
+
+  nIQR = 0; % number of xml-files without SIQR
   cat_progress_bar('Init',n_subjects,'Load xml-files','subjects completed')
   for i=1:n_subjects
     
@@ -156,20 +157,33 @@ if isxml
       fprintf('Quality rating is not saved for %s. Report file %s is incomplete.\nPlease repeat preprocessing amd check for potential errors in the ''err'' folder.\n',job.data{i},xml_files(i,:));    
       return
     end
+
+    % SIQR replaced IQR, but older xml-files only contain IQR
+    if isfield(xml,'qualityratings') && isfield(xml.qualityratings,'SIQR')
+      xml_SIQR = xml.qualityratings.SIQR;
+    else
+      nIQR = nIQR + 1;
+      if isfield(xml,'qualityratings') && isfield(xml.qualityratings,'IQR')
+        xml_SIQR = xml.qualityratings.IQR;
+      else
+        xml_SIQR = NaN;
+      end
+    end
+
     if mesh_detected
       if isfield(xml.qualityratings,'NCR')
       % check for newer available surface measures
         if isfield(xml.subjectmeasures,'EC_abs') && isfinite(xml.subjectmeasures.EC_abs) && isfinite(xml.subjectmeasures.defect_size)
-          QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR xml.subjectmeasures.EC_abs xml.subjectmeasures.defect_size];
+          QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml_SIQR xml.subjectmeasures.EC_abs xml.subjectmeasures.defect_size];
         else
-          QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR NaN NaN];
+          QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml_SIQR NaN NaN];
         end
       else % also try to use old version
         QM(i,:) = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
       end
     else
       if isfield(xml.qualityratings,'NCR')
-        QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml.qualityratings.IQR];
+        QM(i,:) = [xml.qualityratings.NCR xml.qualityratings.ICR xml_SIQR];
       else % also try to use old version
         QM(i,:) = [xml.QAM.QM.NCR xml.QAM.QM.ICR xml.QAM.QM.rms];
       end
@@ -177,7 +191,12 @@ if isxml
     cat_progress_bar('Set',i);  
   end
   cat_progress_bar('Clear');
-  
+
+  if isxml && nIQR
+    cat_io_cprintf('warn',sprintf(['\nWarning: %d of %d xml-files are from older CAT versions without SIQR. ' ...
+      'The former IQR is saved for these files, which is not directly comparable to SIQR.\n'],nIQR,n_subjects));
+  end
+
   % remove last two columns if EC_abs and defect_size are not defined
   if mesh_detected && all(isnan(QM(:,4))) && all(isnan(QM(:,5)))
     QM = QM(:,1:3);
@@ -294,9 +313,9 @@ if 0
 end
 
 if isxml
-  % estimate product between weighted overall quality (IQR) and quartic mean Z-score
-  IQR = QM(:,3);
-  IQRratio = (mean_zscore/std(mean_zscore)).*(IQR/std(IQR));
+  % estimate product between weighted overall quality (SIQR) and quartic mean Z-score
+  SIQR = QM(:,3);
+  SIQRratio = (mean_zscore/std(mean_zscore)).*(SIQR/std(SIQR));
   if mesh_detected
     Euler_number = QM(:,4);
     Topo_defects = QM(:,5);
@@ -314,7 +333,7 @@ end
 
 fprintf(fid,'Path;Name;Mean Z-score');
 if isxml
-  fprintf(fid,';Weighted overall image quality (IQR);Normalized product of IQR and quartic mean Z-score');
+  fprintf(fid,';Structural image quality rating (SIQR);Normalized product of SIQR and quartic mean Z-score');
   if mesh_detected
     fprintf(fid,';Euler Number;Size of topology defects\n');
   else
@@ -327,7 +346,7 @@ for i = 1:n_subjects
   [pth, data_name] = fileparts(job.data{i});
   fprintf(fid,'%s;%s;%g',pth,data_name,mean_zscore(i));
   if isxml
-    fprintf(fid,';%g;%g',IQR(i),IQRratio(i));
+    fprintf(fid,';%g;%g',SIQR(i),SIQRratio(i));
     if mesh_detected
       fprintf(fid,';%d;%g\n',Euler_number(i),Topo_defects(i));
     else

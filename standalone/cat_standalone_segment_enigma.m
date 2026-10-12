@@ -89,8 +89,9 @@ matlabbatch{1}.spm.tools.cat.estwrite.extopts.admin.print = 2;
 % +10 to estimate WM and CSF width/depth/thickness (experimental!)
 matlabbatch{1}.spm.tools.cat.estwrite.output.surface = 1;       
 
-% BIDS output
-matlabbatch{1}.spm.tools.cat.estwrite.output.BIDS.BIDSyes.BIDSfolder = cat_version;
+% BIDS output: write results into a folder named after the CAT version
+% (e.g. CAT26.0) for BIDS and non-BIDS data
+matlabbatch{1}.spm.tools.cat.estwrite.output.BIDS.BIDSrel.BIDSfolder = cat_version;
                                                             
 % define here volume atlases
 matlabbatch{1}.spm.tools.cat.estwrite.output.ROImenu.atlases.neuromorphometrics = 1;

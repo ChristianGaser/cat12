@@ -594,15 +594,14 @@ EXAMPLES
    Please note the multiple quotes for parameter a1.
 
    -----------------------------------------------------------------------------------------------
-   Estimate and save weighted overall image quality
-     -a1 csv output filename
-     -a2 enable global scaling with TIV (only for volumes meaningful)
+   Estimate and save weighted overall image quality (SIQR)
+     -a1 txt output filename
    -----------------------------------------------------------------------------------------------
-   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v232 \ 
-       -b ${cwd}/cat_standalone_get_IQR.m report/cat_*.xml \ 
-       -a1 " 'IQR.txt' "
-   Estimate weighted overall image quality (before preprocessing) using xml-files in report folder 
-   and save IQR measures in IQR.txt for external analysis.
+   cat_standalone.sh -m /Applications/MATLAB/MATLAB_Runtime/v232 \
+       -b ${cwd}/cat_standalone_get_IQR.m report/cat_*.xml \
+       -a1 " 'SIQR.txt' "
+   Estimate weighted overall image quality (SIQR, before preprocessing) using xml-files in report
+   folder and save SIQR measures in SIQR.txt for external analysis.
    Please note the multiple quotes for parameter a1.
 
    -----------------------------------------------------------------------------------------------

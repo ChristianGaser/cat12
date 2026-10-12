@@ -1962,7 +1962,7 @@ function iqr = conf_stat_IQR(data_xml)
   iqr_name.name    = 'Output file';
   iqr_name.strtype = 's';
   iqr_name.num     = [1 Inf];
-  iqr_name.val     = {'IQR.txt'};
+  iqr_name.val     = {'SIQR.txt'};
   iqr_name.help    = {'The output file is written to current working directory unless a valid full pathname is given'};
 
   iqr       = cfg_exbranch;
@@ -1970,7 +1970,11 @@ function iqr = conf_stat_IQR(data_xml)
   iqr.name  = 'Get Weighted Overall Image Quality';
   iqr.val   = {data_xml,iqr_name};
   iqr.prog  = @cat_stat_IQR;
-  iqr.help  = {'This function reads weighted overall image quality from saved xml-files.' ''};
+  iqr.help  = {
+    'This function reads the weighted overall image quality (structural image quality rating, SIQR) from saved xml-files.'
+    ''
+    'For xml-files of older CAT versions without SIQR, the former image quality rating (IQR) is used instead, which is not directly comparable to SIQR.'
+    ''};
 return
 
 %_______________________________________________________________________
@@ -3441,8 +3445,8 @@ function quality_measures = conf_quality_measures(globals)
   csv_name.help    = {
     'The output file is written to current working directory unless a valid full pathname is given. The following parameters are saved:'
     '  Mean Z-score - low values indicate more similarity/homogeneity to sample'
-    '  Weighted overall image quality (IQR) - low values mean better image quality before preprocessing'
-    '  Normalized product of IQR and Mean Z-score - low values point to good image quality before preprocessing and large homogeneity to sample after preprocessing'
+    '  Structural image quality rating (SIQR) - low values mean better image quality before preprocessing (IQR for xml-files of older CAT versions)'
+    '  Normalized product of SIQR and Mean Z-score - low values point to good image quality before preprocessing and large homogeneity to sample after preprocessing'
     '  Euler Number (for surfaces only) - lower numbers point to better quality of surface extraction'
     '  Size of topology defects (for surfaces only) - smaller size points to better quality of surface extraction'
     ''
@@ -3457,8 +3461,8 @@ function quality_measures = conf_quality_measures(globals)
     'In order to identify data with poor image quality or even artefacts you can use this function. In contrast to the Check Homogeneity tool this function can be also applied to very large samples, but provides no graphical output.'
     'The saved quality parameters in the csv-file can be then used with external analysis tools. The following parameters are saved:'
     '  Mean Z-score - low values indicate more similarity/homogeneity to sample'
-    '  Weighted overall image quality (IQR) - low values mean better image quality before preprocessing'
-    '  Normalized product of IQR and Mean Z-score - low values point to good image quality before preprocessing and large homogeneity to sample after preprocessing'
+    '  Structural image quality rating (SIQR) - low values mean better image quality before preprocessing (IQR for xml-files of older CAT versions)'
+    '  Normalized product of SIQR and Mean Z-score - low values point to good image quality before preprocessing and large homogeneity to sample after preprocessing'
     '  Euler Number (for surfaces only) - lower numbers point to better quality of surface extraction'
     '  Size of topology defects (for surfaces only) - smaller size points to better quality of surface extraction'
     ''
