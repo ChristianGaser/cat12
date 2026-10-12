@@ -26,7 +26,7 @@ fi
 # get cat12 dir
 ARCH=`uname`
 if [ "$ARCH" == "Darwin" ]; then
-  cat12_dir="${SPMROOT}/spm25.app/Contents/MacOS/spm12/toolbox/cat12" 
+  cat12_dir="${SPMROOT}/spm26.app/Contents/MacOS/spm12/toolbox/cat12" 
 else
   cat12_dir="your_folder/spm/toolbox/CAT" 
 fi
@@ -212,8 +212,8 @@ check_files ()
     fi
 
     # check for SPM folder
-    if [ ! -f "$SPMROOT/run_spm25.sh" ]; then
-      echo "File $SPMROOT/run_spm25.sh not found found."
+    if [ ! -f "$SPMROOT/run_spm26.sh" ]; then
+      echo "File $SPMROOT/run_spm26.sh not found found."
       help
       exit 1  
     fi
@@ -266,7 +266,7 @@ run_cat ()
   # if no files are given expect that file name is defined
   # in batch file and execute that file
   if [ "$count" -eq "0" ] && [ $standalone == 1 ] ; then
-    eval "\"${SPMROOT}/run_spm25.sh\"" $MCRROOT "batch" $BATCHFILE
+    eval "\"${SPMROOT}/run_spm26.sh\"" $MCRROOT "batch" $BATCHFILE
     exit 0
   fi
   
@@ -368,7 +368,7 @@ run_cat ()
   fi
 
   if [ $standalone == 1 ]; then
-    eval "\"${SPMROOT}/run_spm25.sh\"" $MCRROOT "batch" $TMP
+    eval "\"${SPMROOT}/run_spm26.sh\"" $MCRROOT "batch" $TMP
     rm $TMP
     exit 0
   else

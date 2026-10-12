@@ -315,9 +315,9 @@ jobs:
         if: runner.os == 'Linux'
         shell: bash
         run: |
-          chmod +x cat_standalone/spm25
+          chmod +x cat_standalone/spm26
           echo "Extracting CTF archive..."
-          cat_standalone/spm25 function exit || true
+          cat_standalone/spm26 function exit || true
           echo "CAT standalone setup complete"
 
       # The CTF archive is unpacked by the setup step above, so the toolbox files
@@ -403,10 +403,10 @@ jobs:
         run: |
           SPMROOT=$(pwd)/cat_standalone
           # Use the top-level script copies, NOT the ones embedded in the
-          # extracted MCR CTF archive (spm25_mcr/...), which grep can misdetect
+          # extracted MCR CTF archive (spm26_mcr/...), which grep can misdetect
           # as binary and turn the generated batch into an empty job.
-          BATCH=$(find cat_standalone -name "cat_standalone_segment_enigma.m" -type f -not -path "*/spm25_mcr/*" | head -n 1)
-          CAT_SH=$(find cat_standalone -name "cat_standalone.sh" -type f -not -path "*/spm25_mcr/*" | head -n 1)
+          BATCH=$(find cat_standalone -name "cat_standalone_segment_enigma.m" -type f -not -path "*/spm26_mcr/*" | head -n 1)
+          CAT_SH=$(find cat_standalone -name "cat_standalone.sh" -type f -not -path "*/spm26_mcr/*" | head -n 1)
 
           if [ -z "$BATCH" ]; then
             echo "ERROR: cat_standalone_segment_enigma.m not found"
