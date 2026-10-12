@@ -168,61 +168,91 @@
             <p><a href="#top" aria-label="Back to top">Back to top</a></p>
             
             <!-- ###################################### -->
-            <h3>Changes in version CAT26.0 (3200)</h3>
+            <h3>Changes in version CAT26.0 (3435)</h3>
 
             <details>
               <summary><span class="subhead">Changes in preprocessing pipeline (which affect your results compared to CAT12.9)</span></summary>
               <ul>
 
                 <li>
-                The cortical surface extraction pipeline has been substantially revised, resulting in faster execution and more robust cortical thickness estimation. The initial surface reconstruction now employs an improved Marching Cubes implementation that directly produces topology-correct surfaces, thereby avoiding downstream topology correction issues.
+                The cortical surface extraction pipeline has been substantially revised, resulting in faster execution and more robust cortical thickness estimation. The initial surface reconstruction now employs an improved Marching Cubes implementation that directly produces topology-correct surfaces, thereby avoiding downstream topology correction issues. Cortical thickness is again estimated using the projection-based thickness (PBT) approach instead of the FreeSurfer-like distance measure used in CAT12.7–12.9, and is now additionally corrected for folding-related bias. Thickness values are therefore not directly comparable to CAT12.9, so please do not mix versions within a study.
                 </li>
-                
+
                 <li>
                 The VBM pipeline has been comprehensively updated to improve stability and robustness, particularly for challenging acquisitions such as MP2RAGE. These improvements also enhance the accuracy and reliability of the initial affine registration.
                 </li>
-                
+
                 <li>
-                The quality assessment framework has been updated according to the methods described in 
-                <a href="https://doi.org/10.1093/gigascience/giaf146">Dahnke et&nbsp;al., 2024</a>. The former IQR metric has been replaced by SIQR.
+                The quality assessment framework has been updated according to the methods described in
+                <a href="https://doi.org/10.1093/gigascience/giaf146">Dahnke et&nbsp;al., 2025</a>. The former IQR metric has been replaced by SIQR.
                 </li>
-                
+
+              </ul>
+            </details>
+
+            <details>
+              <summary><span class="subhead">Important changes when upgrading from CAT12.9</span></summary>
+              <ul>
+
                 <li>
                 A new versioning scheme has been introduced, aligned with the year-based system adopted in recent SPM releases. In contrast to SPM, only the release year is used, followed by semantic versioning. The new series therefore starts with CAT26.0.
                 </li>
-                
+
                 <li>
-                Consistent with the updated naming convention, the toolbox directory within <code>spm/toolbox</code> has been renamed from <code>cat12</code> to <code>CAT</code>.
+                Consistent with the updated naming convention, the toolbox directory within <code>spm/toolbox</code> has been renamed from <code>cat12</code> to <code>CAT</code>. CAT offers to remove an old <code>cat12</code> folder on first start. Please update any scripts that refer to the old path.
+                </li>
+
+                <li>
+                BIDS output is now enabled by default: if your data follow the BIDS layout (<code>sub-*/[ses-*/]anat</code>), all results are written to <code>derivatives/CAT26.0_&lt;revision&gt;</code> in the dataset root instead of next to the input files. Non-BIDS data are still written to the usual <code>mri</code>, <code>surf</code>, <code>report</code>, … subfolders. The output structure can be changed with "Use BIDS directory structure?" in the "Writing options" of <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">CAT: Segmentation</a>.
+                </li>
+
+                <li>
+                The <a href="#unix">standalone version</a> is now based on MATLAB Runtime R2023b (v232) for all platforms and is additionally available natively for Apple Silicon (ARM64). Please install the matching MATLAB Runtime.
                 </li>
 
               </ul>
-              </details>            
-              <details>
+            </details>
+
+            <details>
               <summary><span class="subhead">New features</span></summary>
               <ul>
                 <li>
-                The long-awaited and much-requested surface area estimation is finally available. This mirrors the sum-preserving per-vertex area estimation from FreeSurfer, and can now be used as an alternative measurement for surface folding. Use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfextract')">Extract Additional Surface Parameters</a> to access the new functionality.
+                The long-awaited and much-requested surface area estimation is finally available. It follows the sum-preserving per-vertex area estimation of FreeSurfer and can be used as an alternative measure of surface folding. Use <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.stools.surfextract')">Extract Additional Surface Parameters</a> to access the new functionality.
                 </li>
 
                 <li>
-                A new batch has been added under "Volume Tools" > <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.savg')">Rescan Average</a> to average rescans either in BIDS format or from manually selected images. This can be used, for example, to minimize motion artifacts. The functionality is already available directly from the menu.
+                The new <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.dcm2bids');">DICOM2BIDS</a> batch converts DICOM data into a BIDS dataset, including protocol-based filtering, anonymization and a basic image quality check. This requires <a href="https://github.com/rordenlab/dcm2niix">dcm2niix</a> to be installed. See <code>DCM2BIDS/DZPG3T</code> in the CAT folder for an example configuration.
                 </li>
 
                 <li>
-                To run SPM ImCalc on multiple images (e.g. to compute T1w/T2w ratios for all subjects), use the batch available under "Volume Tools" > <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.mimcalc.images')">Multi-Subject Image Calculator</a>.
+                The new <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.bidsinput');">BIDS: Data selection</a> batch selects input files directly from a BIDS dataset root, with filtering by participants, sessions and <code>participants.tsv</code>. The selection is passed on as batch dependencies: subjects with a single session to <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.estwrite');">CAT: Segmentation</a> and subjects with multiple sessions to <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.long');">CAT: Segment longitudinal data</a>.
                 </li>
-                
-                <!-- 
+
                 <li>
-                The output of the CAT preprocessing is now additionally consolidated into a single CSV file. The corresponding batch extracts information from the preprocessing XML files and is available under "Data Quality" > "...".  
+                A new batch has been added under "Volume Tools" > <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.savg')">Rescan Average</a> to average rescans either in BIDS format or from manually selected images. This can be used, for example, to minimize motion artifacts. It can also be started directly from the CAT menu.
+                </li>
+
+                <li>
+                To run SPM ImCalc on multiple images (e.g. to compute T1w/T2w ratios for all subjects), use the batch available under "Volume Tools" > <a class="function" href="matlab:spm_jobman('interactive','','spm.tools.cat.tools.mimcalc')">Multi-Subject Image Calculator</a>.
+                </li>
+
+                <li>
+                New atlases: <a href="#JulichBrain">JulichBrain 3.1</a> (207 areas per hemisphere, available as volume and surface atlas), which replaces the previous JulichBrain atlas, and a
+                <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('CAT')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('CAT')),'templates_MNI152NLin2009cAsym','hypothalamus.nii')}}))">hypothalamus atlas</a>
+                (<a href="https://doi.org/10.1038/s41597-020-00644-6">Neudorfer et&nbsp;al., 2020</a>).
+                </li>
+
+                <!--
+                <li>
+                The output of the CAT preprocessing is now additionally consolidated into a single CSV file. The corresponding batch extracts information from the preprocessing XML files and is available under "Data Quality" > "...".
                 </li>
                 -->
-                
+
                 <li>
-                CAT manual now offers a search function.
+                The CAT manual now offers a search function.
                 </li>
               </ul>
-            </details>            
+            </details>
 
             <!-- ###################################### -->
             <h3>Changes in version CAT12.9 (2550)</h3>
@@ -3554,12 +3584,12 @@
 
             <h6 id="JulichBrain">JulichBrain</h6>
             <p>
-              This atlas is based on <a href="https://kg.ebrains.eu/search/instances/Dataset/3fde2768-e845-4fc3-a425-61e2c1fb6db7">whole-brain parcellation of the Julich-Brain Cytoarchitectonic Atlas (v2.6)</a> by <a href="#Amunts2020">Amunts et al. 2020.</a>
+              This atlas is based on <a href="https://www.julich-brain-atlas.de/">whole-brain parcellation of the Julich-Brain Cytoarchitectonic Atlas (v3.1)</a> by <a href="#Amunts2020">Amunts et al. 2020.</a>
             </p>
             <p>
-              Display Anatomy atlas as
-              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','julichbrain.nii')}}))">volume map</a>.
-            You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','julichbrain.txt'));">here</a>.
+              Display JulichBrain atlas as
+              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','julichbrain3.nii')}}))">volume map</a>.
+            You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','julichbrain3.txt'));">here</a>.
 
             <h6 id="Schaefer">Local-Global Intrinsic Functional Connectivity Parcellation</h6>
             <p>

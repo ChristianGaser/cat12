@@ -24,12 +24,17 @@ if [ ! -n "$SPMROOT" ]; then
 fi
 
 # get cat12 dir
-ARCH=`uname`
-if [ "$ARCH" == "Darwin" ]; then
-  cat12_dir="${SPMROOT}/spm26.app/Contents/MacOS/spm12/toolbox/cat12" 
-else
-  cat12_dir="your_folder/spm/toolbox/CAT" 
-fi
+# In the standalone version CAT is part of the extracted CTF archive (spm_mcr),
+# whose path also contains the folder of the build machine, so it is searched for.
+get_cat12_dir ()
+{
+  cat12_dir=`find "${SPMROOT}"/spm_mcr "${SPMROOT}"/spm.app/Contents/Resources/spm_mcr \
+    -type d -path "*/toolbox/CAT" 2>/dev/null | head -n 1`
+  if [ ! -n "$cat12_dir" ]; then
+    cat12_dir="your_folder/spm/toolbox/CAT"
+  fi
+}
+get_cat12_dir
 
 # default values
 standalone=1
@@ -212,11 +217,14 @@ check_files ()
     fi
 
     # check for SPM folder
-    if [ ! -f "$SPMROOT/run_spm26.sh" ]; then
-      echo "File $SPMROOT/run_spm26.sh not found found."
+    if [ ! -f "$SPMROOT/run_spm.sh" ]; then
+      echo "File $SPMROOT/run_spm.sh not found."
       help
       exit 1  
     fi
+
+    # SPMROOT might have been changed with -s
+    get_cat12_dir
   else
     # we use the same flag as for MCRROOT, but here for Matlab command
     if [ -n "$MCRROOT" ]; then
@@ -266,7 +274,7 @@ run_cat ()
   # if no files are given expect that file name is defined
   # in batch file and execute that file
   if [ "$count" -eq "0" ] && [ $standalone == 1 ] ; then
-    eval "\"${SPMROOT}/run_spm26.sh\"" $MCRROOT "batch" $BATCHFILE
+    eval "\"${SPMROOT}/run_spm.sh\"" $MCRROOT "batch" $BATCHFILE
     exit 0
   fi
   
@@ -368,7 +376,7 @@ run_cat ()
   fi
 
   if [ $standalone == 1 ]; then
-    eval "\"${SPMROOT}/run_spm26.sh\"" $MCRROOT "batch" $TMP
+    eval "\"${SPMROOT}/run_spm.sh\"" $MCRROOT "batch" $TMP
     rm $TMP
     exit 0
   else

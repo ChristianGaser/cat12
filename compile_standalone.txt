@@ -9,9 +9,12 @@ https://en.wikibooks.org/wiki/SPM/Standalone
 
 Steps for compiling
 -----------------------------------------
-1. Open SPM25
-2. Change into folder spm12/config
-3. Call spm_make_standalone
+1. Open SPM
+2. Change into folder spm/config
+3. In spm_make_standalone.m replace '-o',lower(spm('Ver')) by '-o','spm' to
+   name the executable "spm" instead of the SPM version (e.g. spm25), as
+   expected by cat_standalone.sh
+4. Call spm_make_standalone
 
 Install MCR Runtime
 -----------------------------------------
@@ -22,17 +25,17 @@ If you have an older version than Matlab R2012a you can also find the MCR
 installer if you call "mcr" at the Matlab prompt. This will point to
 the installation file that has to be called as administrator.
 
-Running SPM12 standalone
+Running SPM standalone
 -----------------------------------------
-After compilation there should exist a new folder spm_exec in the same directory 
-as spm12.
+After compilation there should exist a new folder standalone in the same directory
+as spm.
 
-Call the run_spm12.sh in that folder where the argument is the path to 
+Call the run_spm.sh in that folder where the argument is the path to
 your MCR installation (with version number):
-./spm_exec/run_spm26.sh /usr/local/MATLAB/MATLAB_Compiler_Runtime/v232/
+./standalone/run_spm.sh /usr/local/MATLAB/MATLAB_Compiler_Runtime/v232/
 
-On Linux/Mac, you can edit the Shell script run_spm26.sh to hardcode the 
-location of the MCR installation, thus removing the need of providing it on the 
+On Linux/Mac, you can edit the Shell script run_spm.sh to hardcode the
+location of the MCR installation, thus removing the need of providing it on the
 command line.
 
-On Windows systems simply double-click on spm26_wxx.exe.
+On Windows systems simply double-click on spm.exe.

@@ -202,6 +202,21 @@ jobs:
           find spm/toolbox/CAT/templates_surfaces_32k -name '*.nii.gz' -exec gunzip -f {} \;
           echo "Decompression complete"
 
+      # spm_make_standalone names the executable after the SPM version (spm25,
+      # spm26, ...). Name it "spm" instead (spm, run_spm.sh, spm.app, spm.exe),
+      # so that cat_standalone.sh and this workflow do not depend on the SPM
+      # release.
+      - name: Name standalone executable "spm"
+        shell: bash
+        run: |
+          f=spm/config/spm_make_standalone.m
+          perl -pi -e "s/'-o',lower\(spm\('Ver'\)\)/'-o','spm'/" "$f"
+          if ! grep -q "'-o','spm'" "$f"; then
+            echo "ERROR: could not set the executable name in $f"
+            grep -n "'-o'" "$f"
+            exit 1
+          fi
+
       # Build SPM standalone (which includes CAT as toolbox)
       - name: Build MATLAB standalone
         uses: matlab-actions/run-command@v2
@@ -315,9 +330,9 @@ jobs:
         if: runner.os == 'Linux'
         shell: bash
         run: |
-          chmod +x cat_standalone/spm26
+          chmod +x cat_standalone/spm
           echo "Extracting CTF archive..."
-          cat_standalone/spm26 function exit || true
+          cat_standalone/spm function exit || true
           echo "CAT standalone setup complete"
 
       # The CTF archive is unpacked by the setup step above, so the toolbox files
@@ -403,10 +418,10 @@ jobs:
         run: |
           SPMROOT=$(pwd)/cat_standalone
           # Use the top-level script copies, NOT the ones embedded in the
-          # extracted MCR CTF archive (spm26_mcr/...), which grep can misdetect
+          # extracted MCR CTF archive (spm_mcr/...), which grep can misdetect
           # as binary and turn the generated batch into an empty job.
-          BATCH=$(find cat_standalone -name "cat_standalone_segment_enigma.m" -type f -not -path "*/spm26_mcr/*" | head -n 1)
-          CAT_SH=$(find cat_standalone -name "cat_standalone.sh" -type f -not -path "*/spm26_mcr/*" | head -n 1)
+          BATCH=$(find cat_standalone -name "cat_standalone_segment_enigma.m" -type f -not -path "*/spm_mcr/*" | head -n 1)
+          CAT_SH=$(find cat_standalone -name "cat_standalone.sh" -type f -not -path "*/spm_mcr/*" | head -n 1)
 
           if [ -z "$BATCH" ]; then
             echo "ERROR: cat_standalone_segment_enigma.m not found"
