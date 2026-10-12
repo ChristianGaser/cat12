@@ -292,7 +292,7 @@ for i=1:n_subjects
   data_name = strrep(data_name,'_rigid','');
   
   % detect if BIDS file structure is used
-  % (hope this is unique enough - would be possible to add CAT12 as subdirectory) 
+  % (hope this is unique enough - would be possible to add CAT as subdirectory) 
   BIDSdir   = [filesep 'derivatives' filesep]; 
   isBIDS    = cat_io_contains( pth , BIDSdir );
 

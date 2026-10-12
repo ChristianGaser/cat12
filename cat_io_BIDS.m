@@ -440,7 +440,7 @@ function create_resultdirs(BIDS,job)
   end
 
   % BIDS input add-on (fork, not upstream): mark the derivatives folder
-  % itself as a valid BIDS-Derivatives dataset, which upstream CAT12 never
+  % itself as a valid BIDS-Derivatives dataset, which upstream CAT never
   % did. See write_dataset_description below.
   write_dataset_description(BIDS);
 end
@@ -480,12 +480,12 @@ function write_dataset_description(BIDS)
     fid = fopen(descfile,'w');
     if fid < 0, continue; end
     fprintf(fid, '{\n');
-    fprintf(fid, '  "Name": "CAT12 derivatives",\n');
+    fprintf(fid, '  "Name": "CAT derivatives",\n');
     fprintf(fid, '  "BIDSVersion": "1.8.0",\n');
     fprintf(fid, '  "DatasetType": "derivative",\n');
     fprintf(fid, '  "GeneratedBy": [\n');
     fprintf(fid, '    {\n');
-    fprintf(fid, '      "Name": "CAT12",\n');
+    fprintf(fid, '      "Name": "CAT",\n');
     fprintf(fid, '      "Version": "%s",\n', jesc(catver));
     fprintf(fid, '      "CodeURL": "https://github.com/ChristianGaser/cat12"\n');
     fprintf(fid, '    }\n');

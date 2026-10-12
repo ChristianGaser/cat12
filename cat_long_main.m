@@ -454,7 +454,7 @@ end
 
 
 
-% 2) cat12 segmentation of average image 
+% 2) cat segmentation of average image 
 % -----------------------------------------------------------------------
 % The average image is used for a general segmentation and registration
 % to the MNI template.  The rigid segmentation is used to create an 
@@ -620,7 +620,7 @@ end
 
 
 % -----------------------------------------------------------------------
-% Cat12 segmentation of prepared longitudinal images
+% CAT segmentation of prepared longitudinal images
 % -----------------------------------------------------------------------
 % In this step each time point is estimated separately but uses the prior
 % (affreg/brain-mask/surface) and the LONGTPM from the AVG for preocessing
