@@ -44,11 +44,12 @@ jobs:
           echo "Downloading $ASSET_NAME from release $TAG"
           gh release download "$TAG" --repo ${{ github.repository }} --pattern "$ASSET_NAME"
 
+      # Uploaded unzipped, see "Upload standalone artifact" below.
       - name: Upload as artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
-          name: cat-standalone-${{ matrix.standalone_os }}
           path: CAT_R2023b_MCR_${{ matrix.standalone_os }}.zip
+          archive: false
           retention-days: 1
 
   # ────────────────────────────────────────────────────
@@ -238,11 +239,16 @@ jobs:
           mv standalone cat_standalone
           zip -r CAT_${{ env.MATLAB_VERSION }}_MCR_${{ matrix.standalone_os }}.zip cat_standalone/*
 
+      # By default the artifact is zipped again on upload, so downloading it
+      # from the run page gives a zip inside a zip (cat-standalone-<OS>.zip).
+      # With archive: false the zip is uploaded as it is and the artifact is
+      # named after the file (CAT_R2023b_MCR_<OS>.zip), which can be attached
+      # to a release directly.
       - name: Upload standalone artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
-          name: cat-standalone-${{ matrix.standalone_os }}
-          path: CAT_*.zip
+          path: CAT_${{ env.MATLAB_VERSION }}_MCR_${{ matrix.standalone_os }}.zip
+          archive: false
           retention-days: 7
 
   # ────────────────────────────────────────────────────
@@ -265,11 +271,14 @@ jobs:
             standalone_os: Linux
 
     steps:
+      # Keep the zip as it is and extract it below with unzip, which (unlike
+      # the automatic extraction) keeps the executable bits.
       - name: Download standalone artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
-          name: cat-standalone-${{ matrix.standalone_os }}
+          pattern: CAT_*_MCR_${{ matrix.standalone_os }}.zip
           path: .
+          skip-decompress: true
 
       - name: Extract standalone
         shell: bash
