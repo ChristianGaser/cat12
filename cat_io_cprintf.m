@@ -246,15 +246,24 @@ else
   end
   % #### end extended styles ####
 
-  if exist('cprintf','file')
-    if nargin>2
-      warning off
-      cprintf(style,format,varargin{:});
-      warning on
-    else
-      cprintf(style,format);
+  % Use the bundled cprintf (Yair Altman) that also supports the web-based
+  % desktop of R2025a+. Its code is only in cprintf.p (cprintf.m contains
+  % the help), which requires MATLAB R2022a (9.12) or newer and cannot be
+  % used by Octave. If it fails, the internal implementation below is used.
+  if exist('cprintf','file')==6 && majorVersion*100 + minorVersion >= 912 && ...
+     ~strcmpi(spm_check_version,'octave')
+    ws = warning('off','all');
+    try
+      if nargin>2
+        cprintf(style,format,varargin{:});
+      else
+        cprintf(style,format);
+      end
+      warning(ws);
+      return
+    catch
+      warning(ws);
     end
-    return
   end
   
   if isa(style,'string'), style = char(style); end

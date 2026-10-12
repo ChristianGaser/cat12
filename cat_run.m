@@ -1812,19 +1812,24 @@ function [lazy,FNok] = checklazy(job,subj,verb) %#ok<INUSD>
     
     % surface
     surfdir = cat_io_BIDS( job.data{subj}, job, 'surfdir'); 
-    if job.output.surface && exist(surfdir,'dir')
-      Pcentral = cat_vol_findfiles(surfdir,['*h.central.' ff '.gii']);
-      if  isscalar(Pcentral)
+    if job.output.surface
+      Pcentral = {};
+      if exist(surfdir,'dir')
+        Pcentral = cat_vol_findfiles(surfdir,['*h.central.' ff '.gii']);
+      end
+      if numel(Pcentral) < 2 % all surface options create at least lh and rh
         return
       end
     end
     
     % rois
     
-    if job.output.ROI && isfield(opts,'ROImenu') && isfield(opts.ROImenu,'atlases') 
-      if isfield(job.output.ROImenu.atlases,'ownatlas'), atlases = rmfield(job.output.ROImenu.atlases,'ownatlas'); end
+    if job.output.ROI && isfield(job.output,'ROImenu') && isfield(job.output.ROImenu,'atlases')
+      atlases = job.output.ROImenu.atlases;
+      if isfield(atlases,'ownatlas'), atlases = rmfield(atlases,'ownatlas'); end
       is_ROI = any(cell2mat(struct2cell(atlases))) || ...
-        (~isempty( job.output.ROImenu.atlases.ownatlas ) & ~isempty( job.output.ROImenu.atlases.ownatlas{1} ));
+        ( isfield(job.output.ROImenu.atlases,'ownatlas') && ...
+          ~isempty( job.output.ROImenu.atlases.ownatlas ) && ~isempty( job.output.ROImenu.atlases.ownatlas{1} ) );
 
       labelpath = cat_io_BIDS( job.data{subj}, job, 'labeldir'); 
       if is_ROI && ~exist(fullfile(labelpath,['catROI_' ff '.xml']),'file')

@@ -82,18 +82,30 @@ if isfield(job,'omitnan'), omitnan = job.omitnan; else, omitnan = 1; end
 if numel(d)>4 && d(5)>1, omitnan = 0; end % avoid issues in deformation files (eg. negative values)
 
 % write average map
+% With omitnan, voxels with NaNs are normalized by the sum of the weights of
+% their non-NaN values (wg), whereas voxels without NaNs remain unchanged.
+% Voxels that are NaN in all images remain NaN.
 avg = zeros(d);
-if omitnan, wg = zeros(d(1:3)); end
-for i = 1:length(N)
-  for j = 1:d(4)
-    for k = 1:d(5)
+write_var = isfield(job,'write_var') && job.write_var > 0;
+if omitnan && write_var, wg = ones(d); end
+for j = 1:d(4)
+  for k = 1:d(5)
+    if omitnan, wgjk = zeros(d(1:3)); hasnan = false(d(1:3)); end
+    for i = 1:length(N)
       img             = N(i).dat(:,:,:,j,k) * weighting(i);
       if omitnan
-        wg              = wg + (~isnan(img)) / prod(d); 
-        img(isnan(img)) = 0; 
+        isnanimg        = isnan(img);
+        wgjk            = wgjk + ~isnanimg * weighting(i);
+        hasnan          = hasnan | isnanimg;
+        img(isnanimg)   = 0;
       end
       avg(:,:,:,j,k)  = avg(:,:,:,j,k) + img;
       clear img
+    end
+    if omitnan
+      wgjk(~hasnan)   = 1;
+      avg(:,:,:,j,k)  = avg(:,:,:,j,k) ./ wgjk;
+      if write_var, wg(:,:,:,j,k) = wgjk; end
     end
   end
 end
@@ -110,7 +122,7 @@ fprintf('Average Image:  %s\n', spm_file(out.files{1}, 'link', cmd) );
 
 
 % write variance map
-if isfield(job,'write_var') && job.write_var > 0
+if write_var
   % estimate variance
   var = zeros(d); % as image
   out.avgvar = zeros(1,length(N)); % as one case-specific value
@@ -129,6 +141,8 @@ if isfield(job,'write_var') && job.write_var > 0
       end
     end
   end
+  % normalize like the average (voxels without NaNs have wg = 1)
+  if omitnan, var = var ./ wg; end
   
   for xi=1:min(2,job.write_var)
     % write output

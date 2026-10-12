@@ -47,21 +47,6 @@ if isempty(CAT_VER)
         v.Release = t{3}(2:end-1);
         %v.User    = 'gaser';
     end
-    try 
-        %% v2 based on the CHANGES.txt
-        vfile = fullfile(fileparts(mfilename('fullpath')),'CHANGES.txt');
-        if exist(vfile,'file')
-          fid = fopen(vfile,'rt'); ct = textscan(fid,'%s','delimiter','\n'); fclose(fid);
-          t  = textscan(ct{1}{2},'%s','delimiter',' '); t = t{1};
-          v2.Date     = t{5};
-          v2.Version  = t{1}(2:end); 
-          %v2.User     = t{3};
-
-          if str2double(v2.Version)>str2double(v.Version), v=cat_io_updateStruct(v,v2); end
-        end
-    catch
-        error('Can''t obtain CAT Revision information.');
-    end
     CAT_VER = v;
 end
 
