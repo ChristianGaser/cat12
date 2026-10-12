@@ -82,11 +82,17 @@ jobs:
             standalone_os: Win
             mex_ext: mexw64
     steps:
+      # The full history is needed because "make update" takes the CAT
+      # revision from "git rev-list --count HEAD" (a shallow clone gives 1).
       - name: Checkout CAT
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Update
-        run: make update
+        run: |
+          make update
+          head -n 2 Contents.m
 
       - name: Install rsync
         if: runner.os == 'Windows'
@@ -446,22 +452,27 @@ jobs:
         run: |
           echo "Checking for segmentation output files..."
 
-          # Look for typical CAT output files
-          found=0
+          # The ENIGMA batch writes the results into a folder named after the
+          # CAT version (e.g. ./CAT26.0/mri), so search below the working
+          # directory, but not inside the standalone itself. All of these
+          # outputs are switched on in the batch and have to exist.
+          missing=0
           for pattern in "mri/mwp1*" "mri/p0*" "report/cat_*" "surf/lh.thickness*"; do
-            matches=$(find . -path "./$pattern" 2>/dev/null)
+            matches=$(find . -path "*/$pattern" -not -path "./cat_standalone/*" 2>/dev/null)
             if [ -n "$matches" ]; then
               echo "Found: $matches"
-              found=1
+            else
+              echo "Missing: $pattern"
+              missing=1
             fi
           done
 
-          if [ "$found" -eq 0 ]; then
-            echo "ERROR: No CAT output files found - standalone segmentation produced no results"
+          if [ "$missing" -ne 0 ]; then
+            echo "ERROR: Not all expected CAT output files were found"
             echo "Files created after the input image:"
-            find . -name "*.nii" -newer single_subj_T1.nii 2>/dev/null || echo "No new .nii files"
-            find . -name "*.gii" 2>/dev/null || echo "No .gii files"
-            find . -name "*.xml" -path "*/report/*" 2>/dev/null || echo "No report XMLs"
+            find . -name "*.nii" -newer single_subj_T1.nii -not -path "./cat_standalone/*" 2>/dev/null || echo "No new .nii files"
+            find . -name "*.gii" -not -path "./cat_standalone/*" 2>/dev/null || echo "No .gii files"
+            find . -name "*.xml" -path "*/report/*" -not -path "./cat_standalone/*" 2>/dev/null || echo "No report XMLs"
             exit 1
           fi
 

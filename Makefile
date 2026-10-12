@@ -24,9 +24,9 @@ STARGET3_HOST=paris.biomag.uni-jena.de
 STARGET3_FOLDER=/home/gaser/spm12/toolbox/CAT
 STARGET3=${STARGET3_HOST}:${STARGET3_FOLDER}
 
-MATLAB_FILES=Contents.* cat_*.m spm_select.m spm_CAT.m spm_cat12.m tbx_cfg_cat.m sliderPanel.m slice_overlay.m cat_run* compile.m
+MATLAB_FILES=Contents.* cat_*.m spm_select.m spm_CAT.m spm_cat12.m tbx_cfg_cat.m sliderPanel.m slice_overlay.m cat_run* compile.m cprintf.m cprintf.p
 C_FILES=Amap.[ch] ornlm_float.c sanlm_float.c MrfPrior.c Pve.c Kmeans.c cat_*.c* cat_*.mex* vollib.c genus0.[ch] tricases.h cat_glibc_compat.h spm_diffeo.* tfceMex_pthread.*
-MISC_FILES=README.md CHANGES.txt INSTALL.txt doc standalone templates_MNI152NLin2009cAsym templates_surfaces templates_surfaces_32k atlases_surfaces atlases_surfaces_32k cat12.* CAT.* cat_*.sh  cat_long_main*txt glass_brain.mat clang*xml
+MISC_FILES=README.md INSTALL.txt doc standalone templates_MNI152NLin2009cAsym templates_surfaces templates_surfaces_32k atlases_surfaces atlases_surfaces_32k cat12.* CAT.* cat_*.sh  cat_long_main*txt glass_brain.mat clang*xml
 
 FILES=${MATLAB_FILES} ${C_FILES} ${MISC_FILES}
 
@@ -111,18 +111,22 @@ zip: update clean
 	-@cp -rp ${FILES} CAT
 	-@gzip -df CAT/templates_MNI152NLin2009cAsym/*.nii.gz
 	-@bash update_revision.sh
+	-@rm -f ${ZIPFILE}
 	-@zip ${ZIPFILE} -rm CAT
 
 # copy binaries after cross-compiling
+# The binaries are replaced by a new file (cp to a temporary file and mv) instead
+# of being overwritten in place, because macOS caches the code signature of an
+# executed binary and kills a binary that was changed in place ("Killed: 9").
 cp_binaries: 
 	-@echo copy binaries matching $(BIN)
 	-@for file in ~/GitHub/CAT-Surface/build-*/Progs/*.o; do \
 			[ -f "$$file" ] && rm "$$file"; \
 	done
-	-@for i in CAT.glnx86/$(BIN); do cp ~/GitHub/CAT-Surface/build-x86_64-pc-linux/Progs/`basename $${i}` CAT.glnx86/ ; done
-	-@for i in CAT.w32/$(BIN); do cp ~/GitHub/CAT-Surface/build-x86_64-w64-mingw32/Progs/`basename $${i}` CAT.w32/ ; done
-	-@for i in CAT.maci64/$(BIN); do cp ~/GitHub/CAT-Surface/build-native/Progs/`basename $${i}` CAT.maci64/ ; done
-	-@for i in CAT.maca64/$(BIN); do cp ~/GitHub/CAT-Surface/build-native-arm64/Progs/`basename $${i}` CAT.maca64/ ; done
+	-@for i in CAT.glnx86/$(BIN); do src=~/GitHub/CAT-Surface/build-x86_64-pc-linux/Progs/`basename $${i}`; [ -f "$$src" ] && cp "$$src" "$${i}.tmp" && mv -f "$${i}.tmp" "$${i}"; done
+	-@for i in CAT.w32/$(BIN); do src=~/GitHub/CAT-Surface/build-x86_64-w64-mingw32/Progs/`basename $${i}`; [ -f "$$src" ] && cp "$$src" "$${i}.tmp" && mv -f "$${i}.tmp" "$${i}"; done
+	-@for i in CAT.maci64/$(BIN); do src=~/GitHub/CAT-Surface/build-native/Progs/`basename $${i}`; [ -f "$$src" ] && cp "$$src" "$${i}.tmp" && mv -f "$${i}.tmp" "$${i}"; done
+	-@for i in CAT.maca64/$(BIN); do src=~/GitHub/CAT-Surface/build-native-arm64/Progs/`basename $${i}`; [ -f "$$src" ] && cp "$$src" "$${i}.tmp" && mv -f "$${i}.tmp" "$${i}"; done
 	-@chmod a+x CAT.*/*
 
 # print check list for releasing
