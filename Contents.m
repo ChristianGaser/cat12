@@ -24,7 +24,6 @@
 %
 % General files
 %   INSTALL.txt                      - installation instructions
-%   CHANGES.txt                      - changes in revisions
 %   Contents.m                       - this file
 %
 % Core functions
