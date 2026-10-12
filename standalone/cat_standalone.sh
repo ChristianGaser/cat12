@@ -52,7 +52,11 @@ main ()
 {
   parse_args ${1+"$@"}
   check_files
-  clear_quarantine
+  if [ $standalone == 1 ]; then
+    clear_quarantine "$SPMROOT"
+  else
+    clear_quarantine
+  fi
   run_cat
 
   exit 0
@@ -65,6 +69,9 @@ main ()
 # proactive quarantine clearing there is skipped. The *.mexmaca64 files are
 # loaded directly by MATLAB (not via system()), so they fail silently if still
 # quarantined. Clear it here before MATLAB starts.
+# For the standalone version the whole SPM folder is cleared, because the
+# launcher (spm.app) and the mex-files of SPM are quarantined as well and
+# Gatekeeper blocks them (they are not notarized).
 
 clear_quarantine ()
 {
@@ -72,10 +79,17 @@ clear_quarantine ()
   local target="${1:-$cat12_dir}"
   [ -d "$target" ] || return 0
 
-  # check a single representative mex-file for the quarantine attribute
-  local testmex
-  testmex=`ls "${target}"/*.mexmaca64 "${target}"/*.mexmaci64 2>/dev/null | head -n 1`
-  if [ -n "$testmex" ] && xattr -p com.apple.quarantine "$testmex" >/dev/null 2>&1; then
+  # check representative files for the quarantine attribute
+  local testfile quarantined=0
+  if [ -f "${target}/run_spm.sh" ]; then
+    for testfile in "${target}/run_spm.sh" "${target}/spm.app/Contents/MacOS/spm"; do
+      xattr -p com.apple.quarantine "$testfile" >/dev/null 2>&1 && quarantined=1
+    done
+  else
+    testfile=`ls "${target}"/*.mexmaca64 "${target}"/*.mexmaci64 2>/dev/null | head -n 1`
+    [ -n "$testfile" ] && xattr -p com.apple.quarantine "$testfile" >/dev/null 2>&1 && quarantined=1
+  fi
+  if [ $quarantined == 1 ]; then
     echo "Clearing macOS Gatekeeper quarantine from ${target}"
     if ! xattr -dr com.apple.quarantine "${target}" 2>/dev/null; then
       echo "WARNING: Could not remove quarantine automatically. Please run:" >&2
