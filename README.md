@@ -18,7 +18,7 @@ https://github.com/ChristianGaser/cat12/archive/refs/heads/main.zip
 - Unzip cat12-main.zip to spm/toolbox/ and rename the folder cat12-main to CAT
 
 ## Requirements
-CAT is designed to work with SPM12 or newer and Matlab R2020a or newer. The compiled functions are built with Matlab R2020a (Linux, Mac Intel), R2022a (Windows) and R2023b (Mac ARM64), which are therefore the oldest supported versions on these platforms. No additional toolboxes are required.
+CAT is designed to work with SPM12 or newer and tested against MATLAB 2020a (or newer) but may work with earlier versions. The compiled functions are built with Matlab R2020a (Linux, Mac Intel), R2022a (Windows) and R2023b (Mac ARM64), which are therefore the oldest supported versions on these platforms. No additional toolboxes are required.
 
 ## Installation
 - Remove the old cat12 or CAT folder in spm/toolbox if existing

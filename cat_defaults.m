@@ -318,10 +318,10 @@ cat.extopts.atlas       = { ...
   fullfile(cat.extopts.pth_templates,'Schaefer2018_600Parcels_17Networks_order.nii') 1  {'gm','wm'}         0; ... % atlas based on rsfMRI data from 1489 subjects
 }; 
 
-% { name fileid GUIlevel use } - in development
+% { name file-id GUIlevel use } - in development
 cat.extopts.satlas      = { ... 
-  'Desikan'                fullfile(catdir,'atlases_surfaces','lh.aparc_a2009s.freesurfer.annot')                   0   1;  
-  'Destrieux'              fullfile(catdir,'atlases_surfaces','lh.aparc_DK40.freesurfer.annot')                     0   1;  
+  'Destrieux'              fullfile(catdir,'atlases_surfaces','lh.aparc_a2009s.freesurfer.annot')                   0   1;  
+  'Desikan'                fullfile(catdir,'atlases_surfaces','lh.aparc_DK40.freesurfer.annot')                     0   1;  
   'HCP'                    fullfile(catdir,'atlases_surfaces','lh.aparc_HCP_MMP1.freesurfer.annot')                 0   0; 
   'JulichBrain'            fullfile(catdir,'atlases_surfaces','lh.JulichBrainAtlas_3.1.freesurfer.annot')           0   0;
   ... Schaefer atlases ...
