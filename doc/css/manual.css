@@ -617,6 +617,12 @@ mark {
   line-height: 1.6;
 }
 
+.doc .doc-version {
+  margin: 0.75rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
 .doc .callout {
   margin: 2rem 0 0;
   padding: 0.875rem 1.1rem;
@@ -793,6 +799,27 @@ mark {
 
 .doc .anchor:hover {
   color: var(--link);
+}
+
+/* "Details" links of the quick start steps */
+.doc a.details {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin-top: 0.15rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.doc a.details::before {
+  content: "\2192\00a0";
+}
+
+/* "Contrasts for this design" links at the end of the model examples */
+.doc .xref {
+  margin-top: 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
 }
 
 @-webkit-keyframes target-flash {
@@ -1028,20 +1055,21 @@ mark {
   margin: 0.35rem 1.75rem 1rem 0;
 }
 
-/* Side notes (footnotes marked with *). */
-.doc .box.right {
-  float: right;
-  clear: right;
-  width: 42%;
-  margin: 0.25rem 0 1rem 1.5rem;
+/* Notes and tips within the text. */
+.doc .note {
+  margin: 1rem 0;
   padding: 0.75rem 1rem;
   border: 1px solid var(--border);
   border-left: 3px solid var(--brand);
   border-radius: var(--radius-sm);
   background: var(--bg-soft);
   color: var(--text-soft);
-  font-size: 0.875rem;
-  line-height: 1.55;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.doc li > .note {
+  margin: 0.6rem 0 0.4rem;
 }
 
 /* ─── Tables ─────────────────────────────────────────────────── */
@@ -1214,12 +1242,6 @@ mark {
   color: var(--heading);
 }
 
-.doc .contact {
-  margin-top: 2.5rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--border);
-}
-
 /* ─── Footer and back-to-top ─────────────────────────────────── */
 
 .doc-footer {
@@ -1233,6 +1255,10 @@ mark {
 
 .doc-footer p {
   margin: 0;
+}
+
+.doc-footer p + p {
+  margin-top: 0.4rem;
 }
 
 .doc-footer a {
@@ -1342,7 +1368,6 @@ mark {
     font-size: 1.2rem;
   }
 
-  .doc .box.right,
   .doc .image.right,
   .doc .image.left {
     float: none;

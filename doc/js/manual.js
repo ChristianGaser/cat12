@@ -201,8 +201,8 @@
   // Open a <details> block when it (or something inside it) is linked to,
   // and print all blocks expanded.
   function initDetails() {
-    // FAQ entries get their ids from search.js after the browser has already
-    // tried to scroll to the fragment, so scroll explicitly on page load.
+    // Blocks without a fixed id (release notes) get their ids from search.js after
+    // the browser has already tried to scroll to the fragment, so scroll explicitly.
     function openTarget(scroll) {
       var id = decodeURIComponent(location.hash.slice(1));
       var el = id && document.getElementById(id);
