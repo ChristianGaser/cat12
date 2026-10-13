@@ -32,10 +32,17 @@ function out = cat_io_dcm2bids(job)
 %                                 import information)
 %   cat_io_dcm2bids_protocols  .. sites, protocol test, and overview tables
 %   cat_io_dcm2bids_bids       .. BIDS naming and output files
-%   cat_io_dcm2bids_pp         .. anonymization, segmentation, and registration
+%   cat_io_dcm2bids_pp_anat    .. anonymization, segmentation, registration, 
+%                                 and shared preprocessing functions (e.g. 
+%                                 distortion correction, preprocessing level)
+%   cat_io_dcm2bids_pp_dwi     .. DTI measures of DWI scans
+%   cat_io_dcm2bids_pp_rsfmri  .. quality and connectivity measures of rs-fMRI
 %   cat_io_dcm2bids_overlap    .. brain coverage of the scans in MNI space
 %   cat_io_dcm2bids_qc         .. quality control
+%   cat_io_dcm2bids_tables     .. tables of the database
 %   cat_io_dcm2bids_report     .. report tables
+%   cat_io_dcm2bids_reportfig  .. report figure (PDF)
+%   cat_io_dcm2bids_stats      .. statistics of the report figure
 %   cat_io_dcm2bids_render     .. rendering of the BIDS images
 %   cat_io_dcm2bids_helper     .. shared helper functions (text/JSON files,
 %                                 paths, NIfTI)
@@ -53,6 +60,10 @@ function out = cat_io_dcm2bids(job)
   def = cat_io_dcm2bids_defaults; 
 
   if ~exist('job','var'), job = struct(); end
+  if isfield(job,'opts') && isfield(job.opts,'render') && ~isstruct(job.opts.render)
+    job.opts = rmfield(job.opts,'render'); 
+    job.opts.render = def.opts.render; 
+  end
   job = cat_io_checkinopt(job,def);
   if isempty(job.data), return; end
 
@@ -130,6 +141,7 @@ function out = cat_io_dcm2bids(job)
   % DB subdirs
   Ptbldir = fullfile(Poutdir,[Pdbdirnam '-tables']); 
   if ~exist(Pmdbdir,'dir'), mkdir(Pmdbdir); end
+  cat_io_dcm2bids_tables('initTables',Ptbldir); % remove tables of older versions
   if ~exist(fullfile(Ptbldir,'protocols'),'dir'), mkdir(fullfile(Ptbldir,'protocols')); end
   % readme file
   txt = {
@@ -165,16 +177,16 @@ function out = cat_io_dcm2bids(job)
   Vjson = cell(1,numel(Psnr)); sci = 0;
   sub = Vjson; ses = Vjson; datatype = Vjson; pro = Vjson; acq = Vjson; 
   sn = Vjson; task = Vjson; suffix = Vjson; site = Vjson; scankey = Vjson; scanid = Vjson;
+  ent = Vjson; lab = Vjson; acqsn = Vjson; acqnr = Vjson; rec = Vjson; % records of the tables of the database
   Panon = Vjson; Pp0 = Vjson; Pwc1 = Vjson; Pdbdir = Vjson;
   Pdbdirpath = Vjson; BIDSpathd = Vjson; Pdbnii = Vjson;
   BIDSpath = Vjson; BIDSdir = Vjson; BIDSfile = Vjson; BIDSsub = Vjson; Pprot = Vjson;
   PID = ''; sni = 0; stime = datetime('now'); bidsroots = {}; convver = {}; 
+  segkeys  = {}; % segmented anatomical scan types of the sessions (session|suffix)
+  ppl      = cat_io_dcm2bids_pp_anat('levelParameters',job.opts.pplevel); % parameters of the preprocessing level
   srcmap   = containers.Map('KeyType','char','ValueType','any'); % new names of BIDS inputs
   intended = {}; % exported JSONs with IntendedFor references
   partdata = containers.Map('KeyType','char','ValueType','any'); % participant data
-  if isfield(job,'BIDSsubdir') % BIDS output directory (protocol specific in the loop)
-    BIDSsubdir = fullfile(job.BIDSdir, job.BIDSsubdir); 
-  end
   QM = struct('NSR',[],'ISR',[],'RES',[],'BSM',[],'WSM',[],'vx_vol',[],'SQR',[]); 
   if job.opts.gzipi, niiext = '.nii.gz'; else, niiext = '.nii'; end
   for fdiri = 1:numel(Psnr)
@@ -230,14 +242,14 @@ function out = cat_io_dcm2bids(job)
             strrep(Vjson{sci}.PatientID,'_','')),'a38')));
         if job.opts.output
           if isempty(Pprodictdirs) || isempty(Pprodictdirs{1})
-            fprintf('%15s : %-50s%10s %5s%5s%5s%5s%5s%5s\n','dicom-protocol', ...
+            fprintf('%15s : %-50s%8s |%5s%5s%5s%5s%5s%5s\n','dicom-protocol', ...
               ' ',' ','BSM','WSM','ISR','NSR','RES','SQR'); 
           else
-            fprintf('%15s : %-50s%10s %5s%5s%5s%5s%5s%5s\n','dicom-protocol', ...
-              'matching-protocol','mismatch','BSM','WSM','ISR','NSR','RES','SQR'); 
+            fprintf('%15s : %-50s%8s |%5s%5s%5s%5s%5s%5s\n','dicom-protocol', ...
+              'matching-protocol','PFR','BSM','WSM','ISR','NSR','RES','SQR'); 
           end
         else
-          fprintf('%15s : %-50s\n','dicom-protocol','matching-protocol'); 
+          fprintf('%15s : %-50s%8s |\n','dicom-protocol','matching-protocol','PFR'); 
         end
         fprintf('%s\n',repmat('-',1,154)); 
         PID = Vjson{sci}.PatientID; 
@@ -294,9 +306,15 @@ function out = cat_io_dcm2bids(job)
         end
         % image dimensions [x y z volumes] and voxel size [x y z] (header only)
         % for the protocol tables and test and the BIDS sidecar
-        [vx,dim] = cat_io_dcm2bids_helper('niiHeaderInfo',Pnii{fscni}); 
-        Vjson{sci}.Dimensions = dim; 
-        Vjson{sci}.VoxelSize  = round(vx,4); 
+        [vx,dim] = cat_io_dcm2bids_helper('niiHeaderInfo',Pnii{fscni});
+        Vjson{sci}.Dimensions = dim;
+        Vjson{sci}.VoxelSize  = round(vx,4);
+        % b-values of DWI for the b-value shells of the protocol test (see
+        % normalizeFields in cat_io_dcm2bids_protocols)
+        Pbval = spm_file(Pjson{fscni},'ext','.bval');
+        if exist(Pbval,'file')
+          Vjson{sci}.BValues = sscanf(fileread(Pbval),'%f')';
+        end
       end
 
       % process each scan only once, i.e., the same series (and dcm2niix 
@@ -330,16 +348,21 @@ function out = cat_io_dcm2bids(job)
       Pdbdirpath{sci} = Pdirfi; 
       Pdbdir{sci}     = Pdirfi(numel(Pmdbdir)+2:end); 
       Pdbnii{sci}     = Pnii{fscni}; % image in the database (e.g. for the session registration)
-      cat_io_dcm2bids_protocols('updateDBtables',Vjson{sci}, Pnii{fscni}, Pdbdir{sci}, Ptbldir, fnameparts, sites, job.opts); 
+      cat_io_dcm2bids_protocols('updateDBtables',Vjson{sci}, Ptbldir, sites, job.opts); 
 
       % test protocols
-      [match,pname,mismatchstr,Pnfailedid,Pfname] = ...
-        cat_io_dcm2bids_protocols('testProtocols',Pjson{fscni},Vjson{sci},Ptbldir,protocols,tol,job,sites);
+      [match,pname,mismatchstr,Pnfailedid,Pfname,PT] = ...
+        cat_io_dcm2bids_protocols('testProtocols',Pjson{fscni},Vjson{sci},protocols,tol,job,sites);
       Pprot{sci} = Pfname; % (closest) protocol file, e.g. for the coverage mask
-      if job.opts.output == 0, fprintf('\n'); continue; end % only the overview tables
-    
+
       % site definition 
       site{sci} = cat_io_dcm2bids_protocols('setupSites',Vjson{sci},sites);
+      if job.opts.output == 0 % only the tables of the database
+        [datatype{sci},suffix{sci},ent{sci}] = scanType(pname,Vjson{sci},Isrc,isbids); 
+        rec{sci} = scanRecord(Ptbldir,Vjson{sci},scanid{sci},site{sci},fileparts(Pdbdir{sci}), ...
+          datatype{sci},suffix{sci},ent{sci},PT,'',tol,job.opts); 
+        fprintf('\n'); continue
+      end
   
       % study definition %%% need later refinement
       studynam = cat_io_dcm2bids_bids('bidsLabel',job.subdir);
@@ -387,60 +410,28 @@ function out = cat_io_dcm2bids(job)
       else
         if isempty(Pprodictdirs) || isempty( Pprodictdirs{1} ) || ~job.opts.protocolsubdirs
           BIDSsubdir  = fullfile(job.BIDSdir, job.BIDSsubdir);
-          pro{sci}    = strrep(fnameparts{2},'_',job.opts.BIDSsep); 
         else
           BIDSsubdir  = fullfile(job.BIDSdir, job.BIDSsubdir, 'mismatch');
-          pro{sci}    = strrep(fnameparts{2},'_',job.opts.BIDSsep); 
         end
-        pro{sci} = cat_io_dcm2bids_bids('bidsLabel',pro{sci});
+        pro{sci} = fnameparts{2}; % protocol name (with separators for setupSuffix)
       end
       BIDSsub{sci} = BIDSsubdir; 
 
-      % evaluate protocols
-      datatype{sci} = cat_io_dcm2bids_bids('setupDatatype',pro{sci}); 
+      % datatype, suffix, further entities (e.g. dir, echo, part), and the 
+      % label of the acq entity, i.e., the protocol name without the 
+      % information of the suffix and entities (e.g. SBRef, phase, echo, 
+      % direction), and the task 
+      [datatype{sci},suffix{sci},ent{sci},label] = scanType(pro{sci},Vjson{sci},Isrc,isbids); 
+      lab{sci} = cat_io_dcm2bids_bids('bidsLabel',label,1); 
       series = pro{sci}; 
       FN = {'ProtocolName', 'SeriesDescription', 'SequenceName'};
       for fni = 1:numel(FN)
         if isfield(Vjson{sci},FN{fni}), series = [series ' ' Vjson{sci}.(FN{fni})]; end %#ok<AGROW>
       end
-      task{sci}     = cat_io_dcm2bids_bids('setupTask',datatype{sci}, series );
-      if isbids % BIDS input: datatype and task of the source dataset
-        datatype{sci} = Isrc.Datatype; 
+      task{sci} = cat_io_dcm2bids_bids('setupTask',datatype{sci}, series );
+      if isbids % BIDS input: task of the source dataset
         if isfield(Isrc.Entities,'task'), task{sci} = ['_task-' Isrc.Entities.task]; else, task{sci} = ''; end
       end
-      % %%%%%%%%%%%%%%%%%%%%%%%%%% refine run definition 
-      % Instead of the acq-series number it would be nice to have a run variable.
-      % I would like to have it all but only necessary cases, e.g. counting
-      % from 1 to 2 if there are more equal scans. However, this is typically
-      % only clear with the second but not the first scan ...
-      sn{sci}       = sprintf('%03.0f',Vjson{sci}.SeriesNumber); % fnameparts{4})); 
-      % Count scans of the same subject, session and series (e.g., fieldmap
-      % magnitude/phase or multi-echo images). The keys are stored because
-      % cleanupVjson later removes the Patient fields from Vjson.
-      scankey{sci} = cat_io_dcm2bids_db('scanKey',Vjson{sci});
-      run  = sum( strcmp( scankey(1:sci) , scankey{sci} ) );
-      % look ahead to the next file to detect a series with further images
-      runs = run;
-      if numel(Pjson) > fscni
-        Pjsonnext = spm_file(Pjson{fscni+1},'path',Pdirfi); % not yet imported
-        if exist(Pjsonnext,'file')
-          % count only further images of the series but no repeated scans 
-          % (e.g. the same series converted from another directory)
-          Vjsonnext = cat_io_dcm2bids_db('assurePatientDCMfields',cat_io_json(Pjsonnext)); 
-          fnamenext = strsplit(spm_file(Pjsonnext,'basename'),'='); 
-          runs = runs + ( strcmp( cat_io_dcm2bids_db('scanKey',Vjsonnext) , scankey{sci} ) && ...
-            ~any(strcmp( scanid(1:sci) , cat_io_dcm2bids_db('getScanID',Vjsonnext,fnamenext) )) );
-        end
-      end
-      if runs > 1
-        acq{sci}    = sprintf('acq-%s%s%d%s%s', sn{sci}, bs, run, bs, pro{sci}); 
-      else
-        acq{sci}    = sprintf('acq-%s%s%s', sn{sci}, bs, pro{sci}); 
-      end
-      acq{sci} = cat_io_dcm2bids_bids('bidsLabel',acq{sci},1);
-      % get suffix 
-      [suffix{sci},acq{sci}] = cat_io_dcm2bids_bids('setupSuffix',datatype{sci}, acq{sci}, Vjson{sci}.SeriesDescription);
-      if isbids, suffix{sci} = Isrc.Suffix; end % BIDS input: suffix of the source dataset
       
 
       % define BIDS naming
@@ -448,15 +439,54 @@ function out = cat_io_dcm2bids(job)
       BIDSdir{sci}   = fullfile(sub{sci}, ses{sci}, datatype{sci}); 
       BIDSpath{sci}  = fullfile(Poutdir, BIDSsubdir, BIDSdir{sci}); 
       BIDSpathd{sci} = fullfile(Poutdir, BIDSsubdir, 'derivatives', BIDSdir{sci}); 
-      BIDSfile{sci}  = sprintf('%s_%s_%s%s_%s.json', ...
-        sub{sci}, ses{sci}, acq{sci}, task{sci}, suffix{sci});
+      % %%%%%%%%%%%%%%%%%%%%%%%%%% refine run definition 
+      % acq entity with the series number and the label (a run entity would 
+      % require all scans of the session, as only the second of two equal 
+      % scans shows that the first one needs a run number): 
+      % - images of one series with the same suffix and entities (e.g. 
+      %   further images of dcm2niix) get also the image number 
+      % - images of one acquisition (consecutive scans of the session with 
+      %   the same datatype and label, e.g. SBRef and bold, field-map 
+      %   magnitude and phase, or AP and PA field maps) get the series 
+      %   number of the first one, as BIDS associates such files by their
+      %   equal entities (e.g. phasediff and magnitude1, AP and PA)
+      sn{sci}      = sprintf('%03.0f',Vjson{sci}.SeriesNumber); 
+      scankey{sci} = cat_io_dcm2bids_db('scanKey',Vjson{sci}); % stored, as cleanupVjson removes the Patient fields
+      prev = find( strcmp( scankey(1:sci-1) , scankey{sci} ) ); 
+      numbered = any( strcmp( suffix(prev) , suffix{sci} ) & strcmp( ent(prev) , ent{sci} ) ); 
+      if ~numbered && ~isbids && numel(Pjson) > fscni
+        % look ahead to the next file of the series (but no repeated scan, 
+        % e.g. the same series converted from another directory)
+        Pjsonnext = spm_file(Pjson{fscni+1},'path',Pdirfi); 
+        if exist(Pjsonnext,'file')
+          Vjsonnext = cat_io_dcm2bids_db('assurePatientDCMfields',cat_io_json(Pjsonnext)); 
+          fnamenext = strsplit(spm_file(Pjsonnext,'basename'),'='); 
+          if strcmp( cat_io_dcm2bids_db('scanKey',Vjsonnext) , scankey{sci} ) && ...
+            ~any(strcmp( scanid(1:sci) , cat_io_dcm2bids_db('getScanID',Vjsonnext,fnamenext) ))
+            [suffixnext,entnext] = cat_io_dcm2bids_bids('setupSuffix',datatype{sci},pro{sci},Vjsonnext); 
+            numbered = strcmp(suffixnext,suffix{sci}) && strcmp(entnext,ent{sci}); 
+          end
+        end
+      end
+      if numbered, acqnr{sci} = sprintf('%s%d', bs, numel(prev) + 1); else, acqnr{sci} = ''; end
+      acqsn{sci} = sn{sci}; 
+      if sci > 1 && isempty(acqnr{sci}) && isempty(acqnr{sci-1}) && ...
+          strcmp(BIDSpath{sci-1},BIDSpath{sci}) && strcmp(lab{sci-1},lab{sci}) 
+        % name with the series number of the previous scan, if not yet used
+        BIDSfile1 = sprintf('%s_%s%s_acq-%s%s%s%s_%s.json', sub{sci}, ses{sci}, task{sci}, ...
+          acqsn{sci-1}, bs, lab{sci}, ent{sci}, suffix{sci}); 
+        if ~any(strcmp( BIDSfile(strcmp(BIDSpath(1:sci-1),BIDSpath{sci})) , BIDSfile1 ))
+          acqsn{sci} = acqsn{sci-1}; 
+        end
+      end
+      acq{sci}      = sprintf('acq-%s%s%s%s', acqsn{sci}, acqnr{sci}, bs, lab{sci}); 
+      BIDSfile{sci} = sprintf('%s_%s%s_%s%s_%s.json', ...
+        sub{sci}, ses{sci}, task{sci}, acq{sci}, ent{sci}, suffix{sci});
       if ~match && ~isempty(protocols) && ~isempty(protocols{1})
         for pfi = 1:numel(Pnfailedid)
           pdir      = fullfile( BIDSpath{sci} , 'matchfiles' );
           if ~exist(pdir,'dir'), mkdir(pdir); end
-          acq2      = sprintf('acq-%s%s%s', sn{sci}, bs, pro{sci}); 
-          BIDSfile2 = sprintf('%s_%s_%s%s_%s.csv', ...
-            sub{sci}, ses{sci}, acq2, task{sci}, suffix{sci});
+          BIDSfile2 = spm_file(BIDSfile{sci},'ext','.csv'); 
 
           try
             cat_io_csv( fullfile( pdir, BIDSfile2) , [{'field','current','required'}; ...
@@ -468,8 +498,10 @@ function out = cat_io_dcm2bids(job)
         end
       end
 
-      % add further fields?
-      %Vjson{jsoni}.site = site
+      % record of the scan for the tables of the database (see 
+      % cat_io_dcm2bids_tables, with the QC rating added below)
+      rec{sci} = scanRecord(Ptbldir,Vjson{sci},scanid{sci},site{sci},fileparts(Pdbdir{sci}), ...
+        datatype{sci},suffix{sci},ent{sci},PT,BIDSfile{sci},tol,job.opts); 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 % data preparation 
@@ -477,7 +509,7 @@ function out = cat_io_dcm2bids(job)
 
       %% (anonymized) input file for internal processing (not zipped!) 
       if job.opts.output > 1
-        Panon{fscni} = cat_io_dcm2bids_pp('anonymize',Pnii{fscni}, job.opts, datatype{sci}); 
+        Panon{fscni} = cat_io_dcm2bids_pp_anat('anonymize',Pnii{fscni}, job.opts, datatype{sci}); 
         
 
         % Basic QC with 
@@ -488,15 +520,24 @@ function out = cat_io_dcm2bids(job)
         %  - RES (RMS of voxel resolution)
         if job.opts.runqc
           [Prnii{fscni},QM(fscni),Pqc{fscni}] = cat_io_dcm2bids_qc(spm_file(Panon{fscni}), datatype{sci}, job.opts, Pfname); %#ok<AGROW>
+          if exist(spm_file(Pqc{fscni},'ext','json'),'file')
+            Jqc = cat_io_json(spm_file(Pqc{fscni},'ext','json')); 
+            if isfield(Jqc,'qualityrating') && isfield(Jqc.qualityrating,'SQR') && isnumeric(Jqc.qualityrating.SQR) && ~isempty(Jqc.qualityrating.SQR)
+              rec{sci}.SQR = double(Jqc.qualityrating.SQR); 
+            end
+          end
         else
           fprintf('\n'); % end of the scan line (otherwise ended by the QC values)
         end
         
 
-        % Basic preprocessing 
-        % segment anatomical scan ... what to do otherwise? how to save/fill data?
-        if strcmp(datatype{sci},'anat')
-          [Pm{fscni}, Pp0{fscni}, Pwc1{fscni}] = cat_io_dcm2bids_pp('segmentanat',Panon{fscni}, datatype{sci}, job.opts); %#ok<AGROW>
+        % Basic preprocessing: segmentation of the anatomical scans (only the
+        % first scan of each type of a session for higher preprocessing 
+        % levels, see levelParameters in cat_io_dcm2bids_pp_anat)
+        segkey = [fileparts(Pdirfi) '|' suffix{sci}]; 
+        if strcmp(datatype{sci},'anat') && (~ppl.onescan || ~any(strcmp(segkeys,segkey)))
+          segkeys{end+1} = segkey; %#ok<AGROW>
+          [Pm{fscni}, Pp0{fscni}, Pwc1{fscni}] = cat_io_dcm2bids_pp_anat('segmentanat',Panon{fscni}, datatype{sci}, job.opts); %#ok<AGROW>
         end
       else
         fprintf('\n');
@@ -534,30 +575,38 @@ function out = cat_io_dcm2bids(job)
               end
     
               if strcmp(ext{ei},niiext)
-              % in case of niftis we try to avoid to copy to save time  
-                if job.opts.gzipe
-                  if 1%~exist(spm_file( fullfile(BIDSpath0,BIDSfile{sci}),'ext','.nii.gz','prefix',pre{ei}),'file')
-                    if ~job.opts.gzipi
-                      gzip( file )
-                      movefile( [file '.gz'], spm_file( fullfile(BIDSpath0,BIDSfile{sci}),'ext','.nii.gz','prefix',pre{ei})); 
-                    else
-                      copyfile( file, spm_file( fullfile(BIDSpath0,BIDSfile{sci}),'ext','.nii.gz','prefix',pre{ei})); 
-                    end
-                  end
-                else
-                  if 1%~exist(spm_file( fullfile(BIDSpath0,BIDSfile{sci}),'ext','.nii','prefix',pre{ei}),'file')
-                    if job.opts.gzipi
-                      gunzip( file )
-                      movefile( [file(1:end-3)], spm_file( fullfile(BIDSpath0,BIDSfile{sci}),'ext','.nii','prefix',pre{ei})); 
-                    else
-                      copyfile( file, spm_file( fullfile(BIDSpath0,BIDSfile{sci}),'ext','.nii','prefix',pre{ei})); 
-                    end
-                  end
-                end
+                cat_io_dcm2bids_helper('exportNii',file, ...
+                  fullfile(BIDSpath0,[pre{ei} spm_file(BIDSfile{sci},'basename')]), job.opts); 
               else
                 copyfile( file, spm_file( fullfile(BIDSpath0,BIDSfile{sci}),'ext',ext{ei},'prefix',pre{ei})); 
               end
             end
+          end
+
+          % QC maps of the scan (see cat_io_dcm2bids_qc and cat_io_dcm2bids_render) 
+          Pbase = regexprep(Panon{fscni},'\.nii(\.gz)?$',''); 
+          for mi = {'denoisedavg','noisemap','noisefield','sliceMotion'}
+            if exist([Pbase '_' mi{1} niiext],'file')
+              if ~exist(BIDSpathd{sci},'dir'), mkdir(BIDSpathd{sci}); end
+              cat_io_dcm2bids_helper('exportNii',[Pbase '_' mi{1} niiext], fullfile(BIDSpathd{sci}, ...
+                ['catDCM2BIDSqc_' mi{1} '_' spm_file(BIDSfile{sci},'basename')]), job.opts); 
+            end
+          end
+
+          % protocol fit measure and rating (not part of the SQR) and the 
+          % protocol test (DICOM protocol name, closest protocol, status, and 
+          % deviations) in the QC JSON of the scan (see testProtocols in 
+          % cat_io_dcm2bids_protocols and cat_io_dcm2bids_report) 
+          if ~isnan(PT.PFM)
+            Pqcj = fullfile(BIDSpathd{sci},['catDCM2BIDSqc_' spm_file(BIDSfile{sci},'basename') '.json']); 
+            if exist(Pqcj,'file'), J = cat_io_json(Pqcj); else, J = struct(); end
+            J.qualitymeasures.PFM = PT.PFM; J.qualityrating.PFR = PT.PFR; 
+            J.protocol = struct('ProtocolName',Vjson{sci}.ProtocolName,'SeriesNumber',Vjson{sci}.SeriesNumber, ...
+              'protocol',PT.protocol, ...
+              'status',PT.status,'deviations',{cellfun(@(f,v,p) sprintf('%s: %s (%s)',f,v,p), ...
+              PT.deviations(:,1),PT.deviations(:,2),PT.deviations(:,3),'UniformOutput',false)}); 
+            if ~exist(BIDSpathd{sci},'dir'), mkdir(BIDSpathd{sci}); end
+            cat_io_json(Pqcj,J); 
           end
         end
 
@@ -565,6 +614,9 @@ function out = cat_io_dcm2bids(job)
         Vjsonp = cat_io_dcm2bids_protocols('cleanupVjson',Vjson{sci},'bids'); 
         if ~isempty(task{sci}) && ~isfield(Vjsonp,'TaskName') % required by BIDS
           Vjsonp.TaskName = regexprep(task{sci},'^_task-',''); 
+        end
+        if contains(ent{sci},'_part-phase') && ~isfield(Vjsonp,'Units') % required by BIDS
+          Vjsonp.Units = 'arbitrary'; % e.g. -4096 to 4095 of Siemens phase images 
         end
         % image dimensions and voxel size (if the image is available)
         if isfield(Vjson{sci},'Dimensions'), Vjsonp.Dimensions = Vjson{sci}.Dimensions; end
@@ -618,7 +670,6 @@ function out = cat_io_dcm2bids(job)
           (isnan(partdata(pkey).V.PatientAge) && ~isnan(Vjson{sci}.PatientAge))
         partdata(pkey) = struct('BIDSsubdir',BIDSsubdir,'sub',sub{sci},'V',Vjson{sci},'extra',extra); 
       end
-      %cat_io_dcm2bids_report('writeScanReportTSV',Vjson{sci},sub{sci},site{sci},Poutdir,BIDSsubdir,'report'); %%%%%%%%%%
 
     end
 
@@ -626,19 +677,28 @@ function out = cat_io_dcm2bids(job)
     % session are processed one after another): affine registration of the 
     % session to MNI space with the orientation rating of the session and 
     % the coverage rating of its scans (see writeSessionAffines in 
-    % cat_io_dcm2bids_pp) and the session data of the subject (sessions.tsv) 
+    % cat_io_dcm2bids_pp_anat), the phase-encoding reversal test of its scans 
+    % (checkPEreversal), and the session data of the subject (sessions.tsv) 
     if job.opts.output > 0 && (fdiri == numel(Psnr) || ~strcmp(fileparts(Psnr{fdiri+1}),fileparts(Pdirfi)))
       sesids = find(strcmp(cellfun(@fileparts,Pdbdirpath(1:sci),'UniformOutput',false),fileparts(Pdirfi)) & ...
         ~cellfun('isempty',BIDSsub(1:sci))); 
       SOR = nan; 
       if job.opts.output > 1 && ~isempty(sesids)
-        S = cat_io_dcm2bids_pp('writeSessionAffines',Pdbdirpath(sesids), Pdbnii(sesids), datatype(sesids), ...
+        S = cat_io_dcm2bids_pp_anat('writeSessionAffines',Pdbdirpath(sesids), Pdbnii(sesids), datatype(sesids), ...
           suffix(sesids), BIDSpathd(sesids), sub(sesids), ses(sesids), job.opts, BIDSfile(sesids), Pprot(sesids)); 
         if ~isempty(S), SOR = S(1).SOR; end
+        cat_io_dcm2bids_pp_anat('checkPEreversal',Pdbnii(sesids),Vjson(sesids),datatype(sesids), ...
+          BIDSpathd(sesids),BIDSfile(sesids),job.opts); 
+        if job.opts.preprocessing % DTI and rs-fMRI measures of the session (see cat_io_dcm2bids_pp_dwi/_rsfmri)
+          cat_io_dcm2bids_pp_dwi('processSession',Pdbnii(sesids),Vjson(sesids),datatype(sesids), ...
+            suffix(sesids),BIDSpathd(sesids),BIDSfile(sesids),job.opts); 
+          cat_io_dcm2bids_pp_rsfmri('processSession',Pdbnii(sesids),Vjson(sesids),datatype(sesids), ...
+            suffix(sesids),BIDSpathd(sesids),BIDSfile(sesids),job.opts); 
+        end
       end
       for bsd = unique(BIDSsub(sesids)) % each BIDS (protocol) directory of the session
         id = sesids(find(strcmp(BIDSsub(sesids),bsd{1}),1,'last')); 
-        cat_io_dcm2bids_bids('writeSubjectTSV',Vjson{id}, sub{id}, ses{id}, Poutdir, bsd{1}, job.opts.anonymize, SOR); 
+        cat_io_dcm2bids_bids('writeSubjectTSV',Vjson{id}, sub{id}, ses{id}, Poutdir, bsd{1}, job.opts.anonymize, SOR, site{id}); 
       end
     end
   end 
@@ -647,6 +707,10 @@ function out = cat_io_dcm2bids(job)
     fprintf('%154s\n',['duration: ' char(duration(datetime('now') - stime))]); 
   end
   fprintf('\nDCM2BIDS - import done.\n')
+
+  % tables of the database (scans, sites, protocols, see cat_io_dcm2bids_tables)
+  rec = rec(1:sci); rec = [rec{~cellfun('isempty',rec)}]; 
+  cat_io_dcm2bids_tables('writeTables',Ptbldir,rec,sites,job.opts); 
 
   % IntendedFor references of BIDS inputs with the new file names
   cat_io_dcm2bids_bids('remapIntendedFor',intended, srcmap); 
@@ -724,10 +788,16 @@ function out = cat_io_dcm2bids(job)
       Pdirs = {fullfile(Poutdir,job.BIDSdir,job.BIDSsubdir)};
     end
 
-    % create final report from result dir (see cat_io_dcm2bids_report)
-    %spm_file(Pprodictdirs,'basename')
-    cat_io_dcm2bids_report('writeSubReportTSV',Poutdir,BIDSsubdir,'report');
-    cat_io_dcm2bids_report('writeReportTable',Poutdir,Pdirs,job);
+    % report tables of the BIDS directory (scans, sessions, project, see 
+    % cat_io_dcm2bids_report)
+    cat_io_dcm2bids_report('writeReportTables',Poutdir,job);
+    if job.opts.reportfig.run % diagrams of the report tables (see cat_io_dcm2bids_reportfig)
+      try
+        cat_io_dcm2bids_reportfig('writeReportFigure',Poutdir,job);
+      catch e
+        cat_io_cprintf('err','  Report figure failed: %s (%s, line %d)\n',e.message,e.stack(1).name,e.stack(1).line);
+      end
+    end
 
     % dataset description, README, and participants description of each 
     % BIDS directory
@@ -754,6 +824,33 @@ function out = cat_io_dcm2bids(job)
     out = cat_io_dcm2bids_bids('getBIDSoutputs', fullfile(Poutdir,job.BIDSdir,job.BIDSsubdir), out ); 
   end
 
+end
+% =========================================================================
+function [datatype,suffix,ent,label] = scanType(pro,V,Isrc,isbids)
+%scanType. BIDS datatype, suffix, further entities (e.g. dir, echo, part),
+%  and acq label of a scan by its protocol name pro and sidecar V (see 
+%  setupDatatype and setupSuffix in cat_io_dcm2bids_bids), or the datatype, 
+%  suffix, and entities of the source dataset of BIDS inputs. 
+  if isbids
+    datatype = Isrc.Datatype; 
+  else
+    datatype = cat_io_dcm2bids_bids('setupDatatype',pro); 
+  end
+  [suffix,ent,label] = cat_io_dcm2bids_bids('setupSuffix',datatype,pro,V);
+  if isbids
+    suffix = Isrc.Suffix; 
+    ent    = cat_io_dcm2bids_bids('entityString',Isrc.Entities); 
+  end
+end
+% =========================================================================
+function R = scanRecord(Ptbldir,V,scanid,site,session,datatype,suffix,ent,PT,BIDSfile,tol,opts)
+%scanRecord. Record of a scan for the tables of the database with its 
+%  protocol variant (see protocolVariant in cat_io_dcm2bids_protocols and 
+%  scanRecord in cat_io_dcm2bids_tables). 
+  variant = cat_io_dcm2bids_protocols('protocolVariant',Ptbldir,PT,V.ProtocolName, ...
+    datatype,[suffix ent],tol,opts); 
+  R = cat_io_dcm2bids_tables('scanRecord',V,scanid,site,session,datatype,suffix,ent, ...
+    variant,PT,BIDSfile); 
 end
 % =========================================================================
 function [same,job] = checkPreviousSetting(Popts,job)

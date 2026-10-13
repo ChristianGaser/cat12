@@ -2,7 +2,7 @@ function varargout = cat_io_dcm2bids_overlap(action,varargin)
 %cat_io_dcm2bids_overlap. Brain coverage of a scan in MNI space.
 %  The field of view (voxel grid) of a scan is mapped by the registration
 %  of its session (Affine, world to MNI, see writeSessionAffines in
-%  cat_io_dcm2bids_pp) into the space of the TPM and compared to the
+%  cat_io_dcm2bids_pp_anat) into the space of the TPM and compared to the
 %  expected coverage, i.e., the brain of the TPM (sum of GM, WM, and CSF)
 %  that is limited by the mask of the protocol if available (e.g. the slab
 %  of a protocol with partial brain coverage: <protocol>_msk.nii next to
@@ -29,7 +29,7 @@ function varargout = cat_io_dcm2bids_overlap(action,varargin)
 %  BBM    .. missing coverage in percent of the expected coverage
 %  BBR    .. rating of BBM
 %
-%  See also cat_io_dcm2bids, cat_io_dcm2bids_pp.
+%  See also cat_io_dcm2bids, cat_io_dcm2bids_pp_anat.
 
   switch action
     case {'coverage','createMask'}

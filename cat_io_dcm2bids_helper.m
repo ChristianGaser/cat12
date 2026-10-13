@@ -1,9 +1,10 @@
 function varargout = cat_io_dcm2bids_helper(action,varargin)
 %cat_io_dcm2bids_helper. Shared helper functions of cat_io_dcm2bids.
 %  Text and JSON files with UTF-8 encoding (readText, writeText, writeJSON),
-%  paths (absPath, normPath, canonPath), NIfTI header information and the 
-%  gzip handling of NIfTIs (niiHeaderInfo, prepNii, prepNiigz), and tables
-%  (updateTable).
+%  paths (absPath, normPath, canonPath), NIfTI header information, single
+%  volumes, the gzip handling of NIfTIs, and their export (niiHeaderInfo, 
+%  niiVolume, prepNii, prepNiigz, gzipFile, exportNii), and tables 
+%  (updateTable, writeTable).
 %
 %  varargout = cat_io_dcm2bids_helper(action,varargin)
 %
@@ -15,15 +16,19 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
 %    P = cat_io_dcm2bids_helper('normPath',P)
 %    P = cat_io_dcm2bids_helper('canonPath',P)
 %    [vx,dim] = cat_io_dcm2bids_helper('niiHeaderInfo',P)
+%    Y = cat_io_dcm2bids_helper('niiVolume',P,vol)
 %    Po = cat_io_dcm2bids_helper('prepNii',Pi,opts,del)
 %    Po = cat_io_dcm2bids_helper('prepNiigz',Pi,opts)
+%    cat_io_dcm2bids_helper('gzipFile',P)
+%    cat_io_dcm2bids_helper('exportNii',P,Pout,opts)
 %    entries = cat_io_dcm2bids_helper('updateTable',Ptable,Thdr,Tnewrow,id,reimport)
+%    cat_io_dcm2bids_helper('writeTable',Ptable,T,format)
 %
 %  See also cat_io_dcm2bids.
 
   switch action
     case {'readText','writeText','writeJSON','absPath','normPath','canonPath', ...
-          'niiHeaderInfo','prepNii','prepNiigz','updateTable'}
+          'niiHeaderInfo','niiVolume','prepNii','prepNiigz','gzipFile','exportNii','updateTable','writeTable'}
       [varargout{1:nargout}] = feval(action,varargin{:});
     otherwise
       error('cat_io_dcm2bids_helper:unknownAction','Unknown action "%s".',action);
@@ -125,6 +130,68 @@ function [vx,dim] = niiHeaderInfo(P)
   dim = reshape(dim,1,[]); vx = reshape(vx,1,[]); 
 end
 % =========================================================================
+function Y = niiVolume(P,vol)
+%niiVolume. One volume (default the first) of a NIfTI-1 image (.nii or 
+%  .nii.gz, scaled values) without reading or unzipping the whole file, 
+%  e.g. for the comparison of the first volumes of long time series. 
+  if ~exist('vol','var') || isempty(vol), vol = 1; end
+  gz = numel(P) > 3 && strcmpi(P(end-2:end),'.gz'); 
+  if gz
+    gis = java.util.zip.GZIPInputStream(java.io.FileInputStream(P),65536); 
+    ch  = java.nio.channels.Channels.newChannel(gis); 
+    hdr = readBytes(ch,348); 
+  else
+    fid = fopen(P,'r'); 
+    hdr = fread(fid,348,'*uint8')'; 
+  end
+  try
+    if typecast(hdr(1:4),'int32') ~= 348 && swapbytes(typecast(hdr(1:4),'int32')) ~= 348
+      error('cat_io_dcm2bids_helper:niiVolume','Only NIfTI-1 images are supported.'); 
+    end
+    swap = typecast(hdr(1:4),'int32') ~= 348; 
+    hval = @(i,type) typecast(hdr(i),type); 
+    dm   = double(hval(41:56,'int16')); 
+    dt   = double(hval(71:72,'int16')); 
+    bp   = double(hval(73:74,'int16')); 
+    vo   = double(hval(109:112,'single')); 
+    sl   = double(hval(113:116,'single')); 
+    si   = double(hval(117:120,'single')); 
+    if swap, dm = double(swapbytes(int16(dm))); dt = double(swapbytes(int16(dt))); bp = double(swapbytes(int16(bp))); 
+      vo = double(swapbytes(single(vo))); sl = double(swapbytes(single(sl))); si = double(swapbytes(single(si))); end
+    dim  = [dm(2:4) 1 1 1]; dim = dim(1:3); dim(dim < 1) = 1; 
+    nb   = prod(dim) * bp/8; 
+    off  = vo + (min(vol,max(1,prod(dm(5:min(end,dm(1)+1))))) - 1) * nb; 
+    if gz
+      for skip = [repmat(2^24,1,floor((off - 348)/2^24)) mod(off - 348,2^24)]
+        readBytes(ch,skip); 
+      end
+      data = readBytes(ch,nb); 
+      gis.close(); 
+    else
+      fseek(fid,off,'bof'); 
+      data = fread(fid,nb,'*uint8')'; 
+      fclose(fid); 
+    end
+    types = {2,'uint8'; 4,'int16'; 8,'int32'; 16,'single'; 64,'double'; 256,'int8'; 512,'uint16'; 768,'uint32'}; 
+    Y = typecast(data,types{[types{:,1}] == dt,2}); 
+    if swap, Y = swapbytes(Y); end
+    Y = reshape(double(Y),dim); 
+    if sl ~= 0 && isfinite(sl), Y = Y * sl + si; end
+  catch e
+    if gz, gis.close(); elseif ~isempty(fopen(fid)), fclose(fid); end
+    rethrow(e); 
+  end
+end
+% =========================================================================
+function b = readBytes(ch,n)
+%readBytes. Next n bytes of a (java) channel, e.g. of a gzip stream.
+  b = zeros(1,0,'uint8'); 
+  if n < 1, return; end
+  bb = java.nio.ByteBuffer.allocate(n); 
+  while bb.hasRemaining() && ch.read(bb) >= 0, end
+  b  = reshape(typecast(bb.array(),'uint8'),1,[]); 
+end
+% =========================================================================
 function Po = prepNii(Pi,opts,del)
   if opts.gzipi
     waschar = 0; 
@@ -171,11 +238,77 @@ function Po = prepNiigz(Pi,opts)
     Po{fi} = [Pnii '.gz']; 
     if exist(Pnii,'file')
       Dnii = dir(Pnii); Dgz = dir(Po{fi}); 
-      if isempty(Dgz) || Dnii.datenum > Dgz.datenum, gzip(Pnii); end
+      if isempty(Dgz) || Dnii.datenum > Dgz.datenum, gzipFile(Pnii); end
       delete(Pnii); 
     end
   end
   if waschar, Po = char(Po); end
+end
+% =========================================================================
+function gzipFile(P)
+%gzipFile. Compression of the file P to P.gz (P is kept), by the system 
+%  gzip with the fastest compression (macOS/Linux, about 4 times faster than
+%  the gzip of MATLAB for about 1% larger files, e.g. 16 instead of 65 s 
+%  for a 0.9 GB rs-fMRI), otherwise (or if it fails) by the gzip of MATLAB.
+  if isunix
+    q  = @(s) ['''' strrep(s,'''','''\''''') '''']; % single-quoted shell argument
+    st = system(sprintf('gzip -1 -c %s > %s',q(P),q([P '.gz']))); 
+    if st == 0, return; end
+  end
+  gzip(P); 
+end
+% =========================================================================
+function exportNii(P,Pout,opts)
+%exportNii. Copy the NIfTI P of the database (zipped for opts.gzipi) to the
+%  output file Pout (without extension) as .nii.gz (opts.gzipe) or .nii.
+  if opts.gzipe
+    if opts.gzipi
+      copyfile(P,[Pout '.nii.gz']); 
+    else
+      gzip(P); movefile([P '.gz'],[Pout '.nii.gz']); 
+    end
+  else
+    if opts.gzipi
+      gunzip(P); movefile(P(1:end-3),[Pout '.nii']); 
+    else
+      copyfile(P,[Pout '.nii']); 
+    end
+  end
+end
+% =========================================================================
+function writeTable(Ptable,T,format)
+%writeTable. Write the cell table T (header and rows) as CSV or TSV file 
+%  (format 'csv' or 'tsv', e.g. opts.tableformat) with UTF-8 encoding: 
+%  numbers with up to 6 significant digits, numeric vectors separated by 
+%  spaces, empty values and NaN as 'n/a' (as BIDS), CSV values with commas,
+%  quotes, or line breaks in quotes (RFC 4180), and TSV values without 
+%  tabs and line breaks. 
+  if strcmpi(format,'tsv'), dl = sprintf('\t'); else, dl = ','; end
+  L = cell(size(T,1),1); 
+  for ri = 1:size(T,1)
+    row = cell(1,size(T,2)); 
+    for ci = 1:size(T,2)
+      v = T{ri,ci}; 
+      if isempty(v) || (isnumeric(v) && all(isnan(v(:))))
+        v = 'n/a'; 
+      elseif isnumeric(v) || islogical(v)
+        v = strjoin(arrayfun(@(x) sprintf('%g',x),double(v(:))','UniformOutput',false),' '); 
+      elseif iscell(v)
+        v = strjoin(cellfun(@char,v(:)','UniformOutput',false),' '); 
+      else
+        v = char(v); 
+      end
+      if strcmp(dl,',')
+        if any(ismember(v,[',"' newline char(13)])), v = ['"' strrep(v,'"','""') '"']; end
+      else
+        v = regexprep(v,'[\t\r\n]+',' '); 
+      end
+      row{ci} = v; 
+    end
+    L{ri} = strjoin(row,dl); 
+  end
+  if ~exist(fileparts(Ptable),'dir'), mkdir(fileparts(Ptable)); end
+  writeText(Ptable,[strjoin(L,newline) newline]); 
 end
 % =========================================================================
 function entries = updateTable(Ptable,Thdr,Tnewrow,id,reimport)

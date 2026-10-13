@@ -3,23 +3,31 @@
   "MagneticFieldStrength": 3,
   "Manufacturer": "Siemens",
   "MRAcquisitionType": "3D",
+  "PulseSequenceDetails": "tfl",
   "ScanningSequence": "GR\\IR",
-  "SequenceVariant": "SK\\SP\\MP",
+  "SequenceVariant": "MP\\SK\\SP",
   "ScanOptions": "IR\\WE",
-  "SequenceName": "*tfl3d1_16ns",
+  "SequenceName": "tfl3d1ns",
   "ImageType": [
-    "ORIGINAL",
-    "PRIMARY",
     "M",
     "ND",
-    "NORM"
+    "NORM",
+    "ORIGINAL",
+    "PRIMARY"
   ],
   "_NonlinearGradientCorrection": true,
   "_MTState": false,
   "SliceThickness": 0.8,
+  "VoxelSize": [
+    0.8,
+    0.8,
+    0.8
+  ],
+  "NumberOfSlices": 320,
+  "NumberOfVolumes": 1,
   "EchoTime": 0.00222,
   "RepetitionTime": 2.4,
-  "SpoilingState": true,
+  "_SpoilingState": true,
   "InversionTime": 1.03,
   "FlipAngle": 8,
   "PartialFourier": 1,
@@ -35,6 +43,6 @@
   "ReconMatrixPE": 300,
   "ParallelReductionFactorInPlane": 2,
   "PixelBandwidth": 220,
-  "DwellTime": 7.1E-6,
+  "DwellTime": 7.1e-06,
   "InPlanePhaseEncodingDirectionDICOM": "ROW"
 }

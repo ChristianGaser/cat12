@@ -2,12 +2,14 @@ function varargout = cat_io_dcm2bids_protocols(action,varargin)
 %cat_io_dcm2bids_protocols. Sites, protocols, and overview tables of cat_io_dcm2bids.
 %  The site dictionary (getSites, setupSites) and the protocol definitions 
 %  (getProtocols, JSON files with the relevant MR parameters) are read once.
-%  Each scan is tested against the protocols (testProtocols) and added to 
-%  the overview tables of the database (updateDBtables, catDCM2BIDSdb-tables
-%  with subjects, studies, and protocols, including shortened protocol JSON
-%  files that can be used to define new protocols). cleanupVjson removes 
-%  the patient-specific fields of a sidecar or keeps only the protocol (or 
-%  BIDS) relevant fields.
+%  Each scan is tested against the protocols (testProtocols, with fields 
+%  that are normalized for the scanner software and dcm2niix version, see 
+%  normalizeFields, and the protocol fit rating, see protocolRating). Its 
+%  protocol variant (protocolVariant, normalized JSON files that can be 
+%  used to define new protocols) and its patient (updateDBtables) are added
+%  to the tables of the database (catDCM2BIDSdb-tables, see also 
+%  cat_io_dcm2bids_tables). cleanupVjson removes the patient-specific 
+%  fields of a sidecar or keeps only the protocol (or BIDS) relevant fields.
 %
 %  varargout = cat_io_dcm2bids_protocols(action,varargin)
 %
@@ -15,14 +17,15 @@ function varargout = cat_io_dcm2bids_protocols(action,varargin)
 %    sites = cat_io_dcm2bids_protocols('getSites',Pcenterdict)
 %    protocols = cat_io_dcm2bids_protocols('getProtocols',Pprodictdirs)
 %    site = cat_io_dcm2bids_protocols('setupSites',Vjson,sites)
-%    [match,pname,mismatchstr,Pnfailedid,Pfname] = cat_io_dcm2bids_protocols('testProtocols',Pjson,Vjson,Ptbldir,protocols,tol,job,sites)
+%    [match,pname,mismatchstr,Pnfailedid,Pfname,PT] = cat_io_dcm2bids_protocols('testProtocols',Pjson,Vjson,protocols,tol,job,sites)
+%    variant = cat_io_dcm2bids_protocols('protocolVariant',Ptbldir,PT,ProtocolName,datatype,type,tol,opts)
 %    Vjson = cat_io_dcm2bids_protocols('cleanupVjson',Vjson,type)
-%    cat_io_dcm2bids_protocols('updateDBtables',Vjson,Pnii,Pdbdir,Ptbldir,fnameparts,sites,opts)
+%    cat_io_dcm2bids_protocols('updateDBtables',Vjson,Ptbldir,sites,opts)
 %
 %  See also cat_io_dcm2bids.
 
   switch action
-    case {'getSites','getProtocols','setupSites','testProtocols','cleanupVjson', ...
+    case {'getSites','getProtocols','setupSites','testProtocols','protocolVariant','cleanupVjson', ...
           'updateDBtables'}
       [varargout{1:nargout}] = feval(action,varargin{:});
     otherwise
@@ -61,7 +64,7 @@ function protocols = getProtocols(Pprodictdirs)
       pdi = pdi + 1; 
       protocols{pdi,1} = spm_file(Pprodictdirs{di},'basename'); 
       protocols{pdi,2} = Pprodictsubdirs{fi}; 
-      protocols{pdi,3} = cat_io_json(Pprodictsubdirs{fi});
+      protocols{pdi,3} = normalizeFields(cat_io_json(Pprodictsubdirs{fi})); % see testProtocols
     end
   end
   protocols = protocols(1:max(1,pdi),:); % remove empty rows of directories without protocols
@@ -85,251 +88,414 @@ function site = setupSites(Vjson,sites)
   site = cat_io_dcm2bids_bids('bidsLabel',site,1); 
 end
 % =========================================================================
-function [match,pname,mismatchstr,Pnfailedid,Pfname] = testProtocols(Pjson,Vjson,Ptbldir,protocols,tol,job,sites)
-% test protocols
+function [match,pname,mismatchstr,Pnfailedid,Pfname,PT] = testProtocols(Pjson,Vjson,protocols,tol,job,sites)
+%testProtocols. Test a scan (sidecar Vjson) against the protocols.
+%  The fields of the scan and of the protocols are normalized, i.e., the
+%  same protocol results in the same values for different scanner software
+%  versions (VE/XA) or dcm2niix versions (see normalizeFields). Numeric
+%  fields have to match within the tolerance tol (in percent, only for the
+%  rounding of the values), text fields and the entries of lists (order
+%  independent) have to be equal (see compareProtocol). Protocol fields
+%  that are not available for the scan are listed as 'n/a' without counting.
+%  Deviations of key parameters (contrast and resolution) count at least 1
+%  and of critical parameters (e.g. phase-encoding direction, sequence, 
+%  image component, b-value shells) 10, i.e., such scans are nonconform 
+%  (see compareProtocol and job.opts.protocol), as well as a direction in
+%  the series name (e.g. PA of "SpinEchoFieldMap_PA") that does not fit to
+%  the direction in the protocol name (e.g. a PA field map that was 
+%  acquired with AP phase encoding is not conform to the AP protocol).
+%  The protocol is selected in two steps to avoid the assignment to another
+%  protocol with more equal fields: the protocols with the same sequence
+%  (PulseSequenceDetails) and key and critical parameters are preferred, 
+%  and of these the protocol with the fewest mismatches is used.
+%  The protocol fit measure PFM is the (weighted) number of deviations from
+%  the closest protocol and PFR its rating (marks 0.5-10.5), which defines 
+%  the protocol status by job.opts.protocol (see protocolRating): conform 
+%  scans are named by the protocol, semiconform scans are rated by the QC 
+%  definition of the closest protocol, and nonconform scans are unknown. 
+%  The scan line shows the (closest) protocol and the PFR in the colors of
+%  the marks. The shortened (normalized) protocol of the scan is saved next
+%  to its sidecar in the database as template for protocol definitions.
+%  match is the index of the conform protocol (0 if not conform), pname its
+%  name (otherwise the DICOM protocol name), mismatchstr the mismatches of
+%  each protocol {field, scan value, protocol value}, Pnfailedid the index
+%  of the closest protocol(s), Pfname the protocol file of conform and 
+%  semiconform scans, and PT the result of the test for the tables of the 
+%  database (see cat_io_dcm2bids_tables): the protocol fit measure and 
+%  rating (PFM, PFR, NaN without protocols), the status, the closest 
+%  protocol (name, file, and tested fields), its deviations ({field, scan
+%  value, protocol value}, without fields that are not available), and the
+%  normalized sidecar (Vn).
 
+  Vjsonn = normalizeFields(Vjson);
   if isempty(protocols) || isempty(protocols{1,1})
   % no given protocols
-    pmatchs         = inf; 
-    pmatch          = 0; 
-    mismatchstr{1}  = cell(0,3); 
-    mismatchcnt(1)  = 0; 
-    
+    mismatchstr{1}  = cell(0,3);
+    mismatchcnt(1)  = 0;
+    rankcnt(1)      = 0;
   else
-    pmatch      = ones(1,size(protocols,1)); 
-    pmatchs     = zeros(1,size(protocols,1)); 
-    mismatchstr = cell(1,size(protocols,1)); 
-    mismatchcnt = zeros(1,size(protocols,1)); 
+    mismatchstr = cell(1,size(protocols,1));
+    mismatchcnt = zeros(1,size(protocols,1));
+    rankcnt     = zeros(1,size(protocols,1));
+    sdesc = ''; if isfield(Vjson,'SeriesDescription'), sdesc = char(Vjson.SeriesDescription); end
+    sdir  = nameDirection([char(Vjson.ProtocolName) ' ' sdesc]); 
     for pri = 1:size(protocols,1)
-      mismatchstr{pri} = cell(0,3); 
-      FNpi = fieldnames(protocols{pri,3});
-     % FNpi(cat_io_contains(FNpi,{'ConsistencyInfo','PulseSequenceDetails', ...
-     %   'ImageComments','SequenceName','ProtocolName','SeriesDescription'})) = []; 
-      
-      pmatchs(pri) = numel(FNpi); 
-      for fni = 1:numel(FNpi)
-        if isfield( Vjson, FNpi{fni} ) 
-          if strncmp(FNpi{fni},'x_',2), continue; end % comment
-          
-          if ( islogical( Vjson.(FNpi{fni})) || isnumeric( Vjson.(FNpi{fni})) ) && ...
-             ( islogical( protocols{pri,3}.(FNpi{fni})) || isnumeric( protocols{pri,3}.(FNpi{fni})) )
-            if numel( Vjson.(FNpi{fni}) ) == numel( protocols{pri,3}.(FNpi{fni}))
-              matstr =  all( Vjson.(FNpi{fni}) >= protocols{pri,3}.(FNpi{fni})*(1-tol/100) & ...
-                             Vjson.(FNpi{fni}) <= protocols{pri,3}.(FNpi{fni})/(1-tol/100)); 
-              %matstr = max(0,min(1, max(0,abs( Vjson.(FNpi{fni}) - protocols{pri,3}.(FNpi{fni}) ) - (protocols{pri,3}.(FNpi{fni})*tol/100) ))); 
-              mismatchcnt(pri) = mismatchcnt(pri) + (1-matstr) * .5; 
-              pmatchn = matstr;
-            else
-              mismatchcnt(pri) = mismatchcnt(pri) + 0.5;
-              pmatchn = 0; 
-            end
-          elseif ischar( Vjson.(FNpi{fni}) ) && ischar( protocols{pri,3}.(FNpi{fni}) )
-            matstr = strcmp( Vjson.(FNpi{fni}) , protocols{pri,3}.(FNpi{fni}) );
-            mismatchcnt(pri) = mismatchcnt(pri) + (1-matstr);
-            pmatchn = matstr; 
-          elseif iscell( Vjson.(FNpi{fni}) ) && iscell( protocols{pri,3}.(FNpi{fni}) )
-            %pmatchn = strcmp( char(sort(protocols{pri,3}.(FNpi{fni}(:)))) , char(sort(Vjson.(FNpi{fni}(:)))) ); 
-            matstr  = 0; 
-            for pmi = 1:numel( Vjson.(FNpi{fni}) )
-               matstr = matstr + ...
-                (1 - max([0;cat_io_contains(protocols{pri,3}.(FNpi{fni}),Vjson.(FNpi{fni})(pmi))])); 
-            end
-            for pmi = 1:numel( protocols{pri,3}.(FNpi{fni}) )
-              matstr = matstr + ...
-                (1 - max([0;cat_io_contains(Vjson.(FNpi{fni}),protocols{pri,3}.(FNpi{fni})(pmi))])); 
-            end
-            mismatchcnt(pri) = mismatchcnt(pri) + max(0,matstr); % - tol/2);
-            pmatchn = mismatchcnt(pri) < 1;
-          else
-            mismatchcnt(pri) = mismatchcnt(pri) + 1;
-            pmatchn = 0; 
-            % need refinement ! ... image type             
-          end
-          pmatch(pri) = pmatch(pri) & pmatchn; 
-  
-          if ~pmatchn
-            if iscell( Vjson.(FNpi{fni}) ) 
-              tstr1 = char(join(sort(Vjson.(FNpi{fni}))));
-              tstr2 = char(join(sort(protocols{pri,3}.(FNpi{fni})))); 
-            else
-              if isscalar(Vjson.(FNpi{fni}))
-                tstr1 = Vjson.(FNpi{fni});
-              elseif ischar(Vjson.(FNpi{fni})) || isstring(Vjson.(FNpi{fni}))
-                tstr1 = join(Vjson.(FNpi{fni}),1); 
-              else
-                tstr1 = sprintf('%dx%d %s', size(Vjson.(FNpi{fni}),1), ...
-                  size(Vjson.(FNpi{fni}),2), class(Vjson.(FNpi{fni}))); 
-              end
-              if isscalar(protocols{pri,3}.(FNpi{fni}))
-                tstr2 = protocols{pri,3}.(FNpi{fni});
-              elseif ischar(protocols{pri,3}.(FNpi{fni})) || isstring(protocols{pri,3}.(FNpi{fni}))
-                tstr2 = join(protocols{pri,3}.(FNpi{fni}),1); 
-              else
-                tstr2 = sprintf('%dx%d %s', size(protocols{pri,3}.(FNpi{fni}),1), ...
-                  size(protocols{pri,3}.(FNpi{fni}),2), class(protocols{pri,3}.(FNpi{fni}))); 
-              end
-            end
-            mismatchstr{pri} = [ mismatchstr{pri}; {FNpi{fni} tstr1 tstr2 }]; 
-          end
-
-          pmatch(pri) = pmatch(pri) & pmatchn; 
-        end
+      [mismatchcnt(pri),mismatchstr{pri},seqdiff,keydiff] = ...
+        compareProtocol(Vjsonn,protocols{pri,3},tol,job.opts);
+      % direction of the series name vs. direction of the protocol name (critical)
+      pdir = nameDirection(spm_file(protocols{pri,2},'basename')); 
+      if ~isempty(sdir) && ~isempty(pdir) && ~strcmp(sdir,pdir)
+        mismatchcnt(pri) = mismatchcnt(pri) + 10; 
+        mismatchstr{pri}(end+1,:) = {'NameDirection', sdir, pdir}; 
+        keydiff = true; 
       end
+      % protocol selection: same sequence and key parameters first
+      rankcnt(pri) = mismatchcnt(pri) + 100*seqdiff + 10*keydiff;
     end
   end
-%% always print session 
+  [~,bestid] = min(rankcnt);
+  mincnt     = mismatchcnt(bestid);
 
-  % display progress
+  % protocol fit measure and rating with the protocol status
+  PT = struct('PFM',nan,'PFR',nan,'status','','protocol','','file','','fields',{{}}, ...
+    'deviations',{cell(0,3)},'Vn',Vjsonn); 
+  if ~isempty(protocols) && ~isempty(protocols{1,1})
+    [PT.PFR,PT.status] = protocolRating(mincnt,job.opts); 
+    PT.PFM      = mincnt; 
+    PT.protocol = spm_file(protocols{bestid,2},'basename'); 
+    PT.file     = protocols{bestid,2}; 
+    FNb         = fieldnames(protocols{bestid,3}); 
+    PT.fields   = FNb(~strncmp(FNb,'x_',2))'; % tested fields (without disabled fields)
+    PT.deviations = mismatchstr{bestid}(~strcmp(mismatchstr{bestid}(:,2),'n/a'),:); 
+    proSubdir   = PT.status; 
+  end
+  PFR = PT.PFR; 
+
+  % display progress: (closest) protocol and rating in the colors of the 
+  % marks (as the QC ratings, separated by "|")
   % =======================================================================
   fname1     = sprintf('%3d) %s', Vjson.SeriesNumber, spm_str_manip(strrep(sprintf('%s_%s_%s', ...
                 strrep(Vjson.PatientID, strrep(char(Vjson.ScanDate),'-',''),''), ...
                 strrep(char(Vjson.ScanDate),'-',''), Vjson.ProtocolName),'__','_'),'l55'));
-  if isempty(protocols) || isempty(protocols{1,1})
+  fprintf('%60s : ',fname1);
+  if isnan(PFR)
   % no given protocols: no match but use the DICOM protocol name
     match      = 0;
     Pnfailedid = [];
     pname      = Vjson.ProtocolName;
     Pfname     = '';
-    fprintf('%60s : ',fname1);
     datatype = cat_io_dcm2bids_bids('setupDatatype',pname);
-    cat_io_cprintf([0 0 0.5],sprintf('%-50s%10s ', [datatype filesep pname], ''));
+    cat_io_cprintf([0 0 0.5],sprintf('%-50s%8s |', [datatype filesep pname], '-'));
     return
-  elseif all( mismatchcnt > 0.05 )
-  % unknown protocol
-    Pnfailed   = mismatchcnt; %cellfun(@(x) size(x,1),mismatchstr);
-    Pnfailedid = find(Pnfailed == min(Pnfailed));% & Pnfailed < 6);
-    pname      = Vjson.ProtocolName;
-    Pfname     = '';
-    fprintf('%60s : ',fname1);
-    pname0 = spm_file(protocols{Pnfailedid(1),2},'basename');
-    if min(Pnfailed) < 1
-      % very close protocol
-      Pfname     = protocols{Pnfailedid(1),2}; 
-      cat_io_cprintf([.5 .5 0],sprintf('%-50s%10s ',pname0,'~'));
-    elseif min(Pnfailed) < 6 
-    % close protocol
-      Pfname     = protocols{Pnfailedid(1),2}; 
-      cat_io_cprintf([1 .5 0],sprintf('%-50s%10s ', ...
-        pname0, sprintf('%2.0f/%2.0f',min(Pnfailed), numel(Pnfailed))));
-    else
-      datatype = cat_io_dcm2bids_bids('setupDatatype',pname);
-      cat_io_cprintf([.7 0 0],sprintf('%-50s%10s ', ...
-        sprintf('Unknown %s protocol',datatype), ...
-        sprintf('%2.0f/%2.0f',min(Pnfailed), numel(Pnfailed))));
-    end
+  end
+  Pnfailedid = find(rankcnt == rankcnt(bestid)); % closest protocols (with the same rank)
+  switch proSubdir
+    case 'conform'
+      match  = bestid; 
+      pname  = spm_file(protocols{bestid,2},'basename');
+      Pfname = protocols{bestid,2};
+      pname0 = spm_str_manip(pname,'l50'); 
+    case 'semiconform'
+      match  = 0; 
+      pname  = Vjson.ProtocolName;
+      Pfname = protocols{bestid,2};
+      pname0 = spm_str_manip(spm_file(protocols{bestid,2},'basename'),'l50'); 
+    otherwise % nonconform
+      match  = 0; 
+      pname  = Vjson.ProtocolName;
+      Pfname = '';
+      pname0 = sprintf('Unknown %s protocol',cat_io_dcm2bids_bids('setupDatatype',pname)); 
+  end
+  MarkColor = cat_io_colormaps('marks+',40); % as the QC ratings (see cat_io_dcm2bids_qc)
+  col2mark  = @(val) MarkColor(min(size(MarkColor,1)-3,max(1,floor( val/9.5 * size(MarkColor,1)))),:); 
+  cat_io_cprintf(col2mark(PFR),sprintf('%-50s%8.1f',pname0,PFR)); 
+  fprintf(' |'); 
+
+  % shortened version of the protocol of the scan (normalized values of all
+  % fields of the protocols) next to its sidecar as template for protocol 
+  % definitions
+  proname = strrep(strrep(Vjson.ProtocolName,'_','-'),' ','-');
+  site    = setupSites(Vjson,sites);
+  FN      = cellfun(@(x) fieldnames(x), protocols(:,3) , 'UniformOutput', false );
+  FNM     = intersect(unique(vertcat(FN{:})),fieldnames(Vjsonn));
+  if isempty(FNM), return; end
+  Vjson4  = struct();
+  for fni = 1:numel(FNM)
+    Vjson4.(FNM{fni}) = Vjsonn.(FNM{fni});
+  end
+  cat_io_json(fullfile(fileparts(Pjson),sprintf('%s-%s.json',proname,site)), cleanupVjson(Vjson4));
+end
+% =========================================================================
+function [PFR,status] = protocolRating(PFM,opts)
+%protocolRating. Rating PFR (marks 0.5-10.5) of the protocol fit measure
+%  PFM, i.e., the weighted number of deviations from the closest protocol 
+%  (see compareProtocol), with the best mark 0.5 for opts.protocol.PFM(1) 
+%  and the mark 4.5 for opts.protocol.PFM(2) (linear), and the protocol 
+%  status by the limits opts.protocol.status: conform (PFR < status(1)), 
+%  semiconform, or nonconform (PFR > status(2)). 
+  s   = opts.protocol.PFM; 
+  PFR = max(0.5,min(10.5, 0.5 + (PFM - s(1)) / (s(2) - s(1)) * 4)); 
+  if PFR < opts.protocol.status(1)
+    status = 'conform'; 
+  elseif PFR > opts.protocol.status(2)
+    status = 'nonconform'; 
   else
-    Pnfailedid = {}; 
-    %pname  = spm_file(protocols{find(pmatch==1 & max(pmatchs.*pmatch)==pmatchs,1,'first'),2},'basename'); 
-    %Pfname = protocols{find(pmatch==1 & max(pmatchs.*pmatch)==pmatchs,1,'first'),2}; 
-    pname  = spm_file(protocols{find(mismatchcnt == min(mismatchcnt),1,'first'),2},'basename'); 
-    Pfname = protocols{find(mismatchcnt == min(mismatchcnt),1,'first'),2}; 
-    pname0 = spm_str_manip( pname, 'l50');
-    fprintf('%60s : ',fname1); 
-    cat_io_cprintf([0 .5 0],sprintf('%-50s%10s ',pname0,''));
+    status = 'semiconform'; 
   end
-  % match = 0 for no fitting protocol, otherwise the index of the fitting protocol
-  [mincnt,matchid] = min(mismatchcnt);
-  match = (mincnt <= 0.05) * matchid;
-
-  % save non-fitting protocols
-  % =======================================================================
-  % This should support central integration of protocols. 
-  % So we create a directory with the full and a shortened version of the protocol. 
-  % The shortened version includes all fields used so far in existing protocols. 
-  % In case of close protocols we copy and adapt these and create a difference table.
-  % Moreover, we create a list of all cases to see how often the protocol is used.
-  % =======================================================================
-  
-  %% Pjson,Vjson,protocols,tol,opts
-  if isempty(protocols{1,1})
-    proSubdir = 'undefined'; 
-  elseif max(0,1 - min(mismatchcnt)) > .95
-    proSubdir = 'conform';
-  elseif max(0,1 - min(mismatchcnt)) > .5
-    proSubdir = 'accepted';
-  elseif min(Pnfailed) < 6
-    proSubdir = 'semiconform';
-  else    
-    proSubdir = 'nonconform'; 
+end
+% =========================================================================
+function variant = protocolVariant(Ptbldir,PT,ProtocolName,datatype,type,tol,opts)
+%protocolVariant. Protocol variant of a scan for the tables of the database
+%  (see cat_io_dcm2bids_tables): the normalized fields of the scan (PT.Vn of
+%  testProtocols) that are tested by the closest protocol of conform and 
+%  semiconform scans (i.e. without the disabled fields, e.g. with 
+%  representation differences of the scanner software), otherwise the 
+%  protocol fields (see cleanupVjson, without coil fields), separated by the
+%  DICOM protocol name and the image type (BIDS suffix and entities, e.g. 
+%  sbref or epi_dir-AP_part-phase). Scans with the same fields (within the
+%  tolerance tol) share a variant, which is saved as protocol definition in
+%    catDCM2BIDSdb-tables/protocols/<datatype>/<protocol>_<type>[_<n>].json
+%  variant is the name of this file. Further fields of a scan (e.g. the
+%  image fields after the conversion of a JSON-only scan) are added to its
+%  variant.
+  if any(strcmp(PT.status,{'conform','semiconform'}))
+    FN = PT.fields; 
+  else
+    FN = [fieldnames(cleanupVjson(PT.Vn,'protocol'))' ...
+      {'NumberOfSlices','NumberOfVolumes','VoxelSize','SliceOrder','BValueShells'}]; 
+    FN = setdiff(FN,{'CoilString','ReceiveCoilName','ReceiveCoilActiveElements', ...
+      'ProcedureStepDescription','PhaseEncodingSteps'},'stable'); 
+  end
+  V = struct(); 
+  for fni = 1:numel(FN)
+    if isfield(PT.Vn,FN{fni}), V.(FN{fni}) = PT.Vn.(FN{fni}); end
   end
 
-  % evaluate protocols
-  proname = strrep(strrep(Vjson.ProtocolName,'_','-'),' ','-'); 
-  datatype = cat_io_dcm2bids_bids('setupDatatype',proname); 
+  % existing variants of the protocol and image type 
+  name = [getFileString(strrep(strrep(ProtocolName,'_','-'),' ','-')) '_' type]; 
+  Pdir = fullfile(Ptbldir,'protocols',datatype); 
+  if ~exist(Pdir,'dir'), mkdir(Pdir); end
+  D    = dir(fullfile(Pdir,[name '*.json'])); 
+  D    = D( ~cellfun('isempty',regexp({D.name},['^' regexptranslate('escape',name) '(_\d+)?\.json$'],'once')) ); 
+  for di = 1:numel(D)
+    Pv  = fullfile(Pdir,D(di).name);
+    Vv  = normalizeFields(cat_io_json(Pv));
+    FNv = fieldnames(Vv); FNs = fieldnames(V);
+    % the same fields or more fields of the scan or of the variant (e.g. the
+    % image fields of a scan that is converted after a JSON-only run) with
+    % equal values of the common fields (compareProtocol ignores fields of
+    % the variant that the scan does not have)
+    if (all(ismember(FNv,FNs)) || all(ismember(FNs,FNv))) && compareProtocol(V,Vv,tol,opts) == 0
+      variant = spm_file(D(di).name,'basename');
+      FNn = setdiff(FNs,FNv,'stable'); % add the further fields of the scan
+      if ~isempty(FNn)
+        for fni = 1:numel(FNn), Vv.(FNn{fni}) = V.(FNn{fni}); end
+        cat_io_json(Pv,Vv);
+      end
+      return
+    end
+  end
 
-  % study
+  % new variant
+  variant = name; ci = 0; 
+  while exist(fullfile(Pdir,[variant '.json']),'file')
+    ci = ci + 1; variant = sprintf('%s_%d',name,ci); 
+  end
+  cat_io_json(fullfile(Pdir,[variant '.json']),V); 
+end
+% =========================================================================
+function V = normalizeFields(V)
+%normalizeFields. Software and converter independent representation of the
+%  protocol relevant fields of a sidecar or protocol, i.e., the same
+%  protocol results in the same values for Siemens VE and XA software and
+%  different dcm2niix versions:
+%    ImageType     merged with ImageTypeText (XA) as sorted list of upper
+%                  case entries without format entries (MOSAIC, NONE,
+%                  FMRI), i.e., e.g. ND/DIS2D/DIS3D (distortion correction),
+%                  M/P, or NORM (prescan normalize) remain
+%    ScanOptions, ScanningSequence, SequenceVariant
+%                  sorted entries without the external trigger EXT (that
+%                  does not change the images)
+%    SequenceName  also from PulseSequenceName (XA) without '*' and numbers,
+%                  e.g. *tfl3d1_16ns (VE) and *tfl3d1_256ns (XA) as tfl3d1ns
+%    PulseSequenceDetails    sequence without directory, e.g. tfl
+%    MultibandAccelerationFactor   from the ImageComments (e.g. 'Unaliased
+%                  MB8/PE3/LB') if not given (XA60 data of dcm2niix 2022)
+%    NumberOfVolumes   4th image dimension (Dimensions, if the image exists)
+%    NumberOfSlices    number of slices (SliceTiming), otherwise the 3rd
+%                  image dimension (e.g. of 3D images)
+%    SliceOrder    acquisition order of the slices (fMRI), i.e., the index
+%                  of the acquisition time of each slice (SliceTiming in ms)
+%                  that is independent of the TR and of the timing precision
+%                  of the software, with equal indices for the simultaneously
+%                  acquired slices of multiband
+%    BValueShells  b-value shells of DWI (from the b-values of the bval file
+%                  of the image, see cat_io_dcm2bids): clusters of similar
+%                  b-values (gaps below 5% + 10 s/mm2, e.g. 1190-1205 of VE 
+%                  or the b-values of XA that are rounded to 50) with at 
+%                  least 2% of the volumes (i.e. without single directions of
+%                  other b-values) as mean value rounded to 50 (i.e. b=5 of 
+%                  the b0 images of VE is 0)
+%  The protocols (getProtocols) are normalized too, i.e., they can use
+%  both representations.
 
+  % sorted lists
+  if isfield(V,'ImageTypeText')
+    if isfield(V,'ImageType')
+      V.ImageType = [reshape(cellstr(V.ImageType),[],1); reshape(cellstr(V.ImageTypeText),[],1)];
+    else
+      V.ImageType = V.ImageTypeText;
+    end
+  end
+  if isfield(V,'ImageType') && (iscellstr(V.ImageType) || ischar(V.ImageType))
+    V.ImageType = setdiff(upper(reshape(cellstr(V.ImageType),[],1)),{'MOSAIC','NONE','FMRI'});
+  end
+  for fn = {'ScanOptions','ScanningSequence','SequenceVariant'}
+    if isfield(V,fn{1}) && ischar(V.(fn{1}))
+      V.(fn{1}) = strjoin(setdiff(upper(strsplit(V.(fn{1}),'\\')),{'','EXT'}),'\\'); % escaped backslash
+    end
+  end
 
-  site     = setupSites(Vjson,sites);
-  Pprodir  = fullfile(Ptbldir,'protocols-details',datatype,proSubdir,proname);
-  if ~exist(Pprodir,'dir'), mkdir(Pprodir); end
+  % sequence names
+  if ~isfield(V,'SequenceName') && isfield(V,'PulseSequenceName')
+    V.SequenceName = V.PulseSequenceName;
+  end
+  if isfield(V,'SequenceName') && ischar(V.SequenceName)
+    V.SequenceName = regexprep(V.SequenceName,'\*|_\d+','');
+  end
+  if isfield(V,'PulseSequenceDetails') && ischar(V.PulseSequenceDetails)
+    V.PulseSequenceDetails = lower(regexprep(V.PulseSequenceDetails,'^.*[\\/]',''));
+  end
 
-  Vjsonc   = cleanupVjson(Vjson); 
-  if ~match
-    if min(Pnfailed) < 6
-    % semi-match 
-      for fi = 1:numel(Pnfailedid)
-        Pprosubdir = fullfile(Pprodir,spm_file(protocols{Pnfailedid(fi),2},'basename')); 
-        if ~exist(Pprosubdir,'dir'), mkdir(Pprosubdir); end
-        Pprofilel = fullfile(Pprosubdir, ...
-          sprintf('%s-%s-long.json', spm_file(protocols{Pnfailedid(fi),2},'basename'),site));
-        cat_io_json(Pprofilel,Vjsonc);
+  % multiband factor of older dcm2niix versions for XA60
+  if ~isfield(V,'MultibandAccelerationFactor') && isfield(V,'ImageComments') && ischar(V.ImageComments)
+    mb = regexp(V.ImageComments,'MB(\d+)','tokens','once');
+    if ~isempty(mb), V.MultibandAccelerationFactor = str2double(mb{1}); end
+  end
 
-        Pprofile = fullfile(Pprosubdir, ...
-          sprintf('%s-%s.json', spm_file(protocols{Pnfailedid(fi),2},'basename'),site));
-        % In this case the most similar protocol is used as template
-        FNpi = intersect(fieldnames(protocols{Pnfailedid(fi),3}),fieldnames(Vjson));
-        for fni = 1:numel(FNpi)
-          Vjson3.(FNpi{fni}) = Vjson.(FNpi{fni});
-        end
-        cat_io_json(Pprofile,Vjson3); clear Vjson3;
+  % number of volumes and slices (image fields without image, e.g. NaN, are missing)
+  for fn = {'Dimensions','VoxelSize'}
+    if isfield(V,fn{1}) && (~isnumeric(V.(fn{1})) || any(isnan(V.(fn{1})(:)))), V = rmfield(V,fn{1}); end
+  end
+  if isfield(V,'Dimensions') && numel(V.Dimensions) >= 3
+    dm = [reshape(V.Dimensions,1,[]) 1];
+    if ~isfield(V,'NumberOfVolumes'), V.NumberOfVolumes = dm(4); end
+    if ~isfield(V,'NumberOfSlices'),  V.NumberOfSlices  = dm(3); end
+  end
+  if isfield(V,'SliceTiming') && isnumeric(V.SliceTiming) && numel(V.SliceTiming) > 1
+    V.NumberOfSlices = numel(V.SliceTiming);
+    [~,~,so] = unique(round(1000*double(V.SliceTiming(:)))); 
+    V.SliceOrder = so'; 
+  end
 
-        Pprofiled = fullfile(Pprosubdir,sprintf('%s-%s-diff.csv', ...
-          spm_file(protocols{Pnfailedid(fi),2},'basename'),site));
-        cat_io_csv(Pprofiled,mismatchstr{Pnfailedid(fi)});
-
-        Pqc = spm_file(protocols{Pnfailedid(fi),2},'prefix','qc');
-        if exist(Pqc,'file')
-          Pprofileqc = fullfile(Pprosubdir,sprintf('qc%s-%s.json', ...
-            spm_file(protocols{Pnfailedid(fi),2},'basename'),site));
-          copyfile(Pqc,Pprofileqc);
-        end
+  % b-value shells of DWI 
+  if isfield(V,'BValues') && isnumeric(V.BValues) && ~isempty(V.BValues)
+    b  = sort(double(V.BValues(:))); 
+    id = cumsum([1; diff(b) > 0.05*b(2:end) + 10]); 
+    V.BValueShells = []; 
+    for ci = 1:id(end)
+      if sum(id==ci) >= max(1,0.02*numel(b))
+        V.BValueShells(end+1) = 50*round(mean(b(id==ci))/50); 
       end
     end
   end
+end
+% =========================================================================
+function [cnt,str,seqdiff,keydiff,nfields] = compareProtocol(V,P,tol,opts)
+%compareProtocol. Mismatches of the (normalized) scan fields V with the
+%  (normalized) protocol P: numeric fields count 0.5 if they differ by more
+%  than tol percent (b-value shells by more than 10%), text fields 1, and 
+%  lists the number of different entries (independent of their order). 
+%  The key parameters opts.protocol.key (contrast and resolution, e.g. TE, 
+%  TR, voxel size) count at least 1, the critical parameters 
+%  opts.protocol.critical (e.g. phase-encoding direction, sequence) and the
+%  image component of the ImageType (magnitude, phase, real, imaginary) 
+%  count 10, i.e., such scans are nonconform (see protocolRating). str 
+%  lists the mismatches as {field, scan value, protocol value}, also for 
+%  the protocol fields that are not available for the scan (as 'n/a', 
+%  without counting). seqdiff and keydiff indicate a different sequence 
+%  (PulseSequenceDetails) or key or critical parameter for the selection of
+%  the protocol, and nfields is the number of tested protocol fields.
 
-
-  % create a list of cases to see how often the protocol is used
-  Pprofilec = fullfile(Pprodir,sprintf('%s-%s-list.csv',proname,site));
-  if exist(Pprofilec,'file')
-    Yc = cat_io_csv(Pprofilec,'','',struct('convert2double',0));
-    Yc{end+1,1} = Pjson;
-    Yc = unique(Yc);
+  crit = opts.protocol.critical; key = opts.protocol.key; 
+  cnt  = 0; str = cell(0,3); seqdiff = false; keydiff = false;
+  FN   = fieldnames(P);
+  FN   = FN(~strncmp(FN,'x_',2)); % comments and disabled fields (e.g. "_ImageType")
+  nfields = numel(FN);
+  for fni = 1:numel(FN)
+    v = []; p = P.(FN{fni});
+    if isfield(V,FN{fni}), v = V.(FN{fni}); end
+    if isempty(v) && ~isempty(p)
+      str(end+1,:) = {FN{fni}, 'n/a', val2str(p)}; %#ok<AGROW>
+      continue
+    end
+    if strcmp(FN{fni},'BValueShells') && isnumeric(v) && isnumeric(p)
+      % shells within 10% (e.g. the rounded b-values of XA)
+      v = double(v(:)); p = double(p(:));
+      d = 0.5 * ~(numel(v) == numel(p) && all(abs(v - p) <= 0.1*p + 25));
+    elseif (isnumeric(v) || islogical(v)) && (isnumeric(p) || islogical(p))
+      v = double(v(:)); p = double(p(:));
+      d = 0.5 * ~(numel(v) == numel(p) && all(abs(v - p) <= tol/100 * abs(p) + eps));
+    elseif (iscellstr(v) || ischar(v)) && (iscellstr(p) || ischar(p)) && (iscell(v) || iscell(p)) %#ok<ISCLSTR> JSON lists
+      d = numel(setxor(upper(cellstr(v)),upper(cellstr(p))));
+      if strcmp(FN{fni},'ImageType') && ~strcmp(imageComponent(v),imageComponent(p))
+        d = 10; % critical: e.g. phase vs. magnitude image
+      end
+    elseif ischar(v) && ischar(p)
+      d = double(~strcmp(v,p));
+    else
+      d = 1;
+    end
+    if d > 0
+      if any(strcmp(FN{fni},crit))
+        d = 10;           % critical parameters (nonconform)
+      elseif any(strcmp(FN{fni},key))
+        d = max(1,d);     % contrast and resolution
+      end
+      cnt = cnt + d;
+      str(end+1,:) = {FN{fni}, val2str(V.(FN{fni})), val2str(P.(FN{fni}))}; %#ok<AGROW>
+      seqdiff = seqdiff || strcmp(FN{fni},'PulseSequenceDetails');
+      keydiff = keydiff || any(strcmp(FN{fni},[crit key])) || d >= 10;
+    end
+  end
+end
+% =========================================================================
+function c = imageComponent(it)
+%imageComponent. Image component of the ImageType entries: phase (P or
+%  PHASE), real, imaginary, otherwise magnitude.
+  it = upper(cellstr(it));
+  if any(ismember(it,{'P','PHASE'}))
+    c = 'phase';
+  elseif any(strcmp(it,'REAL'))
+    c = 'real';
+  elseif any(strcmp(it,'IMAGINARY'))
+    c = 'imaginary';
   else
-    Yc{1,1} = Pjson; 
+    c = 'magnitude';
   end
-  cat_io_csv(Pprofilec,Yc);
-  
-  % save the full unknown protocol
-  Pprofilel = fullfile(Pprodir,sprintf('%s-%s-long.json',proname,site));
-  cat_io_json(Pprofilel,Vjsonc);
-
-  % save a shortened version as starting point   
-  Pprofile  = fullfile(fileparts(Pjson),sprintf('%s-%s.json',proname,site));
-  Pprofile2 = fullfile(Pprodir,sprintf('%s-%s.json',proname,site));
-  FN = cellfun(@(x) fieldnames(x), protocols(:,3) , 'UniformOutput', false );
-  FNM = {}; for fni=1:numel(FN), FNM = [FNM; FN{fni}]; end; FNM = unique(FNM); %#ok<AGROW>
-  FNM = intersect(FNM,fieldnames(Vjson));
-  
-  if isempty(FNM), return; end
-
-  for fni = 1:numel(FNM)
-    Vjson4.(FNM{fni}) = Vjson.(FNM{fni});
+end
+% =========================================================================
+function d = nameDirection(str)
+%nameDirection. Phase-encoding direction token (AP, PA, LR, RL, SI, IS) of 
+%  a series or protocol name (e.g. PA of "SpinEchoFieldMap_PA"), otherwise
+%  empty. 
+  t = regexpi(str,'(?:^|[_ -])(AP|PA|LR|RL|SI|IS)(?=$|[_ -])','tokens','once');
+  if isempty(t), d = ''; else, d = upper(t{1}); end
+end
+% =========================================================================
+function s = val2str(v)
+%val2str. Value as text for the mismatch tables.
+  if ischar(v)
+    s = v;
+  elseif iscell(v)
+    s = strjoin(cellfun(@val2str,reshape(v,1,[]),'UniformOutput',false),' ');
+  elseif islogical(v)
+    s = strjoin(cellstr(char(string(reshape(v,1,[])))),' ');
+  elseif isnumeric(v)
+    s = strjoin(arrayfun(@(x) sprintf('%g',x),reshape(v,1,[]),'UniformOutput',false),' ');
+  else
+    s = sprintf('%dx%d %s',size(v,1),size(v,2),class(v));
   end
-  Vjson4 = cleanupVjson(Vjson4); 
-  cat_io_json(Pprofile, Vjson4);
-  cat_io_json(Pprofile2,Vjson4);
-
 end
 % =========================================================================
 function Vjson = cleanupVjson(Vjson,type)
@@ -429,170 +595,18 @@ function Vjson = cleanupVjson(Vjson,type)
   Vjson = rmfield(Vjson,RFn); 
 end
 % =========================================================================
-function updateDBtables(Vjson, Pnii, Pdbdir, Ptbldir, fnameparts, sites, opts) %#ok<INUSL> Pdbdir for the disabled scan/session lists
-%updateDBtables. Update the overview tables of the database (subjects, 
-%  studies, protocols) for a scan of the database directory Pdbdir 
-%  (sub-*/ses-*/snr-*) with its JSON sidecar information Vjson and its 
-%  image Pnii (if available, e.g. not for JSON-only outputs). 
-
-%datetime( Vjson.AcquisitionDateTime , 'Format','yyyyMMdd-hhmmss'))
-
-  % DB lists 
-  Pstudytable    = spm_file(fullfile(Ptbldir,'studies'),  'ext', opts.tableformat); 
-  Psubjecttable  = spm_file(fullfile(Ptbldir,'subjects'), 'ext', opts.tableformat); 
-  Pprotocoltable = spm_file(fullfile(Ptbldir,'protocols'),'ext', opts.tableformat); 
-
-  if isfield(Vjson,'ProcedureStepDescription')
-    ProcedureStepDescription = getFileString(Vjson.ProcedureStepDescription);
-  else
-    ProcedureStepDescription = getFileString(Vjson.SeriesDescription);
-  end
-  % SCAN-LIST:
-  %  - to avoid double entries ... but what to do ...
-  %  - a flag (keep old / take new)
-%%%%%%%  * this grows too strong >> internal variable + mat     
-  if 0
-    Thdr    = {'SeriesInstanceUID','DBpath'}; %,'IMPORTpath'}; 
-    Tnewrow = {Vjson.SeriesInstanceUID, Pdbdir}; %, Pjson}; 
-    cat_io_dcm2bids_helper('updateTable',Pscantable,Thdr,Tnewrow,1,opts.rerun);
-  end
-
-  % SESSION-LIST:
-  %  - to avoid double entries ... but what to do ...
-  %  - a flag (keep old / take new)
-%%%%%%%  * this one is useless      
-  if 0
-    Thdr    = {'StudyInstanceUID','DBpath','ProcedureStepDescription'}; %,'IMPORTpath'}; 
-    Tnewrow = {Vjson.StudyInstanceUID, spm_fileparts(Pdbdir), Vjson.ProcedureStepDescription}; %, Pjson}; 
-    cat_io_dcm2bids_helper('updateTable',Psessiontable,Thdr,Tnewrow,1,opts.rerun);
-  end
-
-
-  % SUBJECT-LIST ("constant" data):
-%%%%%%%  * this one is nice but a session counter would be nice 
-%%%%%%%  * maybe the scan period 
-%%%%%%%  * import path (not robust :/)
+function updateDBtables(Vjson, Ptbldir, sites, opts) 
+%updateDBtables. Update the subject table of the database (subjects.csv in
+%  catDCM2BIDSdb-tables, one row per patient) for a scan with its JSON 
+%  sidecar Vjson. The tables of the scans, sites, and protocols are created 
+%  at the end of each run (see cat_io_dcm2bids_tables). 
   site    = setupSites(Vjson,sites);
   Thdr    = {'PatientID','PatientName', 'PatientSex','PatientBirthDate','SiteID'}; 
   Tnewrow = {Vjson.PatientID, Vjson.PatientName, ...
              Vjson.PatientSex, Vjson.PatientBirthDate, ...
              site}; 
-  cat_io_dcm2bids_helper('updateTable',Psubjecttable,Thdr,Tnewrow,1,opts.rerun);
-  
-
-  % STUDY-LIST (defined by ProcedureStepDescription with additional list of subjects):
-  % - ProcedureStepDescription with subjects
-  Pstudysubtable = spm_file(fullfile(Ptbldir,'study_subject_lists',ProcedureStepDescription),'ext',opts.tableformat); 
-  Thdr    = {'Subjects'}; 
-  Tnewrow = {Vjson.PatientID}; 
-  nsub    = cat_io_dcm2bids_helper('updateTable',Pstudysubtable,Thdr,Tnewrow,1,opts.rerun);
-  % - study-list with number of subjects
-  Thdr    = {'ProcedureStepDescription','nSubjects'}; 
-  Tnewrow = {ProcedureStepDescription,nsub}; 
-  cat_io_dcm2bids_helper('updateTable',Pstudytable,Thdr,Tnewrow,1,opts.rerun);
-% with counters for anat, func, fmap, dwi ?      
-  
-
-  % PROTOCOLS-LIST:
-  datatype0         = cat_io_dcm2bids_bids('setupDatatype',Vjson.ProtocolName); 
-  ProtocolName      = getFileString(strrep(fnameparts{2},'_','-'));
-  %Pprotocolsubtable = spm_file(fullfile(Ptbldir,ProcedureStepDescription,datatype0,ProtocolName),'ext',opts.tableformat); 
-  Pprotocolsubtable = spm_file(fullfile(Ptbldir,'protocols',datatype0,ProtocolName),'ext',opts.tableformat); 
-
-  % save shortened protocol as json to be used as filter, with the image 
-  % information (Dimensions [x y z volumes], VoxelSize [x y z]) if the
-  % image is available, which is not used to separate protocols 
-  Vjson0 = cleanupVjson(Vjson,'protocol'); 
-  IFN    = {'Dimensions','VoxelSize'}; 
-  for fni = 1:numel(IFN)
-    if isfield(Vjson,IFN{fni}), Vjson0.(IFN{fni}) = Vjson.(IFN{fni}); end
-  end
-  Pjson0 = spm_file( Pprotocolsubtable,'ext','.json'); 
-  ProtocolName0 = ProtocolName; 
-  BFN = {'ProcedureStepDescription'};
-  Vjson0 = rmfield(Vjson0,intersect(fieldnames(Vjson0),BFN)); 
-  if ~exist(Pjson0,'file')
-    cat_io_json( Pjson0, Vjson0); 
-  else
-    %Pjsons = cat_vol_findfiles( fullfile(Ptbldir,ProcedureStepDescription,datatype0)  , '*.json');
-    Pjsons = cat_vol_findfiles( fullfile(Ptbldir,'protocols',datatype0)  , '*.json');
-    Pfit = false(size(Pjsons)); 
-    for pi = 1:numel(Pjsons)
-      Vjson1   = cat_io_json( Pjsons{pi} ); 
-      Vjson1   = rmfield(Vjson1,intersect(fieldnames(Vjson1),BFN)); 
-      Pfit(pi) = cat_io_structEqual( rmfield(Vjson0,intersect(fieldnames(Vjson0),IFN)), ...
-                              rmfield(Vjson1,intersect(fieldnames(Vjson1),IFN)) ); 
-      % add the image information if it was not available before (JSON-only import)
-      if Pfit(pi) && isfield(Vjson0,'VoxelSize') && ~isfield(Vjson1,'VoxelSize')
-        Vjson1 = cat_io_json( Pjsons{pi} ); 
-        for fni = 1:numel(IFN), Vjson1.(IFN{fni}) = Vjson0.(IFN{fni}); end
-        cat_io_json( Pjsons{pi}, Vjson1 ); 
-      end
-    end
-    if any( Pfit )
-      % name of the matching protocol (variant), preferably of this protocol
-      fiti = find( Pfit & startsWith(spm_file(Pjsons,'basename'),ProtocolName), 1); 
-      if isempty(fiti), fiti = find(Pfit,1); end
-      ProtocolName0 = spm_file(Pjsons{fiti},'basename'); 
-    else
-      ci = 0;
-      while exist(Pjson0,'file')
-        ci = ci+1;
-        Pjson0 = spm_file(Pprotocolsubtable,'suffix',sprintf('_%d',ci),'ext','.json'); 
-        ProtocolName0 = spm_file(ProtocolName,'suffix',sprintf('_%d',ci)); 
-      end
-      cat_io_json( Pjson0, Vjson0); 
-    end
-  end
-  Thdr    = {'Subjects'}; 
-  Tnewrow = {Vjson.PatientID}; 
-  nsub    = cat_io_dcm2bids_helper('updateTable',Pprotocolsubtable,Thdr,Tnewrow,1,opts.rerun);
-
-  % - study-list with number of subjects
-  Thdr    = {'ProtocolName', 'nSubjects', ...
-             'MagneticFieldStrength', 'Manufacturer', 'SoftwareVersions' ...
-             'ProcedureStepDescription', ... % quite variant but may be useful to name the studies in future
-             ...'PulseSequenceName', ... % quite variant
-             'MRAcquisitionType', 'ScanningSequence', 'SequenceVariant', ...
-             'ScanOptions', ...
-             'ImageType', ...
-             'NonlinearGradientCorrection',...
-             'RepetitionTime', 'InversionTime', 'EchoTime', ...
-             'FlipAngle', ...
-             'BaseResolution', 'CoilString', 'CoilCombinationMethod', ...
-             'MatrixCoilMode', 'ParallelReductionFactorInPlane', ...
-             'PercentPhaseFOV','PercentSampling', ...
-             'AcquisitionMatrixPE', 'ReconMatrixPE', ...
-             'PixelBandwidth', 'DwellTime', ...
-             'PhaseEncodingDirection', 'EchoTrainLength' ...
-             ... 'BandwidthPerPixelPhaseEncode', 'EffectiveEchoSpacing'; 
-             }; 
-  Vjson0 = Vjson; 
-  for fni = 1:numel(Thdr)
-    if ~isfield(Vjson0,Thdr{fni}), Vjson0.(Thdr{fni}) = ''; end
-    if iscell(Vjson0.(Thdr{fni}))
-      Vjson0.(Thdr{fni}) = strjoin(Vjson0.(Thdr{fni})); 
-    end
-  end
-  
-  % add image dimensions (x, y, z, volumes) and voxel size (x, y, z) as 
-  % separate columns (if the image is available)
-  if exist(Pnii,'file')
-    [vx,dim] = cat_io_dcm2bids_helper('niiHeaderInfo',Pnii);
-  else
-    vx = nan(1,3); dim = nan(1,4); 
-  end
-  for di = 1:4, Thdr{end+1} = sprintf('dim%d',di); Vjson0.(Thdr{end}) = dim(di); end %#ok<AGROW>
-  for di = 1:3, Thdr{end+1} = sprintf('vx%d',di);  Vjson0.(Thdr{end}) = round(vx(di),4); end %#ok<AGROW>
-
-  % new protocols, or with rerun replaced, or the image information of 
-  % JSON-only imports added later 
-  Tnewrow = {sprintf('%s_%s',datatype0,ProtocolName0),nsub}; 
-  for fni = 3:numel(Thdr), Tnewrow{fni} = Vjson0.(Thdr{fni}); end
-  if opts.rerun, reimport = 1; else, reimport = 2; end
-  cat_io_dcm2bids_helper('updateTable',Pprotocoltable,Thdr,Tnewrow,1,reimport);
-
-
+  cat_io_dcm2bids_helper('updateTable', ...
+    spm_file(fullfile(Ptbldir,'subjects'),'ext',opts.tableformat),Thdr,Tnewrow,1,opts.rerun);
 end
 % =========================================================================
 function str = getFileString(str)

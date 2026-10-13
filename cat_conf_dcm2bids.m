@@ -61,7 +61,7 @@ function dcm2bids = cat_conf_dcm2bids(expert)
    ['  ' v s s s s e '{anat|dwi|func|fmaps|...}']
    ['  ' v s s s s s e 'sub-*_ses-*_*.{nii|json} .. raw images']
    ['  ' b 'BIDS-private          .. critical patient information (name, day of birth)']
-   ['  ' b 'BIDS-report           .. overview tables']
+   ['  ' b 'BIDS-report           .. report figure (report_*.pdf), tables, and renderings']
    ['  ' b 'catDCM2BIDSdb         .. main "database"']
    ['  ' e 'catDCM2BIDSdb-tables  .. main database overview tables']
    ''
@@ -97,8 +97,10 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   protocoldir.help     = {
    ['Select directories with JSON files with specified DICOM entries to filter for relevant protocols. ' ...
     'If no directory is specified then all data will be exported to a BIDS directory. ' ...
-    'The file name of the JSON filter file together with the sequence number ' ...
-    'will be used to specify the BIDS acquisition field "acq-###-FILENAME"']
+    'The file name of the JSON filter file together with the series number ' ...
+    'will be used to specify the BIDS acquisition entity "acq-###FILENAME", where scans of one acquisition ' ...
+    '(e.g. SBRef and bold, field-map magnitude and phase, AP and PA) get the series number of the first one ' ...
+    'and the file name without the information of the suffix and further entities (e.g. AP for dir-AP).']
     ''
     'E.g., a "myt1w.json" with:'
     '  {'
@@ -346,7 +348,7 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   % preprocessing
   preprocessing         = cfg_menu;
   preprocessing.tag     = 'preprocessing';
-  preprocessing.name    = 'Run basic SPM preprocessing (expert)';
+  preprocessing.name    = 'Run basic preprocessing';
   preprocessing.labels  = {'No','Yes','Yes (export to derivatives)'}; 
   preprocessing.values  = {0,1,2};
   preprocessing.val     = {def.opts.preprocessing};
@@ -354,6 +356,55 @@ function dcm2bids = cat_conf_dcm2bids(expert)
    ['Run SPM preprocessing to estimate brain tissue volumes (anat), ' ...
     'diffusivity (FA/AD) and functional connectivity using SPM. ' ...
     'Export realigned maps. ']};
+
+  % preprocessing level, i.e. the accuracy and processing time of the DTI 
+  % and rs-fMRI measures (see levelParameters in cat_io_dcm2bids_pp_anat): the 
+  % default user selects the optimized level or the preview, whereas the 
+  % expert enters a (continuous) level with the evaluation table as help
+  if expert
+    pplevel             = cfg_entry;
+    pplevel.tag         = 'pplevel';
+    pplevel.name        = 'Preprocessing accuracy level (expert)';
+    pplevel.strtype     = 'r';
+    pplevel.num         = [1 1];
+    pplevel.val         = {def.opts.pplevel};
+    pplevel.help        = { ...
+      ['Accuracy and processing time of the DTI and rs-fMRI measures as continuous level from 1 to 4 (the ' ...
+       'segmentation of the anatomical scans is the same for all levels, see levelParameters in cat_io_dcm2bids_pp_anat): ']
+      '  1 - full quality: SPM default parameters of the distortion correction (SCOPE) at the native resolution (reference)'
+      '  2 - optimized: fast settings of SCOPE at 2.5 mm'
+      '  3 - quick review: SCOPE at 4 mm and only the first scan of each type (e.g. one T1w, DWI, and rs-fMRI scan per session)'
+      '  4 - preview: SCOPE at 6 mm (rough maps)'
+      ''
+      ['Evaluation with a pilot session (T1w, 2 DWI, and rs-fMRI scans): processing time, differences to level 1 ' ...
+       '(WM FA, tSNR, and segregation), and correlation with level 1 (FA map and connectivity matrix): ']
+      '  level           time    WM FA   r(FA map)  tSNR   segregation  r(conn)'
+      '  1 full quality  26 min  0.352     1        38.3     0.142        1'
+      '  1.5             17 min  +0.000    0.95     -0.2    +0.003        0.99'
+      '  2 optimized      9 min  +0.000    0.93     +0.0    +0.003        0.99'
+      '  2.5              7 min  +0.000    0.85     -0.1    +0.009        0.99'
+      '  3 quick review   4 min  +0.000    0.82     +0.1    +0.019        0.99'
+      '  3.5            2.5 min  +0.000    0.78     -0.3    +0.015        0.97'
+      '  4 preview      2.5 min  +0.000    0.79     +0.1    +0.027        0.98'
+      ''
+      ['I.e., the global measures are the same for all levels, whereas the maps differ slightly. Nevertheless, ' ...
+       'the data of a study should be processed with the same level. Results of a lower level (higher accuracy) ' ...
+       'are kept. ']
+      };
+  else
+    pplevel             = cfg_menu;
+    pplevel.tag         = 'pplevel';
+    pplevel.name        = 'Preprocessing accuracy';
+    pplevel.labels      = {'Optimized','Preview'};
+    pplevel.values      = {2,4};
+    [~,li]              = min(abs([2 4] - def.opts.pplevel)); 
+    pplevel.val         = pplevel.values(li);
+    pplevel.help        = { ...
+      ['Accuracy and processing time of the DTI and rs-fMRI measures: "Optimized" for the final results ' ...
+       '(about 9 min for a session with T1w, 2 DWI, and rs-fMRI scans) and "Preview" for a fast review ' ...
+       '(about 2.5 min, with the same global measures, e.g. the white matter FA, but rougher maps). The data of ' ...
+       'a study should be processed with the same accuracy. Results of the higher accuracy are kept. ']};
+  end
 
   % optimizing: denoising, bias-correction?, resampling to MNI with specific BB
   %{
@@ -383,10 +434,11 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   tolerance.tag      = 'tolerance';
   tolerance.name     = 'Tolerance';
   tolerance.help     = {
-      'Tolerance level of input parameters in percent. E.g., if the TR time should be 2.1 but is 2.2.'
+      'Tolerance of numeric protocol parameters in percent. The same protocol results in the same values (also for different scanner software versions), i.e., the tolerance is only required for the rounding of values (e.g. a pixel bandwidth of 2289 or 2290 Hz/px, i.e., 0.04%). Larger values would hide real changes of the protocol, e.g., an inversion time of 1000 instead of 1030 ms (3%). '
     };
   tolerance.strtype  = 'e';
   tolerance.num      = [1 1];
+  tolerance.hidden   = expert<1; 
   tolerance.val      = {def.opts.tolerance};
 
   % rendering of slices of each scan (BIDS-report/render/..., see 
@@ -540,12 +592,22 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   dorender.name   = 'Yes';
   dorender.val    = {rsource, rsessions, rslicemode, rsort, rtiles, rslices, rrows, rsubjects};
   dorender.help   = {'Render slices of each scan. '};
-
-  render          = cfg_choice;
-  render.tag      = 'render';
-  render.name     = 'Render slices';
-  render.values   = {norender, dorender};
-  if def.opts.render.run, render.val = {dorender}; else, render.val = {norender}; end
+  
+  if expert
+    render          = cfg_choice;
+    render.tag      = 'render';
+    render.name     = 'Render slices';
+    render.values   = {norender, dorender};
+    if def.opts.render.run, render.val = {dorender}; else, render.val = {norender}; end
+  else
+    render        = cfg_menu;
+    render.tag    = 'render';
+    render.name   = 'Render reports';
+    render.labels = {'No','Yes'};
+    render.values = {0,1};
+    render.val    = {1};
+    render.help   = {'Render slices of each scan. '};
+  end
   render.help     = {
    ['Render slices of each scan in MNI space into PNG pages in the BIDS-report directory ' ...
     '(BIDS-report/render/[protocol/]datatype/subtype/) for the visual identification of outliers ' ...
@@ -600,7 +662,14 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   dslicense        = cfg_menu;
   dslicense.tag    = 'License';
   dslicense.name   = 'License';
-  dslicense.labels = {'CC0-1.0','PDDL-1.0','CC-BY-4.0','CC-BY-SA-4.0','CC-BY-NC-4.0','ODC-BY-1.0','other / not specified'};
+  dslicense.labels = {
+    'CC0-1.0 (public domain, no restriction, most common)', ...
+    'PDDL-1.0 (public domain for databases)', ...
+    'CC-BY-4.0 (free use with attribution of the authors)', ...
+    'CC-BY-SA-4.0 (as CC-BY, derived data under the same license', ...
+    'CC-BY-NC-4.0 (as CC-BY, but no commercial use)', ...
+    'ODC-BY-1.0 (free use of the database with attribution)', ...
+    'other / not specified'};
   dslicense.values = {'CC0-1.0','PDDL-1.0','CC-BY-4.0','CC-BY-SA-4.0','CC-BY-NC-4.0','ODC-BY-1.0',''};
   dslicense.val    = {def.dataset.License};
   dslicense.help   = {
@@ -608,18 +677,18 @@ function dcm2bids = cat_conf_dcm2bids(expert)
     'of BIDS datasets, the most restrictive license of this setting and the source datasets is used ' ...
     '(with a warning). ']
     ''
-    '  CC0-1.0      .. Creative Commons Zero: public domain, no restrictions (most common for open data)'
-    '  PDDL-1.0     .. Open Data Commons Public Domain Dedication: public domain for databases'
-    '  CC-BY-4.0    .. Creative Commons Attribution: free use with attribution of the authors'
+    '  CC0-1.0 .. Creative Commons Zero: public domain, no restrictions (most common for open data)'
+    '  PDDL-1.0 .. Open Data Commons Public Domain Dedication: public domain for databases'
+    '  CC-BY-4.0 .. Creative Commons Attribution: free use with attribution of the authors'
     '  CC-BY-SA-4.0 .. Creative Commons Attribution-ShareAlike: as CC-BY, derived data under the same license'
     '  CC-BY-NC-4.0 .. Creative Commons Attribution-NonCommercial: as CC-BY, but no commercial use'
-    '  ODC-BY-1.0   .. Open Data Commons Attribution: free use of the database with attribution'
+    '  ODC-BY-1.0 .. Open Data Commons Attribution: free use of the database with attribution'
     '  other / not specified .. no license entry (e.g. data under a data use agreement)'
     };
 
   dsreadme         = cfg_files;
   dsreadme.tag     = 'README';
-  dsreadme.name    = 'README head';
+  dsreadme.name    = 'README file';
   dsreadme.filter  = 'any';
   dsreadme.ufilter = '.*\.(txt|md|TXT|MD)$';
   dsreadme.num     = [0 1];
@@ -676,8 +745,8 @@ function dcm2bids = cat_conf_dcm2bids(expert)
 
   dataset          = cfg_branch;
   dataset.tag      = 'dataset';
-  dataset.name     = 'Dataset';
-  dataset.val      = {dsname, dsauthors, dshowto, dslicense, dsreadme, dsack, dsfunding, dsethics, dsrefs, dsdoi};
+  dataset.name     = 'Dataset Descriptor';
+  dataset.val      = {dsauthors, dsname, dshowto, dslicense, dsreadme, dsack, dsfunding, dsethics, dsrefs, dsdoi};
   dataset.help     = {
    ['Description of the BIDS dataset that is written to the dataset_description.json and README.md ' ...
     'files of the BIDS directory. BIDSVersion, DatasetType, and GeneratedBy (catDCM2BIDS and dcm2niix) are ' ...
@@ -688,14 +757,14 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   % =======================================================================
   dicts            = cfg_branch;
   dicts.tag        = 'dicts';
-  dicts.name       = 'Dictionary files';
+  dicts.name       = 'Dictionary Files';
   dicts.val        = {protocoldir, centerdict, studydict, subjectdict, };
   dicts.help       = {'Optional files to replace standard variables by more handy names or codes. '}; 
 
   opts            = cfg_branch;
   opts.tag        = 'opts';
   opts.name       = 'Options';
-  opts.val        = {ProtocolFileName, studies, anonymize, tolerance, preprocessing, ...
+  opts.val        = {ProtocolFileName, studies, anonymize, tolerance, preprocessing, pplevel, ...
                       gzipi, gzipe, output, protocolsubdirs, subIDform, render};
   opts.help       = {['Parameters to control the processing and output of ' ...
                       'the converted data and its export to BIDS. ']}; 
@@ -708,7 +777,7 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   dcm2bids.name   = 'DICOM2BIDS';
   dcm2bids.prog   = @cat_io_dcm2bids;
   dcm2bids.vout   = @vout_io_dcm2bids;
-  dcm2bids.val    = {datadir, outdir, subdir, dataset, dicts, opts}; 
+  dcm2bids.val    = {datadir, outdir, subdir, dicts, dataset, opts}; 
   dcm2bids.help   = { ...
    ['This batch uses DCM2NIIX to convert DICOM into NIFTI images with JSON sidecars. ' ...
     'It stores the converted data and reorganizes the output in BIDS. ' ...

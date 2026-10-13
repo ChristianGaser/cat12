@@ -1,29 +1,30 @@
 function varargout = cat_io_dcm2bids_bids(action,varargin)
 %cat_io_dcm2bids_bids. BIDS naming and output files of cat_io_dcm2bids.
-%  Naming: BIDS conform labels (bidsLabel) and the datatype, suffix, and 
-%  task of a scan by its protocol name (setupDatatype, setupSuffix, 
-%  setupTask). BIDSoutputs lists the datatypes and suffixes of the output 
-%  structure (batch dependencies), getBIDSoutputs collects the exported 
-%  images. 
+%  Naming: BIDS conform labels (bidsLabel) and the datatype, suffix, 
+%  entities, and task of a scan by its protocol name and sidecar 
+%  (setupDatatype, setupSuffix, entityString, setupTask). BIDSoutputs lists
+%  the datatypes and suffixes of the output structure (batch dependencies),
+%  getBIDSoutputs collects the exported images. 
 %  Output files: sessions.tsv of each subject (writeSubjectTSV, with SOR), 
 %  participants.tsv and the private participants table (writeParticipantTSV,
 %  writePrivateTSV), the IntendedFor references of BIDS inputs 
-%  (remapIntendedFor), dataset_description.json, README.md, and 
-%  participants.json (writeDatasetFiles with the information of the imported
-%  BIDS datasets, see getBIDSsources), and the gzip status of the output 
-%  (gzipunzipOutputdata).
+%  (remapIntendedFor), dataset_description.json, README.md, 
+%  participants.json, and .bidsignore (writeDatasetFiles with the information
+%  of the imported BIDS datasets, see getBIDSsources), and the gzip status of
+%  the output (gzipunzipOutputdata).
 %
 %  varargout = cat_io_dcm2bids_bids(action,varargin)
 %
 %  Actions (see the help of the local functions):
 %    label = cat_io_dcm2bids_bids('bidsLabel',str,camelCase)
 %    datatype = cat_io_dcm2bids_bids('setupDatatype',pro)
-%    [suffix,pro] = cat_io_dcm2bids_bids('setupSuffix',datatype,pro,ser)
+%    [suffix,ent,label] = cat_io_dcm2bids_bids('setupSuffix',datatype,pro,V)
+%    str = cat_io_dcm2bids_bids('entityString',E)
 %    task = cat_io_dcm2bids_bids('setupTask',datatype,pro)
 %    out = cat_io_dcm2bids_bids('BIDSoutputs')
 %    out = cat_io_dcm2bids_bids('getBIDSoutputs',PBIDS,out)
 %    cat_io_dcm2bids_bids('remapIntendedFor',intended,srcmap)
-%    cat_io_dcm2bids_bids('writeSubjectTSV',Vjson,sub,ses,Poutdir,BIDSsubdir,anon,SOR)
+%    cat_io_dcm2bids_bids('writeSubjectTSV',Vjson,sub,ses,Poutdir,BIDSsubdir,anon,SOR,site)
 %    cat_io_dcm2bids_bids('writeParticipantTSV',P,Pparticipants,anon)
 %    cat_io_dcm2bids_bids('writePrivateTSV',P,Pprivate)
 %    sources = cat_io_dcm2bids_bids('getBIDSsources',roots)
@@ -33,7 +34,7 @@ function varargout = cat_io_dcm2bids_bids(action,varargin)
 %  See also cat_io_dcm2bids.
 
   switch action
-    case {'bidsLabel','setupDatatype','setupSuffix','setupTask','BIDSoutputs', ...
+    case {'bidsLabel','setupDatatype','setupSuffix','entityString','setupTask','BIDSoutputs', ...
           'getBIDSoutputs','remapIntendedFor','writeSubjectTSV', ...
           'writeParticipantTSV','writePrivateTSV','getBIDSsources', ...
           'writeDatasetFiles','gzipunzipOutputdata'}
@@ -98,10 +99,54 @@ function datatype = setupDatatype(pro)
   end
 end
 % =========================================================================
-function [suffix,pro] = setupSuffix(datatype,pro,ser)
-  suffix = '';
+function [suffix,ent,label] = setupSuffix(datatype,pro,V)
+%setupSuffix. BIDS suffix, further entities, and acquisition label of a scan
+%  by its datatype, protocol name pro, and JSON sidecar V:
+%    anat  T1w, T2w, ... (by the protocol name), MP2RAGE with inv-<n> for 
+%          the inversion images (e.g. INV1 or inv-1 in the protocol or 
+%          series name), and UNIT1 for the uniform image (UNI)
+%    func  bold or sbref (SBRef in the protocol or series name)
+%    dwi   dwi or sbref
+%    fmap  epi for EPI field maps (e.g. spin-echo AP/PA) with dir-<label>
+%          (see directionLabel), otherwise (e.g. GRE) magnitude1/magnitude2
+%          (EchoNumber), phasediff, phase1/phase2 (phase images of the
+%          echoes without EchoTime1/EchoTime2), or fieldmap (Units Hz)
+%  Phase images (ImageType P or PHASE) get part-phase (real and imaginary
+%  images part-real and part-imag) and multi-echo images (EchoNumber) of
+%  anat and func echo-<n>. ent is the string of the entities in BIDS order
+%  (e.g. "_dir-AP_part-phase"). The label is the protocol name without the
+%  tokens of the information of the suffix and entities (e.g. SBRef, phase,
+%  e1, AP, inv-1) and without trailing magnitude or phase tokens (e.g. 
+%  "_phase_mag"), i.e. the images of one acquisition (SBRef and bold, 
+%  field-map magnitude and phase, AP and PA, MP2RAGE inversions) get the 
+%  same label (see cat_io_dcm2bids).
+  if ~exist('V','var') || ~isstruct(V), V = struct(); end
+  ser   = ''; if isfield(V,'SeriesDescription'), ser = char(V.SeriesDescription); end
+  itype = {};
+  for fn = {'ImageType','ImageTypeText'}
+    if isfield(V,fn{1}), itype = [itype; upper(reshape(cellstr(V.(fn{1})),[],1))]; end %#ok<AGROW>
+  end
+  echo  = [];
+  if isfield(V,'EchoNumber') && isnumeric(V.EchoNumber) && isscalar(V.EchoNumber), echo = V.EchoNumber; end
+  if any(ismember(itype,{'P','PHASE'})),  part = 'phase';
+  elseif any(strcmp(itype,'REAL')),       part = 'real';
+  elseif any(strcmp(itype,'IMAGINARY')),  part = 'imag';
+  else,                                   part = '';
+  end
+  partok = struct('phase',{{'phase','pha','ph'}},'real',{{'real'}},'imag',{{'imag','imaginary'}});
+  issbref = cat_io_contains(lower(pro),{'sbref'}) || cat_io_contains(lower(ser),{'sbref'});
+  suffix  = ''; ent = struct(); tok = {};
+
   if strcmp( datatype , 'anat')
-    if cat_io_contains( lower(pro) , {'t1map'})
+    inv = regexpi([pro ' ' ser],'(?:^|[-_ ])inv[-_ ]?(\d)(?=$|[-_ ])','tokens','once'); 
+    if ~isempty(inv) % inversion images of MP2RAGE
+      suffix  = 'MP2RAGE'; 
+      ent.inv = str2double(inv{1}); 
+      tok     = {sprintf('inv%d',ent.inv)}; 
+    elseif ~isempty(regexpi([pro ' ' ser],'(?:^|[-_ ])uni(?=$|[-_ ])','once')) && ...
+        ~cat_io_contains( lower(pro) , {'t1w'}) % uniform image of MP2RAGE
+      suffix = 'UNIT1'; 
+    elseif cat_io_contains( lower(pro) , {'t1map'})
       suffix = 'T1map'; 
     elseif cat_io_contains( lower(pro) , {'t2map'})
       suffix = 'T2map'; 
@@ -124,29 +169,96 @@ function [suffix,pro] = setupSuffix(datatype,pro,ser)
     elseif cat_io_contains( lower(pro) , {'flair'})
       suffix = 'FLAIR';
     end
-  
-  elseif strcmp( datatype , 'dwi')
-    if cat_io_contains( lower(pro) , {'sbref'}) || cat_io_contains( lower(ser) , {'sbref'})
-      suffix = 'sbref';
+    if any(strcmp(suffix,{'T1w','T2w','PDw','T2star','FLAIR','PDT2','MP2RAGE'})) % no maps
+      if ~isempty(echo), ent.echo = echo; end
+      if ~isempty(part), ent.part = part; end
+    end
+
+  elseif any(strcmp( datatype , {'func','dwi'}))
+    if issbref
+      suffix = 'sbref'; tok = {'sbref'};
+    elseif strcmp( datatype , 'func')
+      suffix = 'bold';
     else
       suffix = 'dwi';
     end
-    %pro = cat_io_strrep(pro,{'sbref'},{''});
-  
+    if ~isempty(echo) && strcmp( datatype , 'func'), ent.echo = echo; end
+    if ~isempty(part), ent.part = part; end
+
   elseif strcmp( datatype , 'fmap')
-    if cat_io_contains( lower(pro) , {'fieldmap'})
-      suffix = 'fieldmap'; 
-    elseif cat_io_contains( lower(pro) , {'phase'})
-      suffix = 'phase'; 
+    seq = '';
+    if isfield(V,'ScanningSequence'), seq = upper(strjoin(cellstr(V.ScanningSequence),'\')); end
+    if any(strcmp(strsplit(seq,{'\','_'}),'EP')) || (isempty(seq) && isfield(V,'TotalReadoutTime'))
+      % EPI field maps with opposite phase-encoding directions
+      suffix  = 'epi';
+      ent.dir = directionLabel(pro,ser,V);
+      tok     = {ent.dir};
+      if ~isempty(part), ent.part = part; end
+    elseif isfield(V,'Units') && strcmpi(char(V.Units),'Hz')
+      suffix = 'fieldmap';
+    elseif strcmp(part,'phase')
+      % GRE phase difference (with EchoTime1 and EchoTime2) or phase images
+      if ~isempty(echo) && ~(isfield(V,'EchoTime1') && isfield(V,'EchoTime2'))
+        suffix = sprintf('phase%d',echo);
+      else
+        suffix = 'phasediff';
+      end
     else
-      suffix = 'epi'; 
+      % GRE magnitude images of the echoes
+      if isempty(echo), echo = 1; end
+      suffix = sprintf('magnitude%d',echo);
+      tok    = {'mag','magnitude'};
     end
-  
-  elseif strcmp( datatype , 'func')  
-    if cat_io_contains( lower(pro) , {'sbref'}) || cat_io_contains( lower(ser) , {'sbref'})
-      suffix = 'sbref'; 
-    else
-      suffix = 'bold'; 
+    if ~strcmp(suffix,'epi') && ~isempty(echo), tok = [tok {sprintf('e%d',echo)}]; end
+  end
+  if isfield(ent,'echo'), tok = [tok {sprintf('e%d',ent.echo)}]; end
+  if isfield(ent,'part') || any(strcmp(suffix,{'phasediff','phase1','phase2'}))
+    tok = [tok partok.(part)];
+  end
+
+  % entities in BIDS order and the label without the tokens of their 
+  % information and without trailing tokens of the image part (e.g. 
+  % "_phase_mag" of protocols with magnitude and phase images)
+  ent   = entityString(ent);
+  parts = regexp(regexprep(pro,'(?i)(inv)[-_ ](\d)','$1$2'),'[-_ ]+','split');
+  parts = parts(~ismember(lower(parts),lower(tok)));
+  while numel(parts) > 1 && any(strcmpi(parts{end},{'mag','magnitude','phase','pha','ph'}))
+    parts(end) = [];
+  end
+  label = strjoin(parts,'-');
+end
+% =========================================================================
+function d = directionLabel(pro,ser,V)
+%directionLabel. Label of the dir entity of an EPI field map, i.e., the
+%  direction token of the protocol or series name (AP, PA, LR, RL, SI, IS),
+%  otherwise the direction of the PhaseEncodingDirection for the axes of
+%  the dcm2niix output of axial or coronal slices (i: R>L, j: P>A, k: I>S).
+%  BIDS requires the PhaseEncodingDirection for the dir entity, i.e., the
+%  label is empty without it.
+  d = '';
+  if ~isfield(V,'PhaseEncodingDirection') || isempty(V.PhaseEncodingDirection), return; end
+  t = regexpi([pro ' ' ser],'(?:^|[_ -])(AP|PA|LR|RL|SI|IS)(?=$|[_ -])','tokens','once');
+  if ~isempty(t)
+    d = upper(t{1});
+  else
+    map = {'i','RL'; 'i-','LR'; 'j','PA'; 'j-','AP'; 'k','IS'; 'k-','SI'};
+    d   = map(strcmp(map(:,1),char(V.PhaseEncodingDirection)),2);
+    if isempty(d), d = ''; else, d = d{1}; end
+  end
+end
+% =========================================================================
+function str = entityString(E)
+%entityString. File name part of the entities in E (structure with the
+%  keys of the entities as fields, e.g. imported BIDS names) that follow the
+%  acq entity, in BIDS order, e.g. "_dir-AP_echo-1_part-phase". Other keys
+%  (sub, ses, task, acq, run) are set by cat_io_dcm2bids.
+  keys = {'ce','rec','dir','mod','echo','flip','inv','mt','part','chunk'};
+  str  = '';
+  for ki = 1:numel(keys)
+    if isfield(E,keys{ki}) && ~isempty(E.(keys{ki}))
+      v = E.(keys{ki});
+      if isnumeric(v), v = sprintf('%d',v); end
+      str = sprintf('%s_%s-%s', str, keys{ki}, char(v));
     end
   end
 end
@@ -276,15 +388,17 @@ function remapIntendedFor(intended, srcmap)
   end
 end
 % =========================================================================
-function writeSubjectTSV(Vjson,sub,ses,Poutdir,BIDSsubdir,anon,SOR)
+function writeSubjectTSV(Vjson,sub,ses,Poutdir,BIDSsubdir,anon,SOR,site)
 %writeSubjectTSV. BIDS sessions file of a subject (sub-<label>_sessions.tsv) 
-%  with one row per session: age, weight, and the session orientation 
-%  rating SOR (see writeSessionAffines in cat_io_dcm2bids_pp). The rows of
+%  with one row per session: site (abbreviation, see setupSites in 
+%  cat_io_dcm2bids_protocols), age, weight, and the session orientation 
+%  rating SOR (see writeSessionAffines in cat_io_dcm2bids_pp_anat). The rows of
 %  other sessions are kept (by column name, i.e., also from files with other
 %  columns). Missing values are n/a. 
   if ~exist('SOR','var') || isempty(SOR), SOR = nan; end
+  if ~exist('site','var') || isempty(site), site = 'n/a'; end
   Psubject = fullfile(Poutdir,BIDSsubdir,sub,sprintf('%s_sessions.tsv',sub)); % BIDS sessions file
-  hdr      = {'session_id','age','weight','SOR'}; 
+  hdr      = {'session_id','site','age','weight','SOR'}; 
   Tsubject = hdr; 
   if exist(Psubject,'file')
     T0 = cat_io_csv(Psubject, '','', struct('delimiter','\t','convert2double',-1)); 
@@ -294,7 +408,7 @@ function writeSubjectTSV(Vjson,sub,ses,Poutdir,BIDSsubdir,anon,SOR)
       Tsubject(end+1,:) = {'n/a'}; Tsubject(end,isc) = T0(ri,ci(isc)); %#ok<AGROW>
     end
   end
-  Tsubject(end+1,:) = {ses, round(Vjson.PatientAge,2-anon), round(Vjson.PatientWeight), round(SOR,2)}; 
+  Tsubject(end+1,:) = {ses, site, round(Vjson.PatientAge,2-anon), round(Vjson.PatientWeight), round(SOR,2)}; 
   Tsubject(cellfun(@(v) isnumeric(v) && isscalar(v) && isnan(v), Tsubject)) = {'n/a'}; 
   [~,so] = sort(Tsubject(2:end,1)); Tsubject(2:end,:) = Tsubject(so+1,:); 
   
@@ -395,8 +509,9 @@ function writeDatasetFiles(Pbids, job, sources, convver)
 %writeDatasetFiles. BIDS dataset files of the BIDS directory Pbids: 
 %  dataset_description.json (from job.dataset, with automatic BIDSVersion, 
 %  DatasetType, and GeneratedBy), README.md (head from the job.dataset.README
-%  text file, extended by the README files of imported BIDS datasets), and 
-%  participants.json (description of the columns of participants.tsv). 
+%  text file, extended by the README files of imported BIDS datasets), 
+%  participants.json (description of the columns of participants.tsv), and 
+%  .bidsignore (files of catDCM2BIDS that are not part of BIDS). 
 %  sources is an optional structure array of imported BIDS datasets (fields
 %  Name, License, README, participants) for the license, README, and 
 %  column descriptions. convver are the dcm2niix versions of the imports 
@@ -478,6 +593,11 @@ function writeDatasetFiles(Pbids, job, sources, convver)
     end
     cat_io_dcm2bids_helper('writeJSON',fullfile(Pbids,'participants.json'), P); 
   end
+
+  % .bidsignore: settings and readme of the output and the protocol 
+  % differences of non-conform scans (matchfiles, see cat_io_dcm2bids)
+  cat_io_dcm2bids_helper('writeText',fullfile(Pbids,'.bidsignore'), ...
+    sprintf('catDCM2BIDSdb.mat\nreadme.txt\n**/matchfiles/\n')); 
 end
 % =========================================================================
 function lic = mostRestrictiveLicense(lics, name, srcnames)

@@ -4,11 +4,13 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 %  Aim: The rendering supports the visual identification (or confirmation,
 %  e.g. from the report table) of outliers in large sets of similar images.
 %  Therefore, the scans are rendered separately for each image type
-%  (dataset/datatype/subtype, e.g. anat/t1w) and are comparable, as all
-%  images are sampled at the same positions in MNI space using the
-%  registration of the session (catDCM2BIDSaffine_sub-*_ses-*.json in the
-%  derivatives directory of the session, see writeSessionAffines in
-%  cat_io_dcm2bids_pp), i.e., independent of the matrix size, slice
+%  (dataset/datatype/subtype, e.g. anat/t1w or fmap/epi_part-phase with the
+%  suffix, the image part and inversion, and the prefix of derivatives) and
+%  are comparable, as all images are sampled at the same positions in MNI 
+%  space using the registration of the session (catDCM2BIDSaffine_sub-*_
+%  ses-*.json in the derivatives directory of the session, see 
+%  writeSessionAffines in cat_io_dcm2bids_pp_anat), i.e., independent of the 
+%  matrix size, slice
 %  orientation, and the position of the origin. Spatially normalized
 %  derivatives (prefix w or mw, e.g. mwc1) are already in MNI space and are
 %  sampled without the registration. Scans without registration are not
@@ -46,7 +48,8 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 %       with 6 scans per page.
 %   R3) Subject reports with the scan rows (as R2) of all scans (image
 %       types) of a subject ordered by session, datatype (anat, dwi, func,
-%       fmap, perf, others), and name (i.e., derivatives follow their scan)
+%       fmap, perf, others), and name (i.e., derivatives follow their scan,
+%       first the bias-corrected image m and the segmentation c0)
 %       as one multi-page PDF per subject:
 %         [dataset/]subjects/render_<sub>.pdf
 %   rows/  .. slice row of each scan without text as separate image
@@ -54,9 +57,14 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 %   cache/ .. sampled slices of each scan (see renderScanSlices)
 %  The A4 portrait format of SPM is used. It allows to compare multiple
 %  pages on one screen and limits the number of output pages.
-%  4D data is represented by its first volume. Further session reports
-%  with a compressed representation of 4D data (e.g. FA maps for DWI)
-%  should be prepared in the QC.
+%  4D data is represented by the denoised average of its first volumes of
+%  the QC (see cat_io_dcm2bids_qc), otherwise by its first volume. The 
+%  noise maps of the QC (maximum of the absolute noise, noise field, and 
+%  slice motion maps) are shown as red overlay to visualize local noise 
+%  (see ropts.qcnoise). The QC maps are not rendered as own image types and
+%  realigned 4D data (prefix r) not at all, as it equals its scan. 
+%  Further session reports with a compressed representation of 4D data 
+%  (e.g. FA maps for DWI) should be prepared in the QC.
 %
 %  cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 %
@@ -93,11 +101,14 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 %                 degree (default: trilinear for dpi<=300 (fast), otherwise 
 %                 4th degree B-spline for the finer sampling (slower))
 %   .dpi       .. print resolution (300)
+%   .qcnoise   .. range of the red QC noise overlay relative to the signal 
+%                 (transparent to opaque, [.05 .30]), [] - no QC maps (i.e.
+%                 also no denoised average)
 %
 %  The intensities of a scan are scaled for all its slices together
 %  (1-99% percentile) to keep the slices of a scan comparable. The colored
 %  lines show the coordinate planes of the original (scanner) space, i.e.,
-%  x=0 (red), y=0 (green), and z=0 (blue). Labels are colored by the
+%  x=0 (light red), y=0 (green), and z=0 (blue). Labels are colored by the
 %  overall quality rating SQR. Unreadable (e.g. corrupted) files give
 %  black tiles ('read error').
 
@@ -161,6 +172,8 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
   %% find and describe images
   P = cat_vol_findfiles(PBIDS,'*sub-*.nii*');
   P = P( ~cellfun('isempty',regexp(P,'\.nii(\.gz)?$','once')) );
+  P = P( cellfun('isempty',regexp(spm_file(P,'filename'),'^catDCM2BIDS(qc|dwi)_','once')) ); % QC maps (shown with their scan) and DTI maps
+  P = P( cellfun('isempty',regexp(spm_file(P,'filename'),'^rsub-','once')) );          % realigned 4D data (equals its scan)
   isderiv = cat_io_contains(P,[filesep 'derivatives' filesep]);
   switch ropts.source
     case 1, P = P(~isderiv); isderiv = isderiv(~isderiv);
@@ -170,7 +183,7 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 
   F = struct('file',P,'name','','bidsname','','prefix','','sub','','ses','','dataset','', ...
     'datatype','','subtype','','group','','json','','SQR',nan,'QR',[],'T',[],'reg',[], ...
-    'readerr',0,'dim',[],'vx',[],'nvol',nan);
+    'readerr',0,'dim',[],'vx',[],'nvol',nan,'qcmaps',struct(),'qcused',0);
   for fi = 1:numel(P)
     [pp,ff]  = fileparts(P{fi});
     ff       = regexprep(ff,'\.nii$','');
@@ -186,6 +199,9 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
     parts = strsplit(bidsname,'_');
     F(fi).datatype = spm_file(pp,'basename');
     F(fi).subtype  = lower(parts{end});
+    % other image parts (e.g. phase) and inversions (MP2RAGE) as own types
+    tok = regexp(bidsname,'_(part-(?:phase|real|imag)|inv-\d+)(?=_)','tokens');
+    for ti = 1:numel(tok), F(fi).subtype = [F(fi).subtype '_' tok{ti}{1}]; end
     if ~isempty(prefix), F(fi).subtype = [F(fi).subtype '_' prefix]; end
 
     % dataset (protocol subdirectory) relative to the main BIDS directory
@@ -220,6 +236,19 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
               F(fi).reg.SOR = double(A.qualityrating.SOR); % session orientation rating
             end
           end
+        end
+      end
+    end
+
+    % QC maps of the raw scan (see cat_io_dcm2bids_qc), but not of phase 
+    % images (e.g. part-phase or phasediff) 
+    if ~isderiv(fi) && ~isempty(ropts.qcnoise) && isempty(regexp(bidsname,'_part-phase_|_phase(diff|1|2)$','once'))
+      for m = {'denoisedavg','noisemap','noisefield','sliceMotion'}
+        Pm = fullfile(droot,reldir,['catDCM2BIDSqc_' m{1} '_' bidsname]);
+        if exist([Pm '.nii.gz'],'file')
+          F(fi).qcmaps.(m{1}) = [Pm '.nii.gz'];
+        elseif exist([Pm '.nii'],'file')
+          F(fi).qcmaps.(m{1}) = [Pm '.nii'];
         end
       end
     end
@@ -263,7 +292,7 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
     for fi = 1:numel(Fg)
       S = renderScanSlices(Fg(fi),K,ropts,Pcache(Fg(fi)));
       Y(:,:,:,fi) = S.Y; Yov(:,:,:,fi) = S.Yov; nnew = nnew + S.new;
-      Fg(fi).readerr = S.readerr; Fg(fi).dim = S.dim; Fg(fi).vx = S.vx; Fg(fi).nvol = S.nvol;
+      Fg(fi).readerr = S.readerr; Fg(fi).dim = S.dim; Fg(fi).vx = S.vx; Fg(fi).nvol = S.nvol; Fg(fi).qcused = S.qc;
 
       % slice row without text (e.g. for a later HTML report)
       if ropts.rowimg
@@ -299,7 +328,7 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
       for fi = 1:numel(Fs)
         S = renderScanSlices(Fs(fi),K(k2,:),ropts,Pcache(Fs(fi)));
         Y(:,:,:,fi) = S.Y; Yov(:,:,:,fi) = S.Yov;
-        Fs(fi).readerr = S.readerr; Fs(fi).dim = S.dim; Fs(fi).vx = S.vx; Fs(fi).nvol = S.nvol;
+        Fs(fi).readerr = S.readerr; Fs(fi).dim = S.dim; Fs(fi).vx = S.vx; Fs(fi).nvol = S.nvol; Fs(fi).qcused = S.qc;
       end
       Pout = fullfile(Preport,Fs(1).dataset,'subjects');
       if ~exist(Pout,'dir'), mkdir(Pout); end
@@ -347,7 +376,7 @@ function np = renderOverviewPages(fh,Fg,Y,Yov,K,group,Pout,ropts,G)
       text(ax,0,0.5,sprintf('%s  (%s, %s, %s=%+0.0fmm, page %d/%d)', group, ...
         G.orientnam{K(ki,1)}, ropts.slicemode, G.axisnam(K(ki,1)), K(ki,2), pgi, np), ...
         'Color','w','FontSize',fs+1,'Interpreter','none','VerticalAlignment','middle');
-      renderLegend(ax,1,0.5,fs,G.ovc);
+      renderLegend(ax,1,0.5,fs,G.ovc,any(mod([Fg.qcused],2)));
 
       % compose all tiles of the page into one RGB image with the overlay
       ntp  = min(nt, numel(Fg) - (pgi-1)*nt);
@@ -422,7 +451,7 @@ function np = renderRowPages(fh,Fg,Y,Yov,K,ttl,Ppage,showgroup,ropts,G)
     % page title and legend of the overlay lines
     text(ax,1,pht/2,sprintf('%s  (%s, page %d/%d)',ttl,ropts.slicemode,pgi,np), ...
       'Color','w','FontSize',fs+1,'Interpreter','none','VerticalAlignment','middle');
-    renderLegend(ax,W,pht/2,fs,G.ovc);
+    renderLegend(ax,W,pht/2,fs,G.ovc,any(mod([Fg.qcused],2)));
 
     % scan header, slice positions, and information panel
     for si = 1:nsp
@@ -479,11 +508,18 @@ function txt = renderInfoText(F,col2mark)
   if isempty(F.T), txt{end+1} = [red 'no MNI registration']; end
   if F.readerr,    txt{end+1} = [red 'read error']; end
 
-  % image
+  % image (and QC maps)
   if ~isempty(F.dim)
     txt{end+1} = sprintf('%smatrix: %dx%dx%d, %d volume(s)',wht,F.dim(1:3),F.nvol);
     txt{end+1} = sprintf('%svoxel: %0.2fx%0.2fx%0.2f mm',wht,F.vx);
   end
+  qcstr = ''; 
+  if F.qcused >= 2, qcstr = 'denoised average'; end
+  if mod(F.qcused,2) == 1
+    if ~isempty(qcstr), qcstr = [qcstr ' and ']; end
+    qcstr = [qcstr '\color[rgb]{1 0 0}noise']; 
+  end
+  if ~isempty(qcstr), txt{end+1} = [wht 'QC: ' qcstr]; end
 
   % acquisition
   J = struct();
@@ -517,11 +553,15 @@ end
 function Fs = renderSubjectOrder(Fs,ropts)
 %renderSubjectOrder. Order of the scans of one subject in the subject
 %  report: by session, datatype (anat, dwi, func, fmap, perf, others), and
-%  BIDS name, where derivatives follow their scan. Only the first session
-%  for ropts.sessions.
+%  BIDS name, where derivatives follow their scan (first the bias-corrected
+%  image m and the segmentation c0, then the others by prefix). Only the 
+%  first session for ropts.sessions.
   dto = {'anat','dwi','func','fmap','perf'};
   [~,dti] = ismember({Fs.datatype},dto); dti(dti==0) = numel(dto) + 1;
-  key = strcat({Fs.ses},'|',cellstr(num2str(dti(:)))','|',{Fs.datatype},'|',{Fs.bidsname},'|',{Fs.prefix});
+  pro = {'','m','c0'}; 
+  [~,pri] = ismember({Fs.prefix},pro); pri(pri==0) = numel(pro) + 1;
+  key = strcat({Fs.ses},'|',cellstr(num2str(dti(:)))','|',{Fs.datatype},'|',{Fs.bidsname},'|', ...
+    cellstr(num2str(pri(:)))','|',{Fs.prefix});
   [~,so] = sort(key); Fs = Fs(so);
   if ropts.sessions && ~isempty(Fs)
     Fs = Fs( strcmp({Fs.ses},Fs(1).ses) );
@@ -532,16 +572,26 @@ function S = renderScanSlices(F,K,ropts,Pcache)
 %renderScanSlices. Sampled slices of a scan (with cache).
 %  Each scan is read only once and all slices K ([orientation position]
 %  rows) are sampled in MNI space and scaled together to uint8. The result
-%  is saved in Pcache and reused if the source file, the registration, and
-%  the sampling parameters were not changed and the cache includes all
-%  requested slices. This avoids reading all images again (e.g. for large
-%  datasets) and keeps the slices for further outputs (e.g. HTML).
-%  S.Y (uint8 slices), S.Yov (overlay labels), S.K (slices), S.readerr,
-%  header information (S.dim, S.vx, S.nvol), and S.new (newly sampled).
+%  is saved in Pcache and reused if the source file, its QC maps, the 
+%  registration, and the sampling parameters were not changed and the cache
+%  includes all requested slices. This avoids reading all images again (e.g.
+%  for large datasets) and keeps the slices for further outputs (e.g. HTML).
+%  With QC maps (F.qcmaps, see cat_io_dcm2bids_qc), the denoised average 
+%  (4D data) is sampled instead of the first volume and the maximum of the
+%  absolute noise maps is added to the overlay as opacity 0-1 (values 4-255,
+%  ropts.qcnoise range relative to the signal, i.e., the 99th percentile of
+%  the denoised average or 1 for the bias-corrected anatomical maps). 
+%  S.Y (uint8 slices), S.Yov (overlay labels: 1-3 lines of the x/y/z-planes,
+%  4-255 QC noise), S.K (slices), S.readerr, header information of the scan
+%  (S.dim, S.vx, S.nvol), S.qc (QC maps: 1-noise overlay, 2-denoised 
+%  average, 3-both), and S.new (newly sampled).
   n   = round(ropts.fov / ropts.res);
   D   = dir(F.file);
   if isempty(D), srcdate = nan; else, srcdate = D(1).datenum; end
-  par = struct('version',2,'srcdate',srcdate,'T',F.T,'fov',ropts.fov,'res',ropts.res,'interp',ropts.interp);
+  qcmaps = struct2cell(F.qcmaps); qcdate = nan(1,numel(qcmaps)); 
+  for mi = 1:numel(qcmaps), D = dir(qcmaps{mi}); if ~isempty(D), qcdate(mi) = D(1).datenum; end; end
+  par = struct('version',3,'srcdate',srcdate,'qc',{fieldnames(F.qcmaps)'},'qcdate',qcdate, ...
+    'qcnoise',ropts.qcnoise,'T',F.T,'fov',ropts.fov,'res',ropts.res,'interp',ropts.interp);
 
   % cached slices
   if ropts.cache && exist(Pcache,'file')
@@ -556,7 +606,7 @@ function S = renderScanSlices(F,K,ropts,Pcache)
   end
 
   S = struct('K',K,'Y',zeros(n,n,size(K,1),'uint8'),'Yov',zeros(n,n,size(K,1),'uint8'), ...
-    'readerr',0,'dim',[],'vx',[],'nvol',nan,'new',1);
+    'readerr',0,'dim',[],'vx',[],'nvol',nan,'qc',0,'new',1);
   try
     txt = evalc('V = spm_vol(F.file);'); %#ok<NASGU> % avoid gz-messages
     S.nvol = numel(V); V = V(1);
@@ -566,10 +616,21 @@ function S = renderScanSlices(F,K,ropts,Pcache)
   end
   if ~S.readerr && ~isempty(F.T)
     try
+      % QC maps: denoised average (if it has finite values) and the maximum
+      % of the absolute noise maps
+      Yvol = []; Yqc = []; 
+      if ~isempty(fieldnames(F.qcmaps))
+        [Yvol,Vu,Yqc,Vqc] = renderQCmaps(F.qcmaps); 
+        if ~isempty(Yvol), V = Vu; end
+        S.qc = 2*~isempty(Yvol) + ~isempty(Yqc); 
+      end
+
       % B-spline coefficients of the volume (non-finite values set to 0) 
-      % for higher interpolation degrees, otherwise direct sampling
-      if ropts.interp > 1
-        Yvol = spm_read_vols(V); Yvol(~isfinite(Yvol)) = 0;
+      % for higher interpolation degrees or volumes in memory, otherwise 
+      % direct sampling
+      if ropts.interp > 1 || ~isempty(Yvol)
+        if isempty(Yvol), Yvol = spm_read_vols(V); end
+        Yvol(~isfinite(Yvol)) = 0;
         C    = spm_bsplinc(Yvol,[ropts.interp*[1 1 1] 0 0 0]); clear Yvol
       else
         C    = [];
@@ -584,6 +645,20 @@ function S = renderScanSlices(F,K,ropts,Pcache)
       clim = [prctile(Yv,1) prctile(Yv,99)];
       if ~(numel(clim)==2 && all(isfinite(clim)) && diff(clim)>0), clim = [0 max(1,max(Ys(:)))]; end
       S.Y  = uint8(255 * min(1,max(0,(Ys - clim(1)) / diff(clim))));
+
+      % QC noise overlay relative to the signal of the denoised average (in 
+      % the same units) or of the bias-corrected anatomical image (WM about 1)
+      if ~isempty(Yqc)
+        if S.qc >= 2, ref = clim(2); else, ref = 1; end
+        Cq = spm_bsplinc(Yqc,[ropts.interp*[1 1 1] 0 0 0]); clear Yqc
+        for ki = 1:size(K,1)
+          a  = min(1,max(0,(renderSlice(Cq,Vqc,F.T,K(ki,1),K(ki,2),ropts)/ref - ropts.qcnoise(1)) / ...
+            diff(ropts.qcnoise))); 
+          Yo = S.Yov(:,:,ki); 
+          Yo(Yo==0 & a>0) = uint8(4 + round(251*a(Yo==0 & a>0))); % lines on top
+          S.Yov(:,:,ki) = Yo; 
+        end
+      end
     catch
       S.readerr = 1; % e.g. unsupported datatype
     end
@@ -594,6 +669,28 @@ function S = renderScanSlices(F,K,ropts,Pcache)
       save(Pcache,'S','par');
     end
   end
+end
+% =========================================================================
+function [Yu,Vu,Yqc,Vqc] = renderQCmaps(M)
+%renderQCmaps. QC maps of a scan (structure M with the files of the maps, 
+%  see cat_io_dcm2bids_qc): the denoised average Yu (empty without finite 
+%  values, e.g. failed QC) and the maximum of the absolute noise, noise 
+%  field, and slice motion maps Yqc (empty without maps), with their 
+%  headers Vu and Vqc (same space as the first volume of the scan).
+  Yu = []; Vu = []; Yqc = []; Vqc = []; 
+  if isfield(M,'denoisedavg')
+    txt = evalc('Vu = spm_vol(M.denoisedavg);'); %#ok<NASGU>
+    Yu  = single(spm_read_vols(Vu)); 
+    if ~any(isfinite(Yu(:)) & Yu(:)~=0), Yu = []; Vu = []; end
+  end
+  for m = {'noisemap','noisefield','sliceMotion'}
+    if isfield(M,m{1})
+      txt = evalc('Vm = spm_vol(M.(m{1}));'); %#ok<NASGU>
+      Ym  = abs(single(spm_read_vols(Vm))); Ym(~isfinite(Ym)) = 0; 
+      if isempty(Yqc), Yqc = Ym; Vqc = Vm; else, Yqc = max(Yqc,Ym); end
+    end
+  end
+  if ~isempty(Yqc) && ~any(Yqc(:)), Yqc = []; Vqc = []; end
 end
 % =========================================================================
 function Fg = renderSortScans(Fg,ropts)
@@ -638,8 +735,12 @@ function sl = renderSliceList(s)
 end
 % =========================================================================
 function Yrgb = renderTileRGB(Y,Yov,ovc)
-%renderTileRGB. Gray-scale slice (uint8) with colored overlay lines.
-  Yrgb = repmat(single(Y)/255,1,1,3);
+%renderTileRGB. Gray-scale slice (uint8) with colored overlay lines (Yov 
+%  1-3) and the red QC noise overlay (Yov 4-255 for the opacity 0-1, see 
+%  renderScanSlices).
+  Yg   = single(Y)/255; 
+  a    = max(0,single(Yov) - 4)/251; 
+  Yrgb = cat(3, Yg + a.*(1 - Yg), Yg.*(1 - a), Yg.*(1 - a));
   for ci = 1:3
     Yc = Yrgb(:,:,ci);
     for k = 1:3, Yc(Yov==k) = ovc(k,ci); end
@@ -647,11 +748,13 @@ function Yrgb = renderTileRGB(Y,Yov,ovc)
   end
 end
 % =========================================================================
-function renderLegend(ax,x,y,fs,ovc)
-%renderLegend. Legend of the overlay lines (right aligned at x,y).
-  text(ax,x,y,sprintf(['original (scanner) planes:  \\color[rgb]{%g %g %g}x=0  ' ...
-    '\\color[rgb]{%g %g %g}y=0  \\color[rgb]{%g %g %g}z=0'], ovc'), ...
-    'Color','w','FontSize',fs,'Interpreter','tex', ...
+function renderLegend(ax,x,y,fs,ovc,qc)
+%renderLegend. Legend of the overlay lines and of the QC noise overlay (qc) 
+%  (right aligned at x,y).
+  str = sprintf(['original (scanner) planes:  \\color[rgb]{%g %g %g}x=0  ' ...
+    '\\color[rgb]{%g %g %g}y=0  \\color[rgb]{%g %g %g}z=0'], ovc'); 
+  if exist('qc','var') && qc, str = [str '  \color[rgb]{1 1 1}|  \color[rgb]{1 0 0}noise (QC)']; end
+  text(ax,x,y,str,'Color','w','FontSize',fs,'Interpreter','tex', ...
     'HorizontalAlignment','right','VerticalAlignment','middle');
 end
 % =========================================================================

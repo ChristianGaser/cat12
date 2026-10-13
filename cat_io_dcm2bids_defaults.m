@@ -39,7 +39,8 @@ function def = cat_io_dcm2bids_defaults
                                      % of the evaluation protocols under protocol directories
   def.opts.gzipi            = 1;     % internal use of nii.gz (save disk space but maybe a bit slower)
   def.opts.gzipe            = 1;     % external use of nii.gz (save disk space but nonoptimal for SPM processing)
-  def.opts.tolerance        = 5;     % tolerance in percent for MR parameters (does not help for ordinal variables)
+  def.opts.tolerance        = 0.5;   % tolerance in percent for numeric MR parameters (only for rounding, as the same
+                                     % protocol results in the same values, see testProtocols in cat_io_dcm2bids_protocols)
   def.opts.Pdcm2nii         = '';    % dcm2niix executable ('' - detected if required, see cat_io_dcm2bids_importDCM)
   def.opts.output           = 2;     % 0-no, 1-only json, 2-json+nii (input protocols), 3-full
   %def.opts.studies          = '';    % study filter >> file
@@ -53,10 +54,22 @@ function def = cat_io_dcm2bids_defaults
   def.opts.hrrealign        = 0;     % highres-realignment for further use? difficult to keep this persistent
   def.opts.rerun            = 0;     % rerun - overwrite existing
   def.opts.tableformat      = 'csv'; % csv/tsv
+  def.opts.scantypes        = {'anat/T1w','anat/T2w','dwi/dwi','func/bold'}; % typical scan types (datatype/
+                                     % suffix) for the counts of the site table and the columns of the session
+                                     % table (see cat_io_dcm2bids_tables and cat_io_dcm2bids_report)
   def.opts.checkgzipi       = 1;     % look for unzipped data and zip it
   def.opts.runqc            = 1;     % run QC (all data)
-  def.opts.preprocessing    = 1;     % run segmentation (anat)
-  def.opts.denoise          = 0;     % do denoising
+  def.opts.preprocessing    = 1;     % basic preprocessing of all scans: 0 - none, 1 - processing (segmentation 
+                                     % of anat, DTI of dwi, rs-fMRI measures of func, see cat_io_dcm2bids_pp_anat*), 
+                                     % 2 - processing with derivatives (maps)
+  def.opts.denoise          = 0;     % denoising (sanlm) of anat before the segmentation and of the DWI volumes 
+                                     % before the tensor fit (see cat_io_dcm2bids_pp_dwi)
+  def.opts.pplevel          = 4;     % preprocessing level, i.e. accuracy and time of the DTI and rs-fMRI measures 
+                                     % (see levelParameters in cat_io_dcm2bids_pp_anat): 1 - full quality (SPM default 
+                                     % parameters, reference), 2 - optimized (fast parameters, slight resolution 
+                                     % limits), 3 - quick review (lower resolution, only the first scan of each 
+                                     % type), 4 - preview; continuous levels with about 26, 9, 4, and 2.5 min for a
+                                     % session with T1w, 2 DWI, and rs-fMRI scans (4 for the development, later 2)
   def.opts.ignoreScouts     = 1;     % remove localizer/scouts ASAP (also derived and 2D images by dcm2niix -i y)
   def.opts.protocolsubdirs  = 0;     % use additional sub-directories to separate between protocols
   def.opts.BIDSsep          = '';    % Use extra BIDS-incompatible separator such as - to separate the site
@@ -64,9 +77,11 @@ function def = cat_io_dcm2bids_defaults
 
   % orientation rating of each session (RMSE of the offset of the image 
   % origin and of the rotation to MNI space, see writeSessionAffines in 
-  % cat_io_dcm2bids_pp) and coverage rating of each scan (missing brain 
-  % coverage, see cat_io_dcm2bids_overlap) with the [best worst] measure 
-  % for the marks 1 and 6 (similar to the protocol qc*.json files)
+  % cat_io_dcm2bids_pp_anat), coverage rating of each scan (missing brain
+  % coverage, see cat_io_dcm2bids_overlap), and phase-encoding reversal
+  % rating of scans with opposite phase-encoding direction with the
+  % [best worst] measure for the marks 1 and 6 (similar to the protocol
+  % qc*.json files)
   def.opts.orientation.OTM  = [ 6 30];   % orientation translation measure: RMSE of the origin offset in mm 
                                          % (i.e. an offset of 10 and 50 mm along one axis)
   def.opts.orientation.ORM  = [ 3 12];   % orientation rotation measure: RMSE of the rotation in degree
@@ -74,6 +89,30 @@ function def = cat_io_dcm2bids_defaults
   def.opts.coverage.BBM     = [ 0 20];   % coverage measure: missing coverage in percent of the expected 
                                          % brain (whole brain or protocol mask <protocol>_msk.nii)
   def.opts.coverage.fwhm    = 4;         % smoothing of the coverage maps in mm
+  def.opts.reversal.PRM     = [.80 .95]; % phase-encoding reversal measure: correlation of the first volumes of scans
+                                         % with opposite phase-encoding direction (e.g. AP/PA field maps), where high
+                                         % values indicate a missing reversal (see checkPEreversal in cat_io_dcm2bids_pp_anat)
+
+  % protocol fit rating of each scan (PFR) of the protocol fit measure PFM,
+  % i.e., the weighted number of deviations from the closest protocol (0.5
+  % for each numeric field outside the tolerance, 1 for each text field or
+  % list entry), and the protocol status by the PFR (see testProtocols in
+  % cat_io_dcm2bids_protocols), where the PFM scale is defined by the marks
+  % 0.5 and 4.5 (the best mark and the limit of semiconform scans)
+  def.opts.protocol.PFM     = [ 0 3.5];  % PFM for the marks 0.5 and 4.5 (i.e. about 1.1 marks per deviation point)
+  def.opts.protocol.status  = [1.5 4.5]; % PFR limits of the protocol status: conform (PFR < 1.5, scans are named by
+                                         % the protocol), semiconform, and nonconform (PFR > 4.5, unknown protocol)
+  % critical parameters, which are never the same if they differ (10 points,
+  % i.e., nonconform), as well as the image component of the ImageType
+  % (magnitude/phase) and the direction in the series name (e.g. PA of
+  % "SpinEchoFieldMap_PA") that has to fit to the direction in the protocol
+  % name, and key parameters of the contrast and resolution (at least 1
+  % point, whereas other numeric deviations count 0.5)
+  def.opts.protocol.critical = {'PhaseEncodingDirection','InPlanePhaseEncodingDirectionDICOM', ...
+    'PulseSequenceDetails','ScanningSequence','MRAcquisitionType','MagneticFieldStrength', ...
+    'EchoNumber','BValueShells'};
+  def.opts.protocol.key      = {'EchoTime','EchoTime1','EchoTime2','RepetitionTime','InversionTime', ...
+    'FlipAngle','SliceThickness','VoxelSize','MultibandAccelerationFactor','SliceOrder'};
 
   % render slices of each scan into BIDS-report/render/... (see cat_io_dcm2bids_render)
   def.opts.render.run       = 1;       % render images
@@ -95,6 +134,17 @@ function def = cat_io_dcm2bids_defaults
   def.opts.render.interp    = [];      % interpolation: 0-nearest, 1-trilinear, 2-7 B-spline degree
                                        % ([] - trilinear for dpi<=300, otherwise 4th degree B-spline)
   def.opts.render.dpi       = 300;     % print resolution
+  def.opts.render.qcnoise   = [.05 .30]; % QC maps of the scans (see cat_io_dcm2bids_qc): denoised average as 
+                                       % underlay of 4D data and the noise maps as red overlay with this range 
+                                       % (transparent to opaque) relative to the signal ([] - no QC maps)
+
+  % report figure of each BIDS directory (see cat_io_dcm2bids_reportfig): A4
+  % overview page and one page per site (for several sites) with diagrams 
+  % of the report tables in <BIDSdir>-report/report_<BIDSsubdir>.pdf
+  def.opts.reportfig.run      = 1;       % create the report figure
+  def.opts.reportfig.agerange = [0 100]; % age range of the age pyramid in years
+  def.opts.reportfig.agestep  = 5;       % bin size of the age pyramid in years
+  def.opts.reportfig.nworst   = 5;       % number of sessions to check (worst ratings)
 
   % datatypes and (lower case) suffixes of the output structure that is
   % used by the batch dependencies (see BIDSoutputs in cat_io_dcm2bids_bids),

@@ -12,6 +12,11 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
 %  catDCM2BIDSqc_<image>.mat/json. The
 %  ratings (or the measures without protocol) are printed in the scan line 
 %  of the command line output. 
+%  The QC maps are written next to the image (<image>_<map>.nii, zipped 
+%  for opts.gzipi): noisemap, noisefield, denoisedavg, and sliceMotion of 
+%  4D data (of the first 8 volumes), and noisemap and noisefield of 
+%  anatomical data (see cat_io_dcm2bids for the export as derivatives and
+%  cat_io_dcm2bids_render for the rendering). 
 %
 %  [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P,type,opts,Pprotocols)
 %
@@ -179,6 +184,7 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
     opts.biasCor        = 1; 
     opts.denoise        = 1; 
     opts.tlim           = min(size(Y,4),8); 
+    Pmaps               = {}; 
     for run = 1%:1 + strcmp(type,'dwi')
       Vr = spm_vol(Pr);
       if strcmp(type,'dwi')
@@ -211,7 +217,18 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
         g0  = prctile(Yg(~Yb(:)),10) * 2;
         s0  = prctile(Ym(Yg(:) < g0 & Ym(:) > prctile(Ym(:),80) & Ym(:) < prctile(Ym(:),95)),80); 
         Yo  = Yg < g0  &  Ym > s0*.4  &  Ym < s0*1.5;
-        Yw  = cat_vol_smooth3X(cat_vol_approx( abs(Yr(:,:,:,1)) .* Yo),4); 
+        Yo2 = cat_vol_morph(Yg<g0/2 & Yo,'lo'); % WM (within the tissue, e.g. not the background of EPIs)
+        % first correction 
+        Yw  = cat_vol_smooth3X(cat_vol_approx( abs(Yr(:,:,:,1)) .* Yo),16); 
+        Yw  = Yw .* wmScale(Ym,Yw,Yo2);
+        % second correction (only with enough tissue of the expected intensity,
+        % as cat_vol_approx of an empty image gives zeros, i.e., NaN measures)
+        Ysc = Yo & Ym./Yw > .9 & Ym./Yw < 1.5; 
+        if nnz(Ysc) > 0.1 * nnz(Yo)
+          Yw  = cat_vol_smooth3X(cat_vol_approx( abs(Yr(:,:,:,1)) .* Ysc),4);
+          Yw  = Yw .* wmScale(Ym,Yw,Yo2);
+        end
+        clear Ysc
         Yb  = cat_vol_morph(Yg .* (Ym./Yw) > g0,'ldc',2); 
         Ynr = cat_vol_localstat(Ym./Yw,Yb,1,4); nr = cat_stat_nanmean(Ynr(Yb(:)))*2; 
         Ywm = cat_vol_morph(Yg<g0*2 & (Ym./Yw)>.8-nr & (Ym./Yw)<1.2+nr,'ldo',0);
@@ -241,8 +258,13 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
           epiids = 1:opts.tlim;
         end
 
-        Yd  = zeros(size(Yr),'single'); 
+        %%
+        Ymn = zeros(V(1).dim,'single'); 
+        if opts.sliceMotionCor 
+          Ydm = zeros(V(1).dim,'single'); 
+        end
         Yr  = single(spm_read_vols(Vr(epiids)));
+        Yd  = zeros([size(Yr,1) size(Yr,2) size(Yr,3) min(size(Yr,4),opts.tlim)],'single');
         WSM = nan(1,size(Yr,4));
         for vi = 1:min(size(Yr,4),opts.tlim)
         % for each time-point / direction apply the general bias correction
@@ -266,6 +288,7 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
             end
             Yas = Ya - Yw1 .* abs(Yw1).^.25;
             Yas(Ya==0) = 0; % apply defacing
+            Ydm = Ydm + abs(Yas - Ya) / min(size(Yr,4),opts.tlim);
             WSM(vi) = cat_stat_nanmean( (Yas(:) - Ya(:)).^2 ).^.5; 
             if opts.sliceMotionCor > 2, Ya = Yas; end
           end
@@ -274,6 +297,7 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
           % Denoising of a single slice to quantify the amount of noise 
           % in the difference image
           Yas = Ya + 0; if opts.denoise, cat_sanlm(Yas,1,3); end
+          Ymn = Ymn + Yas / min(size(Yr,4),opts.tlim); 
           Vrr = Vr; Vrr(epiids(vi)).fname = spm_file(Vrr(epiids(vi)).fname,'prefix','c'); 
           if opts.biasCor
             spm_write_vol(Vrr(epiids(vi)),Yas .* Yw); 
@@ -284,14 +308,46 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
           Yd(:,:,:,vi) = sqrt( (Ya-Yas).^2 * 2 ); % Rician noise
           %end
         end
-    
+        
         % remove the temporary corrected volumes (not used further)
         Pc = spm_file(Vr(1).fname,'prefix','c'); 
         if exist(Pc,'file'), delete(Pc); end
 
         if run==1 % why only run 1?
-          Yn   = mean(Yd(:,:,:,1:min(size(Yr,4),opts.tlim)), 4);
-          Yns  = cat_vol_approx(cat_vol_median3(Yn)); 
+          Yn   = mean(Yd(:,:,:,1:min(size(Yr,4),opts.tlim)), 4) .* (Ya~=0);
+          Yns  = cat_vol_approx(cat_vol_median3(Yn)) .* (Ya~=0); 
+
+          %% write output
+          Vn = V(1); Vn.dt(1) = 16;
+          Vn.fname = spm_file(V(1).fname,'suffix','_noisemap');    
+          Vn.descrip = sprintf(...
+            'average noise map of %d (bias-adjusted) input volums < %s', ...
+            min(size(Yr,4),opts.tlim), V(1).descrip);  
+          spm_write_vol(Vn,Yn);
+          Pmaps{end+1} = Vn.fname; %#ok<AGROW>
+
+          Vn.fname = spm_file(V(1).fname,'suffix','_noisefield');       
+          Vn.descrip = sprintf(...
+            'average noise field map of %d (bias-adjusted) input volums < %s', ...
+            min(size(Yr,4),opts.tlim), V(1).descrip);  
+          spm_write_vol(Vn,Yns);
+          Pmaps{end+1} = Vn.fname; %#ok<AGROW>
+
+          Vn.fname = spm_file(V(1).fname,'suffix','_denoisedavg');    
+          Vn.descrip = sprintf(...
+            'denoise, bias-adjusted average image of %d input volums < %s', ...
+            min(size(Yr,4),opts.tlim), V(1).descrip);  
+          spm_write_vol(Vn,Ymn);
+          Pmaps{end+1} = Vn.fname; %#ok<AGROW>
+
+         if opts.sliceMotionCor 
+           Vn.fname = spm_file(V(1).fname,'suffix','_sliceMotion');    
+           Vn.descrip = sprintf(...
+             'average slice motion map of %d input volums < %s', ...
+             min(size(Yr,4),opts.tlim), V(1).descrip);  
+           spm_write_vol(Vn,Ydm);
+           Pmaps{end+1} = Vn.fname; %#ok<AGROW>
+         end
         end
       end
     end
@@ -319,7 +375,7 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
     
 
     elseif   strcmp(type,'anat')  &&  ( nnz(Ym(:)<0) ./ numel(Ym)  < .3 ) 
-      [Ya,Ybr]  = cat_vol_resize({mean(Yr,4)./Yw,single(Yb)},'reduceV',vx_vol,2,32,'meanm');
+      [Ya,Ybr,res]  = cat_vol_resize({mean(Yr,4)./Yw,single(Yb)},'reduceV',vx_vol,2,32,'meanm');
       
       % measure variance in background and foreground
       Yg     = abs(cat_vol_grad(Ya+min(Ya(:)))) ./ abs(Ya+min(Ya(:))); 
@@ -335,6 +391,20 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
       %% estimate denoising difference
       Yas = Ya + 0; if opts.denoise, cat_sanlm(Yas,1,3); end
   
+      Yni = cat_vol_resize(abs(Ya - Yas),'dereduceV',res);
+      Vn = V(1); Vn.dt(1) = 16;
+      Vn.fname = spm_file(V(1).fname,'suffix','_noisemap');    
+      Vn.descrip = sprintf(...
+        'noise map in the bias-adjusted input volums < %s', V(1).descrip);  
+      spm_write_vol(Vn,Yni .* (mean(Yr,4)~=0) );
+      Pmaps{end+1} = Vn.fname; 
+
+      Vn.fname = spm_file(V(1).fname,'suffix','_noisefield');       
+      Vn.descrip = sprintf(...
+        'average noise field map from bias-adjustment < %s', V(1).descrip);  
+      spm_write_vol(Vn, prctile(Yni(Ya(:)~=0),95) ./ (Yw ./ mean(Yw(:))) .* (mean(Yr,4)~=0)  );
+      Pmaps{end+1} = Vn.fname; 
+
       % average
       QM.NSR = QM.NSR; % , cat_stat_nanmean((Ya(:) - Yas(:)).^2).^.5 );       % noise to signal rating based on the approximated 
       QM.WSM = cat_stat_nanmean((Ya(:) - Yas(:)).^2).^.5; 
@@ -377,7 +447,15 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
 
   cat_io_dcm2bids_helper('prepNiigz',P ,opts); % repack
   Pr = cat_io_dcm2bids_helper('prepNiigz',Pr,opts);
+  if exist('Pmaps','var'), cat_io_dcm2bids_helper('prepNiigz',Pmaps,opts); end
 
+end
+% =========================================================================
+function f = wmScale(Ym,Yw,Ywm)
+%wmScale. Scaling of the bias field Yw to the intensity of the mean image 
+%  Ym in the WM mask Ywm (1 if not finite, e.g. for an empty mask).
+  f = mean(Ym(Ywm(:)) ./ Yw(Ywm(:))); 
+  if ~isfinite(f) || f <= 0, f = 1; end
 end
 % =========================================================================
 function QR = qualityRating(QM,Pprotocols)
