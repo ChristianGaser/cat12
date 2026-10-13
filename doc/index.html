@@ -366,17 +366,17 @@
             <ul>
               <li>Start MATLAB</li>
               <li>Start SPM (i.e., type &quot;spm pet&quot;)</li>
-              <li>Select &quot;CAT&quot; from the SPM menu (see <a href="#figure1">Figure 1</a>). You will find the drop-down menu between the &quot;Display&quot; and the &quot;Help&quot; button (you can also call the Toolbox directly by typing &quot;CAT&quot; on the MATLAB command line). This will open the CAT Toolbox as an additional window (Fig. 2).</li>
+              <li>Select &quot;CAT&quot; from the SPM menu (see <a href="#figure1">Figure 1</a>). You will find the drop-down menu between the &quot;Display&quot; and the &quot;Help&quot; button (you can also call the Toolbox directly by typing &quot;CAT&quot; on the MATLAB command line). This will open the CAT Toolbox as an additional window (see <a href="#figure2">Figure 2</a>).</li>
             </ul>
             
             <div class="figure-row">
               <figure>
-                <img loading="lazy" id="figure1" width=70% alt="SPM menu window with the opened toolbox list" src="images/spm_gui.webp">
-                <figcaption><b>Figure 1:</b> SPM menu</figcaption>
+                <img loading="lazy" id="figure1" width=100% alt="SPM menu window with CAT selected in the toolbox list" src="images/spm_gui.webp">
+                <figcaption><b>Figure 1:</b> SPM menu with CAT selected in the toolbox list</figcaption>
               </figure>
               <figure>
-                <img loading="lazy" id="figure2" width=90% alt="CAT toolbox window" src="images/cat_gui.webp">
-                <figcaption><b>Figure 2:</b> CAT Window</figcaption>
+                <img loading="lazy" id="figure2" width=84% alt="CAT toolbox window" src="images/cat_gui.webp">
+                <figcaption><b>Figure 2:</b> CAT window</figcaption>
               </figure>
             </div>
             
@@ -433,7 +433,7 @@
             <b>A few words about the Batch Editor...</b>
             <ul>
               <li>As soon as you select a module from the CAT Toolbox menu, a new window (the Batch Editor) will open. The Batch Editor is the environment where you will set up your analysis (see <a href="#figure3">Figure 3</a>). For example, an &quot;&lt;-X&quot; indicates where you need to select files (e.g. your image files, the template, etc.). Other parameters have either default settings (which can be modified) or require input (e.g. choosing between different options, providing text or numeric values, etc.).</li>
-              <li>Once all missing parameters are set, a green arrow will appear on the top of the window (the current snapshots in <a href="#figure3">Figure 3</a> show the arrow still in grey). Click this arrow to run the module or select &quot;File &rarr; Run Batch&quot;. It is very useful to save the settings before you run the batch (click on the disk symbol or select &quot;File &rarr; Save Batch&quot;).</li>
+              <li>Once all missing parameters are set, a green arrow will appear on the top of the window. Click this arrow to run the module or select &quot;File &rarr; Run Batch&quot;. It is very useful to save the settings before you run the batch (click on the disk symbol or select &quot;File &rarr; Save Batch&quot;).</li>
             
               <li>Of note, you can always find helpful information and parameter-specific explanations at the bottom of the Batch Editor window.
                 <div class="note">Additional CAT-related information can be found by selecting &quot;Website&quot; in the CAT window (Help &rarr; Website), which opens the website of the Structural Brain Mapping Group, or in this manual (Help &rarr; Interactive Manual).</div>
@@ -442,8 +442,8 @@
             </ul>
             
             <figure>
-              <img loading="lazy" id="figure3" width=80% alt="Batch Editor showing the module list, the settings, the current item with the Select Files and Edit Value buttons, and the help text" src="images/batch_gui.webp">
-              <figcaption><b>Figure 3:</b> The Batch Editor is the environment where the analysis is set up. Left: For all settings marked with &quot;&lt;-X&quot;, files have to be selected (&quot;Select Files&quot;). Right: Parameters can be edited and adapted (&quot;Edit Value&quot;).</figcaption>
+              <img loading="lazy" id="figure3" width=100% alt="Batch Editor with the CAT segmentation module: module list, settings of the module, current item with the Specify button, and help text" src="images/batch_gui.webp">
+              <figcaption><b>Figure 3:</b> The Batch Editor with the CAT segmentation module: (1) module list, (2) settings of the current module, where &quot;&lt;-X&quot; marks settings that still need an input (here: &quot;Volumes&quot;), (3) the current item with its value or options (the selected option is marked with &quot;*&quot;), and (4) help for the current item. To change a setting, select it in (2) and click &quot;Specify...&quot; (or double-click the setting) to select files, enter a value, or choose an option.</figcaption>
             </figure>
             
             <!-- ################################################################################# -->
@@ -489,7 +489,7 @@
             Parameters:</p>
             
             <ul>
-              <li>Volumes &lt;-X &rarr; Select Files &rarr; <em>[select the new files]</em> &rarr; Done
+              <li>Volumes &lt;-X &rarr; Specify... &rarr; <em>[select the new files]</em> &rarr; Done
               <ul>
                 <li>Select one volume for each subject. As the Toolbox does not support multispectral data (i.e., different imaging methods for the same brain, such as T1-, T2-, diffusion-weighted, or CT images), it is recommended to choose a T1-weighted image.</li>
                 <li>Importantly, the images need to be in the same orientation as the priors; you can double-check and correct them by using &quot;Display&quot; in the SPM menu. The priors are located in your SPM folder (SPM &rarr; tpm &rarr; TPM.nii).</li>
@@ -567,7 +567,7 @@
             Parameters:</p>
 
             <ul>
-              <li>Sample data &lt;-X &rarr; Select Files &rarr; <em>[select the new files]</em> &rarr; Done
+              <li>Sample data &lt;-X &rarr; Specify... &rarr; <em>[select the new files]</em> &rarr; Done
               <ul>
                 <li>Select the newly written data [e.g. the &quot;wm*&quot; files, which are the normalized bias-corrected volumes]. This tool will display one horizontal slice for each subject, thus giving a good overview of whether the segmentation and normalization procedures yielded reasonable results. For example, if the native volume had artifacts or if the native volumes had a wrong orientation, the results may look odd. Solutions: Use &quot;Check Reg&quot; from the SPM main menu to make sure that the native images have the same orientation as the MNI Template (e.g. &quot;SPM &rarr; canonical &rarr; avg152T1.nii&quot;). Adjust if necessary using &quot;Display&quot; from the SPM main menu.</li>
               </ul></li>
@@ -590,7 +590,7 @@
             Parameters:</p>
 
             <ul>
-              <li>XML files &lt;-X &rarr; Select Files &rarr; <em>[select XML files]</em> &rarr; Done
+              <li>XML files &lt;-X &rarr; Specify... &rarr; <em>[select XML files]</em> &rarr; Done
               <ul>
                 <li>Select the XML files in the report-folder (for BIDS data in the derivatives folder) [e.g. the &quot;cat_*.xml&quot;].</li>
               </ul></li>
@@ -611,7 +611,7 @@
             Parameters:</p>
 
             <ul>
-              <li>Data &rarr; New: Sample data &lt;-X &rarr; Select Files &rarr; <em>[select grey matter volumes]</em> &rarr; Done
+              <li>Data &rarr; New: Sample data &lt;-X &rarr; Specify... &rarr; <em>[select grey matter volumes]</em> &rarr; Done
               <ul>
                 <li>Select the newly written data [e.g. the &quot;mwp1*&quot; files, which are the modulated (m) normalized (w) GM segments (p1)]. It is recommended to use the unsmoothed segmentations that provide more anatomical details. This tool visualises the quartic mean Z-score of each volume using a boxplot. Thus, it will help to identify outliers. Any outlier should be carefully inspected for artifacts or preprocessing errors using &quot;Check worst&quot; in the GUI. If you specify different samples the quartic mean Z-score is displayed in separate boxplots for each sample.</li>
               </ul></li>
@@ -645,7 +645,7 @@
             Parameters:</p>
 
             <ul>
-              <li>Images to Smooth &lt;-X &rarr; Select Files &rarr; <em>[select grey matter volumes]</em> &rarr; Done
+              <li>Images to Smooth &lt;-X &rarr; Specify... &rarr; <em>[select grey matter volumes]</em> &rarr; Done
               <ul>
                 <li>Select the newly written data [e.g. the &quot;mwp1&quot; files, which are the modulated (m) normalized (w) grey matter segments (p1)].</li>
               </ul></li>
@@ -806,11 +806,11 @@
             Parameters:</p>
             
             <ul>
-              <li>Directory &lt;-X &rarr; Select Files &rarr; <em>[select the working directory for your analysis]</em> &rarr; Done</li>
+              <li>Directory &lt;-X &rarr; Specify... &rarr; <em>[select the working directory for your analysis]</em> &rarr; Done</li>
               <li>Design &rarr; &quot;Two-sample t-test&quot;
               <ul>
-                <li>Group 1 scans &rarr; Select Files &rarr; <em>[select the smoothed grey matter data for group 1; following this script these are the &quot;smwp1&quot; files]</em> &rarr; Done</li>
-                <li>Group 2 scans &rarr; Select Files &rarr; <em>[select the smoothed grey matter data for group 2]</em> &rarr; Done</li>
+                <li>Group 1 scans &rarr; Specify... &rarr; <em>[select the smoothed grey matter data for group 1; following this script these are the &quot;smwp1&quot; files]</em> &rarr; Done</li>
+                <li>Group 2 scans &rarr; Specify... &rarr; <em>[select the smoothed grey matter data for group 2]</em> &rarr; Done</li>
                 <li>Independence &rarr; Yes</li>
                 <li>Variance &rarr; Equal or Unequal</li>
               </ul></li>
@@ -834,7 +834,7 @@
 
             <p>Parameters:</p>
             <ul>
-              <li>Directory &lt;-X &rarr; Select Files &rarr; <em>[select the working directory for your analysis]</em> &rarr; Done</li>
+              <li>Directory &lt;-X &rarr; Specify... &rarr; <em>[select the working directory for your analysis]</em> &rarr; Done</li>
               <li>Design &rarr; &quot;Any cross-sectional data (Full factorial)&quot;
               <ul>
                 <li>Factors &rarr; &quot;New: Factor; New: Factor&quot;<br>
@@ -898,7 +898,7 @@
 
             <p>Parameters:</p>
             <ul>
-              <li>Directory &lt;-X &rarr; Select Files &rarr; <em>[select the working directory for your analysis]</em> &rarr; Done</li>
+              <li>Directory &lt;-X &rarr; Specify... &rarr; <em>[select the working directory for your analysis]</em> &rarr; Done</li>
               <li>Design &rarr; &quot;Multiple Regression&quot;
               <ul>
                 <li>Scans &rarr; <em>[select files (e.g. the smoothed GM data of all subjects)]</em> &rarr; Done</li>
@@ -934,7 +934,7 @@
 
             <p>Parameters:</p>
             <ul>
-              <li>Directory &lt;-X &rarr; Select Files &rarr; <em>[select the working directory for your analysis]</em> &rarr; Done</li>
+              <li>Directory &lt;-X &rarr; Specify... &rarr; <em>[select the working directory for your analysis]</em> &rarr; Done</li>
               <li>Design &rarr; &quot;Multiple Regression&quot;
               <ul>
                 <li>Scans &rarr; <em>[select files (e.g. the smoothed GM data of all subjects)]</em> &rarr; Done</li>
@@ -972,7 +972,7 @@
 
             <p>Parameters:</p>
             <ul>
-              <li>Directory &lt;-X &rarr; Select Files &rarr; <em>[select the working directory for your analysis]</em> &rarr; Done</li>
+              <li>Directory &lt;-X &rarr; Specify... &rarr; <em>[select the working directory for your analysis]</em> &rarr; Done</li>
               <li>Design &rarr; &quot;Any cross-sectional data (Full factorial)&quot;
               <ul>
                 <li>Factors &rarr; &quot;New: Factor&quot;<br>
@@ -1030,7 +1030,7 @@
 
             <p>Parameters:</p>
             <ul>
-              <li>Directory &lt;-X &rarr; Select Files &rarr; <em>[select the working directory for your analysis]</em> &rarr; Done</li>
+              <li>Directory &lt;-X &rarr; Specify... &rarr; <em>[select the working directory for your analysis]</em> &rarr; Done</li>
               <li>Design &rarr; &quot;Any cross-sectional data (Full factorial)&quot;
               <ul>
                 <li>Factors &rarr; &quot;New: Factor&quot;<br>
@@ -1835,7 +1835,7 @@
 
             <p>Parameters:</p>
             <ul>
-              <li>Directory &lt;-X &rarr; Select Files &rarr; <em>[select the working directory for your analysis]</em> &rarr; Done</li>
+              <li>Directory &lt;-X &rarr; Specify... &rarr; <em>[select the working directory for your analysis]</em> &rarr; Done</li>
               <li>Design &rarr; &quot;Longitudinal data (Flexible factorial)&quot;
               <ul>
                 <li>Factors &rarr; &quot;New: Factor; New: Factor&quot;
@@ -1957,7 +1957,7 @@
 
             <p>Parameters:</p>
             <ul>
-              <li>Directory &lt;-X &rarr; Select Files &rarr; <em>[select the working directory for your analysis]</em> &rarr; Done</li>
+              <li>Directory &lt;-X &rarr; Specify... &rarr; <em>[select the working directory for your analysis]</em> &rarr; Done</li>
               <li>Design &rarr; &quot;Longitudinal data (Flexible factorial)&quot;
               <ul>
                 <li>Factors &rarr; &quot;New: Factor; New: Factor; New: Factor&quot;
@@ -2088,7 +2088,7 @@
 
             <p>Parameters:</p>
             <ul>
-              <li>Directory &lt;-X &rarr; Select Files &rarr; <em>[select the working directory for your analysis]</em> &rarr; Done</li>
+              <li>Directory &lt;-X &rarr; Specify... &rarr; <em>[select the working directory for your analysis]</em> &rarr; Done</li>
               <li>Design &rarr; &quot;Longitudinal data (Flexible factorial)&quot;
               <ul>
                 <li>Factors &rarr; &quot;New: Factor; New: Factor; New: Factor&quot;
