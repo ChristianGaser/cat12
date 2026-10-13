@@ -950,6 +950,32 @@ mark {
   border: 1px solid var(--border-strong);
 }
 
+/* Figures with a separate version for the dark theme (img-light / img-dark). */
+.doc img.img-dark {
+  display: none;
+  background-color: transparent;
+  -webkit-filter: none;
+  filter: none;
+}
+
+:root[data-theme="dark"] .doc img.img-light {
+  display: none;
+}
+
+:root[data-theme="dark"] .doc img.img-dark {
+  display: inline;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .doc img.img-light {
+    display: none;
+  }
+
+  :root:not([data-theme="light"]) .doc img.img-dark {
+    display: inline;
+  }
+}
+
 .doc figure {
   margin: 1.75rem 0 2rem;
   text-align: center;
@@ -1414,5 +1440,13 @@ mark {
 
   .doc summary::before {
     display: none;
+  }
+
+  .doc img.img-light {
+    display: inline !important;
+  }
+
+  .doc img.img-dark {
+    display: none !important;
   }
 }
