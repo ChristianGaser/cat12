@@ -84,9 +84,13 @@ help:
 	-@echo "cp_binaries usage: make cp_binaries [BIN=CAT_MyBinary]"
 
 #make html documentation
+# The help website (../cat12-help) mirrors doc/ (files removed from doc/ are removed there, too),
+# without the template cat.txt and the GUI icons. MATLAB links only work inside MATLAB: links that
+# open web pages become plain links and all other MATLAB links are removed (their text remains).
 docs:
 	-@cat doc/cat.txt | sed -e 's/VERSION/'${NEWVERSION}'/g' -e 's/RELNUMBER/r'${REVISION}'/g' -e 's/DATE/'${DATE}'/g' > doc/cat.html
-	-@test ! -d ../cat12-help || cp -R doc/* ../cat12-help/
+	-@test ! -d ../cat12-help || rsync -a --delete --exclude='.git*' --exclude='.DS_Store' --exclude='cat.txt' --exclude='icons' doc/ ../cat12-help/
+	-@test ! -d ../cat12-help || perl -0777 -p -i -e "s/matlab:web\(fullfile\(fileparts\(which\('cat12'\)\),'doc','([^']+)'\),'-new'\);?/\1/g; s/matlab:web\('([^']+)','-new'\);?/\1/g; s/\s+href=\"matlab:[^\"]*\"//g" ../cat12-help/*.html
 
 # update version numbers
 update: docs copy_longmode
