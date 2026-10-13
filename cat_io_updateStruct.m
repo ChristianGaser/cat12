@@ -1,7 +1,7 @@
 function S=cat_io_updateStruct(S,SN,RepByEmpty,ind)
 % _________________________________________________________________________
 % Add and/or updates entries of the structure 'SN' to the structure 'SI'.
-% If 'RepByEmpty=0', fields of SI where only overwriten by nonemtpy fields 
+% If 'RepByEmpty=0', fields of SI where only overwriten by nonempty fields 
 % of 'SN'. If the structure has multiple entries, 'ind' can be used to set 
 % a specific field, otherwise all entries will be replaced. 
 %

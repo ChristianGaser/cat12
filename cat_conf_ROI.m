@@ -214,7 +214,7 @@ for ali=1:numel(atlaslist)
   if any(~cellfun('isempty',strfind(atlaslist(ali),'suit')))
     ROI.help = [ROI.help; strrep({
         '(MAI) SUIT Atlas of the human cerebellum:'
-        '    Diedrichsen J., Balster J.H., Flavell J., Cussans E., Ramnani N. (2009). A probabilistic MR atlas of the human cerebellum. Neuroimage; 46(1), 39-46.'
+        '    Diedrichsen J., Balsters J.H., Flavell J., Cussans E., Ramnani N. (2009). A probabilistic MR atlas of the human cerebellum. Neuroimage; 46(1), 39-46.'
         ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
   end
   if any(~cellfun('isempty',strfind(atlaslist(ali),'Schaefer2018_200Parcels_17Networks_order')))

@@ -3472,7 +3472,7 @@ function quality_measures = conf_quality_measures(globals)
 function [check_homogeneity, check_cov] = conf_check_cov(data_xml,outdir,fname,save,globals,expert) 
  
   % --- update input data ---
-  data_xml.name     = 'Quality measures (leave emtpy for autom. search)';
+  data_xml.name     = 'Quality measures (leave empty for autom. search)';
   data_xml.help     = {
     'Select optional the quality measures that are saved during segmentation as xml-files in the report folder. This allows to additionally analyze image quality parameters such as noise, bias, and weighted overall image quality.'
     'Please note, that the order of the xml-files should be the same as the other data files.'
@@ -3533,7 +3533,7 @@ function [check_homogeneity, check_cov] = conf_check_cov(data_xml,outdir,fname,s
 
   rps          = cfg_menu;
   rps.tag      = 'userps';
-  rps.name     = 'Rating sytem';
+  rps.name     = 'Rating system';
   rps.labels   = {'School marks','Percentage score'};
   rps.values   = {-1 1};
   rps.val      = {-1};
@@ -3577,7 +3577,7 @@ function [check_homogeneity, check_cov] = conf_check_cov(data_xml,outdir,fname,s
   data.tag      = 'data';
   sample.values = {data};
   
-  data_xml.name     = 'Select quality measures (leave emtpy for autom. search)';
+  data_xml.name     = 'Select quality measures (leave empty for autom. search)';
 
   xmldir            = cfg_files;
   xmldir.tag        = 'select_dir';
@@ -3595,7 +3595,7 @@ function [check_homogeneity, check_cov] = conf_check_cov(data_xml,outdir,fname,s
   sel_xml.val       = {data_xml};
   sel_xml.help      = {
     'Choose between two methods to find xml-files with quality measures:'
-    '(1) Selecting the xml-files manually or leave emtpy for automatically search in the standard report folder.'
+    '(1) Selecting the xml-files manually or leave empty for automatically search in the standard report folder.'
     '(2) Selecting the report folder for automatically search for these xml-files.'
     };
   
