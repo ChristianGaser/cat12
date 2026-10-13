@@ -1,44 +1,36 @@
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="en">
   <head>
-    <title>CAT26.0 - Computational Anatomy Toolbox for SPM</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-    <link rel="stylesheet" type="text/css" href="css/cat.css" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CAT26.0 &ndash; Computational Anatomy Toolbox for SPM</title>
+    <link rel="stylesheet" type="text/css" href="css/cat.css">
   </head>
-  
+
   <body>
-  
-    <div id="content">
-      <br />
-      <p align="center" style="text-align:center;">This is <b>CAT26.0 (r3447) from 2026-10-12</b><br />You can update your copy of CAT here: <a href="matlab:cat_update(1);">Check for updates</a>.<br />If you find any bugs, please report them to <a href="mailto:vbmweb@gmail.com">vbmweb@gmail.com</a>.</p>
-      <h1 style="text-align:center;"><img src="images/CAT.png" width=40% height=auto alt="CAT" ></h1>
+    <div class="page">
 
-      <hr />
-    </div>    
-    <div id="button">
-      <p align="center" style="text-align:center;"><a href="matlab:web(fullfile(fileparts(which('cat12')),'doc','index.html#quick'),'-new');">Open ''Quick Start Guide'' in external window</a></p>      
-    </div>
-    <div id="button">
-      <p align="center" style="text-align:center;"><a href="matlab:web(fullfile(fileparts(which('cat12')),'doc','index.html'),'-new');">Open ''CAT Manual'' in external window</a></p>      
-    </div>
+      <div class="hero">
+        <img class="logo" src="images/CAT.png" width="195" height="95" alt="CAT &ndash; Computational Anatomy Toolbox">
+        <p class="version">This is <b>CAT26.0 (r3447)</b> from 2026-10-12</p>
+        <p class="actions">
+          <a class="button primary" href="matlab:web(fullfile(fileparts(which('cat12')),'doc','index.html#quick'),'-new');">Quick start guide</a>
+          <a class="button" href="matlab:web(fullfile(fileparts(which('cat12')),'doc','index.html'),'-new');">CAT manual</a>
+        </p>
+        <p class="meta"><a href="matlab:cat_update(1);">Check for updates</a> &middot; Please report bugs to <a href="mailto:vbmweb@gmail.com">vbmweb@gmail.com</a></p>
+      </div>
 
-    <div style="padding-left: 5%; padding-bottom: 30px; width: 90%; ">
-      <h2>Description</h2>
-      <p>This toolbox is an extension to <a href="matlab:web('http://www.fil.ion.ucl.ac.uk/spm/software/spm12','-new');">SPM</a> (Wellcome Department of Cognitive Neurology) to provide computational anatomy. This covers diverse morphometric methods such as voxel-based morphometry (VBM), surface-based morphometry (SBM), deformation-based morphometry (DBM), and ROI- or label-based morphometry. It is developed by Christian Gaser and Robert Dahnke (Jena University Hospital, Departments of Psychiatry and Neurology) and is free but copyrighted software, distributed under the terms of the <a href="matlab:web('http://www.gnu.org/licenses/gpl-2.0.html','-new');">GNU General Public Licence</a> as published by the Free Software Foundation; either version 2 of the Licence, or (at your option) any later version. If you use any CAT code for commercial applications, please send a <a href="mailto:christian.gaser@uni-jena.de">mail</a>.
-      </p>
-      <p>
-        This documentation contains <a class="function">interactive MATLAB links</a>&nbsp; that open SPM and CAT tools, e.g. to display ROIs like the <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','CAT','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','CAT','templates_MNI152NLin2009cAsym','lpba40.nii')}}))">LPBA40 volume map</a>.
-        You can find this help (e.g. if the SPM graphic window was used by SPM/CAT) in the CAT toolbox menu at the bottom-left button <em>Tools > Internet/Help....</em>
-      </p>
-      <p>
-      Please <a href="matlab:web(fullfile(fileparts(which('cat12')),'doc','index.html#cite'),'-new');">cite our papers</a> and the work of other researchers if you use this software.</p><p>
-      Our main paper is:<br>
-      Gaser C, Dahnke R, P.M. Thompson, Kurth K, Luders E, Alzheimer's Disease Neuroimaging Initiative.<br>
-      <a href="matlab:web('https://doi.org/10.1093/gigascience/giae049','-new');">CAT: a computational anatomy toolbox for the analysis of structural MRI data.</a>
-      </p>
-    </div>        
-  
-    <div id="footer">
-      <p>Copyright (C) Structural Brain Mapping Group &lt;<a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a>&gt;</p>
+      <h2>About CAT</h2>
+      <p>This toolbox is an extension to <a href="matlab:web('https://www.fil.ion.ucl.ac.uk/spm/','-new');">SPM</a> (Wellcome Centre for Human Neuroimaging, UCL) to provide computational anatomy. This covers diverse morphometric methods such as voxel-based morphometry (VBM), surface-based morphometry (SBM), deformation-based morphometry (DBM), and ROI- or label-based morphometry. It is developed by Christian Gaser and Robert Dahnke (Jena University Hospital, Departments of Psychiatry and Neurology) and is free but copyrighted software, distributed under the terms of the <a href="matlab:web('https://www.gnu.org/licenses/gpl-2.0.html','-new');">GNU General Public Licence</a> as published by the Free Software Foundation; either version 2 of the Licence, or (at your option) any later version. If you use any CAT code for commercial applications, please send a <a href="mailto:christian.gaser@uni-jena.de">mail</a>.</p>
+      <p>This documentation contains <a class="function">interactive MATLAB links</a> that open SPM and CAT tools, e.g. to display ROIs like the <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(spm('dir'),'toolbox','CAT','templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(spm('dir'),'toolbox','CAT','templates_MNI152NLin2009cAsym','lpba40.nii')}}))">LPBA40 volume map</a>. You can open the manual at any time from the CAT window: <em>Tools &rarr; Help &rarr; Interactive Manual</em>.</p>
+
+      <h2>Citation</h2>
+      <p>Please <a href="matlab:web(fullfile(fileparts(which('cat12')),'doc','index.html#cite'),'-new');">cite our papers</a> and the work of other researchers if you use this software. Our main paper is:</p>
+      <p class="citation">Gaser C, Dahnke R, Thompson PM, Kurth F, Luders E, Alzheimer's Disease Neuroimaging Initiative (2024).
+        <a href="matlab:web('https://doi.org/10.1093/gigascience/giae049','-new');">CAT: a computational anatomy toolbox for the analysis of structural MRI data.</a> GigaScience 13, giae049.</p>
+
+      <p class="footer">Copyright &copy; Structural Brain Mapping Group, Jena University Hospital &middot; <a href="mailto:christian.gaser@uni-jena.de">christian.gaser@uni-jena.de</a></p>
+
     </div>
   </body>
 </html>

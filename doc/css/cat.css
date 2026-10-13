@@ -1,299 +1,201 @@
-img {
-  border: 0;
+/* CAT start page (cat.html, generated from cat.txt), shown in MATLAB's web
+   browser or, for older MATLAB versions, in SPM's help window.
+   Plain CSS with literal colours (no custom properties) so that older HTML
+   renderers display it as well; colours match the CAT manual and website. */
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  src: url("../webfonts/inter-latin-wght-normal.woff2") format("woff2");
 }
 
 body {
-/*  font: 13px 'Lucida Grande', Verdana, Arial, Sans-Serif; */
-  font: small 'Lucida Grande', Verdana, Arial, Sans-Serif;
-  /* we need to set the pixel size for different MATLAB versions */
-   /* font: 100% 'Lucida Grande', Verdana, Arial, Sans-Serif; /* Resets 1em to 10px 'Lucida Grande', Verdana, Arial, Sans-Serif;  */ 
-  color: #444;
-  width: 100%;
-  margin: 0px;
-  border: 0px;
-  padding: 0px;
-  background: #F5F5F5;
+  margin: 0;
+  padding: 0;
+  background: #f5f7fa;
+  color: #1f2731;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
 }
 
-/* --- Header */
-#header {
-  background: black url('images/home.jpg') right;
-  background-repeat: no-repeat;
-  width: 100%;
-  position: relative;
-  height: 115px; /* in MATLAB 2016a high without padding */
-  padding: 85px 0px 0px 0px;
-  margin: 0px 0px 0px 0px; 
+.page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 28px 24px 20px;
 }
 
-#header h1, #header h1 a, #header h1 a:hover, #header h1 a:visited { /* H1 is the title in the header */
-  text-align: left;
-  font-size: 1.5em; 
-  font-weight: bold;
-  letter-spacing: -1px;
-  margin:  0px 0px 0px 0px;
-  padding: 0px 0px 0px 0px;
-  color: white;
-}
-
-#header p, #header p a, #header p a:hover, #header p a:visited { /* H1 is the title in the header */
-  text-decoration: none;
-  color: white;
-  font-weight: normal;
-  margin:  0px 0px 0px 0px;
-  padding: 0px 0px 0px 0px;
-  font-size: 0.9em;
-}
-#header h1, #header p {
-  padding-left: 20px; 
-}
-
-#button {
-  -webkit-border-radius: 6px;
-  -moz-border-radius: 6px;
-  border-radius: 6px;
-  border: solid 1px #000000;
-  -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
-  -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
-  background: #DDD;
-  margin-top: 20px; 
-  padding: 0 10 0 10px;
-  text-decoration: none;
-  width: 30%;
-  margin-left: auto;
-  margin-right: auto;
-  display: flex;
-  justify-content: center;   /* centers the two 30% blocks */
-}
-
-.button-row{
-  display: flex;
-  justify-content: center;   /* centers the two 30% blocks */
-  gap: 5%;                   /* spacing between them */
-  flex-wrap: nowrap;
-  margin-left: 10%;
-  margin-right: 10%;
-}
-
-.button-row .button{
-  flex: 0 0 30%;
-}
-
-#button a {
-  color: #003344;
-  font-weight: bold;
-  text-decoration: none;
-}
-
-#button a:hover {
-  background: #DDD;
-  color: #00AA00;
-  text-decoration: none;
-}
-
-#breadcrumbs { 
-  width: 90%;
-  color: #FFFFFF;
-  margin: 35px 0px 0px 20px;
-  padding: 0px 0px 0px 0px;
-}
-  
-#breadcrumbs a, #breadcrumbs a:hover, #breadcrumbs a:visited {
-  padding: 0px 0px 5px 0px;
-  color: #FFFFFF;
-  text-decoration: none;
-
-}
-  
-#breadcrumbs a:hover {
-  padding: 0px 0px 5px 0px;
-  text-decoration: none;
-  background: #F5F5F5;
-  color: #000000;
-
-}
-  
-/* --- Footer --- */ 
-#footer {
-  height: 30px;
-  width: 100%;
-  border-top: medium;
-  border-top-style: solid;
-  border-top-color: #000000;
-  border-top-width: 1px;
-  font-size:0.85em;
-  font-weight: normal;
-}
-#footer p {
-  margin: 10px;
-}
-
-/* Content */
-#content {
-  padding: 5px 20px 20px 20px;
-  font-size: 100%;
-}
-
-#center {
+.hero {
+  padding: 28px 24px 22px;
+  border: 1px solid #e0e6ed;
+  border-radius: 12px;
+  background: #ffffff;
   text-align: center;
-  width: 95%;
-  position: relative;
-  display: block;
-  margin-top: 20px;
-  margin-bottom: 20px;
-  margin-left: auto;
-  margin-right: auto;
-}
-  
-#content p {
-  text-align:justify;
 }
 
-
-/*- Headings */
-h1, h2, h3, h4, h5 {
-  color: #222;
-  font-family: 'Trebuchet MS', Verdana, Sans-Serif;
-}
-  
-h2 {
-  color: #444;
-  margin-top: 2.5em;
-  font-size: 1.3em;
+.logo {
+  width: 195px;
+  height: auto;
+  border: 0;
 }
 
-h3 {
-  color: #555;
-  margin-top: 2.5em;
-  border-bottom: solid;
-  border-bottom-width: 1px;
-  border-bottom-color: #666;
-  font-size: 1.2em;
+.version {
+  margin: 14px 0 0;
+  color: #4b5664;
 }
 
-h4 {
-  color: #444;
-  margin-top: 2.0em;
-  font-size:  1.1em;
+.version b {
+  color: #0d131a;
 }
 
-h5 {
-  color: #444;
-  margin-top: 1.5em;
-  margin-bottom: 0em;
-  font-size: 1.0em;
+.actions {
+  margin: 18px 0 0;
 }
-  
-li h4, li h5 {
-  margin-top: 0em;
-  margin-bottom: 0em;
-} 
 
-li p {
-  margin-top: 0em;
-  margin-bottom: 0.5em;
-}
-  
-a {
-  font-weight: 500;
+.button {
+  display: inline-block;
+  margin: 4px;
+  padding: 9px 18px;
+  border: 1px solid #cbd4de;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #0d131a;
+  font-weight: 600;
   text-decoration: none;
-  color:#133fbb;
+}
+
+.button:hover {
+  border-color: #4f9be6;
+  background: #eaf3fc;
+  text-decoration: none;
+}
+
+.button.primary {
+  border-color: #1c6dcc;
+  background: #1c6dcc;
+  color: #ffffff;
+}
+
+.button.primary:hover {
+  border-color: #1659a8;
+  background: #1659a8;
+  color: #ffffff;
+}
+
+.meta {
+  margin: 14px 0 0;
+  color: #687483;
+  font-size: 13px;
+}
+
+h2 {
+  margin: 30px 0 8px;
+  color: #0d131a;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+p {
+  margin: 0 0 12px;
+}
+
+a {
+  color: #1c6dcc;
+  text-decoration: none;
 }
 
 a:hover {
-  background:#133f7a;
-  color: #FFFFFF;
+  text-decoration: underline;
 }
 
+/* Links that run MATLAB code, marked with a play icon as in the manual */
 a.function {
-  color: #008800; 
+  color: #0b6f8a;
+  font-weight: 600;
 }
 
-a.function:hover {
-  background:#00BB00;
-  color: #FFFFFF; 
+a.function::before {
+  display: inline-block;
+  width: 0.62em;
+  height: 0.62em;
+  margin: 0 0.3em 0 0.1em;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M1.5 0.8 9.2 5 1.5 9.2z'/%3E%3C/svg%3E") center / contain no-repeat;
+  content: "";
 }
 
-li {
-  margin-bottom: 0.2em;
+.citation {
+  padding: 14px 18px;
+  border: 1px solid #e0e6ed;
+  border-left: 3px solid #4f9be6;
+  border-radius: 6px;
+  background: #ffffff;
 }
 
-table {
-  /*
-  background-color: #ffeda0;
-  */
-  font: 'Lucida Grande', Verdana, Arial, Sans-Serif;
-  font-size: 0.9em; 
-  border-collapse: collapse;
-  border: none;
+.footer {
+  margin: 30px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid #e0e6ed;
+  color: #687483;
+  font-size: 13px;
 }
 
-table ul {
-	margin-left: -20px; 
-	padding-left: -20px;	
-}
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #0e1216;
+    color: #d3dae2;
+  }
 
-thead {
-  background-color: #f3c600;
-  /*
-  border-top: 1px solid #999;
-  border-bottom: 1px solid #999;
-  */
-}
+  .hero,
+  .citation {
+    border-color: #27303a;
+    background: #12171c;
+  }
 
-tfood {
-  background-color: #F7F1D4;
-  font-size: 80%;
-  border-top: 1px solid #999;
-}
-td, th {
-  text-align: left; 
-  padding: 0.2em 1em;
-}
+  .citation {
+    border-left-color: #4f9be6;
+  }
 
-em, tt, strong {
-  font-style: italic;
-  font-weight: bold;
-/*  font-weight: 500;
-  color: #886666; 
-*/
-}
+  .version,
+  .meta,
+  .footer {
+    color: #a9b4c0;
+  }
 
-img.center {
-  text-align: center;
-  width: 95%;
-  position: relative;
-  display: block;
-  margin-top: 20px;
-  margin-bottom: 20px;
-  margin-left: auto;
-  margin-right: auto;
-}
+  .version b,
+  h2 {
+    color: #f1f4f7;
+  }
 
-p.img {
-  text-align: center;
-  width: 90%;
-  font-size: 0.9em; 
-  position: relative;
-  display: block;
-  margin-top: 20px;
-  margin-bottom: 20px;
-  margin-left: auto;
-  margin-right: auto;
-  color: #666; 
-}
+  .footer {
+    border-top-color: #27303a;
+  }
 
-p.code {
-  text-align: left;
-  width: 90%;
-  font-size: 0.9em; 
-  font: Monaco, Lucida Console, Courier, New Courier;
-  position: relative;
-  display: block;
-  margin-top: 10px;
-  margin-bottom: -10px;
-  margin-left: auto;
-  margin-right: auto;
-  color: #222; 
+  a {
+    color: #79b8ff;
+  }
+
+  a.function {
+    color: #8fd3e3;
+  }
+
+  .button {
+    border-color: #36414d;
+    background: #12171c;
+    color: #f1f4f7;
+  }
+
+  .button:hover {
+    border-color: #4f9be6;
+    background: #10233a;
+  }
+
+  .button.primary {
+    border-color: #1c6dcc;
+    background: #1c6dcc;
+    color: #ffffff;
+  }
 }
