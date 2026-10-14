@@ -104,6 +104,7 @@ function V = assurePatientDCMfields(V)
     try
       ScanDate     = datetime(V.ScanDate,'Format','uuuu-MM-dd');
       BirthDate    = datetime(V.PatientBirthDate,'Format','uuuu-MM-dd');
+      BirthDate.Day = 15; % the same age for the anonymized DICOM export (see cat_io_dcm2bids_export)
       V.PatientAge = char(duration( ScanDate - BirthDate, 'Format','y'));
       V.PatientAge = str2double(V.PatientAge(1:end-4)); 
     catch
