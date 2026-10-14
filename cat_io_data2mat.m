@@ -19,7 +19,7 @@ function out = cat_io_data2mat(opt,par,scaling)
 % opt.resolution - resampling spatial resolution for volume data
 % opt.mask       - optional brainmask for volume data
 % opt.mask_th    - optional threshold for brainmask for volume data
-% opt.fwhm       - optional Gaussian smoothing kernel size in FWHM
+% opt.fwhm       - optional Gaussian smoothing kernel size in FWHM (mm)
 %
 % additional parameters to be saved with mat file:
 % par            - structure with parameter as name and the values
@@ -80,6 +80,8 @@ if isfield(opt,'data') % use simpler field structure for call as script
   end
   if isfield(opt,'mask')
     brainmask = opt.mask;
+  else
+    brainmask = '';
   end
   if isfield(opt,'mask_th')
     mask_th = opt.mask_th;
@@ -256,7 +258,6 @@ if ~spm_mesh_detect(V{1}(1))
   else
     mask_ind = zeros(Vres.dim,'logical');
   end
-  ind = find(mask_ind);
   
   for sl=1:Vres.dim(3)
     % read mask
@@ -270,6 +271,8 @@ if ~spm_mesh_detect(V{1}(1))
     M1{sl} = Vres.mat\V{1}(1).mat\M;
   end
   
+  % indices of the voxels inside the mask (in the order of the columns of Y)
+  ind = find(mask_ind);
     
   for j=1:n_samples
     if n_subjects(j) > 500, cat_progress_bar('Init',n_subjects(j),'reading...','subjects completed','cmd%'); end
@@ -284,7 +287,10 @@ if ~spm_mesh_detect(V{1}(1))
           fwhm = repmat(fwhm,1,3);
         end
         if sum(fwhm) > 0
-          spm_smooth(vol,vol,fwhm,0);
+          % spm_smooth cannot get the voxel size from an array: convert FWHM from mm
+          % to voxels
+          vx = sqrt(sum(V{j}(i).mat(1:3,1:3).^2));
+          spm_smooth(vol,vol,fwhm./vx,0);
         end
       end
    
