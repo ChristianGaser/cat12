@@ -51,6 +51,9 @@ function def = cat_io_dcm2bids_defaults
   def.opts.anonymize        = 1;     % imaging data: 0-no, 1-light-anat-only,  2-strong-all, 3-skull-strip-light?
                                      % meta data:    0-no, 1-basic-reduced,    2-strong-only-coded
 
+  def.opts.dicomexport      = 0;     % anonymized DICOM export of the imported scans (cleaned headers, defaced images,
+                                     % birth date by opts.anonymize, see cat_io_dcm2bids_export): 0 - no, 1 - scans with
+                                     % conform or semiconform protocol (all scans without protocols), 2 - all scans
   def.opts.hrrealign        = 0;     % highres-realignment for further use? difficult to keep this persistent
   def.opts.rerun            = 0;     % rerun - overwrite existing
   def.opts.tableformat      = 'csv'; % csv/tsv

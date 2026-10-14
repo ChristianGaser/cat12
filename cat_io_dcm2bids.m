@@ -21,6 +21,13 @@ function out = cat_io_dcm2bids(job)
 % ses-*, or snr-* directories) can be selected to export already imported
 % data again (see cat_io_dcm2bids_import and cat_io_dcm2bids_importDCM).
 %
+% The anonymized DICOM export (opts.dicomexport) writes the DICOM files of
+% the imported scans with cleaned headers and defaced images as zip files
+% of the sessions (catDCM2BIDSdb-dicom), e.g. to transfer the data to a
+% central site that runs the batch again (see cat_io_dcm2bids_export).
+% THE EXPORT IS NOT AN ARCHIVE OR BACKUP OF THE ORIGINAL DATA, AS THE
+% HEADERS ARE CLEANED AND THE IMAGES ARE DEFACED.
+%
 % The functions are organized in the following files, where the functions
 % of other files are called with their name as action, e.g.
 % cat_io_dcm2bids_db('getDBdir',V):
@@ -40,6 +47,8 @@ function out = cat_io_dcm2bids(job)
 %   cat_io_dcm2bids_overlap    .. brain coverage of the scans in MNI space
 %   cat_io_dcm2bids_qc         .. quality control
 %   cat_io_dcm2bids_tables     .. tables of the database
+%   cat_io_dcm2bids_export     .. anonymized DICOM export (cleaned headers,
+%                                 defaced images)
 %   cat_io_dcm2bids_report     .. report tables
 %   cat_io_dcm2bids_reportfig  .. report figure (PDF)
 %   cat_io_dcm2bids_stats      .. statistics of the report figure
@@ -178,7 +187,7 @@ function out = cat_io_dcm2bids(job)
   sub = Vjson; ses = Vjson; datatype = Vjson; pro = Vjson; acq = Vjson; 
   sn = Vjson; task = Vjson; suffix = Vjson; site = Vjson; scankey = Vjson; scanid = Vjson;
   ent = Vjson; lab = Vjson; acqsn = Vjson; acqnr = Vjson; rec = Vjson; % records of the tables of the database
-  Panon = Vjson; Pp0 = Vjson; Pwc1 = Vjson; Pdbdir = Vjson;
+  Panon = Vjson; Pp0 = Vjson; Pwc1 = Vjson; Pdbdir = Vjson; Pdbjson = Vjson; pstatus = Vjson;
   Pdbdirpath = Vjson; BIDSpathd = Vjson; Pdbnii = Vjson;
   BIDSpath = Vjson; BIDSdir = Vjson; BIDSfile = Vjson; BIDSsub = Vjson; Pprot = Vjson;
   PID = ''; sni = 0; stime = datetime('now'); bidsroots = {}; convver = {}; 
@@ -237,9 +246,9 @@ function out = cat_io_dcm2bids(job)
           stime = datetime('now'); 
         end
 
-        cat_io_cprintf([0 0.2 .8],'\n%-45s',sprintf('%4d) %s', sni, ...
-          spm_str_manip(sprintf('sub-%s-%s',Vjson{sci}.DeviceSerialNumber, ...
-            strrep(Vjson{sci}.PatientID,'_','')),'a38')));
+        sname = sprintf('sub-%s-%s',Vjson{sci}.DeviceSerialNumber,strrep(Vjson{sci}.PatientID,'_',''));
+        if numel(sname) > 39, sname = ['..' sname(end-36:end)]; end % keep the end of long names
+        cat_io_cprintf([0 0.2 .8],'\n%-45s',sprintf('%4d) %s', sni, sname));
         if job.opts.output
           if isempty(Pprodictdirs) || isempty(Pprodictdirs{1})
             fprintf('%15s : %-50s%8s |%5s%5s%5s%5s%5s%5s\n','dicom-protocol', ...
@@ -348,12 +357,14 @@ function out = cat_io_dcm2bids(job)
       Pdbdirpath{sci} = Pdirfi; 
       Pdbdir{sci}     = Pdirfi(numel(Pmdbdir)+2:end); 
       Pdbnii{sci}     = Pnii{fscni}; % image in the database (e.g. for the session registration)
+      Pdbjson{sci}    = Pjson{fscni}; % sidecar in the database (e.g. for the DICOM export)
       cat_io_dcm2bids_protocols('updateDBtables',Vjson{sci}, Ptbldir, sites, job.opts); 
 
       % test protocols
       [match,pname,mismatchstr,Pnfailedid,Pfname,PT] = ...
         cat_io_dcm2bids_protocols('testProtocols',Pjson{fscni},Vjson{sci},protocols,tol,job,sites);
-      Pprot{sci} = Pfname; % (closest) protocol file, e.g. for the coverage mask
+      Pprot{sci}   = Pfname;    % (closest) protocol file, e.g. for the coverage mask
+      pstatus{sci} = PT.status; % protocol status, e.g. for the DICOM export
 
       % site definition 
       site{sci} = cat_io_dcm2bids_protocols('setupSites',Vjson{sci},sites);
@@ -710,7 +721,17 @@ function out = cat_io_dcm2bids(job)
 
   % tables of the database (scans, sites, protocols, see cat_io_dcm2bids_tables)
   rec = rec(1:sci); rec = [rec{~cellfun('isempty',rec)}]; 
-  cat_io_dcm2bids_tables('writeTables',Ptbldir,rec,sites,job.opts); 
+  cat_io_dcm2bids_tables('writeTables',Ptbldir,rec,sites,job.opts);
+
+  % anonymized DICOM export of the scans of this run (catDCM2BIDSdb-dicom,
+  % see cat_io_dcm2bids_export)
+  if job.opts.dicomexport > 0
+    try
+      cat_io_dcm2bids_export('exportDICOM',Pdbjson(1:sci),datatype(1:sci),pstatus(1:sci),Pmdbdir,job.opts);
+    catch e
+      cat_io_cprintf('err','  DICOM export failed: %s (%s, line %d)\n',e.message,e.stack(1).name,e.stack(1).line);
+    end
+  end
 
   % IntendedFor references of BIDS inputs with the new file names
   cat_io_dcm2bids_bids('remapIntendedFor',intended, srcmap); 

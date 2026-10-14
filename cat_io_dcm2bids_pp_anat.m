@@ -67,7 +67,7 @@ function Pout = anonymize(Pin,opts,datatype)
       %%%%%%%%%% this might bias the realignment!
       Vm = V(1); Vm.fname = spm_file(Vm.fname,'prefix','anon_');
       spm_write_vol(Vm,Ym);
-      Pmsk = spm_deface( struct( 'images' , Vm.fname )); 
+      Pmsk = char(spm_deface( struct( 'images' , Vm.fname )));
       Ymsk = spm_read_vols(spm_vol(Pmsk)) > 0; 
       delete(Vm.fname); delete(Pmsk);
 
@@ -82,8 +82,9 @@ function Pout = anonymize(Pin,opts,datatype)
     else
       spm_deface( struct( 'images' , Pin ));
     end
-  catch
-    copyfile(Pin,Pout);
+  catch e
+    cat_io_cprintf('err','  Defacing failed (%s), the image is not defaced.\n',e.message);
+    copyfile(Pin,regexprep(Pout,'\.gz$','')); % (zipped below)
     %%% mark as failed?
   end
 

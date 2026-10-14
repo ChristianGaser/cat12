@@ -330,6 +330,35 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   end
   
 
+  % anonymized DICOM export (see cat_io_dcm2bids_export)
+  dicomexport        = cfg_menu;
+  dicomexport.tag    = 'dicomexport';
+  dicomexport.name   = 'Anonymized DICOM export';
+  dicomexport.labels = {'No','Scans fitting the protocols','All imported scans'};
+  dicomexport.values = {0,1,2};
+  dicomexport.val    = {def.opts.dicomexport};
+  dicomexport.help   = {
+   ['Export of the DICOM files of the imported scans with cleaned headers and defaced images into the directory ' ...
+    'catDCM2BIDSdb-dicom, e.g. to transfer the data to a central site that runs this batch again. ' ...
+    'Option 1 exports the scans with conform or semiconform protocol (all scans without protocols), option 2 all ' ...
+    'imported scans (localizers, scouts, derived and 2D images are not imported). ']
+    ''
+   ['Each run with new scans writes a directory <date-time> with one zip file per session (DICOM files in the ' ...
+    'layout of the internal database) and a table of its content. Each scan is exported only once, i.e. the run ' ...
+    'directories can be removed after the upload. The tables scans and sessions give an overview of all exports ' ...
+    '(without personal data). ']
+    ''
+   ['Header: the names of the patient (replaced by the PatientID), physicians, and operators, addresses, phone ' ...
+    'numbers, other IDs, and comments are cleaned, and the birth date is set to the 15th of the month (anonymization), ' ...
+    'whereas the fields used by the batch are kept (e.g. PatientID, sex, age, dates, UIDs, scanner, protocol, and ' ...
+    'private fields). A warning is given if parts of the patient name are found in other fields. The PatientID is ' ...
+    'not changed and has to be a pseudonym! ']
+    'Images: defaced as the BIDS export (anatomical scans, all scans for the extensive anonymization). '
+    ''
+    'THE EXPORT IS NOT AN ARCHIVE OR BACKUP OF THE ORIGINAL DATA, AS THE HEADERS ARE CLEANED AND THE IMAGES ARE DEFACED. KEEP THE ORIGINAL DATA! '
+    ''
+    };
+
   % anonymize .. always required !
   anonymize         = cfg_menu;
   anonymize.tag     = 'anonymize';
@@ -765,7 +794,7 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   opts.tag        = 'opts';
   opts.name       = 'Options';
   opts.val        = {ProtocolFileName, studies, anonymize, tolerance, preprocessing, pplevel, ...
-                      gzipi, gzipe, output, protocolsubdirs, subIDform, render};
+                      gzipi, gzipe, output, dicomexport, protocolsubdirs, subIDform, render};
   opts.help       = {['Parameters to control the processing and output of ' ...
                       'the converted data and its export to BIDS. ']}; 
 
@@ -786,8 +815,12 @@ function dcm2bids = cat_conf_dcm2bids(expert)
    ['Please check out the CAT subdirectory DCM2BIDS/DZPG3T for an example that includes the definition for ' ...
     'structural, functional, and diffusion scans used by the DZPG (German Center for Mental Health, https://www.dzpg.org/). ']
     ''
-    'The batch also applies the SPM anonymization routine and runs a basic image quality control. ' ...
-    }; 
+    'The batch also applies the SPM anonymization routine and runs a basic image quality control. '
+    ''
+   ['The anonymized DICOM export (option) writes the DICOM files of the imported scans with cleaned headers and ' ...
+    'defaced images as zip files of the sessions, e.g. to transfer the data to a central site that runs this batch again. ']
+    'THE DICOM EXPORT IS NOT AN ARCHIVE OR BACKUP OF THE ORIGINAL DATA, AS THE HEADERS ARE CLEANED AND THE IMAGES ARE DEFACED! '
+    };
 end
 function cdep = vout_io_dcm2bids(job)
 %vout_io_dcm2bids. Dependencies for the converted raw BIDS images.

@@ -17,6 +17,7 @@ function [ok,res] = cat_DCM2BIDS_selftest(Pdata,Pout,tests,levels)
 %                                     under a path with special characters,
 %                                     and the derived ADC series
 %    site_berlin_pilot202511       .. session of the preprocessing levels
+%                                     and the DICOM export (classic DICOM)
 %  All outputs are written to Pout, i.e. the data directory is not changed.
 %  The fake dcm2niix is a shell script (macOS/Linux).
 %
@@ -33,6 +34,9 @@ function [ok,res] = cat_DCM2BIDS_selftest(Pdata,Pout,tests,levels)
 %                          relative paths, and dcm2niix options
 %            'inputs'    - split and copied series, flat DICOM folder,
 %                          protocol tables, output 0, and UTF-8 paths
+%            'export'    - anonymized DICOM export (zip files, tables,
+%                          reimport, repeated run, protocol scans of a
+%                          JSON-only import, cleaning, mosaic defacing)
 %            'pplevels'  - preprocessing levels (time and accuracy)
 %  levels .. preprocessing levels of 'pplevels' (default: 1:0.5:4), where
 %            level 1 is the reference (its results are kept in Pout and
@@ -49,7 +53,7 @@ function [ok,res] = cat_DCM2BIDS_selftest(Pdata,Pout,tests,levels)
     Pdata = spm_select(1,'dir','Select the DZPG pilot data directory (with DCM and protocols)');
   end
   if ~exist('Pout','var')   || isempty(Pout),   Pout   = fullfile(tempdir,'cat_DCM2BIDS_selftest'); end
-  if ~exist('tests','var')  || isempty(tests),  tests  = {'import','selection','special','inputs','pplevels'}; end
+  if ~exist('tests','var')  || isempty(tests),  tests  = {'import','selection','special','inputs','export','pplevels'}; end
   if ~exist('levels','var') || isempty(levels), levels = 1:0.5:4; end
   tests = cellstr(tests);
 
@@ -58,7 +62,7 @@ function [ok,res] = cat_DCM2BIDS_selftest(Pdata,Pout,tests,levels)
   if any(strcmp(tests,'import')) || (any(ismember(tests,{'selection','special'})) && ~exist(E.PL0,'file'))
     res = [res runGroup('import',@testImport,E)];
   end
-  for g = {'selection','special','inputs'}
+  for g = {'selection','special','inputs','export'}
     if any(strcmp(tests,g{1}))
       res = [res runGroup(g{1},str2func(['test' upper(g{1}(1)) g{1}(2:end)]),E)]; %#ok<AGROW>
     end
@@ -402,6 +406,193 @@ function R = testInputs(E)
   % (6) no temporary directories left
   tl = [dir(fullfile(T7,'study','catDCM2BIDSdb','catDCM2BIDStmp*')); dir(fullfile(T8,'study','catDCM2BIDSdb','catDCM2BIDStmp*'))];
   R(end+1) = struct('name','no-tmp-left','ok',isempty(tl),'info','');
+end
+% =========================================================================
+function R = testExport(E)
+%testExport. Anonymized DICOM export (see cat_io_dcm2bids_export) of a
+%  classic (Berlin) and an enhanced (JE7) session: zip files and their
+%  content tables, export tables without personal data, reimport of the
+%  export (only the cleaned fields of the sidecars differ, the same BIDS
+%  names and participants, defaced images), repeated run (no new export),
+%  the protocol scans of a JSON-only import (images converted only for the
+%  defacing), the cleaning of a file with a name part in a description,
+%  and the defacing of a Siemens mosaic (extensive anonymization).
+  R  = struct('name',{},'ok',{},'info',{});
+  T  = fullfile(E.Pout,'export'); fresh(T);
+  DB = fullfile(T,'study','catDCM2BIDSdb'); X = [DB '-dicom'];
+  job = E.job0; job.outdir = {T}; job.data = {E.BER; E.dcmses}; job.dicts = E.dicts; job.opts.dicomexport = 2;
+
+  % (1) import with the export of all scans: one run directory with a zip
+  % file and its content table per session
+  tic; evalc('cat_io_dcm2bids(job);'); t = toc;
+  Pz = cat_vol_findfiles(X,'*.zip'); L = load(fullfile(X,'exports.mat'));
+  okc = ~isempty(Pz);
+  for zi = 1:numel(Pz)
+    U = tempname; unzip(Pz{zi},U);
+    F = strrep(strrep(cat_vol_findfiles(U,'*.dcm'),[U filesep],''),filesep,'/'); rmdir(U,'s');
+    C = cat_io_csv(spm_file(Pz{zi},'ext','.csv'),'','',struct('convert2double',0));
+    okc = okc && isequal(sort(F(:)),sort(C(2:end,1)));
+  end
+  R(end+1) = struct('name','export','ok',isscalar(dir(fullfile(X,'2*'))) && numel(Pz) == 2 && okc && ...
+    numel(L.Z) == 2 && sum([L.Z.Scans]) == numel(L.R) && any([L.R.Defaced]), ...
+    'info',sprintf('%0.0f s, %d zip files, %d scans (%d defaced), %d files, content tables: %d', ...
+    t,numel(Pz),numel(L.R),nnz([L.R.Defaced]),sum([L.R.Files]),okc));
+
+  % (2) no personal data in the tables of the export (parts of the patient
+  % names, birth dates, and the DICOM directories)
+  txt  = lower(strjoin(cellfun(@fileread,[cat_vol_findfiles(X,'*.csv'); {fullfile(X,'readme.txt')}], ...
+    'UniformOutput',false),' '));
+  pats = {};
+  for P = sidecars(DB)'
+    J = cat_io_json(P{1}); I = cat_io_json(spm_file(P{1},'prefix','catDCM2BIDSimport_'));
+    if isfield(J,'PatientName') && isfield(J,'PatientID')
+      p = strsplit(lower(char(J.PatientName)),{'^',' ','-','_'});
+      pats = [pats p(cellfun(@numel,p) >= 4 & ~cellfun(@(q) contains(lower(char(J.PatientID)),q),p))]; %#ok<AGROW>
+    end
+    if isfield(J,'PatientBirthDate')
+      pats = [pats {char(J.PatientBirthDate), strrep(char(J.PatientBirthDate),'-','')}]; %#ok<AGROW>
+    end
+    pats{end+1} = lower(I.DICOMdirectory); %#ok<AGROW>
+  end
+  pats = unique(pats); found = pats(cellfun(@(q) contains(txt,q),pats));
+  R(end+1) = struct('name','export-private','ok',isempty(found), ...
+    'info',sprintf('%d personal strings, %d found',numel(pats),numel(found)));
+
+  % (3) reimport of the export: only the cleaned fields of the sidecars
+  % differ, the same BIDS names and participants, the defaced images as
+  % the anonymized images of the first import, and other images identical
+  T2 = fullfile(E.Pout,'export2'); fresh(T2); U = fullfile(T2,'dicom');
+  for zi = 1:numel(Pz), unzip(Pz{zi},U); end
+  job2 = E.job0; job2.outdir = {T2}; job2.data = {U}; job2.dicts = E.dicts;
+  tic; evalc('cat_io_dcm2bids(job2);'); t = toc;
+  DB2 = fullfile(T2,'study','catDCM2BIDSdb');
+  S1  = sidecars(DB); S1 = S1(ismember(cellfun(@(P) sidecarKey(P,1),S1,'UniformOutput',false),{L.R.SeriesInstanceUID}));
+  S2  = sidecars(DB2);
+  [~,i1,i2] = intersect(cellfun(@(P) sidecarKey(P),S1,'UniformOutput',false),cellfun(@(P) sidecarKey(P),S2,'UniformOutput',false));
+  dif = {}; dface = 0; nface = 0; same = true;
+  for j = 1:numel(i1)
+    A = cat_io_json(S1{i1(j)}); B = cat_io_json(S2{i2(j)});
+    f = union(fieldnames(A),fieldnames(B));
+    dif = [dif; f(cellfun(@(x) ~isfield(A,x) || ~isfield(B,x) || ~isequal(A.(x),B.(x)),f))]; %#ok<AGROW>
+    Pa = spm_file(S1{i1(j)},'prefix','anon_','ext','.nii.gz'); P2 = spm_file(S2{i2(j)},'ext','.nii.gz');
+    if exist(Pa,'file') % defaced: as the anonymized image of the first import
+      Ya = readNiiGz(Pa); Yb = readNiiGz(P2); Ya(isnan(Ya)) = 0;
+      dface = max(dface,nnz(Ya ~= Yb) / numel(Ya)); nface = nface + 1;
+    elseif dir(P2).bytes < 50e6 % other images (without the large ones)
+      same = same && isequal(readNiiGz(spm_file(S1{i1(j)},'ext','.nii.gz')),readNiiGz(P2));
+    end
+  end
+  dif = unique(dif);
+  B1  = fullfile(T,'study','BIDS'); B2 = fullfile(T2,'study','BIDS');
+  pt1 = cat_vol_findfiles(B1,'participants.tsv'); pt2 = cat_vol_findfiles(B2,'participants.tsv');
+  pt  = ~isempty(pt1) && ~isempty(pt2) && isequal(fileread(pt1{1}),fileread(pt2{1}));
+  bn  = isequal(names(listing(B1)),names(listing(B2)));
+  R(end+1) = struct('name','export-reimport','ok',numel(i1) == numel(S1) && ...
+    all(ismember(dif,{'PatientName','PatientBirthDate','AccessionNumber','ReferringPhysicianName'})) && ...
+    bn && pt && nface > 0 && dface < 1e-4 && same, ...
+    'info',sprintf(['%0.0f s, %d of %d sidecars, differing fields: %s, BIDS names equal: %d, participants ' ...
+    'equal: %d, defaced images: %d (max %0.4f%% voxels differ), other images identical: %d'], ...
+    t,numel(i1),numel(S1),strjoin(dif',' '),bn,pt,nface,100*dface,same));
+
+  % (4) the same import again: no new export
+  tic; evalc('cat_io_dcm2bids(job);'); t = toc; L4 = load(fullfile(X,'exports.mat'));
+  R(end+1) = struct('name','export-again','ok',isscalar(dir(fullfile(X,'2*'))) && numel(L4.R) == numel(L.R), ...
+    'info',sprintf('%0.0f s, run directories: %d, scans: %d',t,numel(dir(fullfile(X,'2*'))),numel(L4.R)));
+
+  % (5) protocol scans (conform or semiconform) of a JSON-only import with
+  % only the T1w protocol (the other scans are nonconform): the images are
+  % converted only for the defaced scans
+  T3 = fullfile(E.Pout,'export3'); fresh(T3); DB3 = fullfile(T3,'study','catDCM2BIDSdb');
+  Pp = fullfile(T3,'protocols','anat'); mkdir(Pp);
+  copyfile(fullfile(E.dicts.Pprotocoldirs{1},'anat','*T1w*.json'),Pp);
+  job3 = job; job3.outdir = {T3}; job3.data = {E.BER}; job3.dicts.Pprotocoldirs = {fileparts(Pp)};
+  job3.opts.output = 1; job3.opts.dicomexport = 1;
+  tic; evalc('cat_io_dcm2bids(job3);'); t = toc;
+  L5 = load(fullfile([DB3 '-dicom'],'exports.mat'));
+  Ts = cat_io_csv(fullfile(T3,'study','catDCM2BIDSdb-tables','scans.csv'),'','',struct('convert2double',0));
+  sid = Ts(2:end,strcmp(Ts(1,:),'ScanID')); sst = Ts(2:end,strcmp(Ts(1,:),'Status'));
+  nexp = numel(unique(regexprep(sid(ismember(sst,{'conform','semiconform'})),'\|.*$','')));
+  nimg = numel(cat_vol_findfiles(DB3,'*=*=*=*.nii.gz'));
+  R(end+1) = struct('name','export-json-protocols','ok',numel(L5.R) == nexp && nexp < numel(unique(regexprep(sid,'\|.*$',''))) && ...
+    any([L5.R.Defaced]) && isequal([L5.R.Defaced] == 1,strcmp({L5.R.Datatype},'anat')) && nimg == nnz([L5.R.Defaced]), ...
+    'info',sprintf('%0.0f s, %d of %d series (conform or semiconform), %d defaced, %d images converted', ...
+    t,numel(L5.R),numel(unique(regexprep(sid,'\|.*$',''))),nnz([L5.R.Defaced]),nimg));
+
+  % (6) cleaning of a file (JE7 T1w) with a part of the patient name in the
+  % study description: the name part is found, the patient name is the
+  % PatientID, the birth date is the 15th, the cleaned elements are empty,
+  % and all other top-level elements are unchanged (besides sequences with
+  % cleaned elements)
+  F  = dir(E.dcmseries); F = F(~[F.isdir] & ~startsWith({F.name},'.'));
+  fid = fopen(fullfile(E.dcmseries,F(1).name)); b0 = fread(fid,inf,'*uint8')'; fclose(fid);
+  E0 = cat_io_dcm2bids_export('dicomElements',b0);
+  pn = elementText(b0,E0,'00100010'); pid = elementText(b0,E0,'00100020');
+  p  = strsplit(lower(pn),{'^',' ','-','_'}); p = p(cellfun(@numel,p) >= 3 & ~cellfun(@(q) contains(lower(pid),q),p));
+  sd = find(E0.depth == 0 & E0.tag == hex2dec('00081030'),1);
+  if ~isempty(p) && ~isempty(sd) && E0.len(sd) >= numel(p{1}) + 2
+    b0(E0.voff(sd) + (0:numel(p{1}) + 1)) = uint8([' ' upper(p{1}) ' ']);
+  end
+  [b1,info] = cat_io_dcm2bids_export('anonymizeFile',b0,[],struct('anonymize',1));
+  E1  = cat_io_dcm2bids_export('dicomElements',b1);
+  cln = hex2dec([cat_io_dcm2bids_export('cleanedElements'); {'00100010'; '00100030'}]);
+  chg = false; emp = true;
+  for ei = find(E0.depth == 0)'
+    ej = find(E1.depth == 0 & E1.tag == E0.tag(ei),1);
+    if ismember(E0.tag(ei),cln(1:end-2)), emp = emp && E1.len(ej) == 0; continue; end
+    if ~ismember(E0.tag(ei),cln) && ~strcmp(E0.vr(ei,:),'SQ')
+      chg = chg || ~isequal(b0(E0.voff(ei) + (0:E0.len(ei) - 1)),b1(E1.voff(ej) + (0:E1.len(ej) - 1)));
+    end
+  end
+  bd = elementText(b1,E1,'00100030');
+  R(end+1) = struct('name','export-clean','ok',~isempty(p) && any(strcmp(info.names,'(0008,1030)')) && ...
+    strcmp(elementText(b1,E1,'00100010'),pid) && endsWith(bd,'15') && emp && ~chg, ...
+    'info',sprintf('name parts: %d, found in: %s, patient name = PatientID: %d, birth date 15th: %d, cleaned empty: %d, others unchanged: %d', ...
+    numel(p),strjoin(info.names,' '),strcmp(elementText(b1,E1,'00100010'),pid),endsWith(bd,'15'),emp,~chg));
+
+  % (7) extensive anonymization: the defaced Siemens mosaic (field map) of
+  % the export as the anonymized image of the BIDS export
+  T4 = fullfile(E.Pout,'export4'); fresh(T4);
+  Ds = dir(fullfile(E.BER,'**','*SpinEchoFieldMap*')); Ds = Ds([Ds.isdir]);
+  job4 = E.job0; job4.outdir = {T4}; job4.data = {fullfile(Ds(1).folder,Ds(1).name)};
+  job4.opts.anonymize = 2; job4.opts.dicomexport = 2;
+  evalc('cat_io_dcm2bids(job4);');
+  Pz4 = cat_vol_findfiles(fullfile(T4,'study','catDCM2BIDSdb-dicom'),'*.zip');
+  Pb  = cat_vol_findfiles(fullfile(T4,'study','BIDS'),'*.nii.gz');
+  Pr  = cat_vol_findfiles(fullfile(T4,'study','catDCM2BIDSdb'),'*=*=*=*.nii.gz');
+  Pr  = Pr(~startsWith(spm_file(Pr,'filename'),'anon_'));
+  if ~isempty(Pz4) && ~isempty(Pb) && ~isempty(Pr)
+    U = fullfile(T4,'unzip'); unzip(Pz4{1},U); C = fullfile(T4,'conv'); mkdir(C);
+    system(sprintf('"%s" -b n -z n -f out -o "%s" "%s" > /dev/null 2>&1',E.dcm2niix,C,U));
+    Ye = spm_read_vols(spm_vol(fullfile(C,'out.nii'))); Ya = readNiiGz(Pb{1}); Ya(isnan(Ya)) = 0;
+    dm = nnz(abs(Ye - Ya) > 0.5) / numel(Ye); z = nnz(Ye == 0 & readNiiGz(Pr{1}) ~= 0) / numel(Ye);
+  else
+    dm = inf; z = 0;
+  end
+  R(end+1) = struct('name','export-mosaic','ok',dm < 1e-3 && z > 0.01, ...
+    'info',sprintf('voxels set to 0 by the defacing: %0.1f%%, voxels differing from the BIDS image: %0.3f%%',100*z,100*dm));
+end
+% =========================================================================
+function k = sidecarKey(P,~)
+%sidecarKey. SeriesInstanceUID and image suffix (last part of the name) of
+%  a sidecar of the database (only the UID with a second argument).
+  J = cat_io_json(P); k = J.SeriesInstanceUID;
+  if nargin < 2, n = strsplit(spm_file(P,'basename'),'='); k = [k '|' n{end}]; end
+end
+% =========================================================================
+function Y = readNiiGz(P)
+%readNiiGz. Image of a NIfTI (also gzipped, unzipped into a temporary
+%  directory).
+  T = tempname; mkdir(T); c = onCleanup(@() rmdir(T,'s'));
+  if endsWith(P,'.gz'), Pu = gunzip(P,T); P = Pu{1}; end
+  Y = spm_read_vols(spm_vol(P));
+end
+% =========================================================================
+function v = elementText(b,E,tag)
+%elementText. Text value of a top-level DICOM element (see dicomElements
+%  of cat_io_dcm2bids_export).
+  ei = find(E.depth == 0 & E.tag == hex2dec(tag),1);
+  if isempty(ei) || E.len(ei) == 0, v = ''; return; end
+  v = char(b(E.voff(ei) + (0:E.len(ei) - 1))); v = strtrim(v(v ~= char(0)));
 end
 % =========================================================================
 function R = testLevels(E,levels)
