@@ -142,6 +142,7 @@ function cat_run_newcatch(job,tpm,subj)
       ... possible orientation and resolution errors issues
       'insufficient image overlap'
       'Image does not have 3 dimensions.'
+      'CAT preprocessing requires 3D images'
       'Voxel resolution has to be better than 5 mm'
       'Out of memory.' 
       'cat_run_job:restype'

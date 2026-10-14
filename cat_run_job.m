@@ -283,6 +283,12 @@ function cat_run_job(job,tpm,subj)
       %  -----------------------------------------------------------------
       for n=1:numel(job.channel) 
         V = spm_vol(job.channel(n).vols{subj});
+
+        % 4D input (cat_run removes the frame number, i.e. spm_vol returns all volumes)
+        if numel(V) > 1
+          error('cat_run_job:MultiVolumeInput',['CAT preprocessing requires 3D images but this image has %d volumes. ' ...
+            'Please split the 4D file (SPM > Util > 4D to 3D File Conversion) and select a single volume.'],numel(V));
+        end
         vx_vol = sqrt(sum(V.mat(1:3,1:3).^2));
 
         % maximum [ slice-thickness , volume^3 , anisotropy ]

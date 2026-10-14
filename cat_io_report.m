@@ -588,7 +588,7 @@ function cat_io_report(job,qa,subj,createerr)
     createerrtxt = [createerrtxt; {'Error:cat_io_report:Fig','Error in CAT report figure creation!'}]; 
     cat_io_cprintf('err','%30s: %s\n',createerrtxt{end,1},createerrtxt{end,2});
   end
-  spm_orthviews('Zoom'); 
+  try, spm_orthviews('Zoom'); end
   %spm_orthviews('BB'); % update BB to avoid problems with different resolution 
   
   
