@@ -3130,7 +3130,7 @@
 
             <p>CAT uses the anonymized IP address (e.g. 192.168.100.xxx) for geolocation and sends information about MATLAB version, CAT version, computer platform, preprocessing runs, and error messages to our SBM server. This is invaluable to us to get statistics about the use of CAT and more importantly about possible errors and helps us to fix them.<br>
             
-            You can set the flag "cat.extopts.send_info" in <a class="function" href="matlab:edit('cat_defaults');">cat_defaults.m</a> to "0" to prevent sending any (anonymized) information to our SBM server. However, keep in mind that we need this information to fix possible errors and to get statistics about MATLAB and CAT versions.</p>
+            You can set the flag "cat.extopts.send_info" in <a class="function" href="matlab:edit('cat_defaults');">cat_defaults.m</a> to "0" to prevent sending any (anonymized) information to our SBM server and to PostHog. However, keep in mind that we need this information to fix possible errors and to get statistics about MATLAB and CAT versions.</p>
             
             <p>Description of CAT statistics:</p>
             <ul>
@@ -3156,8 +3156,9 @@
                 <br><i> urlread(sprintf('http://dbm.neuro.uni-jena.de/piwik/piwik.php?idsite=1&amp;rec=1&amp;action_name=%s%s%s%s%s%s%d',cat_version,'%2F',computer,'%2F','processed','%2F',n_subjects));</i>
               </li>
               <li>If an error occurs during preprocessing, information about CAT version, revision and GUI mode (default or expert), computer platform (with &quot;_standalone&quot; for the standalone version), MATLAB release, error identifier, error message (file paths are removed) and error stack (names and line numbers of the functions) is sent using the MATLAB command:
-                <br><i> urlread(sprintf('http://dbm.neuro.uni-jena.de/piwik/piwik.php?idsite=1&amp;rec=1&amp;action_name=%s/%s/%s/%s/%s/%s/%s/%s',CATrel,computer,'errors',['r' CATver],caterr_id,version('-release'),caterr_message_str,str_err));</i>              
+                <br><i> urlread(sprintf('http://dbm.neuro.uni-jena.de/piwik/piwik.php?idsite=1&amp;rec=1&amp;action_name=%s/%s/%s/%s/%s/%s/%s/%s',CATrel,computer,'errors',['r' CATver],caterr_id,version('-release'),caterr_message_str,str_err));</i>
               </li>
+              <li>In addition, the same information is sent as anonymous events to <a href="https://posthog.com">PostHog</a> (EU cloud), which will replace the Piwik statistics in the future: &quot;cat12_start&quot; when CAT is started, &quot;cat12_run&quot; with the number of datasets when preprocessing is started, and &quot;cat12_error&quot; if an error occurs (error identifier, error message with file paths removed, GUI mode, location of the error and error stack). Errors are also sent as &quot;$exception&quot; events for PostHog error tracking with the same information and the names, file names (without paths) and line numbers of the functions in the error stack. All events contain CAT release and revision, computer platform, standalone flag and MATLAB release. Instead of a user ID, a random ID that changes with each MATLAB session is used, no user profiles are created, and the IP address is only used for geolocation and is not stored. The events are sent with <a class="function" href="matlab:edit('cat_io_send_to_posthog');">cat_io_send_to_posthog.m</a>.</li>
             </ul>
 
             <!-- ################################################################################# -->
