@@ -190,9 +190,18 @@ function cat_run_newcatch(job,tpm,subj)
     caterrtxt{2} = sprintf('%s\n',caterr.message); 
     for si=1:numel(caterr.stack)
       cat_io_cprintf('err',sprintf('% 5d - %s\n',caterr.stack(si).line,caterr.stack(si).name));  
-      caterrtxt{si+2} = sprintf('% 5d - %s\n',caterr.stack(si).line,caterr.stack(si).name); 
+      caterrtxt{si+2} = sprintf('% 5d - %s\n',caterr.stack(si).line,caterr.stack(si).name);
     end
-    cat_io_cprintf('err',sprintf('%s\n',repmat('-',1,72)));  
+    cat_io_cprintf('err',sprintf('%s\n',repmat('-',1,72)));
+
+    % hint for m-files without function definition (e.g. empty files after
+    % an incomplete download or installation) that are executed as script
+    if strcmp(caterr.identifier,'MATLAB:scriptNotAFunction')
+      scriptfile = regexp(caterr.message,'[^\n]*\.m\s*$','match','once');
+      cat_io_cprintf('warn',['Hint: The file "%s" contains no function definition and\n' ...
+        'is probably empty or damaged (e.g. by an incomplete download or installation).\n' ...
+        'Please replace this file or reinstall SPM/CAT.\n\n'],strtrim(scriptfile));
+    end
 
     % save cat xml file
     caterrstruct = struct();

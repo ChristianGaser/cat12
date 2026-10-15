@@ -622,7 +622,7 @@ function [src2,NCstr] = cat_vol_sanlm_filter(job,V,i,src)
         Vo(i).fname   = fullfile(pth,[job.prefix nm job.suffix '.nii']);
         Vo(i).descrip = sprintf('%s SANLM filtered (NCstr=%-4.2f > %0.2f)',...
           V(i).descrip,job.NCstr(NCstri),abs(NCstr(NCstri)) + NCstrr);
-        % don't change datatype high-dimentional data
+        % don't change datatype high-dimensional data
         if ~isfield(job,'data1sz4') || job.data1sz4(i)==1, Vo(i).dt(1) = 16; end % default - changes later if required 
         if exist(Vo(i).fname,'file') && all(Vo(i).n==[1 1]); delete(Vo(i).fname); end
         spm_write_vol(Vo(i), src2);
