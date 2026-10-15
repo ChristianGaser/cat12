@@ -701,6 +701,9 @@ function cat_run_job1639(job,tpm,subj)
               urlinfo = sprintf('%s%s%s%s%s%s%s%s%s%s',cat_version,'%2F',computer,'%2F','errors',...
                  '%2F','cat_run_job:failedAPP','%2F','WARNING: APP failed. Use simple scaling.','cat_run_job');
               cat_io_send_to_server(urlinfo);
+              cat_io_send_to_posthog('cat12_error', struct('error_id', [mfilename ':failedAPP'], ...
+                'error_message', 'WARNING: APP failed. Use simple scaling.', ...
+                'expertgui', job.extopts.expertgui, 'stack', apperr.stack));
             end
           end
           APPRMS = checkAPP(Ym,Ysrc); 

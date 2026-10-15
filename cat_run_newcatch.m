@@ -179,6 +179,9 @@ function cat_run_newcatch(job,tpm,subj)
       end
       urlinfo = sprintf('%s/%s/%s/%s/%s/%s/%s/%s',CATrel,system_str,'errors',['r' CATver],caterr_id,version('-release'),caterr_message_str,str_err);
       cat_io_send_to_server(urlinfo);
+      cat_io_send_to_posthog('cat12_error', struct('error_id', caterr_id, ...
+        'error_message', caterr_message_str, 'expertgui', job.extopts.expertgui, ...
+        'stack', caterr.stack));
     end
 
     % write error report

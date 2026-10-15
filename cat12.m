@@ -1329,6 +1329,7 @@ if cat_get_defaults('extopts.send_info')
   end
   urlinfo = sprintf('%s%s%s','TotalUsers','%2F',system_str);
   cat_io_send_to_server(urlinfo);
+  cat_io_send_to_posthog('cat12_start');
 end
 
 % check for new CAT version
