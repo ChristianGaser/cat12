@@ -171,6 +171,12 @@
               </li>
               <li class="nav-group">
                 <div class="nav-row">
+                  <a href="#cD2B">DCM2BIDS</a>
+                  <button type="button" class="nav-toggle" aria-expanded="false" aria-label="Show subsections of DCM2BIDS"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
+                </div>
+              </li>
+              <li class="nav-group">
+                <div class="nav-row">
                   <a href="#faq">FAQ</a>
                   <button type="button" class="nav-toggle" aria-expanded="false" aria-label="Show subsections of FAQ"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
                 </div>
@@ -216,6 +222,7 @@
                 <li><a href="#variants">Other variants of computational morphometry</a></li>
                 <li><a href="#add_info">Additional information</a></li>
                 <li><a href="#methods">Methods</a></li>
+                <li><a href="#cD2B">DCM2BIDS</a></li>
                 <li><a href="#faq">FAQ</a></li>
                 <li><a href="#cite">Citing CAT</a></li>
                 <li><a href="#refs">References</a></li>
@@ -3634,6 +3641,40 @@
               <a href="#figure7">Figure 7</a> shows example scans of good, bad and ugly quality and how their SIQR and relative GM volume (rGMV) differ.
             </p> 
                           
+            <!-- ################################################################################# -->
+
+            <h2 id="cD2B">catDCM2BIDS</h2>
+            <p><b>WARNING:</b> This batch is currently in development and undergoes still strong changes</p>
+            <p>Implementation of the DZPG Imaging Infrastructure group deliveries to harmonisation and pooling of MRI data across the DZPG imaging sites by a federated tool used by principal investigators (PIs) and data administrators.</p> 
+            <p><b>AIMS:</b> The batch focuses on: (1) DICOM/BIDS import, (2) MR-protocols monitoring, (3) BIDS data organisation, (4) anonymisation, (5) quality assessment, (6) basic preprocessing, (7) report generation, and (8) anonymised DICOM export. 
+Import: Import of DICOMs requires DCM2NIIX software package, whereas the BIDS import requires protocol information provided by JSON sidecars. The data is imported into a “catDCM2BIDSdb” directory, which stores the converted NIFTI images, JSON sidecars, and preprocessing results.</p>
+            <p><b>Protocols:</b> Example protocols can be found in the “DCM2BIDS” subdirectory, where (DZPG) MRI sequences for structural, functional, and diffusion MRI are grouped in BIDS datatype subdirectories. Additional protocol directories can be set up for other projects with DICOM data; for example, to extract ADNI-like sequences. </p>
+            <p><b>BIDS:</b> The organisation and coding of data depends on the selected anonymisation level. By default, scanned subjects use the DICOM patientID with a prefix coding site, scanner, manufacturer, and field-strength. For example, if one scans on a Siemens 3T scanner in Jena, the prefix would be 'sub-JenSI30T001'. Sessions use the scan date or the difference from the first scan, e.g. 'ses-20260815' or 'ses-m012'. The subject and file name are always included in the file name. Additionally, participants- and subject-sessions TSV files are generated. Dataset-specific information (e.g., author and license) and phenotypic CSV/TSV files (e.g. diagnosis information and test scores) can be attached, and require the first columns to align the subject and session with the imaging data. Although anonymisation routines are applied to these identifier columns, the user is responsible for data privacy! </p>
+            <p><b>Anonymisation:</b> BIDS/DICOM data can be exported as either pseudo-anonymised or anonymised by running SPM defacing of anatomical images. The processing also removes other personal information from the header/JSON sidecars. Tables with personal information are stored in the BIDS-private directory, enabling users to track their data. </p>
+            <p><b>Quality-assessment:</b> All images are evaluated for noise, inhomogeneity, resolution, and motion between volumes. These measures are rated according to the protocol settings to facilitate easy evaluation and averaging into overall ratings for sessions, subjects, and centres. In addition to image quality, the position and rotation in relation to the MNI origin and the overlap of the brain mask are evaluated to detect outliers and systematic misplacements. Ratings are stored under “derivatives/catDCM2BIDS”. </p>
+            <p><b>Preprocessing:</b> Due to the highly divergent usage of tools (and versions) across studies and centres, the pre-processing is limited to basic fast processing. It is used for quality assessment and to provide a quick overview of the dataset. Although the data can be exported and analysed, the results should be treated with caution, and more precise techniques are recommended. </p>
+            <p><b>Reports:</b> To export results for further evaluation, CSV/TSV tables can be created. In addition, various A4 figures are created for reviewing images by data type, subject and study. </p>
+            <p><b>Export:</b> In addition to the BIDS export, the DICOM data can also be anonymised and exported for an external archive or a pool protocol that conforms to the DICOM standard. </p>
+
+            <h3 id="cD2Bgui">catDCM2BIDS GUI</h3>
+            <p>The batch can be found in the SPM Batch window under:</p>
+            <p><a class="function" href = "matlab:spm_jobman('interactive','','spm.tools.cat.dcm2bids');">SPM > Toolboxes > CAT > DICOM2BIDS</a></p>
+            <p>where essential batch settings can be controlled via the (expert) GUI and are stored in cat_io_dcm2bids_defaults.m file.</p>
+            <p>Select the Input Directories and specify the directory with your DICOM (or BIDS) data. Next, select the Output Directory. You can specify the name of your database in the Study Directory.</p>
+In Dictionary Files, you can select a directory that includes JSON files that specify relevant MR sequence parameters to monitor the type of your scans. For instance, you can find the T1w, DWI and rs-fMRI consensus protocols of the DZPG in the CAT/DCM2BIDS subdirectory. 
+            <p>The Dataset Descriptor allows adding additional information for the BIDS dataset description such as the authors and license. There are further options that are explained in the help window of the batch.</p>
+            <p>The most relevant field is the Output  level of the Options menu, where you can select three possible processing levels. Option 1, “only JSON”,  imports the data without converting DICOMs to NIfTI. It is useful when you want to get a quick overview of your data to check if the protocol fits the requirements and to extract the protocol information to define your one setup.. Use option 2 to import, convert and quickly process the data of the specified protocol only, and option 3 for all the protocols.</p>
+            <p>There is a field for DICOM export that can be used to export, share and store the anonymised data. As it only includes part of the DICOMs (e.g. no localiser, 2D data etc.) it should not be used to archive the complete RAW data! 
+Click on the green play button to run the batch. If it’s gray, fill in the required fields, like the input or output directory.</p>
+            <p>The batch will convert the images for all DICOM subdirectories, and organize the output in BIDS format with a folder "sub-subjects/ses-timepoints/imagetype", where it will store the NIfTI images with JSON sidecar with basic imaging information. It will also create a participants and subject and session TSV table with basic information. Participants' personal  information is stored separately in the BIDS-private directory.</p>
+            <p>The BIDS directory includes renamed copies of the imported data that are stored in the main database directory (catDCM2BIDSdb). Please take care not to edit the files in the catDCM2BIDSdb directory.</p> 
+            <p>There is also a sidecar directory catDCM2BIDSdb-tables with protocol, site, and subjects tables, as well as directories with other collected protocols.</p>
+            
+            <h3 id="cD2Bsetup">Setup of own Protocols</h3>
+            <p>In the CAT/DCM2BIDS/DZPG[37]T” directories, we have stored consensus protocols for anatomical, diffusion and functional data ordered by BIDS datatype. Each protocol is stored as a JSON-file containing the most relevant consensus parameters that have to be monitored. Fields that start with an “_” are ignored. For the quality assessment (QA), an additional file with the prefix “qc” is used, including the best-worst case definitions of the quality measures (see QC).</p>
+            
+
+
             <!-- ################################################################################# -->
 
             <h2 id="faq">FAQ</h2>

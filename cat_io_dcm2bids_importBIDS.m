@@ -157,7 +157,7 @@ function Psnr = cat_io_dcm2bids_importBIDS(Pbids, Pmdbdir, opts)
         'Datatype',dt{fi}, 'Suffix',ent.suffix, 'Entities',ent.entities, ...
         'Participant',struct('columns',{pcols},'values',{pvals}), ...
         'ImportDate',char(datetime('now','Format','yyyy-MM-dd''T''HH:mm:ss')), ...
-        'ScanID',cat_io_dcm2bids_db('getScanID',V0,strsplit(sidecar,'='))); 
+        'ScanID',cat_io_dcm2bids_db('getScanID',V0,cat_io_dcm2bids_db('nameParts',sidecar))); 
       if strcmp(dt{fi},'dwi')
         [~,~,~,I.SourceBval] = bidsMetadata(R, P{fi}, ent, '.bval'); 
         [~,~,~,I.SourceBvec] = bidsMetadata(R, P{fi}, ent, '.bvec'); 
@@ -167,7 +167,8 @@ function Psnr = cat_io_dcm2bids_importBIDS(Pbids, Pmdbdir, opts)
       % files of the scan (e.g. events, physio, aslcontext) 
       A = bidsAssociated(R, P{fi}, ent); 
       for ai = 1:size(A,1)
-        copyfile(A{ai,1}, fullfile(Pdbdirpath,sprintf('catDCM2BIDSassoc_%s_%s',sidecar,A{ai,2}))); 
+        Pa = fullfile(Pdbdirpath,sprintf('catDCM2BIDSassoc_%s_%s',sidecar,A{ai,2})); 
+        copyfile(A{ai,1}, Pa); fileattrib(Pa,'+w','u'); % (e.g. locked DataLad files) 
       end
       Psnr{end+1,1} = Pdbdirpath; %#ok<AGROW>
     end

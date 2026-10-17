@@ -29,6 +29,9 @@ function def = cat_io_dcm2bids_defaults
   def.dataset.EthicsApprovals    = {};
   def.dataset.ReferencesAndLinks = {};
   def.dataset.DatasetDOI         = '';
+  def.dataset.phenotypic         = {};         % tables (CSV/TSV) with phenotypic data of the sessions (see 
+                                               % cat_io_dcm2bids_phenotypic), exported to the sessions files
+  def.dataset.phenotypickeys     = [];         % key columns of the tables (numbers, empty: detected by their names)
 
   def.dicts.Pprotocoldirs   = {};    % input DCM protocol directories
   def.dicts.Pcenterdict     = {};    % dictionary for center names (otherwise scanner ID)
@@ -44,12 +47,22 @@ function def = cat_io_dcm2bids_defaults
   def.opts.Pdcm2nii         = '';    % dcm2niix executable ('' - detected if required, see cat_io_dcm2bids_importDCM)
   def.opts.output           = 2;     % 0-no, 1-only json, 2-json+nii (input protocols), 3-full
   %def.opts.studies          = '';    % study filter >> file
+  def.opts.sitelength       = 3;     % letters of the city in the site abbreviation without site dictionary (city, 
+                                     % manufacturer, and field strength, e.g. HeiSI30T, see siteRegistry in 
+                                     % cat_io_dcm2bids_protocols)
+  def.opts.sitevendor       = 2;     % letters of the manufacturer in the site abbreviation (0 - none, 1 - e.g. S, 
+                                     % 2 - e.g. SI for Siemens, GE, PH for Philips, see vendorCode in cat_io_dcm2bids_protocols)
   def.opts.subIDform        = 2;     % (1) use only PatientID, i.e. sub-PID
                                      % (2) add the ScannerID, i.e. sub-SITE-PID
                                      % (3) add also StudyName, i.e. sub-STUDY-SITE-PID
                                      % (4) i.e. sub-SITE-STUDY-PID
-  def.opts.anonymize        = 1;     % imaging data: 0-no, 1-light-anat-only,  2-strong-all, 3-skull-strip-light?
-                                     % meta data:    0-no, 1-basic-reduced,    2-strong-only-coded
+  def.opts.anonymize        = 1;     % anonymization (BIDS directory BIDS-<level> and DICOM export): 0 - no, 1 - pseudonymized 
+                                     % (site and PatientID, scan date, defaced anatomical scans), 2 - anonymized (site and
+                                     % number, time since the first session, shifted dates, defaced scans, see 
+                                     % cat_io_dcm2bids_anonymize)
+  def.opts.sesunit          = 'w';   % unit of the session labels and dates of the anonymization level 2, i.e. the time 
+                                     % since the first session of the subject (rounded): 'd' - days, 'w' - weeks, 
+                                     % 'm' - months, 'y' - years, e.g. ses-w0000 and ses-w0052 one year later
 
   def.opts.dicomexport      = 0;     % anonymized DICOM export of the imported scans (cleaned headers, defaced images,
                                      % birth date by opts.anonymize, see cat_io_dcm2bids_export): 0 - no, 1 - scans with
@@ -70,9 +83,15 @@ function def = cat_io_dcm2bids_defaults
   def.opts.pplevel          = 4;     % preprocessing level, i.e. accuracy and time of the DTI and rs-fMRI measures 
                                      % (see levelParameters in cat_io_dcm2bids_pp_anat): 1 - full quality (SPM default 
                                      % parameters, reference), 2 - optimized (fast parameters, slight resolution 
-                                     % limits), 3 - quick review (lower resolution, only the first scan of each 
-                                     % type), 4 - preview; continuous levels with about 26, 9, 4, and 2.5 min for a
-                                     % session with T1w, 2 DWI, and rs-fMRI scans (4 for the development, later 2)
+                                     % limits), 3 - quick review (lower resolution, only the first DWI and BOLD
+                                     % scan), 4 - preview; continuous levels with about 26, 9, 4, and 2.5 min for a
+                                     % session with T1w, 2 DWI, and rs-fMRI scans (4 for the development, later 2);
+                                     % one segmentation per session for all levels (T1w, otherwise UNIT1, T2w, or
+                                     % FLAIR, see anatScan in cat_io_dcm2bids_pp_anat)
+  def.opts.dtimaps          = 1;     % DTI maps for opts.preprocessing = 2 (see cat_io_dcm2bids_pp_dwi): 1 - FA,
+                                     % DEC (direction-encoded colors), and the normalized FA (wFA, e.g. for voxel-
+                                     % based analyses), 2 - also MD, AD, and RD (their white matter values are
+                                     % always estimated)
   def.opts.ignoreScouts     = 1;     % remove localizer/scouts ASAP (also derived and 2D images by dcm2niix -i y)
   def.opts.protocolsubdirs  = 0;     % use additional sub-directories to separate between protocols
   def.opts.BIDSsep          = '';    % Use extra BIDS-incompatible separator such as - to separate the site
@@ -137,17 +156,19 @@ function def = cat_io_dcm2bids_defaults
   def.opts.render.interp    = [];      % interpolation: 0-nearest, 1-trilinear, 2-7 B-spline degree
                                        % ([] - trilinear for dpi<=300, otherwise 4th degree B-spline)
   def.opts.render.dpi       = 300;     % print resolution
-  def.opts.render.qcnoise   = [.05 .30]; % QC maps of the scans (see cat_io_dcm2bids_qc): denoised average as 
-                                       % underlay of 4D data and the noise maps as red overlay with this range 
-                                       % (transparent to opaque) relative to the signal ([] - no QC maps)
 
   % report figure of each BIDS directory (see cat_io_dcm2bids_reportfig): A4
   % overview page and one page per site (for several sites) with diagrams 
-  % of the report tables in <BIDSdir>-report/report_<BIDSsubdir>.pdf
-  def.opts.reportfig.run      = 1;       % create the report figure
-  def.opts.reportfig.agerange = [0 100]; % age range of the age pyramid in years
-  def.opts.reportfig.agestep  = 5;       % bin size of the age pyramid in years
-  def.opts.reportfig.nworst   = 5;       % number of sessions to check (worst ratings)
+  % of the report tables in <BIDSdir>-report/report_<BIDSsubdir>_<design>.pdf
+  def.opts.reportfig.run       = 1;            % create the report figure
+  def.opts.reportfig.design    = {'CAT_bright','CAT_dark','DZPG_bright'}; % designs (one PDF each, 
+                                              % DCM2BIDS/colormaps/<design>.json with the logos, rating icons, colors, 
+                                              % and colormaps): 'CAT_bright', 'CAT_dark', and/or 'DZPG_bright'
+  def.opts.reportfig.fontsize  = 8;            % font size of the text in pt
+  def.opts.reportfig.fontscale = [0.96 0.8];   % relative font size of header-like elements (titles of the diagrams) 
+                                              % and of axes, table entries, and legends
+  def.opts.reportfig.agerange  = [0 100];      % age range of the age pyramid in years
+  def.opts.reportfig.agestep   = 5;            % bin size of the age pyramid in years
 
   % datatypes and (lower case) suffixes of the output structure that is
   % used by the batch dependencies (see BIDSoutputs in cat_io_dcm2bids_bids),

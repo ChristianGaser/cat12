@@ -82,7 +82,7 @@ function Psnr = importDICOMheaders(Pdcmdirs, Pmdbdir, Ptmp, opts)
     Pjson  = cat_vol_findfiles(Ptmpdi,'*.json',struct('depth',1)); 
     rec    = struct('Pimp',{},'S',{}); % import information of this directory
     for ji = 1:numel(Pjson)
-      fnameparts = strsplit(spm_file(Pjson{ji},'basename'),'='); 
+      fnameparts = cat_io_dcm2bids_db('nameParts',spm_file(Pjson{ji},'basename')); 
       if numel(fnameparts) < 4 || any(cat_io_contains(lower(fnameparts),{'localizer','scout'}))
         continue
       end
@@ -101,7 +101,7 @@ function Psnr = importDICOMheaders(Pdcmdirs, Pmdbdir, Ptmp, opts)
       elseif exist(Pdbdirpath,'dir')
         Pother = cat_io_dcm2bids_db('getDBscanJSONs',Pdbdirpath); 
         same   = cellfun(@(P) strcmp(cat_io_dcm2bids_db('getScanID',cat_io_dcm2bids_db('assurePatientDCMfields',cat_io_json(P)), ...
-          strsplit(spm_file(P,'basename'),'=')), scanid), Pother); 
+          cat_io_dcm2bids_db('nameParts',spm_file(P,'basename'))), scanid), Pother); 
         if any(same)
           Pexist = Pother{find(same,1)}; 
           Pimp   = spm_file(Pexist,'prefix','catDCM2BIDSimport_'); 
@@ -206,10 +206,17 @@ function msg = convertImages(Psnr, Pmdbdir, Ptmp, opts)
       I = cat_io_dcm2bids_db('readImportJSON',Pimp); 
       if isfield(I,'SourceFile') 
         % BIDS import: copy the image (and bval/bvec)
-        if ~exist(I.SourceFile,'file'), msg(Pjson{ji}) = 'source image not available'; continue; end
+        if ~exist(I.SourceFile,'file')
+          msg(Pjson{ji}) = 'source image not available'; 
+          [~,lnk] = system(sprintf('test -L "%s" && echo link',I.SourceFile)); 
+          if contains(lnk,'link') % e.g. a DataLad/git-annex file without content
+            msg(Pjson{ji}) = 'source image not available (link without file, e.g. DataLad: run "datalad get")'; 
+          end
+          continue
+        end
         copyImage(I.SourceFile, spm_file(Pjson{ji},'ext',niiext)); 
-        if isfield(I,'SourceBval') && ~isempty(I.SourceBval), copyfile(I.SourceBval, spm_file(Pjson{ji},'ext','.bval')); end
-        if isfield(I,'SourceBvec') && ~isempty(I.SourceBvec), copyfile(I.SourceBvec, spm_file(Pjson{ji},'ext','.bvec')); end
+        if isfield(I,'SourceBval') && ~isempty(I.SourceBval), copyWritable(I.SourceBval, spm_file(Pjson{ji},'ext','.bval')); end
+        if isfield(I,'SourceBvec') && ~isempty(I.SourceBvec), copyWritable(I.SourceBvec, spm_file(Pjson{ji},'ext','.bvec')); end
         continue
       end
       if ~exist(I.DICOMdirectory,'dir'), msg(Pjson{ji}) = 'DICOM directory not available'; continue; end
@@ -233,7 +240,7 @@ function msg = convertImages(Psnr, Pmdbdir, Ptmp, opts)
     Pconv = cat_vol_findfiles(Pout,'*.json',struct('depth',1)); 
     for ci = 1:numel(Pconv)
       name       = spm_file(Pconv{ci},'basename'); 
-      fnameparts = strsplit(name,'='); 
+      fnameparts = cat_io_dcm2bids_db('nameParts',name); 
       if ~exist(fullfile(Pout,[name niiext]),'file') || numel(fnameparts) < 4 || ...
           any(cat_io_contains(lower(fnameparts),{'localizer','scout'}))
         continue
@@ -276,15 +283,24 @@ function msg = convertImages(Psnr, Pmdbdir, Ptmp, opts)
 end
 % =========================================================================
 function copyImage(Psrc, Pdst)
-%copyImage. Copy a NIfTI image with the gzip format of the destination name.
+%copyImage. Copy a NIfTI image with the gzip format of the destination name
+%  (writable, see copyWritable).
   srcgz = endsWith(Psrc,'.gz'); dstgz = endsWith(Pdst,'.gz'); 
   if srcgz == dstgz
-    copyfile(Psrc, Pdst); 
+    copyWritable(Psrc, Pdst); 
   elseif dstgz
-    copyfile(Psrc, Pdst(1:end-3)); gzip(Pdst(1:end-3)); delete(Pdst(1:end-3)); 
+    copyWritable(Psrc, Pdst(1:end-3)); gzip(Pdst(1:end-3)); delete(Pdst(1:end-3)); 
   else
-    copyfile(Psrc, [Pdst '.gz']); gunzip([Pdst '.gz']); delete([Pdst '.gz']); 
+    copyWritable(Psrc, [Pdst '.gz']); gunzip([Pdst '.gz']); delete([Pdst '.gz']); 
   end
+end
+% =========================================================================
+function copyWritable(Psrc, Pdst)
+%copyWritable. Copy of a file (the content of a symbolic link) that is
+%  writable, also for read-only sources (e.g. the locked files of DataLad
+%  datasets), as the database files are updated.
+  copyfile(Psrc, Pdst); 
+  fileattrib(Pdst,'+w','u'); 
 end
 % =========================================================================
 function runDCM2NIIX(Pdcm, Pout, opts, headeronly)
@@ -334,6 +350,9 @@ function P = getDCM2NIIX
     if ~exist(P,'file')
       P = 'C:\Program Files (x86)\MRIcron\dcm2niix.exe';
     end
+    if ~exist(P,'file')
+      P = 'C:\Program Files (x86)\RIcroGL\Resources\dcm2niix.exe';
+    end
   else
     [~,P] = system('find /usr /opt -type f -name "dcm2niix" 2>/dev/null');
   end
@@ -341,8 +360,9 @@ function P = getDCM2NIIX
   if ~exist(P,'file')
     %%%%%%% maybe use input path or include it in CAT?
     error('cat_io_dcm2bids:noDcm2niix', ...
-      'Cannot find dcm2niix. Please install from: \n  %s\n\n', ... 
-      spm_file('https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage' , ...
-        'link','https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage')); 
+     ['Cannot find dcm2niix (%s). \n ' ...
+      'Please install from: \n  %s\n\n'], ... 
+      P, spm_file('https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage' , ...
+           'link','https://www.nitrc.org/plugins/mwiki/index.php/dcm2nii:MainPage')); 
   end
 end

@@ -39,6 +39,7 @@ function out = cat_io_dcm2bids(job)
 %                                 import information)
 %   cat_io_dcm2bids_protocols  .. sites, protocol test, and overview tables
 %   cat_io_dcm2bids_bids       .. BIDS naming and output files
+%   cat_io_dcm2bids_phenotypic .. phenotypic data of the sessions (user tables)
 %   cat_io_dcm2bids_pp_anat    .. anonymization, segmentation, registration, 
 %                                 and shared preprocessing functions (e.g. 
 %                                 distortion correction, preprocessing level)
@@ -49,10 +50,13 @@ function out = cat_io_dcm2bids(job)
 %   cat_io_dcm2bids_tables     .. tables of the database
 %   cat_io_dcm2bids_export     .. anonymized DICOM export (cleaned headers,
 %                                 defaced images)
+%   cat_io_dcm2bids_anonymize  .. numbers and date shifts of the anonymization 
+%                                 level 2
 %   cat_io_dcm2bids_report     .. report tables
 %   cat_io_dcm2bids_reportfig  .. report figure (PDF)
 %   cat_io_dcm2bids_stats      .. statistics of the report figure
 %   cat_io_dcm2bids_render     .. rendering of the BIDS images
+%   cat_io_dcm2bids_readme     .. readme files of the output directories
 %   cat_io_dcm2bids_helper     .. shared helper functions (text/JSON files,
 %                                 paths, NIfTI)
 %   cat_io_structEqual         .. comparison of structures (general CAT function)
@@ -75,6 +79,14 @@ function out = cat_io_dcm2bids(job)
   end
   job = cat_io_checkinopt(job,def);
   if isempty(job.data), return; end
+
+  % anonymization level (0 - no, 1 - pseudonymized, 2 - anonymized) with 
+  % its BIDS directory (e.g. BIDS-pseudonymized, also of the private and
+  % report directories), see cat_io_dcm2bids_anonymize
+  job.opts.anonymize = min(2,max(0,round(job.opts.anonymize))); 
+  levelname   = {'','-pseudonymized','-anonymized'}; 
+  job.BIDSdir = [job.BIDSdir levelname{job.opts.anonymize + 1}]; 
+  cat_io_cprintf('err','\n%s\n',cat_io_dcm2bids_readme('disclaimer',job.opts.anonymize)); 
 
   % GUI render choice: "norender" or "render" with the (expert) subfields
   if isfield(job.opts.render,'norender')
@@ -105,6 +117,16 @@ function out = cat_io_dcm2bids(job)
   Pdbdirnam = 'catDCM2BIDSdb'; 
   Pmdbdir   = fullfile(Poutdir,Pdbdirnam); 
 
+  % output within a DataLad dataset: files saved by DataLad are locked 
+  % (read-only), i.e. the database cannot be updated by later runs
+  Pds = cat_io_dcm2bids_helper('absPath',Poutdir); 
+  while ~exist(fullfile(Pds,'.datalad'),'dir') && ~strcmp(fileparts(Pds),Pds), Pds = fileparts(Pds); end
+  if exist(fullfile(Pds,'.datalad'),'dir')
+    cat_io_cprintf('warn',['  The output directory is part of the DataLad dataset "%s". Files saved by DataLad are ' ...
+      'locked (read-only), i.e. use "datalad unlock" (or "datalad run") before a run or keep the output outside ' ...
+      'of the dataset.\n'],Pds); 
+  end
+
   % input: DICOM directories (import) and/or directories of the database of
   % this output (export of imported data), see cat_io_dcm2bids_import (before
   % any output is written, as directories of other databases give an error)
@@ -127,16 +149,6 @@ function out = cat_io_dcm2bids(job)
     [same, job] = checkPreviousSetting(Popts,job);
     if ~same, return; end 
     clear Popts; 
-   
-    % readme file for each protocol dir
-    for pdi = 1:numel(Pprodictdirs)
-      txt = {'catDCM2BIDS BIDS export sub-directory with protocol-(mis)matching specific subdirectories.'};
-      cat_io_csv(fullfile(Poutdir, job.BIDSdir, job.BIDSsubdir, 'readme.txt'),txt);
-    end
-
-    % readme file for the main BIDS dir
-    txt = {'catDCM2BIDS main BIDS export directory protocol-directory dependent subdirectories. '};
-    cat_io_csv(fullfile(Poutdir, job.BIDSdir, 'readme.txt'),txt);
   end
   
 
@@ -152,25 +164,9 @@ function out = cat_io_dcm2bids(job)
   if ~exist(Pmdbdir,'dir'), mkdir(Pmdbdir); end
   cat_io_dcm2bids_tables('initTables',Ptbldir); % remove tables of older versions
   if ~exist(fullfile(Ptbldir,'protocols'),'dir'), mkdir(fullfile(Ptbldir,'protocols')); end
-  % readme file
-  txt = {
-    'catDCM2BIDS batch main "database" directory. Here we store the imported DICOM data as JSON/NIFTI. '; 
-    'The scans are organized similar to BIDS with subject/session/scan: ';
-    '  sub-DeviceSerialNumber-PatientID/ses-StudyID-ScanDate/snr-SeriesNumber-ProtocolName';
-    ['Each scan has the JSON sidecar of dcm2niix "folder=protocol=time=series.json", the ' ...
-      'import information "catDCM2BIDSimport_*.json" with the original DICOM directory, and ' ...
-      'the image (converted only if required, i.e., not for JSON-only outputs). ']; 
-    ''
-    ['Directories of this database (the database itself, sub-*, ses-*, snr-*) can be ' ...
-      'selected as input to export the imported data again (e.g. with other protocols). ']; 
-    ''
-    'Be careful with edits!'
-  };
-  cat_io_csv(fullfile(Pmdbdir,'readme.txt'),txt);
-  txt = {
-    'Overview directory of files in the database directory.'
-    'Can be deleted in case of problems to be recreated in the next run. '};
-  cat_io_csv(fullfile(Ptbldir,'readme.txt'),txt);
+  % readme files of the output directory and its subdirectories (written
+  % again at the end, see cat_io_dcm2bids_readme)
+  cat_io_dcm2bids_readme('writeReadmes',Poutdir,job);
   
 
 
@@ -181,18 +177,29 @@ function out = cat_io_dcm2bids(job)
   % and 1), see cat_io_dcm2bids_import
   [Psnr, convmsg] = cat_io_dcm2bids_import('importSources', Psrc, Pmdbdir, job.opts);
 
+  % site abbreviations of the scanners: the site dictionary and for all
+  % other scanners the registry of the database (i.e. no serial numbers in
+  % the BIDS labels, see siteRegistry in cat_io_dcm2bids_protocols)
+  sites = cat_io_dcm2bids_protocols('siteRegistry',Pmdbdir,job.opts,sites); 
+
+  % numbers and date offsets of the subjects for the anonymization level 2
+  % (see cat_io_dcm2bids_anonymize)
+  if job.opts.anonymize > 1, anon = cat_io_dcm2bids_anonymize('registry',Pmdbdir); end
+
+  % phenotypic data of the sessions (user tables matched to the sessions of
+  % the database, exported to the sessions files, see cat_io_dcm2bids_phenotypic)
+  cat_io_dcm2bids_phenotypic('importTables',job.dataset.phenotypic,job.dataset.phenotypickeys,Pmdbdir,Ptbldir);
+
 
   %% basic initialization that might have to be extended
   Vjson = cell(1,numel(Psnr)); sci = 0;
   sub = Vjson; ses = Vjson; datatype = Vjson; pro = Vjson; acq = Vjson; 
   sn = Vjson; task = Vjson; suffix = Vjson; site = Vjson; scankey = Vjson; scanid = Vjson;
   ent = Vjson; lab = Vjson; acqsn = Vjson; acqnr = Vjson; rec = Vjson; % records of the tables of the database
-  Panon = Vjson; Pp0 = Vjson; Pwc1 = Vjson; Pdbdir = Vjson; Pdbjson = Vjson; pstatus = Vjson;
+  Panon = Vjson; Pdbdir = Vjson; Pdbjson = Vjson; pstatus = Vjson;
   Pdbdirpath = Vjson; BIDSpathd = Vjson; Pdbnii = Vjson;
   BIDSpath = Vjson; BIDSdir = Vjson; BIDSfile = Vjson; BIDSsub = Vjson; Pprot = Vjson;
   PID = ''; sni = 0; stime = datetime('now'); bidsroots = {}; convver = {}; 
-  segkeys  = {}; % segmented anatomical scan types of the sessions (session|suffix)
-  ppl      = cat_io_dcm2bids_pp_anat('levelParameters',job.opts.pplevel); % parameters of the preprocessing level
   srcmap   = containers.Map('KeyType','char','ValueType','any'); % new names of BIDS inputs
   intended = {}; % exported JSONs with IntendedFor references
   partdata = containers.Map('KeyType','char','ValueType','any'); % participant data
@@ -219,7 +226,7 @@ function out = cat_io_dcm2bids(job)
         end
       end
       Vjson{sci} = cat_io_dcm2bids_db('assurePatientDCMfields',Vjson{sci});
-      fnameparts = strsplit(spm_file(Pjson{fscni},'basename'),'='); 
+      fnameparts = cat_io_dcm2bids_db('nameParts',spm_file(Pjson{fscni},'basename')); 
       Vjson{sci}.ProtocolName = fnameparts{2};
 
       % import information, e.g. the datatype, suffix, and participant data 
@@ -368,12 +375,6 @@ function out = cat_io_dcm2bids(job)
 
       % site definition 
       site{sci} = cat_io_dcm2bids_protocols('setupSites',Vjson{sci},sites);
-      if job.opts.output == 0 % only the tables of the database
-        [datatype{sci},suffix{sci},ent{sci}] = scanType(pname,Vjson{sci},Isrc,isbids); 
-        rec{sci} = scanRecord(Ptbldir,Vjson{sci},scanid{sci},site{sci},fileparts(Pdbdir{sci}), ...
-          datatype{sci},suffix{sci},ent{sci},PT,'',tol,job.opts); 
-        fprintf('\n'); continue
-      end
   
       % study definition %%% need later refinement
       studynam = cat_io_dcm2bids_bids('bidsLabel',job.subdir);
@@ -381,33 +382,37 @@ function out = cat_io_dcm2bids(job)
 
       % main BIDS fields (subject, session, datatype, weighting, ...)
       % ===================================================================
-      % subject
-      bs   = job.opts.BIDSsep; 
-      NPID = cat_io_dcm2bids_bids('bidsLabel',Vjson{sci}.PatientID); 
-      switch job.opts.subIDform
-        case 1 % sub-PID
-          sub{sci} = sprintf('sub-%s', strrep(NPID,'_','')); %#ok<*SAGROW>
-        case 2 % sub-SITE-PID
-          sub{sci} = sprintf('sub-%s%s%s', cat_io_dcm2bids_bids('bidsLabel',site{sci}), bs, strrep(NPID,'_','')); %#ok<*SAGROW>
-        case 3 % sub-STUDY-PID
-          sub{sci} = sprintf('sub-%s%s%s', studynam, bs, strrep(NPID,'_','')); %#ok<*SAGROW>
-        case 4 % sub-SITE-STUDY-PID
-          sub{sci} = sprintf('sub-%s%s%s%s%s', site{sci}, bs, studynam, bs, strrep(NPID,'_','')); %#ok<*SAGROW>
-        case 5 % sub-STUDY-SITE-PID
-          sub{sci} = sprintf('sub-%s%s%s%s%s', studynam, bs, site{sci}, bs, strrep(NPID,'_','')); %#ok<*SAGROW>
+      % subject: prefix (site and/or study) and PatientID, or the number of
+      % the subject (anonymized), without the prefix for an ID that starts
+      % with it (e.g. of an anonymized DICOM export, i.e. the same label)
+      bs = job.opts.BIDSsep; dayoffset = 0; 
+      if job.opts.anonymize > 1 % number and date offset of the subject (anonymized)
+        [~,dbsub] = fileparts(fileparts(fileparts(Pdirfi))); 
+        [NPID,dayoffset] = cat_io_dcm2bids_anonymize('subject',anon,dbsub); 
+      else
+        NPID = strrep(cat_io_dcm2bids_bids('bidsLabel',Vjson{sci}.PatientID),'_',''); 
       end
+      sitelab = cat_io_dcm2bids_bids('bidsLabel',site{sci}); 
+      switch job.opts.subIDform
+        case 1, pre = {};                  % sub-PID
+        case 2, pre = {sitelab};           % sub-SITE-PID
+        case 3, pre = {studynam};          % sub-STUDY-PID
+        case 4, pre = {sitelab,studynam};  % sub-SITE-STUDY-PID
+        case 5, pre = {studynam,sitelab};  % sub-STUDY-SITE-PID
+      end
+      if ~isempty(pre) && numel(NPID) > numel([pre{:}]) && startsWith(NPID,[pre{:}])
+        NPID = NPID(numel([pre{:}]) + 1:end); 
+      end
+      sub{sci} = ['sub-' strjoin([pre {NPID}],bs)]; %#ok<*SAGROW>
       
       % session
-      if job.opts.anonymize > 1 % ses-StudyID
-        ses{sci}  = sprintf('ses-%s',cat_io_dcm2bids_bids('bidsLabel',Vjson{sci}.StudyID));
-      elseif isempty(regexp(fnameparts{3},'^[0-9]+$','once')) 
-        % session label (e.g. BIDS input without scan date)
-        ses{sci}  = sprintf('ses-%s',cat_io_dcm2bids_bids('bidsLabel',fnameparts{3}));
-      else % ses-date
-        ses{sci}  = sprintf('ses-%s',fnameparts{3}(1:min(8,numel(fnameparts{3}))));
-        if numel(fnameparts{3}) > 8  &&  job.opts.anonymize==0
-          ses{sci}  = sprintf('%s%s%s',ses{sci}, bs, fnameparts{3}(9:end)); 
-        end
+      ses{sci} = cat_io_dcm2bids_bids('sessionLabel',fileparts(Pdirfi),fnameparts{3},job.opts,dayoffset); 
+
+      if job.opts.output == 0 % only the tables of the database
+        [datatype{sci},suffix{sci},ent{sci}] = scanType(pname,Vjson{sci},Isrc,isbids); 
+        rec{sci} = scanRecord(Ptbldir,Vjson{sci},scanid{sci},site{sci},fileparts(Pdbdir{sci}), ...
+          datatype{sci},suffix{sci},ent{sci},PT,'',tol,job.opts); 
+        fprintf('\n'); continue
       end
 
       % protocol directory 
@@ -471,7 +476,7 @@ function out = cat_io_dcm2bids(job)
         Pjsonnext = spm_file(Pjson{fscni+1},'path',Pdirfi); 
         if exist(Pjsonnext,'file')
           Vjsonnext = cat_io_dcm2bids_db('assurePatientDCMfields',cat_io_json(Pjsonnext)); 
-          fnamenext = strsplit(spm_file(Pjsonnext,'basename'),'='); 
+          fnamenext = cat_io_dcm2bids_db('nameParts',spm_file(Pjsonnext,'basename')); 
           if strcmp( cat_io_dcm2bids_db('scanKey',Vjsonnext) , scankey{sci} ) && ...
             ~any(strcmp( scanid(1:sci) , cat_io_dcm2bids_db('getScanID',Vjsonnext,fnamenext) ))
             [suffixnext,entnext] = cat_io_dcm2bids_bids('setupSuffix',datatype{sci},pro{sci},Vjsonnext); 
@@ -540,16 +545,8 @@ function out = cat_io_dcm2bids(job)
         else
           fprintf('\n'); % end of the scan line (otherwise ended by the QC values)
         end
-        
-
-        % Basic preprocessing: segmentation of the anatomical scans (only the
-        % first scan of each type of a session for higher preprocessing 
-        % levels, see levelParameters in cat_io_dcm2bids_pp_anat)
-        segkey = [fileparts(Pdirfi) '|' suffix{sci}]; 
-        if strcmp(datatype{sci},'anat') && (~ppl.onescan || ~any(strcmp(segkeys,segkey)))
-          segkeys{end+1} = segkey; %#ok<AGROW>
-          [Pm{fscni}, Pp0{fscni}, Pwc1{fscni}] = cat_io_dcm2bids_pp_anat('segmentanat',Panon{fscni}, datatype{sci}, job.opts); %#ok<AGROW>
-        end
+        % (the segmentation of the anatomical scan of the session follows at
+        % the end of the session, see anatScan in cat_io_dcm2bids_pp_anat)
       else
         fprintf('\n');
       end
@@ -563,14 +560,18 @@ function out = cat_io_dcm2bids(job)
       if job.opts.output > 0
         if ~exist(BIDSpath{sci},'dir'), mkdir(BIDSpath{sci}); end
         if job.opts.output > 1
-          der = [0 0 0 1 1]; 
-          pre = {'','','','catDCM2BIDSqc_','catDCM2BIDSsegus_'};
-          ext = {niiext,'.bval','.bvec','.json','.json'}; 
+          % remove older derivatives of the scan, as all its derivatives are
+          % written again by this run (e.g. maps of former versions such as
+          % the noise maps of the QC or segmentations of further scans)
+          Dold = dir(fullfile(BIDSpathd{sci},['*' spm_file(BIDSfile{sci},'basename') '*']));
+          for di = find(~[Dold.isdir]), delete(fullfile(Dold(di).folder,Dold(di).name)); end
+          der = [0 0 0 1];
+          pre = {'','','','catDCM2BIDSqc_'};
+          ext = {niiext,'.bval','.bvec','.json'};
           if job.opts.preprocessing > 1
-            % copy also preprocessed files
-            der = [der 1 1 1 1]; %#ok<AGROW>
-            pre = [pre 'c0' 'm' 'mwc1' 'r']; %#ok<AGROW>
-            ext = [ext niiext niiext niiext niiext]; %#ok<AGROW>
+            % copy also the realigned 4D data (the segmentation of the session
+            % is exported at the end of the session, see exportSegmentation)
+            der = [der 1]; pre = [pre 'r']; ext = [ext niiext]; %#ok<AGROW>
           end
           for ei = 1:numel(ext)
             if exist( spm_file(Pjson{fscni},'ext',ext{ei},'prefix',pre{ei}) , 'file' ) || ...
@@ -594,14 +595,13 @@ function out = cat_io_dcm2bids(job)
             end
           end
 
-          % QC maps of the scan (see cat_io_dcm2bids_qc and cat_io_dcm2bids_render) 
-          Pbase = regexprep(Panon{fscni},'\.nii(\.gz)?$',''); 
-          for mi = {'denoisedavg','noisemap','noisefield','sliceMotion'}
-            if exist([Pbase '_' mi{1} niiext],'file')
-              if ~exist(BIDSpathd{sci},'dir'), mkdir(BIDSpathd{sci}); end
-              cat_io_dcm2bids_helper('exportNii',[Pbase '_' mi{1} niiext], fullfile(BIDSpathd{sci}, ...
-                ['catDCM2BIDSqc_' mi{1} '_' spm_file(BIDSfile{sci},'basename')]), job.opts); 
-            end
+          % denoised average of 4D data of the QC (see cat_io_dcm2bids_qc and
+          % cat_io_dcm2bids_render), but not the noise maps of older versions
+          Pavg = [regexprep(Panon{fscni},'\.nii(\.gz)?$','') '_denoisedavg' niiext];
+          if exist(Pavg,'file')
+            if ~exist(BIDSpathd{sci},'dir'), mkdir(BIDSpathd{sci}); end
+            cat_io_dcm2bids_helper('exportNii',Pavg, fullfile(BIDSpathd{sci}, ...
+              ['catDCM2BIDSqc_denoisedavg_' spm_file(BIDSfile{sci},'basename')]), job.opts);
           end
 
           % protocol fit measure and rating (not part of the SQR) and the 
@@ -685,8 +685,9 @@ function out = cat_io_dcm2bids(job)
     end
 
     % end of a session (the scan directories are sorted, i.e., the scans of a
-    % session are processed one after another): affine registration of the 
-    % session to MNI space with the orientation rating of the session and 
+    % session are processed one after another): segmentation of one
+    % anatomical scan of the session, affine registration of the
+    % session to MNI space with the orientation rating of the session and
     % the coverage rating of its scans (see writeSessionAffines in 
     % cat_io_dcm2bids_pp_anat), the phase-encoding reversal test of its scans 
     % (checkPEreversal), and the session data of the subject (sessions.tsv) 
@@ -695,6 +696,19 @@ function out = cat_io_dcm2bids(job)
         ~cellfun('isempty',BIDSsub(1:sci))); 
       SOR = nan; 
       if job.opts.output > 1 && ~isempty(sesids)
+        % segmentation of the anatomical scan of the session (one per session,
+        % e.g. the T1w with the best quality rating, see anatScan in 
+        % cat_io_dcm2bids_pp_anat) and its derivatives 
+        ia = sesids(cat_io_dcm2bids_pp_anat('anatScan',Pdbnii(sesids),datatype(sesids),suffix(sesids))); 
+        if ~isempty(ia) && job.opts.preprocessing
+          try
+            cat_io_dcm2bids_pp_anat('segmentanat',cat_io_dcm2bids_pp_anat('anonymize',Pdbnii{ia},job.opts,datatype{ia}), ...
+              datatype{ia},job.opts); 
+            exportSegmentation(Pdbnii{ia},BIDSpathd{ia},BIDSfile{ia},job.opts); 
+          catch e
+            cat_io_cprintf('err','%60s : segmentation failed: %s\n',spm_file(BIDSfile{ia},'basename'),e.message); 
+          end
+        end
         S = cat_io_dcm2bids_pp_anat('writeSessionAffines',Pdbdirpath(sesids), Pdbnii(sesids), datatype(sesids), ...
           suffix(sesids), BIDSpathd(sesids), sub(sesids), ses(sesids), job.opts, BIDSfile(sesids), Pprot(sesids)); 
         if ~isempty(S), SOR = S(1).SOR; end
@@ -707,9 +721,10 @@ function out = cat_io_dcm2bids(job)
             suffix(sesids),BIDSpathd(sesids),BIDSfile(sesids),job.opts); 
         end
       end
-      for bsd = unique(BIDSsub(sesids)) % each BIDS (protocol) directory of the session
+      for bsd = reshape(unique(BIDSsub(sesids)),1,[]) % each BIDS (protocol) directory of the session
         id = sesids(find(strcmp(BIDSsub(sesids),bsd{1}),1,'last')); 
-        cat_io_dcm2bids_bids('writeSubjectTSV',Vjson{id}, sub{id}, ses{id}, Poutdir, bsd{1}, job.opts.anonymize, SOR, site{id}); 
+        cat_io_dcm2bids_bids('writeSubjectTSV',Vjson{id}, sub{id}, ses{id}, Poutdir, bsd{1}, job.opts.anonymize, SOR, site{id}, ...
+          cat_io_dcm2bids_phenotypic('sessionData',fileparts(Pdbdirpath{id}))); 
       end
     end
   end 
@@ -727,7 +742,8 @@ function out = cat_io_dcm2bids(job)
   % see cat_io_dcm2bids_export)
   if job.opts.dicomexport > 0
     try
-      cat_io_dcm2bids_export('exportDICOM',Pdbjson(1:sci),datatype(1:sci),pstatus(1:sci),Pmdbdir,job.opts);
+      cat_io_dcm2bids_export('exportDICOM',Pdbjson(1:sci),datatype(1:sci),pstatus(1:sci),site(1:sci), ...
+        sub(1:sci),ses(1:sci),BIDSfile(1:sci),Pmdbdir,job.opts);
     catch e
       cat_io_cprintf('err','  DICOM export failed: %s (%s, line %d)\n',e.message,e.stack(1).name,e.stack(1).line);
     end
@@ -845,17 +861,22 @@ function out = cat_io_dcm2bids(job)
     out = cat_io_dcm2bids_bids('getBIDSoutputs', fullfile(Poutdir,job.BIDSdir,job.BIDSsubdir), out ); 
   end
 
+  % readme files of the new directories of this run
+  cat_io_dcm2bids_readme('writeReadmes',Poutdir,job);
+  cat_io_cprintf('err','\n%s\n',cat_io_dcm2bids_readme('disclaimer',job.opts.anonymize)); 
+
 end
 % =========================================================================
 function [datatype,suffix,ent,label] = scanType(pro,V,Isrc,isbids)
 %scanType. BIDS datatype, suffix, further entities (e.g. dir, echo, part),
-%  and acq label of a scan by its protocol name pro and sidecar V (see 
+%  and acq label of a scan by its protocol name pro and sidecar V (with the
+%  image fields, e.g. for protocol names without datatype, see 
 %  setupDatatype and setupSuffix in cat_io_dcm2bids_bids), or the datatype, 
 %  suffix, and entities of the source dataset of BIDS inputs. 
   if isbids
     datatype = Isrc.Datatype; 
   else
-    datatype = cat_io_dcm2bids_bids('setupDatatype',pro); 
+    datatype = cat_io_dcm2bids_bids('setupDatatype',pro,V); 
   end
   [suffix,ent,label] = cat_io_dcm2bids_bids('setupSuffix',datatype,pro,V);
   if isbids
@@ -871,7 +892,31 @@ function R = scanRecord(Ptbldir,V,scanid,site,session,datatype,suffix,ent,PT,BID
   variant = cat_io_dcm2bids_protocols('protocolVariant',Ptbldir,PT,V.ProtocolName, ...
     datatype,[suffix ent],tol,opts); 
   R = cat_io_dcm2bids_tables('scanRecord',V,scanid,site,session,datatype,suffix,ent, ...
-    variant,PT,BIDSfile); 
+    variant,PT,BIDSfile);
+end
+% =========================================================================
+function exportSegmentation(Pdbnii,BIDSpathd,BIDSfile,opts)
+%exportSegmentation. BIDS derivatives of the segmentation of the database
+%  image Pdbnii (the anatomical scan of a session, see anatScan and
+%  segmentanat in cat_io_dcm2bids_pp_anat): the volumes (JSON) and for
+%  opts.preprocessing > 1 the label map c0, the bias-corrected image m, and
+%  the modulated normalized GM map mwc1 (of the anonymized or denoised
+%  image).
+  [pth,nam] = fileparts(regexprep(Pdbnii,'\.gz$',''));
+  bnam = spm_file(BIDSfile,'basename');
+  Pj   = fullfile(pth,['catDCM2BIDSsegus_' nam '.json']);
+  if ~exist(Pj,'file'), return; end
+  if ~exist(BIDSpathd,'dir'), mkdir(BIDSpathd); end
+  copyfile(Pj,fullfile(BIDSpathd,['catDCM2BIDSsegus_' bnam '.json']));
+  if opts.preprocessing < 2, return; end
+  for pre = {'c0','m','mwc1'}
+    for p2 = {'anon_','sanlm_anon_','sanlm_',''}
+      P = fullfile(pth,[pre{1} p2{1} nam '.nii.gz']); if ~exist(P,'file'), P = P(1:end-3); end
+      if exist(P,'file')
+        cat_io_dcm2bids_helper('exportNii',P,fullfile(BIDSpathd,[pre{1} bnam]),opts); break
+      end
+    end
+  end
 end
 % =========================================================================
 function [same,job] = checkPreviousSetting(Popts,job)
@@ -880,7 +925,8 @@ function [same,job] = checkPreviousSetting(Popts,job)
     load(Popts,'opts','dicts');
     % only the fields that define the BIDS structure (independent of other, 
     % e.g. removed or new, fields of the current or previous options)
-    KEEP   = {'ProtocolFileName','anonymize','gzipe','tolerance','subIDform'}; 
+    KEEP   = {'ProtocolFileName','anonymize','gzipe','tolerance','subIDform','sesunit'}; 
+    KEEP   = intersect(KEEP,intersect(fieldnames(job.opts),fieldnames(opts))); % fields of both settings
     jopts0 = rmfield(job.opts, setdiff(fieldnames(job.opts),KEEP));  
     opts0  = rmfield(opts    , setdiff(fieldnames(opts),KEEP));  
     same   = cat_io_structEqual(jopts0,opts0) && cat_io_structEqual(job.dicts,dicts);

@@ -185,13 +185,15 @@ function dcm2bids = cat_conf_dcm2bids(expert)
     }; 
 
   % select files with center information 
+  % automatic naming based on the site name and scanner field strength.
   centerdict          = cfg_files;
   centerdict.tag      = 'Pcenterdict';
-  centerdict.name     = 'Center Dictionary File';
+  centerdict.name     = 'Center Dictionary File (expert)';
   centerdict.filter   = 'any';
   centerdict.ufilter  = 'site.*\.json$';
   centerdict.val      = {{''}};
   centerdict.num      = [0 Inf];
+  centerdict.hidden   = true;
   centerdict.help     = {
     [ ...
     'In case of multiple centers it is possible to include a centerID into ' ...
@@ -204,15 +206,27 @@ function dcm2bids = cat_conf_dcm2bids(expert)
     '  ['
     '    {'
     '      "DeviceSerialNumber":           "000815",'
-    '      "InstitutionAbbreviation":      "JE"'
-    '    }'
+    '      "InstitutionAbbreviation":      "JE",'
+    '      "Color":                        "#A82117"'
+    '    },'
     '    {'
     '      "DeviceSerialNumber":           "000007",'
     '      "InstitutionAbbreviation":      "NA"'
+    '    },'
+    '    {'
+    '      "Name":                         "partner site Halle-Jena-Magdeburg",'
+    '      "Cities":                       ["Halle","Jena","Magdeburg"],'
+    '      "Color":                        "#A82117"'
     '    }'
     '  ]'
     ''
-    }; 
+    ['The optional "Color" (RGB hex) is the color of the site in the report figure. Entries with "Cities" and ' ...
+     '"Color" (without "DeviceSerialNumber") define the color of all scanners of these cities (city of the ' ...
+     '"InstitutionAddress", also of scanners that are not in the dictionary, "*" for all other cities) without ' ...
+     'own color, e.g. of all scanners of a partner site, where scanners with the same color differ slightly in ' ...
+     'brightness. See also DCM2BIDS/sites.json. ']
+    ''
+    };
     
 
 
@@ -354,6 +368,8 @@ function dcm2bids = cat_conf_dcm2bids(expert)
     'private fields). A warning is given if parts of the patient name are found in other fields. The PatientID is ' ...
     'not changed and has to be a pseudonym! ']
     'Images: defaced as the BIDS export (anatomical scans, all scans for the extensive anonymization). '
+   ['Limitations: only DICOM files with explicit VR little endian are exported, and UIH mosaic images (e.g. DTI ' ...
+    'saved by slice) cannot be defaced yet, i.e. they are not exported if they have to be defaced. ']
     ''
     'THE EXPORT IS NOT AN ARCHIVE OR BACKUP OF THE ORIGINAL DATA, AS THE HEADERS ARE CLEANED AND THE IMAGES ARE DEFACED. KEEP THE ORIGINAL DATA! '
     ''
@@ -364,27 +380,62 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   anonymize.tag     = 'anonymize';
   if expert
     anonymize.name    = 'Anonymization level (expert)';
-    anonymize.labels  = {'No','Yes - basic','Yes - extensive','Yes - extreme'}; 
-    anonymize.values  = {0,1,2,3};
+    anonymize.labels  = {'No','Pseudonymized','Anonymized'}; 
+    anonymize.values  = {0,1,2};
   else
     anonymize.name    = 'Anonymization level';
-    anonymize.labels  = {'Basic','Extensive'};
+    anonymize.labels  = {'Pseudonymized','Anonymized'};
     anonymize.values  = {1,2};
   end
   anonymize.val     = {def.opts.anonymize};
-  anonymize.help    = {'Strength of the anonymization of DICOM header and image information. '};
+  anonymize.help    = {
+    'Anonymization of the BIDS export (directory BIDS-<level>) and the DICOM export: '
+    ''
+   ['No (0): personal data (subject labels with the PatientID, session labels with date and time, images with faces), ' ...
+    'i.e. not for sharing (BIDS directory without level name). ']
+   ['Pseudonymized (1): subject labels with the site and the PatientID (that has to be a pseudonym), session labels ' ...
+    'with the scan date, age with one decimal, defaced anatomical images, no acquisition times in the NIfTI headers. ' ...
+    'The DICOM export keeps the PatientID, dates, and UIDs, but cleans names, addresses, IDs, and comments (birth date ' ...
+    'at the 15th of the month). ']
+   ['Anonymized (2): subject labels with the site and a number (e.g. sub-BerSI30T00001), session labels with the time ' ...
+    'since the first session of the subject (e.g. ses-w0000 and ses-w0052 one year later, unit in weeks by default, ' ...
+    'see opts.sesunit in cat_io_dcm2bids_defaults), age in years, defaced images of all scans. The DICOM export uses ' ...
+    'the subject and session labels as PatientID, PatientName, and StudyID, shifts the dates of a session to the ' ...
+    'date of its label (first session at 1900-01-01) and its times to the time since its start (00:00:00, i.e. the ' ...
+    'timing of scans and slices is kept), replaces the UIDs (also in private fields) and the scanner ' ...
+    'and institution by the site abbreviation and city, removes the station, department, and study and procedure ' ...
+    'descriptions, and replaces parts of the patient name, the PatientID, and the serial number in other fields by ' ...
+    'X. The key (numbers and date ' ...
+    'offsets) stays in the database (catDCM2BIDSdb/catDCM2BIDSanonymization.json) and the private tables, i.e. the ' ...
+    'creator can still identify the subjects (e.g. in case of findings). The import of an anonymized DICOM export ' ...
+    'gives the labels of the anonymized BIDS export (dates from 1850 to 1949 are treated as anonymized). ']
+    ''
+   ['Limitations: the anonymization is a best effort of the software without any warranty. Defaced (and also ' ...
+    'skull-stripped) images, rare phenotypes, small sites, the phenotypic data of the user tables, and other ' ...
+    'information can allow a re-identification. THE USER IS RESPONSIBLE FOR CHECKING THE DATA AND FOR THE DATA ' ...
+    'PROTECTION RULES OF THE STUDY BEFORE SHARING. ']
+    ''
+    };
  
   % preprocessing
   preprocessing         = cfg_menu;
   preprocessing.tag     = 'preprocessing';
   preprocessing.name    = 'Run basic preprocessing';
-  preprocessing.labels  = {'No','Yes','Yes (export to derivatives)'}; 
+  preprocessing.labels  = {'No','Yes (only report tables)','Yes (also images)'}; 
   preprocessing.values  = {0,1,2};
   preprocessing.val     = {def.opts.preprocessing};
   preprocessing.help    = { ...
    ['Run SPM preprocessing to estimate brain tissue volumes (anat), ' ...
     'diffusivity (FA/AD) and functional connectivity using SPM. ' ...
-    'Export realigned maps. ']};
+    'Export tables or also the maps: the segmentation of one anatomical scan per session (T1w, otherwise ' ...
+    'UNIT1, T2w, or FLAIR, of several scans the one with the best quality rating: label map c0, bias-corrected ' ...
+    'image m, and the modulated normalized GM map mwc1), the DTI maps (FA, the direction-encoded color map DEC ' ...
+    'in head orientation, and the normalized FA wFA, e.g. for voxel-based analyses, optionally also MD, AD, and ' ...
+    'RD, and the DEC map in the space of the T1w), and the distortion-corrected mean EPI of the rs-fMRI with the ' ...
+    'connectivity matrix. The DWI and rs-fMRI scans are coregistered rigidly to the segmented scan of their ' ...
+    'session and non-linearly only if it clearly improves the overlap (as the non-linear co-registration of CAT, ' ...
+    'e.g. for remaining distortions of an EPI without distortion correction; the Dice overlap of the brain masks ' ...
+    'is saved in the JSON and shown in the renderings, with a warning below 0.8). ']};
 
   % preprocessing level, i.e. the accuracy and processing time of the DTI 
   % and rs-fMRI measures (see levelParameters in cat_io_dcm2bids_pp_anat): the 
@@ -402,19 +453,19 @@ function dcm2bids = cat_conf_dcm2bids(expert)
        'segmentation of the anatomical scans is the same for all levels, see levelParameters in cat_io_dcm2bids_pp_anat): ']
       '  1 - full quality: SPM default parameters of the distortion correction (SCOPE) at the native resolution (reference)'
       '  2 - optimized: fast settings of SCOPE at 2.5 mm'
-      '  3 - quick review: SCOPE at 4 mm and only the first scan of each type (e.g. one T1w, DWI, and rs-fMRI scan per session)'
+      '  3 - quick review: SCOPE at 4 mm and only the first DWI and rs-fMRI scan per session (one segmentation per session for all levels)'
       '  4 - preview: SCOPE at 6 mm (rough maps)'
       ''
       ['Evaluation with a pilot session (T1w, 2 DWI, and rs-fMRI scans): processing time, differences to level 1 ' ...
        '(WM FA, tSNR, and segregation), and correlation with level 1 (FA map and connectivity matrix): ']
       '  level           time    WM FA   r(FA map)  tSNR   segregation  r(conn)'
-      '  1 full quality  26 min  0.352     1        38.3     0.142        1'
-      '  1.5             17 min  +0.000    0.95     -0.2    +0.003        0.99'
-      '  2 optimized      9 min  +0.000    0.93     +0.0    +0.003        0.99'
-      '  2.5              7 min  +0.000    0.85     -0.1    +0.009        0.99'
-      '  3 quick review   4 min  +0.000    0.82     +0.1    +0.019        0.99'
-      '  3.5            2.5 min  +0.000    0.78     -0.3    +0.015        0.97'
-      '  4 preview      2.5 min  +0.000    0.79     +0.1    +0.027        0.98'
+      '  1 full quality  26 min  0.372     1        37.8     0.731        1'
+      '  1.5             17 min  +0.000    0.98     -0.1    +0.007        0.999'
+      '  2 optimized      9 min  +0.001    0.98     +0.0    +0.019        0.999'
+      '  2.5              7 min  +0.001    0.96     -0.1    +0.014        0.998'
+      '  3 quick review   4 min  +0.001    0.95     +0.1    +0.018        0.997'
+      '  3.5            2.5 min  +0.001    0.95     -0.2    +0.007        0.996'
+      '  4 preview      2.5 min  +0.001    0.93     +0.2    +0.008        0.996'
       ''
       ['I.e., the global measures are the same for all levels, whereas the maps differ slightly. Nevertheless, ' ...
        'the data of a study should be processed with the same level. Results of a lower level (higher accuracy) ' ...
@@ -435,26 +486,27 @@ function dcm2bids = cat_conf_dcm2bids(expert)
        'a study should be processed with the same accuracy. Results of the higher accuracy are kept. ']};
   end
 
-  % optimizing: denoising, bias-correction?, resampling to MNI with specific BB
-  %{
-  optimizing         = cfg_menu;
-  optimizing.tag     = 'optimizing';
-  optimizing.name    = 'Run optimization (expert)';
-  optimizing.labels  = {'No','Yes'}; 
-  optimizing.values  = {0,1};
-  optimizing.val     = {0};
-  optimizing.hidden  = expert<1; 
-  optimizing.help    = { ...
-    'Run optimization with denoising, slice-motion/bias-correction, and resampling in MNI.'};
-  %}
+  % DTI maps of the preprocessing (see cat_io_dcm2bids_pp_dwi)
+  dtimaps         = cfg_menu;
+  dtimaps.tag     = 'dtimaps';
+  dtimaps.name    = 'DTI maps (expert)';
+  dtimaps.labels  = {'FA, DEC, and wFA','Also MD, AD, and RD'};
+  dtimaps.values  = {1,2};
+  dtimaps.val     = {def.opts.dtimaps};
+  dtimaps.hidden  = expert < 1; 
+  dtimaps.help    = { ...
+    ['DTI maps of the basic preprocessing with images: the fractional anisotropy FA, the direction-encoded ' ...
+     'color map DEC, and the normalized FA wFA (e.g. for voxel-based analyses), optionally also the mean, axial, ' ...
+     'and radial diffusivity MD, AD, and RD (their white matter values are always estimated for the tables). ']
+    };
 
-  % preprocessing
   protocolsubdirs         = cfg_menu;
   protocolsubdirs.tag     = 'protocolsubdirs';
-  protocolsubdirs.name    = 'Use subdirectories to separate protocols';
+  protocolsubdirs.name    = 'Use subdirectories to separate protocols (expert)';
   protocolsubdirs.labels  = {'No','Yes'}; 
   protocolsubdirs.values  = {0,1};
   protocolsubdirs.val     = {def.opts.protocolsubdirs};
+  protocolsubdirs.hidden  = expert < 1; 
   protocolsubdirs.help    = { ...
     'Use subdirectories to separate the protocols of the main protocol directories. '
     };
@@ -580,7 +632,8 @@ function dcm2bids = cat_conf_dcm2bids(expert)
     'sagittal x=0 (between the hemispheres, shows the offset of the origin). Further interesting ' ...
     'slices are coronal y=-60 (symmetric cut through the cerebellum) and sagittal x=-30 and x=30 ' ...
     '(frontal, parietal, temporal, and cerebellar areas and especially the hippocampus of both ' ...
-    'hemispheres). No slice means no overview pages. ']};
+    'hemispheres). No slice means no overview pages. Each tile shows the subject, the session with the ' ...
+    'quality rating, and the scan (e.g. the acquisition label with series number and protocol). ']};
   clear defsl rslval rslo rslp si
 
   % R2: scan-row pages with one row of slices per scan
@@ -607,8 +660,11 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   rsubjects.hidden = expert<1;
   rsubjects.help   = {
    ['One PDF file per subject (BIDS-report/render/[protocol/]subjects/render_sub-*.pdf) with the scan ' ...
-    'rows (as the scan-row pages) of all scans of the subject ordered by session, datatype (anat, dwi, ' ...
-    'func, fmap, perf, others), and name. ']};
+    'rows (as the scan-row pages) of selected images of the subject: the original anatomical scans of the ' ...
+    'segmentation (e.g. T1w), the label map of the segmentation, the normalized GM map, the ' ...
+    'direction-encoded color map of the DWI on the T1w, and the mean EPI with the network of the rs-fMRI ' ...
+    '(similar images of several scans together), otherwise all scans ordered by session, datatype (anat, ' ...
+    'dwi, func, perf, others), and name. Field maps are not rendered. ']};
 
   norender        = cfg_const;
   norender.tag    = 'norender';
@@ -635,6 +691,7 @@ function dcm2bids = cat_conf_dcm2bids(expert)
     render.labels = {'No','Yes'};
     render.values = {0,1};
     render.val    = {1};
+    render.hidden = true; % it is nearly always required/helpful and relative cheap
     render.help   = {'Render slices of each scan. '};
   end
   render.help     = {
@@ -772,10 +829,54 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   dsdoi.hidden     = expert<1;
   dsdoi.help       = {'The Digital Object Identifier of the dataset (not the corresponding paper), e.g. "doi:10.18112/openneuro.ds000001.v1.0.0" (BIDS "DatasetDOI"). '};
 
+  % phenotypic data of the sessions (see cat_io_dcm2bids_phenotypic)
+  dspheno          = cfg_files;
+  dspheno.tag      = 'phenotypic';
+  dspheno.name     = 'Phenotypic data tables';
+  dspheno.filter   = 'any';
+  dspheno.ufilter  = '.*\.(csv|tsv|CSV|TSV)$';
+  dspheno.num      = [0 Inf];
+  dspheno.val      = {{''}};
+  dspheno.help     = {
+   ['CSV or TSV tables with data of the scan sessions (e.g. clinical or behavioral data) with one row per session ' ...
+    '(or per subject). The rows are matched to the sessions of the internal database by their key columns, and ' ...
+    'all other columns are added to the BIDS sessions files (sub-<label>_sessions.tsv). The key columns are not ' ...
+    'exported, but please check the other columns for personal data. ']
+    ''
+   ['Key columns (if not given by their numbers): PatientID (patientid, pid), name (name, patientname, firstname, ' ...
+    'lastname, surname, vorname, nachname; the words of all name columns and of the DICOM name in any order), birth ' ...
+    'date (birthdate, dateofbirth, dob, geburtsdatum; year and month), scan date (scandate, date, datetime, ' ...
+    'acquisitiondate, datum; day and the closest time), and visit (visit, session, timepoint; number of the session ' ...
+    'of the subject by date). Dates as yyyy-mm-dd, yyyymmdd, dd.mm.yyyy, or dd/mm/yyyy (with optional time). ']
+    ''
+   ['Rows with a scan date or visit have to match exactly one session, rows without all sessions of one subject. ' ...
+    'Sessions with several rows of a table get no data of this table. The data of a table are replaced by each ' ...
+    'import of the table (by its file name). The match of each row is given in the private table ' ...
+    'catDCM2BIDSdb-tables/phenotypic_<table>.csv. ']
+    ''
+    'E.g. a "visits.csv" with:'
+    '  name, surname, scandate, MMSE, group'
+    '  Max, Mustermann, 2025-11-20, 29, control'
+    ''
+    };
+
+  dsphenokeys         = cfg_entry;
+  dsphenokeys.tag     = 'phenotypickeys';
+  dsphenokeys.name    = 'Key columns of the phenotypic tables';
+  dsphenokeys.strtype = 'n';
+  dsphenokeys.num     = [0 Inf];
+  dsphenokeys.val     = {def.dataset.phenotypickeys};
+  dsphenokeys.help    = {
+   ['Numbers of the key columns of the phenotypic data tables for the matching to the sessions, e.g. 1:3 for name, ' ...
+    'surname, and scan date. Empty: detection of the key columns by their names (see the help of the tables). ' ...
+    'Key columns with other names are dates (scan or birth date), visits (numbers up to 99), or names. ']
+    };
+
   dataset          = cfg_branch;
   dataset.tag      = 'dataset';
   dataset.name     = 'Dataset Descriptor';
-  dataset.val      = {dsauthors, dsname, dshowto, dslicense, dsreadme, dsack, dsfunding, dsethics, dsrefs, dsdoi};
+  dataset.val      = {dsauthors, dsname, dshowto, dslicense, dsreadme, dsack, dsfunding, dsethics, dsrefs, dsdoi, ...
+                      dspheno, dsphenokeys};
   dataset.help     = {
    ['Description of the BIDS dataset that is written to the dataset_description.json and README.md ' ...
     'files of the BIDS directory. BIDSVersion, DatasetType, and GeneratedBy (catDCM2BIDS and dcm2niix) are ' ...
@@ -790,11 +891,39 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   dicts.val        = {protocoldir, centerdict, studydict, subjectdict, };
   dicts.help       = {'Optional files to replace standard variables by more handy names or codes. '}; 
 
+  % report figure (see cat_io_dcm2bids_reportfig): designs of DCM2BIDS/colormaps
+  % (all or one, other combinations by the defaults or a batch script)
+  Pdes            = dir(fullfile(fileparts(mfilename('fullpath')),'DCM2BIDS','colormaps','*.json'));
+  dnames          = regexprep({Pdes.name},'\.json$','');
+  rdesign         = cfg_menu;
+  rdesign.tag     = 'design';
+  rdesign.name    = 'Designs';
+  rdesign.labels  = [{'All designs'} strrep(dnames,'_',' ')];
+  rdesign.values  = [{dnames} cellfun(@(d) {d},dnames,'UniformOutput',false)];
+  ddef            = cellstr(def.opts.reportfig.design);
+  if ~any(cellfun(@(v) isequal(v,ddef),rdesign.values))
+    rdesign.labels = [{'Default designs'} rdesign.labels]; rdesign.values = [{ddef} rdesign.values];
+  end
+  rdesign.val     = {ddef};
+  rdesign.help    = {
+   ['Designs of the report figure, i.e. one PDF file per design (BIDS-report/report_<BIDSsubdir>_<design>.pdf): ' ...
+    'the bright and dark CAT designs and the bright DZPG design with the logos, rating icons, colors, and ' ...
+    'colormaps of DCM2BIDS/colormaps/<design>.json (further designs can be added there). ']};
+
+  reportfig       = cfg_branch;
+  reportfig.tag   = 'reportfig';
+  reportfig.name  = 'Report figure';
+  reportfig.val   = {rdesign};
+  reportfig.help  = {
+   ['A4 pages with the diagrams of the report tables of each BIDS directory (overview and one page per site): ' ...
+    'number of sessions per month and per site, age and sex of the subjects, brain measures by age, sample ' ...
+    'homogeneity, and quality ratings (see cat_io_dcm2bids_reportfig). ']};
+
   opts            = cfg_branch;
   opts.tag        = 'opts';
   opts.name       = 'Options';
-  opts.val        = {ProtocolFileName, studies, anonymize, tolerance, preprocessing, pplevel, ...
-                      gzipi, gzipe, output, dicomexport, protocolsubdirs, subIDform, render};
+  opts.val        = {ProtocolFileName, studies, anonymize, tolerance, preprocessing, pplevel, dtimaps, ...
+                      gzipi, gzipe, output, dicomexport, protocolsubdirs, subIDform, render, reportfig};
   opts.help       = {['Parameters to control the processing and output of ' ...
                       'the converted data and its export to BIDS. ']}; 
 

@@ -37,20 +37,25 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 %  Outputs:
 %   R1) Overview pages with m x n tiles of all subjects/sessions with one
 %       slice per scan (one set of pages for each slice of ropts.slices):
-%         [dataset/]datatype/subtype/render_<subtype>_<orientation>_<axis><pos>_p##.png
+%         [dataset/]datatype/subtype/render_<subtype>_slice_<orientation>_<axis><pos>_p##.png
 %       This gives a very brief overview of many images but is biased by
 %       the selected slice, i.e., it is useful for a rough global review.
+%       Each tile shows the subject, the session with the quality rating 
+%       SQR, and the scan (BIDS entities, e.g. the acquisition label with 
+%       the series number and protocol).
 %   R2) Scan-row pages with one row per scan with a header (BIDS filename
 %       and an underline over the whole page), an information panel
 %       (quality ratings, image and acquisition parameters, registration),
 %       and the slices axial z=+10, sagittal x=0, and coronal y=0:
 %         [dataset/]datatype/subtype/render_<subtype>_rows_p##.png
 %       with 6 scans per page.
-%   R3) Subject reports with the scan rows (as R2) of all scans (image
-%       types) of a subject ordered by session, datatype (anat, dwi, func,
-%       fmap, perf, others), and name (i.e., derivatives follow their scan,
-%       first the bias-corrected image m and the segmentation c0)
-%       as one multi-page PDF per subject:
+%   R3) Subject reports with the scan rows (as R2) of selected images of a
+%       subject (subject perspective, see renderSubjectOrder): original 
+%       anatomical scan of the segmentation (e.g. T1w), its label map (c0),
+%       normalized GM, DEC map with the bias-corrected T1w as underlay, and 
+%       mean EPI with the network of the rs-fMRI (similar images of several
+%       scans together), otherwise all  
+%       scans, as one multi-page PDF per subject:
 %         [dataset/]subjects/render_<sub>.pdf
 %   rows/  .. slice row of each scan without text as separate image
 %             (e.g. for a later interactive HTML report)
@@ -59,12 +64,29 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 %  pages on one screen and limits the number of output pages.
 %  4D data is represented by the denoised average of its first volumes of
 %  the QC (see cat_io_dcm2bids_qc), otherwise by its first volume. The 
-%  noise maps of the QC (maximum of the absolute noise, noise field, and 
-%  slice motion maps) are shown as red overlay to visualize local noise 
-%  (see ropts.qcnoise). The QC maps are not rendered as own image types and
-%  realigned 4D data (prefix r) not at all, as it equals its scan. 
-%  Further session reports with a compressed representation of 4D data 
-%  (e.g. FA maps for DWI) should be prepared in the QC.
+%  denoised average is not rendered as own image type, realigned 4D data 
+%  (prefix r) not at all, as it equals its scan, as well as field maps
+%  (fmap) and the normalized FA (wFA, for voxel-based analyses). 
+%  The DTI maps of cat_io_dcm2bids_pp_dwi (FA, the direction-encoded color
+%  map DEC, and MD, AD, and RD for opts.dtimaps > 1) are rendered as own 
+%  image types (e.g. dwi/dwi_FA) with fixed intensity windows (FA 0-1, 
+%  diffusivities 0-0.003 mm2/s, see renderWindow), the DEC map in color 
+%  (principal direction in head orientation: x red, y green, z blue, with 
+%  the FA as brightness).
+%  Composite images are rendered as own image types (e.g. for the subject
+%  report): the DEC map on the darkened bias-corrected image of the 
+%  segmentation of the session (e.g. dwi_DECt1w, FA as opacity, the DEC map
+%  in the space of the T1w by the non-linear coregistration if available,
+%  see toT1w in cat_io_dcm2bids_pp_anat), and the mean EPI with the network of the  
+%  rs-fMRI (bold_conn: nodes of the parcels in the colors of the 7 networks
+%  with a white edge and edges with |z| >= 0.5 in blue-white-red for the 
+%  Fisher z of -1.2 to 1.2, see drawNetwork). DWI and fMRI scans with a 
+%  coregistration to the T1w of their preprocessing (see coregAnat in 
+%  cat_io_dcm2bids_pp_anat) use the registration of the T1w and this 
+%  coregistration (e.g. after a repositioning of the subject), i.e. the
+%  images are aligned by the rigid coregistration and the affine 
+%  registration of the session (the DEC composite by the non-linear 
+%  coregistration, without normalization).
 %
 %  cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 %
@@ -101,9 +123,6 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 %                 degree (default: trilinear for dpi<=300 (fast), otherwise 
 %                 4th degree B-spline for the finer sampling (slower))
 %   .dpi       .. print resolution (300)
-%   .qcnoise   .. range of the red QC noise overlay relative to the signal 
-%                 (transparent to opaque, [.05 .30]), [] - no QC maps (i.e.
-%                 also no denoised average)
 %
 %  The intensities of a scan are scaled for all its slices together
 %  (1-99% percentile) to keep the slices of a scan comparable. The colored
@@ -172,8 +191,9 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
   %% find and describe images
   P = cat_vol_findfiles(PBIDS,'*sub-*.nii*');
   P = P( ~cellfun('isempty',regexp(P,'\.nii(\.gz)?$','once')) );
-  P = P( cellfun('isempty',regexp(spm_file(P,'filename'),'^catDCM2BIDS(qc|dwi)_','once')) ); % QC maps (shown with their scan) and DTI maps
+  P = P( cellfun('isempty',regexp(spm_file(P,'filename'),'^catDCM2BIDS(qc|dwi_wFA|dwi_DECt1w)_','once')) ); % QC maps (shown with their scan), wFA (analyses), and DECt1w (composite)
   P = P( cellfun('isempty',regexp(spm_file(P,'filename'),'^rsub-','once')) );          % realigned 4D data (equals its scan)
+  P = P( cellfun('isempty',regexp(P,'[\\/]fmap[\\/][^\\/]*$','once')) );                   % field maps
   isderiv = cat_io_contains(P,[filesep 'derivatives' filesep]);
   switch ropts.source
     case 1, P = P(~isderiv); isderiv = isderiv(~isderiv);
@@ -183,12 +203,12 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 
   F = struct('file',P,'name','','bidsname','','prefix','','sub','','ses','','dataset','', ...
     'datatype','','subtype','','group','','json','','SQR',nan,'QR',[],'T',[],'reg',[], ...
-    'readerr',0,'dim',[],'vx',[],'nvol',nan,'qcmaps',struct(),'qcused',0);
+    'readerr',0,'dim',[],'vx',[],'nvol',nan,'qcmaps',struct(),'qcused',0,'pp',[],'kind','','under','','over','','Tu',[]);
   for fi = 1:numel(P)
     [pp,ff]  = fileparts(P{fi});
     ff       = regexprep(ff,'\.nii$','');
     si       = strfind(ff,'sub-');
-    prefix   = regexprep(ff(1:si(1)-1),'_$','');
+    prefix   = regexprep(regexprep(ff(1:si(1)-1),'_$',''),'^catDCM2BIDS(dwi|rsfmri)_',''); % (e.g. FA or mean)
     bidsname = ff(si(1):end);
     F(fi).name = ff; F(fi).bidsname = bidsname; F(fi).prefix = prefix;
 
@@ -240,15 +260,27 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
       end
     end
 
-    % QC maps of the raw scan (see cat_io_dcm2bids_qc), but not of phase 
-    % images (e.g. part-phase or phasediff) 
-    if ~isderiv(fi) && ~isempty(ropts.qcnoise) && isempty(regexp(bidsname,'_part-phase_|_phase(diff|1|2)$','once'))
-      for m = {'denoisedavg','noisemap','noisefield','sliceMotion'}
-        Pm = fullfile(droot,reldir,['catDCM2BIDSqc_' m{1} '_' bidsname]);
-        if exist([Pm '.nii.gz'],'file')
-          F(fi).qcmaps.(m{1}) = [Pm '.nii.gz'];
-        elseif exist([Pm '.nii'],'file')
-          F(fi).qcmaps.(m{1}) = [Pm '.nii'];
+    % denoised average of 4D data of the QC (see cat_io_dcm2bids_qc), but
+    % not of phase images (e.g. part-phase or phasediff) 
+    if ~isderiv(fi) && isempty(regexp(bidsname,'_part-phase_|_phase(diff|1|2)$','once'))
+      Pm = niiOf(fullfile(droot,reldir,['catDCM2BIDSqc_denoisedavg_' bidsname]));
+      if ~isempty(Pm), F(fi).qcmaps.denoisedavg = Pm; end
+    end
+
+    % results of the DTI and rs-fMRI preprocessing of the scan (see 
+    % cat_io_dcm2bids_pp_dwi/_rsfmri): the coregistration to the T1w, i.e.
+    % the scan and its maps in the space of the scan use the registration of
+    % the T1w and the coregistration (e.g. after a repositioning of the 
+    % subject), and the global values (information panel)
+    for pp = {'dwi','rsfmri'}
+      Pj = fullfile(droot,reldir,['catDCM2BIDS' pp{1} '_' bidsname '.json']);
+      if exist(Pj,'file')
+        try
+          F(fi).pp = cat_io_json(Pj);
+          if ~isempty(F(fi).T) && isempty(regexp(prefix,'^m?w','once')) && isfield(F(fi).pp,'coreg') && ...
+              isnumeric(F(fi).pp.coreg) && isequal(size(F(fi).pp.coreg),[4 4])
+            F(fi).T = F(fi).T * double(F(fi).pp.coreg);
+          end
         end
       end
     end
@@ -264,6 +296,38 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
       end
     end
   end
+
+
+  %% composite images (own image types, e.g. for the subject report): the
+  % DEC map on the bias-corrected image of the segmentation of the session
+  % (see method.T1w of the DTI) as underlay with its own registration (e.g.
+  % dwi_DECt1w), where the DEC map in the space of the T1w (non-linear 
+  % coregistration, see toT1w in cat_io_dcm2bids_pp_anat) is used if 
+  % available (otherwise the DEC map of the scan with the rigid 
+  % coregistration), and the mean EPI with the network of the rs-fMRI 
+  % (bold_conn)
+  Fc = F([]);
+  for fi = 1:numel(F)
+    pp = fileparts(F(fi).file);
+    switch F(fi).prefix
+      case 'DEC'
+        if isstruct(F(fi).pp) && isfield(F(fi).pp,'method') && isfield(F(fi).pp.method,'T1w') && ~isempty(F(fi).pp.method.T1w)
+          ba = regexprep(char(F(fi).pp.method.T1w),'\.nii$','');
+          Fm = F(strcmp({F.prefix},'m') & strcmp({F.bidsname},ba) & strcmp({F.dataset},F(fi).dataset));
+          if ~isempty(Fm) && ~isempty(Fm(1).T)
+            st = regexp(ba,'_([^_]+)$','tokens','once'); % suffix of the underlay (e.g. T1w)
+            C  = composite(F(fi),'dec',Fm(1).file,'',['DEC' lower(st{1})]); C.Tu = Fm(1).T;
+            Pt = niiOf(fullfile(pp,['catDCM2BIDSdwi_DECt1w_' F(fi).bidsname]));
+            if ~isempty(Pt), C.file = Pt; C.T = Fm(1).T; end % (DEC map in the space of the T1w)
+            Fc(end+1) = C; %#ok<AGROW>
+          end
+        end
+      case 'mean'
+        Pc = fullfile(pp,['catDCM2BIDSrsfmri_conn_' F(fi).bidsname '.tsv']);
+        if exist(Pc,'file'), Fc(end+1) = composite(F(fi),'conn','',Pc,'conn'); end %#ok<AGROW>
+    end
+  end
+  F = [F(:); Fc(:)];
 
 
   %% render each group (image type)
@@ -288,10 +352,10 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
     for oi = 1:numel(Pold), delete(Pold{oi}); end
 
     % sample all slices of each scan once (or load them from the cache)
-    Y = zeros(n,n,size(K,1),numel(Fg),'uint8'); Yov = Y; nnew = 0;
+    Y = zeros(n,n,size(K,1),numel(Fg),'uint8'); Yov = Y; Yc = cell(1,numel(Fg)); nnew = 0;
     for fi = 1:numel(Fg)
       S = renderScanSlices(Fg(fi),K,ropts,Pcache(Fg(fi)));
-      Y(:,:,:,fi) = S.Y; Yov(:,:,:,fi) = S.Yov; nnew = nnew + S.new;
+      Y(:,:,:,fi) = S.Y; Yov(:,:,:,fi) = S.Yov; Yc{fi} = S.C; nnew = nnew + S.new;
       Fg(fi).readerr = S.readerr; Fg(fi).dim = S.dim; Fg(fi).vx = S.vx; Fg(fi).nvol = S.nvol; Fg(fi).qcused = S.qc;
 
       % slice row without text (e.g. for a later HTML report)
@@ -300,7 +364,7 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
         if S.new || ~exist(Prow,'file')
           if ~exist(fileparts(Prow),'dir'), mkdir(fileparts(Prow)); end
           Yr = cell(1,3);
-          for ci = 1:3, Yr{ci} = renderTileRGB(S.Y(:,:,k2(ci)),S.Yov(:,:,k2(ci)),G.ovc); end
+          for ci = 1:3, Yr{ci} = renderTileRGB(S.Y(:,:,k2(ci)),S.Yov(:,:,k2(ci)),G.ovc,colorSlice(Yc,fi,k2(ci))); end
           imwrite(cat(2,Yr{:}),Prow);
         end
       end
@@ -308,14 +372,26 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 
     np1 = 0; np2 = 0;
     if ~isempty(k1)
-      np1 = renderOverviewPages(fh,Fg,Y(:,:,k1,:),Yov(:,:,k1,:),K(k1,:),groups{gi},Pout,ropts,G);
+      np1 = renderOverviewPages(fh,Fg,Y(:,:,k1,:),Yov(:,:,k1,:),colorSlices(Yc,k1),K(k1,:),groups{gi},Pout,ropts,G);
     end
     if ropts.rows
-      np2 = renderRowPages(fh,Fg,Y(:,:,k2,:),Yov(:,:,k2,:),K(k2,:),groups{gi}, ...
+      np2 = renderRowPages(fh,Fg,Y(:,:,k2,:),Yov(:,:,k2,:),colorSlices(Yc,k2),K(k2,:),groups{gi}, ...
         fullfile(Pout,['render_' Fg(1).subtype '_rows_p%02d.png']),0,ropts,G);
     end
     cat_io_cprintf('blue',sprintf('  Rendered %4d images (%4d new) in %3d overview and %3d row page(s): %s\n', ...
       numel(Fg), nnew, np1, np2, Pout));
+  end
+
+  % remove the pages of image types of former runs that are not rendered
+  % anymore (e.g. maps of former versions), i.e. other directories with a
+  % slice cache (and their then empty datatype directories)
+  Pc = cat_vol_findfiles(Preport,'cache',struct('dirs',1));
+  for ci = 1:numel(Pc)
+    Pg = fileparts(Pc{ci});
+    if strncmp(Pg,Preport,numel(Preport)) && ~any(endsWith(Pg,strcat(filesep,groups))) % (keeps all rendered groups)
+      rmdir(Pg,'s'); Pp = fileparts(Pg); D = dir(Pp);
+      if ~strcmp(Pp,Preport) && all(ismember({D.name},{'.','..'})), rmdir(Pp); end
+    end
   end
 
 
@@ -324,46 +400,58 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
     [subs,~,sid] = unique(strcat({F.dataset},'|',{F.sub}));
     for si = 1:numel(subs)
       Fs = renderSubjectOrder(F(sid==si),ropts);
-      Y  = zeros(n,n,3,numel(Fs),'uint8'); Yov = Y;
+      Y  = zeros(n,n,3,numel(Fs),'uint8'); Yov = Y; Yc = cell(1,numel(Fs));
       for fi = 1:numel(Fs)
         S = renderScanSlices(Fs(fi),K(k2,:),ropts,Pcache(Fs(fi)));
-        Y(:,:,:,fi) = S.Y; Yov(:,:,:,fi) = S.Yov;
+        Y(:,:,:,fi) = S.Y; Yov(:,:,:,fi) = S.Yov; Yc{fi} = S.C;
         Fs(fi).readerr = S.readerr; Fs(fi).dim = S.dim; Fs(fi).vx = S.vx; Fs(fi).nvol = S.nvol; Fs(fi).qcused = S.qc;
       end
       Pout = fullfile(Preport,Fs(1).dataset,'subjects');
       if ~exist(Pout,'dir'), mkdir(Pout); end
       Ppdf = fullfile(Pout,['render_' Fs(1).sub '.pdf']);
       if exist(Ppdf,'file'), delete(Ppdf); end
-      np = renderRowPages(fh,Fs,Y,Yov,K(k2,:),fullfile(Fs(1).dataset,Fs(1).sub),Ppdf,1,ropts,G);
+      np = renderRowPages(fh,Fs,Y,Yov,Yc,K(k2,:),fullfile(Fs(1).dataset,Fs(1).sub),Ppdf,1,ropts,G);
       cat_io_cprintf('blue',sprintf('  Rendered %4d images in %3d subject page(s): %s\n', ...
         numel(Fs), np, Ppdf));
     end
   end
 end
 % =========================================================================
-function np = renderOverviewPages(fh,Fg,Y,Yov,K,group,Pout,ropts,G)
+function np = renderOverviewPages(fh,Fg,Y,Yov,Yc,K,group,Pout,ropts,G)
 %renderOverviewPages. R1 pages with one slice per scan in m x n tiles.
-%  Y and Yov are the slices (n x n x slices x scans) of the slices K. Each
-%  tile shows the subject, session, and quality rating SQR in its header.
+%  Y and Yov are the slices (n x n x slices x scans) of the slices K, Yc 
+%  the color slices of each scan (empty for gray-scale images). Each
+%  tile shows the subject, the session with the quality rating SQR, and 
+%  the scan (BIDS entities besides the subject, session, and suffix, e.g.
+%  the acquisition label with series number and protocol) in its header.
   nx = ropts.tiles(1); ny = ropts.tiles(2); nt = nx*ny;
   fs = [8 7 6 5]; fs = fs( all( [3 4; 4 5; 5 7; 6 8] == ropts.tiles(:)' , 2 ) ); % font size
   mg = 0.002; ht = 0.02; % margin and title height (normalized)
   tw = (1 - 2*mg) / nx * G.pw; th = (1 - 2*mg - ht) / ny * G.ph; % tile size in cm
   n  = size(Y,1);
-  % free header above each slice for about two text lines to reduce the
-  % overlay of the labels (sub, ses, SQR) with the image
-  hd = round(2 * 1.2 * fs/72*2.54 * n/min(tw,th));            % header in pixel
+  % free header above each slice for about three text lines to reduce the
+  % overlay of the labels (sub, ses with SQR, scan) with the image
+  hd = round(3 * 1.2 * fs/72*2.54 * n/min(tw,th));            % header in pixel
   cw = round(max(n, (n+hd)*tw/th)); ch = round(max(n+hd, n*th/tw)); % tile size in pixel
   np = ceil(numel(Fg)/nt);
 
-  % labels: subject, session and quality rating in separate rows
+  % labels: subject, session with the quality rating, and scan (e.g. 
+  % acq-007T1wMPR, i.e. several scans or protocols of a subject) in rows
   lab = cell(1,numel(Fg));
   for fi = 1:numel(Fg)
     lab{fi} = {Fg(fi).sub};
     if isempty(Fg(fi).T), lab{fi}{1} = [lab{fi}{1} ' (no MNI)']; end
     if Fg(fi).readerr,    lab{fi}{1} = [lab{fi}{1} ' (read error)']; end
-    if ~isempty(Fg(fi).ses), lab{fi}{end+1} = Fg(fi).ses; end
-    if ~isnan(Fg(fi).SQR),   lab{fi}{end+1} = sprintf('SQR: %0.1f',Fg(fi).SQR); end
+    str = Fg(fi).ses;
+    if ~isnan(Fg(fi).SQR), str = strtrim(sprintf('%s  SQR %0.1f',str,Fg(fi).SQR)); end
+    if ~isempty(str), lab{fi}{end+1} = str; end
+    scan = regexprep(regexprep(Fg(fi).bidsname,'^sub-[^_]+_(ses-[^_]+_)?',''),'_?[^_]+$','');
+    if ~isempty(scan), lab{fi}{end+1} = scan; end
+    % (within the tile width, e.g. long subject names)
+    maxc = floor(tw / (0.6 * fs/72*2.54));
+    for li = 1:numel(lab{fi})
+      if numel(lab{fi}{li}) > maxc, lab{fi}{li} = [lab{fi}{li}(1:maxc-1) char(8230)]; end
+    end
   end
 
   % pages for each orientation and slice position
@@ -376,7 +464,7 @@ function np = renderOverviewPages(fh,Fg,Y,Yov,K,group,Pout,ropts,G)
       text(ax,0,0.5,sprintf('%s  (%s, %s, %s=%+0.0fmm, page %d/%d)', group, ...
         G.orientnam{K(ki,1)}, ropts.slicemode, G.axisnam(K(ki,1)), K(ki,2), pgi, np), ...
         'Color','w','FontSize',fs+1,'Interpreter','none','VerticalAlignment','middle');
-      renderLegend(ax,1,0.5,fs,G.ovc,any(mod([Fg.qcused],2)));
+      renderLegend(ax,1,0.5,fs,G.ovc);
 
       % compose all tiles of the page into one RGB image with the overlay
       ntp  = min(nt, numel(Fg) - (pgi-1)*nt);
@@ -388,7 +476,7 @@ function np = renderOverviewPages(fh,Fg,Y,Yov,K,group,Pout,ropts,G)
         [ix,iy]   = ind2sub([nx ny],ti);
         pos(ti,:) = [(ix-1)*cw, (iy-1)*ch]; % upper left corner of the tile
         page(pos(ti,2) + hd + floor((ch-hd-n)/2) + (1:n), pos(ti,1) + floor((cw-n)/2) + (1:n), :) = ...
-          renderTileRGB(Y(:,:,ki,fi),Yov(:,:,ki,fi),G.ovc);
+          renderTileRGB(Y(:,:,ki,fi),Yov(:,:,ki,fi),G.ovc,colorSlice(Yc,fi,ki));
       end
       ax = axes('Parent',fh,'Position',[mg mg 1-2*mg 1-2*mg-ht],'Color','k');
       image(ax,page); axis(ax,'image','off');
@@ -402,7 +490,7 @@ function np = renderOverviewPages(fh,Fg,Y,Yov,K,group,Pout,ropts,G)
       end
 
       % print page and give the graphics system time to finish
-      Ppng = fullfile(Pout,sprintf('render_%s_%s_%s%+0.0f_p%02d.png', ...
+      Ppng = fullfile(Pout,sprintf('render_%s_slice_%s_%s%+0.0f_p%02d.png', ...
         Fg(1).subtype,G.orientnam{K(ki,1)},G.axisnam(K(ki,1)),K(ki,2),pgi));
       print(fh, Ppng, '-dpng', sprintf('-r%d',ropts.dpi));
       drawnow;
@@ -411,8 +499,9 @@ function np = renderOverviewPages(fh,Fg,Y,Yov,K,group,Pout,ropts,G)
   np = np * size(K,1);
 end
 % =========================================================================
-function np = renderRowPages(fh,Fg,Y,Yov,K,ttl,Ppage,showgroup,ropts,G)
-%renderRowPages. Pages with one row of 3 slices per scan (R2 and R3).
+function np = renderRowPages(fh,Fg,Y,Yov,Yc,K,ttl,Ppage,showgroup,ropts,G)
+%renderRowPages. Pages with one row of 3 slices per scan (R2 and R3), with
+%  the color slices Yc of each scan (empty for gray-scale images).
 %  Each scan starts with a header with its BIDS filename (and its image
 %  type for showgroup=1) and an underline over the whole page, followed by
 %  an information panel (see renderInfoText) and the slices K. The tile
@@ -442,7 +531,7 @@ function np = renderRowPages(fh,Fg,Y,Yov,K,ttl,Ppage,showgroup,ropts,G)
       y0 = pht + (si-1)*bh;                        % top of the scan block
       page(y0 + phh - (2:-1:1), :, :) = 0.6;       % underline over the whole page
       for ci = 1:3
-        page(y0 + phh + (1:n), x0 + (ci-1)*n + (1:n), :) = renderTileRGB(Y(:,:,ci,fi),Yov(:,:,ci,fi),G.ovc);
+        page(y0 + phh + (1:n), x0 + (ci-1)*n + (1:n), :) = renderTileRGB(Y(:,:,ci,fi),Yov(:,:,ci,fi),G.ovc,colorSlice(Yc,fi,ci));
       end
     end
     ax = axes('Parent',fh,'Position',[mg/G.pw mg/G.ph 1-2*mg/G.pw 1-2*mg/G.ph],'Color','k');
@@ -451,7 +540,7 @@ function np = renderRowPages(fh,Fg,Y,Yov,K,ttl,Ppage,showgroup,ropts,G)
     % page title and legend of the overlay lines
     text(ax,1,pht/2,sprintf('%s  (%s, page %d/%d)',ttl,ropts.slicemode,pgi,np), ...
       'Color','w','FontSize',fs+1,'Interpreter','none','VerticalAlignment','middle');
-    renderLegend(ax,W,pht/2,fs,G.ovc,any(mod([Fg.qcused],2)));
+    renderLegend(ax,W,pht/2,fs,G.ovc);
 
     % scan header, slice positions, and information panel
     for si = 1:nsp
@@ -513,13 +602,39 @@ function txt = renderInfoText(F,col2mark)
     txt{end+1} = sprintf('%smatrix: %dx%dx%d, %d volume(s)',wht,F.dim(1:3),F.nvol);
     txt{end+1} = sprintf('%svoxel: %0.2fx%0.2fx%0.2f mm',wht,F.vx);
   end
-  qcstr = ''; 
-  if F.qcused >= 2, qcstr = 'denoised average'; end
-  if mod(F.qcused,2) == 1
-    if ~isempty(qcstr), qcstr = [qcstr ' and ']; end
-    qcstr = [qcstr '\color[rgb]{1 0 0}noise']; 
+  if F.qcused, txt{end+1} = [wht 'denoised average of the QC']; end
+
+  % DTI and rs-fMRI: coregistration to the T1w (Dice of the brain masks),
+  % global values, and the colors of the DEC map, segmentation, and network
+  if isstruct(F.pp)
+    if isfield(F.pp,'method') && isfield(F.pp.method,'coregistration') && isfield(F.pp.method.coregistration,'Dice')
+      Qc = F.pp.method.coregistration; dn = nan; if isfield(Qc,'Dice_nonlinear'), dn = Qc.Dice_nonlinear; end
+      cc = wht; if max([Qc.Dice Qc.Dice_scanner dn]) < 0.8, cc = red; end
+      txt{end+1} = sprintf('%scoregistration to T1w: Dice %0.2f (scanner %0.2f)',cc,Qc.Dice,Qc.Dice_scanner);
+      if isfinite(dn) && isfield(Qc,'displacement')
+        txt{end} = sprintf('%s, non-linear %0.2f (%0.1f mm)',txt{end},dn,Qc.displacement(1));
+        if isfield(Qc,'method') && ischar(Qc.method) && contains(Qc.method,'not used'), txt{end} = [txt{end} ' not used']; end
+      end
+    end
+    if isfield(F.pp,'global') && isfield(F.pp.global,'FA_WM')
+      g = F.pp.global;
+      txt{end+1} = sprintf('%sWM: FA %0.3f, MD %0.2f, AD %0.2f, RD %0.2f (10^{-3} mm^2/s)',wht,g.FA_WM,1000*[g.MD_WM g.AD_WM g.RD_WM]);
+    end
+    if isfield(F.pp,'qc') && isfield(F.pp.qc,'FD_mean') && isfield(F.pp,'connectivity')
+      txt{end+1} = sprintf('%sFD %0.2f mm, tSNR %0.0f, GCOR %0.3f, segregation %0.2f',wht,F.pp.qc.FD_mean, ...
+        F.pp.qc.tSNR,F.pp.connectivity.GCOR,F.pp.connectivity.segregation);
+    end
   end
-  if ~isempty(qcstr), txt{end+1} = [wht 'QC: ' qcstr]; end
+  if strcmp(F.prefix,'DEC') || strcmp(F.kind,'dec')
+    txt{end+1} = ['\color[rgb]{1 0.3 0.3}x left-right  \color[rgb]{0.3 1 0.3}y posterior-anterior  ' ...
+      '\color[rgb]{0.45 0.6 1}z inferior-superior' wht ' (FA)'];
+    st = regexp(F.under,'_([^_\\/]+)\.nii(\.gz)?$','tokens','once');
+    if strcmp(F.kind,'dec') && ~isempty(st), txt{end+1} = [wht 'underlay: bias-corrected ' tex(st{1})]; end
+  end
+  if strcmp(F.kind,'conn')
+    txt{end+1} = [wht 'nodes: 7 networks (Yeo), edges |z| \geq 0.5: \color[rgb]{0.1 0.3 1}-1.2' wht ...
+      ' to \color[rgb]{1 0.1 0.1}+1.2' wht ' (Fisher z)'];
+  end
 
   % acquisition
   J = struct();
@@ -534,10 +649,10 @@ function txt = renderInfoText(F,col2mark)
   tim = {'RepetitionTime','TR'; 'EchoTime','TE'; 'InversionTime','TI'}; str = '';
   for i = 1:size(tim,1)
     if isfield(J,tim{i,1}) && isnumeric(J.(tim{i,1})) && ~isempty(J.(tim{i,1}))
-      str = [str sprintf('%s %0.4g ms  ',tim{i,2},1000*J.(tim{i,1})(1))]; %#ok<AGROW>
+      str = [str sprintf('%s %0.5g ms  ',tim{i,2},round(1000*J.(tim{i,1})(1),2))]; %#ok<AGROW>
     end
   end
-  if isfield(J,'FlipAngle') && isnumeric(J.FlipAngle) && ~isempty(J.FlipAngle), str = [str sprintf('FA %g%s',J.FlipAngle(1),char(176))]; end
+  if isfield(J,'FlipAngle') && isnumeric(J.FlipAngle) && ~isempty(J.FlipAngle), str = [str sprintf('flip %g%s',J.FlipAngle(1),char(176))]; end
   if ~isempty(str), txt{end+1} = [wht str]; end
 
   % registration (rotation of the scanner space to MNI)
@@ -551,14 +666,33 @@ function txt = renderInfoText(F,col2mark)
 end
 % =========================================================================
 function Fs = renderSubjectOrder(Fs,ropts)
-%renderSubjectOrder. Order of the scans of one subject in the subject
-%  report: by session, datatype (anat, dwi, func, fmap, perf, others), and
-%  BIDS name, where derivatives follow their scan (first the bias-corrected
-%  image m and the segmentation c0, then the others by prefix). Only the 
-%  first session for ropts.sessions.
-  dto = {'anat','dwi','func','fmap','perf'};
+%renderSubjectOrder. Scans of one subject in the subject report: the 
+%  selected images of the subject perspective (if available) in the order
+%  (1) original anatomical scans of the type of the segmentation (e.g. 
+%  T1w), (2) label map of the segmentation (c0), (3) normalized GM
+%  (mwc1), (4) DEC map with the bias-corrected image as underlay, and (5)  
+%  mean EPI with the network, i.e. similar images of several scans 
+%  together (e.g. first all original T1w), ordered by session and BIDS 
+%  name. Without these images (e.g. without anatomical scan), all scans by
+%  session, datatype (anat, dwi, func, perf, others), and BIDS name, where
+%  derivatives follow their scan (first the bias-corrected image m and the
+%  segmentation c0, the DTI maps FA, DEC, MD, AD, and RD, then the others 
+%  by prefix). Only the first session for ropts.sessions.
+  st  = regexprep({Fs(~cellfun('isempty',regexp({Fs.subtype},'_c0$','once'))).subtype},'_c0$',''); % (e.g. t1w)
+  if isempty(st), st = {'t1w'}; end
+  dec = unique({Fs(strcmp({Fs.kind},'dec')).subtype});
+  sel = [st strcat(st,'_c0') strcat(st,'_mwc1') dec {'bold_conn'}];
+  nr  = [ones(1,numel(st)) 2*ones(1,numel(st)) 3*ones(1,numel(st)) 4*ones(1,numel(dec)) 5];
+  [iss,ri] = ismember({Fs.subtype},sel);
+  if any(iss)
+    Fs = Fs(iss); row = nr(ri(iss));
+    [~,so] = sort(strcat(cellstr(num2str(row(:)))','|',{Fs.ses},'|',{Fs.bidsname})); Fs = Fs(so);
+    if ropts.sessions && ~isempty(Fs), Fs = Fs( strcmp({Fs.ses},Fs(1).ses) ); end
+    return
+  end
+  dto = {'anat','dwi','func','perf'};
   [~,dti] = ismember({Fs.datatype},dto); dti(dti==0) = numel(dto) + 1;
-  pro = {'','m','c0'}; 
+  pro = {'','m','c0','FA','DEC','MD','AD','RD'}; 
   [~,pri] = ismember({Fs.prefix},pro); pri(pri==0) = numel(pro) + 1;
   key = strcat({Fs.ses},'|',cellstr(num2str(dti(:)))','|',{Fs.datatype},'|',{Fs.bidsname},'|', ...
     cellstr(num2str(pri(:)))','|',{Fs.prefix});
@@ -576,22 +710,22 @@ function S = renderScanSlices(F,K,ropts,Pcache)
 %  registration, and the sampling parameters were not changed and the cache
 %  includes all requested slices. This avoids reading all images again (e.g.
 %  for large datasets) and keeps the slices for further outputs (e.g. HTML).
-%  With QC maps (F.qcmaps, see cat_io_dcm2bids_qc), the denoised average 
-%  (4D data) is sampled instead of the first volume and the maximum of the
-%  absolute noise maps is added to the overlay as opacity 0-1 (values 4-255,
-%  ropts.qcnoise range relative to the signal, i.e., the 99th percentile of
-%  the denoised average or 1 for the bias-corrected anatomical maps). 
-%  S.Y (uint8 slices), S.Yov (overlay labels: 1-3 lines of the x/y/z-planes,
-%  4-255 QC noise), S.K (slices), S.readerr, header information of the scan
-%  (S.dim, S.vx, S.nvol), S.qc (QC maps: 1-noise overlay, 2-denoised 
-%  average, 3-both), and S.new (newly sampled).
+%  With the denoised average of the QC (F.qcmaps, see cat_io_dcm2bids_qc),
+%  it is sampled instead of the first volume of 4D data. 
+%  The DTI maps have fixed intensity windows (see renderWindow) and the DEC
+%  map (volumes red, green, blue) and the composite images give color 
+%  slices S.C (uint8 n x n x 3 x slices, otherwise empty).
+%  S.Y (uint8 slices), S.Yov (overlay labels: 1-3 lines of the x/y/z-planes),
+%  S.K (slices), S.readerr, header information of the scan (S.dim, S.vx, 
+%  S.nvol), S.qc (1 - denoised average), and S.new (newly sampled).
   n   = round(ropts.fov / ropts.res);
   D   = dir(F.file);
   if isempty(D), srcdate = nan; else, srcdate = D(1).datenum; end
   qcmaps = struct2cell(F.qcmaps); qcdate = nan(1,numel(qcmaps)); 
   for mi = 1:numel(qcmaps), D = dir(qcmaps{mi}); if ~isempty(D), qcdate(mi) = D(1).datenum; end; end
-  par = struct('version',3,'srcdate',srcdate,'qc',{fieldnames(F.qcmaps)'},'qcdate',qcdate, ...
-    'qcnoise',ropts.qcnoise,'T',F.T,'fov',ropts.fov,'res',ropts.res,'interp',ropts.interp);
+  par = struct('version',8,'srcdate',srcdate,'qc',{fieldnames(F.qcmaps)'},'qcdate',qcdate, ...
+    'kind',F.kind,'part',{{F.under F.over}},'partdate',[dateOf(F.under) dateOf(F.over)], ...
+    'T',F.T,'Tu',F.Tu,'fov',ropts.fov,'res',ropts.res,'interp',ropts.interp);
 
   % cached slices
   if ropts.cache && exist(Pcache,'file')
@@ -600,29 +734,28 @@ function S = renderScanSlices(F,K,ropts,Pcache)
       [isK,ki] = ismember(K,C.S.K,'rows');
       if isequal(C.par,par) && all(isK)
         S = C.S; S.K = K; S.Y = S.Y(:,:,ki); S.Yov = S.Yov(:,:,ki); S.new = 0;
+        if ~isempty(S.C), S.C = S.C(:,:,:,ki); end
         return
       end
     end
   end
 
-  S = struct('K',K,'Y',zeros(n,n,size(K,1),'uint8'),'Yov',zeros(n,n,size(K,1),'uint8'), ...
+  S = struct('K',K,'Y',zeros(n,n,size(K,1),'uint8'),'Yov',zeros(n,n,size(K,1),'uint8'),'C',[], ...
     'readerr',0,'dim',[],'vx',[],'nvol',nan,'qc',0,'new',1);
   try
     txt = evalc('V = spm_vol(F.file);'); %#ok<NASGU> % avoid gz-messages
-    S.nvol = numel(V); V = V(1);
+    S.nvol = numel(V); Vall = V; V = V(1);
     S.dim  = V.dim; S.vx = sqrt(sum(V.mat(1:3,1:3).^2));
   catch
     S.readerr = 1; % e.g. corrupted files
   end
   if ~S.readerr && ~isempty(F.T)
     try
-      % QC maps: denoised average (if it has finite values) and the maximum
-      % of the absolute noise maps
-      Yvol = []; Yqc = []; 
-      if ~isempty(fieldnames(F.qcmaps))
-        [Yvol,Vu,Yqc,Vqc] = renderQCmaps(F.qcmaps); 
-        if ~isempty(Yvol), V = Vu; end
-        S.qc = 2*~isempty(Yvol) + ~isempty(Yqc); 
+      % denoised average of 4D data of the QC (if it has finite values)
+      Yvol = []; 
+      if isfield(F.qcmaps,'denoisedavg')
+        [Yvol,Vu] = renderAverage(F.qcmaps.denoisedavg); 
+        if ~isempty(Yvol), V = Vu; S.qc = 1; end
       end
 
       % B-spline coefficients of the volume (non-finite values set to 0) 
@@ -640,24 +773,39 @@ function S = renderScanSlices(F,K,ropts,Pcache)
         [Ys(:,:,ki),S.Yov(:,:,ki)] = renderSlice(C,V,F.T,K(ki,1),K(ki,2),ropts);
       end
       clear C
-      % common intensity scaling of all slices of the scan
-      Yv   = Ys(Ys~=0);
-      clim = [prctile(Yv,1) prctile(Yv,99)];
-      if ~(numel(clim)==2 && all(isfinite(clim)) && diff(clim)>0), clim = [0 max(1,max(Ys(:)))]; end
+      % common intensity scaling of all slices of the scan (fixed for DTI maps)
+      clim = renderWindow(F);
+      if isempty(clim)
+        Yv   = Ys(Ys~=0);
+        clim = [prctile(Yv,1) prctile(Yv,99)];
+        if ~(numel(clim)==2 && all(isfinite(clim)) && diff(clim)>0), clim = [0 max(1,max(Ys(:)))]; end
+      end
       S.Y  = uint8(255 * min(1,max(0,(Ys - clim(1)) / diff(clim))));
 
-      % QC noise overlay relative to the signal of the denoised average (in 
-      % the same units) or of the bias-corrected anatomical image (WM about 1)
-      if ~isempty(Yqc)
-        if S.qc >= 2, ref = clim(2); else, ref = 1; end
-        Cq = spm_bsplinc(Yqc,[ropts.interp*[1 1 1] 0 0 0]); clear Yqc
-        for ki = 1:size(K,1)
-          a  = min(1,max(0,(renderSlice(Cq,Vqc,F.T,K(ki,1),K(ki,2),ropts)/ref - ropts.qcnoise(1)) / ...
-            diff(ropts.qcnoise))); 
-          Yo = S.Yov(:,:,ki); 
-          Yo(Yo==0 & a>0) = uint8(4 + round(251*a(Yo==0 & a>0))); % lines on top
-          S.Yov(:,:,ki) = Yo; 
+      % color slices of the DEC map of DTI (volumes red, green, and blue)
+      if strcmp(F.prefix,'DEC') && numel(Vall) == 3
+        S.C = zeros(n,n,3,size(K,1),'uint8');
+        for ci = 1:3
+          Cc = [];
+          if ropts.interp > 1
+            Yd = spm_read_vols(Vall(ci)); Yd(~isfinite(Yd)) = 0; Cc = spm_bsplinc(Yd,[ropts.interp*[1 1 1] 0 0 0]); 
+          end
+          for ki = 1:size(K,1)
+            S.C(:,:,ci,ki) = uint8(255 * min(1,max(0,(renderSlice(Cc,Vall(ci),F.T,K(ki,1),K(ki,2),ropts) - clim(1)) / diff(clim))));
+          end
         end
+      end
+
+      % composite images (see the help of this file)
+      switch F.kind
+        case 'dec'  % DEC map (direction as color, FA as opacity) on the darkened underlay (own registration)
+          g  = 0.6 * windowSlices(sampleSlices(F.under,1,F.Tu,K,ropts));
+          d  = cat(4,sampleSlices(F.file,1,F.T,K,ropts),sampleSlices(F.file,2,F.T,K,ropts),sampleSlices(F.file,3,F.T,K,ropts));
+          fa = sqrt(sum(d.^2,4)); a = 0.9 * min(1,max(0,(fa - 0.1) / 0.35)); % (no colors for low FA, e.g. GM)
+          S.C = uint8(255 * permute((1-a).*g + a.*(d ./ max(eps,max(d,[],4))),[1 2 4 3]));
+        case 'conn' % mean EPI with the network
+          g = single(S.Y) / 255;
+          S.C = uint8(255 * permute(drawNetwork(cat(4,g,g,g),K,F.over,ropts),[1 2 4 3]));
       end
     catch
       S.readerr = 1; % e.g. unsupported datatype
@@ -671,26 +819,14 @@ function S = renderScanSlices(F,K,ropts,Pcache)
   end
 end
 % =========================================================================
-function [Yu,Vu,Yqc,Vqc] = renderQCmaps(M)
-%renderQCmaps. QC maps of a scan (structure M with the files of the maps, 
-%  see cat_io_dcm2bids_qc): the denoised average Yu (empty without finite 
-%  values, e.g. failed QC) and the maximum of the absolute noise, noise 
-%  field, and slice motion maps Yqc (empty without maps), with their 
-%  headers Vu and Vqc (same space as the first volume of the scan).
-  Yu = []; Vu = []; Yqc = []; Vqc = []; 
-  if isfield(M,'denoisedavg')
-    txt = evalc('Vu = spm_vol(M.denoisedavg);'); %#ok<NASGU>
-    Yu  = single(spm_read_vols(Vu)); 
-    if ~any(isfinite(Yu(:)) & Yu(:)~=0), Yu = []; Vu = []; end
-  end
-  for m = {'noisemap','noisefield','sliceMotion'}
-    if isfield(M,m{1})
-      txt = evalc('Vm = spm_vol(M.(m{1}));'); %#ok<NASGU>
-      Ym  = abs(single(spm_read_vols(Vm))); Ym(~isfinite(Ym)) = 0; 
-      if isempty(Yqc), Yqc = Ym; Vqc = Vm; else, Yqc = max(Yqc,Ym); end
-    end
-  end
-  if ~isempty(Yqc) && ~any(Yqc(:)), Yqc = []; Vqc = []; end
+function [Y,V] = renderAverage(P)
+%renderAverage. Denoised average P of 4D data of the QC (see 
+%  cat_io_dcm2bids_qc) as image Y with the header V (same space as the 
+%  first volume of the scan, empty without finite values, e.g. of a failed
+%  QC).
+  txt = evalc('V = spm_vol(P);'); %#ok<NASGU>
+  Y   = single(spm_read_vols(V)); 
+  if ~any(isfinite(Y(:)) & Y(:)~=0), Y = []; V = []; end
 end
 % =========================================================================
 function Fg = renderSortScans(Fg,ropts)
@@ -734,13 +870,15 @@ function sl = renderSliceList(s)
   end
 end
 % =========================================================================
-function Yrgb = renderTileRGB(Y,Yov,ovc)
+function Yrgb = renderTileRGB(Y,Yov,ovc,Yc)
 %renderTileRGB. Gray-scale slice (uint8) with colored overlay lines (Yov 
-%  1-3) and the red QC noise overlay (Yov 4-255 for the opacity 0-1, see 
-%  renderScanSlices).
-  Yg   = single(Y)/255; 
-  a    = max(0,single(Yov) - 4)/251; 
-  Yrgb = cat(3, Yg + a.*(1 - Yg), Yg.*(1 - a), Yg.*(1 - a));
+%  1-3), or the color slice Yc (uint8 n x n x 3, e.g. of the DEC map of 
+%  DTI) with the overlay lines.
+  if exist('Yc','var') && ~isempty(Yc)
+    Yrgb = single(Yc)/255;
+  else
+    Yg   = single(Y)/255; Yrgb = cat(3,Yg,Yg,Yg);
+  end
   for ci = 1:3
     Yc = Yrgb(:,:,ci);
     for k = 1:3, Yc(Yov==k) = ovc(k,ci); end
@@ -748,12 +886,150 @@ function Yrgb = renderTileRGB(Y,Yov,ovc)
   end
 end
 % =========================================================================
-function renderLegend(ax,x,y,fs,ovc,qc)
-%renderLegend. Legend of the overlay lines and of the QC noise overlay (qc) 
-%  (right aligned at x,y).
+function Yc = colorSlice(C,fi,k)
+%colorSlice. Color slice k of scan fi of the color slices C (cell of
+%  n x n x 3 x slices or empty for gray-scale images).
+  if isempty(C{fi}), Yc = []; else, Yc = C{fi}(:,:,:,k); end
+end
+% =========================================================================
+function C = colorSlices(C,k)
+%colorSlices. Color slices k of all scans (see colorSlice).
+  for fi = 1:numel(C), if ~isempty(C{fi}), C{fi} = C{fi}(:,:,:,k); end, end
+end
+% =========================================================================
+function C = composite(F,kind,under,over,tag)
+%composite. Composite image of the image F (see the composite images in 
+%  cat_io_dcm2bids_render): kind (dec, conn) with the underlay and 
+%  overlay files (or the connectivity matrix) as own image type with the 
+%  tag (e.g. dwi_DEC to dwi_DECt1w).
+  C = F; C.kind = kind; C.under = under; C.over = over; C.prefix = tag; C.name = [F.name '_' tag];
+  C.subtype = regexprep(F.subtype,['_' F.prefix '$'],['_' tag]);
+  C.group   = fullfile(F.dataset,F.datatype,C.subtype);
+end
+% =========================================================================
+function P = niiOf(P)
+%niiOf. Existing NIfTI of the name P without extension (.nii.gz or .nii),
+%  otherwise ''.
+  if exist([P '.nii.gz'],'file'), P = [P '.nii.gz']; elseif exist([P '.nii'],'file'), P = [P '.nii']; else, P = ''; end
+end
+% =========================================================================
+function d = dateOf(P)
+%dateOf. Modification date of the file P (NaN if not available).
+  d = nan; if ~isempty(P), D = dir(P); if ~isempty(D), d = D(1).datenum; end, end
+end
+% =========================================================================
+function Ys = sampleSlices(P,vol,T,K,ropts)
+%sampleSlices. Slices K of the volume vol of the image P (linear 
+%  interpolation, 0 outside) by the transformation T to MNI space (see
+%  renderSlice).
+  n = round(ropts.fov / ropts.res); Ys = zeros(n,n,size(K,1),'single');
+  txt = evalc('V = spm_vol(P);'); V = V(min(vol,numel(V))); o = ropts; o.interp = 1; %#ok<NASGU>
+  for ki = 1:size(K,1), Ys(:,:,ki) = renderSlice([],V,T,K(ki,1),K(ki,2),o); end
+end
+% =========================================================================
+function g = windowSlices(Y)
+%windowSlices. Slices Y scaled to 0-1 by the 1st and 99th percentile.
+  v = Y(Y ~= 0); clim = [prctile(v,1) prctile(v,99)];
+  if ~(numel(clim) == 2 && all(isfinite(clim)) && diff(clim) > 0), clim = [0 max(1,max(Y(:)))]; end
+  g = min(1,max(0,(Y - clim(1)) / diff(clim)));
+end
+% =========================================================================
+function rgb = drawNetwork(rgb,K,Pconn,ropts)
+%drawNetwork. Network of the connectivity matrix Pconn (Fisher z of the 
+%  parcels of the Schaefer2018 atlas, see cat_io_dcm2bids_pp_rsfmri) on the
+%  slices rgb (n x n x slices x 3) of the slices K as projection of all 
+%  edges with |z| >= 0.5 (lines in blue-white-red for z from -1.2 to 1.2,
+%  i.e. a fixed symmetric scale with white for 0, with the opacity 0 to 1
+%  for |z| of 0.5 to 1.2, i.e. weak edges are transparent, strong edges on
+%  top) and all nodes (parcel centers in the color of their network of the
+%  7 networks of Yeo et al. 2011 with a white edge).
+  zmax = 1.2; zthr = 0.5;
+  [Xn,net,col] = networkNodes; R = readConn(Pconn);
+  if isempty(R) || size(R,1) ~= size(Xn,1), return; end
+  [a,b] = find(triu(abs(R) >= zthr & isfinite(R),1)); z = R(sub2ind(size(R),a,b));
+  [~,o] = sort(abs(z)); a = a(o); b = b(o); z = z(o);
+  n = size(rgb,1); c0 = [0; -18; 18]; rn = max(1.5,2.5 / ropts.res);
+  for ki = 1:size(K,1)
+    an = K(ki,1); ap = setdiff(1:3,an); c = c0; c(an) = K(ki,2);
+    pc = (Xn(:,ap(1)) - c(ap(1))) / ropts.res + (n+1)/2;     % column (first in-plane axis, see renderSlice)
+    pr = n + 1 - ((Xn(:,ap(2)) - c(ap(2))) / ropts.res + (n+1)/2); % row (second axis upwards)
+    T  = reshape(rgb(:,:,ki,:),[n n 3]);
+    for e = 1:numel(z)
+      t  = min(1,abs(z(e)) / zmax); op = min(1,(abs(z(e)) - zthr) / (zmax - zthr));
+      ce = (1 - t) * [1 1 1] + t * ((z(e) > 0) * [1 0.1 0.1] + (z(e) < 0) * [0.1 0.3 1]);
+      T  = drawLine(T,[pr(a(e)) pc(a(e))],[pr(b(e)) pc(b(e))],ce,op);
+    end
+    for p = find(net(:)' > 0), T = drawDisk(T,[pr(p) pc(p)],rn,col(net(p),:)); end
+    rgb(:,:,ki,:) = reshape(T,[n n 1 3]);
+  end
+end
+% =========================================================================
+function [X,net,col] = networkNodes
+%networkNodes. Centers (MNI, mm) of the 100 parcels of the Schaefer2018 
+%  atlas of CAT, their network (7 networks of Yeo et al. 2011, see networks
+%  in cat_io_dcm2bids_pp_rsfmri), and the colors of the 7 networks (Yeo).
+  persistent N
+  if isempty(N)
+    parc = 'Schaefer2018_100Parcels_17Networks_order';
+    V = spm_vol(cat_io_dcm2bids_pp_rsfmri('atlasFile',parc)); Y = round(spm_read_vols(V));
+    [~,net] = cat_io_dcm2bids_pp_rsfmri('networks',parc); X = nan(numel(net),3);
+    for p = 1:numel(net)
+      [i,j,k] = ind2sub(size(Y),find(Y == p));
+      if ~isempty(i), x = V.mat * [mean(i); mean(j); mean(k); 1]; X(p,:) = x(1:3)'; end
+    end
+    col = [120 18 134; 70 130 180; 0 118 14; 196 58 250; 220 248 164; 230 148 34; 205 62 78] / 255;
+    N = struct('X',X,'net',net,'col',col);
+  end
+  X = N.X; net = N.net; col = N.col;
+end
+% =========================================================================
+function R = readConn(P)
+%readConn. Connectivity matrix of the table P (parcel names in the first
+%  row and column, see cat_io_dcm2bids_pp_rsfmri).
+  R = [];
+  try
+    C = cat_io_csv(P,'','',struct('delimiter','\t','convert2double',1)); C = C(2:end,2:end);
+    R = nan(size(C));
+    for i = 1:numel(C), if isnumeric(C{i}) && ~isempty(C{i}), R(i) = double(C{i}(1)); end, end
+  end
+end
+% =========================================================================
+function T = drawLine(T,p,q,c,a)
+%drawLine. Line from p to q ([row column]) in the color c with the opacity
+%  a in the RGB image T.
+  m = ceil(2 * max(abs(q - p))) + 1; t = linspace(0,1,m)';
+  r = round(p(1) + t * (q(1) - p(1))); k = round(p(2) + t * (q(2) - p(2)));
+  ok = r >= 1 & r <= size(T,1) & k >= 1 & k <= size(T,2); r = r(ok); k = k(ok);
+  for ci = 1:3
+    Tc = T(:,:,ci); i = sub2ind(size(Tc),r,k); Tc(i) = (1 - a) * Tc(i) + a * c(ci); T(:,:,ci) = Tc;
+  end
+end
+% =========================================================================
+function T = drawDisk(T,p,r,c)
+%drawDisk. Disk at p ([row column]) with the radius r (pixel) in the color
+%  c with a white edge (1 pixel) in the RGB image T.
+  [kk,rr] = meshgrid(1:size(T,2),1:size(T,1)); d = sqrt((rr - p(1)).^2 + (kk - p(2)).^2);
+  for ci = 1:3
+    Tc = T(:,:,ci); Tc(d <= r + 1) = 1; Tc(d <= r) = c(ci); T(:,:,ci) = Tc;
+  end
+end
+% =========================================================================
+function clim = renderWindow(F)
+%renderWindow. Fixed intensity window of the DTI maps (comparable scans): 
+%  FA 0-1, DEC 0-0.8 (FA weighted directions), MD/AD/RD 0-0.003 mm2/s, 
+%  otherwise empty (percentiles of the scan).
+  switch F.prefix
+    case 'FA',              clim = [0 1];
+    case 'DEC',             clim = [0 0.8];
+    case {'MD','AD','RD'},  clim = [0 0.003];
+    otherwise,              clim = [];
+  end
+end
+% =========================================================================
+function renderLegend(ax,x,y,fs,ovc)
+%renderLegend. Legend of the overlay lines (right aligned at x,y).
   str = sprintf(['original (scanner) planes:  \\color[rgb]{%g %g %g}x=0  ' ...
     '\\color[rgb]{%g %g %g}y=0  \\color[rgb]{%g %g %g}z=0'], ovc'); 
-  if exist('qc','var') && qc, str = [str '  \color[rgb]{1 1 1}|  \color[rgb]{1 0 0}noise (QC)']; end
   text(ax,x,y,str,'Color','w','FontSize',fs,'Interpreter','tex', ...
     'HorizontalAlignment','right','VerticalAlignment','middle');
 end

@@ -2,6 +2,7 @@
   {
     "DeviceSerialNumber":           "000815",
     "InstitutionAbbreviation":      "Site01",
+    "Color":                        "#A82117",
     "InstitutionName":              "Hospital",
     "InstitutionalDepartmentName":  "Neurologie",
     "InstitutionAddress":           "Street,City,Country,Post",
@@ -12,11 +13,22 @@
   {
     "DeviceSerialNumber":           "000816",
     "InstitutionAbbreviation":      "Site02",
+    "Color":                        "",
     "InstitutionName":              "Hospital",
     "InstitutionalDepartmentName":  "Neurologie",
     "InstitutionAddress":           "Street,City,Country,Post",
     "MagneticFieldStrength":        7,
     "Manufacturer":                 "Siemens",
     "ManufacturersModelName":       "7TPlus"
+  },
+  {
+    "Name":                         "color of all scanners of these cities without Color",
+    "Cities":                       ["City","OtherCity"],
+    "Color":                        "#4F8FCC"
+  },
+  {
+    "Name":                         "color of all other scanners",
+    "Cities":                       ["*"],
+    "Color":                        "#58C5B9"
   }
 ]

@@ -13,6 +13,7 @@ function varargout = cat_io_dcm2bids_db(action,varargin)
 %
 %  Actions (see the help of the local functions):
 %    Pdbdir = cat_io_dcm2bids_db('getDBdir',V)
+%    p = cat_io_dcm2bids_db('nameParts',name)
 %    Pjson = cat_io_dcm2bids_db('getDBscanJSONs',Pdir)
 %    V = cat_io_dcm2bids_db('assurePatientDCMfields',V)
 %    id = cat_io_dcm2bids_db('getScanID',V,fnameparts)
@@ -25,7 +26,7 @@ function varargout = cat_io_dcm2bids_db(action,varargin)
 %  See also cat_io_dcm2bids.
 
   switch action
-    case {'getDBdir','getDBscanJSONs','assurePatientDCMfields','getScanID', ...
+    case {'getDBdir','nameParts','getDBscanJSONs','assurePatientDCMfields','getScanID', ...
           'scanKey','getImportIndex','readImportJSON','writeImportJSON', ...
           'checkGzipi'}
       [varargout{1:nargout}] = feval(action,varargin{:});
@@ -36,12 +37,23 @@ end
 % =========================================================================
 function Pdbdir = getDBdir(V)
 %getDBdir. Scan directory in the database (relative to the database), with 
-%  the scan date in the session directory if available.
-  ses = sprintf('ses-%s', V.StudyID); 
+%  the scan date in the session directory if available. Wildcards and path
+%  separators of the fields are replaced by _ (e.g. *** of anonymized data).
+  fn  = @(x) regexprep(char(string(x)),'[*?\[\]/\\:<>|"]','_'); 
+  ses = sprintf('ses-%s', fn(V.StudyID)); 
   if ~isnat(datetime(V.ScanDate)), ses = sprintf('%s-%s', ses, datetime( V.ScanDate , 'Format','yyyyMMdd')); end
   Pdbdir = fullfile( ...
-    sprintf('sub-%s-%s',   V.DeviceSerialNumber, V.PatientID), ses, ...
-    sprintf('snr-%04d-%s', V.SeriesNumber, V.ProtocolName)); 
+    sprintf('sub-%s-%s',   fn(V.DeviceSerialNumber), fn(V.PatientID)), ses, ...
+    sprintf('snr-%04d-%s', V.SeriesNumber, fn(V.ProtocolName))); 
+end
+% =========================================================================
+function p = nameParts(name)
+%nameParts. Parts of the name of a database file (folder=protocol=time=
+%  series of dcm2niix, without extension), also for a protocol name with 
+%  the separator (e.g. EPI_PE=AP), i.e. the time and series are the last 
+%  parts.
+  p = strsplit(name,'=');
+  if numel(p) > 4, p = [p(1) {strjoin(p(2:end-2),'=')} p(end-1:end)]; end
 end
 % =========================================================================
 function Pjson = getDBscanJSONs(Pdir)
@@ -70,12 +82,14 @@ function V = assurePatientDCMfields(V)
   
   %% fields that are required later but may be missing (e.g. in case of 
   %  already anonymized DICOMs)
-  % subject ID: use the name or the study UID if no PatientID is available,
-  % to avoid that different subjects get the same ID
-  if ~isfield(V,'PatientID') || isempty(V.PatientID)
-    if isfield(V,'PatientName') && ~isempty(V.PatientName)
+  % subject ID: use the name or the study UID if no PatientID is available
+  % (or without letters and digits, e.g. *** of anonymized data), to avoid
+  % that different subjects get the same ID
+  alnum = @(fn) isfield(V,fn) && ~isempty(regexprep(char(string(V.(fn))),'[^a-zA-Z0-9]',''));
+  if ~alnum('PatientID')
+    if alnum('PatientName')
       V.PatientID = regexprep(char(V.PatientName),'[^a-zA-Z0-9]','');
-    elseif isfield(V,'StudyInstanceUID') && ~isempty(V.StudyInstanceUID)
+    elseif alnum('StudyInstanceUID')
       uid = regexprep(char(V.StudyInstanceUID),'[^0-9]',''); 
       V.PatientID = ['UID' uid(max(1,end-9):end)];
     else

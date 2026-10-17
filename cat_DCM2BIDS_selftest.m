@@ -34,10 +34,15 @@ function [ok,res] = cat_DCM2BIDS_selftest(Pdata,Pout,tests,levels)
 %                          relative paths, and dcm2niix options
 %            'inputs'    - split and copied series, flat DICOM folder,
 %                          protocol tables, output 0, and UTF-8 paths
+%            'phenotypic'- phenotypic data tables (matching to the sessions,
+%                          sessions files, conflicts, key columns by number,
+%                          no names in BIDS, persistence, corrected tables)
 %            'export'    - anonymized DICOM export (zip files, tables,
 %                          reimport, repeated run, protocol scans of a
 %                          JSON-only import, cleaning, mosaic defacing)
-%            'pplevels'  - preprocessing levels (time and accuracy)
+%                          and the anonymization level 2 (BIDS labels,
+%                          no personal data, DICOM export and reimport)
+%            'pplevels'  - preprocessing levels (time and accuracy, coregistration, DTI mask)
 %  levels .. preprocessing levels of 'pplevels' (default: 1:0.5:4), where
 %            level 1 is the reference (its results are kept in Pout and
 %            only processed once)
@@ -53,7 +58,7 @@ function [ok,res] = cat_DCM2BIDS_selftest(Pdata,Pout,tests,levels)
     Pdata = spm_select(1,'dir','Select the DZPG pilot data directory (with DCM and protocols)');
   end
   if ~exist('Pout','var')   || isempty(Pout),   Pout   = fullfile(tempdir,'cat_DCM2BIDS_selftest'); end
-  if ~exist('tests','var')  || isempty(tests),  tests  = {'import','selection','special','inputs','export','pplevels'}; end
+  if ~exist('tests','var')  || isempty(tests),  tests  = {'import','selection','special','inputs','phenotypic','export','pplevels'}; end
   if ~exist('levels','var') || isempty(levels), levels = 1:0.5:4; end
   tests = cellstr(tests);
 
@@ -62,7 +67,7 @@ function [ok,res] = cat_DCM2BIDS_selftest(Pdata,Pout,tests,levels)
   if any(strcmp(tests,'import')) || (any(ismember(tests,{'selection','special'})) && ~exist(E.PL0,'file'))
     res = [res runGroup('import',@testImport,E)];
   end
-  for g = {'selection','special','inputs','export'}
+  for g = {'selection','special','inputs','phenotypic','export'}
     if any(strcmp(tests,g{1}))
       res = [res runGroup(g{1},str2func(['test' upper(g{1}(1)) g{1}(2:end)]),E)]; %#ok<AGROW>
     end
@@ -128,7 +133,7 @@ function E = setup(Pdata,Pout)
   % runs of the import tests
   E.T   = fullfile(Pout,'run');
   E.DB  = fullfile(E.T,'study','catDCM2BIDSdb');
-  E.B   = fullfile(E.T,'study','BIDS');
+  E.B   = fullfile(E.T,'study','BIDS-pseudonymized'); % BIDS directory of the anonymization level 1
   E.PL0 = fullfile(Pout,'L0.mat');                           % BIDS listing of the import
 
   % fake dcm2niix (logs its calls)
@@ -162,6 +167,48 @@ function R = testImport(E)
     ~exist(fullfile(E.DB,'catDCM2BIDSimportpath'),'dir') && isempty(dir(fullfile(E.DB,'catDCM2BIDStmp*'))) && ...
     exist(I.DICOMdirectory,'dir') > 0, 'info',sprintf('%0.0f s, %d BIDS files, %d scans',t,numel(L0),numel(snr)));
 
+  % report figure of the report tables of the import for all designs (see
+  % cat_io_dcm2bids_reportfig, the default): one PDF per design with the
+  % overview and one page per site
+  Prep = cat_vol_findfiles(fullfile(E.T,'study'),'*-report',struct('dirs',1,'depth',0)); ok = false; info = 'no report tables';
+  if ~isempty(Prep)
+    Ptab = cat_vol_findfiles(fullfile(Prep{1},'tables'),'*',struct('dirs',1,'depth',0));
+    def  = cat_io_dcm2bids_defaults; job = struct('opts',def.opts,'subdir','study', ...
+      'BIDSdir',regexprep(spm_file(Prep{1},'filename'),'-report$',''),'BIDSsubdir',spm_file(Ptab{1},'filename'));
+    T = readcell(fullfile(Ptab{1},['sessions.' def.opts.tableformat]),'FileType','text');
+    s = T(2:end,strcmp(T(1,:),'site')); s = s(cellfun(@(x) (ischar(x) && ~isempty(x)) || isnumeric(x),s));
+    nsite = numel(unique(cellfun(@num2str,s,'UniformOutput',false))); np = 1 + nsite*(nsite > 1);
+    designs = cellstr(def.opts.reportfig.design); npg = zeros(1,numel(designs)); tic;
+    evalc('Ppdf = cat_io_dcm2bids_reportfig(''writeReportFigure'',fullfile(E.T,''study''),job);');
+    for di = 1:min(numel(designs),numel(Ppdf))
+      if exist(Ppdf{di},'file'), npg(di) = numel(regexp(fileread(Ppdf{di}),'/Type\s*/Page[^s]')); end
+    end
+    ok   = all(npg == np);
+    info = sprintf('%0.0f s, pages %s of %d (%s)',toc,mat2str(npg),np,strjoin(designs,', '));
+  end
+  R(end+1) = struct('name','report-figure','ok',ok,'info',info);
+
+  % colors of the sites in the project table with the site dictionary (see
+  % siteColors in cat_io_dcm2bids_protocols): report tables of the import
+  % again with the dictionary, i.e. the colors of the cities of the scanners
+  % of the site registry (the import uses no dictionary), with a color for
+  % all sites ("*" entry of the dictionary), different colors (brightness
+  % of sites with the same color), and a color of the dictionary
+  ok = false; info = 'no report tables';
+  if ~isempty(Prep)
+    jobc = job; jobc.dicts = E.dicts; evalc('cat_io_dcm2bids_report(''writeReportTables'',fullfile(E.T,''study''),jobc);'); %#ok<NASGU>
+    Q  = readcell(fullfile(Ptab{1},['project.' def.opts.tableformat]),'FileType','text');
+    qs = cellfun(@num2str,Q(2:end,strcmp(Q(1,:),'site')),'UniformOutput',false); st = ~strcmp(qs,'all');
+    qc = cellfun(@num2str,Q(2:end,strcmp(Q(1,:),'color')),'UniformOutput',false);
+    J  = cat_io_json(E.dicts.Pcenterdict{1}); if isstruct(J), J = num2cell(J); end
+    dc = cellfun(@(e) upper(char(string(e.Color))),J(cellfun(@(e) isfield(e,'Color'),J)),'UniformOutput',false);
+    hex  = ~cellfun('isempty',regexp(qc,'^#[0-9A-F]{6}$','once'));
+    ok   = any(st) && all(hex(st)) && numel(unique(qc(st))) == nnz(st) && any(ismember(qc(st),dc));
+    info = sprintf('%d of %d sites with color (%d of the dictionary), %d different colors',nnz(hex & st),nnz(st), ...
+      nnz(ismember(qc(st),dc)),numel(unique(qc(st))));
+  end
+  R(end+1) = struct('name','site-colors','ok',ok,'info',info);
+
   % (2) export of the whole database (no conversion)
   resetBIDS(E.T); job = E.job0; job.data = {E.DB}; job.opts.Pdcm2nii = E.fake; tic; evalc('cat_io_dcm2bids(job);'); t = toc;
   L1 = listing(E.B);
@@ -176,7 +223,7 @@ function R = testImport(E)
 
   % (4) JSON-only output (1) in a new output directory, then the images (2)
   T2 = fullfile(E.Pout,'run1'); fresh(T2);
-  DB2 = fullfile(T2,'study','catDCM2BIDSdb'); B2 = fullfile(T2,'study','BIDS');
+  DB2 = fullfile(T2,'study','catDCM2BIDSdb'); B2 = fullfile(T2,'study','BIDS-pseudonymized');
   job = E.job0; job.outdir = {T2}; job.data = E.dcm; job.opts.output = 1; tic; evalc('cat_io_dcm2bids(job);'); t1 = toc;
   nimg1 = numel(cat_vol_findfiles(DB2,'*.nii*')); Lj = listing(B2);
   job.opts.output = 2; tic; evalc('cat_io_dcm2bids(job);'); t2 = toc; L3 = listing(B2);
@@ -190,7 +237,7 @@ function R = testSelection(E)
 %  directories (subsets of the import listing), rerun, and expected errors.
   R = struct('name',{},'ok',{},'info',{}); cleanLog(E);
   load(E.PL0,'L0');
-  [sA,sB,sesA] = dbSubjects(E); bA = bidsSub(sA); bB = bidsSub(sB);
+  [sA,sB,sesA] = dbSubjects(E); bA = bidsSub(sA,E.DB); bB = bidsSub(sB,E.DB);
   t1w = dir(fullfile(E.DB,sA,sesA{1},'snr-*T1w*')); t1w = fullfile(t1w(1).folder,t1w(1).name);
   pat = @(s) [bA '/' bidsSes(s)]; anat = [pat(sesA{1}) '/(anat/.*_T1w|catDCM2BIDSaffine)'];
   tests = {
@@ -239,15 +286,27 @@ function R = testSelection(E)
   movefile([Pim{1} '.bak'],Pim{1}); cat_io_json(Pi{1},I0);
   R(end+1) = struct('name','missing-dicom','ok',strcmp(id,'none') && contains(txt,'DICOM directory not available') && ...
     isempty(scans(listing(E.B))),'info',id);
+
+  % the same directory for the input and the output, and an input within the
+  % output directory (not the database): error before any output
+  T3 = fullfile(E.Pout,'inout'); fresh(T3); mkdir(T3);
+  job = E.job0; job.outdir = {T3}; job.data = {T3};
+  try cat_io_dcm2bids(job); id = 'none'; catch e, id = e.identifier; end
+  job = E.job0; job.data = {E.B};
+  try cat_io_dcm2bids(job); id2 = 'none'; catch e, id2 = e.identifier; end
+  R(end+1) = struct('name','input-output','ok',strcmp(id,'cat_io_dcm2bids:inputOutput') && ...
+    strcmp(id2,'cat_io_dcm2bids:inputOutput') && ~exist(fullfile(T3,'study'),'dir'),'info',sprintf('%s, %s',id,id2));
   R(end+1) = struct('name','no-conversion','ok',~exist(E.flog,'file'),'info','fake dcm2niix not called');
 end
 % =========================================================================
 function R = testSpecial(E)
 %testSpecial. Stored settings of a previous version, two copies of a series
-%  in the database, symbolic links, relative paths, and dcm2niix options.
+%  in the database, symbolic links, relative paths, dcm2niix options, site
+%  and session labels (synthetic databases), site dictionaries with mixed
+%  fields, and the minimum age of the participants file.
   R = struct('name',{},'ok',{},'info',{}); cleanLog(E);
   load(E.PL0,'L0'); Lb = names(scans(L0));
-  [sA,~,sesA] = dbSubjects(E); bA = bidsSub(sA);
+  [sA,~,sesA] = dbSubjects(E); bA = bidsSub(sA,E.DB);
   t1w = dir(fullfile(E.DB,sA,sesA{1},'snr-*T1w*')); t1w = fullfile(t1w(1).folder,t1w(1).name);
   jsonsDB = @(d) numel(dir(fullfile(d,'*=*=*=*.json'))) - numel(dir(fullfile(d,'catDCM2BIDS*.json')));
   sesLb = sel(Lb,[bA '/' bidsSes(sesA{1})]);
@@ -312,12 +371,99 @@ function R = testSpecial(E)
   cd(old); Lt = names(scans(listing(E.B)));
   R(end+1) = struct('name','relative-outdir','ok',strcmp(id,'none') && isequal(Lt,sel(Lb,bA)),'info',sprintf('%s, %d files',id,numel(Lt)));
   R(end+1) = struct('name','no-conversion','ok',~exist(E.flog,'file'),'info','fake dcm2niix not called');
+
+  % site registry without site dictionary (synthetic database): the same 
+  % abbreviation (Heidelberg and Heidenheim, two Siemens scanners of Jena),
+  % another manufacturer and field strength, no address, and in a second 
+  % run no manufacturer and a new scanner of a registered abbreviation 
+  % (Heilbronn), with unchanged abbreviations of the first run
+  Ds = fullfile(E.Pout,'sites','catDCM2BIDSdb'); fresh(fileparts(Ds));
+  sc = {'1001','Str,Heidelberg,BW,DE',3,'SIEMENS'; '1002','Str,Heidenheim,BW,DE',3,'Siemens Healthineers'; ...
+        '1003','Str,Jena,TH,DE',3,'SIEMENS'; '1004','Str,Jena,TH,DE',3,'SIEMENS'; ...
+        '1005','Str,Jena,TH,DE',3,'Philips Medical Systems'; '1006','Str,Jena,TH,DE',1.5,'SIEMENS'; ...
+        '1007','',3,'GE MEDICAL SYSTEMS'; '1008','Str,Magdeburg,ST,DE',3,''; '1009','Str,Heilbronn,BW,DE',3,'SIEMENS'};
+  for k = 1:7, fakeScan(Ds,sc(k,:)); end
+  o = struct('sitelength',3,'sitevendor',2); S1 = {}; S2 = {}; %#ok<NASGU> (evalc)
+  evalc('S1 = cat_io_dcm2bids_protocols(''siteRegistry'',Ds,o);');
+  for k = 8:9, fakeScan(Ds,sc(k,:)); end
+  evalc('S2 = cat_io_dcm2bids_protocols(''siteRegistry'',Ds,o);');
+  e1 = {'HeASI30T','HeBSI30T','JeASI30T','JeBSI30T','JenPH30T','JenSI15T','UnkGE30T'}; e2 = [e1 {'MagXX30T','HeCSI30T'}];
+  R(end+1) = struct('name','site-registry','ok',isequal(S1(:,2)',e1) && isequal(S2(:,2)',e2) && isequal(S2(:,1)',sc(:,1)'), ...
+    'info',sprintf('run 1: %s; run 2: %s',strjoin(S1(:,2)',' '),strjoin(S2(:,2)',' ')));
+
+  % site dictionary with different fields of the entries (cell array of 
+  % jsondecode), a numeric serial number, an entry without serial number, 
+  % and a color entry of cities (skipped, see siteColors)
+  Pd = fullfile(fileparts(Ds),'sites_mixed.json'); Sd = {}; %#ok<NASGU> (evalc)
+  cat_io_dcm2bids_helper('writeText',Pd,['[{"DeviceSerialNumber":"1001","InstitutionAbbreviation":"Abc","InstitutionName":"X"},' ...
+    '{"InstitutionAbbreviation":"Def","DeviceSerialNumber":2002},{"InstitutionName":"no serial"},' ...
+    '{"Name":"site","Cities":["Jena","Halle"],"Color":"#A82117"}]']);
+  evalc('Sd = cat_io_dcm2bids_protocols(''getSites'',{Pd});');
+  R(end+1) = struct('name','site-dictionary-mixed','ok',isequal(Sd,{'1001','Abc';'2002','Def'}), ...
+    'info',sprintf('%d entries: %s',size(Sd,1),strjoin(strcat(Sd(:,1),'=',Sd(:,2))',' ')));
+
+  % minimum age of the participants file over runs (e.g. a later run with 
+  % only a follow-up session)
+  Pp = fullfile(E.Pout,'participants','participants.tsv'); fresh(fileparts(Pp));
+  ages = [45.3 40.1 50.2 NaN]; a = nan(size(ages));
+  for k = 1:numel(ages)
+    cat_io_dcm2bids_bids('writeParticipantTSV',struct('sub','sub-01','V',struct('PatientSex','F','PatientAge',ages(k)), ...
+      'extra',[]),Pp,1);
+    T = cat_io_csv(Pp,'','',struct('delimiter','\t','convert2double',-2)); a(k) = T{2,3};
+  end
+  R(end+1) = struct('name','participants-min-age','ok',isequal(a,[45.3 40.1 40.1 40.1]),'info',sprintf('ages %s',mat2str(a)));
+
+  % session labels (synthetic database): two studies of a day, a study two
+  % days later, and a study over midnight (two directories) by the 
+  % anonymization level (0-2, weeks), and the labels of the import of the 
+  % anonymized DICOM export (StudyID with the session label, the dates of 
+  % the labels, and the times)
+  Dl = fullfile(E.Pout,'sessions'); fresh(Dl);
+  S = {'ses-1-20250101','20250101120000'; 'ses-2-20250101','20250101150000'; 'ses-3-20250103','20250103090000'; ...
+       'ses-4-20250105','20250105235000'; 'ses-4-20250106','20250105235000'};
+  T = {'ses-w0000-19000101','19000101120000'; 'ses-w0000b-19000101','19000101150000'; 'ses-w0000c-19000101','19000101090000'; ...
+       'ses-w0001-19000108','19000108235000'; 'ses-w0001-19000109','19000108235000'};
+  for k = 1:5, fakeSession(Dl,'sub-A-1',S(k,:)); fakeSession(Dl,'sub-B-1',T(k,:)); end
+  off = days(datetime(1900,1,1) - datetime(2025,1,1)); o = struct('BIDSsep','','sesunit','w'); L = cell(4,5);
+  for k = 1:5
+    for lev = 0:2
+      o.anonymize = lev; L{lev+1,k} = cat_io_dcm2bids_bids('sessionLabel',fullfile(Dl,'sub-A-1',S{k,1}),S{k,2},o,off);
+    end
+    o.anonymize = 1; L{4,k} = cat_io_dcm2bids_bids('sessionLabel',fullfile(Dl,'sub-B-1',T{k,1}),T{k,2},o,0);
+  end
+  e = {'ses-20250101','ses-20250101b','ses-20250103','ses-20250105','ses-20250105'; ...
+       'ses-w0000','ses-w0000b','ses-w0000c','ses-w0001','ses-w0001'};
+  % sessions without date (time only, a study in two directories) and with 
+  % the date 1970-01-01 (placeholder of anonymized data, no shifted date)
+  C = {'ses-1116','134431'; 'ses-1116-20180925','134431'; 'ses-1117','150000'; 'ses-1-19700101','19700101120000'};
+  for k = 1:3, fakeSession(Dl,'sub-C-1',C(k,:)); end, fakeSession(Dl,'sub-D-1',C(4,:));
+  o.anonymize = 1; Lc = cell(1,4);
+  for k = 1:4, Lc{k} = cat_io_dcm2bids_bids('sessionLabel',fullfile(Dl,['sub-' char('C' + (k == 4)) '-1'],C{k,1}),C{k,2},o,0); end
+  ec = {'ses-NA','ses-NA','ses-NAb','ses-19700101'};
+  R(end+1) = struct('name','session-labels','ok',numel(unique(L(1,:))) == 4 && isequal(L(2,:),e(1,:)) && ...
+    isequal(L(3,:),e(2,:)) && isequal(L(4,:),e(2,:)) && isequal(Lc,ec),'info',sprintf('level 1: %s; level 2: %s; import: %s; %s', ...
+    strjoin(L(2,:),' '),strjoin(L(3,:),' '),strjoin(L(4,:),' '),strjoin(Lc,' ')));
+end
+% =========================================================================
+function fakeSession(D,sub,s)
+%fakeSession. Scan directory with an empty sidecar of a synthetic database
+%  D with the subject sub and the session directory and time stamp s.
+  P = fullfile(D,sub,s{1},'snr-0001-t1'); mkdir(P); fclose(fopen(fullfile(P,['f=t1=' s{2} '=1.json']),'w'));
+end
+% =========================================================================
+function fakeScan(Ds,sc)
+%fakeScan. Sidecar of a scan of a synthetic database Ds with the serial 
+%  number, address, field strength, and manufacturer sc.
+  P = fullfile(Ds,['sub-' sc{1} '-P1'],'ses-1-20250101','snr-0001-t1'); mkdir(P);
+  cat_io_json(fullfile(P,'f=t1=20250101120000=1.json'),struct('DeviceSerialNumber',sc{1},'InstitutionAddress',sc{2}, ...
+    'MagneticFieldStrength',sc{3},'Manufacturer',sc{4},'PatientID','P1','StudyID','1','SeriesNumber',1, ...
+    'AcquisitionDateTime','2025-01-01T12:00:00'));
 end
 % =========================================================================
 function R = testInputs(E)
 %testInputs. Split and copied series, flat DICOM folder with dcm2niix name
 %  conflicts (with the protocol tables), output 0, changed dcm2niix options
-%  (derived ADC series), and UTF-8 paths.
+%  (derived ADC series), UTF-8 paths, and a BIDS dataset of DataLad.
   R = struct('name',{},'ok',{},'info',{});
   In = fullfile(E.Pout,'inputs'); fresh(In);
   mkdir(fullfile(In,'split','p1')); mkdir(fullfile(In,'split','p2'));
@@ -373,15 +519,15 @@ function R = testInputs(E)
     'info',sprintf('variants %d -> %d, VoxelSize n/a %d -> %d',size(Tp1,1)-1,size(Tp2,1)-1,nnz(na1),nnz(na2)));
   Pj = Pv2(contains(Pv2,[filesep 'anat' filesep])); J = cat_io_json(Pj{1});
   R(end+1) = struct('name','protocol-json-image','ok',all(isfield(J,{'VoxelSize','NumberOfSlices','NumberOfVolumes'})),'info','');
-  B8 = listing(fullfile(T8,'study','BIDS')); bj = B8(contains(B8,'.json') & contains(B8,'/anat/') & ~contains(B8,'derivatives'));
-  J  = cat_io_json(fullfile(T8,'study','BIDS',regexprep(bj{1},'^\S+\s+\./','')));
+  B8 = listing(fullfile(T8,'study','BIDS-pseudonymized')); bj = B8(contains(B8,'.json') & contains(B8,'/anat/') & ~contains(B8,'derivatives'));
+  J  = cat_io_json(fullfile(T8,'study','BIDS-pseudonymized',regexprep(bj{1},'^\S+\s+\./','')));
   R(end+1) = struct('name','bids-json-imagefields','ok',isfield(J,'Dimensions') && isfield(J,'VoxelSize'),'info','');
 
   % (3) output 0 (overview only)
   T9 = fullfile(E.Pout,'run9'); fresh(T9); job = E.job0; job.outdir = {T9}; job.data = {fullfile(In,'copy')}; job.opts.output = 0;
   try evalc('cat_io_dcm2bids(job);'); id = 'none'; catch e, id = e.message; end
   R(end+1) = struct('name','output0','ok',strcmp(id,'none') && exist(fullfile(T9,'study','catDCM2BIDSdb-tables','protocols.csv'),'file') && ...
-    ~exist(fullfile(T9,'study','BIDS','BIDS'),'dir'),'info',id);
+    ~exist(fullfile(T9,'study','BIDS-pseudonymized','BIDS'),'dir'),'info',id);
 
   % (4) dcm2niix options changed: import with -i n (ADC kept), then -i y and
   %     output 2 (ADC ignored as derived image, directory read again)
@@ -389,7 +535,7 @@ function R = testInputs(E)
   job.opts.output = 1; job.opts.ignoreScouts = 0; evalc('cat_io_dcm2bids(job);');
   n0 = numel(cat_vol_findfiles(fullfile(T10,'study','catDCM2BIDSdb'),'catDCM2BIDSimport_*.json'));
   job.opts.ignoreScouts = 1; job.opts.output = 2; txt = evalc('cat_io_dcm2bids(job);');
-  Lb = listing(fullfile(T10,'study','BIDS'));
+  Lb = listing(fullfile(T10,'study','BIDS-pseudonymized'));
   R(end+1) = struct('name','options-changed','ok',n0==1 && ~contains(txt,'no image') && contains(txt,'0 directories imported before') && ...
     ~any(contains(Lb,'.nii')),'info',sprintf('ADC sidecars with -i n: %d, BIDS images: %d',n0,nnz(contains(Lb,'.nii'))));
   job.data = {fullfile(T10,'study','catDCM2BIDSdb')}; txt = evalc('cat_io_dcm2bids(job);');
@@ -406,12 +552,165 @@ function R = testInputs(E)
   % (6) no temporary directories left
   tl = [dir(fullfile(T7,'study','catDCM2BIDSdb','catDCM2BIDStmp*')); dir(fullfile(T8,'study','catDCM2BIDSdb','catDCM2BIDStmp*'))];
   R(end+1) = struct('name','no-tmp-left','ok',isempty(tl),'info','');
+
+  % (7) BIDS dataset of DataLad (simulated): an annexed image (link to the
+  % read-only content in .git/annex), an image without content (link 
+  % without file), and the output within a DataLad dataset: the available 
+  % image is imported as writable copy, the missing image is reported (no
+  % error of the session without images), and the output gets a warning
+  Dl = fullfile(E.Pout,'datalad'); fresh(Dl); ds = fullfile(Dl,'ds'); 
+  Pt = cat_vol_findfiles(fullfile(E.B,'BIDS'),'sub-*_T1w.nii.gz'); Pt = Pt(~contains(Pt,'derivatives')); 
+  K  = fullfile(ds,'.git','annex','objects','aa','bb','KEY','KEY'); mkdir(fileparts(K)); copyfile(Pt{1},K); fileattrib(K,'-w','a');
+  for si = 1:2
+    Pa = fullfile(ds,sprintf('sub-%02d',si),'anat'); mkdir(Pa); 
+    copyfile(spm_file(spm_file(Pt{1},'ext',''),'ext','.json'),fullfile(Pa,sprintf('sub-%02d_T1w.json',si)));
+  end
+  system(sprintf('ln -s ../../.git/annex/objects/aa/bb/KEY/KEY "%s"',fullfile(ds,'sub-01','anat','sub-01_T1w.nii.gz')));
+  system(sprintf('ln -s ../../.git/annex/objects/cc/dd/MISSING/MISSING "%s"',fullfile(ds,'sub-02','anat','sub-02_T1w.nii.gz')));
+  cat_io_dcm2bids_helper('writeText',fullfile(ds,'dataset_description.json'),'{"Name":"DataLad test","BIDSVersion":"1.9.0"}');
+  mkdir(fullfile(ds,'.datalad')); mkdir(fullfile(Dl,'out','.datalad')); 
+  job = E.job0; job.outdir = {fullfile(Dl,'out')}; job.data = {ds}; 
+  try out = evalc('cat_io_dcm2bids(job);'); id = 'none'; catch e, out = ''; id = e.message; end
+  Pdb = cat_vol_findfiles(fullfile(Dl,'out','study','catDCM2BIDSdb'),'ds=*.nii*'); wr = false;
+  if isscalar(Pdb), [~,a] = fileattrib(Pdb{1}); wr = a.UserWrite == 1; end
+  Pb = cat_vol_findfiles(fullfile(Dl,'out','study','BIDS-pseudonymized','BIDS'),'sub-*_T1w.nii.gz');
+  fileattrib(K,'+w','a'); 
+  R(end+1) = struct('name','datalad-bids','ok',strcmp(id,'none') && isscalar(Pdb) && wr && isscalar(Pb) && ...
+    contains(out,'datalad get') && contains(out,'DataLad dataset'), ...
+    'info',sprintf('%s, database copies %d (writable %d), BIDS images %d, hints: %d %d',id,numel(Pdb),wr,numel(Pb), ...
+    contains(out,'datalad get'),contains(out,'DataLad dataset')));
+end
+% =========================================================================
+function R = testPhenotypic(E)
+%testPhenotypic. Phenotypic data tables (see cat_io_dcm2bids_phenotypic) of
+%  the JE7 sessions (JSON-only output): session rows by name (German column
+%  names, other order than the DICOM name), birth date (dd.mm.yyyy), and 
+%  scan date with their data in the sessions files (also of a reserved 
+%  column name), subject rows with an unknown name and a conflict, key 
+%  columns by number with other names, no names and birth dates in the BIDS
+%  directory, the data of the database without these tables, and a 
+%  corrected table. The tables are created from the imported data.
+  R  = struct('name',{},'ok',{},'info',{});
+  T  = fullfile(E.Pout,'phenotypic'); fresh(T); mkdir(T);
+  DB = fullfile(T,'study','catDCM2BIDSdb'); B = fullfile(T,'study','BIDS-pseudonymized','BIDS');
+  job = E.job0; job.outdir = {T}; job.data = E.dcm; job.opts.output = 1;
+  evalc('cat_io_dcm2bids(job);'); job.data = {DB};
+
+  % sessions of the database (DICOM name, PatientID, birth date, scan date)
+  S = struct('pn',{},'pid',{},'birth',{},'date',{});
+  D = dir(fullfile(DB,'sub-*','ses-*')); D = D([D.isdir]);
+  for di = 1:numel(D)
+    P = cat_vol_findfiles(fullfile(D(di).folder,D(di).name),'*=*=*=*.json'); 
+    P = P(~startsWith(spm_file(P,'filename'),'catDCM2BIDS'));
+    J = cat_io_dcm2bids_db('assurePatientDCMfields',cat_io_json(P{1}));
+    S(end+1) = struct('pn',char(J.PatientName),'pid',char(J.PatientID),'birth',char(J.PatientBirthDate), ...
+      'date',char(datetime(J.ScanDate,'Format','yyyy-MM-dd'))); %#ok<AGROW>
+  end
+  n = arrayfun(@(s) nnz(strcmp({S.pid},s.pid)),S);
+  [~,o] = sortrows([-n(:) posixtime(datetime({S.date},'InputFormat','yyyy-MM-dd'))']);
+  S = S(o); % sessions of the subject with two sessions first (by date)
+  given  = @(s) strjoin(subsref(strsplit(s.pn,'^'),struct('type','()','subs',{{2:numel(strsplit(s.pn,'^'))}})),' ');
+  family = @(s) subsref(strsplit(s.pn,'^'),struct('type','{}','subs',{{1}}));
+  birth  = @(s) germanDate(s.birth);
+  Pp = fullfile(T,'tables'); mkdir(Pp);
+
+  % (1) session rows (name, birth date, scan date) and subject rows (name):
+  % the subject with one session, the subject with two sessions, an unknown
+  % name, and a conflict (the first session of the subject with two sessions
+  % by a subject row and a visit)
+  C1 = {'Vorname','Nachname','Geburtsdatum','Scan date','MMSE','Group','age'};
+  for k = 1:numel(S)
+    C1(end+1,:) = {given(S(k)),family(S(k)),birth(S(k)),S(k).date,sprintf('%d',20+k),sprintf('g%d',k),sprintf('%d',60+k)}; %#ok<AGROW>
+  end
+  C2 = {'Name','Visit','Diagnosis'; [given(S(3)) ' ' family(S(3))],'','dx3'; [given(S(1)) ' ' family(S(1))],'','dx1'; ...
+        'Erika Musterfrau','','dx0'; [family(S(1)) ' ' given(S(1))],'1','dx9'};
+  P1 = fullfile(Pp,'visits.csv'); P2 = fullfile(Pp,'diagnoses.tsv');
+  cat_io_csv(P1,C1); cat_io_csv(P2,C2,'','',struct('delimiter','\t'));
+  job1 = job; job1.dataset.phenotypic = {P1; P2}; evalc('cat_io_dcm2bids(job1);');
+  [V,ok1] = sessionValues(B,S,{'MMSE','Group','age_user','Diagnosis'});
+  exp1 = arrayfun(@(k) {sprintf('%d',20+k),sprintf('g%d',k),sprintf('%d',60+k)},1:numel(S),'UniformOutput',false);
+  st1 = reportStatus(fullfile(T,'study','catDCM2BIDSdb-tables','phenotypic_visits.csv'));
+  st2 = reportStatus(fullfile(T,'study','catDCM2BIDSdb-tables','phenotypic_diagnoses.csv'));
+  okv = ok1 && isequal(cellfun(@(v) v(1:3),V,'UniformOutput',false),exp1) && ...
+    isequal(cellfun(@(v) v{4},V,'UniformOutput',false),{'n/a','dx1','dx3'});
+  R(end+1) = struct('name','session-rows','ok',okv && all(startsWith(st1,'assigned (1 sessions)')), ...
+    'info',sprintf('%d sessions, values in the sessions files: %d, visits: %s',numel(S),okv,strjoin(unique(st1),'; ')));
+  R(end+1) = struct('name','subject-rows','ok',strcmp(st2{1},'assigned (1 sessions)') && ...
+    startsWith(st2{2},'conflict (1 of 2') && strcmp(st2{3},'no session') && startsWith(st2{4},'conflict'), ...
+    'info',strjoin(st2,'; '));
+
+  % (2) key columns by number with other names (name, name, scan date as
+  % yyyymmdd): the data of the other tables are kept (database)
+  C3 = {'A','B','C','score'};
+  for k = 1:numel(S), C3(end+1,:) = {family(S(k)),given(S(k)),strrep(S(k).date,'-',''),sprintf('%d',k)}; end %#ok<AGROW>
+  P3 = fullfile(Pp,'scores.csv'); cat_io_csv(P3,C3);
+  job3 = job; job3.dataset.phenotypic = {P3}; job3.dataset.phenotypickeys = 1:3; evalc('cat_io_dcm2bids(job3);');
+  V3 = sessionValues(B,S,{'score','MMSE'});
+  R(end+1) = struct('name','keys-by-number','ok',isequal(cellfun(@(v) v{1},V3,'UniformOutput',false),arrayfun(@(k) sprintf('%d',k),1:numel(S),'UniformOutput',false)) && ...
+    isequal(cellfun(@(v) v{2},V3,'UniformOutput',false),cellfun(@(e) e{1},exp1,'UniformOutput',false)), ...
+    'info',sprintf('score: %s, MMSE kept: %s',strjoin(cellfun(@(v) v{1},V3,'UniformOutput',false),' '),strjoin(cellfun(@(v) v{2},V3,'UniformOutput',false),' ')));
+
+  % (3) no names and birth dates in the BIDS directory
+  txt = lower(strjoin(cellfun(@fileread,[cat_vol_findfiles(B,'*.tsv'); cat_vol_findfiles(B,'*.json')],'UniformOutput',false),' '));
+  w   = unique(regexp(lower(strjoin({S.pn},' ')),'[a-z]{3,}','match'));
+  bd  = unique([{S.birth} cellfun(birth,num2cell(S),'UniformOutput',false)]);
+  found = [w(cellfun(@(x) ~isempty(regexp(txt,['(?<![a-z])' x '(?![a-z])'],'once')),w)) bd(cellfun(@(x) contains(txt,x),bd))];
+  R(end+1) = struct('name','no-names-in-BIDS','ok',isempty(found),'info',sprintf('%d name words and birth dates, %d found',numel(w) + numel(bd),numel(found)));
+
+  % (4) corrected table: new value of the first session
+  C1{2,5} = '99'; cat_io_csv(P1,C1);
+  job4 = job; job4.dataset.phenotypic = {P1}; evalc('cat_io_dcm2bids(job4);');
+  V4 = sessionValues(B,S,{'MMSE','Diagnosis','score'});
+  R(end+1) = struct('name','corrected-table','ok',strcmp(V4{1}{1},'99') && isequal(cellfun(@(v) v{1},V4(2:end),'UniformOutput',false), ...
+    cellfun(@(e) e{1},exp1(2:end),'UniformOutput',false)) && strcmp(V4{2}{2},'dx1') && strcmp(V4{3}{3},'3'), ...
+    'info',sprintf('MMSE: %s, diagnoses and scores kept: %d',strjoin(cellfun(@(v) v{1},V4,'UniformOutput',false),' '), ...
+    strcmp(V4{2}{2},'dx1') && strcmp(V4{3}{3},'3')));
+end
+% =========================================================================
+function t = germanDate(d)
+%germanDate. Date yyyy-mm-dd as dd.mm.yyyy ('' if not available).
+  try
+    t = char(datetime(d,'InputFormat','yyyy-MM-dd','Format','dd.MM.yyyy'));
+  catch
+    t = '';
+  end
+end
+% =========================================================================
+function [V,ok] = sessionValues(B,S,cols)
+%sessionValues. Values of the columns cols of each session S (by the subject
+%  of its PatientID and the session of its scan date) in the sessions files
+%  of the BIDS directory B (n/a if not available).
+  V = cell(1,numel(S)); ok = true;
+  sub = dir(fullfile(B,'sub-*')); sub = sub([sub.isdir]);
+  for k = 1:numel(S)
+    V{k} = repmat({'n/a'},1,numel(cols));
+    si = find(endsWith(lower(regexprep({sub.name},'[^A-Za-z0-9]','')),lower(regexprep(S(k).pid,'[^A-Za-z0-9]',''))),1);
+    if isempty(si), ok = false; continue; end
+    Ps = fullfile(B,sub(si).name,[sub(si).name '_sessions.tsv']);
+    if ~exist(Ps,'file'), ok = false; continue; end
+    C = cat_io_csv(Ps,'','',struct('delimiter','\t','convert2double',0));
+    ri = find(strcmp(C(:,1),['ses-' strrep(S(k).date,'-','')]),1);
+    if isempty(ri), ok = false; continue; end
+    for ci = 1:numel(cols)
+      c = find(strcmp(C(1,:),cols{ci}),1);
+      if ~isempty(c), V{k}{ci} = C{ri,c}; end
+    end
+  end
+end
+% =========================================================================
+function st = reportStatus(P)
+%reportStatus. Status of the rows of a match report of the phenotypic data.
+  st = {};
+  if ~exist(P,'file'), return; end
+  C  = cat_io_csv(P,'','',struct('convert2double',0));
+  st = C(2:end,strcmp(C(1,:),'status'))';
 end
 % =========================================================================
 function R = testExport(E)
 %testExport. Anonymized DICOM export (see cat_io_dcm2bids_export) of a
 %  classic (Berlin) and an enhanced (JE7) session: zip files and their
-%  content tables, export tables without personal data, reimport of the
+%  content tables (images of the database, series directories, and files
+%  of the zip), export tables without personal data, reimport of the
 %  export (only the cleaned fields of the sidecars differ, the same BIDS
 %  names and participants, defaced images), repeated run (no new export),
 %  the protocol scans of a JSON-only import (images converted only for the
@@ -427,11 +726,15 @@ function R = testExport(E)
   tic; evalc('cat_io_dcm2bids(job);'); t = toc;
   Pz = cat_vol_findfiles(X,'*.zip'); L = load(fullfile(X,'exports.mat'));
   okc = ~isempty(Pz);
-  for zi = 1:numel(Pz)
+  for zi = 1:numel(Pz) % content table: images of the database with the series directory and files of the zip
     U = tempname; unzip(Pz{zi},U);
     F = strrep(strrep(cat_vol_findfiles(U,'*.dcm'),[U filesep],''),filesep,'/'); rmdir(U,'s');
     C = cat_io_csv(spm_file(Pz{zi},'ext','.csv'),'','',struct('convert2double',0));
-    okc = okc && isequal(sort(F(:)),sort(C(2:end,1)));
+    col = @(n) C(2:end,strcmp(C(1,:),n));
+    [ser,si] = unique(col('Series')); nd = str2double(col('DICOMfiles')); 
+    nf  = cellfun(@(s) nnz(startsWith(F,[s '/'])),ser);
+    img = cellfun(@(p) ~isempty(dir(fullfile(DB,fileparts(p),['*=' spm_file(p,'filename')]))),col('Image'));
+    okc = okc && sum(nf) == numel(F) && isequal(nf(:),nd(si)) && all(img) && size(C,1) > 1;
   end
   R(end+1) = struct('name','export','ok',isscalar(dir(fullfile(X,'2*'))) && numel(Pz) == 2 && okc && ...
     numel(L.Z) == 2 && sum([L.Z.Scans]) == numel(L.R) && any([L.R.Defaced]), ...
@@ -483,7 +786,7 @@ function R = testExport(E)
     end
   end
   dif = unique(dif);
-  B1  = fullfile(T,'study','BIDS'); B2 = fullfile(T2,'study','BIDS');
+  B1  = fullfile(T,'study','BIDS-pseudonymized'); B2 = fullfile(T2,'study','BIDS-pseudonymized');
   pt1 = cat_vol_findfiles(B1,'participants.tsv'); pt2 = cat_vol_findfiles(B2,'participants.tsv');
   pt  = ~isempty(pt1) && ~isempty(pt2) && isequal(fileread(pt1{1}),fileread(pt2{1}));
   bn  = isequal(names(listing(B1)),names(listing(B2)));
@@ -557,7 +860,7 @@ function R = testExport(E)
   job4.opts.anonymize = 2; job4.opts.dicomexport = 2;
   evalc('cat_io_dcm2bids(job4);');
   Pz4 = cat_vol_findfiles(fullfile(T4,'study','catDCM2BIDSdb-dicom'),'*.zip');
-  Pb  = cat_vol_findfiles(fullfile(T4,'study','BIDS'),'*.nii.gz');
+  Pb  = cat_vol_findfiles(fullfile(T4,'study','BIDS-anonymized'),'*.nii.gz');
   Pr  = cat_vol_findfiles(fullfile(T4,'study','catDCM2BIDSdb'),'*=*=*=*.nii.gz');
   Pr  = Pr(~startsWith(spm_file(Pr,'filename'),'anon_'));
   if ~isempty(Pz4) && ~isempty(Pb) && ~isempty(Pr)
@@ -570,6 +873,97 @@ function R = testExport(E)
   end
   R(end+1) = struct('name','export-mosaic','ok',dm < 1e-3 && z > 0.01, ...
     'info',sprintf('voxels set to 0 by the defacing: %0.1f%%, voxels differing from the BIDS image: %0.3f%%',100*z,100*dm));
+
+  % (8) anonymization level 2 (T1w, field map, and DWI reference scan of 
+  % Berlin): subject label with the site (with manufacturer) and number and
+  % session label of the time since the first session (weeks), without 
+  % personal data in the text files of the BIDS and report directories and
+  % without acquisition times in the NIfTI headers
+  T5 = fullfile(E.Pout,'export5'); fresh(T5);
+  D5 = [dir(fullfile(E.BER,'**','*mprage*')); dir(fullfile(E.BER,'**','*SpinEchoFieldMap_PA*')); dir(fullfile(E.BER,'**','*refscan*'))];
+  D5 = D5([D5.isdir]);
+  job5 = E.job0; job5.outdir = {T5}; job5.data = fullfile({D5.folder},{D5.name})';
+  job5.opts.anonymize = 2; job5.opts.dicomexport = 2;
+  evalc('cat_io_dcm2bids(job5);');
+  A5  = fullfile(T5,'study','BIDS-anonymized'); B5 = fullfile(A5,'BIDS');
+  sub = dir(fullfile(B5,'sub-*')); sub = sub([sub.isdir]); ses = dir(fullfile(B5,'sub-*','ses-*'));
+  S5  = sidecars(fullfile(T5,'study','catDCM2BIDSdb')); J5 = cat_io_json(S5{1});
+  dat = regexprep(char(J5.AcquisitionDateTime),'T.*$','');
+  pats = {char(J5.PatientID),char(J5.DeviceSerialNumber),char(J5.PatientBirthDate),strrep(char(J5.PatientBirthDate),'-',''), ...
+    dat,strrep(dat,'-','')};
+  p = strsplit(lower(char(J5.PatientName)),{'^',' ','-','_'}); pats = [pats p(cellfun(@numel,p) >= 4)];
+  pats = unique(pats(~cellfun('isempty',pats)));
+  Pt  = {}; % text files of the BIDS and report directories (shareable)
+  for Pd = {A5,[A5 '-report']}, for ext = {'*.tsv','*.json','*.csv','*.txt'}, Pt = [Pt; cat_vol_findfiles(Pd{1},ext{1})]; end, end %#ok<AGROW>
+  txt = lower(strjoin(cellfun(@fileread,Pt,'UniformOutput',false),' '));
+  found = pats(cellfun(@(q) contains(txt,lower(q)),pats));
+  Pn = cat_vol_findfiles(B5,'*.nii.gz'); tim = sum(cellfun(@(P) contains(niiDescrip(P),'Time='),Pn));
+  okb = isscalar(sub) && ~isempty(regexp(sub(1).name,'^sub-[A-Z][A-Za-z]{2}[A-Z]{2}\d{2}T\d{5}$','once')) && ...
+    ~isempty(ses) && all(strcmp({ses.name},'ses-w0000')) && isempty(found) && tim == 0 && ~isempty(Pn);
+  if isempty(sub), sname = 'none'; else, sname = sub(1).name; end
+  R(end+1) = struct('name','anonymized-bids','ok',okb,'info',sprintf(['%s/%s, personal strings found: %d of %d, ' ...
+    'NIfTI with time: %d of %d'],sname,strjoin({ses.name},' '),numel(found),numel(pats),tim,numel(Pn)));
+
+  % (9) DICOM export of the level 2: subject label, the date of the session
+  % label (1900-01-01 for the first session), times since the start of the
+  % session (00:00:00), and site in the header, no original IDs, dates, or
+  % UIDs in the files, and its import (level 1) gives the subject and 
+  % session labels, age, and slice timing of (8)
+  Pz5 = cat_vol_findfiles(fullfile(T5,'study','catDCM2BIDSdb-dicom'),'*.zip');
+  U5  = fullfile(T5,'unzip'); for zi = 1:numel(Pz5), unzip(Pz5{zi},U5); end
+  F5  = cat_vol_findfiles(U5,'*.dcm');
+  orig = [pats {char(J5.StudyInstanceUID),char(J5.SeriesInstanceUID)}]; nf = 0;
+  for k = 1:numel(F5)
+    fid = fopen(F5{k}); t = lower(char(fread(fid,inf,'*uint8')')); fclose(fid);
+    nf = nf + any(cellfun(@(q) contains(t,lower(q)),orig));
+  end
+  hp = ''; hd = ''; hs = ''; ht = ''; at = nan(1,numel(F5));
+  for k = 1:numel(F5) % times since the start of the session (acquisition times of all files)
+    fid = fopen(F5{k}); b = fread(fid,inf,'*uint8')'; fclose(fid); El = cat_io_dcm2bids_export('dicomElements',b);
+    at(k) = str2double(regexprep(elementText(b,El,'00080032'),'\..*$',''));
+    if k == 1
+      hp = elementText(b,El,'00100020'); hd = elementText(b,El,'00080020'); hs = elementText(b,El,'00181000');
+      ht = elementText(b,El,'00080030');
+    end
+  end
+  T6 = fullfile(E.Pout,'export6'); fresh(T6);
+  job6 = E.job0; job6.outdir = {T6}; job6.data = {U5}; evalc('cat_io_dcm2bids(job6);');
+  B6 = fullfile(T6,'study','BIDS-pseudonymized','BIDS');
+  sub6 = dir(fullfile(B6,'sub-*')); sub6 = sub6([sub6.isdir]); ses6 = dir(fullfile(B6,'sub-*','ses-*'));
+  same = isequal({sub6.name},{sub.name}) && isequal(sort({ses6.name}),sort({ses.name}));
+  a5 = cat_io_csv(fullfile(B5,'participants.tsv'),'','',struct('delimiter','\t'));
+  a6 = cat_io_csv(fullfile(B6,'participants.tsv'),'','',struct('delimiter','\t'));
+  sage = isequal(round(a5{2,strcmp(a5(1,:),'age')}),round(a6{2,strcmp(a6(1,:),'age')}));
+  % slice timing of the import equal to the anonymized BIDS export (sidecars with the same names)
+  Pj = cat_vol_findfiles(B5,'*.json'); nst = 0; dst = 0;
+  for k = 1:numel(Pj)
+    J1 = cat_io_json(Pj{k}); P2 = strrep(Pj{k},B5,B6);
+    if ~isfield(J1,'SliceTiming') || ~exist(P2,'file'), continue; end
+    J2 = cat_io_json(P2); nst = nst + 1;
+    if isfield(J2,'SliceTiming') && isequal(size(J1.SliceTiming),size(J2.SliceTiming))
+      dst = max(dst,max(abs(J1.SliceTiming(:) - J2.SliceTiming(:))));
+    else
+      dst = inf;
+    end
+  end
+  R(end+1) = struct('name','anonymized-dicom','ok',~isempty(F5) && nf == 0 && strcmp(['sub-' hp],sname) && ...
+    strcmp(hd,'19000101') && startsWith(ht,'000000') && max(at) < 120000 && ...
+    ~isempty(regexp(hs,'^[A-Z][A-Za-z]{2}[A-Z]{2}\d{2}T$','once')) && same && sage && nst > 0 && dst < 1e-4, ...
+    'info',sprintf(['%d files (%d with original strings), StudyDate %s, StudyTime %s, last acquisition %06.0f, scanner %s, ' ...
+    'labels of the import equal: %d, age equal: %d, slice timing of %d scans equal: %d'], ...
+    numel(F5),nf,hd,ht,max(at),hs,same,sage,nst,dst < 1e-4));
+end
+% =========================================================================
+function d = niiDescrip(P)
+%niiDescrip. Description of the header of a NIfTI-1 file (also gzipped).
+  if endsWith(P,'.gz')
+    gz = java.util.zip.GZIPInputStream(java.io.FileInputStream(P)); h = zeros(1,348,'uint8');
+    for k = 1:348, x = gz.read(); if x < 0, break; end; h(k) = x; end
+    gz.close();
+  else
+    fid = fopen(P); h = fread(fid,348,'*uint8')'; fclose(fid);
+  end
+  d = char(h(149:228)); d = d(d ~= char(0));
 end
 % =========================================================================
 function k = sidecarKey(P,~)
@@ -604,8 +998,12 @@ function R = testLevels(E,levels)
 %  volumes, Dice of the label map, absolute difference of the DTI and 
 %  rs-fMRI measures, and the correlation of the FA maps and connectivity 
 %  matrices). The results of each level are saved in 
-%  Pout/pplevels/level<L>.mat (level 1 is only processed once) and the 
-%  table in Pout/pplevels/pplevels.csv.
+%  Pout/pplevels/level<L>.mat (level 1 is only processed once for each
+%  version of the results, see levelParameters) and the
+%  table in Pout/pplevels/pplevels.csv. Moreover, the coregistration to the
+%  T1w of a synthetic EPI with a known offset is tested (see coregAnat) and
+%  that the DTI includes only voxels with signal in all volumes (see
+%  estimateDTI in cat_io_dcm2bids_pp_dwi).
   R = struct('name',{},'ok',{},'info',{});
   O = fullfile(E.Pout,'pplevels'); if ~exist(O,'dir'), mkdir(O); end
   job0 = struct('outdir',{{O}},'subdir','study','dicts',E.dicts);
@@ -617,13 +1015,13 @@ function R = testLevels(E,levels)
   levels = sort(unique([1 levels(:)']),'descend'); % fast levels first (early errors), the reference last
   for li = 1:numel(levels)
     Pl = fullfile(O,sprintf('level%s.mat',strrep(sprintf('%g',levels(li)),'.','p')));
-    if ~exist(Pl,'file') || levels(li) > 1
+    p  = cat_io_dcm2bids_pp_anat('levelParameters',levels(li)); S = [];
+    if levels(li) == 1 && exist(Pl,'file'), load(Pl,'S'); end
+    if ~isfield(S,'version') || S.version < p.version % (level 1 only once for each version of the results)
       job = job0; job.data = {DB}; job.opts.preprocessing = 2; job.opts.rerun = 1; job.opts.pplevel = levels(li); %#ok<STRNU>
       t0 = datetime('now'); t = tic; evalc('cat_io_dcm2bids(job);'); ttotal = toc(t);
-      S = levelResults(DB,O,levels(li),t0); S.ttotal = ttotal;
+      S = levelResults(DB,O,levels(li),t0); S.ttotal = ttotal; S.version = p.version;
       save(Pl,'S');
-    else
-      load(Pl,'S');
     end
     L(li) = S; %#ok<AGROW>
   end
@@ -647,6 +1045,74 @@ function R = testLevels(E,levels)
       C{li,[2 3 5 8 10 12 13 17 18]})); %#ok<AGROW>
   end
   cat_io_dcm2bids_helper('writeTable',fullfile(O,'pplevels.csv'),[hdr; C],'csv');
+
+  % coregistration to the T1w (see coregAnat in cat_io_dcm2bids_pp_anat) of
+  % a synthetic EPI (T2-like image of the segmentation with 2 mm voxels) 
+  % with a known offset of 40 mm and 10 degree (e.g. a repositioning of the
+  % subject between the scans): recovered within 2 mm and 2 degree with a
+  % Dice of the brain masks above 0.9 (and a median displacement of the 
+  % non-linear coregistration below 1 mm), whereas the scanner alignment
+  % fails. Moreover, the non-linear coregistration (see nonlinCoreg) of the
+  % synthetic EPI with a smooth distortion along y (up to 4 mm in opposite
+  % directions of both hemispheres, i.e. not rigid, e.g. of an EPI without
+  % distortion correction) recovers the true positions of the displaced 
+  % brain voxels (median residual of the voxels with more than 1 mm below 
+  % 1 mm and below 60% of the residual of the rigid coregistration).
+  Pn = cat_vol_findfiles(DB,'*=*=*=*.nii.gz');
+  A  = cat_io_dcm2bids_pp_anat('sessionAnat',Pn,repmat({'anat'},size(Pn)),repmat({'T1w'},size(Pn)));
+  ok = false; info = 'no T1w segmentation'; okn = false; infon = info;
+  if ~isempty(A)
+    o  = struct('gzipi',1); Pc = cat_io_dcm2bids_helper('prepNii',{A.Pc0},o,0); Vc = spm_vol(Pc{1}); Yc0 = spm_read_vols(Vc);
+    cat_io_dcm2bids_helper('prepNiigz',Pc,o);
+    Vs = struct('dim',ceil(Vc.dim .* sqrt(sum(Vc.mat(1:3,1:3).^2)) / 2),'mat',[]); 
+    Vs.mat = Vc.mat * diag([2 ./ sqrt(sum(Vc.mat(1:3,1:3).^2)) 1]); Vs.mat(1:3,4) = Vc.mat(1:3,4);
+    [x,y,z] = ndgrid(1:Vs.dim(1),1:Vs.dim(2),1:Vs.dim(3)); W0 = Vs.mat * [x(:)'; y(:)'; z(:)'; ones(1,numel(x))];
+    lab = @(W) reshape(spm_sample_vol(Yc0,subsref(Vc.mat \ W,substruct('()',{1,':'})),subsref(Vc.mat \ W,substruct('()',{2,':'})), ...
+      subsref(Vc.mat \ W,substruct('()',{3,':'})),1),Vs.dim);
+    syn = @(L) interp1(0:3,[0 1 0.55 0.35],min(3,max(0,L))); % CSF bright, GM medium, WM dark (b0-like)
+    L  = lab(W0); Ys = syn(L);
+    Mt = spm_matrix([5 -10 40 10*pi/180 3*pi/180 -4*pi/180]); % true offset of the synthetic scan
+    Vs.mat = Mt \ Vs.mat;                                    % scan world coordinates (shifted)
+    evalc('[M,Q] = cat_io_dcm2bids_pp_anat(''coregAnat'',Ys,Vs,A,o);');
+    q  = spm_imatrix(M / Mt); e = [norm(q(1:3)) max(abs(q(4:6))) * 180/pi]; % residual error
+    dsp = nan; if isfield(Q,'displacement'), dsp = Q.displacement(1); end
+    ok = e(1) < 2 && e(2) < 2 && Q.Dice > 0.9 && Q.Dice_scanner < 0.8 && dsp < 1;
+    info = sprintf('residual %0.1f mm, %0.1f deg, Dice %0.3f (scanner %0.3f), non-linear displacement %0.1f mm',e,Q.Dice,Q.Dice_scanner,dsp);
+    % smooth distortion along y (T1w world) of the synthetic scan
+    u  = 4 * sin(2*pi * x(:)' / Vs.dim(1)) .* sin(pi * z(:)' / Vs.dim(3));
+    Wt = W0 + [zeros(1,numel(u)); u; zeros(2,numel(u))];  % true T1w world positions of the scan voxels
+    Ld = lab(Wt); b = Ld(:) > 0.5 & abs(u(:)) > 1;           % displaced brain voxels
+    evalc('[M2,Q2,D2] = cat_io_dcm2bids_pp_anat(''coregAnat'',syn(Ld),Vs,A,o);');
+    Wr = M2 * Vs.mat * [x(b)'; y(b)'; z(b)'; ones(1,nnz(b))]; rr = median(sqrt(sum((Wr(1:3,:) - Wt(1:3,b)).^2,1)));
+    rn = nan; dn = nan; if isfield(Q2,'Dice_nonlinear'), dn = Q2.Dice_nonlinear; end
+    if ~isempty(D2), Yi = reshape(D2.Yi,[],3)'; rn = median(sqrt(sum((double(Yi(:,b)) - Wt(1:3,b)).^2,1))); end
+    okn  = rn < 1 && rn < 0.6 * rr;
+    infon = sprintf('distortion up to 4 mm: residual median %0.2f mm (rigid %0.2f mm), Dice %0.3f (rigid %0.3f)',rn,rr,dn,Q2.Dice);
+  end
+  R(end+1) = struct('name','coregistration','ok',ok,'info',info);
+  R(end+1) = struct('name','coregistration-nonlinear','ok',okn,'info',infon);
+
+  % DTI only of the voxels with signal in all volumes (see estimateDTI in
+  % cat_io_dcm2bids_pp_dwi), i.e. not of the edge slices of the field of
+  % view that are missing in some volumes after the realignment (with high
+  % FA in the direction of the slices)
+  ok = false; info = 'no FA map and realigned DWI';
+  Pf = cat_vol_findfiles(DB,'catDCM2BIDSdwi_FA_0*.nii.gz');
+  if ~isempty(Pf)
+    nam = regexprep(spm_file(Pf{1},'filename'),'^catDCM2BIDSdwi_FA_|\.nii\.gz$','');
+    Pr  = fullfile(fileparts(Pf{1}),['r' nam '.nii.gz']);
+    if exist(Pr,'file')
+      FA = readNii(Pf(1),O,0); Pt = fullfile(O,'tmp_r.nii.gz'); copyfile(Pr,Pt); Pu = gunzip(Pt); delete(Pt);
+      Vr = spm_vol(Pu{1}); z = false(Vr(1).dim);
+      for vi = 1:numel(Vr), z = z | ~(spm_read_vols(Vr(vi)) > 0); end
+      delete(Pu{1});
+      J  = cat_io_json(fullfile(fileparts(Pf{1}),['catDCM2BIDSdwi_' nam '.json'])); nx = nan;
+      if isfield(J,'qc') && isfield(J.qc,'voxels_without_signal'), nx = J.qc.voxels_without_signal; end
+      nz = nnz(isfinite(FA) & z); ok = nz <= 0.001 * nnz(isfinite(FA)) && isfinite(nx);
+      info = sprintf('FA of %d voxels without signal in some volumes (%g brain voxels excluded)',nz,nx);
+    end
+  end
+  R(end+1) = struct('name','dti-signal','ok',ok,'info',info);
 end
 % =========================================================================
 function S = levelResults(DB,O,level,t0)
@@ -706,7 +1172,19 @@ function [sA,sB,sesA] = dbSubjects(E)
   [~,so] = sort(regexprep(sesA,'^.*-','')); sesA = sesA(so);
 end
 % =========================================================================
-function b = bidsSub(s), b = ['sub-' strrep(s(5:end),'-','')]; end   % BIDS subject of a database subject (subIDform 2)
+function b = bidsSub(s,DB)
+%bidsSub. BIDS subject of a database subject sub-<serial>-<PatientID> 
+%  (subIDform 2), i.e. with the site abbreviation of the site registry of 
+%  the database (without site dictionary, see siteRegistry in 
+%  cat_io_dcm2bids_protocols) or the serial number.
+  tok  = regexp(s,'^sub-(.+?)-(.*)$','tokens','once'); site = tok{1};
+  Preg = fullfile(DB,'catDCM2BIDSsites.json');
+  if exist(Preg,'file')
+    S = cat_io_json(Preg); i = find(strcmp(cellfun(@(x) char(string(x)),{S.DeviceSerialNumber},'UniformOutput',false),tok{1}),1);
+    if ~isempty(i), site = S(i).InstitutionAbbreviation; end
+  end
+  b = ['sub-' cat_io_dcm2bids_bids('bidsLabel',site,1) regexprep(tok{2},'[^A-Za-z0-9]','')];
+end
 function b = bidsSes(s), b = ['ses-' regexprep(s,'^.*-','')]; end    % BIDS session of a database session (date)
 % =========================================================================
 function L = listing(B)
@@ -722,9 +1200,8 @@ function S = sidecars(DB), S = cat_vol_findfiles(DB,'*=*=*=*.json'); S = S(~star
 % =========================================================================
 function resetBIDS(T)
 %resetBIDS. Remove the BIDS outputs of a run (keep the database and its tables).
-  for d = fullfile(T,'study',{'BIDS','BIDS-report','BIDS-private'})
-    if exist(d{1},'dir'), rmdir(d{1},'s'); end
-  end
+  D = dir(fullfile(T,'study','BIDS*')); D = D([D.isdir]); % (BIDS directories of all anonymization levels)
+  for di = 1:numel(D), rmdir(fullfile(D(di).folder,D(di).name),'s'); end
 end
 function fresh(T), if exist(T,'dir'), rmdir(T,'s'); end, end
 function cleanLog(E), if exist(E.flog,'file'), delete(E.flog); end, end

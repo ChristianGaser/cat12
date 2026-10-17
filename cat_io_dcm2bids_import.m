@@ -39,8 +39,12 @@ function Psrc = getInputSources(Pdata, Pmdbdir, ignoreScouts)
 %      where derivatives are ignored and the sourcedata directory is 
 %      imported as DICOM directory. BIDS datasets within DICOM directories 
 %      are imported as BIDS datasets. 
-%  Directories of another database give an error, as merging databases 
-%  is not supported. The lists are sorted and without repetitions. 
+%  Hidden directories (e.g. .git and .datalad of DataLad datasets) are 
+%  ignored. Directories of another database give an error, as merging databases 
+%  is not supported, as well as input directories (besides the database)
+%  that contain the output directory or are part of it (e.g. the same 
+%  directory for the input and output), as the output would be imported 
+%  again. The lists are sorted and without repetitions. 
 
   fs   = regexptranslate('escape',filesep); 
   Psrc = struct('dicom',{{}},'database',{{}},'bids',struct('root',{},'sel',{})); 
@@ -52,6 +56,18 @@ function Psrc = getInputSources(Pdata, Pmdbdir, ignoreScouts)
     
     % database directory: last path component "catDCM2BIDSdb" and the rest
     tok = regexp(cat_io_dcm2bids_helper('absPath',Pdi), ['^(.*' fs 'catDCM2BIDSdb)(' fs '.*)?$'], 'tokens', 'once'); 
+
+    % other inputs must not contain the output directory or be part of it
+    if isempty(tok)
+      Pin  = [cat_io_dcm2bids_helper('canonPath',Pdi) filesep]; 
+      Pout = [cat_io_dcm2bids_helper('canonPath',fileparts(Pmdbdir)) filesep]; 
+      if strncmp(Pout,Pin,numel(Pin)) || strncmp(Pin,Pout,numel(Pout))
+        error('cat_io_dcm2bids:inputOutput', ...
+          ['The input directory "%s" contains the output directory "%s" or is part of it, i.e. the ' ...
+           'output would be imported again. Select another output directory (or the database ' ...
+           'catDCM2BIDSdb of the output to export its data again).'], Pdi, fileparts(Pmdbdir)); 
+      end
+    end
 
     % (3) BIDS dataset or a directory within a BIDS dataset (with the 
     % dataset_description.json), where the derivatives are ignored and the
@@ -80,6 +96,9 @@ function Psrc = getInputSources(Pdata, Pmdbdir, ignoreScouts)
     if isempty(tok)
       Pdirsdi = [{Pdi}; cat_vol_findfiles(Pdi,'*',struct('dirs',1))]; 
       Pdirsdi(cat_io_contains(Pdirsdi,'catDCM2BIDSdb')) = []; 
+      % no hidden directories (e.g. .git/annex of DataLad datasets with the
+      % content of the linked files, i.e. copies of the images)
+      Pdirsdi(~cellfun('isempty',regexp(strrep(Pdirsdi,Pdi,''),['(^|' fs ')\.'],'once'))) = []; 
       % BIDS datasets within the directory (imported as BIDS, without their
       % sub-directories, i.e. also without the sourcedata)
       % (datasets within other datasets, e.g. derivatives, are not imported)

@@ -24,11 +24,21 @@ function varargout = cat_io_dcm2bids_report(action,varargin)
 %                      Z-score, see cat_io_dcm2bids_stats)
 %    project.<fmt>     one row per dataset and site and for all sites of a
 %                      dataset with the number of subjects, sessions, and
-%                      scans, the demographics, and median ratings
+%                      scans, the demographics, median ratings, and the
+%                      color of the site (site dictionary, see siteColors
+%                      of cat_io_dcm2bids_protocols)
 %  in <outdir>/<subdir>/<BIDSdir>-report/tables/<BIDSsubdir>/ with a JSON
 %  file of each table with the description of its columns, where <fmt> is
 %  opts.tableformat (csv or tsv) and missing values are n/a. The report 
 %  figure (see cat_io_dcm2bids_reportfig) shows the tables as diagrams.
+%  The regional results of each session (see writeRegionTables) are in
+%  <outdir>/<subdir>/<BIDSdir>-report/regions/<BIDSsubdir>/:
+%    <sub>_<ses>_anat.<fmt>  tissue volumes of the neuromorphometrics regions
+%                            (segmentation of each anatomical scan)
+%    <sub>_<ses>_dwi.<fmt>   FA and MD of the Mori white-matter regions
+%    <sub>_<ses>_func.<fmt>  within-network connectivity of the 7 networks
+%  with one row per scan and region and the JSON files anat.json, 
+%  dwi.json, and func.json with the description of the columns.
 %
 %  varargout = cat_io_dcm2bids_report(action,varargin)
 %
@@ -76,9 +86,15 @@ function writeReportTables(Poutdir,job)
   [cols,desc] = sessionColumns(types,tnam);
   writeReport(fullfile(Preport,['sessions.' fmt]),E,cols,desc,fmt);
   Q = projectRecords(S,E,job.subdir,types,tnam);
+  Pdict = {}; if isfield(job,'dicts') && isfield(job.dicts,'Pcenterdict'), Pdict = job.dicts.Pcenterdict; end
+  col = cat_io_dcm2bids_protocols('siteColors',Pdict,fullfile(Poutdir,'catDCM2BIDSdb'),{Q.site}); % (site dictionary)
+  [Q.color] = col{:};
   [cols,desc] = projectColumns(types,tnam);
   writeReport(fullfile(Preport,['project.' fmt]),Q,cols,desc,fmt);
   fprintf('  Report tables: %s\n',Preport);
+
+  % regional results of each session
+  writeRegionTables(fullfile(Poutdir,[job.BIDSdir '-report'],'regions',job.BIDSsubdir),S,fmt);
 end
 % =========================================================================
 function S = collectScans(PBIDS)
@@ -173,12 +189,106 @@ function S = collectScans(PBIDS)
     r.GCOR = jsonNumber(Jr,{'connectivity','GCOR'}); r.segregation = jsonNumber(Jr,{'connectivity','segregation'});
     r.FC_within = jsonNumber(Jr,{'connectivity','within'}); r.FC_between = jsonNumber(Jr,{'connectivity','between'});
     r.pplevel = max([jsonNumber(Jd,{'method','level'}) jsonNumber(Jr,{'method','level'})]); % (NaN without)
-    r.Pmwc1 = ''; % normalized GM map (sample homogeneity, not a column)
+    % regional results (region tables, not columns)
+    r.regional_anat = jsonPath(G,{'regional'},struct());
+    r.regional_dwi  = jsonPath(Jd,{'regional'},struct());
+    r.regional_func = jsonPath(Jr,{'connectivity','network'},struct());
+    % normalized GM map, normalized FA map, and connectivity matrix (sample
+    % homogeneity, not columns)
+    r.Pmwc1 = ''; r.PwFA = ''; r.Pconn = '';
     for ext = {'.nii.gz','.nii'}
-      if exist(fullfile(droot,['mwc1' name ext{1}]),'file'), r.Pmwc1 = fullfile(droot,['mwc1' name ext{1}]); break; end
+      if isempty(r.Pmwc1) && exist(fullfile(droot,['mwc1' name ext{1}]),'file'), r.Pmwc1 = fullfile(droot,['mwc1' name ext{1}]); end
+      if isempty(r.PwFA) && exist(fullfile(droot,['catDCM2BIDSdwi_wFA_' name ext{1}]),'file'), r.PwFA = fullfile(droot,['catDCM2BIDSdwi_wFA_' name ext{1}]); end
     end
+    if exist(fullfile(droot,['catDCM2BIDSrsfmri_conn_' name '.tsv']),'file'), r.Pconn = fullfile(droot,['catDCM2BIDSrsfmri_conn_' name '.tsv']); end
     if isempty(S), S = r; else, S(end+1) = r; end %#ok<AGROW>
   end
+end
+% =========================================================================
+function writeRegionTables(Preg,S,fmt)
+%writeRegionTables. Tables of the regional results of the scans S of each
+%  session in the directory Preg (created again in each run, one 
+%  subdirectory per dataset for several datasets): tissue volumes of the
+%  neuromorphometrics regions (anat), FA and MD of the Mori white-matter 
+%  regions (dwi), and the within-network connectivity of the 7 networks 
+%  (func), with one row per scan and region (see the JSON files of the
+%  columns, i.e. anat.json, dwi.json, and func.json). 
+  if exist(Preg,'dir'), rmdir(Preg,'s'); end
+  types = {
+    'anat', 'regional_anat', {'scan','region','name','Vgm','Vwm','Vcsf'}, ...
+      {'scan of the session (BIDS name without subject and session)', ...
+       'region of the neuromorphometrics atlas of CAT (l/r for left/right)','name of the region', ...
+       'gray matter volume in ml (native space, SPM segmentation, n/a for regions without this tissue)', ...
+       'white matter volume in ml','cerebrospinal fluid volume in ml'}
+    'dwi',  'regional_dwi',  {'scan','region','name','FA','MD','voxels'}, ...
+      {'scan of the session (BIDS name without subject and session)', ...
+       'white-matter region of the Mori atlas of CAT (l/r for left/right)','name of the region', ...
+       'median fractional anisotropy in the white matter of the region (T1w segmentation)', ...
+       'median mean diffusivity in mm2/s','number of voxels'}
+    'func', 'regional_func', {'scan','network','FC_within'}, ...
+      {'scan of the session (BIDS name without subject and session)', ...
+       'network of Yeo et al. 2011 (7 networks of the Schaefer2018 parcels of CAT)', ...
+       'mean within-network connectivity of the parcels (Fisher z)'}
+    };
+  mori = atlasNames('mori'); neuro = atlasNames('neuromorphometrics');
+  multi = numel(unique({S.dataset})) > 1; 
+  key = strcat({S.dataset},'|',{S.participant_id},'|',{S.session_id}); 
+  for k = unique(key)
+    Ss = S(strcmp(key,k{1}));
+    if isempty(Ss(1).session_id), name = Ss(1).participant_id; else, name = [Ss(1).participant_id '_' Ss(1).session_id]; end
+    if multi, Pd = fullfile(Preg,Ss(1).dataset); else, Pd = Preg; end
+    for ti = 1:size(types,1)
+      T = types{ti,3};
+      for si = 1:numel(Ss)
+        R = Ss(si).(types{ti,2}); 
+        if ~isstruct(R) || isempty(fieldnames(R)), continue; end
+        scan = regexprep(spm_file(Ss(si).filename,'basename'),'^sub-[^_]+_(ses-[^_]+_)?','');
+        for fn = fieldnames(R)'
+          v = R.(fn{1}); 
+          switch types{ti,1}
+            case 'anat', T(end+1,:) = {scan,fn{1},regionName(neuro,v,'ROIid'),field(v,'Vgm'),field(v,'Vwm'),field(v,'Vcsf')}; %#ok<AGROW>
+            case 'dwi',  T(end+1,:) = {scan,fn{1},regionName(mori,fn{1},'ROIabbr'),field(v,'FA'),field(v,'MD'),field(v,'voxels')}; %#ok<AGROW>
+            case 'func', T(end+1,:) = {scan,fn{1},v}; %#ok<AGROW>
+          end
+        end
+      end
+      if size(T,1) > 1
+        cat_io_dcm2bids_helper('writeTable',fullfile(Pd,sprintf('%s_%s.%s',name,types{ti,1},fmt)),T,fmt);
+        if ~exist(fullfile(Pd,[types{ti,1} '.json']),'file')
+          cat_io_dcm2bids_helper('writeJSON',fullfile(Pd,[types{ti,1} '.json']), ...
+            cell2struct(cellfun(@(d) struct('Description',d),types{ti,4},'UniformOutput',false),types{ti,3},2)); 
+        end
+      end
+    end
+  end
+  if exist(Preg,'dir'), fprintf('  Region tables: %s\n',Preg); end
+end
+% =========================================================================
+function A = atlasNames(name)
+%atlasNames. ROIid, ROIabbr (if available), and ROIname of a CAT atlas.
+  P = fullfile(fileparts(mfilename('fullpath')),'templates_MNI152NLin2009cAsym',[name '.csv']);
+  C = regexp(fileread(P),'\r?\n','split'); C = C(~cellfun('isempty',strtrim(C)));
+  C = cellfun(@(l) strsplit(l,';'),C,'UniformOutput',false); hdr = C{1}; C = vertcat(C{2:end});
+  A.ROIid   = str2double(C(:,strcmp(hdr,'ROIid')));
+  A.ROIname = strtrim(C(:,strcmp(hdr,'ROIname')));
+  if any(strcmp(hdr,'ROIabbr')), A.ROIabbr = strtrim(C(:,strcmp(hdr,'ROIabbr'))); end
+end
+% =========================================================================
+function n = regionName(A,v,by)
+%regionName. Name of a region of the atlas names A by its ROIid (the field
+%  ROIid of the record v) or its ROIabbr (v).
+  n = ''; i = [];
+  if strcmp(by,'ROIid') && isstruct(v) && isfield(v,'ROIid')
+    i = find(A.ROIid == v.ROIid,1);
+  elseif strcmp(by,'ROIabbr') && isfield(A,'ROIabbr')
+    i = find(strcmp(A.ROIabbr,v),1);
+  end
+  if ~isempty(i), n = A.ROIname{i}; end
+end
+% =========================================================================
+function x = field(v,fn)
+%field. Numeric field fn of the record v (NaN if not available).
+  if isstruct(v) && isfield(v,fn) && isnumeric(v.(fn)) && ~isempty(v.(fn)), x = double(v.(fn)); else, x = nan; end
 end
 % =========================================================================
 function E = sessionRecords(S,types,tnam)
@@ -217,11 +327,13 @@ function E = sessionRecords(S,types,tnam)
       if isempty(St), e.(['T1w_' fn{1}]) = nan; else, e.(['T1w_' fn{1}]) = St.(fn{1}); end
     end
     if isempty(St), e.Pmwc1 = ''; else, e.Pmwc1 = St.Pmwc1; end
-    % DTI and rs-fMRI measures of the best DWI and BOLD scan (with these measures)
-    for tf = {{'dwi/dwi','dwi',{'FA_WM','MD_WM','MD_WM_peakwidth'}},{'func/bold','bold',{'FD_mean','tSNR','GCOR','segregation'}}}
+    % DTI and rs-fMRI measures of the best DWI and BOLD scan (with these 
+    % measures) with the normalized FA map and the connectivity matrix
+    e.PwFA = ''; e.Pconn = '';
+    for tf = {{'dwi/dwi','dwi',{'FA_WM','MD_WM','MD_WM_peakwidth'},'PwFA'},{'func/bold','bold',{'FD_mean','tSNR','GCOR','segregation'},'Pconn'}}
       St = Sk(strcmp({Sk.type},tf{1}{1}) & ~isnan([Sk.(tf{1}{3}{1})]));
       if ~isempty(St)
-        sqr = [St.SQR]; sqr(isnan(sqr)) = inf; [~,bi] = min(sqr); St = St(bi);
+        sqr = [St.SQR]; sqr(isnan(sqr)) = inf; [~,bi] = min(sqr); St = St(bi); e.(tf{1}{4}) = St.(tf{1}{4});
       end
       for fn = tf{1}{3}
         if isempty(St), e.([tf{1}{2} '_' fn{1}]) = nan; else, e.([tf{1}{2} '_' fn{1}]) = St.(fn{1}); end
@@ -233,17 +345,43 @@ end
 % =========================================================================
 function E = sessionStats(E)
 %sessionStats. Statistics of the sessions (see cat_io_dcm2bids_stats): 
-%  z-scores of the TIV and relative tissue volumes of the best T1w scan of
-%  the robust age/sex model of the sample and the sample homogeneity of its
-%  mwc1 map (quartic mean Z-score).
-  fn = {'T1w_TIV','T1w_rGMV','T1w_rWMV','T1w_rCSFV'};
+%  z-scores of the robust age/sex model of the sample of the TIV and the 
+%  relative tissue volumes of the best T1w scan, of the white matter FA of
+%  the best DWI scan, and of the system segregation of the best BOLD scan,
+%  and the sample homogeneity (quartic mean Z-score, corrected for age and
+%  sex) of the mwc1 map, of the normalized FA map (wFA), and of the 
+%  connectivity matrix (Fisher z of the connections).
+  fn = {'T1w_TIV','T1w_rGMV','T1w_rWMV','T1w_rCSFV','dwi_FA_WM','bold_segregation'};
   Y  = cell2mat(cellfun(@(f) reshape([E.(f)],[],1),fn,'UniformOutput',false));
   z  = cat_io_dcm2bids_stats('volumeModel',Y,[E.age],{E.sex});
   qmz = cat_io_dcm2bids_stats('homogeneity',{E.Pmwc1},[E.T1w_TIV],[E.age],{E.sex});
+  qfa = cat_io_dcm2bids_stats('homogeneity',{E.PwFA},[],[E.age],{E.sex});
+  qfc = cat_io_dcm2bids_stats('vectorHomogeneity',connVectors({E.Pconn}),[E.age],{E.sex});
   for ei = 1:numel(E)
     for fi = 1:numel(fn), E(ei).([fn{fi} '_z']) = z(ei,fi); end
-    E(ei).T1w_QMZ = qmz(ei);
+    E(ei).T1w_QMZ = qmz(ei); E(ei).dwi_QMZ = qfa(ei); E(ei).bold_QMZ = qfc(ei);
   end
+end
+% =========================================================================
+function X = connVectors(P)
+%connVectors. Connections (upper triangle, Fisher z) of the connectivity
+%  matrices P (cell of tables of cat_io_dcm2bids_pp_rsfmri, '' if not 
+%  available) as rows of X (NaN for missing matrices or other sizes than 
+%  the first one).
+  X = []; m = 0;
+  for i = 1:numel(P)
+    x = [];
+    if ~isempty(P{i}) && exist(P{i},'file')
+      try
+        C = readcell(P{i},'FileType','text','Delimiter','\t'); C = C(2:end,2:end);
+        C(~cellfun(@(v) isnumeric(v) && isscalar(v),C)) = {nan}; R = cell2mat(C);
+        if size(R,1) == size(R,2), x = R(triu(true(size(R)),1))'; end
+      end
+    end
+    if m == 0 && ~isempty(x), m = numel(x); X = nan(numel(P),m); end
+    if m > 0 && numel(x) == m, X(i,:) = x; end
+  end
+  if m == 0, X = nan(numel(P),1); end
 end
 % =========================================================================
 function Q = projectRecords(S,E,project,types,tnam)
@@ -274,7 +412,7 @@ function Q = projectRecords(S,E,project,types,tnam)
       q.age_min  = minValue(age); q.age_max = maxValue(age);
       q.SQR = median([Es.SQR],'omitnan'); q.PFR = median([Es.PFR],'omitnan'); q.SOR = median([Es.SOR],'omitnan');
       st = {Ss.protocol_status}; st = st(~cellfun('isempty',st));
-      if isempty(st), q.conform = nan; else, q.conform = 100 * mean(strcmp(st,'conform')); end
+      if isempty(st), q.PCP = nan; else, q.PCP = 100 * mean(strcmp(st,'conform')); end
       if isempty(Q), Q = q; else, Q(end+1) = q; end %#ok<AGROW>
     end
   end
@@ -373,7 +511,7 @@ function [cols,desc] = scanColumns(type)
       'DVARS'       'median signal change between volumes (RMS) in percent of the mean signal'
       'tSNR'        'temporal signal-to-noise ratio (median of the gray matter)'
       'GCOR'        'global correlation of the gray matter (Saad et al. 2013)'
-      'FC_within'   'mean within-network connectivity (Fisher z, 7 networks of the Schaefer2018 200 parcels)'
+      'FC_within'   'mean within-network connectivity (Fisher z, 7 networks of the Schaefer2018 100 parcels)'
       'FC_between'  'mean between-network connectivity (Fisher z)'
       'segregation' 'system segregation: (within - between) / within (Chan et al. 2014)'
       'pplevel'     'preprocessing level (see levelParameters in cat_io_dcm2bids_pp_anat)'
@@ -421,10 +559,14 @@ function [cols,desc] = sessionColumns(types,tnam)
     'dwi_FA_WM'           'median white matter FA of the best DWI scan (see cat_io_dcm2bids_pp_dwi)'
     'dwi_MD_WM'           'median white matter MD of the best DWI scan in mm2/s'
     'dwi_MD_WM_peakwidth' 'peak width of the white matter MD of the best DWI scan in mm2/s'
+    'dwi_FA_WM_z'         'z-score of the white matter FA of the robust age/sex model of the sample'
+    'dwi_QMZ'             'sample homogeneity of the normalized FA map (wFA): quartic mean Z-score (high values: atypical map)'
     'bold_FD_mean'        'mean framewise displacement of the best BOLD scan in mm (see cat_io_dcm2bids_pp_rsfmri)'
     'bold_tSNR'           'temporal signal-to-noise ratio of the best BOLD scan'
     'bold_GCOR'           'global correlation of the best BOLD scan'
     'bold_segregation'    'system segregation of the best BOLD scan'
+    'bold_segregation_z'  'z-score of the system segregation of the robust age/sex model of the sample'
+    'bold_QMZ'            'sample homogeneity of the connectivity matrix: quartic mean Z-score of the connections (high values: atypical connectivity)'
     }];
   cols = C(:,1)'; desc = C(:,2)';
 end
@@ -453,7 +595,9 @@ function [cols,desc] = projectColumns(types,tnam)
     'SQR'      'median combined quality rating of the sessions (marks)'
     'PFR'      'median combined protocol fit rating of the sessions (marks)'
     'SOR'      'median session orientation rating (marks)'
-    'conform'  'percentage of protocol conform scans'
+    'PCP'      'protocol conformity percentage (PCP): percentage of protocol conform scans'
+    'color'    ['color of the site (RGB hex) of the site dictionary (Color of the scanner or of its city, scanners ' ...
+                'with the same color differ in brightness, n/a if not defined), see siteColors of cat_io_dcm2bids_protocols']
     }];
   cols = C(:,1)'; desc = C(:,2)';
 end

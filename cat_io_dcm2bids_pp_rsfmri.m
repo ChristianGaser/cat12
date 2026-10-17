@@ -13,9 +13,14 @@ function varargout = cat_io_dcm2bids_pp_rsfmri(action,varargin)
 %        cat_io_dcm2bids_pp_anat), i.e., the volumes are sampled at their 
 %        undistorted positions without resampling of the 4D data
 %    (3) brain, gray matter (GM), white matter (WM), CSF, and the parcels
-%        of the Schaefer2018 atlas of CAT (200 parcels, 17 networks) of the
-%        T1w segmentation of the session by the rigid coregistration of the
-%        mean EPI and the deformation of the segmentation (native space)
+%        of the Schaefer2018 atlas of CAT (100 parcels, 17 networks) of the
+%        T1w segmentation of the session by the rigid and non-linear 
+%        coregistration of the mean EPI to the T1w (with the Dice of the 
+%        brain masks as test, see coregAnat and nonlinCoreg in 
+%        cat_io_dcm2bids_pp_anat) and the
+%        deformation of the segmentation (native space), only voxels with
+%        signal in all volumes (i.e. not the edge slices of the field of
+%        view that are missing in some volumes after the realignment)
 %    (4) quality measures: framewise displacement (FD, Power et al. 2012:
 %        mean, maximum, and percentage of volumes with FD > 0.5 mm), DVARS
 %        (median of the RMS of the signal change between volumes in percent
@@ -31,9 +36,15 @@ function varargout = cat_io_dcm2bids_pp_rsfmri(action,varargin)
 %        7 networks (Yeo et al. 2011), average between-network connectivity,
 %        and system segregation ((within - between) / within, Chan et al.
 %        2014)
-%  The results are saved in the database (catDCM2BIDSrsfmri_<scan>.json and
-%  the connectivity matrix catDCM2BIDSrsfmri_conn_<scan>.tsv) and copied to
-%  the BIDS derivatives (the matrix only for opts.preprocessing > 1). The
+%  The results are saved in the database (catDCM2BIDSrsfmri_<scan>.json with
+%  the coregistration to the T1w, the connectivity matrix 
+%  catDCM2BIDSrsfmri_conn_<scan>.tsv, and the distortion-corrected mean EPI
+%  catDCM2BIDSrsfmri_mean_<scan>.nii in the space of the scan, e.g. as 
+%  underlay of the network rendering via the coregistration and the 
+%  registration of the session, see cat_io_dcm2bids_render) and copied to 
+%  the BIDS derivatives (the matrix and map only for opts.preprocessing > 1).
+%  The segmentation is the one of the session (T1w, otherwise UNIT1, T2w, 
+%  or FLAIR, see anatScan in cat_io_dcm2bids_pp_anat). The
 %  measures (4) and (6) without T1w segmentation are restricted to the
 %  quality measures with a brain mask of the mean EPI.
 %
@@ -41,11 +52,13 @@ function varargout = cat_io_dcm2bids_pp_rsfmri(action,varargin)
 %
 %  Actions (see the help of the local functions):
 %    cat_io_dcm2bids_pp_rsfmri('processSession',Pdbnii,Vjson,datatype,suffix,BIDSpathd,BIDSfile,opts)
+%    [names,net,nets] = cat_io_dcm2bids_pp_rsfmri('networks',name)
+%    P = cat_io_dcm2bids_pp_rsfmri('atlasFile',name)
 %
 %  See also cat_io_dcm2bids_pp_anat, cat_io_dcm2bids_pp_dwi.
 
   switch action
-    case {'processSession'}
+    case {'processSession','networks','atlasFile'}
       [varargout{1:nargout}] = feval(action,varargin{:});
     otherwise
       error('cat_io_dcm2bids_pp_rsfmri:unknownAction','Unknown action "%s".',action);
@@ -82,10 +95,12 @@ function processScan(i,Pdbnii,Vjson,datatype,suffix,A,BIDSpathd,BIDSfile,opts,co
 %  processSession), that are skipped if the results of the same or a lower
 %  preprocessing level exist (besides opts.rerun, see levelUpdate in
 %  cat_io_dcm2bids_pp_anat). Without compute, only existing results are
-%  exported.
+%  exported (results of older versions are processed again).
   [pth,nam] = fileparts(regexprep(Pdbnii{i},'\.gz$',''));
   Pjson = fullfile(pth,['catDCM2BIDSrsfmri_' nam '.json']);
   Pconn = fullfile(pth,['catDCM2BIDSrsfmri_conn_' nam '.tsv']);
+  % results of older versions are processed again (also without compute)
+  compute = compute || (exist(Pjson,'file') && cat_io_dcm2bids_pp_anat('levelOutdated',Pjson));
   if ~compute && ~exist(Pjson,'file'), return; end
   if compute && cat_io_dcm2bids_pp_anat('levelUpdate',Pjson,opts)
     stime = tic;
@@ -97,7 +112,7 @@ function processScan(i,Pdbnii,Vjson,datatype,suffix,A,BIDSpathd,BIDSfile,opts,co
     end
     Pu = cat_io_dcm2bids_helper('prepNii',{P},opts,0);
     try
-      [J,C] = estimateMeasures(i,Pu{1},Prp,Pdbnii,Vjson,datatype,suffix,A,opts);
+      [J,C,Ymap] = estimateMeasures(i,Pu{1},Prp,Pdbnii,Vjson,datatype,suffix,A,opts);
     catch e
       cat_io_dcm2bids_helper('prepNiigz',Pu,opts); rethrow(e);
     end
@@ -109,6 +124,11 @@ function processScan(i,Pdbnii,Vjson,datatype,suffix,A,BIDSpathd,BIDSfile,opts,co
     J.method.duration = round(toc(stime));
     cat_io_json(Pjson,J);
     if ~isempty(C), cat_io_dcm2bids_helper('writeTable',Pconn,C,'tsv'); end
+    for mi = 1:numel(Ymap) % mean EPI in the space of the scan and in MNI space
+      V = Ymap(mi).V; V.fname = fullfile(pth,['catDCM2BIDSrsfmri_' Ymap(mi).name '_' nam '.nii']);
+      V.descrip = sprintf('%s EPI (cat_io_dcm2bids_pp_rsfmri)',Ymap(mi).name); spm_write_vol(V,Ymap(mi).Y);
+      cat_io_dcm2bids_helper('prepNiigz',{V.fname},opts);
+    end
   else
     J = cat_io_json(Pjson);
   end
@@ -120,16 +140,28 @@ function processScan(i,Pdbnii,Vjson,datatype,suffix,A,BIDSpathd,BIDSfile,opts,co
   if opts.preprocessing > 1 && exist(Pconn,'file')
     copyfile(Pconn,fullfile(BIDSpathd,['catDCM2BIDSrsfmri_conn_' bnam '.tsv']));
   end
+  if opts.preprocessing > 1
+    for m = {'mean'}
+      Pmap = fullfile(pth,['catDCM2BIDSrsfmri_' m{1} '_' nam '.nii']);
+      if ~exist(Pmap,'file'), Pmap = [Pmap '.gz']; end
+      if exist(Pmap,'file')
+        cat_io_dcm2bids_helper('exportNii',Pmap,fullfile(BIDSpathd,['catDCM2BIDSrsfmri_' m{1} '_' bnam]),opts);
+      end
+    end
+  end
   Q = J.qc; F = J.connectivity;
   fprintf('%60s : rs-fMRI FD %0.2f mm (%0.0f%% > 0.5), tSNR %0.0f, GCOR %0.3f, segregation %0.2f, %s\n', ...
     scanName(BIDSfile),Q.FD_mean,Q.FD_pct05,Q.tSNR,F.GCOR,F.segregation,J.method.distortion_correction);
 end
 % =========================================================================
-function [J,C] = estimateMeasures(i,P,Prp,Pdbnii,Vjson,datatype,suffix,A,opts)
+function [J,C,Ymap] = estimateMeasures(i,P,Prp,Pdbnii,Vjson,datatype,suffix,A,opts)
 %estimateMeasures. Measures of the (unzipped) realigned image P of the BOLD
-%  scan i with the motion parameters Prp: result structure J (JSON) and the
-%  connectivity matrix C (table with the parcel names).
-  J  = []; C = {};
+%  scan i with the motion parameters Prp: result structure J (JSON, with the
+%  coregistration to the T1w), the connectivity matrix C (table with the 
+%  parcel names), and the distortion-corrected mean EPI Ymap (structure 
+%  array with the name, image Y, and grid V: mean in the space of the scan,
+%  e.g. as underlay of the network in the rendering).
+  J  = []; C = {}; Ymap = struct('name',{},'Y',{},'V',{}); parc = 'Schaefer2018_100Parcels_17Networks_order'; % parcellation (CAT)
   Vi = spm_vol(P); T = numel(Vi); dim = Vi(1).dim;
   TR = fieldValue(Vjson{i},'RepetitionTime',nan);
   rp = load(Prp);
@@ -143,20 +175,26 @@ function [J,C] = estimateMeasures(i,P,Prp,Pdbnii,Vjson,datatype,suffix,A,opts)
   Ymu  = reshape(Wall * Ym(:),dim);
 
   % (3) brain, tissues, and parcels (T1w segmentation of the session)
-  if ~isempty(A)
-    [Yt1,Vt1] = readImage(A.Pm,opts);
-    M     = cat_io_dcm2bids_pp_anat('coregImages',Ymu,Vi(1),Yt1,Vt1);
-    L     = cat_io_dcm2bids_pp_anat('sampleAnat',Vi(1),M,A,{atlasFile('Schaefer2018_200Parcels_17Networks_order')},opts);
-    brain = L.c0 > 0.5; mask = 'T1w segmentation';
+  M = eye(4); Qc = struct();
+  Vo = struct('dim',dim,'mat',Vi(1).mat,'dt',[16 0],'pinfo',[1 0 0]');
+  Ymap(1) = struct('name','mean','Y',single(Ymu),'V',Vo);
+  if ~isempty(A) % (rigid and non-linear coregistration to the T1w)
+    [M,Qc,Dn] = cat_io_dcm2bids_pp_anat('coregAnat',Ymu,Vi(1),A,opts);
+    L     = cat_io_dcm2bids_pp_anat('sampleAnat',Vi(1),M,A,{atlasFile(parc)},opts,Dn);
+    brain = L.c0 > 0.5; mask = 'T1w segmentation (with signal in all volumes)';
     c0    = L.c0(brain); par = L.atlas{1}(brain);
   else
-    brain = Ymu > 0.2 * prctile(Ymu(:),99); mask = 'mean EPI threshold';
+    brain = Ymu > 0.2 * prctile(Ymu(:),99); mask = 'mean EPI threshold (with signal in all volumes)';
     c0    = 2 * ones(nnz(brain),1); par = zeros(nnz(brain),1);
   end
   W  = Wall(brain(:),:); clear Wall
-  Y  = zeros(T,nnz(brain),'single');
-  for t = 1:T, Y(t,:) = W * reshape(spm_read_vols(Vi(t)),[],1); end
-  ok = (mean(Y,1) > 0 & std(Y,0,1) > 0)';                   % voxels with signal (field of view)
+  Y  = zeros(T,nnz(brain),'single'); bad = zeros(nnz(brain),1);
+  for t = 1:T
+    Yt = reshape(spm_read_vols(Vi(t)),[],1); Y(t,:) = W * Yt; bad = bad + W * double(~(Yt > 0)); % (also NaN)
+  end
+  % voxels with signal in all volumes (e.g. not the edge slices of the field
+  % of view that are missing in some volumes after the realignment)
+  ok = bad == 0 & std(Y,0,1)' > 0;
   gm = ok & c0 >= 1.5 & c0 <= 2.5; wm = ok & c0 >= 2.9; csf = ok & c0 >= 0.5 & c0 <= 1.1;
 
   % (4) quality measures
@@ -165,7 +203,8 @@ function [J,C] = estimateMeasures(i,P,Prp,Pdbnii,Vjson,datatype,suffix,A,opts)
   mu   = mean(Y,1);
   sd   = std(Y(:,gm) - X1 * (X1 \ Y(:,gm)),0,1);
   Q    = struct('FD_mean',mean(FD),'FD_max',max(FD),'FD_pct05',100 * mean(FD > 0.5), ...
-    'DVARS',median(sqrt(mean(diff(Y,1,1).^2,2))) / mean(mu) * 100,'tSNR',median(mu(gm) ./ sd));
+    'DVARS',median(sqrt(mean(diff(Y(:,ok),1,1).^2,2))) / mean(mu(ok)) * 100,'tSNR',median(mu(gm) ./ sd), ...
+    'voxels_without_signal',nnz(bad));                     % (brain voxels without signal in some volumes)
 
   % (5) nuisance regression of the GM signal and low-pass filter
   dR = [zeros(1,6); diff(rp)];
@@ -184,7 +223,7 @@ function [J,C] = estimateMeasures(i,P,Prp,Pdbnii,Vjson,datatype,suffix,A,opts)
   % (6) functional connectivity
   Z  = Yg ./ max(eps,sqrt(sum(Yg.^2,1)));                   % unit norm (zero mean after the regression)
   N  = struct('GCOR',double(sum(mean(Z,2).^2)),'within',nan,'between',nan,'segregation',nan,'parcels',0);
-  [names,net,nets] = networks('Schaefer2018_200Parcels_17Networks_order');
+  [names,net,nets] = networks(parc);
   pg = par(gm); np = numel(net); TS = nan(T,np,'single');
   for p = 1:np
     v = pg == p;
@@ -202,9 +241,12 @@ function [J,C] = estimateMeasures(i,P,Prp,Pdbnii,Vjson,datatype,suffix,A,opts)
     end
     C = [{'parcel'} names(:)'; names(:) num2cell(R)];
   end
-  J.method = struct('level',opts.pplevel,'volumes',T,'RepetitionTime',TR,'distortion_correction',dc,'masks',mask, ...
+  p = cat_io_dcm2bids_pp_anat('levelParameters',opts.pplevel);
+  J.method = struct('level',opts.pplevel,'version',p.version,'volumes',T,'RepetitionTime',TR,'distortion_correction',dc,'masks',mask, ...
     'nuisance','24 motion parameters, mean WM and CSF signal, linear trend, DCT high-pass 0.01 Hz', ...
-    'lowpass','0.1 Hz (FFT)','parcellation','Schaefer2018 200 parcels, 17 networks (CAT), 7 networks of Yeo 2011');
+    'lowpass','0.1 Hz (FFT)','parcellation','Schaefer2018 100 parcels, 17 networks (CAT), 7 networks of Yeo 2011', ...
+    'coregistration',Qc);
+  J.coreg = M; % world space of the scan to the world space of the T1w
   J.qc = Q;
   J.connectivity = N;
 end
@@ -258,13 +300,6 @@ function [names,net,nets] = networks(name)
   n7(strcmp(n7,'TempPar')) = {'Default'};
   nets  = {'Vis','SomMot','DorsAttn','SalVentAttn','Limbic','Cont','Default'};
   [~,net] = ismember(n7,nets);
-end
-% =========================================================================
-function [Y,V] = readImage(P,opts)
-%readImage. Image P (.nii or .nii.gz) with its header V.
-  Pu = cat_io_dcm2bids_helper('prepNii',{P},opts,0);
-  V  = spm_vol(Pu{1}); V = V(1); Y = spm_read_vols(V);
-  cat_io_dcm2bids_helper('prepNiigz',Pu,opts);
 end
 % =========================================================================
 function P = atlasFile(name)

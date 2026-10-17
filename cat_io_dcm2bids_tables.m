@@ -7,8 +7,9 @@ function varargout = cat_io_dcm2bids_tables(action,varargin)
 %    scans.<fmt>       one row per scan with the site, session, BIDS type,
 %                      protocol test (closest protocol, status, PFM, PFR,
 %                      deviations), protocol variant, quality rating (SQR),
-%                      and scanner fields (the cumulative list is kept in
-%                      scans.mat)
+%                      acquisition duration (s, see acquisitionDuration in
+%                      cat_io_dcm2bids_protocols), and scanner fields (the
+%                      cumulative list is kept in scans.mat)
 %    sites.<fmt>       one row per scanner with its identity, software and
 %                      coils, scan period, number of subjects, sessions, and
 %                      scans (also of the typical scan types opts.scantypes),
@@ -17,6 +18,8 @@ function varargout = cat_io_dcm2bids_tables(action,varargin)
 %                      with the abbreviation of the dictionary or a proposal
 %    protocols.<fmt>   one row per protocol variant (see protocolVariant in
 %                      cat_io_dcm2bids_protocols) with the sites using it
+%                      and its main parameters (with the acquisition 
+%                      duration)
 %    protocols_sites.<fmt>  one row per site and protocol variant
 %    protocols-details/<datatype>/<protocol>/<site>-deviations.<fmt>
 %                      deviations of conform and semiconform scans of a
@@ -78,6 +81,7 @@ function R = scanRecord(Vjson,scanid,site,session,datatype,suffix,ent,variant,PT
     'Manufacturer',str('Manufacturer'), 'ManufacturersModelName',str('ManufacturersModelName'), ...
     'MagneticFieldStrength',num('MagneticFieldStrength'), 'SoftwareVersions',str('SoftwareVersions'), ...
     'ReceiveCoilName',str('ReceiveCoilName'), 'ReceiveCoilActiveElements',str('ReceiveCoilActiveElements'), ...
+    'AcquisitionDuration',cat_io_dcm2bids_protocols('acquisitionDuration',Vjson), ...
     'TxRefAmp',num('TxRefAmp'), 'ProcedureStepDescription',str('ProcedureStepDescription'), ...
     'InstitutionName',str('InstitutionName'), 'InstitutionalDepartmentName',str('InstitutionalDepartmentName'), ...
     'InstitutionAddress',str('InstitutionAddress'), 'StationName',str('StationName'));
@@ -90,11 +94,9 @@ function writeTables(Ptbldir,R,sites,opts)
 %  file).
   if isempty(R), return; end
   Pmat = fullfile(Ptbldir,'scans.mat');
-  if exist(Pmat,'file')
+  if exist(Pmat,'file') % (records of older versions with other fields)
     S = load(Pmat,'R'); S = S.R;
-    if ~isempty(S) && isequal(sort(fieldnames(S)),sort(fieldnames(R)))
-      R = [S(~ismember({S.ScanID},{R.ScanID})) R];
-    end
+    if ~isempty(S), R = cat_io_dcm2bids_helper('catRecords',S(~ismember({S.ScanID},{R.ScanID})),R); end
   end
   [~,so] = sort(strcat({R.Session},'|',cellfun(@(x) sprintf('%06d',x),{R.SeriesNumber},'UniformOutput',false),'|',{R.ScanID}));
   R = R(so);
@@ -120,8 +122,12 @@ end
 function writeSites(Ptbldir,R,sites,opts)
 %writeSites. Site table with one row per scanner (DeviceSerialNumber) and
 %  the template of the site dictionary (sites.json, see getSites in
-%  cat_io_dcm2bids_protocols) with the abbreviation of the dictionary or a
-%  proposal for new scanners (city and field strength, e.g. MAG3T).
+%  cat_io_dcm2bids_protocols) with the abbreviation of the dictionary (or
+%  of the site registry of the database without dictionary, see 
+%  siteRegistry in cat_io_dcm2bids_protocols) or a proposal for new 
+%  scanners (city, manufacturer, and field strength, e.g. MagSI30T), and an
+%  empty Color of the site in the report figure (e.g. #A82117, see 
+%  siteColors in cat_io_dcm2bids_protocols).
   dev = {R.DeviceSerialNumber}; dev(cellfun('isempty',dev)) = {R(cellfun('isempty',dev)).Site};
   [udev,~,di] = unique(dev,'stable');
   [types,tnam] = scanTypes(opts);
@@ -131,7 +137,7 @@ function writeSites(Ptbldir,R,sites,opts)
     'ReceiveCoilName','FirstScan','LastScan','Subjects','Sessions','Scans'}, ...
     reshape([strcat(tnam,'_scans'); strcat(tnam,'_subjects')],1,[]), ...
     {'conform','semiconform','nonconform','PFR','SQR','TxRefAmp','ProcedureStepDescription'}];
-  J = struct('DeviceSerialNumber',{},'InstitutionAbbreviation',{},'InstitutionName',{}, ...
+  J = struct('DeviceSerialNumber',{},'InstitutionAbbreviation',{},'Color',{},'InstitutionName',{}, ...
     'InstitutionalDepartmentName',{},'InstitutionAddress',{},'MagneticFieldStrength',{}, ...
     'Manufacturer',{},'ManufacturersModelName',{},'StationName',{});
   for si = 1:numel(udev)
@@ -159,8 +165,8 @@ function writeSites(Ptbldir,R,sites,opts)
       id = find(cat_io_contains(sites(:,1),udev{si}),1); % as setupSites in cat_io_dcm2bids_protocols
       if ~isempty(id), abbr = char(sites{id,2}); end
     end
-    if isempty(abbr), abbr = siteProposal(row{5},row{9},udev{si}); end
-    J(end+1) = struct('DeviceSerialNumber',udev{si},'InstitutionAbbreviation',abbr, ...
+    if isempty(abbr), abbr = cat_io_dcm2bids_protocols('siteProposal',row{5},row{9},row{7},opts); end
+    J(end+1) = struct('DeviceSerialNumber',udev{si},'InstitutionAbbreviation',abbr,'Color','', ...
       'InstitutionName',row{3},'InstitutionalDepartmentName',row{4},'InstitutionAddress',row{5}, ...
       'MagneticFieldStrength',row{9},'Manufacturer',row{7},'ManufacturersModelName',row{8}, ...
       'StationName',row{6}); %#ok<AGROW>
@@ -188,7 +194,7 @@ function writeProtocols(Ptbldir,R,opts)
   ext  = ['.' opts.tableformat];
   par  = {'MRAcquisitionType','PulseSequenceDetails','EchoTime','RepetitionTime','InversionTime', ...
     'FlipAngle','VoxelSize','NumberOfSlices','NumberOfVolumes','MultibandAccelerationFactor', ...
-    'PhaseEncodingDirection'};
+    'PhaseEncodingDirection','AcquisitionDuration'};
   hdr  = {'Variant','Datatype','Type','ProtocolName','Protocol','Status','PFR','Deviations', ...
     'Scans','Sessions','Subjects','FirstScan','LastScan'};
 
@@ -258,19 +264,6 @@ function t = recordType(r)
   tok = regexp(r.Entities,'_(part-(?:phase|real|imag)|inv-\d+)(?=_|$)','tokens');
   t   = [r.Datatype '/' r.Suffix sprintf('_%s',strjoin(cellfun(@(x) x{1},tok,'UniformOutput',false),'_'))];
   if isempty(tok), t = [r.Datatype '/' r.Suffix]; end
-end
-% =========================================================================
-function abbr = siteProposal(address,field,serial)
-%siteProposal. Abbreviation of a new scanner by the city of the address
-%  (second entry of the Siemens address, e.g. "Street,City,District,...")
-%  and the field strength (e.g. MAG3T), otherwise the serial number.
-  parts = strtrim(strsplit(address,','));
-  city  = regexprep(char(parts(min(2,numel(parts)))),'[^a-zA-Z]','');
-  if numel(parts) > 1 && numel(city) >= 3 && isfinite(field)
-    abbr = sprintf('%s%gT',upper(city(1:3)),field);
-  else
-    abbr = cat_io_dcm2bids_bids('bidsLabel',serial);
-  end
 end
 % =========================================================================
 function s = deviationString(r)

@@ -6,17 +6,19 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
 %    ISR .. inhomogeneity to signal ratio
 %    NSR .. noise to signal ratio
 %    RES .. RMS of the voxel resolution
-%  4D data is realigned (prefix r). The measures are rated (marks 1-6 for
+%  4D data is realigned (prefix r, DWI with separate realignments of the b0
+%  and of the diffusion-weighted volumes). The measures are rated (marks 1-6 for
 %  the [best worst] measures, see qualityRating) by the QC definition of the
 %  protocol file Pprotocols (qc<protocol>.json) and saved as
 %  catDCM2BIDSqc_<image>.mat/json. The
 %  ratings (or the measures without protocol) are printed in the scan line 
 %  of the command line output. 
-%  The QC maps are written next to the image (<image>_<map>.nii, zipped 
-%  for opts.gzipi): noisemap, noisefield, denoisedavg, and sliceMotion of 
-%  4D data (of the first 8 volumes), and noisemap and noisefield of 
-%  anatomical data (see cat_io_dcm2bids for the export as derivatives and
-%  cat_io_dcm2bids_render for the rendering). 
+%  The denoised average of 4D data (of the first 8 volumes) is written next
+%  to the image (<image>_denoisedavg.nii, zipped for opts.gzipi, see
+%  cat_io_dcm2bids for the export as derivative and cat_io_dcm2bids_render
+%  for the rendering), whereas the noise maps (noise map, noise field, and
+%  slice motion) are only used for the measures, as they were not reliable
+%  enough as maps.
 %
 %  [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P,type,opts,Pprotocols)
 %
@@ -42,6 +44,17 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
     Pqc = spm_file(strrep(P,'.nii.gz','.nii'),'prefix','catDCM2BIDSqc_','ext','mat');
   end
   Pqcj = spm_file(Pqc,'ext','json');
+
+  % DWI realigned by former versions (one realignment with the b0 and the
+  % diffusion-weighted volumes as sessions, see the realignment below,
+  % recognized by the moved header sidecar rp_*.mat) are processed again
+  Pbase = regexprep(P,'\.nii(\.gz)?$','');
+  if strcmp(type,'dwi') && exist(spm_file([Pbase '.mat'],'prefix','rp_'),'file')
+    for Pold = {spm_file([Pbase '.mat'],'prefix','rp_'), spm_file([Pbase '.txt'],'prefix','rp_'), Pqc, Pqcj, ...
+        spm_file([Pbase '.nii'],'prefix','r'), spm_file([Pbase '.nii.gz'],'prefix','r')}
+      if exist(Pold{1},'file'), delete(Pold{1}); end
+    end
+  end
 
   if exist(Pqc,'file')
     [pp,ff,ee] = spm_fileparts(P); 
@@ -130,49 +143,30 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
       isepi = sig75 > mean(sig75); 
     end
   
-    if ~exist(Pr,'file') 
-      %% realignment batch
-      clear matlabbatch; 
+    if ~exist(Pr,'file')
+      %% realignment (SPM, register to mean) and reslicing of all volumes
+      % into the grid of the first volume (rp_*.txt with the parameters of
+      % all volumes relative to the first one, without changes of the
+      % header): DWI with separate realignments of the b0 volumes and of the
+      % diffusion-weighted volumes (the first volume of each set unmoved), as
+      % one realignment with both sets as sessions registers their first
+      % volumes across the contrasts (least squares), which shifted the
+      % diffusion-weighted volumes by several mm relative to the b0 volumes
       V = spm_vol(P);
-      switch type
-        case 'dwi'
-          epiids = find(~isepi); 
-        case 'func' 
-          epiids = 1:numel(V);
-        otherwise
-          epiids = 1:numel(V);
-      end
-      for vi = 1:numel(epiids)
-        matlabbatch{1}.spm.spatial.realign.estwrite.data{1}{vi,1} = ... 
-          sprintf('%s,%d',V(vi).fname,epiids(vi)); 
-      end
-      if strcmp(type,'dwi') 
-        epiids = find(isepi); 
-        for vi = 1:numel(epiids)
-          matlabbatch{1}.spm.spatial.realign.estwrite.data{2}{vi,1} = ... 
-            sprintf('%s,%d',V(vi).fname,epiids(vi)); 
-        end
-      end
+      if strcmp(type,'dwi'), ses = {find(isepi), find(~isepi)}; else, ses = {1:numel(V)}; end
       if opts.hrrealign
-        matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.quality  = 0.95;    
-        matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.sep      = 1.5;     
-        matlabbatch{1}.spm.spatial.realign.estwrite.roptions.interp   = 4;      
-        matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.fwhm     = 1;
+        ef = struct('quality',0.95,'sep',1.5,'fwhm',1); ri = 4;
       else
-        matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.quality  = 0.8;    
-        matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.sep      = 4;   
-        matlabbatch{1}.spm.spatial.realign.estwrite.roptions.interp   = 1;    
-        matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.fwhm     = 2;
+        ef = struct('quality',0.8,'sep',4,'fwhm',2); ri = 1;
       end
-      matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.rtm      = 1;
-      matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.wrap     = [0 0 0];
-      matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.weight   = '';
-      matlabbatch{1}.spm.spatial.realign.estwrite.roptions.which    = [2 0];  
-      matlabbatch{1}.spm.spatial.realign.estwrite.roptions.wrap     = [0 0 0];
-      matlabbatch{1}.spm.spatial.realign.estwrite.roptions.mask     = 1;
-      matlabbatch{1}.spm.spatial.realign.estwrite.roptions.prefix   = 'r';
-      evalc('spm_jobman(''run'',matlabbatch);');  
-      movefile( spm_file(P,'ext','.mat') , spm_file(P,'ext','.mat','prefix','rp_'));  
+      ef.rtm = 1; ef.wrap = [0 0 0]; ef.interp = 2; ef.weight = ''; ef.graphics = 0;
+      for si = find(cellfun(@numel,ses) > 1)
+        evalc('Vs = spm_realign(V(ses{si}),ef);'); V(ses{si}) = Vs;
+      end
+      evalc('spm_reslice(V,struct(''which'',2,''mean'',0,''interp'',ri,''wrap'',[0 0 0],''mask'',1,''prefix'',''r''));');
+      rp = zeros(numel(V),6);
+      for vi = 1:numel(V), q = spm_imatrix(V(vi).mat / V(1).mat); rp(vi,:) = q(1:6); end
+      save(spm_file(P,'prefix','rp_','ext','.txt'),'rp','-ascii');
     end
   
 
@@ -207,7 +201,7 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
       % g0  .. threshold in Yg
       % s1  .. signal intensity in Ym (for GM-WM intensity)
       Ym  = real(single(cat_stat_nanmean(Yr,4)));
-      bbs = min(4,size(Ym)/4); 
+      bbs = max(1,floor(min(4,size(Ym)/4))); % boundary width (integer, also for few slices)
       Ybb = true(size(Ym)); Ybb(bbs(1):end-bbs(1),bbs(2):end-bbs(2),bbs(3):end-bbs(3)) = false; 
       if  nnz(Ym(:)<0) ./ numel(Ym)  < .3 %~strcmp(type,'fmap')  &&  (
         %% typical image with mostly positive values and high intensity object
@@ -259,10 +253,7 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
         end
 
         %%
-        Ymn = zeros(V(1).dim,'single'); 
-        if opts.sliceMotionCor 
-          Ydm = zeros(V(1).dim,'single'); 
-        end
+        Ymn = zeros(V(1).dim,'single');
         Yr  = single(spm_read_vols(Vr(epiids)));
         Yd  = zeros([size(Yr,1) size(Yr,2) size(Yr,3) min(size(Yr,4),opts.tlim)],'single');
         WSM = nan(1,size(Yr,4));
@@ -288,8 +279,7 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
             end
             Yas = Ya - Yw1 .* abs(Yw1).^.25;
             Yas(Ya==0) = 0; % apply defacing
-            Ydm = Ydm + abs(Yas - Ya) / min(size(Yr,4),opts.tlim);
-            WSM(vi) = cat_stat_nanmean( (Yas(:) - Ya(:)).^2 ).^.5; 
+            WSM(vi) = cat_stat_nanmean( (Yas(:) - Ya(:)).^2 ).^.5;
             if opts.sliceMotionCor > 2, Ya = Yas; end
           end
     
@@ -314,40 +304,19 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
         if exist(Pc,'file'), delete(Pc); end
 
         if run==1 % why only run 1?
+          % noise map and its smooth noise field (NSR), which are not written
+          % as they were not reliable enough as maps
           Yn   = mean(Yd(:,:,:,1:min(size(Yr,4),opts.tlim)), 4) .* (Ya~=0);
-          Yns  = cat_vol_approx(cat_vol_median3(Yn)) .* (Ya~=0); 
+          Yns  = cat_vol_approx(cat_vol_median3(Yn)) .* (Ya~=0);
 
           %% write output
           Vn = V(1); Vn.dt(1) = 16;
-          Vn.fname = spm_file(V(1).fname,'suffix','_noisemap');    
-          Vn.descrip = sprintf(...
-            'average noise map of %d (bias-adjusted) input volums < %s', ...
-            min(size(Yr,4),opts.tlim), V(1).descrip);  
-          spm_write_vol(Vn,Yn);
-          Pmaps{end+1} = Vn.fname; %#ok<AGROW>
-
-          Vn.fname = spm_file(V(1).fname,'suffix','_noisefield');       
-          Vn.descrip = sprintf(...
-            'average noise field map of %d (bias-adjusted) input volums < %s', ...
-            min(size(Yr,4),opts.tlim), V(1).descrip);  
-          spm_write_vol(Vn,Yns);
-          Pmaps{end+1} = Vn.fname; %#ok<AGROW>
-
-          Vn.fname = spm_file(V(1).fname,'suffix','_denoisedavg');    
+          Vn.fname = spm_file(V(1).fname,'suffix','_denoisedavg');
           Vn.descrip = sprintf(...
             'denoise, bias-adjusted average image of %d input volums < %s', ...
-            min(size(Yr,4),opts.tlim), V(1).descrip);  
+            min(size(Yr,4),opts.tlim), V(1).descrip);
           spm_write_vol(Vn,Ymn);
           Pmaps{end+1} = Vn.fname; %#ok<AGROW>
-
-         if opts.sliceMotionCor 
-           Vn.fname = spm_file(V(1).fname,'suffix','_sliceMotion');    
-           Vn.descrip = sprintf(...
-             'average slice motion map of %d input volums < %s', ...
-             min(size(Yr,4),opts.tlim), V(1).descrip);  
-           spm_write_vol(Vn,Ydm);
-           Pmaps{end+1} = Vn.fname; %#ok<AGROW>
-         end
         end
       end
     end
@@ -375,7 +344,7 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
     
 
     elseif   strcmp(type,'anat')  &&  ( nnz(Ym(:)<0) ./ numel(Ym)  < .3 ) 
-      [Ya,Ybr,res]  = cat_vol_resize({mean(Yr,4)./Yw,single(Yb)},'reduceV',vx_vol,2,32,'meanm');
+      [Ya,Ybr]  = cat_vol_resize({mean(Yr,4)./Yw,single(Yb)},'reduceV',vx_vol,2,32,'meanm');
       
       % measure variance in background and foreground
       Yg     = abs(cat_vol_grad(Ya+min(Ya(:)))) ./ abs(Ya+min(Ya(:))); 
@@ -388,22 +357,9 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
       NSRtis = cat_vol_localstat(Ygr,Ytisr>.9,2,4); NSRtis = cat_stat_nanmedian(NSRtis(Ytisr(:)>.9)); 
       QM.NSR = min([NSRbg,NSRtis]);       % noise to signal rating based on the approximated 
   
-      %% estimate denoising difference
+      %% estimate denoising difference (without noise maps, as they were not
+      %  reliable enough as maps)
       Yas = Ya + 0; if opts.denoise, cat_sanlm(Yas,1,3); end
-  
-      Yni = cat_vol_resize(abs(Ya - Yas),'dereduceV',res);
-      Vn = V(1); Vn.dt(1) = 16;
-      Vn.fname = spm_file(V(1).fname,'suffix','_noisemap');    
-      Vn.descrip = sprintf(...
-        'noise map in the bias-adjusted input volums < %s', V(1).descrip);  
-      spm_write_vol(Vn,Yni .* (mean(Yr,4)~=0) );
-      Pmaps{end+1} = Vn.fname; 
-
-      Vn.fname = spm_file(V(1).fname,'suffix','_noisefield');       
-      Vn.descrip = sprintf(...
-        'average noise field map from bias-adjustment < %s', V(1).descrip);  
-      spm_write_vol(Vn, prctile(Yni(Ya(:)~=0),95) ./ (Yw ./ mean(Yw(:))) .* (mean(Yr,4)~=0)  );
-      Pmaps{end+1} = Vn.fname; 
 
       % average
       QM.NSR = QM.NSR; % , cat_stat_nanmean((Ya(:) - Yas(:)).^2).^.5 );       % noise to signal rating based on the approximated 

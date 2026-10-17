@@ -11,19 +11,23 @@ function varargout = cat_io_dcm2bids_stats(action,varargin)
 %                  as in cat_stat_homogeneity (with the scaling of the head
 %                  size by the TIV and the correction of age and sex),
 %                  where high values indicate atypical maps (e.g. artifacts
-%                  or segmentation problems)
+%                  or segmentation problems), also of other normalized maps
+%                  (e.g. wFA, without TIV)
+%    vectorHomogeneity  sample homogeneity of vectors (e.g. the connections
+%                  of the connectivity matrices) as QMZ
 %
 %  varargout = cat_io_dcm2bids_stats(action,varargin)
 %
 %  Actions (see the help of the local functions):
 %    [z,M] = cat_io_dcm2bids_stats('volumeModel',Y,age,sex)
 %    [qmz,thr] = cat_io_dcm2bids_stats('homogeneity',P,TIV,age,sex)
+%    [qmz,thr] = cat_io_dcm2bids_stats('vectorHomogeneity',X,age,sex)
 %
 %  See also cat_io_dcm2bids_report, cat_io_dcm2bids_reportfig,
 %  cat_stat_homogeneity.
 
   switch action
-    case {'volumeModel','homogeneity'}
+    case {'volumeModel','homogeneity','vectorHomogeneity'}
       [varargout{1:nargout}] = feval(action,varargin{:});
     otherwise
       error('cat_io_dcm2bids_stats:unknownAction','Unknown action "%s".',action);
@@ -100,11 +104,13 @@ function [qmz,thr] = homogeneity(P,TIV,age,sex)
 %  mean Z-score (QMZ) of each map as in cat_stat_homogeneity, i.e., the
 %  4th root of the mean of the 4th power of the voxel-wise Z-scores to the
 %  sample (that emphasizes local deviations), after the proportional
-%  scaling by the TIV (head size) and the correction of age and sex (for
-%  at least 10 maps). thr is the threshold of atypical maps (mean + 2 SD
-%  of the QMZ as in cat_stat_homogeneity). The maps are read twice (no
-%  maps are kept in memory) and need at least 3 maps of the same size.
+%  scaling by the TIV (head size, empty TIV for maps without scaling, e.g.
+%  the wFA) and the correction of age and sex (for at least 10 maps, see
+%  nuisanceModel). thr is the threshold of atypical maps (mean + 2 SD of 
+%  the QMZ as in cat_stat_homogeneity). The maps are read twice (no maps 
+%  are kept in memory) and need at least 3 maps of the same size.
   n   = numel(P); qmz = nan(n,1); thr = nan;
+  if isempty(TIV), TIV = ones(n,1); end
   TIV = double(TIV(:)); age = double(age(:));
   va  = ~cellfun('isempty',P(:)) & isfinite(TIV) & TIV > 0;
   va(va) = cellfun(@(f) exist(f,'file') > 0,P(va));
@@ -119,13 +125,8 @@ function [qmz,thr] = homogeneity(P,TIV,age,sex)
   if nv < 3, return; end
   gSF = mean(TIV(ids)) ./ TIV(ids); % proportional scaling of the head size
 
-  % nuisance parameters (centered) for at least 10 maps (as job.c of
-  % cat_stat_homogeneity)
-  G = zeros(nv,0);
-  if nv >= 10 && all(isfinite(age(ids))) && std(age(ids)) > 1, G = [G age(ids)]; end
-  male = double(strcmpi(sex(ids),'M'));
-  if nv >= 10 && sum(male) >= 3 && sum(1-male) >= 3, G = [G male(:)]; end
-  if ~isempty(G), G = G - mean(G,1); iG = pinv(G); end
+  % nuisance parameters (centered, as job.c of cat_stat_homogeneity)
+  G = nuisanceModel(age(ids),sex(ids)); if ~isempty(G), iG = pinv(G); end
 
   % voxel-wise mean, SD, and nuisance effects (first pass)
   Ymean = zeros(prod(dim(1:3)),1); Yss = Ymean; Beta = zeros(numel(Ymean),size(G,2),'single');
@@ -147,6 +148,40 @@ function [qmz,thr] = homogeneity(P,TIV,age,sex)
     qmz(ids(j)) = mean(abs(Z).^4)^(1/4);
   end
   thr = mean(qmz(ids)) + 2 * std(qmz(ids));
+end
+% =========================================================================
+function [qmz,thr] = vectorHomogeneity(X,age,sex)
+%vectorHomogeneity. Sample homogeneity of the vectors X (n x m, e.g. the 
+%  Fisher z of the connections of the connectivity matrices, rows of NaN
+%  if not available) as quartic mean Z-score (QMZ) of each vector (as for 
+%  the maps, see homogeneity) of the elements that are available for all 
+%  vectors, after the correction of age and sex (for at least 10 vectors,
+%  see nuisanceModel). thr is the threshold of atypical vectors (mean + 2 
+%  SD of the QMZ). It needs at least 3 vectors.
+  n  = size(X,1); qmz = nan(n,1); thr = nan;
+  ids = find(any(isfinite(X),2)); 
+  if numel(ids) < 3, return; end
+  age = double(age(:)); sex = sex(:);
+  Xv = double(X(ids,:)); Xv = Xv(:,all(isfinite(Xv),1));
+  if isempty(Xv), return; end
+  G  = nuisanceModel(age(ids),sex(ids));
+  if ~isempty(G), Xv = Xv - G * (pinv(G) * Xv); end
+  sd = std(Xv,0,1); ok = sd > 0;
+  Z  = (Xv(:,ok) - mean(Xv(:,ok),1)) ./ sd(ok);
+  qmz(ids) = mean(abs(Z).^4,2).^(1/4);
+  thr = mean(qmz(ids)) + 2 * std(qmz(ids));
+end
+% =========================================================================
+function G = nuisanceModel(age,sex)
+%nuisanceModel. Centered nuisance parameters of age and sex (male) of the
+%  maps or vectors of the sample homogeneity for at least 10 of them (age 
+%  for an age range of more than one year, sex for at least 3 males and 3 
+%  females), otherwise empty.
+  nv = numel(age); G = zeros(nv,0);
+  if nv >= 10 && all(isfinite(age)) && std(age) > 1, G = [G age(:)]; end
+  male = double(strcmpi(sex(:),'M'));
+  if nv >= 10 && sum(male) >= 3 && sum(1-male) >= 3, G = [G male]; end
+  if ~isempty(G), G = G - mean(G,1); end
 end
 % =========================================================================
 function Y = readMap(P,sf)

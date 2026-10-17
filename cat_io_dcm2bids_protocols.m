@@ -1,7 +1,9 @@
 function varargout = cat_io_dcm2bids_protocols(action,varargin)
 %cat_io_dcm2bids_protocols. Sites, protocols, and overview tables of cat_io_dcm2bids.
-%  The site dictionary (getSites, setupSites) and the protocol definitions 
-%  (getProtocols, JSON files with the relevant MR parameters) are read once.
+%  The site dictionary (getSites, setupSites, or without dictionary the 
+%  site registry of the database, see siteRegistry and siteProposal) and
+%  the protocol definitions (getProtocols, JSON files with the relevant MR
+%  parameters) are read once.
 %  Each scan is tested against the protocols (testProtocols, with fields 
 %  that are normalized for the scanner software and dcm2niix version, see 
 %  normalizeFields, and the protocol fit rating, see protocolRating). Its 
@@ -17,6 +19,10 @@ function varargout = cat_io_dcm2bids_protocols(action,varargin)
 %    sites = cat_io_dcm2bids_protocols('getSites',Pcenterdict)
 %    protocols = cat_io_dcm2bids_protocols('getProtocols',Pprodictdirs)
 %    site = cat_io_dcm2bids_protocols('setupSites',Vjson,sites)
+%    sites = cat_io_dcm2bids_protocols('siteRegistry',Pmdbdir,opts,dict)
+%    [abbr,city,rest] = cat_io_dcm2bids_protocols('siteProposal',address,field,vendor,opts)
+%    C = cat_io_dcm2bids_protocols('siteColors',Pcenterdict,Pmdbdir,labels)
+%    d = cat_io_dcm2bids_protocols('acquisitionDuration',V)
 %    [match,pname,mismatchstr,Pnfailedid,Pfname,PT] = cat_io_dcm2bids_protocols('testProtocols',Pjson,Vjson,protocols,tol,job,sites)
 %    variant = cat_io_dcm2bids_protocols('protocolVariant',Ptbldir,PT,ProtocolName,datatype,type,tol,opts)
 %    Vjson = cat_io_dcm2bids_protocols('cleanupVjson',Vjson,type)
@@ -25,8 +31,8 @@ function varargout = cat_io_dcm2bids_protocols(action,varargin)
 %  See also cat_io_dcm2bids.
 
   switch action
-    case {'getSites','getProtocols','setupSites','testProtocols','protocolVariant','cleanupVjson', ...
-          'updateDBtables'}
+    case {'getSites','getProtocols','setupSites','siteRegistry','siteProposal','siteColors','acquisitionDuration','testProtocols', ...
+          'protocolVariant','cleanupVjson','updateDBtables'}
       [varargout{1:nargout}] = feval(action,varargin{:});
     otherwise
       error('cat_io_dcm2bids_protocols:unknownAction','Unknown action "%s".',action);
@@ -34,17 +40,107 @@ function varargout = cat_io_dcm2bids_protocols(action,varargin)
 end
 % =========================================================================
 function sites = getSites(Pcenterdict)
-  sites = {}; 
-  if ~isempty(Pcenterdict) 
-    for di = 1 % to support more you would have to match the fields 
-      if ~isempty(Pcenterdict{di}) 
-        if ~exist(Pcenterdict{di},'file')
-          error('cat_io_dcm2bids:Pcenterdict','Center dictionary file "%s" is not existing.', Pcenterdict{di});
-        end
-        sites = [sites; struct2cell(cat_io_json(Pcenterdict{1}))']; %#ok<AGROW>
-      end
+%getSites. Site dictionary of the JSON file Pcenterdict{1}, i.e. a list of
+%  scanners with the fields DeviceSerialNumber and InstitutionAbbreviation
+%  (further fields are optional and can differ between the scanners, e.g.
+%  the Color of the site in the report figure, see siteColors) as cell
+%  array with the serial number and abbreviation of each scanner. Color
+%  entries (Cities and Color, see siteColors) are skipped and other entries
+%  without these two fields are ignored (warning).
+  sites = cell(0,2);
+  if isempty(Pcenterdict) || isempty(Pcenterdict{1}), return; end
+  if ~exist(Pcenterdict{1},'file')
+    error('cat_io_dcm2bids:Pcenterdict','Center dictionary file "%s" is not existing.', Pcenterdict{1});
+  end
+  S = jsonList(cat_io_json(Pcenterdict{1}));
+  for si = 1:numel(S)
+    if isstruct(S{si}) && all(isfield(S{si},{'DeviceSerialNumber','InstitutionAbbreviation'}))
+      sites(end+1,:) = {char(string(S{si}.DeviceSerialNumber)), char(string(S{si}.InstitutionAbbreviation))}; %#ok<AGROW>
+    elseif ~(isstruct(S{si}) && all(isfield(S{si},{'Cities','Color'})))
+      cat_io_cprintf('warn','  Site dictionary: entry %d without DeviceSerialNumber or InstitutionAbbreviation ignored.\n',si);
     end
   end
+end
+% =========================================================================
+function C = siteColors(Pcenterdict,Pmdbdir,labels)
+%siteColors. Colors of the site labels (RGB hex, e.g. #A82117, '' if not
+%  defined) by the site dictionary Pcenterdict{1} (see getSites): the
+%  Color of the scanner entry, otherwise the Color of the color entry of
+%  the city of the scanner (address of the dictionary or of the site
+%  registry of the database Pmdbdir, see siteRegistry), i.e. of the 
+%  entries with the fields Cities (list of cities, compared transliterated
+%  and without case as beginning of the city of the address, "*" for all
+%  other cities) and Color, e.g. 
+%    {"Name": "DZPG Halle-Jena-Magdeburg", "Cities": ["Halle","Jena","Magdeburg"], "Color": "#A82117"}
+%  for all scanners of a site, also for scanners that are added later.
+%  Sites with the same color get a slightly different brightness (in the 
+%  order of their labels: the color, lighter, darker, ...).
+  C = repmat({''},1,numel(labels));
+  if isempty(Pcenterdict) || isempty(Pcenterdict{1}) || ~exist(Pcenterdict{1},'file'), return; end
+  J    = jsonList(cat_io_json(Pcenterdict{1}));
+  isen = @(e,f) isstruct(e) && all(isfield(e,f));
+  scn  = J(cellfun(@(e) isen(e,{'DeviceSerialNumber','InstitutionAbbreviation'}),J)); % scanners
+  col  = J(cellfun(@(e) isen(e,{'Cities','Color'}),J));                                % colors of cities
+  Preg = fullfile(Pmdbdir,'catDCM2BIDSsites.json'); reg = {};
+  if exist(Preg,'file'), reg = jsonList(cat_io_json(Preg)); reg = reg(cellfun(@(e) isen(e,{'InstitutionAbbreviation'}),reg)); end
+  low  = @(s) lower(cat_io_dcm2bids_bids('bidsLabel',char(string(s))));
+  abbr = @(E) cellfun(@(e) cat_io_dcm2bids_bids('bidsLabel',char(string(e.InstitutionAbbreviation)),1),E, ...
+    'UniformOutput',false); % (labels as setupSites)
+  for li = 1:numel(labels)
+    e = [scn(strcmpi(abbr(scn),labels{li})); reg(strcmpi(abbr(reg),labels{li}))];
+    if isempty(e), continue; end
+    if isfield(e{1},'Color'), C{li} = hexColor(e{1}.Color); end
+    if ~isempty(C{li}), continue; end
+    city = ''; 
+    if isfield(e{1},'InstitutionAddress'), city = low(addressCity(e{1}.InstitutionAddress)); end
+    for ci = 1:numel(col) % city of a color entry, otherwise all other cities ("*")
+      cities = cellstr(col{ci}.Cities);
+      if ~isempty(city) && any(cellfun(@(c) ~strcmp(c,'*') && startsWith(city,low(c)),cities))
+        C{li} = hexColor(col{ci}.Color); break
+      end
+    end
+    if isempty(C{li})
+      ci = find(cellfun(@(c) any(strcmp(cellstr(c.Cities),'*')),col),1);
+      if ~isempty(ci), C{li} = hexColor(col{ci}.Color); end
+    end
+  end
+  % brightness of the sites with the same color (in the order of their labels)
+  [~,so] = sort(lower(cellfun(@char,labels(:)','UniformOutput',false)));
+  [uc,~,ui] = unique(C(so)); ui = ui(:)';
+  for ci = find(~cellfun('isempty',uc(:)'))
+    k = so(ui == ci);
+    for ki = 2:numel(k)
+      rgb = sscanf(C{k(ki)}(2:end),'%2x')' / 255; s = 0.18 * ceil((ki-1)/2);
+      if mod(ki,2) == 0, rgb = rgb + s * (1 - rgb); else, rgb = rgb * (1 - s); end % lighter, darker
+      C{k(ki)} = hexColor(rgb);
+    end
+  end
+end
+% =========================================================================
+function h = hexColor(c)
+%hexColor. Color c (RGB hex text with or without #, or RGB values from 0
+%  to 1) as text #RRGGBB ('' if not valid).
+  h = '';
+  if isnumeric(c) && numel(c) == 3
+    h = sprintf('#%02X%02X%02X',round(255 * min(1,max(0,double(c(:)')))));
+  elseif ischar(c) || isstring(c)
+    c = regexprep(char(c),'^#','');
+    if ~isempty(regexp(c,'^[0-9a-fA-F]{6}$','once')), h = ['#' upper(c)]; end
+  end
+end
+% =========================================================================
+function city = addressCity(address)
+%addressCity. City of the address of a scanner (second entry of the
+%  Siemens address, e.g. "Street,City,District,...", '' if not available).
+  parts = strtrim(strsplit(char(string(address)),','));
+  if numel(parts) < 2, city = ''; else, city = parts{2}; end
+end
+% =========================================================================
+function C = jsonList(S)
+%jsonList. Entries of a JSON list of objects as cell array of structures, 
+%  i.e. of a structure array (objects with the same fields) or a cell array
+%  (objects with different fields) of jsondecode.
+  if isstruct(S), C = num2cell(S(:)); elseif iscell(S), C = S(:); else, C = {}; end
 end
 % =========================================================================
 function protocols = getProtocols(Pprodictdirs)
@@ -75,8 +171,13 @@ function protocols = getProtocols(Pprodictdirs)
 end
 % =========================================================================
 function site = setupSites(Vjson,sites)
+%setupSites. Site label of a scan by its DeviceSerialNumber and the site
+%  dictionary sites (serial number and abbreviation of each scanner, first
+%  the same serial number, then a serial number that contains it), 
+%  otherwise the serial number. 
   if ~isempty(sites)
-    DevNam = cat_io_contains( sites(:,1) , Vjson.DeviceSerialNumber );
+    DevNam = strcmp( cellfun(@(x) char(string(x)),sites(:,1),'UniformOutput',false) , char(Vjson.DeviceSerialNumber) );
+    if ~any(DevNam), DevNam = cat_io_contains( sites(:,1) , Vjson.DeviceSerialNumber ); end
   else
     DevNam = 0; 
   end
@@ -87,6 +188,160 @@ function site = setupSites(Vjson,sites)
   end
   site = cat_io_dcm2bids_bids('bidsLabel',site,1); 
 end
+% =========================================================================
+function sites = siteRegistry(Pmdbdir,opts,dict)
+%siteRegistry. Site abbreviations of the scanners of the database Pmdbdir
+%  (as cell array of getSites): the abbreviations of the site dictionary
+%  dict (see getSites) and for all other scanners the abbreviations of the
+%  registry of the database (catDCM2BIDSsites.json), i.e. the BIDS labels
+%  contain no serial numbers. New scanners get the abbreviation of their 
+%  city, manufacturer, and field strength (see siteProposal, e.g. 
+%  HeiSI30T), where scanners with the same abbreviation (e.g. several 
+%  scanners of a site, Heidelberg and Heidenheim, or an abbreviation of the
+%  dictionary) get a capital letter A to Z instead of the last letter of 
+%  the city (e.g. HeASI30T and HeBSI30T, ordered by their serial number, 
+%  with a warning and the serial number after Z). Serial numbers with the
+%  form of a site label (e.g. of the anonymized DICOM export) keep it. The 
+%  abbreviations of the registry are never changed, as they are part of
+%  the BIDS labels, i.e. a new scanner with the abbreviation (proposal) of
+%  a registered scanner gets the next free letter. Abbreviations are 
+%  compared without case (e.g. directories of macOS).
+  Preg = fullfile(Pmdbdir,'catDCM2BIDSsites.json');
+  R = struct('DeviceSerialNumber',{},'InstitutionAbbreviation',{},'Proposal',{},'InstitutionName',{}, ...
+    'InstitutionAddress',{},'MagneticFieldStrength',{},'Manufacturer',{},'Registered',{});
+  if exist(Preg,'file') % (entries with other fields, e.g. without manufacturer of older versions)
+    J = jsonList(cat_io_json(Preg)); fn = fieldnames(R)'; 
+    for ji = 1:numel(J)
+      e = cell2struct(cellfun(@(f) fieldOr(J{ji},f),fn,'UniformOutput',false),fn,2); R(end+1) = e; %#ok<AGROW>
+    end
+  end
+  if ~exist('dict','var') || isempty(dict), dict = cell(0,2); end
+  known = [cellfun(@(x) char(string(x)),{R.DeviceSerialNumber},'UniformOutput',false) ...
+           cellfun(@(x) char(string(x)),dict(:,1)','UniformOutput',false)];
+
+  % new scanners of the database (first sidecar of each subject)
+  N = struct('serial',{},'name',{},'address',{},'field',{},'vendor',{});
+  S = dir(fullfile(Pmdbdir,'sub-*')); S = S([S.isdir]);
+  for si = 1:numel(S)
+    tok = regexp(S(si).name,'^sub-(.+?)-','tokens','once'); % serial number of the subject directory
+    if ~isempty(tok) && any(strcmp(known,tok{1})), continue; end
+    P = cat_vol_findfiles(fullfile(S(si).folder,S(si).name),'*=*=*=*.json',struct('depth',3)); % (sub-*/ses-*/snr-*)
+    P = P(~startsWith(spm_file(P,'filename'),'catDCM2BIDS'));
+    if isempty(P), continue; end
+    V = cat_io_dcm2bids_db('assurePatientDCMfields',cat_io_json(P{1}));
+    serial = char(V.DeviceSerialNumber);
+    if any(strcmp([known {N.serial}],serial)), continue; end
+    N(end+1) = struct('serial',serial,'name',textField(V,'InstitutionName'), ...
+      'address',textField(V,'InstitutionAddress'),'field',numField(V,'MagneticFieldStrength'), ...
+      'vendor',textField(V,'Manufacturer')); %#ok<AGROW>
+  end
+  if ~isempty(N)
+    [~,o] = sort({N.serial}); N = N(o);
+    prop = cell(1,numel(N)); city = prop; rest = prop;
+    for ni = 1:numel(N)
+      [prop{ni},city{ni},rest{ni}] = siteProposal(N(ni).address,N(ni).field,N(ni).vendor,opts);
+      if ~isempty(regexp(N(ni).serial,'^[A-Z][A-Za-z]{1,9}\d{2}T$','once')) % site label of an anonymized DICOM export
+        prop{ni} = N(ni).serial; 
+      end
+    end
+    used = [cellfun(@char,{R.InstitutionAbbreviation},'UniformOutput',false) ...
+            cellfun(@(x) char(string(x)),dict(:,2)','UniformOutput',false)]; % (case-insensitive)
+    for ni = 1:numel(N)
+      abbr = prop{ni};
+      if any(strcmpi(used,abbr)) || any(strcmpi({R.Proposal},abbr)) || nnz(strcmpi(prop,abbr)) > 1
+        abbr = ''; % another scanner with this abbreviation (also before): capital letter
+        for L = 'A':'Z'
+          if ~any(strcmpi(used,[city{ni}(1:end-1) L rest{ni}])), abbr = [city{ni}(1:end-1) L rest{ni}]; break; end
+        end
+        if isempty(abbr)
+          abbr = cat_io_dcm2bids_bids('bidsLabel',N(ni).serial);
+          cat_io_cprintf('warn','  No free site abbreviation %s for scanner %s (A to Z used): serial number used.\n', ...
+            prop{ni},N(ni).serial);
+        end
+      end
+      used{end+1} = abbr; %#ok<AGROW>
+      R(end+1) = struct('DeviceSerialNumber',N(ni).serial,'InstitutionAbbreviation',abbr,'Proposal',prop{ni}, ...
+        'InstitutionName',N(ni).name,'InstitutionAddress',N(ni).address,'MagneticFieldStrength',N(ni).field, ...
+        'Manufacturer',N(ni).vendor,'Registered',char(datetime('now','Format','yyyy-MM-dd'))); %#ok<AGROW>
+      fprintf('  New site abbreviation %s of scanner %s (%s)\n',abbr,N(ni).serial,N(ni).address);
+    end
+    cat_io_json(Preg,R);
+  end
+  sites = [dict(:,1:2); {R.DeviceSerialNumber}' {R.InstitutionAbbreviation}']; % dictionary first
+end
+% =========================================================================
+function [abbr,city,rest] = siteProposal(address,field,vendor,opts)
+%siteProposal. Abbreviation of a scanner with a constant length: the first
+%  opts.sitelength letters of the city of its address (second entry of the
+%  Siemens address, e.g. "Street,City,District,...", transliterated, first
+%  letter as capital, Unk if not available), the code of the manufacturer
+%  vendor with opts.sitevendor letters (see vendorCode, e.g. SI or S for 
+%  Siemens), and the field strength in tenths of Tesla with two digits 
+%  (rounded, e.g. 15T, 30T, or 70T for 1.5, 3, and 6.98 T, 00T if not 
+%  available), e.g. HeiSI30T, with the city and the rest of the 
+%  abbreviation.
+  n = opts.sitelength; 
+  parts = strtrim(strsplit(char(address),','));
+  city  = regexprep(cat_io_dcm2bids_bids('bidsLabel',char(parts(min(2,numel(parts))))),'[^a-zA-Z]','');
+  if numel(parts) < 2 || numel(city) < max(2,n), city = 'Unknown'; end
+  city = [upper(city(1)) lower(city(2:n))]; 
+  if isfinite(field), fstr = sprintf('%02dT',round(10*field - 0.01)); else, fstr = '00T'; end
+  rest = [vendorCode(vendor,opts.sitevendor) fstr];
+  abbr = [city rest];
+end
+% =========================================================================
+function v = vendorCode(vendor,n)
+%vendorCode. Code of the manufacturer vendor with n letters (0 to 2): SI
+%  (Siemens), GE, PH (Philips), CA (Canon), TO (Toshiba), HI (Hitachi), FU
+%  (Fujifilm), UI (United Imaging), BR (Bruker), ES (Esaote), HY 
+%  (Hyperfine), NE (Neusoft), otherwise the first letters of the 
+%  manufacturer (XX if not available), or for one letter the first letter
+%  of the code (e.g. S for Siemens).
+  codes = {'siemens','SI'; '^ge( |$)|general electric','GE'; 'philips','PH'; 'canon','CA'; ...
+    'toshiba','TO'; 'hitachi','HI'; 'fujifilm','FU'; 'united imaging|^uih','UI'; 'bruker','BR'; ...
+    'esaote','ES'; 'hyperfine','HY'; 'neusoft','NE'};
+  m = lower(strtrim(char(vendor))); 
+  k = find(~cellfun('isempty',regexp(m,codes(:,1),'once')),1); 
+  if isempty(k), v = [upper(regexprep(m,'[^a-z]','')) 'XX']; else, v = codes{k,2}; end
+  v = v(1:n);
+end
+% =========================================================================
+function d = acquisitionDuration(V)
+%acquisitionDuration. Acquisition duration of a scan in seconds by its 
+%  sidecar V: the AcquisitionDuration of dcm2niix (e.g. the total scan time
+%  of Siemens or of enhanced DICOM), otherwise the number of volumes times
+%  the TR of time series (NumberOfVolumes or the 4th image dimension of 
+%  Dimensions), NaN if not available (e.g. single volumes without scan 
+%  time). (Not in the BIDS sidecars, where AcquisitionDuration is the 
+%  duration of a volume and excludes the RepetitionTime.)
+  num = @(fn) isfield(V,fn) && isnumeric(V.(fn)) && ~isempty(V.(fn));
+  d   = nan;
+  if num('AcquisitionDuration')
+    d = double(V.AcquisitionDuration(1));
+  elseif num('RepetitionTime')
+    nv = nan;
+    if num('NumberOfVolumes'), nv = double(V.NumberOfVolumes(1)); 
+    elseif num('Dimensions') && numel(V.Dimensions) > 3, nv = double(V.Dimensions(4)); end
+    if nv > 1, d = nv * double(V.RepetitionTime(1)); end
+  end
+  d = round(d,1);
+end
+% =========================================================================
+function v = fieldOr(S,fn)
+%fieldOr. Field fn of the structure S ('' if not available).
+  if isstruct(S) && isfield(S,fn), v = S.(fn); else, v = ''; end
+end
+% =========================================================================
+function v = textField(S,fn)
+%textField. Text of the field fn of the structure S ('' if not available).
+  if isfield(S,fn) && ~isempty(S.(fn)) && ~isnumeric(S.(fn)), v = char(S.(fn)); else, v = ''; end
+end
+% =========================================================================
+function x = numField(S,fn)
+%numField. Number of the field fn of the structure S (NaN if not available).
+  if isfield(S,fn) && isnumeric(S.(fn)) && ~isempty(S.(fn)), x = double(S.(fn)(1)); else, x = nan; end
+end
+
 % =========================================================================
 function [match,pname,mismatchstr,Pnfailedid,Pfname,PT] = testProtocols(Pjson,Vjson,protocols,tol,job,sites)
 %testProtocols. Test a scan (sidecar Vjson) against the protocols.
@@ -184,7 +439,7 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname,PT] = testProtocols(Pjson,Vj
     Pnfailedid = [];
     pname      = Vjson.ProtocolName;
     Pfname     = '';
-    datatype = cat_io_dcm2bids_bids('setupDatatype',pname);
+    datatype = cat_io_dcm2bids_bids('setupDatatype',pname,Vjson);
     cat_io_cprintf([0 0 0.5],sprintf('%-50s%8s |', [datatype filesep pname], '-'));
     return
   end
@@ -204,7 +459,7 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname,PT] = testProtocols(Pjson,Vj
       match  = 0; 
       pname  = Vjson.ProtocolName;
       Pfname = '';
-      pname0 = sprintf('Unknown %s protocol',cat_io_dcm2bids_bids('setupDatatype',pname)); 
+      pname0 = sprintf('Unknown %s protocol',cat_io_dcm2bids_bids('setupDatatype',pname,Vjson)); 
   end
   MarkColor = cat_io_colormaps('marks+',40); % as the QC ratings (see cat_io_dcm2bids_qc)
   col2mark  = @(val) MarkColor(min(size(MarkColor,1)-3,max(1,floor( val/9.5 * size(MarkColor,1)))),:); 
@@ -257,19 +512,22 @@ function variant = protocolVariant(Ptbldir,PT,ProtocolName,datatype,type,tol,opt
 %    catDCM2BIDSdb-tables/protocols/<datatype>/<protocol>_<type>[_<n>].json
 %  variant is the name of this file. Further fields of a scan (e.g. the
 %  image fields after the conversion of a JSON-only scan) are added to its
-%  variant.
+%  variant, as well as the acquisition duration (see acquisitionDuration),
+%  i.e. protocols of these variants also test the duration (within 5%).
   if any(strcmp(PT.status,{'conform','semiconform'}))
     FN = PT.fields; 
   else
     FN = [fieldnames(cleanupVjson(PT.Vn,'protocol'))' ...
       {'NumberOfSlices','NumberOfVolumes','VoxelSize','SliceOrder','BValueShells'}]; 
     FN = setdiff(FN,{'CoilString','ReceiveCoilName','ReceiveCoilActiveElements', ...
-      'ProcedureStepDescription','PhaseEncodingSteps'},'stable'); 
+      'PhaseEncodingSteps'},'stable'); 
   end
   V = struct(); 
   for fni = 1:numel(FN)
     if isfield(PT.Vn,FN{fni}), V.(FN{fni}) = PT.Vn.(FN{fni}); end
   end
+  d = acquisitionDuration(PT.Vn); 
+  if ~isnan(d), V.AcquisitionDuration = d; end % (informative, compared within 5%)
 
   % existing variants of the protocol and image type 
   name = [getFileString(strrep(strrep(ProtocolName,'_','-'),' ','-')) '_' type]; 
@@ -410,7 +668,8 @@ function [cnt,str,seqdiff,keydiff,nfields] = compareProtocol(V,P,tol,opts)
 %  TR, voxel size) count at least 1, the critical parameters 
 %  opts.protocol.critical (e.g. phase-encoding direction, sequence) and the
 %  image component of the ImageType (magnitude, phase, real, imaginary) 
-%  count 10, i.e., such scans are nonconform (see protocolRating). str 
+%  count 10, i.e., such scans are nonconform (see protocolRating). The 
+%  AcquisitionDuration counts 0.5 if it differs by more than 5%. str 
 %  lists the mismatches as {field, scan value, protocol value}, also for 
 %  the protocol fields that are not available for the scan (as 'n/a', 
 %  without counting). seqdiff and keydiff indicate a different sequence 
@@ -433,6 +692,9 @@ function [cnt,str,seqdiff,keydiff,nfields] = compareProtocol(V,P,tol,opts)
       % shells within 10% (e.g. the rounded b-values of XA)
       v = double(v(:)); p = double(p(:));
       d = 0.5 * ~(numel(v) == numel(p) && all(abs(v - p) <= 0.1*p + 25));
+    elseif strcmp(FN{fni},'AcquisitionDuration') && isnumeric(v) && isnumeric(p)
+      % duration within 5% (e.g. the scan time of dcm2niix or volumes times TR)
+      d = 0.5 * ~(abs(double(v(1)) - double(p(1))) <= 0.05 * double(p(1)));
     elseif (isnumeric(v) || islogical(v)) && (isnumeric(p) || islogical(p))
       v = double(v(:)); p = double(p(:));
       d = 0.5 * ~(numel(v) == numel(p) && all(abs(v - p) <= tol/100 * abs(p) + eps));
@@ -560,8 +822,7 @@ function Vjson = cleanupVjson(Vjson,type)
         'DerivedVendorReportedEchoSpacing';
         ... 
         ... 'PulseSequenceName'; % not always and operator specific
-        'ProcedureStepDescription';
-        ...
+        ... 'ProcedureStepDescription'; % free text of the site (e.g. names)
         'PhaseEncodingDirection';
         ...'SliceTiming';
         'InPlanePhaseEncodingDirectionDICOM';

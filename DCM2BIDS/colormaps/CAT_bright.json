@@ -1,0 +1,9 @@
+{
+  "Name": "CAT_bright",
+  "Description": "Bright CAT design of the report figure (white page with dark text and the CAT logo).",
+  "Logos": ["doc/images/CAT.png"],
+  "Icons": "DCM2BIDS/icon-cat.png",
+  "Colors": [[0.15,0.15,0.17],[0.45,0.45,0.50],[0.93,0.94,0.96],[1.00,1.00,1.00]],
+  "Discrete": "nejm",
+  "Continuous": "cool"
+}

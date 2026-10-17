@@ -4,7 +4,7 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
 %  paths (absPath, normPath, canonPath), NIfTI header information, single
 %  volumes, the gzip handling of NIfTIs, and their export (niiHeaderInfo, 
 %  niiVolume, prepNii, prepNiigz, gzipFile, exportNii), and tables 
-%  (updateTable, writeTable).
+%  (updateTable, writeTable, and lists of records with catRecords).
 %
 %  varargout = cat_io_dcm2bids_helper(action,varargin)
 %
@@ -21,14 +21,17 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
 %    Po = cat_io_dcm2bids_helper('prepNiigz',Pi,opts)
 %    cat_io_dcm2bids_helper('gzipFile',P)
 %    cat_io_dcm2bids_helper('exportNii',P,Pout,opts)
+%    cat_io_dcm2bids_helper('removeAcquisitionTime',P)
 %    entries = cat_io_dcm2bids_helper('updateTable',Ptable,Thdr,Tnewrow,id,reimport)
 %    cat_io_dcm2bids_helper('writeTable',Ptable,T,format)
+%    R = cat_io_dcm2bids_helper('catRecords',R,S)
 %
 %  See also cat_io_dcm2bids.
 
   switch action
     case {'readText','writeText','writeJSON','absPath','normPath','canonPath', ...
-          'niiHeaderInfo','niiVolume','prepNii','prepNiigz','gzipFile','exportNii','updateTable','writeTable'}
+          'niiHeaderInfo','niiVolume','prepNii','prepNiigz','gzipFile','exportNii','removeAcquisitionTime', ...
+          'updateTable','writeTable','catRecords'}
       [varargout{1:nargout}] = feval(action,varargin{:});
     otherwise
       error('cat_io_dcm2bids_helper:unknownAction','Unknown action "%s".',action);
@@ -261,6 +264,10 @@ end
 function exportNii(P,Pout,opts)
 %exportNii. Copy the NIfTI P of the database (zipped for opts.gzipi) to the
 %  output file Pout (without extension) as .nii.gz (opts.gzipe) or .nii.
+%  For the anonymization (opts.anonymize > 0), the acquisition time of the
+%  description of the header is removed in P before (once, see 
+%  removeAcquisitionTime).
+  if isfield(opts,'anonymize') && opts.anonymize > 0, removeAcquisitionTime(P); end
   if opts.gzipe
     if opts.gzipi
       copyfile(P,[Pout '.nii.gz']); 
@@ -309,6 +316,33 @@ function writeTable(Ptable,T,format)
   end
   if ~exist(fileparts(Ptable),'dir'), mkdir(fileparts(Ptable)); end
   writeText(Ptable,[strjoin(L,newline) newline]); 
+end
+function removeAcquisitionTime(P)
+%removeAcquisitionTime. Remove the acquisition time of the description of
+%  the header of the NIfTI P (.nii or .nii.gz, NIfTI-1 or NIfTI-2), e.g. 
+%  "Time=133520.302;" of dcm2niix ("TE=37;Time=133520.302;phase=1;mb=8").
+%  The header is only rewritten if the description contains a time. 
+  if endsWith(P,'.gz')
+    gz = java.util.zip.GZIPInputStream(java.io.FileInputStream(P)); 
+    h  = zeros(1,540,'uint8'); n = 0; 
+    while n < 540, x = gz.read(); if x < 0, break; end; n = n + 1; h(n) = x; end
+    gz.close(); 
+  else
+    fid = fopen(P,'r'); h = fread(fid,540,'*uint8')'; fclose(fid); 
+  end
+  if numel(h) < 348, return; end
+  switch double(typecast(h(1:4),'int32'))
+    case 348, off = 148; % NIfTI-1
+    case 540, off = 240; % NIfTI-2
+    otherwise, return
+  end
+  d = char(h(off + (1:80))); d = d(1:find([d char(0)] == char(0),1) - 1); 
+  if isempty(regexp(d,'Time=','once')), return; end
+  d = regexprep(d,'Time=[0-9.]*;?',''); 
+  Pu = regexprep(P,'\.gz$',''); 
+  if endsWith(P,'.gz'), gunzip(P); end
+  fid = fopen(Pu,'r+'); fseek(fid,off,'bof'); fwrite(fid,uint8([d zeros(1,80 - numel(d))]),'uint8'); fclose(fid); 
+  if endsWith(P,'.gz'), gzipFile(Pu); delete(Pu); end
 end
 % =========================================================================
 function entries = updateTable(Ptable,Thdr,Tnewrow,id,reimport)
@@ -371,3 +405,15 @@ function entries = updateTable(Ptable,Thdr,Tnewrow,id,reimport)
   end
   entries = size(Tfiles,1)-1;
 end
+% =========================================================================
+function R = catRecords(R,S)
+%catRecords. Concatenation of the record lists (structure arrays) R and S
+%  with the fields of both, i.e. missing fields are NaN (e.g. records of a 
+%  previous version of the batch without a new field).
+  if isempty(R), R = S; return; end
+  if isempty(S), return; end
+  for fn = setdiff(fieldnames(S),fieldnames(R))', [R.(fn{1})] = deal(nan); end
+  for fn = setdiff(fieldnames(R),fieldnames(S))', [S.(fn{1})] = deal(nan); end
+  R = [R(:)' reshape(orderfields(S,R),1,[])];
+end
+

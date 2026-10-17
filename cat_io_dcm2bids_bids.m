@@ -1,11 +1,13 @@
 function varargout = cat_io_dcm2bids_bids(action,varargin)
 %cat_io_dcm2bids_bids. BIDS naming and output files of cat_io_dcm2bids.
-%  Naming: BIDS conform labels (bidsLabel) and the datatype, suffix, 
-%  entities, and task of a scan by its protocol name and sidecar 
-%  (setupDatatype, setupSuffix, entityString, setupTask). BIDSoutputs lists
+%  Naming: BIDS conform labels (bidsLabel), the session label of a 
+%  database session (sessionLabel, by the anonymization level), and the 
+%  datatype, suffix, entities, and task of a scan by its protocol name and
+%  sidecar (setupDatatype, setupSuffix, entityString, setupTask). BIDSoutputs lists
 %  the datatypes and suffixes of the output structure (batch dependencies),
 %  getBIDSoutputs collects the exported images. 
-%  Output files: sessions.tsv of each subject (writeSubjectTSV, with SOR), 
+%  Output files: sessions.tsv of each subject (writeSubjectTSV, with SOR and
+%  the phenotypic data of cat_io_dcm2bids_phenotypic), 
 %  participants.tsv and the private participants table (writeParticipantTSV,
 %  writePrivateTSV), the IntendedFor references of BIDS inputs 
 %  (remapIntendedFor), dataset_description.json, README.md, 
@@ -17,14 +19,15 @@ function varargout = cat_io_dcm2bids_bids(action,varargin)
 %
 %  Actions (see the help of the local functions):
 %    label = cat_io_dcm2bids_bids('bidsLabel',str,camelCase)
-%    datatype = cat_io_dcm2bids_bids('setupDatatype',pro)
+%    ses = cat_io_dcm2bids_bids('sessionLabel',Pdbses,stamp,opts,offset)
+%    datatype = cat_io_dcm2bids_bids('setupDatatype',pro,V)
 %    [suffix,ent,label] = cat_io_dcm2bids_bids('setupSuffix',datatype,pro,V)
 %    str = cat_io_dcm2bids_bids('entityString',E)
 %    task = cat_io_dcm2bids_bids('setupTask',datatype,pro)
 %    out = cat_io_dcm2bids_bids('BIDSoutputs')
 %    out = cat_io_dcm2bids_bids('getBIDSoutputs',PBIDS,out)
 %    cat_io_dcm2bids_bids('remapIntendedFor',intended,srcmap)
-%    cat_io_dcm2bids_bids('writeSubjectTSV',Vjson,sub,ses,Poutdir,BIDSsubdir,anon,SOR,site)
+%    cat_io_dcm2bids_bids('writeSubjectTSV',Vjson,sub,ses,Poutdir,BIDSsubdir,anon,SOR,site,extra)
 %    cat_io_dcm2bids_bids('writeParticipantTSV',P,Pparticipants,anon)
 %    cat_io_dcm2bids_bids('writePrivateTSV',P,Pprivate)
 %    sources = cat_io_dcm2bids_bids('getBIDSsources',roots)
@@ -34,7 +37,7 @@ function varargout = cat_io_dcm2bids_bids(action,varargin)
 %  See also cat_io_dcm2bids.
 
   switch action
-    case {'bidsLabel','setupDatatype','setupSuffix','entityString','setupTask','BIDSoutputs', ...
+    case {'bidsLabel','sessionLabel','setupDatatype','setupSuffix','entityString','setupTask','BIDSoutputs', ...
           'getBIDSoutputs','remapIntendedFor','writeSubjectTSV', ...
           'writeParticipantTSV','writePrivateTSV','getBIDSsources', ...
           'writeDatasetFiles','gzipunzipOutputdata'}
@@ -79,8 +82,75 @@ function label = bidsLabel(str,camelCase)
   end
 end
 % =========================================================================
-function datatype = setupDatatype(pro)
-% first level
+function ses = sessionLabel(Pdbses,stamp,opts,offset)
+%sessionLabel. BIDS session label of the database session directory Pdbses
+%  (ses-<StudyID>-<yyyymmdd>) with the study date and time stamp of its
+%  files (yyyymmddHHMMSS): the label of a session without date or time 
+%  (e.g. BIDS input), the date and time (opts.anonymize = 0), the date (1),
+%  or the time since the first session of the subject (2, with the date 
+%  offset of the subject, see session in cat_io_dcm2bids_anonymize, also 
+%  for imports of anonymized data with dates from 1850 to 1949, invalid 
+%  dates as date), and NA for a time without date (opts.anonymize > 0). 
+%  Studies of a subject with the same label (e.g. two sessions of a day 
+%  for opts.anonymize = 1 or of a week for 2) get a letter (b, c, ...) in
+%  the order of their date, StudyID, and time.
+  isdate = ~isempty(regexp(stamp,'^[0-9]{8}','once'));
+  if ~isdate && isempty(regexp(stamp,'^[0-9]{1,7}$','once')) % no date or time (e.g. BIDS input)
+    ses = ['ses-' bidsLabel(stamp)]; return
+  end
+  shifted = isdate && str2double(stamp(1:4)) >= 1850 && str2double(stamp(1:4)) < 1950; % dates of an anonymized export
+  if opts.anonymize == 0 && ~shifted % date and time
+    if isdate, ses = ['ses-' stamp(1:8)]; else, ses = ['ses-' stamp]; end
+    if isdate && numel(stamp) > 8, ses = [ses opts.BIDSsep stamp(9:end)]; end
+    return
+  end
+  if ~isdate
+    label = @(t) 'NA'; % no date (and no time of the day)
+  elseif opts.anonymize > 1 || shifted
+    label = @(t) timeLabel(t(1:8),offset * (opts.anonymize > 1),opts.sesunit);
+  else
+    label = @(t) t(1:8); % date (opts.anonymize = 1)
+  end
+  ses = ['ses-' label(stamp)];
+
+  % studies of the subject with this label (time stamp of their files and
+  % StudyID of their directories, e.g. two directories of a study over 
+  % midnight have the same key)
+  [~,name] = fileparts(Pdbses); key = {}; own = '';
+  D = dir(fullfile(fileparts(Pdbses),'ses-*')); D = D([D.isdir]);
+  for di = 1:numel(D)
+    F = dir(fullfile(D(di).folder,D(di).name,'snr-*','*=*=*=*.json')); 
+    F = F(~startsWith({F.name},'catDCM2BIDS')); 
+    if isempty(F), continue; end
+    t = cat_io_dcm2bids_db('nameParts',spm_file(F(1).name,'basename')); t = t{min(3,end)}; 
+    if isdate ~= ~isempty(regexp(t,'^[0-9]{8}','once')) || isempty(regexp(t,'^[0-9]','once')) || ...
+       ~strcmp(['ses-' label(t)],ses), continue; end
+    id = regexp(D(di).name,'^ses-(.*?)(-\d{8})?$','tokens','once'); if isempty(id), id = {''}; end
+    if ~isempty(regexp(id{1},'^\d+$','once')), id{1} = sprintf('%012d',str2double(id{1})); end % numeric order
+    if isdate, d = t(1:8); t = t(9:end); else, d = ''; end
+    key{end+1} = [d char(1) id{1} char(1) t]; %#ok<AGROW> (separator before all characters)
+    if strcmp(D(di).name,name), own = key{end}; end
+  end
+  r = find(strcmp(unique(key),own),1); 
+  if r > 1, ses = [ses char('a' + r - 1)]; end
+end
+% =========================================================================
+function l = timeLabel(d,offset,unit)
+%timeLabel. Label of the time since the first session of the date d (see
+%  session in cat_io_dcm2bids_anonymize) or d for an invalid date (e.g. 
+%  10101000 of anonymized data).
+  try
+    l = cat_io_dcm2bids_anonymize('session',d,offset,unit);
+  catch
+    l = d;
+  end
+end
+% =========================================================================
+function datatype = setupDatatype(pro,V)
+%setupDatatype. BIDS datatype of a scan by its protocol name pro, or for
+%  protocol names without this information (e.g. of other vendors or sites)
+%  by its sidecar V (see sidecarDatatype), otherwise other.
+  if ~exist('V','var') || ~isstruct(V), V = struct(); end
   if cat_io_contains( lower(pro) , {'mpr','mp2r','t1w','t2w','pdw','flair','inv','uni','t1','t2','tse'} ) && ...
     ~cat_io_contains( lower(pro) , {'fmri','rest','bold','func','rmri','dti','dwi','diff','dmri','field',} )
     datatype  = 'anat'; 
@@ -92,17 +162,84 @@ function datatype = setupDatatype(pro)
     datatype  = 'mrs';
   elseif cat_io_contains( lower(pro) , {'field','fieldmap','mag','b0','b1','phase'} )
     datatype  = 'fmap';
+  elseif cat_io_contains( lower(pro) , {'asl'} ) % perfusion (not supported)
+    datatype  = 'other'; 
   else
-    % unknown protocols
-    cat_io_cprintf('red', sprintf('\n  Unknown BIDS datatype (anat/func/...) for protocol "%s"\n', lower(pro)) ) 
-    datatype = 'other';
+    datatype = sidecarDatatype(V); 
+    if isempty(datatype) % unknown protocols
+      cat_io_cprintf('red', sprintf('\n  Unknown BIDS datatype (anat/func/...) for protocol "%s"\n', lower(pro)) ) 
+      datatype = 'other';
+    end
+  end
+end
+% =========================================================================
+function datatype = sidecarDatatype(V)
+%sidecarDatatype. BIDS datatype of a scan by its sidecar V (with the image
+%  fields Dimensions and BValues of cat_io_dcm2bids), i.e. for protocol 
+%  names without datatype information: dwi (b-values above 50 s/mm2), fmap
+%  (GRE field maps with EchoTime1/2 or Hz units, EPI with up to 3 volumes,
+%  e.g. spin-echo field maps or b0 images), func (EPI time series or SBRef
+%  in the series description), anat (other images with one volume), or ''
+%  (e.g. ASL with PERFUSION in the ImageType, or other time series).
+  has = @(fn) isfield(V,fn) && ~isempty(V.(fn));
+  txt = @(fn) char(strjoin(string(V.(fn)),'\'));
+  seq = ''; for fn = {'ScanningSequence','SequenceName','PulseSequenceName'}, if has(fn{1}), seq = [seq ' ' txt(fn{1})]; end, end %#ok<AGROW>
+  epi = ~isempty(regexpi(seq,'(^|[^a-z])ep([^a-z]|fid|se|i)|epi','once')); 
+  nv  = 1; if has('Dimensions') && isnumeric(V.Dimensions) && numel(V.Dimensions) > 3, nv = V.Dimensions(4); end
+  ser = ''; if has('SeriesDescription'), ser = lower(txt('SeriesDescription')); end
+  itype = ''; if has('ImageType'), itype = upper(txt('ImageType')); end
+  if has('ArterialSpinLabelingType') || ~isempty(regexpi(seq,'asl','once')) || contains(itype,{'PERFUSION','ASL'})
+    datatype = ''; % perfusion (not supported)
+  elseif has('BValues') && isnumeric(V.BValues) && any(V.BValues(:) > 50)
+    datatype = 'dwi';
+  elseif (has('EchoTime1') && has('EchoTime2')) || (has('Units') && strcmpi(txt('Units'),'Hz'))
+    datatype = 'fmap';
+  elseif epi && contains(ser,'sbref')
+    datatype = 'func';
+  elseif epi
+    if nv > 3, datatype = 'func'; else, datatype = 'fmap'; end
+  elseif nv == 1 && has('RepetitionTime') && has('EchoTime')
+    datatype = 'anat';
+  else
+    datatype = '';
+  end
+end
+% =========================================================================
+function suffix = anatSuffix(V)
+%anatSuffix. BIDS suffix of an anatomical scan by the timing of its sidecar
+%  V (seconds) for protocol names without this information: FLAIR (TI 
+%  above 1.5 and TR above 4), T1w (TI from 0.3 to 1.5, TR below 1 with TE 
+%  below 0.03, or single-echo gradient echo with TR below 0.1 and TE below
+%  0.01), T2star (gradient echo with TE from 0.015 or several echoes), T2w
+%  (TR above 2 and TE above 0.06), or PDw (TR above 2 and TE below 0.03), 
+%  otherwise ''.
+  val = @(fn) isfield(V,fn) && isnumeric(V.(fn)) && ~isempty(V.(fn));
+  TR = nan; TE = nan; TI = nan;
+  if val('RepetitionTime'), TR = V.RepetitionTime(1); end
+  if val('EchoTime'),       TE = V.EchoTime(1); end
+  if val('InversionTime'),  TI = V.InversionTime(1); end
+  gre = isfield(V,'ScanningSequence') && contains(upper(char(strjoin(string(V.ScanningSequence),'\'))),'GR');
+  me  = isfield(V,'EchoNumber') && ~isempty(V.EchoNumber); % multi-echo (dcm2niix)
+  if TI > 1.5 && TR > 4
+    suffix = 'FLAIR';
+  elseif (TI >= 0.3 && TI <= 1.5) || (TR < 1 && TE < 0.03 && ~gre) || (gre && ~me && TR < 0.1 && TE < 0.01)
+    suffix = 'T1w';
+  elseif gre && (TE >= 0.015 || me)
+    suffix = 'T2star';
+  elseif TR > 2 && TE > 0.06
+    suffix = 'T2w';
+  elseif TR > 2 && TE < 0.03
+    suffix = 'PDw';
+  else
+    suffix = '';
   end
 end
 % =========================================================================
 function [suffix,ent,label] = setupSuffix(datatype,pro,V)
 %setupSuffix. BIDS suffix, further entities, and acquisition label of a scan
 %  by its datatype, protocol name pro, and JSON sidecar V:
-%    anat  T1w, T2w, ... (by the protocol name), MP2RAGE with inv-<n> for 
+%    anat  T1w, T2w, ... (by the protocol name, otherwise by the timing of
+%          the sidecar, see anatSuffix), MP2RAGE with inv-<n> for 
 %          the inversion images (e.g. INV1 or inv-1 in the protocol or 
 %          series name), and UNIT1 for the uniform image (UNI)
 %    func  bold or sbref (SBRef in the protocol or series name)
@@ -168,6 +305,8 @@ function [suffix,ent,label] = setupSuffix(datatype,pro,V)
       suffix = 'PDw';
     elseif cat_io_contains( lower(pro) , {'flair'})
       suffix = 'FLAIR';
+    else
+      suffix = anatSuffix(V); % by the timing of the sidecar
     end
     if any(strcmp(suffix,{'T1w','T2w','PDw','T2star','FLAIR','PDT2','MP2RAGE'})) % no maps
       if ~isempty(echo), ent.echo = echo; end
@@ -388,28 +527,37 @@ function remapIntendedFor(intended, srcmap)
   end
 end
 % =========================================================================
-function writeSubjectTSV(Vjson,sub,ses,Poutdir,BIDSsubdir,anon,SOR,site)
+function writeSubjectTSV(Vjson,sub,ses,Poutdir,BIDSsubdir,anon,SOR,site,extra)
 %writeSubjectTSV. BIDS sessions file of a subject (sub-<label>_sessions.tsv) 
 %  with one row per session: site (abbreviation, see setupSites in 
-%  cat_io_dcm2bids_protocols), age, weight, and the session orientation 
-%  rating SOR (see writeSessionAffines in cat_io_dcm2bids_pp_anat). The rows of
-%  other sessions are kept (by column name, i.e., also from files with other
-%  columns). Missing values are n/a. 
+%  cat_io_dcm2bids_protocols), age, weight, the session orientation rating
+%  SOR (see writeSessionAffines in cat_io_dcm2bids_pp_anat), and the 
+%  phenotypic data of the session (structure extra, see 
+%  cat_io_dcm2bids_phenotypic). The rows of other sessions are kept (by 
+%  column name, i.e., also from files with other columns, including their
+%  phenotypic data). Missing values are n/a. 
   if ~exist('SOR','var') || isempty(SOR), SOR = nan; end
   if ~exist('site','var') || isempty(site), site = 'n/a'; end
+  if ~exist('extra','var') || ~isstruct(extra), extra = struct(); end
   Psubject = fullfile(Poutdir,BIDSsubdir,sub,sprintf('%s_sessions.tsv',sub)); % BIDS sessions file
-  hdr      = {'session_id','site','age','weight','SOR'}; 
-  Tsubject = hdr; 
+  hdr = {'session_id','site','age','weight','SOR'}; T0 = {};
   if exist(Psubject,'file')
     T0 = cat_io_csv(Psubject, '','', struct('delimiter','\t','convert2double',-1)); 
-    [isc,ci] = ismember(hdr,T0(1,:)); 
-    for ri = 2:size(T0,1)
-      if strcmp(T0{ri,1},ses), continue; end % replaced by the current session
-      Tsubject(end+1,:) = {'n/a'}; Tsubject(end,isc) = T0(ri,ci(isc)); %#ok<AGROW>
-    end
   end
-  Tsubject(end+1,:) = {ses, site, round(Vjson.PatientAge,2-anon), round(Vjson.PatientWeight), round(SOR,2)}; 
-  Tsubject(cellfun(@(v) isnumeric(v) && isscalar(v) && isnan(v), Tsubject)) = {'n/a'}; 
+  ext = fieldnames(extra)'; old = {};
+  if ~isempty(T0), old = T0(1,~ismember(T0(1,:),hdr)); end
+  hdr = [hdr old setdiff(ext,old,'stable')]; % phenotypic columns of all sessions
+  Tsubject = hdr; 
+  for ri = 2:size(T0,1)
+    if strcmp(T0{ri,1},ses), continue; end % replaced by the current session
+    [isc,ci] = ismember(hdr,T0(1,:)); 
+    Tsubject(end+1,:) = {'n/a'}; Tsubject(end,isc) = T0(ri,ci(isc)); %#ok<AGROW>
+  end
+  row = repmat({'n/a'},1,numel(hdr)); 
+  row(1:5) = {ses, site, round(Vjson.PatientAge,2-anon), round(Vjson.PatientWeight), round(SOR,2)}; 
+  for e = ext, row{strcmp(hdr,e{1})} = extra.(e{1}); end
+  Tsubject(end+1,:) = row; 
+  Tsubject(cellfun(@(v) (isnumeric(v) && isscalar(v) && isnan(v)) || (ischar(v) && isempty(v)), Tsubject)) = {'n/a'}; 
   [~,so] = sort(Tsubject(2:end,1)); Tsubject(2:end,:) = Tsubject(so+1,:); 
   
   % write
@@ -420,6 +568,8 @@ function writeParticipantTSV(P,Pparticipants,anon)
 % Create participant file (eg. OpenNeuro) with sex and age (sex first as it
 % is more robust, the session-specific age is in the subject files) and 
 % further columns of imported BIDS datasets (extra.columns/extra.values). 
+% The age is the minimum age of the subject, i.e. also of the sessions of 
+% previous runs (the age of the existing row is kept if it is lower). 
 % P is a structure array with the subject (sub), its data (V), and further 
 % columns (extra) that is added to (or replaced in) the table Pparticipants.
   if exist(Pparticipants,'file')
@@ -430,7 +580,12 @@ function writeParticipantTSV(P,Pparticipants,anon)
   for pi = 1:numel(P)
     pidpa = find( strcmp( Tparticipants(2:end,1) , P(pi).sub ) ) + 1;
     if isempty(pidpa), pidpa = size(Tparticipants,1) + 1; end
-    Tparticipants(pidpa,1:3) = {P(pi).sub, P(pi).V.PatientSex, round(P(pi).V.PatientAge,2-anon) };
+    age = round(P(pi).V.PatientAge,2-anon); 
+    if pidpa <= size(Tparticipants,1) && isnumeric(Tparticipants{pidpa,3}) && isscalar(Tparticipants{pidpa,3}) && ...
+        ~isnan(Tparticipants{pidpa,3}) && ~(Tparticipants{pidpa,3} >= age) % (also for a new age NaN)
+      age = Tparticipants{pidpa,3}; % minimum age of all runs
+    end
+    Tparticipants(pidpa,1:3) = {P(pi).sub, P(pi).V.PatientSex, age };
     extra = P(pi).extra; 
     if isstruct(extra) && isfield(extra,'columns') && ~isempty(extra.columns)
       cols = cellstr(extra.columns); vals = cellstr(string(extra.values)); 
@@ -641,7 +796,9 @@ end
 % =========================================================================
 function gzipunzipOutputdata(Poutdir,opts)
 %gzipunzipOutputdata. Assure the internal .nii.gz status defined by gzipi
-  BIDSsubdirs = cat_vol_findfiles( Poutdir , 'BIDS*', struct('dirs',1)); 
+%  in the BIDS directories (BIDS*) of the output directory.
+  D = dir(fullfile(Poutdir,'BIDS*')); D = D([D.isdir]); 
+  BIDSsubdirs = fullfile(Poutdir,{D.name})'; 
   if opts.gzipi == 1  &&  opts.gzipe == 0  &&  ~isempty(BIDSsubdirs)
     % gunzip all files in the result directory
     fprintf('DCM2BIDS - gunzip BIDS output data')
