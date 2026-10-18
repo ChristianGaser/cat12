@@ -401,7 +401,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         opt0  = opt; opt0.reconres = min(0.5,opt.reconres);   % minimum resolution 
         Yppi  = Pcb.Yta + Pcb.Yppi; 
         Yppi  = cat_ornlm(Yppi,3,4,.33);
-        Yppi  = max(0,Yppi - prctile(Yppi(:),0.01)) ./ ( prctile(Yppi(:),99.99) - prctile(Yppi(:),0.01) );
+        Yppi  = max(0,Yppi - cat_stat_prctile(Yppi(:),0.01)) ./ ( cat_stat_prctile(Yppi(:),99.99) - cat_stat_prctile(Yppi(:),0.01) );
         Yppi  = min(1,max(0,Yppi + .5*(Yppi - smooth3(Yppi))));
         Vppmi = exportPPmap( Yppi , Vmfs, opt0); % write temporary file only for surface reconstruction 
       else
@@ -1303,7 +1303,7 @@ function Yp0 = myelincorrection(Yp0,vx_vol,opt,P,Vmfs,si,quick)
 
   % estimate correction area
   medgmt = median(Ygmt0(:)); 
-  try iqrgmt = iqr(Ygmt0(:)); catch, iqrgmt = std(Ygmt0(:)); end
+  iqrgmt = diff(cat_stat_prctile(Ygmt0,[25 75]));
   YenoughWM  = Ycdc2>0 & Ycdc2 < Ybmt - 1.5;
   YthinnerGM = max(0,medgmt - 1.5*iqrgmt - Ygmt0); 
   Yclose2CSF = Ycdc2>0 & Ycdc2<(medgmt - 1.5*iqrgmt); 

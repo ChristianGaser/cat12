@@ -376,7 +376,7 @@ function cat_run_job1639(job,tpm,subj)
         %              So very small head volume. Hence we test in this
         %              case if one object enclose all others.
         if F0vol < 2500
-          Wth   = prctile(YF(YF(:)>BGth),90);
+          Wth   = cat_stat_prctile(YF(YF(:)>BGth),90);
           BO    = cat_vol_morph(cat_vol_morph( YF > Wth*.5 , 'o'), 'l', [3 .2 ]);
           BOL   = cell(1,max(BO(:)));
           for i=1:max(BO(:))

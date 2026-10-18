@@ -195,7 +195,7 @@ function [J,Ymap] = estimateDTI(i,P,Pdbnii,Vjson,b,dwi,A,opts)
     brain = cat_vol_morph(L.c0 > 0.5,'e',1); wmT1 = L.c0 > 2.5; atlas = L.atlas{1}; mask = 'T1w segmentation (eroded by one voxel, with signal in all volumes)';
     Rh    = cat_io_dcm2bids_pp_anat('headRotation',A,M);
   else
-    brain = Yb0u > 0.2 * prctile(Yb0u(:),99); wmT1 = true(dim); atlas = zeros(dim); mask = 'b0 threshold (with signal in all volumes)';
+    brain = Yb0u > 0.2 * cat_stat_prctile(Yb0u(:),99); wmT1 = true(dim); atlas = zeros(dim); mask = 'b0 threshold (with signal in all volumes)';
   end
   soft = zeros(dim); spm_smooth(double(brain),soft,1 ./ sqrt(sum(Vi(1).mat(1:3,1:3).^2))); % soft mask (1 mm)
   W = Wall(brain(:),:); clear Wall
@@ -222,7 +222,7 @@ function [J,Ymap] = estimateDTI(i,P,Pdbnii,Vjson,b,dwi,A,opts)
   % (4) global values in the white matter and (5) Mori WM regions
   wm = wmT1(brain)' & FA > 0.2;
   G  = struct('FA_WM',median(FA(wm)),'MD_WM',median(MD(wm)),'AD_WM',median(AD(wm)),'RD_WM',median(RD(wm)), ...
-    'MD_WM_peakwidth',diff(prctile(MD(wm),[5 95])),'MD_brain',median(MD),'WM_voxels',nnz(wm));
+    'MD_WM_peakwidth',diff(cat_stat_prctile(MD(wm),[5 95])),'MD_brain',median(MD),'WM_voxels',nnz(wm));
   R  = struct();
   [id,abbr] = atlasRegions('mori','Vwm');
   lab = atlas(brain)';

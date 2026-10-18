@@ -357,7 +357,7 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimpleCS4(Yp0,vx_vol,opt)
   if 0
     %% only internal tests
     fprintf('    Median thickness + IQR:        %5.2f ± %4.2f mm (gsr=%0.2f)\n', ...
-      median( Ygmt( Ypp(:)>.3 & Ypp(:)<.7 )) , iqr( Ygmt( Ypp(:)>.3 & Ypp(:)<.7 )), gsr); 
+      median( Ygmt( Ypp(:)>.3 & Ypp(:)<.7 )) , diff(cat_stat_prctile( Ygmt( Ypp(:)>.3 & Ypp(:)<.7 ),[25 75])), gsr); 
     CS    = isosurface(smooth3(1-Ypp),.5,min(5,Ygmt)); cat_surf_render2(CS); 
     cat_surf_render2('clim',[0 6]); 
   end

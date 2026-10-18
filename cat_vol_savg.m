@@ -297,16 +297,16 @@ function biascorrection(subject,job)
         Ybb = false(size(Ygr)); Ybb(2:end-1,2:end-1,2:end-1) = true; 
         
         % object = brain/head
-        Yr  = Yr ./ prctile(Yr(Ygr(:)~=0 & Ygr(:)<.3),90); % 80-90
+        Yr  = Yr ./ cat_stat_prctile(Yr(Ygr(:)~=0 & Ygr(:)<.3),90); % 80-90
        % Yr  = cat_vol_median3(Yr,Yr>.1); % quick denoising
         Yt  = cat_vol_morph(Yr > .2 & Ybb,'ldc'); 
         Ytd = cat_vbdist( single(~Yt) ); Ytd = Ytd ./ max(Ytd(:));
         
         % brain tissue
-        Yt2 = Yr>.3 & Yt & (Ygr./Ytd.^1.2 < prctile(Ygr( Yt(:) ),50)) & Ytd>.3 & (Ygr < prctile(Ygr( Yt(:) ),80)); 
+        Yt2 = Yr>.3 & Yt & (Ygr./Ytd.^1.2 < cat_stat_prctile(Ygr( Yt(:) ),50)) & Ytd>.3 & (Ygr < cat_stat_prctile(Ygr( Yt(:) ),80)); 
         Yt2 = cat_vol_morph(Yt2,'l'); 
         Ygg = Yt .* (Yt - Ygr); 
-        gth = prctile(Ygg(Yt2(:)>0 & Ygg(:)>0),50); 
+        gth = cat_stat_prctile(Ygg(Yt2(:)>0 & Ygg(:)>0),50); 
 
         % intial bias field to remove inproper values
         Ywr  = cat_vol_approx( Yr .* (Yt2 & Ygg>gth)); 
@@ -320,20 +320,20 @@ function biascorrection(subject,job)
         % go back to native resolution and apply bias field
         Yt2 = cat_vol_resize(Yt2,'dereduceV',redR) > .5;
         Yw  = cat_vol_resize(Ywr,'dereduceV',redR);
-        Yw  = Yw ./ prctile(Yw(Yt2(:)),90) * prctile(Y(Yt2(:)),90);  
+        Yw  = Yw ./ cat_stat_prctile(Yw(Yt2(:)),90) * cat_stat_prctile(Y(Yt2(:)),90);  
         Y   = Y ./ Yw;
       end
       
       %% final correction
-      Yw = ( Yo/prctile(Yo(Yt2(:)),90) ) ./ ( Y/prctile(Y(Yt2(:)),90));  
+      Yw = ( Yo/cat_stat_prctile(Yo(Yt2(:)),90) ) ./ ( Y/cat_stat_prctile(Y(Yt2(:)),90));  
       Ywa = cat_vol_approx( Yw ); Yw(Yw>10 | Yw<.01) = Ywa(Yw>10 | Yw<.01);
       Yw = spm_smooth3(Yw,60 / (job.opts.bias-1) ./ vx_vol); 
-      Yw = Yw / prctile(Yw(Yt2(:)),90) * prctile(Yo(Yt2(:)),90); 
+      Yw = Yw / cat_stat_prctile(Yw(Yt2(:)),90) * cat_stat_prctile(Yo(Yt2(:)),90); 
       Ym = Yo ./ Yw;
      
     else
     % only intensity normalization
-      Ym = Y / prctile(Y(:),90); 
+      Ym = Y / cat_stat_prctile(Y(:),90); 
     end
     
     %% write

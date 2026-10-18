@@ -907,7 +907,7 @@ function [M,Q,D] = coregAnat(Ysrc,Vsrc,A,opts)
   end
   cat_io_dcm2bids_helper('prepNiigz',P,opts);
   Ysrc(~isfinite(Ysrc)) = 0;
-  ms  = Ysrc > 0.25 * prctile(Ysrc(:),99); mt = Yc > 0.5;   % brain masks of the EPI and T1w
+  ms  = Ysrc > 0.25 * cat_stat_prctile(Ysrc(:),99); mt = Yc > 0.5;   % brain masks of the EPI and T1w
   M0  = eye(4); M0(1:3,4) = maskCenter(mt,Vm) - maskCenter(ms,Vsrc); % centers of the brain masks
   Vs0 = Vsrc; Vs0.mat = M0 * Vsrc.mat;
   M1  = coregImages(Ysrc,Vs0,Ym .* mt,Vm) * M0;
@@ -930,7 +930,7 @@ function [M,Q,D] = coregAnat(Ysrc,Vsrc,A,opts)
     Yi = D.Yi(1:2:end,1:2:end,1:2:end,:); dn = diceSampled(mss,double(Yc),Vc.mat,[double(reshape(Yi,[],3))'; ones(1,numel(mss))]);
     [x,y,z] = ndgrid(1:Vsrc.dim(1),1:Vsrc.dim(2),1:Vsrc.dim(3)); W = M * Vsrc.mat * [x(ms)'; y(ms)'; z(ms)'; ones(1,nnz(ms))];
     Yi = reshape(D.Yi,[],3); ds = sqrt(sum((double(Yi(ms(:),:))' - W(1:3,:)).^2,1)); clear x y z W Yi
-    Q.Dice_nonlinear = round(dn,3); Q.displacement = round([median(ds) prctile(ds,95) max(ds)],1); % (mm: median, 95%, maximum)
+    Q.Dice_nonlinear = round(dn,3); Q.displacement = round([median(ds) cat_stat_prctile(ds,95) max(ds)],1); % (mm: median, 95%, maximum)
     if dn <= max(d0,d1) + 0.01 || Q.displacement(2) > 10
       D = []; Q.method = [Q.method '; non-linear coregistration not used (Dice not higher by more than 0.01 or displacement above 10 mm)'];
     else

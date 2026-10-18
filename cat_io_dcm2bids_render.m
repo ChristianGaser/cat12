@@ -777,7 +777,7 @@ function S = renderScanSlices(F,K,ropts,Pcache)
       clim = renderWindow(F);
       if isempty(clim)
         Yv   = Ys(Ys~=0);
-        clim = [prctile(Yv,1) prctile(Yv,99)];
+        clim = [cat_stat_prctile(Yv,1) cat_stat_prctile(Yv,99)];
         if ~(numel(clim)==2 && all(isfinite(clim)) && diff(clim)>0), clim = [0 max(1,max(Ys(:)))]; end
       end
       S.Y  = uint8(255 * min(1,max(0,(Ys - clim(1)) / diff(clim))));
@@ -929,7 +929,7 @@ end
 % =========================================================================
 function g = windowSlices(Y)
 %windowSlices. Slices Y scaled to 0-1 by the 1st and 99th percentile.
-  v = Y(Y ~= 0); clim = [prctile(v,1) prctile(v,99)];
+  v = Y(Y ~= 0); clim = [cat_stat_prctile(v,1) cat_stat_prctile(v,99)];
   if ~(numel(clim) == 2 && all(isfinite(clim)) && diff(clim) > 0), clim = [0 max(1,max(Y(:)))]; end
   g = min(1,max(0,(Y - clim(1)) / diff(clim)));
 end

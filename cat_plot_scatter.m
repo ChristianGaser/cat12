@@ -570,7 +570,7 @@ if nargout > 1
     end
     if dosim
         k = length(p);
-        crit = sqrt(k * finv(1-alpha,k,S.df)); % Scheffe simultaneous value
+        crit = sqrt(k * spm_invFcdf(1-alpha,k,S.df)); % Scheffe simultaneous value
     else
         crit = tinv(1-alpha/2,S.df);           % non-simultaneous value
     end

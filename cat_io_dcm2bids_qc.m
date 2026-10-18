@@ -136,7 +136,7 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
     sig75 = nan(1,size(Y,4)); 
     for di = 1:size(Y,4)
       Ydi = Y(:,:,:,di); 
-      sig75(di) = prctile(Ydi(:),75); 
+      sig75(di) = cat_stat_prctile(Ydi(:),75); 
       clear Ydi; 
     end 
     if strcmp(type,'dwi') 
@@ -206,10 +206,10 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
       if  nnz(Ym(:)<0) ./ numel(Ym)  < .3 %~strcmp(type,'fmap')  &&  (
         %% typical image with mostly positive values and high intensity object
         Yg  = cat_vol_grad(Ym) ./ Ym; % this function has issues with negative non-noise structures
-        g0  = prctile(Yg(:),10) * 2;
+        g0  = cat_stat_prctile(Yg(:),10) * 2;
         Yb  = ~cat_vol_morph(Yg > g0*2,'ldc',2); 
-        g0  = prctile(Yg(~Yb(:)),10) * 2;
-        s0  = prctile(Ym(Yg(:) < g0 & Ym(:) > prctile(Ym(:),80) & Ym(:) < prctile(Ym(:),95)),80); 
+        g0  = cat_stat_prctile(Yg(~Yb(:)),10) * 2;
+        s0  = cat_stat_prctile(Ym(Yg(:) < g0 & Ym(:) > cat_stat_prctile(Ym(:),80) & Ym(:) < cat_stat_prctile(Ym(:),95)),80); 
         Yo  = Yg < g0  &  Ym > s0*.4  &  Ym < s0*1.5;
         Yo2 = cat_vol_morph(Yg<g0/2 & Yo,'lo'); % WM (within the tissue, e.g. not the background of EPIs)
         % first correction 
@@ -226,16 +226,16 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
         Yb  = cat_vol_morph(Yg .* (Ym./Yw) > g0,'ldc',2); 
         Ynr = cat_vol_localstat(Ym./Yw,Yb,1,4); nr = cat_stat_nanmean(Ynr(Yb(:)))*2; 
         Ywm = cat_vol_morph(Yg<g0*2 & (Ym./Yw)>.8-nr & (Ym./Yw)<1.2+nr,'ldo',0);
-        s1  = prctile(Ym(Ywm(:)),90); 
+        s1  = cat_stat_prctile(Ym(Ywm(:)),90); 
       else
         %% typical field-map with positive and negative values
         %  - here the bias is the information (so no correction) surrounded 
         %    by heavy noise that defines the signal intensity 
         Yg  = cat_vol_localstat(Ym,true(size(Ym)),2,4) ./ ...
               cat_vol_localstat(cat_vol_smooth3X(abs(Ym),1),true(size(Ym)),1,4);
-        g0  = prctile(Yg(:),10) * 2;
+        g0  = cat_stat_prctile(Yg(:),10) * 2;
         Yb  = cat_vol_morph( cat_vol_morph(Yg < g0 & ~Ybb,'ldo',1), 'ldc', 4); 
-        s1  = prctile(Ym(~Yb(:)),90);
+        s1  = cat_stat_prctile(Ym(~Yb(:)),90);
         Yw  = ones(size(Yg)) * s1;
       end  
       clear Yg g0 Ybb 
@@ -348,9 +348,9 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
       
       % measure variance in background and foreground
       Yg     = abs(cat_vol_grad(Ya+min(Ya(:)))) ./ abs(Ya+min(Ya(:))); 
-      Ytis   = Yg<prctile(Yg(Ybr(:)>.5),50) & Ya>.5 & Ya<1.5 & Ybr>.5; 
+      Ytis   = Yg<cat_stat_prctile(Yg(Ybr(:)>.5),50) & Ya>.5 & Ya<1.5 & Ybr>.5; 
       Ytis   = cat_vol_morph(cat_vol_morph(cat_vol_morph(Ytis,'l',1),'lc',1),'de',1);
-      Ytis   = Yg<prctile(Yg(Ytis(:)>.5),50) & Ya>.5 & Ya<1.5 & Ybr>.5; 
+      Ytis   = Yg<cat_stat_prctile(Yg(Ytis(:)>.5),50) & Ya>.5 & Ya<1.5 & Ybr>.5; 
       Ytis   = cat_vol_morph(Ytis,'ldo',1);
       [Ygr,Ybgr,Ytisr] = cat_vol_resize({Ya,~Ybr,Ytis},'reduceV',1,2,32,'meanm');
       NSRbg  = cat_vol_localstat(Ygr,Ybgr>.9,2,4);  NSRbg  = cat_stat_nanmedian(NSRbg(Ybgr(:)>.9)); 

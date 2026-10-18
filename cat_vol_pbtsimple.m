@@ -336,7 +336,7 @@ function [Ygmt,Ypp,Yp0] = cat_vol_pbtsimple(Yp0,vx_vol,opt)
 
     % estimate correction area
     medgmt = median(Ygmt0(:)); 
-    try iqrgmt = iqr(Ygmt0(:)); catch, iqrgmt = std(Ygmt0(:)); end
+    iqrgmt = diff(cat_stat_prctile(Ygmt0,[25 75]));
     YenoughWM  = Ycdc2 < Ybmt - 1.5;
     YthinnerGM = max(0,medgmt - 1.5*iqrgmt - Ygmt0); 
     Yclose2CSF = Ycdc2>0 & Ycdc2<(medgmt - 1.5*iqrgmt); 

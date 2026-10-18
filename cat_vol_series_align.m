@@ -119,7 +119,7 @@ for vi = 1:numel(Nii)
   end
 
   if sharpen
-    con   = abs(diff([ prctile(Yx(:),10) prctile(Yx(:),90) ]));  
+    con   = abs(diff([ cat_stat_prctile(Yx(:),10) cat_stat_prctile(Yx(:),90) ]));  
     sharp = min(.5,sharpen * min(con, numel(Nii).^1.5 / 20));
     Yx = min(max(Yx(:)),max(min(Yx(:)),Yx + ... 
       (Yx~=0) .* max(-con/6.*Yx,min(con/6.*Yx, ...

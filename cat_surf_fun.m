@@ -3384,7 +3384,7 @@ function S=cat_surf_meshinterp(S,interp,method,distth)
         F4 = [nV + NF, nV + 2*nF + NF, nV +   nF + NF];
         
         % colors
-        if     CT==2, C=[C;nanmean(C(F(:,1),:),C(F(:,2),:));nanmean(C(F(:,2),:),C(F(:,3),:));nanmean(C(F(:,3),:),C(F(:,1),:))]; %#ok<AGROW>
+        if     CT==2, C=[C;cat_stat_nanmean([C(F(:,1),:),C(F(:,2),:)],2);cat_stat_nanmean([C(F(:,2),:),C(F(:,3),:)],2);cat_stat_nanmean([C(F(:,3),:),C(F(:,1),:)],2)];
         elseif CT==1, C=repmat(C,4,1);
         end
         

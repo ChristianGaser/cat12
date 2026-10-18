@@ -875,7 +875,7 @@ for i=1:numel(param)
   % RD202508: remove extrem outliers in thickness phantom (Rusak et al., 2021)
   %           there are still issues in the Rusak resuls 
   if 1
-    minmax = [prctile(tmp_vol(:),0.1),prctile(tmp_vol(:),99.9)]; 
+    minmax = [cat_stat_prctile(tmp_vol(:),0.1),cat_stat_prctile(tmp_vol(:),99.9)]; 
     tmp_vol( tmp_vol < minmax(1) ) = minmax(1); 
     tmp_vol( tmp_vol > minmax(2) ) = minmax(2); 
     % median fitler to remove extrem outliers (in Rusak)

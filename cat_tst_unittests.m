@@ -9,7 +9,9 @@ function varargout = cat_tst_unittests(verb)
 %   res  .. struct array with fields .name, .ok, .msg
 %
 % These tests cover the parsing / option-handling / filename logic and the
-% configuration / dependency integrity of CAT12. They need neither image
+% configuration / dependency integrity of CAT12. They also check that the
+% m-files call no functions of further toolboxes or of MATLAB releases
+% after R2020a (see restricted_functions). They need neither image
 % data, GUI, nor a running preprocessing - only SPM on the MATLAB path -
 % and therefore run in a few seconds. They complement the compiled
 % c-function tests in compile.m and the full pipeline test in
@@ -61,6 +63,12 @@ function varargout = cat_tst_unittests(verb)
     'cat_io_checkdepfiles:remove'     @t_checkdepfiles_remove
     'cat_io_checkdepfiles:keep'       @t_checkdepfiles_keep
     'cat_version:nonempty'            @t_version
+    % --- toolbox-free statistics ---------------------------------------
+    'cat_stat_prctile:values'         @t_prctile_values
+    'cat_stat_prctile:edgeCases'      @t_prctile_edge
+    % --- toolbox and MATLAB release dependencies -----------------------
+    'm-files:toolboxScanSelftest'     @t_toolbox_scan
+    'm-files:toolboxFreeR2020a'       @t_toolbox_functions
     };
 
   np  = size(tests,1);
@@ -270,6 +278,235 @@ function tf = t_version
 % the release and version strings must be available and non-empty
   [rel,ver] = cat_version;
   tf = ischar(rel) && ~isempty(rel) && ~isempty(ver);
+end
+
+% ======================================================================
+%  toolbox-free statistics (prctile/iqr need the Statistics Toolbox
+%  before MATLAB R2022a)
+% ======================================================================
+function tf = t_prctile_values
+% percentiles and interquartile range as prctile and iqr of MATLAB
+  tf = isequal(cat_stat_prctile([4 1 3 2],[0 25 50 75 100]),[1 1.5 2.5 3.5 4]) && ...
+       diff(cat_stat_prctile(single(1:10),[25 75])) == 5 && ...
+       isa(cat_stat_prctile(single(1:4),50),'single');
+end
+
+function tf = t_prctile_edge
+% NaNs are ignored, a single value has no range and no values give NaN
+  tf = isequal(cat_stat_prctile([nan 2 nan 1],[25;75]),[1;2]) && ...
+       diff(cat_stat_prctile(5,[25 75])) == 0 && ...
+       all(isnan(cat_stat_prctile([nan nan],[25 75])));
+end
+
+% ======================================================================
+%  toolbox and MATLAB release dependencies
+% ======================================================================
+function tf = t_toolbox_scan
+% the scan finds calls (also without brackets or as handle) but no names in
+% comments, strings, fields, variables, local functions or guarded calls
+  d = tempname; mkdir(d); c = onCleanup(@() rmdir(d,'s'));
+  fid = fopen(fullfile(d,'cat_tst_scan.m'),'w');
+  fprintf(fid,'%s\n', ...
+    'function y = cat_tst_scan(x)', ...
+    'y = iqr(x);', ...
+    'colormap(turbo); f = @prctile;', ...
+    '% iqr(x) in a comment', ...
+    'disp(''iqr(x) in a string''); s.range = x.iqr(1);', ...
+    'range = [1 2]; z = range(1);', ...
+    'try, m = nanmean(x); catch, m = mean(x); end', ...
+    '%{', 'zscore(x)', '%}', ...
+    'end', ...
+    'function k = kmeans(x)', 'k = x;', 'end');
+  fclose(fid);
+  hits = toolbox_calls(d);
+  tf   = numel(hits) == 3 && ...
+    all(~cellfun('isempty',regexp(hits,'^cat_tst_scan\.m:(2  iqr|3  prctile|3  turbo) ','once')));
+end
+
+function tf = t_toolbox_functions
+% CAT has to run with MATLAB R2020a without further toolboxes. Hence, the
+% m-files of the main and standalone folder must not call functions of
+% other toolboxes or of later MATLAB releases (see restricted_functions).
+  hits = toolbox_calls(fileparts(mfilename('fullpath')));
+  if ~isempty(hits)
+    error('cat_tst_unittests:toolboxFunctions','%d call(s) found:\n%s', ...
+      numel(hits),sprintf('        %s\n',hits{:}));
+  end
+  tf = true;
+end
+
+function hits = toolbox_calls(catdir)
+% 'file:line  function  (reason)' for all calls of restricted functions.
+% A call is accepted if a local function or variable has the same name, if
+% the function is checked by exist/which in the file, if it is called in a
+% one-line try-catch block, or if it is listed below.
+  accepted = {  % option 'test' compares the results with the Statistics Toolbox
+    'cat_stat_nanmean.m'    'nanmean'
+    'cat_stat_nanmedian.m'  'nanmedian'
+    'cat_stat_nanmedian.m'  'nanmean'
+    'cat_stat_nanstd.m'     'nanstd'
+    'cat_stat_nanstd.m'     'nanmean'
+    'cat_stat_nansum.m'     'nansum'
+    'cat_stat_nansum.m'     'nanmean'
+    };
+
+  [names,reason] = restricted_functions;
+  d1    = dir(fullfile(catdir,'*.m'));
+  d2    = dir(fullfile(catdir,'standalone','*.m'));
+  files = [{d1.name} strcat('standalone/',{d2.name})];
+  own   = regexprep(files,'^.*[\\/]|\.m$','');   % functions of CAT itself
+  hits  = {};
+  for fi = 1:numel(files)
+    raw = fileread(fullfile(catdir,files{fi}));
+    L   = code_lines(raw);
+    tok = regexp(L,'(?<![\w\.])[A-Za-z]\w*','match');   % identifiers without fields
+    if ~any(ismember([{} tok{:}],names)), continue; end
+
+    [blk,lfun,vars] = code_scopes(L);
+    for li = find(cellfun(@(t) any(ismember(t,names)),tok))
+      for t = unique(tok{li}(ismember(tok{li},names)))
+        if any(strcmp(t{1},[lfun vars{blk(li)+1} own])) || ...
+           ~isempty(regexp(raw,['(exist|which)\s*\(\s*[''"]' t{1} '[''"]'],'once')) || ...
+           ~isempty(regexp(L{li},['(?<![\w\.])try(?!\w).*(?<![\w\.])' t{1} ...
+             '(?!\w).*(?<![\w\.])catch(?!\w)'],'once')) || ...
+           any(strcmp(accepted(:,1),files{fi}) & strcmp(accepted(:,2),t{1}))
+          continue
+        end
+        hits{end+1} = sprintf('%s:%d  %s  (%s)',files{fi},li,t{1}, ...
+          reason{strcmp(names,t{1})}); %#ok<AGROW>
+      end
+    end
+  end
+end
+
+function L = code_lines(txt)
+% lines of m-code without (block) comments, strings and text after line
+% continuations
+  L  = regexp(txt,'\r?\n','split');
+  op = ~cellfun('isempty',regexp(L,'^\s*%\{\s*$','once'));
+  cl = ~cellfun('isempty',regexp(L,'^\s*%\}\s*$','once'));
+  if any(op)
+    bc = false(size(L)); d = 0;
+    for li = 1:numel(L)     % nested block comments, a single %} is a comment
+      if op(li), d = d + 1; end
+      bc(li) = d > 0;
+      if cl(li) && d > 0, d = d - 1; end
+    end
+    L(bc) = {''};
+  end
+  % the leftmost match decides between double-quoted string, single-quoted
+  % string (a quote after a name, bracket, dot or quote is a transpose),
+  % comment and continuation
+  L = regexprep(L,['"[^"]*(?:""[^"]*)*"|(?<![\w\)\]\}\.''])''[^'']*(?:''''[^'']*)*''|' ...
+    '%.*$|\.\.\..*$'],' ');
+end
+
+function [blk,lfun,vars] = code_scopes(L)
+% function block of each line (0 for code before the first function), the
+% names of the local functions, and the variables of each block (assigned,
+% function arguments, global/persistent, anonymous function inputs, catch)
+  isfn = ~cellfun('isempty',regexp(L,'^\s*function(?!\w)','once'));
+  blk  = cumsum(isfn);
+  lfun = regexp(L(isfn),'^\s*function\s+(?:(?:\[[^\]]*\]|\w+)\s*=\s*)?(\w+)','tokens','once');
+  lfun = [{} lfun{:}];
+  vars = cell(1,max(blk) + 1);
+  for bi = 0:max(blk)
+    B = L(blk==bi);
+    v = [ regexp(B,'(?<![\w\.])([A-Za-z]\w*)\s*(?:\([^=]*?\)|\{[^=]*?\}|\.\s*\w+)*\s*=(?!=)','tokens') ...
+          regexp(B,'\[([^\[\]=]*)\]\s*=(?!=)','tokens') ...
+          regexp(B,'^\s*function(?!\w)[^(]*\(([^)]*)\)','tokens') ...
+          regexp(B,'^\s*(?:global|persistent)\s+(.*)','tokens') ...
+          regexp(B,'@\(([^)]*)\)','tokens') ...
+          regexp(B,'(?<![\w\.])catch\s+([A-Za-z]\w*)','tokens') ];
+    v = [{} v{:}]; v = [{} v{:}];
+    vars{bi + 1} = regexp(sprintf('%s ',v{:}),'(?<![\w\.])[A-Za-z]\w*','match');
+  end
+end
+
+function [names,reason] = restricted_functions
+% Functions that are not available in MATLAB R2020a without toolboxes: a
+% selection of common toolbox functions and functions of later releases.
+% Some have CAT replacements, e.g. cat_stat_prctile, cat_stat_nanmean,
+% cat_vol_morph, cat_vol_smooth3X, cat_vol_resize, or spm_invFcdf.
+  F = {
+    % toolbox functions that are part of MATLAB in later releases
+    'Statistics Toolbox before R2022a, use cat_stat_prctile'   'iqr prctile quantile'
+    'Signal Processing Toolbox before R2022a'                  'rms'
+    'Parallel Computing Toolbox before R2021b'                 'parfeval parfevalOnAll'
+    % toolbox functions
+    'Statistics and Machine Learning Toolbox' [ ...
+      'nanmean nanmedian nanstd nanvar nanmax nanmin nansum nancov mad zscore ' ...
+      'skewness kurtosis moment trimmean geomean harmmean range normpdf normcdf ' ...
+      'norminv normrnd normfit tpdf tcdf tinv fpdf fcdf finv chi2pdf chi2cdf ' ...
+      'chi2inv betapdf betacdf betainv gampdf gamcdf gaminv binopdf binocdf ' ...
+      'poisspdf poisscdf exppdf expcdf unifpdf unifcdf mvnpdf mvncdf mvnrnd ' ...
+      'fitdist makedist ttest ttest2 ranksum signrank kstest kstest2 lillietest ' ...
+      'chi2gof vartest2 anova1 anova2 anovan kruskalwallis friedman multcompare ' ...
+      'corr partialcorr regress robustfit glmfit glmval fitlm fitglm stepwisefit ' ...
+      'lasso ridge nlinfit pca pcacov factoran cmdscale pdist pdist2 squareform ' ...
+      'linkage clusterdata dendrogram kmeans kmedoids silhouette mahal knnsearch ' ...
+      'dummyvar grp2idx grpstats crosstab tabulate ecdf ksdensity histfit boxplot ' ...
+      'normplot qqplot lsline gscatter randsample datasample bootstrp bootci ' ...
+      'cvpartition crossval fitcsvm perfcurve confusionmat']
+    'Image Processing Toolbox' [ ...
+      'bwlabel bwlabeln bwconncomp labelmatrix regionprops regionprops3 imdilate ' ...
+      'imerode imopen imclose imfill imreconstruct imclearborder imregionalmax ' ...
+      'imregionalmin imextendedmax imextendedmin imhmax imhmin imtophat imbothat ' ...
+      'strel offsetstrel bwdist bwdistgeodesic bwmorph bwmorph3 bwskel bwareaopen ' ...
+      'bwareafilt bwpropfilt bwperim bwboundaries bwtraceboundary bwconvhull ' ...
+      'bweuler bwselect bwselect3 watershed imgaussfilt imgaussfilt3 imfilter ' ...
+      'fspecial fspecial3 medfilt2 medfilt3 ordfilt2 stdfilt rangefilt entropyfilt ' ...
+      'entropy imboxfilt imboxfilt3 imdiffusefilt imresize3 imrotate imrotate3 ' ...
+      'imwarp imtranslate imcrop imcrop3 padarray graythresh otsuthresh multithresh ' ...
+      'imbinarize imquantize edge edge3 imgradient imgradient3 mat2gray im2uint8 ' ...
+      'im2uint16 im2int16 im2single imadjust imadjustn stretchlim histeq ' ...
+      'adapthisteq imhist imhistmatch imhistmatchn imnoise wiener2 imsharpen ' ...
+      'imcomplement imabsdiff imlincomb label2rgb labeloverlay montage imshowpair ' ...
+      'imfuse imregister imregtform imregdemons imregcorr imref2d imref3d affine2d ' ...
+      'affine3d intlut niftiread niftiwrite niftiinfo dicomread dicominfo ' ...
+      'dicomwrite dicomreadVolume analyze75read analyze75info ssim psnr immse dice ' ...
+      'jaccard corr2 mean2 std2 normxcorr2 poly2mask roipoly imfindcircles hough ' ...
+      'radon iradon blockproc nlfilter colfilt bwlookup volshow sliceViewer ' ...
+      'orthosliceViewer volumeViewer imtool']
+    'Signal Processing Toolbox' [ ...
+      'butter cheby1 cheby2 ellip filtfilt sosfilt designfilt fir1 fir2 firls ' ...
+      'freqz findpeaks hilbert envelope pwelch periodogram spectrogram ' ...
+      'bandpower resample decimate upsample downsample medfilt1 sgolay sgolayfilt ' ...
+      'hamming hann hanning blackman gausswin tukeywin kaiser chirp peak2peak ' ...
+      'peak2rms rssq findchangepts snr sinc']
+    'Optimization Toolbox' [ ...
+      'fmincon fminunc fminimax fgoalattain fseminf lsqcurvefit lsqnonlin lsqlin ' ...
+      'linprog intlinprog quadprog fsolve optimoptions coneprog']
+    'Curve Fitting Toolbox' [ ...
+      'fit fittype fitoptions cfit sfit smooth csaps spaps spap2 csapi fnval ' ...
+      'fnder fnint']
+    'Parallel Computing Toolbox' [ ...
+      'parpool gcp parcluster getCurrentTask gpuArray ' ...
+      'gpuDevice spmdIndex spmdSize createJob createTask']
+    % functions of later MATLAB releases
+    'MATLAB R2020b' [ ...
+      'pagemtimes pagetranspose pagectranspose turbo subtitle im2gray cmap2gray ' ...
+      'isMATLABReleaseOlderThan matlabRelease readlines readstruct writestruct ' ...
+      'boxchart swarmchart bubblechart exportapp']
+    'MATLAB R2021a' 'bubblecloud'
+    'MATLAB R2021b' 'pagesvd'
+    'MATLAB R2022a (caxis before)' 'clim'
+    'MATLAB R2022a' [ ...
+      'allfinite anynan fontsize fontname tensorprod writelines pageinv ' ...
+      'pagemldivide pagemrdivide']
+    'MATLAB R2022b' 'isuniform dictionary pagenorm'
+    'MATLAB R2023a' 'combinations xregion yregion sky pageeig fillmissing2'
+    'MATLAB R2023b' 'paddata resize trimdata abyss orderedcolors smoothdata2'
+    'MATLAB R2024a' 'clip islocalmax2 islocalmin2'
+    'MATLAB R2024b' 'isapprox'
+    'MATLAB R2025a' 'theme'
+    };
+  names = {}; reason = {};
+  for fi = 1:size(F,1)
+    n      = strsplit(F{fi,2});
+    names  = [names n];                          %#ok<AGROW>
+    reason = [reason repmat(F(fi,1),1,numel(n))]; %#ok<AGROW>
+  end
 end
 
 % ======================================================================

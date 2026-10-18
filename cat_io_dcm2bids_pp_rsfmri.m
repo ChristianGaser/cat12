@@ -184,7 +184,7 @@ function [J,C,Ymap] = estimateMeasures(i,P,Prp,Pdbnii,Vjson,datatype,suffix,A,op
     brain = L.c0 > 0.5; mask = 'T1w segmentation (with signal in all volumes)';
     c0    = L.c0(brain); par = L.atlas{1}(brain);
   else
-    brain = Ymu > 0.2 * prctile(Ymu(:),99); mask = 'mean EPI threshold (with signal in all volumes)';
+    brain = Ymu > 0.2 * cat_stat_prctile(Ymu(:),99); mask = 'mean EPI threshold (with signal in all volumes)';
     c0    = 2 * ones(nnz(brain),1); par = zeros(nnz(brain),1);
   end
   W  = Wall(brain(:),:); clear Wall

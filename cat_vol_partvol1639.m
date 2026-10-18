@@ -419,9 +419,9 @@ function [Ya1,Ycls,YMF,Ycortex] = cat_vol_partvol1639(Ym,Ycls,Yb,Yy,vx_vol,extop
   if 0
     %% display for development
     [YD,YI] = cat_vbdist(single(Ya1)); Yax = Ya1(YI);
-    figure, isosurface(smooth3(Ya1 & Ym>2.1),.5,Yax), axis equal off; colormap cool, clim([1,8])
+    figure, isosurface(smooth3(Ya1 & Ym>2.1),.5,Yax), axis equal off; colormap cool, set(gca,'CLim',[1,8])
     %%
-    figure, isosurface(smooth3((Yd<50 | Ym<2.1) .* (Ym>2.1)),.5,Yax), axis equal off; colormap cool, clim([1,8])
+    figure, isosurface(smooth3((Yd<50 | Ym<2.1) .* (Ym>2.1)),.5,Yax), axis equal off; colormap cool, set(gca,'CLim',[1,8])
     
   end
 

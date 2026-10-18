@@ -193,7 +193,7 @@ y(~isfinite(y)) = 0;
 if ~isempty(scanner)
   % looks like a vector with coding scanner 1..n
   if min(size(scanner)) == 1 && min(scanner) == 1
-    batch = dummyvar(scanner);
+    batch = double(scanner(:) == (1:max(scanner))); % dummy coding (dummyvar needs the Statistics Toolbox)
   elseif min(size(scanner)) > 1 && min(scanner) == 0 && max(scanner) == 1
     batch = scanner;
   else

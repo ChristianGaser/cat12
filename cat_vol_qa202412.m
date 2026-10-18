@@ -780,11 +780,11 @@ function varargout = cat_vol_qa202412(action,varargin)
 
       %%  
       denoising = 1; 
-      Ys = Yo+0; Ymsk = cat_vol_morph( cat_vol_smooth3X(Ys,1./mean(vx_vol)) < .3*prctile(Ys(:),90),'lo',3); Ys(Ymsk) = 0; 
+      Ys = Yo+0; Ymsk = cat_vol_morph( cat_vol_smooth3X(Ys,1./mean(vx_vol)) < .3*cat_stat_prctile(Ys(:),90),'lo',3); Ys(Ymsk) = 0; 
       if denoising == 1
         cat_sanlm(Ys,1,3); 
         % additional median filter in case of strong noise
-        noise = sqrt( (cat_stat_nanmean(Yo(:) - Ys(:))/ prctile(Ys(:),90)) .^2 );
+        noise = sqrt( (cat_stat_nanmean(Yo(:) - Ys(:))/ cat_stat_prctile(Ys(:),90)) .^2 );
         if (noise>0.03 && all(vx_vol < 1.5 )) || noise>0.075
           mix = min(1,noise * 10);
           Ys = Ys.*(1-mix) + mix.*cat_vol_median3(Ys,Ys>0,Ys>0,0.2); 
@@ -800,7 +800,7 @@ function varargout = cat_vol_qa202412(action,varargin)
 
       %% tissue approximation 
       Yg  = cat_vol_grad(Ys,vx_vol); 
-      Ygn = Yg ./ min( prctile(Ys(:),90)*1.2 , max(eps,Ys - 2*noise*prctile(Ys(:),90))); Ygn(Ynd) = inf; 
+      Ygn = Yg ./ min( cat_stat_prctile(Ys(:),90)*1.2 , max(eps,Ys - 2*noise*cat_stat_prctile(Ys(:),90))); Ygn(Ynd) = inf; 
       Yt  = cat_vol_morph(Ygn>1 & Ys < cat_stat_nanmean(Ys(Ygn<.1 & Ygn~=0))*.4 ,'dd',2,vx_vol)<.3 & ...
             Ys  > cat_stat_nanmedian(Ys(Ygn<.4 & Ygn~=0))*.6 & ...
             Ygn < cat_stat_nanmedian(Ygn(Ygn(:)<.5 & Ygn(:)~=0)) & ...
