@@ -540,7 +540,7 @@ function [Ymg,Yml] = suit_amap_LAS(Ymi,Yp0a,Yc2h,Yg,gth,T4th,vx_vol,job)
     
     % GM 
     Ylabg    = Ymi .* (Yp0a>1.5 & Yp0a<2.5 & Yg>0 & Yg<gth*4 & Ymi>mean(T4th(1:2)) & Ymi<mean(T4th(3:4))); 
-    Ylabg    = Ylabg .* (Ylabg>prctile(Ylabg(Ylabg(:)>0),10) & Ylabg<prctile(Ylabg(Ylabg(:)>0),90)); % 
+    Ylabg    = Ylabg .* (Ylabg>cat_stat_prctile(Ylabg(Ylabg(:)>0),10) & Ylabg<cat_stat_prctile(Ylabg(Ylabg(:)>0),90)); % 
     %Ylabg    = cat_vol_median3( Ylabg, Ylabg>0, Ylabg>0 ); % important to avoid bias by outliers!
     Ylaba    = cat_vol_approx( Ylabg ); 
     Ylabg    = Ylabg + (Ylabg==0).*cat_vol_approx( Ylabg .* (Ymi ./ Ylaba > .9 & Ymi ./ Ylaba < 1.1) ); 
@@ -590,9 +590,9 @@ function [Ymg,Yml] = suit_amap_LAS(Ymi,Yp0a,Yc2h,Yg,gth,T4th,vx_vol,job)
        cat_sanlm(Ymg,1,3); 
 
        Ymi  = Ymg; 
-       T4th = [ prctile(Ymi(Yp0r(:)==1  & Ymi(:)>0),10), ...
+       T4th = [ cat_stat_prctile(Ymi(Yp0r(:)==1  & Ymi(:)>0),10), ...
                 cat_stat_kmeans(Ymi(Yp0r(:)==2 & Ymg(:)<2.5/3 & Ymg(:)>1.5/3),2), ... % modeling two GM subregions by layer and PVE
-                prctile(Ymi(Yp0r(:)==3  & Ymi(:)>0),80) ];
+                cat_stat_prctile(Ymi(Yp0r(:)==3  & Ymi(:)>0),80) ];
     else
       % local intensity normalization 
       % this function will also enhance the contrast between the tissues!
@@ -618,9 +618,9 @@ function [Ymg,Yml] = suit_amap_LAS2(Ymi,Yp0a,Yc2h,Yg,gth,job)
   %%
   verb = 0; 
   Ymi  = Ymio; 
-  T4th = [ prctile(Ymi(Yp0r(:)==1  & Ymi(:)>0),10), ...
+  T4th = [ cat_stat_prctile(Ymi(Yp0r(:)==1  & Ymi(:)>0),10), ...
           cat_stat_kmeans(Ymi(Yp0r(:)==2 & Ymi(:)<2.5/3 & Ymi(:)>0.5/3),4), ... % modeling two GM subregions by layer and PVE
-          prctile(Ymi(Yp0r(:)==3  & Ymi(:)>0),80) ];
+          cat_stat_prctile(Ymi(Yp0r(:)==3  & Ymi(:)>0),80) ];
   T4th([2,5])=[]; % remove PVE helper
   T4vol = @(Yp0,Ymi,T4th) ...
       [ sum( Yp0(:)>0 & Ymi(:)<mean(T4th(1:2)) ), ...
@@ -655,7 +655,7 @@ function [Ymg,Yml] = suit_amap_LAS2(Ymi,Yp0a,Yc2h,Yg,gth,job)
     % GM 
     cx = .5; cx = 2*[cx 1-cx]; wx = 2 - cx; 
     Ylabg    = Ymi .* (Yp0a>1.5 & Yp0a<2.5 & Yg>0 & Yg<gth*8 & Ymi>mean(T4th(1:2).*cx) & Ymi<mean(T4th(3:4).*wx)); 
-    Ylabg    = Ylabg .* (Ylabg>prctile(Ylabg(Ylabg(:)>0),5) & Ylabg<prctile(Ylabg(Ylabg(:)>0),95)); % 
+    Ylabg    = Ylabg .* (Ylabg>cat_stat_prctile(Ylabg(Ylabg(:)>0),5) & Ylabg<cat_stat_prctile(Ylabg(Ylabg(:)>0),95)); % 
     Ylaba    = cat_vol_approx( Ylabg ); 
     Ylabg    = Ylabg + (Ylabg==0).*cat_vol_approx( Ylabg .* (Ymi ./ Ylaba > .58 & Ymi ./ Ylaba < 1.52) ); 
     %Ylabg    = Ylabg .* Ytisdistprob; % reduced weighting to boundaries 
@@ -717,9 +717,9 @@ function [Ymg,Yml] = suit_amap_LAS2(Ymi,Yp0a,Yc2h,Yg,gth,job)
        Ymi  = Ymg; 
        Ymi  = Ymi.^(1./(Ylab{4}./(Ylab23/mean(Ylab23(:)))).^.5); %Ymi.^(1./(Ylab{4}*.5 + 0.5.*Ylab23/mean(Ylab23(:))).^2);
      
-       T4th = [ prctile(Ymi(Yp0r(:)==1  & Ymi(:)>0),10), ...
+       T4th = [ cat_stat_prctile(Ymi(Yp0r(:)==1  & Ymi(:)>0),10), ...
                 cat_stat_kmeans(Ymi(Yp0r(:)==2 & Ymg(:)<2.5/3 & Ymg(:)>1.5/3),4), ... % modeling two GM subregions by layer and PVE
-                prctile(Ymi(Yp0r(:)==3  & Ymi(:)>0),80) ];
+                cat_stat_prctile(Ymi(Yp0r(:)==3  & Ymi(:)>0),80) ];
        T4th([2,5])=[]; % remove PVE helper
 
        if verb, T4vol(Yp0a,Ymi,T4th), end
@@ -759,7 +759,7 @@ function Ymi = suit_amap_biascorr(Ym,Yp0a,Yg,Yc2h,Ycbd,gth,job,vx_vol)
   Ymo = Ym; 
 
   Ym = Ym ./ cat_vol_approx(smooth3(Ym) ./ max(eps,Yp0a/3) .* (Ycbd>0 & Yp0a>1.5)) ;  
-  Ym = Ym ./ prctile(Ym(Yp0a(:)>2.5),60) * prctile(Ymo(Yp0a(:)>2.5),60);
+  Ym = Ym ./ cat_stat_prctile(Ym(Yp0a(:)>2.5),60) * cat_stat_prctile(Ymo(Yp0a(:)>2.5),60);
 
   Ymo = Ym; 
 
@@ -795,7 +795,7 @@ function Ymi = suit_amap_biascorr(Ym,Yp0a,Yg,Yc2h,Ycbd,gth,job,vx_vol)
     Ylabw    = Ylabgw ./ cat_stat_nanmedian(Ylabgw(Yp0a(:)>2.5));
 
     Ymi = Ymi ./ cat_vol_smooth3X(Ylabw,4); 
-    Ymi = Ymi ./ prctile( Ymi(Yp0a(:)>2.5) , 60);
+    Ymi = Ymi ./ cat_stat_prctile( Ymi(Yp0a(:)>2.5) , 60);
   end
   
   %%
@@ -819,7 +819,7 @@ function [Ycb,Yml,Ycbd,Yc2h] = suit_amap_cleanup_cerebellum(Yml,Yp0s,Ycbd,Yg,Ybv
   Ycbd       = cat_vol_resize(Ycbd,'reduceV',vx_vol,.8,32,'meanm');   % CSF thr. (minimum to avoid PVE)
   
   if init
-    csfth = prctile( Yml(Yml(:)<.6 & Ycbd(:)<5) , 5); 
+    csfth = cat_stat_prctile( Yml(Yml(:)<.6 & Ycbd(:)<5) , 5); 
     gmth  = cat_stat_nanmedian( Yml(Yg(:)>1/9 & Yml(:)<.9 & Yml(:)>csfth*1.5 & Ycbd(:)<-2  & Ycbd(:)>-20 & Yml(:)<.95) ); 
   else
     csfth = 1/4; 
@@ -935,7 +935,7 @@ end
 function Ymi = suit_amap_quickscale(Ym,Yp0s,vx_vol,P,fi)
 %suit_amap_quickscale. Quick bias correction (if original image is used) & intensity normalization.
 
-  Tth = [prctile(Ym(round(Yp0s(:))==1),10), prctile(Ym(round(Yp0s(:))==2),50), prctile(Ym(round(Yp0s(:))==3),90)];
+  Tth = [cat_stat_prctile(Ym(round(Yp0s(:))==1),10), cat_stat_prctile(Ym(round(Yp0s(:))==2),50), cat_stat_prctile(Ym(round(Yp0s(:))==3),90)];
 
   % estimate bias 
   Ywme = cat_vol_morph(Yp0s>2.5,'e');     % use save WM for estimation 
@@ -964,13 +964,13 @@ function Ymi = suit_amap_quickscale(Ym,Yp0s,vx_vol,P,fi)
       Yexr  = cat_vol_resize(Yex,'reduceV',vx_vol,res,32,'meanm') > .5;  
       Ygr   = cat_vol_resize(Yg,'reduceV',vx_vol,res,32,'meanm') > .5;  
       % get average WM and GM intensies
-      Ywr = cat_vol_approx(max(Yexr * prctile(Ymr(Ywmer),95), ...
+      Ywr = cat_vol_approx(max(Yexr * cat_stat_prctile(Ymr(Ywmer),95), ...
         cat_vol_localstat(Ymr,Ymr>median(Ymr(:)) & Yp0sr>2.5,2,2 + ( Tth(2) < Tth(3) )))); 
-      Ygr = cat_vol_approx(max(Yexr * prctile(Ymr(Ygmr),50), ...
+      Ygr = cat_vol_approx(max(Yexr * cat_stat_prctile(Ymr(Ygmr),50), ...
         cat_vol_localstat(Ymr,Ymr>median(Ymr(:)) & Yp0sr>1.5 & Yp0sr<2.5 & ...
         Ymr>min(Tth)*1.5 & Ymr<max(Tth)*.9 & Ygr>median(Ygr(round(Yp0sr(:))==2)),2,1))); 
       %% adapt and mix both tissue intensities  
-      Ywr = (Ywr*.5 + .5*(Ygr / prctile(Ygr(Ywmer),50)) * prctile(Ywr(Ywmer),50) ); 
+      Ywr = (Ywr*.5 + .5*(Ygr / cat_stat_prctile(Ygr(Ywmer),50)) * cat_stat_prctile(Ywr(Ywmer),50) ); 
       % go back to original resolution
       Yw  = cat_vol_resize(Ywr,'dereduceV',redR); clear Ywr Ygr Yexr Ywmer Ywmer; 
       Ymi = real( (Ym ./ Yw) .^ max(eps,Yw./mean(Yw(Ywme(:)))) ); clear Yw;
@@ -983,7 +983,7 @@ function Ymi = suit_amap_quickscale(Ym,Yp0s,vx_vol,P,fi)
     end
   
     % intensity normalization
-    Ymi  = Ymi / prctile(Ymi(Ywme(:)),80);
+    Ymi  = Ymi / cat_stat_prctile(Ymi(Ywme(:)),80);
 
     % further normalization ???
     Ymi = suit_quadintnorm(Ymi,Yp0s);
@@ -1003,19 +1003,19 @@ function [Ym2, coeff] = suit_quadintnorm(Ym,Yp0s)
   % define normalization intensities based on the segmentation 
   if 0
     x = [ ...
-      prctile(Ym(round(Yp0s(:))==1),10);
-      prctile(Ym(round(Yp0s(:))==2),50);
-      prctile(Ym(round(Yp0s(:))==3),90);
-      prctile(Ym(round(Yp0s(:))==3),99);
+      cat_stat_prctile(Ym(round(Yp0s(:))==1),10);
+      cat_stat_prctile(Ym(round(Yp0s(:))==2),50);
+      cat_stat_prctile(Ym(round(Yp0s(:))==3),90);
+      cat_stat_prctile(Ym(round(Yp0s(:))==3),99);
     ]; 
     y = [1; 2; 3; 4] / 3;
   else
     x = [ ...
-      prctile(Ym(Ym(:)~=0),.5);
-      prctile(Ym(round(Yp0s(:))==1),10);
-      prctile(Ym(round(Yp0s(:))==2),50);
-      prctile(Ym(round(Yp0s(:))==3),90);
-      prctile(Ym(round(Yp0s(:))==3),99);
+      cat_stat_prctile(Ym(Ym(:)~=0),.5);
+      cat_stat_prctile(Ym(round(Yp0s(:))==1),10);
+      cat_stat_prctile(Ym(round(Yp0s(:))==2),50);
+      cat_stat_prctile(Ym(round(Yp0s(:))==3),90);
+      cat_stat_prctile(Ym(round(Yp0s(:))==3),99);
     ]; 
     y = [0; 1; 2; 3; 4] / 3;
   end
@@ -1064,13 +1064,13 @@ function [Tth,suit] = suit_amap_eval(Ym,Ymi,Yp0a,Yp0s,vx_vol,suit,fi)
 
   % threshold for the tissues - use extrem values for CSF and WM 
   Yp0r = uint8(round(Yp0a));
-  Tth  = [ prctile(Ymi(Yp0r(:)==1  & Ymi(:)>0),10), ...
+  Tth  = [ cat_stat_prctile(Ymi(Yp0r(:)==1  & Ymi(:)>0),10), ...
            cat_stat_nanmedian(Ymi(Yp0r(:)==2  & Ymi(:)>0)), ...
-           prctile(Ymi(Yp0r(:)==3  & Ymi(:)>0),80) ];
+           cat_stat_prctile(Ymi(Yp0r(:)==3  & Ymi(:)>0),80) ];
   % new 4 class model
-  T4th = [ prctile(Ymi(Yp0r(:)==1  & Ymi(:)>0),10), ...
+  T4th = [ cat_stat_prctile(Ymi(Yp0r(:)==1  & Ymi(:)>0),10), ...
            cat_stat_kmeans(Ymi(Yp0r(:)==2),2), ... % modeling two GM subregions by layer and PVE
-           prctile(Ymi(Yp0r(:)==3  & Ymi(:)>0),80) ];
+           cat_stat_prctile(Ymi(Yp0r(:)==3  & Ymi(:)>0),80) ];
   clear Ylabw Ylabgw Ylabgw1 Ylabgw2 Ylabgw3; 
 
   % test for skull-stripping problems (e.g., AHEAD dataset)
