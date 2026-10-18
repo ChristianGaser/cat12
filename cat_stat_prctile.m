@@ -11,7 +11,8 @@ function y = cat_stat_prctile(x,p)
 %
 %   x .. data array (all elements are used, NaNs are ignored)
 %   p .. percentages between 0 and 100
-%   y .. percentiles (double, same size as p, NaN if x has no values)
+%   y .. percentiles (same size as p, NaN if x has no values; single for
+%        single x as in prctile and double otherwise)
 %
 % Example - interquartile range like iqr(x):
 %   diff(cat_stat_prctile(x,[25 75]))
@@ -29,16 +30,18 @@ function y = cat_stat_prctile(x,p)
   x = x(:);
   x = sort(x(~isnan(x)));
   n = numel(x);
-  if n == 0, y = nan(size(p)); return; end
+  y = nan(numel(p),1);
+  if n > 0
+    % position of the percentiles in the sorted data limited to [1,n]
+    r  = min(max(double(p(:))/100*n + 0.5, 1), n);
+    lo = floor(r);
+    w  = r - lo;
 
-  % position of the percentiles in the sorted data limited to [1,n]
-  r  = min(max(double(p(:))/100*n + 0.5, 1), n);
-  lo = floor(r);
-  w  = r - lo;
-
-  % interpolate only between two values (avoids 0*inf for infinite values)
-  y    = double(x(lo));
-  i    = w > 0;
-  y(i) = y(i) + w(i) .* (double(x(lo(i) + 1)) - y(i));
-  y    = reshape(y,size(p));
+    % interpolate only between two values (avoids 0*inf for infinite values)
+    y    = double(x(lo));
+    i    = w > 0;
+    y(i) = y(i) + w(i) .* (double(x(lo(i) + 1)) - y(i));
+  end
+  y = reshape(y,size(p));
+  if isa(x,'single'), y = single(y); end
 end
