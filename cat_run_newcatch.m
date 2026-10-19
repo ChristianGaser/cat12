@@ -203,6 +203,22 @@ function cat_run_newcatch(job,tpm,subj)
         'Please replace this file or reinstall SPM/CAT.\n\n'],strtrim(scriptfile));
     end
 
+    % hint for errors in files of other toolboxes that shadow SPM functions
+    if ~isdeployed
+      catdirs = strcat({spm('dir'), fileparts(mfilename('fullpath')), matlabroot}, filesep);
+      ncalled = find(strcmp({caterr.stack.name},'cat_run_newcatch'),1) - 1; % frames called from here
+      for si = 1:ncalled
+        if ~isempty(caterr.stack(si).file) && ...
+           ~any(cellfun(@(d) strncmpi(caterr.stack(si).file,d,numel(d)),catdirs))
+          cat_io_cprintf('warn',['Hint: The error occurred in "%s",\n' ...
+            'which is not part of SPM, CAT or MATLAB. Another toolbox on the MATLAB path\n' ...
+            'probably shadows SPM functions. Please remove this toolbox from the MATLAB\n' ...
+            'path (e.g. with pathtool) and restart MATLAB.\n\n'],caterr.stack(si).file);
+          break
+        end
+      end
+    end
+
     % save cat xml file
     caterrstruct = struct();
     for si=1:numel(caterr.stack)

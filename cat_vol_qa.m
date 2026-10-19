@@ -985,6 +985,13 @@ function [QAS,QAR] = cat12err(opt,mridir,reportdir)
   QAS.filedata.F      = fullfile(pp,[ff ee]);
   QAS.filedata.Fm     = fullfile(pp,mridir,['m'  ff ee]);
   QAS.filedata.Fp0    = fullfile(pp,mridir,['p0' ff ee]);
+  % mridir is an absolute path (from cat_io_BIDS) for preprocessing errors
+  % but relative to the image directory ('mri' or '') for batch QC calls
+  if isempty(regexp(mridir,'^(/|\\\\|[A-Za-z]:)','once'))
+    mridir = fullfile(pp,mridir);
+  end
+  QAS.filedata.Fm     = fullfile(mridir,['m'  ff ee]);
+  QAS.filedata.Fp0    = fullfile(mridir,['p0' ff ee]);
   QAS.filedata.fnames = [ 
     spm_str_manip(pp,sprintf('k%d', ...
       floor( max(opt.snspace(1)-19-ff,opt.snspace(1)-19)/3) - 1)), '/',...
