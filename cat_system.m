@@ -92,12 +92,6 @@ if ST > 1
   end
 end
 
-if nargout > 0
-  [status,result] = cat_check_system_output(ST,RS,verb,trerr);
-else
-  cat_check_system_output(ST,RS,verb,trerr);
-end
-
 % for mac we need to enable execution because of Apple Gatekeeper
 if ismac && (ST == 137 || ST == 127)
   [fixStatus1, ~] = system(sprintf('xattr -dr com.apple.quarantine "%s"', strrep(CATDir,'\ ',' ')));
@@ -108,6 +102,14 @@ if ismac && (ST == 137 || ST == 127)
     [ST, RS] = system(cmdfull);
     warning on
   end
+end
+
+% check the output only after the retry above, so that status/result describe
+% the final call and a failed first attempt is not reported as an error
+if nargout > 0
+  [status,result] = cat_check_system_output(ST,RS,verb,trerr);
+else
+  cat_check_system_output(ST,RS,verb,trerr);
 end
 
 if ST > 1 && ST~=139 % 139: data setup error
