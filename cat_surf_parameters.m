@@ -241,7 +241,9 @@ function varargout = cat_surf_parameters(job)
             if job.verb, fprintf('%sexist - Display %s\n',nstr,spm_file(Parea,'link','cat_surf_display(''%s'')')); end
           else
             cmd = sprintf('CAT_SurfArea "%s" "%s"',Pxname,Parea); 
+            f0 = cat_surf_parameters_fstate(Parea);
             cat_system(cmd,job.debug,job.trerr);
+            cat_surf_parameters_checkout(Parea,f0,'surface area',cmd);
             if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(Parea,'link','cat_surf_display(''%s'')')); end
           end
 
@@ -285,7 +287,9 @@ function varargout = cat_surf_parameters(job)
           else
             stime = clock; 
             cmd = sprintf('CAT_DumpCurv "%s" "%s" 0 0 1',Pname,PGI);
+            f0 = cat_surf_parameters_fstate(PGI);
             cat_system(cmd,job.debug,job.trerr);
+            cat_surf_parameters_checkout(PGI,f0,'gyrification index',cmd);
             if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(PGI,'link','cat_surf_display(''%s'')')); end
           end
           if nargout==1, varargout{1}.([sides{si} 'PGI'  ]){i} = PGI; end  
@@ -310,6 +314,7 @@ function varargout = cat_surf_parameters(job)
           else
             stime = clock; 
             cmd = sprintf('CAT_SulcusDepth %s "%s" "%s" "%s"',option,Pname,Psphere,PSD{SDi});
+            f0 = cat_surf_parameters_fstate(PSD{SDi});
             try
               cat_system(cmd,job.debug*0,job.trerr*0);
             catch
@@ -331,6 +336,7 @@ function varargout = cat_surf_parameters(job)
 
               cat_system(cmd,job.debug,job.trerr);
             end
+            cat_surf_parameters_checkout(PSD{SDi},f0,'sulcal depth',cmd);
             if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(PSD{SDi},'link','cat_surf_display(''%s'')')); end
           end
           if nargout==1 && SDi==1, varargout{1}.([sides{si} 'PSD' ]){i} = PSD{SDi}; end
@@ -347,7 +353,9 @@ function varargout = cat_surf_parameters(job)
           else
             stime = clock; 
             cmd = sprintf('CAT_FractalDimension -sphere "%s" -nosmooth "%s" "%s" "%s"',Psphere,Pname,Psphere,PFD);
+            f0 = cat_surf_parameters_fstate(PFD);
             cat_system(cmd,job.debug,job.trerr);
+            cat_surf_parameters_checkout(PFD,f0,'fractal dimension',cmd);
             if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(PFD,'link','cat_surf_display(''%s'')')); end
           end
           if nargout==1, varargout{1}.([sides{si} 'PFD']){i} = PFD; end  
@@ -369,7 +377,9 @@ function varargout = cat_surf_parameters(job)
               else
                 stime = clock; 
                 cmd = sprintf('CAT_DumpSurfaceRatio "%s" "%s" -no_normalization %d',Pxname,PtGI{ti,1},job.tGI( ti )<0); 
+                f0 = cat_surf_parameters_fstate(PtGI{ti,1});
                 cat_system(cmd,job.debug,job.trerr);
+                cat_surf_parameters_checkout(PtGI{ti,1},f0,'Toro''s gyrification index',cmd);
                 if job.verb, fprintf('%s%4.0fs - Display %s\n',nstr,etime(clock,stime),spm_file(PtGI{ti,1},'link','cat_surf_display(''%s'')')); end
               end
               if nargout==1, varargout{1}.([sides{si} 'P' PtGI{ti,2} ]){i} = PtGI{ti,1}; end
@@ -695,4 +705,28 @@ function varargout = cat_surf_parameters(job)
   
   % remove files that do not exist
   varargout{1} = cat_io_checkdepfiles( varargout{1} );
+end
+
+%=======================================================================
+function f = cat_surf_parameters_fstate(P)
+% modification time and size of file P, or [] if it does not exist
+  d = dir(P);
+  if isempty(d), f = []; else, f = [d(1).datenum d(1).bytes]; end
+end
+
+%=======================================================================
+function cat_surf_parameters_checkout(P,f0,measure,cmd)
+% warn if the CAT binary did not write or update P
+%  cat_system does not throw for failed commands, so a failed estimation
+%  otherwise left no file or the file of an earlier run. The test compares
+%  the file state before and after the call (no clock comparison).
+  f1 = cat_surf_parameters_fstate(P);
+  if isempty(f1)
+    warning('cat_surf_parameters:notWritten', ...
+      'Estimation of %s failed: %s was not written.\nCommand: %s', measure, P, cmd);
+  elseif ~isempty(f0) && isequal(f0,f1)
+    warning('cat_surf_parameters:notUpdated', ...
+      ['Estimation of %s failed: %s was not updated and is from an earlier run.\n' ...
+       'Command: %s'], measure, P, cmd);
+  end
 end
