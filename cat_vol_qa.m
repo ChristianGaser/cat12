@@ -983,8 +983,6 @@ function [QAS,QAR] = cat12err(opt,mridir,reportdir)
                         spm_fileparts(opt.job.channel.vols{opt.subj});
   QAS.filedata.fname  = opt.job.data{opt.subj};
   QAS.filedata.F      = fullfile(pp,[ff ee]);
-  QAS.filedata.Fm     = fullfile(pp,mridir,['m'  ff ee]);
-  QAS.filedata.Fp0    = fullfile(pp,mridir,['p0' ff ee]);
   % mridir is an absolute path (from cat_io_BIDS) for preprocessing errors
   % but relative to the image directory ('mri' or '') for batch QC calls
   if isempty(regexp(mridir,'^(/|\\\\|[A-Za-z]:)','once'))
