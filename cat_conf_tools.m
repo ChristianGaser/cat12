@@ -3093,7 +3093,7 @@ function [T2x,T2x_surf,F2x,F2x_surf] = conf_T2x
   sel               = cfg_menu;
   sel.name          = 'Convert t value to';
   sel.tag           = 'sel';
-  sel.labels        = {'p','-log(p)','correlation coefficient r (only for linear regression)','effect size d (only for 2-sample t-test)','standard normal (Z-value)','apply thresholds without conversion'};
+  sel.labels        = {'p','-log(p)','correlation coefficient r (only for linear regression)','effect size d (only for group contrasts)','standard normal (Z-value)','apply thresholds without conversion'};
   sel.values        = {1,2,3,4,6,5};
   sel.val           = {2};
   sel.help          = {'Select conversion of t-value'};
@@ -3246,8 +3246,9 @@ function [T2x,T2x_surf,F2x,F2x_surf] = conf_T2x
     '            t'
     '  r = ------------------'
     '        sqrt(t^2 + df)'
-    'effect size d (only for 2-sample t-test):'
-    ' d = 2*t/sqrt(df(2))'
+    'effect size d (only for contrasts between group means):'
+    ' d = t*sqrt(c''*Bcov*c)/sum(c(c>0))'
+    ' (contrast estimate in units of the residual SD; valid for unequal group sizes and covariates)'
     'Standard normal (Z-value):'
     ' Z = spm_t2z(t,df(2))'
     'p-value:'

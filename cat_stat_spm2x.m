@@ -15,10 +15,17 @@ function out = cat_stat_spm2x(job)
 %       sqrt(t^2 + df)
 %
 % ---------------------------------------------
-% (uncorrected) effect size d without Bessel 
-% correction for unequal sample sizes
+% effect size d (standardized contrast):
 %
-% d = 2*t/sqrt(df(2));
+% d = t * sqrt(c'*Bcov*c) / sum(c(c>0))
+%
+% SPM computes t = c'*beta / sqrt(ResMS * c'*Bcov*c), so d is the contrast
+% estimate in units of the residual standard deviation. This is correct for
+% unbalanced groups and for covariates that are correlated with group,
+% where the former d = 2*t/sqrt(df(2)) was biased (df(2) depends only on
+% rank(X), not on group sizes or on collinearity with covariates).
+% Only defined for contrasts between (weighted) group means, i.e. weights
+% on indicator columns that either sum to zero or are all positive.
 %
 % ---------------------------------------------
 % Standard normal (Z-value)
@@ -167,7 +174,7 @@ else
     stat = 'T';
     P = spm_select(Inf,'^(spmT|nullT).*(img|nii|gii)','Select T-images');
     sel = spm_input('Convert t value to?',1,'m',...
-      '1-p|-log(1-p)|correlation coefficient cc (only for regression)|effect size d (only for 2-sample t-test)|apply thresholds without conversion|Z-score',1:6, 2);
+      '1-p|-log(1-p)|correlation coefficient cc (only for regression)|effect size d (only for group contrasts)|apply thresholds without conversion|Z-score',1:6, 2);
   else
     stat = 'F';
     P = spm_select(Inf,'^spmF.*(img|nii|gii)','Select F-images');
@@ -515,7 +522,7 @@ for i=1:size(P,1)
     case 3
       t2x = Z./sqrt(Z.*Z + df(2));
     case 4
-      t2x = 2*Z/sqrt(df(2));
+      t2x = Z * cat_stat_spm2x_dscale(SPM, xCon(Ic).c);
     case 5
       t2x = Z;
     case 6
@@ -660,3 +667,60 @@ if nargout
   out.Pname = Pname;  
 end
 
+%_______________________________________________________________________
+function scl = cat_stat_spm2x_dscale(SPM, c)
+% Scale factor that converts a t-value into the effect size d
+%
+%   d = t * scl,   scl = sqrt(c'*Bcov*c) / sum(c(c>0))
+%
+% SPM's t is c'*beta / sqrt(ResMS * c'*Bcov*c) (spm_contrasts), hence
+% t*sqrt(c'*Bcov*c) = c'*beta/sqrt(ResMS): the contrast estimate in units
+% of the residual SD. Dividing by sum(c(c>0)) makes it independent of the
+% scaling of the contrast weights ([1 -1] and [2 -2] give the same d, and
+% [.5 .5 -.5 -.5] gives the difference of the averaged cell means).
+%
+% d is only defined if the contrast compares (weighted) means of groups:
+% all non-zero weights must lie on indicator (0/1) columns of the design,
+% and the weights must sum to zero (difference of means) or all be
+% positive (mean of one group, e.g. one-sample t-test). Contrasts that
+% involve covariates (regression slopes) raise an error.
+
+c = c(:);
+X = SPM.xX.X;
+if size(c,1) ~= size(X,2)
+  error('cat_stat_spm2x:dContrast', ...
+    'Contrast has %d weights but the design has %d columns.', size(c,1), size(X,2));
+end
+
+tol   = 1e-8;
+nz    = abs(c) > tol;
+isind = all(abs(X) < tol | abs(X - 1) < tol, 1)';
+
+if ~all(isind(nz))
+  error('cat_stat_spm2x:dUndefined', ...
+    ['Effect size d is only defined for contrasts between group means.\n' ...
+     'This contrast has weights on covariate columns (e.g. a regression slope).\n' ...
+     'Use the correlation coefficient r for regressions instead.']);
+end
+
+cpos = sum(c(c > tol));
+if abs(sum(c)) > tol * max(1, sum(abs(c))) && any(c < -tol)
+  error('cat_stat_spm2x:dUndefined', ...
+    ['Effect size d is only defined for contrasts whose weights sum to zero\n' ...
+     '(difference of group means) or are all positive (mean of one group).']);
+end
+
+if isfield(SPM.xX,'Bcov') && ~isempty(SPM.xX.Bcov)
+  Bcov = SPM.xX.Bcov;
+else
+  Bcov = pinv(SPM.xX.xKXs.X' * SPM.xX.xKXs.X);
+end
+
+scl = sqrt(c' * Bcov * c) / cpos;
+
+% for designs with subject/block effects (paired t-test, within-subject
+% ANOVA) the residual SD is the within-subject SD, not the between-subject SD
+if isfield(SPM.xX,'iB') && ~isempty(SPM.xX.iB)
+  fprintf(['Note: The design contains subject/block effects. Effect size d refers to\n' ...
+           'the within-subject residual SD; for a paired design d_z = d/sqrt(2).\n']);
+end
