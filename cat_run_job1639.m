@@ -33,6 +33,8 @@ function cat_run_job1639(job,tpm,subj)
   % if there is a breakpoint in this file set debug=1 and do not clear temporary variables 
   dbs   = dbstatus; debug = 0; for dbsi=1:numel(dbs), if strcmp(dbs(dbsi).name,mfilename); debug = 1; break; end; end
   
+  if exist('rng','file') == 2, rng('default'); rng(0); else, rand('state',0); randn('state',0); end
+  
   clearvars -global cat_err_res;
   global cat_err_res; % for CAT error report
   cat_err_res.stime        = clock; 
