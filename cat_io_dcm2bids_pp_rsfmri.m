@@ -1,7 +1,8 @@
 function varargout = cat_io_dcm2bids_pp_rsfmri(action,varargin)
 %cat_io_dcm2bids_pp_rsfmri. Basic preprocessing of resting-state fMRI.
-%  Quality and functional connectivity measures of each BOLD scan of a
-%  session with at least 100 volumes, with the parameters of the 
+%  Quality and functional connectivity measures of each resting-state BOLD
+%  scan (task rest, not task fMRI) of a session with at least 100 volumes,
+%  with the parameters of the 
 %  preprocessing level opts.pplevel (see levelParameters in 
 %  cat_io_dcm2bids_pp_anat, i.e. the resolution and settings of SCOPE, and only
 %  the first scan for higher levels, whereas subsets of the volumes were 
@@ -66,14 +67,20 @@ function varargout = cat_io_dcm2bids_pp_rsfmri(action,varargin)
 end
 % =========================================================================
 function processSession(Pdbnii,Vjson,datatype,suffix,BIDSpathd,BIDSfile,opts)
-%processSession. Measures of the BOLD scans of a session (see the help of
-%  this file) with the database images Pdbnii, sidecars Vjson, BIDS
+%processSession. Measures of the resting-state BOLD scans of a session 
+%  (task rest, also resting or rs of BIDS inputs, i.e. not task fMRI, see 
+%  the help of this file) with the database images Pdbnii, sidecars Vjson, BIDS
 %  datatype and suffix, derivatives directory BIDSpathd, and BIDS file of
 %  all scans of the session.
   bold = find(strcmp(datatype,'func') & strcmp(suffix,'bold') & ~cellfun('isempty',Pdbnii) & ...
-    ~cellfun('isempty',BIDSfile));
+    ~cellfun('isempty',BIDSfile)); 
+  bold = bold(~cellfun('isempty',regexpi(BIDSfile(bold),'_task-(rest[a-z]*|rs(fmri)?)_','once'))); % resting state only (not task fMRI)
   if isempty(bold), return; end
   A = cat_io_dcm2bids_pp_anat('sessionAnat',Pdbnii,datatype,suffix);
+  if ~isempty(A) % BIDS file of the segmented scan (e.g. for the rendering), also of another session
+    A.bids = ''; if ~isempty(BIDSfile{A.i}), A.bids = spm_file(BIDSfile{A.i},'basename'); end
+    A.other = ~strcmp(fileparts(fileparts(Pdbnii{A.i})),fileparts(fileparts(Pdbnii{bold(1)}))); 
+  end
   p = cat_io_dcm2bids_pp_anat('levelParameters',opts.pplevel);
   first = bold(1);                % first scan with at least 100 volumes (for higher levels)
   for i = bold
@@ -99,14 +106,16 @@ function processScan(i,Pdbnii,Vjson,datatype,suffix,A,BIDSpathd,BIDSfile,opts,co
   [pth,nam] = fileparts(regexprep(Pdbnii{i},'\.gz$',''));
   Pjson = fullfile(pth,['catDCM2BIDSrsfmri_' nam '.json']);
   Pconn = fullfile(pth,['catDCM2BIDSrsfmri_conn_' nam '.tsv']);
-  % results of older versions are processed again (also without compute)
-  compute = compute || (exist(Pjson,'file') && cat_io_dcm2bids_pp_anat('levelOutdated',Pjson));
+  % results of older versions and results without T1w (if a T1w is 
+  % available now, e.g. of another session) are processed again (also 
+  % without compute)
+  noT1w   = exist(Pjson,'file') && ~isempty(A) && ~cat_io_dcm2bids_pp_anat('hasT1w',Pjson);
+  compute = compute || (exist(Pjson,'file') && cat_io_dcm2bids_pp_anat('levelOutdated',Pjson)) || noT1w;
   if ~compute && ~exist(Pjson,'file'), return; end
-  if compute && cat_io_dcm2bids_pp_anat('levelUpdate',Pjson,opts)
+  if compute && (noT1w || cat_io_dcm2bids_pp_anat('levelUpdate',Pjson,opts))
     stime = tic;
-    P   = spm_file(Pdbnii{i},'prefix','r');                 % realigned by the QC
-    Prp = fullfile(pth,['rp_' nam '.txt']);
-    if ~exist(P,'file') || ~exist(Prp,'file')
+    [P,Prp] = cat_io_dcm2bids_pp_anat('qcFiles',Pdbnii{i},opts,'func'); % input and realignment of the QC (of the defaced copy for level 2)
+    if isempty(Prp)
       cat_io_cprintf([.5 .5 .5],'%60s : rs-fMRI skipped (no realignment of the QC)\n',scanName(BIDSfile));
       return
     end
@@ -155,19 +164,21 @@ function processScan(i,Pdbnii,Vjson,datatype,suffix,A,BIDSpathd,BIDSfile,opts,co
 end
 % =========================================================================
 function [J,C,Ymap] = estimateMeasures(i,P,Prp,Pdbnii,Vjson,datatype,suffix,A,opts)
-%estimateMeasures. Measures of the (unzipped) realigned image P of the BOLD
-%  scan i with the motion parameters Prp: result structure J (JSON, with the
+%estimateMeasures. Measures of the (unzipped) image P of the BOLD scan i 
+%  with the realignment (motion parameters) Prp of the QC, i.e. of its
+%  realigned volumes resliced in memory (see realignedVolumes in 
+%  cat_io_dcm2bids_helper): result structure J (JSON, with the
 %  coregistration to the T1w), the connectivity matrix C (table with the 
 %  parcel names), and the distortion-corrected mean EPI Ymap (structure 
 %  array with the name, image Y, and grid V: mean in the space of the scan,
 %  e.g. as underlay of the network in the rendering).
   J  = []; C = {}; Ymap = struct('name',{},'Y',{},'V',{}); parc = 'Schaefer2018_100Parcels_17Networks_order'; % parcellation (CAT)
-  Vi = spm_vol(P); T = numel(Vi); dim = Vi(1).dim;
+  Vi = cat_io_dcm2bids_helper('realignedVolumes',P,Prp,opts); T = numel(Vi); dim = Vi(1).dim;
   TR = fieldValue(Vjson{i},'RepetitionTime',nan);
   rp = load(Prp);
   if T < 100 || size(rp,1) ~= T || ~isfinite(TR), return; end
   Ym = 0; vm = 1:max(1,floor(T/50)):T;                      % mean of 50 volumes
-  for t = vm, Ym = Ym + spm_read_vols(Vi(t)); end; Ym = Ym / numel(vm);
+  for t = vm, Ym = Ym + cat_io_dcm2bids_helper('realignedVolume',Vi,t); end; Ym = Ym / numel(vm);
 
   % (2) distortion correction (sampling at the undistorted positions)
   [vdm,dc] = distortion(i,Pdbnii,Vjson,datatype,suffix,Vi(1),Ym,opts);
@@ -190,7 +201,7 @@ function [J,C,Ymap] = estimateMeasures(i,P,Prp,Pdbnii,Vjson,datatype,suffix,A,op
   W  = Wall(brain(:),:); clear Wall
   Y  = zeros(T,nnz(brain),'single'); bad = zeros(nnz(brain),1);
   for t = 1:T
-    Yt = reshape(spm_read_vols(Vi(t)),[],1); Y(t,:) = W * Yt; bad = bad + W * double(~(Yt > 0)); % (also NaN)
+    Yt = reshape(cat_io_dcm2bids_helper('realignedVolume',Vi,t),[],1); Y(t,:) = W * Yt; bad = bad + W * double(~(Yt > 0)); % (also NaN)
   end
   % voxels with signal in all volumes (e.g. not the edge slices of the field
   % of view that are missing in some volumes after the realignment)
@@ -246,6 +257,7 @@ function [J,C,Ymap] = estimateMeasures(i,P,Prp,Pdbnii,Vjson,datatype,suffix,A,op
     'nuisance','24 motion parameters, mean WM and CSF signal, linear trend, DCT high-pass 0.01 Hz', ...
     'lowpass','0.1 Hz (FFT)','parcellation','Schaefer2018 100 parcels, 17 networks (CAT), 7 networks of Yeo 2011', ...
     'coregistration',Qc);
+  if ~isempty(A), J.method.T1w = A.bids; J.method.T1w_other_session = isfield(A,'other') && A.other; end
   J.coreg = M; % world space of the scan to the world space of the T1w
   J.qc = Q;
   J.connectivity = N;

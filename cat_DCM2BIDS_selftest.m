@@ -488,8 +488,8 @@ function R = testInputs(E)
   % (2) flat DICOM folder with dcm2niix name conflicts: output 1, then 2
   %     (sidecars of the full conversion by dcm2niix)
   Pf = fullfile(E.Pout,'fullconversion');
-  if ~exist(Pf,'dir')
-    mkdir(Pf); IM = cat_vol_findfiles(E.MU,'IMAGES',struct('dirs',1));
+  if ~exist(Pf,'dir') || isempty(dir(fullfile(Pf,'*.json'))) % (also an empty folder, e.g. of an interrupted conversion)
+    if ~exist(Pf,'dir'), mkdir(Pf); end; IM = cat_vol_findfiles(E.MU,'IMAGES',struct('dirs',1));
     system(sprintf('"%s" -f "%%f=%%p=%%t=%%s" -p n -ba n -d 0 -i y -b y -z y -o "%s" "%s"',E.dcm2niix,Pf,IM{1}));
   end
   T8 = fullfile(E.Pout,'run8'); fresh(T8); job = E.job0; job.outdir = {T8}; job.data = {E.MU}; job.opts.output = 1;
@@ -529,14 +529,16 @@ function R = testInputs(E)
   R(end+1) = struct('name','output0','ok',strcmp(id,'none') && exist(fullfile(T9,'study','catDCM2BIDSdb-tables','protocols.csv'),'file') && ...
     ~exist(fullfile(T9,'study','BIDS-pseudonymized','BIDS'),'dir'),'info',id);
 
-  % (4) dcm2niix options changed: import with -i n (ADC kept), then -i y and
-  %     output 2 (ADC ignored as derived image, directory read again)
+  % (4) derived image: import without ignoreScouts (ADC kept in the 
+  %     database), then with ignoreScouts and output 2 (ADC ignored as 
+  %     derived image, see ignoredDerived; dcm2niix always with -i n, i.e. 
+  %     the directory is not read again)
   T10 = fullfile(E.Pout,'run10'); fresh(T10); job = E.job0; job.outdir = {T10}; job.data = {E.ADC};
   job.opts.output = 1; job.opts.ignoreScouts = 0; evalc('cat_io_dcm2bids(job);');
   n0 = numel(cat_vol_findfiles(fullfile(T10,'study','catDCM2BIDSdb'),'catDCM2BIDSimport_*.json'));
   job.opts.ignoreScouts = 1; job.opts.output = 2; txt = evalc('cat_io_dcm2bids(job);');
   Lb = listing(fullfile(T10,'study','BIDS-pseudonymized'));
-  R(end+1) = struct('name','options-changed','ok',n0==1 && ~contains(txt,'no image') && contains(txt,'0 directories imported before') && ...
+  R(end+1) = struct('name','options-changed','ok',n0==1 && ~contains(txt,'no image') && contains(txt,'1 directories imported before') && ...
     ~any(contains(Lb,'.nii')),'info',sprintf('ADC sidecars with -i n: %d, BIDS images: %d',n0,nnz(contains(Lb,'.nii'))));
   job.data = {fullfile(T10,'study','catDCM2BIDSdb')}; txt = evalc('cat_io_dcm2bids(job);');
   R(end+1) = struct('name','derived-db-input','ok',contains(txt,'ignore derived image') && ~contains(txt,'no image'),'info','');
@@ -1095,16 +1097,17 @@ function R = testLevels(E,levels)
   % DTI only of the voxels with signal in all volumes (see estimateDTI in
   % cat_io_dcm2bids_pp_dwi), i.e. not of the edge slices of the field of
   % view that are missing in some volumes after the realignment (with high
-  % FA in the direction of the slices)
-  ok = false; info = 'no FA map and realigned DWI';
+  % FA in the direction of the slices; the realigned volumes are resliced 
+  % in memory by the realignment parameters of the QC)
+  ok = false; info = 'no FA map and realignment of the DWI';
   Pf = cat_vol_findfiles(DB,'catDCM2BIDSdwi_FA_0*.nii.gz');
   if ~isempty(Pf)
     nam = regexprep(spm_file(Pf{1},'filename'),'^catDCM2BIDSdwi_FA_|\.nii\.gz$','');
-    Pr  = fullfile(fileparts(Pf{1}),['r' nam '.nii.gz']);
-    if exist(Pr,'file')
-      FA = readNii(Pf(1),O,0); Pt = fullfile(O,'tmp_r.nii.gz'); copyfile(Pr,Pt); Pu = gunzip(Pt); delete(Pt);
-      Vr = spm_vol(Pu{1}); z = false(Vr(1).dim);
-      for vi = 1:numel(Vr), z = z | ~(spm_read_vols(Vr(vi)) > 0); end
+    Pd  = fullfile(fileparts(Pf{1}),[nam '.nii.gz']); Prp = fullfile(fileparts(Pf{1}),['rp_' nam '.txt']);
+    if exist(Pd,'file') && exist(Prp,'file')
+      FA = readNii(Pf(1),O,0); Pt = fullfile(O,'tmp_r.nii.gz'); copyfile(Pd,Pt); Pu = gunzip(Pt); delete(Pt);
+      Vr = cat_io_dcm2bids_helper('realignedVolumes',Pu{1},Prp,struct('hrrealign',0)); z = false(Vr(1).dim);
+      for vi = 1:numel(Vr), z = z | ~(cat_io_dcm2bids_helper('realignedVolume',Vr,vi) > 0); end
       delete(Pu{1});
       J  = cat_io_json(fullfile(fileparts(Pf{1}),['catDCM2BIDSdwi_' nam '.json'])); nx = nan;
       if isfield(J,'qc') && isfield(J.qc,'voxels_without_signal'), nx = J.qc.voxels_without_signal; end

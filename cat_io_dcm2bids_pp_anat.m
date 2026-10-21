@@ -6,7 +6,8 @@ function varargout = cat_io_dcm2bids_pp_anat(action,varargin)
 %  see regionalVolumes), the affine registration of
 %  each session to MNI space with the orientation rating of the session 
 %  and the coverage rating of its scans (writeSessionAffines, e.g. for the
-%  rendering, see cat_io_dcm2bids_render, and cat_io_dcm2bids_overlap), and
+%  rendering, see cat_io_dcm2bids_render, and cat_io_dcm2bids_overlap, and
+%  coregSessionAffine for sessions without anatomical scan), and
 %  the test of the phase-encoding reversal of scans with opposite phase-
 %  encoding direction, e.g. AP/PA field maps (checkPEreversal), and helper
 %  functions of the DWI and rs-fMRI preprocessing (see cat_io_dcm2bids_pp_dwi
@@ -25,11 +26,14 @@ function varargout = cat_io_dcm2bids_pp_anat(action,varargin)
 %
 %  Actions (see the help of the local functions):
 %    Pout = cat_io_dcm2bids_pp_anat('anonymize',Pin,opts,datatype)
+%    [Pq,Prp] = cat_io_dcm2bids_pp_anat('qcFiles',P,opts,datatype)
 %    p = cat_io_dcm2bids_pp_anat('levelParameters',level)
 %    run = cat_io_dcm2bids_pp_anat('levelUpdate',Pjson,opts)
 %    old = cat_io_dcm2bids_pp_anat('levelOutdated',Pjson)
+%    ok = cat_io_dcm2bids_pp_anat('hasT1w',Pjson)
 %    [Pm,Pc0,Pwc1,Pseg] = cat_io_dcm2bids_pp_anat('segmentanat',Pin,datatype,opts)
-%    S = cat_io_dcm2bids_pp_anat('writeSessionAffines',Pdbdirpath,Pdbnii,datatype,suffix,BIDSpathd,sub,ses,opts,BIDSfile,Pprot)
+%    S = cat_io_dcm2bids_pp_anat('writeSessionAffines',Pdbdirpath,Pdbnii,datatype,suffix,BIDSpathd,sub,ses,opts,BIDSfile,Pprot[,R])
+%    R = cat_io_dcm2bids_pp_anat('coregSessionAffine',Pdbnii,Pdbses,Pt1w,datatype,suffix,label,opts)
 %    R = cat_io_dcm2bids_pp_anat('checkPEreversal',Pdbnii,Vjson,datatype,BIDSpathd,BIDSfile,opts)
 %    i = cat_io_dcm2bids_pp_anat('anatScan',Pdbnii,datatype,suffix)
 %    A = cat_io_dcm2bids_pp_anat('sessionAnat',Pdbnii,datatype,suffix)
@@ -45,7 +49,7 @@ function varargout = cat_io_dcm2bids_pp_anat(action,varargin)
 %  See also cat_io_dcm2bids, cat_io_dcm2bids_pp_dwi, cat_io_dcm2bids_pp_rsfmri.
 
   switch action
-    case {'anonymize','levelParameters','levelUpdate','levelOutdated','segmentanat','writeSessionAffines','checkPEreversal', ...
+    case {'anonymize','qcFiles','levelParameters','levelUpdate','levelOutdated','hasT1w','segmentanat','writeSessionAffines','coregSessionAffine','checkPEreversal', ...
           'anatScan','sessionAnat','sampleAnat','coregImages','coregAnat','toT1w','warpToMNI','headRotation','scopeVDM','unwarpMatrix'}
       [varargout{1:nargout}] = feval(action,varargin{:});
     otherwise
@@ -54,8 +58,10 @@ function varargout = cat_io_dcm2bids_pp_anat(action,varargin)
 end
 % =========================================================================
 function Pout = anonymize(Pin,opts,datatype) 
+%anonymize. Defaced copy anon_* of the database image Pin for the 
+%  anonymization (see defaced), otherwise Pin.
   
-  if (~strcmp( datatype, 'anat') && opts.anonymize < 2) || opts.anonymize == 0
+  if ~defaced(opts,datatype)
     Pout = Pin; 
     return
   end
@@ -107,6 +113,25 @@ function Pout = anonymize(Pin,opts,datatype)
 
 end
 % =========================================================================
+function d = defaced(opts,datatype)
+%defaced. Images of the datatype are defaced for the anonymization level 
+%  opts.anonymize (anatomical images for level 1, all images for level 2).
+  d = opts.anonymize > 1 || (opts.anonymize > 0 && strcmp(datatype,'anat'));
+end
+% =========================================================================
+function [Pq,Prp] = qcFiles(P,opts,datatype)
+%qcFiles. Files of the QC (see cat_io_dcm2bids_qc) of the database image P
+%  of the datatype: its input Pq, i.e. the defaced copy anon_* of the 
+%  anonymization (see anonymize, e.g. of all images for level 2) if it 
+%  exists, otherwise P, and for 4D data the realignment parameters Prp 
+%  (rp_*.txt) of this input (empty if not available), i.e. the realigned 
+%  volumes of the DTI and rs-fMRI measures (resliced in memory, see 
+%  realignedVolumes in cat_io_dcm2bids_helper).
+  Pq = P; 
+  if defaced(opts,datatype) && exist(spm_file(P,'prefix','anon_'),'file'), Pq = spm_file(P,'prefix','anon_'); end
+  Prp = spm_file(regexprep(Pq,'\.gz$',''),'prefix','rp_','ext','.txt'); if ~exist(Prp,'file'), Prp = ''; end
+end
+% =========================================================================
 function p = levelParameters(level)
 %levelParameters. Parameters of the preprocessing level (opts.pplevel), a
 %  continuous level of the accuracy and processing time of the DTI and 
@@ -115,8 +140,8 @@ function p = levelParameters(level)
 %    1 - full quality (reference): SPM default parameters of the distortion
 %        correction (SCOPE) at the native resolution and all scans
 %    2 - optimized: fast settings and a resolution limit of SCOPE 
-%    3 - quick review: lower resolution of SCOPE and only the first DWI and
-%        BOLD scan of a session
+%    3 - quick review: lower resolution of SCOPE and only the first DWI scan
+%        of each b-value scheme (protocol) and the first BOLD scan of a session
 %    4 - preview: lowest resolution of SCOPE (rough maps)
 %  The parameters are given for the levels 1 to 4 and interpolated between
 %  them (log-linear, levels below 1 are level 1, levels above 4 are level 4):
@@ -129,7 +154,9 @@ function p = levelParameters(level)
 %                    resolution)
 %    scope.interp .. B-spline degree of SCOPE (SPM default 2 for level 1, 
 %                    otherwise linear)
-%    onescan      .. only the first DWI and BOLD scan of a session
+%    onescan      .. only the first DWI scan of each b-value scheme (e.g. the
+%                    standard and the advanced protocol) and the first BOLD
+%                    scan of a session
 %
 %  Evaluation with the Berlin pilot session of the DZPG (T1w, 2 DWI, and 
 %  rs-fMRI scans, see 'pplevels' of cat_DCM2BIDS_selftest): processing 
@@ -210,6 +237,17 @@ function old = levelOutdated(Pjson)
   old = ~isfield(J,'method') || ~isfield(J.method,'version') || J.method.version < p.version;
 end
 % =========================================================================
+function ok = hasT1w(Pjson)
+%hasT1w. True if the DTI or rs-fMRI result Pjson used a T1w (method.T1w),
+%  i.e. results without T1w are processed again if a T1w is available (e.g.
+%  the T1w of another session of the subject, see cat_io_dcm2bids).
+  ok = false;
+  try
+    J  = cat_io_json(Pjson); 
+    ok = isfield(J,'method') && isfield(J.method,'T1w') && ~isempty(J.method.T1w);
+  end
+end
+% =========================================================================
 function [Pm,Pc0,Pwc1,Pseg] = segmentanat(Pin,datatype,opts)
   
   %% segment on anonymized data!
@@ -220,10 +258,22 @@ function [Pm,Pc0,Pwc1,Pseg] = segmentanat(Pin,datatype,opts)
   if (strcmp( datatype, 'anat') || opts.preprocessing > 1) 
     if opts.denoise, prefn = 'sanlm_'; else, prefn = ''; end
 
+    % label maps of former versions (l0 and wl0 of all classes, normalized
+    % label map wc0), which are not written anymore (see SPMsegment)
+    [pth,nam] = spm_fileparts(regexprep(Pin,'\.gz$',''));
+    for pre = {'l0','wl0','wc0'}
+      for p2 = unique({'',prefn})
+        for ext = {'.nii','.nii.gz'}
+          Po = fullfile(pth,[pre{1} p2{1} nam ext{1}]); if exist(Po,'file'), delete(Po); end
+        end
+      end
+    end
+
     Pm   = spm_file(Pin,'prefix',['m' prefn]); 
     Pc0  = spm_file(Pin,'prefix',['c0' prefn]); 
     Pwc1 = spm_file(Pin,'prefix',['wc1' prefn]); 
     Py   = spm_file(Pin,'prefix',['y_' prefn]); 
+    Pl   = spm_file(Pin,'prefix',['neuromorphometrics_' prefn]); Plu = regexprep(Pl,'\.gz$',''); % (atlas labels)
     Pmat = spm_file(strrep(Pin,'.nii.gz','.nii'),'prefix',prefn,'suffix','_seg8','ext','mat'); 
     Pseg = spm_file(strrep(strrep(Pin,'.nii.gz','.nii'),[filesep 'anon_'], filesep), ...
       'prefix','catDCM2BIDSsegus_','ext','json');
@@ -246,6 +296,18 @@ function [Pm,Pc0,Pwc1,Pseg] = segmentanat(Pin,datatype,opts)
           cat_io_json(Pseg,J);
         catch e
           cat_io_cprintf('err','  Regional volumes failed: %s\n',e.message);
+        end
+        cat_io_dcm2bids_helper('prepNiigz',P,opts);
+      end
+      % atlas label map of segmentations of former versions
+      if ~run && ~exist(Pl,'file') && ~exist(Plu,'file') && exist(Py,'file')
+        P = cat_io_dcm2bids_helper('prepNii',{Pc0; Py},opts,0);
+        try
+          V = spm_vol(P{1}); [~,~,Yl] = regionalVolumes(spm_read_vols(V),V,P{2});
+          writeLabelMap(Yl,V,Plu); clear Yl
+          if opts.gzipi, cat_io_dcm2bids_helper('prepNiigz',Plu,opts); end
+        catch e
+          cat_io_cprintf('err','  Atlas label map failed: %s\n',e.message);
         end
         cat_io_dcm2bids_helper('prepNiigz',P,opts);
       end
@@ -311,16 +373,18 @@ function [Pm,Pc0,Pwc1,Pseg] = segmentanat(Pin,datatype,opts)
                         mean( [ abs(spmus.iGM-spmus.iWM) abs(spmus.iGM-spmus.iCSF) ...
                                 abs(spmus.iWM-spmus.iCSF)] * 2 * 3);
 
-      % tissue volumes of the regions of the neuromorphometrics atlas
+      % tissue volumes of the regions of the neuromorphometrics atlas and
+      % its label map (in the space of the scan)
       Pyu = regexprep(Py,'\.gz$',''); if ~exist(Pyu,'file'), Pyu = Py; end
-      [spmus.regional,atlas] = regionalVolumes(Y,V(1),Pyu);
+      [spmus.regional,atlas,Yl] = regionalVolumes(Y,V(1),Pyu);
+      writeLabelMap(Yl,V(1),Plu); clear Yl
       spmus.method    = struct('samp',samp,'duration',round(toc(stime)),'atlas',atlas);
       cat_io_json(Pseg,spmus);
 
       % zip the segmentation outputs and remove all unzipped copies (also
       % of the input and denoised image, and the unzipped c0 of the CAT QC)
       if opts.gzipi
-        prefixes = {'','c0','wc0','wc1','mwc1','l0','wl0','m','y_'};
+        prefixes = {'','c0','wc1','mwc1','m','y_','neuromorphometrics_'};
         prefns   = unique({'',prefn}); 
         for pri = 1:numel(prefixes)
           for pfi = 1:numel(prefns)
@@ -333,7 +397,7 @@ function [Pm,Pc0,Pwc1,Pseg] = segmentanat(Pin,datatype,opts)
   end
 end
 % =========================================================================
-function [R,atlas] = regionalVolumes(Y,V,Py)
+function [R,atlas,Yl] = regionalVolumes(Y,V,Py)
 %regionalVolumes. Tissue volumes in ml of the regions of the 
 %  neuromorphometrics atlas of CAT in the native space of the label map Y
 %  of the segmentation (V, CSF 1, GM 2, WM 3), i.e. its labels by the 
@@ -341,7 +405,9 @@ function [R,atlas] = regionalVolumes(Y,V,Py)
 %  inverseDeformation), 
 %  for the tissues of each region by the atlas table (Vgm, Vwm, and Vcsf, 
 %  e.g. Vgm of cortical regions and Vcsf of the ventricles), as structure 
-%  with the region names (see regionKey) and the ROIid of the atlas. 
+%  with the region names (see regionKey) and the ROIid of the atlas, and
+%  the atlas label map Yl of the brain voxels (uint16, grid of Y, see 
+%  writeLabelMap). 
   atlas = 'neuromorphometrics (CAT)';
   Pa  = fullfile(fileparts(mfilename('fullpath')),'templates_MNI152NLin2009cAsym','neuromorphometrics.nii');
   C   = regexp(fileread(spm_file(Pa,'ext','.csv')),'\r?\n','split'); C = C(~cellfun('isempty',strtrim(C)));
@@ -365,6 +431,17 @@ function [R,atlas] = regionalVolumes(Y,V,Py)
     for ti = find(tis(ri,:)), r.(fn{ti}) = nnz(lab == id(ri) & t == ti) * vx; end
     R.(regionKey(nam{ri})) = r; 
   end
+  if nargout > 2, Yl = zeros(size(Y),'uint16'); Yl(b) = lab; end
+end
+% =========================================================================
+function writeLabelMap(Yl,V,P)
+%writeLabelMap. Atlas label map Yl (neuromorphometrics of CAT, see 
+%  regionalVolumes) in the grid V of the label map of the segmentation as 
+%  uint16 image P (e.g. for the rendering, see cat_io_dcm2bids_render).
+  Vl = struct('fname',P,'dim',V.dim(1:3),'mat',V.mat,'dt',[spm_type('uint16') spm_platform('bigend')], ...
+    'pinfo',[1;0;0],'descrip','neuromorphometrics labels (CAT, inverse deformation of the segmentation)');
+  if exist(P,'file'), delete(P); end
+  spm_write_vol(Vl,Yl);
 end
 % =========================================================================
 function iy = inverseDeformation(Py,Vn)
@@ -419,8 +496,8 @@ function matlabbatch = SPMsegment(Pfiles,opts,samp)
   for ci = 1:numel(Vtpm)
     matlabbatch{mi}.spm.spatial.preproc.tissue(ci).tpm    = {sprintf('%s,%d',Ptpm,ci)};
     matlabbatch{mi}.spm.spatial.preproc.tissue(ci).ngaus  = ngaus(ci);
-    matlabbatch{mi}.spm.spatial.preproc.tissue(ci).native = [ci<numel(Vtpm) 0];
-    matlabbatch{mi}.spm.spatial.preproc.tissue(ci).warped = [ci<numel(Vtpm) ci<2]; % unmod mod
+    matlabbatch{mi}.spm.spatial.preproc.tissue(ci).native = [ci<=3 0];        % GM, WM, CSF (label map c0)
+    matlabbatch{mi}.spm.spatial.preproc.tissue(ci).warped = [ci==1 ci==1];     % unmod mod (GM)
   end
   % MRF remove fine anatomical details and it is better to live with random noise/artifacts 
   matlabbatch{mi}.spm.spatial.preproc.warp.mrf     = 0.1; % default = 1 
@@ -433,85 +510,46 @@ function matlabbatch = SPMsegment(Pfiles,opts,samp)
   matlabbatch{mi}.spm.spatial.preproc.warp.write   = [0 1];  % backward forward
 
 
-  % create label map for quick review
-  for wi = 0:1 % subjects/template space
-    for li = 0:1 
-      mi = mi + 1; 
-      for ci = 1:numel(Vtpm)-1
-        if li==1, label='l'; else, label='c'; end
-        if wi
-          matlabbatch{mi}.spm.tools.cat.tools.mimcalc.images{ci}(1) = ...
-            cfg_dep(sprintf('Segment: wc%d Images',ci), ...
-            substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-            substruct('.','tiss', '()',{ci}, '.','wc', '()',{':'}));
-        else
-          matlabbatch{mi}.spm.tools.cat.tools.mimcalc.images{ci}(1) = ...
-            cfg_dep(sprintf('Segment: c%d Images',ci), ...
-            substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-            substruct('.','tiss', '()',{ci}, '.','c', '()',{':'}));
-        end
-      end
-      if wi
-        matlabbatch{mi}.spm.tools.cat.tools.mimcalc.prefix = ['\f\f\fw' label '0'];
-      else
-        matlabbatch{mi}.spm.tools.cat.tools.mimcalc.prefix = ['\f\f' label '0'];
-      end
-      matlabbatch{mi}.spm.tools.cat.tools.mimcalc.suffix          = '';
-      matlabbatch{mi}.spm.tools.cat.tools.mimcalc.outdir          = {''};
-      matlabbatch{mi}.spm.tools.cat.tools.mimcalc.BIDSdir         = '';
-      if li == 0
-        matlabbatch{mi}.spm.tools.cat.tools.mimcalc.expression = 'i1*2 + i2*3 + i3*1';
-      else 
-        matlabbatch{mi}.spm.tools.cat.tools.mimcalc.expression = 'round(i1)*1'; 
-        for cii = 2:numel(Vtpm)-1
-          matlabbatch{mi}.spm.tools.cat.tools.mimcalc.expression = [ ...
-            matlabbatch{mi}.spm.tools.cat.tools.mimcalc.expression , ...
-            sprintf('+round(i%d)*%d',cii,cii)]; 
-        end
-      end
-      matlabbatch{mi}.spm.tools.cat.tools.mimcalc.var             = struct('name', {}, 'value', {});
-      matlabbatch{mi}.spm.tools.cat.tools.mimcalc.options.dmtx    = 0;
-      matlabbatch{mi}.spm.tools.cat.tools.mimcalc.options.mask    = 0; % masking is not working here
-      matlabbatch{mi}.spm.tools.cat.tools.mimcalc.options.interp  = 1 - li;
-      matlabbatch{mi}.spm.tools.cat.tools.mimcalc.options.dtype   = 2; % 2
-      matlabbatch{mi}.spm.tools.cat.tools.mimcalc.options.coreg   = 0;
-    end
-  end
-
-
-  % cleanup 
-  %  - remove classes ([w]c1-c#) that were useful for the label map but are
-  %    not further required
+  % label map c0 for quick review (CSF 1, GM 2, WM 3, in the space of the
+  % scan; label maps of all classes l0/wl0 and the normalized label map wc0
+  % of former versions are not written)
   mi = mi + 1; 
-  for fi = 1:numel(Pfiles)
-    for ci = 1:numel(Vtpm)-1
-      if fi==1 && ci == 1
-        matlabbatch{mi}.cfg_basicio.file_dir.file_ops.file_move.files(1) = ...
-          cfg_dep(sprintf('Segment: c%d Images',ci), ...
-          substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-          substruct('.','tiss', '()',{ci}, '.','c', '()',{':'}));
-      else
-        matlabbatch{mi}.cfg_basicio.file_dir.file_ops.file_move.files(end+1) = ...
-          cfg_dep(sprintf('Segment: c%d Images',ci), ...
-          substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-          substruct('.','tiss', '()',{ci}, '.','c', '()',{':'}));
-      end                
-    end
-    for ci = 2:numel(Vtpm)-1 % keep GM 
-      matlabbatch{mi}.cfg_basicio.file_dir.file_ops.file_move.files(end+1) = ...
-        cfg_dep( sprintf('Segment: wc%d Images',ci), ...
-        substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
-        substruct('.','tiss', '()',{ci}, '.','wc', '()',{':'}));
-    end
-    matlabbatch{mi}.cfg_basicio.file_dir.file_ops.file_move.action.delete = false;
+  for ci = 1:3
+    matlabbatch{mi}.spm.tools.cat.tools.mimcalc.images{ci}(1) = ...
+      cfg_dep(sprintf('Segment: c%d Images',ci), ...
+      substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+      substruct('.','tiss', '()',{ci}, '.','c', '()',{':'}));
   end
+  matlabbatch{mi}.spm.tools.cat.tools.mimcalc.prefix          = '\f\fc0';
+  matlabbatch{mi}.spm.tools.cat.tools.mimcalc.suffix          = '';
+  matlabbatch{mi}.spm.tools.cat.tools.mimcalc.outdir          = {''};
+  matlabbatch{mi}.spm.tools.cat.tools.mimcalc.BIDSdir         = '';
+  matlabbatch{mi}.spm.tools.cat.tools.mimcalc.expression      = 'i1*2 + i2*3 + i3*1';
+  matlabbatch{mi}.spm.tools.cat.tools.mimcalc.var             = struct('name', {}, 'value', {});
+  matlabbatch{mi}.spm.tools.cat.tools.mimcalc.options.dmtx    = 0;
+  matlabbatch{mi}.spm.tools.cat.tools.mimcalc.options.mask    = 0; % masking is not working here
+  matlabbatch{mi}.spm.tools.cat.tools.mimcalc.options.interp  = 1;
+  matlabbatch{mi}.spm.tools.cat.tools.mimcalc.options.dtype   = 2; % 2
+  matlabbatch{mi}.spm.tools.cat.tools.mimcalc.options.coreg   = 0;
+
+
+  % cleanup: remove the native classes c1-c3 that were only required for 
+  % the label map
+  mi = mi + 1; 
+  for ci = 1:3
+    matlabbatch{mi}.cfg_basicio.file_dir.file_ops.file_move.files(ci) = ...
+      cfg_dep(sprintf('Segment: c%d Images',ci), ...
+      substruct('.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), ...
+      substruct('.','tiss', '()',{ci}, '.','c', '()',{':'}));
+  end
+  matlabbatch{mi}.cfg_basicio.file_dir.file_ops.file_move.action.delete = false;
 
   % run batch
   %spm_jobman('run',matlabbatch); % just for debugging
   evalc('spm_jobman(''run'',matlabbatch);');  
 end
 % =========================================================================
-function S = writeSessionAffines(Pdbdirpath,Pdbnii,datatype,suffix,BIDSpathd,sub,ses,opts,BIDSfile,Pprot)
+function S = writeSessionAffines(Pdbdirpath,Pdbnii,datatype,suffix,BIDSpathd,sub,ses,opts,BIDSfile,Pprot,R)
 %writeSessionAffines. Affine registration to MNI space for each session 
 %  with the orientation rating of the session and the coverage rating of 
 %  its scans.
@@ -519,7 +557,7 @@ function S = writeSessionAffines(Pdbdirpath,Pdbnii,datatype,suffix,BIDSpathd,sub
 %  same registration. The Affine of the segmentation (seg8.mat) with the 
 %  best log-likelihood is used, otherwise spm_maff8 estimates it for the 
 %  (best) anatomical scan. The Affine and its rigid part are saved as 
-%    derivatives/sub-*/ses-*/catDCM2BIDSaffine_sub-*_ses-*.json
+%    derivatives/catDCM2BIDS/sub-*/ses-*/catDCM2BIDSaffine_sub-*_ses-*.json
 %  that maps world (scanner) coordinates to MNI coordinates (with the BIDS
 %  file of the source scan). 
 %  The orientation of the session is measured by the RMSE of the translation
@@ -533,14 +571,24 @@ function S = writeSessionAffines(Pdbdirpath,Pdbnii,datatype,suffix,BIDSpathd,sub
 %  and 60 degree in tests). The coverage of each scan (BBM/BBR, see 
 %  cat_io_dcm2bids_overlap) with the mask of its protocol Pprot 
 %  (<protocol>_msk.nii if available) is added to its QC JSON in the 
-%  derivatives (catDCM2BIDSqc_<BIDSfile>.json). The ratings are printed in 
-%  one line per session. 
+%  derivatives (catDCM2BIDSqc_<BIDSfile>.json). The scans of a session 
+%  share the scanner space unless the subject (or table) was repositioned
+%  between the scans (e.g. a z offset of 35-60 mm of the EPI in two NKI-TRT
+%  sessions), i.e. the other scans of a session with an anatomical scan are
+%  tested by their alignment with it (see scannerAlignment) and use their 
+%  coregistration if necessary (alignment in the QC JSON, also for the 
+%  renderings). The ratings are printed in one line per session. 
+%  A given registration R (Affine, method, src, ll, e.g. of a session 
+%  without anatomical scan by the coregistration of its DTI or rs-fMRI to
+%  the T1w of another session, see coregSessionAffine) replaces the 
+%  registration of the anatomical scan. 
 %  S is a structure array with the database session directory (dbses), the
 %  Affine (empty without registration), and the SOR of each session. 
 
   S = struct('dbses',{},'Affine',{},'SOR',{}); 
   if ~exist('BIDSfile','var'), BIDSfile = cell(size(Pdbnii)); end
   if ~exist('Pprot','var'),    Pprot    = cell(size(Pdbnii)); end
+  if ~exist('R','var'),        R        = []; end
   valid = find(~cellfun('isempty',BIDSpathd) & ~cellfun('isempty',Pdbdirpath)); 
   if isempty(valid), return; end
   MarkColor = cat_io_colormaps('marks+',40); 
@@ -554,7 +602,11 @@ function S = writeSessionAffines(Pdbdirpath,Pdbnii,datatype,suffix,BIDSpathd,sub
     ids = valid(u==si); 
     S(si).dbses = udb{si}; S(si).Affine = []; S(si).SOR = nan; 
     sesline = sprintf('session %s',spm_str_manip(spm_file(udb{si},'basename'),'l50')); 
-    [Affine,method,src,ll] = getSessionAffine(udb{si}, Pdbnii(ids), datatype(ids), suffix(ids), opts); 
+    if ~isempty(R)
+      Affine = R.Affine; method = R.method; src = R.src; ll = R.ll; 
+    else
+      [Affine,method,src,ll] = getSessionAffine(udb{si}, Pdbnii(ids), datatype(ids), suffix(ids), opts); 
+    end
     if isempty(Affine)
       cat_io_cprintf([.5 .5 .5],'%60s : no registration (no anatomical scan)\n',sesline); 
       continue
@@ -586,14 +638,29 @@ function S = writeSessionAffines(Pdbdirpath,Pdbnii,datatype,suffix,BIDSpathd,sub
         'info','Affine and rigid transformation from world (scanner) to MNI coordinates.')); 
     end
 
-    % coverage of each scan (added to its QC JSON in the derivatives)
-    BBM = nan(size(ids)); BBR = BBM; 
+    % coverage of each scan (added to its QC JSON in the derivatives) with
+    % the alignment of the non-anatomical scans with the anatomical scan of
+    % the session (not for a given registration, i.e. by the coregistration 
+    % of the session without anatomical scan)
+    BBM = nan(size(ids)); BBR = BBM; rep = false(size(ids)); 
+    Aanat = struct([]); T1 = []; 
+    if isempty(R) && strcmp(method,'seg8'), Aanat = sessionAnat(Pdbnii(ids),datatype(ids),suffix(ids)); end
     for ii = 1:numel(ids)
       id = ids(ii); 
       if isempty(Pdbnii{id}) || ~exist(Pdbnii{id},'file') || isempty(BIDSfile{id}), continue; end
       if isempty(Pprot{id}), Pmsk = ''; else, Pmsk = spm_file(Pprot{id},'suffix','_msk','ext','.nii'); end
+      Mc = eye(4); Qa = []; 
+      if ~isempty(Aanat) && ~strcmp(datatype{id},'anat') && ...
+          isempty(regexp(spm_file(BIDSfile{id},'basename'),'(_part-phase_|_phase(diff|1|2)?|_fieldmap)(\.nii)?$|_part-phase_','once'))
+        try
+          [Mc,Qa,T1] = scannerAlignment(Pdbnii{id},datatype{id},Aanat,T1,opts); rep(ii) = isfield(Qa,'coreg'); 
+        catch e
+          cat_io_cprintf('warn','  alignment test failed for "%s": %s\n',spm_file(BIDSfile{id},'basename'),e.message); 
+          Mc = eye(4); Qa = []; 
+        end
+      end
       try
-        [BBM(ii),BBR(ii)] = cat_io_dcm2bids_overlap('coverage',Pdbnii{id},Affine,Pmsk,opts); 
+        [BBM(ii),BBR(ii)] = cat_io_dcm2bids_overlap('coverage',Pdbnii{id},Affine * Mc,Pmsk,opts,datatype{id}); 
       catch e
         cat_io_cprintf('err','  coverage failed for "%s": %s\n',Pdbnii{id},e.message); 
         continue
@@ -601,6 +668,7 @@ function S = writeSessionAffines(Pdbdirpath,Pdbnii,datatype,suffix,BIDSpathd,sub
       Pqcj = fullfile(BIDSpathd{id},['catDCM2BIDSqc_' spm_file(BIDSfile{id},'basename') '.json']); 
       if exist(Pqcj,'file'), J = cat_io_json(Pqcj); else, J = struct(); end
       J.qualitymeasures.BBM = BBM(ii); J.qualityrating.BBR = BBR(ii); 
+      if ~isempty(Qa), J.alignment = Qa; elseif isfield(J,'alignment'), J = rmfield(J,'alignment'); end
       if ~exist(BIDSpathd{id},'dir'), mkdir(BIDSpathd{id}); end
       cat_io_json(Pqcj,J); 
     end
@@ -618,6 +686,41 @@ function S = writeSessionAffines(Pdbdirpath,Pdbnii,datatype,suffix,BIDSpathd,sub
       fprintf(' (%0.1f%% missing: %s)',BBM(wi),regexprep(spm_file(BIDSfile{ids(wi)},'basename'),'^sub-[^_]+_(ses-[^_]+_)?','')); 
     end
     fprintf('\n'); 
+    if any(rep)
+      cat_io_cprintf('warn','%60s : %d scan(s) not aligned with the anatomical scan (repositioning?): coverage and renderings by coregistration\n', ...
+        '',nnz(rep)); 
+    end
+  end
+end
+% =========================================================================
+function R = coregSessionAffine(Pdbnii,Pdbses,Pt1w,datatype,suffix,label,opts)
+%coregSessionAffine. Registration of a session without anatomical scan by 
+%  the coregistration of its DTI or rs-fMRI to the T1w of another session 
+%  (see method.T1w_other_session of cat_io_dcm2bids_pp_dwi/_rsfmri), i.e.,
+%  the registration of the session of the T1w (database session directory
+%  Pdbses and the T1w Pt1w with its datatype and suffix, see 
+%  getSessionAffine) times the coregistration (world space of the scan to
+%  the world space of the T1w) of the first processed scan of the session 
+%  (Pdbnii), as the scans of a session share the scanner space. 
+%  R (Affine, method, src, ll, see writeSessionAffines) is empty without 
+%  coregistration. The method names the session of the T1w (label). 
+  R = []; 
+  A = getSessionAffine(Pdbses,{Pt1w},{datatype},{suffix},opts); 
+  if isempty(A), return; end
+  for k = 1:numel(Pdbnii)
+    if isempty(Pdbnii{k}), continue; end
+    [pth,nam] = fileparts(regexprep(Pdbnii{k},'\.gz$','')); 
+    for pp = {'dwi','rsfmri'}
+      Pj = fullfile(pth,['catDCM2BIDS' pp{1} '_' nam '.json']); 
+      if ~exist(Pj,'file') || ~hasT1w(Pj), continue; end
+      try
+        J = cat_io_json(Pj); 
+        if isnumeric(J.coreg) && isequal(size(J.coreg),[4 4])
+          R = struct('Affine',A * double(J.coreg),'method',strtrim(['coreg ' label]),'src',Pdbnii{k},'ll',nan); 
+          return
+        end
+      end
+    end
   end
 end
 % =========================================================================
@@ -701,7 +804,9 @@ end
 function [Affine,method,src,ll] = getSessionAffine(Pdbses,Pnii,datatype,suffix,opts)
 %getSessionAffine. Affine of the session: (1) seg8.mat of the segmentation
 %  of the session (see anatScan), (2) cached or new spm_maff8 registration
-%  of this anatomical scan (otherwise of the first one), or (3) empty.
+%  of this anatomical scan (otherwise of the first one), (3) the affine 
+%  registration of the mean EPI of the session without anatomical scan to
+%  the EPI template of SPM (see epiAffine), or (4) empty.
   Affine = []; method = ''; src = ''; ll = nan;
 
   % (1) segmentation
@@ -722,7 +827,7 @@ function [Affine,method,src,ll] = getSessionAffine(Pdbses,Pnii,datatype,suffix,o
   end
   i = anatScan(Pnii,datatype,suffix);
   if isempty(i), i = find(strcmp(datatype(:),'anat') & ~cellfun('isempty',Pnii(:)),1); end
-  if isempty(i), return; end
+  if isempty(i), [Affine,method,src,ll] = epiAffine(Pdbses,Pnii,datatype,opts); return; end
   P = Pnii{i};
   try
     Pu = cat_io_dcm2bids_helper('prepNii',P,opts,0); 
@@ -735,6 +840,67 @@ function [Affine,method,src,ll] = getSessionAffine(Pdbses,Pnii,datatype,suffix,o
     cat_io_cprintf('err','  spm_maff8 failed for "%s": %s\n',P,e.message); 
     Affine = []; 
   end
+end
+% =========================================================================
+function [Affine,method,src,ll] = epiAffine(Pdbses,Pnii,datatype,opts)
+%epiAffine. Affine registration of a session without anatomical scan by 
+%  the mean EPI of a BOLD scan (denoised average of the QC, see 
+%  cat_io_dcm2bids_qc), otherwise by the first volume (b0) of a DWI scan, 
+%  to the EPI template of SPM (see runAffEPI; cached in the database 
+%  session directory), e.g. for the renderings and the coverage ratings.
+%  Empty without EPI.
+  Affine = []; method = ''; src = ''; ll = nan;
+  Pcache = fullfile(Pdbses,'catDCM2BIDSaffepi.mat');
+  if exist(Pcache,'file') && ~opts.rerun, load(Pcache,'Affine','method','src','ll'); return; end
+  Pt = fullfile(spm('dir'),'toolbox','OldNorm','EPI.nii');
+  if ~exist(Pt,'file'), return; end
+  for dt = {'func','dwi'}
+    for i = find(strcmp(datatype(:),dt{1}) & ~cellfun('isempty',Pnii(:)))'
+      P = '';
+      if strcmp(dt{1},'func')
+        b = regexprep(Pnii{i},'\.nii(\.gz)?$','');
+        for c = {[b '_denoisedavg.nii.gz'],[b '_denoisedavg.nii'],[spm_file(b,'prefix','anon_') '_denoisedavg.nii.gz']}
+          if exist(c{1},'file'), P = c{1}; break; end
+        end
+      elseif exist(Pnii{i},'file')
+        P = Pnii{i};
+      end
+      if isempty(P), continue; end
+      try
+        Pu = cat_io_dcm2bids_helper('prepNii',P,opts,0); V = spm_vol(char(Pu));
+        Affine = runAffEPI(spm_vol(Pt),V(1)); method = 'EPI'; src = P(numel(Pdbses)+2:end);
+        save(Pcache,'Affine','method','src','ll');
+        cat_io_dcm2bids_helper('prepNiigz',Pu,opts);
+        return
+      catch e
+        cat_io_cprintf('err','  EPI registration failed for "%s": %s\n',spm_file(P,'filename'),e.message);
+        Affine = [];
+      end
+    end
+  end
+end
+% =========================================================================
+function Affine = runAffEPI(VG,VF)
+%runAffEPI. Affine registration (12 parameters with the zoom and shear 
+%  prior of MNI templates, spm_affreg as the former spatial normalization
+%  of SPM) of the EPI image VF (smoothed by 8 mm) to the EPI template VG,
+%  initialized by the centers of the heads (intensity above 20% of the 
+%  99th percentile, e.g. for an origin at the scanner isocenter), as 
+%  transformation from world (scanner) to MNI coordinates.
+  cen = @(V) centerOf(V);
+  M0  = eye(4); M0(1:3,4) = cen(VG) - cen(VF);
+  VF1 = spm_smoothto8bit(VF,8); VG1 = spm_smoothto8bit(VG,0);
+  fl  = struct('sep',8,'regtype','mni','WG',[],'WF',[],'globnorm',1,'debug',0);
+  evalc('Affine = spm_affreg(VG1,VF1,fl,M0);');
+end
+% =========================================================================
+function c = centerOf(V)
+%centerOf. World coordinates of the center of the head of the image V 
+%  (voxels above 20% of the 99th percentile).
+  Y = spm_read_vols(V); y = sort(Y(isfinite(Y(:)) & Y(:) > 0));
+  if isempty(y), c = V.mat(1:3,:) * [V.dim(:)/2; 1]; return; end
+  [i,j,k] = ind2sub(size(Y),find(Y > 0.2 * y(max(1,round(0.99*numel(y)))))); 
+  c = V.mat(1:3,:) * [mean(i); mean(j); mean(k); 1];
 end
 % =========================================================================
 function [Affine,ll] = runMaff8(V)
@@ -769,12 +935,14 @@ function i = anatScan(Pdbnii,datatype,suffix)
 %anatScan. Index of the anatomical scan of a session that is segmented
 %  (one segmentation per session, e.g. also for the registration of the
 %  session and the DWI and rs-fMRI preprocessing): the first available
-%  type of T1w, UNIT1 (T1w-like image of MP2RAGE), T2w, and FLAIR, and of
-%  several scans of this type the scan with the best quality rating (lowest
-%  SQR of its QC, otherwise the first scan, e.g. a rescan after motion).
-%  Empty without such scans.
+%  type of T1w, UNIT1 (T1w-like image of MP2RAGE), T2w, FLAIR, PDw, and the
+%  inversion images of MP2RAGE (not ideal for the segmentation, but better
+%  than none), and of several scans of this type the scan with the best 
+%  quality rating (lowest SQR of its QC, otherwise the first scan, e.g. a
+%  rescan after motion, or the second inversion of MP2RAGE). Empty without
+%  such scans.
   i = [];
-  for t = {'T1w','UNIT1','T2w','FLAIR'}
+  for t = {'T1w','UNIT1','T2w','FLAIR','PDw','MP2RAGE'}
     c = find(strcmp(datatype(:),'anat') & strcmpi(suffix(:),t{1}) & ~cellfun('isempty',Pdbnii(:)));
     if isempty(c), continue; end
     q = inf(numel(c),1);
@@ -945,6 +1113,95 @@ function [M,Q,D] = coregAnat(Ysrc,Vsrc,A,opts)
   end
 end
 % =========================================================================
+function [M,Q,T1] = scannerAlignment(Pnii,datatype,A,T1,opts)
+%scannerAlignment. Alignment of a scan (e.g. EPI) with the anatomical scan
+%  A of its session (see sessionAnat) in the scanner space, as the scans 
+%  of a session share the scanner space unless the subject (or table) was
+%  repositioned between the scans (e.g. a z offset of 35-60 mm of the EPI
+%  in two NKI-TRT sessions): the Dice coefficient of the brain masks in 
+%  the grid of the scan (see scanImage; intensity above 25% of the 99th 
+%  percentile, and c0 > 0.5 of the anatomical scan in the field of view of
+%  the scan, i.e. not reduced by a partial coverage). Scans with a Dice 
+%  below 0.88 are coregistered (see coregImages, initialized by the brain
+%  centers as coregAnat) and the coregistration M (world of the scan to 
+%  the world of the anatomical scan) is used if it improves the Dice by 
+%  more than 0.02 (about 1 mm, as coregAnat; otherwise identity, e.g. for
+%  strong distortions). In NKI-TRT, the EPI of most first sessions had 
+%  offsets of 10-60 mm to the T1w (Dice 0.42-0.85, all scans of a session
+%  with a similar offset) and a Dice of 0.86-0.93 after the coregistration,
+%  where offsets of 10-15 mm still gave 2-5% "missing" coverage. Q 
+%  describes the alignment (Dice in the scanner space and of the 
+%  coregistration, translation in mm, rotation in degree, method, and the
+%  coregistration coreg if used, e.g. for the coverage rating and the 
+%  renderings). T1 caches the images of the anatomical scan.
+  M = eye(4);
+  [Y,V] = scanImage(Pnii,datatype,opts);
+  if isempty(T1)
+    P = cat_io_dcm2bids_helper('prepNii',{A.Pm; A.Pc0},opts,0);
+    try
+      Vm = spm_vol(P{1}); Vc = spm_vol(P{2});
+      T1 = struct('Vm',Vm,'Ym',spm_read_vols(Vm),'Vc',Vc,'Yc',spm_read_vols(Vc));
+    catch e
+      cat_io_dcm2bids_helper('prepNiigz',P,opts); rethrow(e);
+    end
+    cat_io_dcm2bids_helper('prepNiigz',P,opts);
+  end
+  Y(~isfinite(Y)) = 0; ms = Y > 0.25 * prctile(Y(:),99); 
+  [x,y,z] = ndgrid(1:2:V.dim(1),1:2:V.dim(2),1:2:V.dim(3)); 
+  XYZ  = [x(:)'; y(:)'; z(:)'; ones(1,numel(x))]; mss = ms(1:2:end,1:2:end,1:2:end); mss = mss(:);
+  dice = @(T) diceSampled(mss,double(T1.Yc),T1.Vc.mat,(T * V.mat) * XYZ);
+  d0   = dice(eye(4)); Q = struct('Dice_scanner',round(d0,3),'method','scanner space');
+  if d0 >= 0.88 || ~any(ms(:)), return; end
+  mt  = T1.Yc > 0.5;
+  M0  = eye(4); M0(1:3,4) = maskCenter(mt,T1.Vc) - maskCenter(ms,V); % centers of the brain masks
+  Vs0 = V; Vs0.mat = M0 * V.mat;
+  M1  = coregImages(Y,Vs0,T1.Ym .* mt,T1.Vm) * M0;
+  d1  = dice(M1); q = spm_imatrix(M1);
+  Q.Dice = round(d1,3); Q.translation = round(q(1:3),1); Q.rotation = round(q(4:6) * 180/pi,1);
+  if d1 > d0 + 0.02
+    M = M1; Q.method = 'spm_coreg (nmi) to the brain-masked T1w, initialized by the brain centers (repositioning between the scans?)';
+    Q.coreg = M1;
+  else
+    Q.method = 'scanner space (the coregistration improves the Dice by less than 0.02)';
+  end
+end
+% =========================================================================
+function [Y,V] = scanImage(Pnii,datatype,opts)
+%scanImage. Image of a scan (array and header of the first volume) for 
+%  its alignment: the first volume with the lowest b-value of DWI (the b0
+%  with the CSF fits the brain mask of the T1w better than the average, 
+%  e.g. a Dice of 0.84-0.91 instead of 0.51-0.83 for aligned NKI-TRT DWI),
+%  otherwise the denoised average of 4D data of the QC (see 
+%  cat_io_dcm2bids_qc, also of the anonymized scan), otherwise the first
+%  volume (without decompressing the whole file, see niiVolume).
+  b = regexprep(Pnii,'\.nii(\.gz)?$','');
+  if strcmp(datatype,'dwi')
+    vol = 1;
+    if exist([b '.bval'],'file')
+      try bv = load([b '.bval']); [~,vol] = min(bv(:)); end %#ok<TRYNC>
+    end
+    [~,dim,mat] = cat_io_dcm2bids_helper('niiHeaderInfo',Pnii);
+    V = struct('fname',Pnii,'dim',dim(1:3),'mat',mat);
+    Y = cat_io_dcm2bids_helper('niiVolume',Pnii,vol);
+    return
+  end
+  for c = {[b '_denoisedavg.nii.gz'],[b '_denoisedavg.nii'],[spm_file(b,'prefix','anon_') '_denoisedavg.nii.gz']}
+    if exist(c{1},'file')
+      Pu = cat_io_dcm2bids_helper('prepNii',c{1},opts,0); 
+      try
+        V = spm_vol(char(Pu)); V = V(1); Y = spm_read_vols(V);
+      catch e
+        cat_io_dcm2bids_helper('prepNiigz',Pu,opts); rethrow(e);
+      end
+      cat_io_dcm2bids_helper('prepNiigz',Pu,opts);
+      return
+    end
+  end
+  [~,dim,mat] = cat_io_dcm2bids_helper('niiHeaderInfo',Pnii);
+  V = struct('fname',Pnii,'dim',dim(1:3),'mat',mat);
+  Y = cat_io_dcm2bids_helper('niiVolume',Pnii,1);
+end
+% =========================================================================
 function D = nonlinCoreg(Ysrc,Vsrc,M,Yc,Vc)
 %nonlinCoreg. Non-linear coregistration of the image Ysrc (grid Vsrc, e.g.
 %  the undistorted b0 of DWI or the mean EPI of fMRI) to the T1w with the 
@@ -1082,13 +1339,13 @@ function [vdm,info] = scopeVDM(Ppair,vols,Vt,Yt,flip,TRT,opts)
   % mean images of the pair 
   m = cell(1,2); Vp = cell(1,2);
   for k = 1:2
-    P = spm_file(Ppair{k},'prefix','r'); if ~exist(P,'file'), P = Ppair{k}; end
+    [P,Prp] = qcFiles(Ppair{k},opts,''); % (realignment of the QC, of the defaced copy for level 2)
     keep = exist(regexprep(P,'\.gz$',''),'file') > 0; % unzipped by the caller (e.g. the target itself)
     Pu = cat_io_dcm2bids_helper('prepNii',{P},opts,0);
     try
-      V = spm_vol(Pu{1}); vi = vols{k}; if isempty(vi), vi = 1:numel(V); end
-      m{k} = 0; for i = vi(:)', m{k} = m{k} + spm_read_vols(V(i)); end
-      m{k} = m{k} / numel(vi); Vp{k} = V(1);
+      V = cat_io_dcm2bids_helper('realignedVolumes',Pu{1},Prp,opts); vi = vols{k}; if isempty(vi), vi = 1:numel(V); end
+      m{k} = 0; for i = vi(:)', m{k} = m{k} + cat_io_dcm2bids_helper('realignedVolume',V,i); end
+      m{k} = m{k} / numel(vi); Vp{k} = rmfield(V(1),intersect(fieldnames(V),{'rmask','rinterp'}));
     catch e
       if ~keep, cat_io_dcm2bids_helper('prepNiigz',Pu,opts); end
       rethrow(e);

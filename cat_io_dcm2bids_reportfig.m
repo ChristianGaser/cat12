@@ -10,7 +10,9 @@ function varargout = cat_io_dcm2bids_reportfig(action,varargin)
 %                  scanner), numbers of subjects, sessions, and scans, and
 %                  the median ratings of the sessions with icons (protocol
 %                  fit rating PFR, protocol conformity percentage PCP,
-%                  session orientation rating SOR, scan quality rating SQR)
+%                  brain coverage rating BBR, session orientation rating
+%                  SOR, phase-encoding reversal rating PRR, scan quality
+%                  rating SQR)
 %    data          sessions per month (by site, from the date of the session
 %                  label, i.e. not for coded session labels of anonymize > 1)
 %                  and the site table (sites as columns, numbers as blue
@@ -30,11 +32,14 @@ function varargout = cat_io_dcm2bids_reportfig(action,varargin)
 %                  age and sex for at least 10 sessions) of the mwc1 maps,
 %                  the normalized FA maps, and the connectivity matrices by
 %                  the quality rating of their scans (points by site)
-%    QC            session ratings and image quality SQR of the best scan of
-%                  each scan type as box plots (points by site, marks 0.5 to
-%                  6.5 with their colors in the background, worse ratings
-%                  are clipped as in the CAT report), and
-%                  the completeness and protocol status of the sessions
+%    QC            session ratings (in the order of the header, points by
+%                  site; for one site the ratings of all scans with the
+%                  protocol status of each scan as PCP, points by datatype)
+%                  and image quality SQR of the best scan of each scan type
+%                  as box plots (marks 0.5 to 6.5 with their colors in the
+%                  background, worse ratings are clipped as in the CAT
+%                  report), and the completeness and protocol status of the
+%                  sessions
 %  The values are given in or next to the diagrams. The pages are saved for
 %  each design of opts.reportfig.design (one or several, by default all) as
 %    <outdir>/<subdir>/<BIDSdir>-report/report_<BIDSsubdir>_<design>.pdf
@@ -76,16 +81,16 @@ function Ppdf = writeReportFigure(Poutdir,job)
 %  help of this file), returns the PDF files (cell).
   Prep = fullfile(Poutdir,[job.BIDSdir '-report']);
   Ptab = fullfile(Prep,'tables',job.BIDSsubdir);
-  Pold = [{fullfile(Prep,['report_' job.BIDSsubdir '.pdf'])}, ...   % (all designs of former runs)
-    strcat(fullfile(Prep,['report_' job.BIDSsubdir '_']),designNames(),'.pdf')];
-  for oi = 1:numel(Pold), if exist(Pold{oi},'file'), delete(Pold{oi}); end, end
   fmt  = job.opts.tableformat;
   S    = readTable(fullfile(Ptab,['scans.' fmt]));
   E    = readTable(fullfile(Ptab,['sessions.' fmt]));
   Q    = readTable(fullfile(Ptab,['project.' fmt]));
   designs = cellstr(job.opts.reportfig.design);
   Ppdf = strcat(fullfile(Prep,['report_' job.BIDSsubdir '_']),designs(:)','.pdf');
-  if isempty(E), Ppdf = {}; return; end
+  if isempty(E), Ppdf = {}; return; end % (the PDFs of former runs are kept without tables)
+  Pold = [{fullfile(Prep,['report_' job.BIDSsubdir '.pdf'])}, ...   % (all designs of former runs)
+    strcat(fullfile(Prep,['report_' job.BIDSsubdir '_']),designNames(),'.pdf')];
+  for oi = 1:numel(Pold), if exist(Pold{oi},'file'), delete(Pold{oi}); end, end
   ws = warning('off','MATLAB:print:ContentTypeImageSuggested'); % vector output of many objects
   for di = 1:numel(designs)
     job.opts.reportfig.design = designs{di};
@@ -156,6 +161,8 @@ function F = setupFigure(job,E,Q)
     h = qc(strcmp(qs,F.sites{si}));
     if ~isempty(h) && ~isempty(regexp(h{1},'^#[0-9a-fA-F]{6}$','once')), F.sitecol(si,:) = sscanf(h{1}(2:end),'%2x')' / 255; end
   end
+  F.dtnam   = {'anat','func','dwi','fmap','perf'};  % datatypes of the scan ratings of one site (see drawRatings)
+  F.dtcol   = colormapOf(D.Discrete,numel(F.dtnam) + 1); % (last: other datatypes)
   F.ccmap   = colormapOf(D.Continuous,64);          % continuous values (not used yet)
   F.cntcol  = [0.15 0.42 0.82];                     % numbers of the tables (more blue for larger values)
   F.agecol  = [0.96 0.62 0.12];                     % ages of the tables (more yellow-orange for older subjects, see ageColor)
@@ -180,6 +187,42 @@ function F = setupFigure(job,E,Q)
   for qi = 1:3
     q = numCol(E,fq{qi}); q = q(isfinite(q));
     if numel(q) >= 3, F.qthr(qi) = mean(q) + 2*std(q); end
+  end
+  % SQR of light and severe artifacts of the whole sample (see sqrLimits)
+  F.yellow = [0.85 0.60 0.00]; if mean(F.bg) < 0.5, F.yellow = [1 0.80 0.30]; end
+  F.sqrlim = [sqrLimits(numCol(E,'T1w_SQR')); sqrLimits(numCol(E,'dwi_SQR')); sqrLimits(numCol(E,'bold_SQR'))];
+end
+% =========================================================================
+function L = sqrLimits(q)
+%sqrLimits. Typical protocol quality (the 25th percentile of the SQR, i.e.
+%  the border of the best 25% of the sample) and the borders of light and
+%  severe artifacts [typical light severe]: one and two interquartile 
+%  ranges (IQR) above the typical quality, at least 0.25 and 0.75 marks 
+%  (e.g. motion artifacts of T1w data appear slightly about 0.5 and 
+%  clearly about 1.0 marks below the typical quality), i.e. the IQR (robust
+%  to the artifacts, two IQR above the 25th percentile are about two SD 
+%  above the mean of normally distributed data) widens the borders of a 
+%  heterogeneous sample (e.g. several sites or protocols), whereas the 
+%  minimum keeps them relevant for a very homogeneous sample. NaN for less
+%  than 5 values.
+  q = q(isfinite(q)); L = nan(1,3);
+  if numel(q) < 5, return; end
+  q25 = prctile(q,25); iqr = prctile(q,75) - q25;
+  L = [q25 q25 + max(0.25,iqr) q25 + max(0.75,2*iqr)];
+end
+% =========================================================================
+function E = sessionPCP(E,S)
+%sessionPCP. Protocol conformity percentage of the scans of each session
+%  (with protocol test) as mark (100% as 1, 0% as 6, see the header), NaN 
+%  without tested scans.
+  if isempty(E), return; end
+  [E.PCP] = deal(nan);
+  st = textCol(S,'protocol_status'); ok = ismember(st,{'conform','semiconform','nonconform'});
+  sk = strcat(textCol(S,'participant_id'),'|',textCol(S,'session_id'));
+  ek = strcat(textCol(E,'participant_id'),'|',textCol(E,'session_id'));
+  for ei = 1:numel(E)
+    m = ok & strcmp(sk,ek{ei});
+    if any(m), E(ei).PCP = 1 + 5 * (1 - mean(strcmp(st(m),'conform'))); end
   end
 end
 % =========================================================================
@@ -259,8 +302,12 @@ function drawPage(fh,F,S,E,site,pgi,npg)
 
   % quality control (panel)
   c = panelCells(fh,F,[F.mx 0.6 w 5.5],3);
-  drawRatings(fh,F,E,{'SQR','PFR','SOR','BBR','PRR'},{'SQR','PFR','SOR','BBR','PRR'},c(1,:), ...
-    'Session ratings');
+  rn = {'PFR','PCP','BBR','SOR','PRR','SQR'}; % (the order of the header)
+  if isscalar(unique(textCol(E,'site'))) % one site: the ratings of all scans by datatype
+    drawRatings(fh,F,scanPCP(S),rn,rn,c(1,:),'Scan ratings','datatype');
+  else
+    drawRatings(fh,F,sessionPCP(E,S),rn,rn,c(1,:),'Session ratings');
+  end
   drawRatings(fh,F,E,strcat(F.tnam,'_SQR'),F.tnam,c(2,:),'Image quality SQR (best scans)');
   drawCompleteness(fh,F,S,E,c(3,:));
 
@@ -364,9 +411,11 @@ function drawHeader(fh,F,S,E,site,p)
   if isempty(st), pcp = nan; else, pcp = 100 * mean(strcmp(st,'conform')); end
   R  = {'Protocol fit rating (PFR)',             median(numCol(E,'PFR'),'omitnan'), 0
         'Protocol conformity percentage (PCP)',  pcp,                               1
+        'Brain coverage rating (BBR)',           median(numCol(E,'BBR'),'omitnan'), 0
         'Session orientation rating (SOR)',      median(numCol(E,'SOR'),'omitnan'), 0
+        'Phase-encoding reversal rating (PRR)',  median(numCol(E,'PRR'),'omitnan'), 0
         'Scan quality rating (SQR)',             median(numCol(E,'SQR'),'omitnan'), 0};
-  tx = x1 - tw; rh = 0.43; y0 = p(2) + p(4) - 0.1 - rh;
+  tx = x1 - tw; rh = (p(4) - 0.1) / size(R,1); y0 = p(2) + p(4) - 0.1 - rh;
   for ri = 1:size(R,1)
     y = y0 - (ri-1) * rh;
     wi = 0; if ~isempty(F.icon), wi = drawImage(fh,F,F.icon,[tx y+0.06 0 rh-0.12]); end
@@ -737,6 +786,7 @@ function drawVolumes(fh,F,E,c)
   hold(ax,'on');
   mk = {'s','o','^','^'}; xr = [min(age(ok)) max(age(ok))] + [-1 1];
   for ti = 1:3
+    subjectLines(ax,F,E,age,Y(:,ti),ok & isfinite(Y(:,ti)),F.tiscol(ti,:));
     for gi = 1:4
       g = ok & isfinite(Y(:,ti)) & strcmp(sex,F.sexnam{gi});
       if gi == 4, g = ok & isfinite(Y(:,ti)) & ~ismember(sex,F.sexnam(1:3)); end
@@ -777,6 +827,7 @@ function drawMarker(fh,F,E,c,fn,M,ttl,ylab,nd)
   if ~any(ok), noData(ax,F,{sprintf('no %s',ylab),'(preprocessing)'}); return; end
   hold(ax,'on');
   mk = {'s','o','^','^'}; xr = [min(age(ok)) max(age(ok))] + [-1 1];
+  subjectLines(ax,F,E,age,v,ok,site);
   [us,~,ui] = unique(site);
   for si = 1:numel(us)
     col = siteColor(F,us{si});
@@ -806,6 +857,22 @@ end
 function t = ageTicks(F)
 %ageTicks. Ticks of the age range of the brain markers (e.g. 20 years).
   ar = F.ropts.agerange; t = ar(1):niceStep(diff(ar)/5):ar(2);
+end
+% =========================================================================
+function subjectLines(ax,F,E,x,y,ok,col)
+%subjectLines. Thin lines between the sessions (points x,y of the valid 
+%  sessions ok) of each subject in the order of the sessions (drawn before
+%  the points, i.e. behind them) with the color col (RGB, or the sites of 
+%  the sessions for the color of the site).
+  sub = textCol(E,'participant_id'); ses = textCol(E,'session_id'); idx = find(ok(:));
+  if numel(idx) < 2, return; end
+  [us,~,ui] = unique(sub(idx));
+  for si = 1:numel(us)
+    k = idx(ui == si); if numel(k) < 2, continue; end
+    [~,so] = sort(ses(k)); k = k(so);
+    if iscell(col), c = siteColor(F,col{k(1)}); else, c = col; end
+    plot(ax,x(k),y(k),'-','Color',F.mix(c,0.45),'LineWidth',0.3);
+  end
 end
 % =========================================================================
 function points(ax,x,y,mk,col)
@@ -838,8 +905,11 @@ function drawHomogeneity(fh,F,E,c,fq,fs,thr,ttl,typ)
 %drawHomogeneity. Sample homogeneity fq (quartic mean Z-score QMZ, e.g. of
 %  the mwc1 maps of the best T1w scan) by the quality rating fs of the
 %  scans (points by site) with the threshold thr of atypical maps (mean + 2
-%  SD of the whole sample, as cat_stat_homogeneity) and the labels of the
-%  (at most 3) sessions above the threshold.
+%  SD of the whole sample, as cat_stat_homogeneity), the SQR borders of 
+%  light and severe artifacts (yellow and red, see sqrLimits), and the 
+%  labels (without sub- and ses-) of the (at most 3) sessions above the 
+%  threshold and of the (at most 3) worst sessions with severe artifacts,
+%  and thin lines between the sessions of a subject (see subjectLines).
   [ax,tax] = cellAxes(fh,F,c,ttl,1.7);
   qmz = numCol(E,fq); sqr = numCol(E,fs); site = textCol(E,'site');
   ok  = isfinite(qmz) & isfinite(sqr);
@@ -850,7 +920,13 @@ function drawHomogeneity(fh,F,E,c,fq,fs,thr,ttl,typ)
     patch(ax,mi + [-0.5 0.5 0.5 -0.5],yr([1 1 2 2]),F.mix(F.col2mark(mi),F.markbg),'EdgeColor','none');
   end
   if isfinite(thr), plot(ax,F.marks,[thr thr],'--','Color',F.red,'LineWidth',0.6); end
+  L = F.sqrlim(find(strcmp({'T1w','DWI','BOLD'},typ),1),:); % (typical quality, light and severe artifacts)
+  if all(isfinite(L))
+    plot(ax,L([2 2]),yr,':','Color',F.yellow,'LineWidth',0.8);
+    plot(ax,L([3 3]),yr,'--','Color',F.red,'LineWidth',0.6);
+  end
   x = min(F.marks(2),max(F.marks(1),sqr));
+  subjectLines(ax,F,E,x,qmz,ok,site);
   [us,~,ui] = unique(site);
   for si = 1:numel(us)
     g = ok & ui == si; col = siteColor(F,us{si});
@@ -859,11 +935,14 @@ function drawHomogeneity(fh,F,E,c,fq,fs,thr,ttl,typ)
   set(ax,'XLim',F.marks,'YLim',yr,'XTick',1:6,'Layer','top'); % (before the labels for their extent)
   hi  = find(ok & qmz > thr);
   [~,so] = sort(qmz(hi),'descend'); hl = hi(so(1:min(end,3)));
-  sub = textCol(E,'participant_id'); ses = textCol(E,'session_id');
+  hs  = find(ok & sqr > L(3));                      % (severe artifacts by the SQR)
+  [~,so] = sort(sqr(hs),'descend'); hs = hs(so(1:min(end,3)));
+  hl  = union(hl,hs); [~,so] = sort(qmz(hl),'descend'); hl = hl(so);
+  sub = regexprep(textCol(E,'participant_id'),'^sub-',''); ses = regexprep(textCol(E,'session_id'),'^ses-','');
   yi = inf;
   for i = 1:numel(hl) % right of the point, or left if it does not fit (below the previous label)
     xi = x(hl(i)); yi = min(qmz(hl(i)),yi - 0.065*diff(yr));
-    h  = text(ax,xi + 0.15,yi,shortLabel([sub{hl(i)} ' ' ses{hl(i)}],26),'FontSize',F.fss*0.85, ...
+    h  = text(ax,xi + 0.15,yi,shortLabel(strtrim([sub{hl(i)} ' ' ses{hl(i)}]),31),'FontSize',F.fss*0.85, ...
       'Color',F.fg,'Interpreter','none','HorizontalAlignment','left','Clipping','on');
     if sum(h.Extent([1 3])) > F.marks(2)
       set(h,'Position',[xi - 0.15 yi 0],'HorizontalAlignment','right');
@@ -878,6 +957,11 @@ function drawHomogeneity(fh,F,E,c,fq,fs,thr,ttl,typ)
   if isfinite(thr)
     text(tax,0.08,y,sprintf('mean + 2 SD %0.3f',thr),'FontSize',F.fss,'Color',F.red); y = y - dy;
     text(tax,0.08,y,sprintf('above: %d',numel(hi)),'FontSize',F.fss,'Color',F.fg); y = y - dy;
+  end
+  if all(isfinite(L))
+    text(tax,0.08,y,sprintf('SQR typical %0.2f',L(1)),'FontSize',F.fss,'Color',F.fg); y = y - dy;
+    text(tax,0.08,y,sprintf('light > %0.2f: %d',L(2),sum(ok & sqr > L(2) & sqr <= L(3))),'FontSize',F.fss,'Color',F.yellow); y = y - dy;
+    text(tax,0.08,y,sprintf('severe > %0.2f: %d',L(3),sum(ok & sqr > L(3))),'FontSize',F.fss,'Color',F.red); y = y - dy;
   end
   if sum(isfinite(qmz)) >= 10, str = {'corrected for','age and sex'}; else, str = {'not corrected','(< 10 sessions)'}; end
   text(tax,0.08,y,str{1},'FontSize',F.fss,'Color',F.fgl); text(tax,0.08,y - dy,str{2},'FontSize',F.fss,'Color',F.fgl);
@@ -927,13 +1011,15 @@ function drawCompleteness(fh,F,S,E,c)
   end
 end
 % =========================================================================
-function drawRatings(fh,F,E,fields,names,c,ttl)
-%drawRatings. Box plots of the ratings of the fields of the sessions E
-%  (marks 0.5 to 6.5 with the colors of the marks, worse ratings are
-%  clipped) with the data points (colored by site), the median, and the
-%  number of sessions of each rating.
+function drawRatings(fh,F,E,fields,names,c,ttl,colorby)
+%drawRatings. Box plots of the ratings of the fields of the records E
+%  (sessions, or the scans of one site) (marks 0.5 to 6.5 with the colors
+%  of the marks, worse ratings are clipped) with the data points (colored
+%  by site, or by datatype for colorby 'datatype' with a legend), the
+%  median, and the number of records of each rating.
+  if ~exist('colorby','var'), colorby = 'site'; end
   ax = cellAxes(fh,F,c,ttl,0);
-  n  = numel(fields); data = cell(1,n); site = textCol(E,'site');
+  n  = numel(fields); data = cell(1,n); site = textCol(E,colorby);
   for fi = 1:n, data{fi} = numCol(E,fields{fi}); end
   nv = cellfun(@(d) sum(isfinite(d)),data);
   if ~any(nv), noData(ax,F,{'no ratings'}); return; end
@@ -960,7 +1046,7 @@ function drawRatings(fh,F,E,fields,names,c,ttl)
     mk = repmat('o',size(d)); mk(d > F.marks(2)) = '^'; mk(d < F.marks(1)) = 'v';
     [us,~,ui] = unique(s);
     for si = 1:numel(us)
-      col = siteColor(F,us{si});
+      if strcmp(colorby,'datatype'), col = dtColor(F,us{si}); else, col = siteColor(F,us{si}); end
       for m = 'o^v'
         g = ui == si & mk == m;
         if any(g)
@@ -980,6 +1066,27 @@ function drawRatings(fh,F,E,fields,names,c,ttl)
     'XTick',1:n,'TickLabelInterpreter','tex','XTickLabel',cellfun(@(nm,k) ...
     sprintf('%s\\newline{\\fontsize{%g}n=%d}',strrep(nm,'_','\_'),F.fss*0.85,k),names,num2cell(nv),'UniformOutput',false));
   ylabel(ax,'mark','FontSize',F.fss,'Color',F.fg);
+  if strcmp(colorby,'datatype') % legend of the datatypes (top left)
+    dt = unique(site(~cellfun('isempty',site))); [~,o] = ismember(dt,F.dtnam); o(o==0) = numel(F.dtnam) + 1; [~,o] = sort(o); dt = dt(o);
+    str = strjoin(cellfun(@(d) sprintf('\\color[rgb]{%0.2f %0.2f %0.2f}%s',dtColor(F,d),d),dt(:)','UniformOutput',false),'  ');
+    text(ax,0.55,F.marks(2) - 0.15,str,'FontSize',F.fss,'Interpreter','tex','VerticalAlignment','top');
+  end
+end
+% =========================================================================
+function c = dtColor(F,dt)
+%dtColor. Color of the datatype (scan ratings of one site, see drawRatings).
+  di = find(strcmp(F.dtnam,dt),1); if isempty(di), di = numel(F.dtnam) + 1; end
+  c  = F.dtcol(di,:);
+end
+% =========================================================================
+function S = scanPCP(S)
+%scanPCP. Protocol status of each scan as mark of the protocol conformity
+%  (conform 1, semiconform 3.5, nonconform 6, NaN without protocol test),
+%  e.g. for the scan ratings of one site.
+  if isempty(S), return; end
+  st = textCol(S,'protocol_status'); m = nan(numel(S),1);
+  m(strcmp(st,'conform')) = 1; m(strcmp(st,'semiconform')) = 3.5; m(strcmp(st,'nonconform')) = 6;
+  for si = 1:numel(S), S(si).PCP = m(si); end
 end
 % =========================================================================
 function noData(ax,F,str)

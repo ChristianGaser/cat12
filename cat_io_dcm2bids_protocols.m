@@ -88,11 +88,10 @@ function C = siteColors(Pcenterdict,Pmdbdir,labels)
     'UniformOutput',false); % (labels as setupSites)
   for li = 1:numel(labels)
     e = [scn(strcmpi(abbr(scn),labels{li})); reg(strcmpi(abbr(reg),labels{li}))];
-    if isempty(e), continue; end
-    if isfield(e{1},'Color'), C{li} = hexColor(e{1}.Color); end
+    if ~isempty(e) && isfield(e{1},'Color'), C{li} = hexColor(e{1}.Color); end
     if ~isempty(C{li}), continue; end
     city = ''; 
-    if isfield(e{1},'InstitutionAddress'), city = low(addressCity(e{1}.InstitutionAddress)); end
+    if ~isempty(e) && isfield(e{1},'InstitutionAddress'), city = low(addressCity(e{1}.InstitutionAddress)); end
     for ci = 1:numel(col) % city of a color entry, otherwise all other cities ("*")
       cities = cellstr(col{ci}.Cities);
       if ~isempty(city) && any(cellfun(@(c) ~strcmp(c,'*') && startsWith(city,low(c)),cities))

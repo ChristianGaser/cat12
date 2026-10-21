@@ -21,7 +21,10 @@ function varargout = cat_io_dcm2bids_report(action,varargin)
 %                      best T1w scan (n/a if not available) with their 
 %                      z-scores of the age/sex model of the sample and the 
 %                      sample homogeneity of its mwc1 map (quartic mean 
-%                      Z-score, see cat_io_dcm2bids_stats)
+%                      Z-score, see cat_io_dcm2bids_stats), and the DTI and
+%                      rs-fMRI measures of the best DWI and BOLD scan (and
+%                      of the mixed DTI of several DWI scans, see
+%                      processMix of cat_io_dcm2bids_pp_dwi)
 %    project.<fmt>     one row per dataset and site and for all sites of a
 %                      dataset with the number of subjects, sessions, and
 %                      scans, the demographics, median ratings, and the
@@ -59,14 +62,14 @@ end
 function writeReportTables(Poutdir,job)
 %writeReportTables. Report tables of the BIDS directory of the job (with
 %  its protocol subdirectories, see the help of this file). The tables are
-%  created again in each run.
+%  created again in each run (the old tables are kept without scans).
   PBIDS   = fullfile(Poutdir,job.BIDSdir,job.BIDSsubdir);
   Preport = fullfile(Poutdir,[job.BIDSdir '-report'],'tables',job.BIDSsubdir);
+  S = collectScans(PBIDS);
+  if isempty(S), return; end
   Pold    = fullfile(Poutdir,[job.BIDSdir '-report'],sprintf('report_%s.%s',job.BIDSsubdir,job.opts.tableformat));
   if exist(Pold,'file'), delete(Pold); end % report table of older versions
   if exist(Preport,'dir'), rmdir(Preport,'s'); end
-  S = collectScans(PBIDS);
-  if isempty(S), return; end
   fmt = job.opts.tableformat;
 
   % scans (all and the typical scan types)
@@ -124,7 +127,7 @@ function S = collectScans(PBIDS)
     tok   = regexp(name,'_(part-(?:phase|real|imag)|inv-\d+)(?=_)','tokens');
     type  = [dt '/' sx strjoin(cellfun(@(x) ['_' x{1}],tok,'UniformOutput',false),'')];
     acq   = regexp(name,'_acq-(\d+)','tokens','once'); if isempty(acq), acq = ''; else, acq = acq{1}; end
-    droot = fullfile(root,'derivatives',sub,ses,dt);
+    droot = fullfile(cat_io_dcm2bids_helper('derivativesDir',root),sub,ses,dt);
 
     % participants and sessions (cached)
     P0 = readTSVcached(cache,fullfile(root,'participants.tsv'));
@@ -133,7 +136,7 @@ function S = collectScans(PBIDS)
     Q  = readJSON(fullfile(droot,['catDCM2BIDSqc_' name '.json']));
     G  = readJSON(fullfile(droot,['catDCM2BIDSsegus_' name '.json']));
     if isempty(ses), sesname = sub; else, sesname = [sub '_' ses]; end
-    A  = readJSONcached(cache,fullfile(root,'derivatives',sub,ses,['catDCM2BIDSaffine_' sesname '.json']));
+    A  = readJSONcached(cache,fullfile(fileparts(droot),['catDCM2BIDSaffine_' sesname '.json']));
 
     r = struct();
     r.dataset = spm_file(root,'basename');
@@ -160,6 +163,8 @@ function S = collectScans(PBIDS)
       r.([fn{1} '_value']) = jsonNumber(Q,{'qualitymeasures',fn{1}});
     end
     r.BBM = jsonNumber(Q,{'qualitymeasures','BBM'}); r.BBR = jsonNumber(Q,{'qualityrating','BBR'});
+    r.Dice_scanner = jsonNumber(Q,{'alignment','Dice_scanner'}); % alignment with the anatomical scan (see scannerAlignment)
+    r.repositioned = nan; if isfinite(r.Dice_scanner), r.repositioned = double(isfield(Q.alignment,'coreg')); end
     r.PRM = jsonNumber(Q,{'qualitymeasures','PRM'}); r.PRR = jsonNumber(Q,{'qualityrating','PRR'});
     for fn = {'OTM','ORM'}, r.(fn{1}) = jsonNumber(A,{'qualitymeasures',fn{1}}); end
     for fn = {'OTR','ORR','SOR'}, r.(fn{1}) = jsonNumber(A,{'qualityrating',fn{1}}); end
@@ -184,11 +189,26 @@ function S = collectScans(PBIDS)
     Jd = readJSON(fullfile(droot,['catDCM2BIDSdwi_' name '.json']));
     for fn = {'FA_WM','MD_WM','AD_WM','RD_WM','MD_WM_peakwidth','MD_brain'}, r.(fn{1}) = jsonNumber(Jd,{'global',fn{1}}); end
     r.DWI_outliers = jsonNumber(Jd,{'qc','outlier_volumes'});
+    % mixed DTI of the DWI scans of the session (result of the scan with the
+    % most DTI volumes, see processMix of cat_io_dcm2bids_pp_dwi, not columns)
+    Jm = readJSON(fullfile(droot,['catDCM2BIDSdwimix_' name '.json']));
+    r.mix = struct('n',0,'FA_WM',nan,'MD_WM',nan,'MD_WM_peakwidth',nan,'PwFA','');
+    if isfield(Jm,'global')
+      r.mix.n = 1 + numel(jsonPath(Jm,{'method','mix','further'},[]));
+      for fn = {'FA_WM','MD_WM','MD_WM_peakwidth'}, r.mix.(fn{1}) = jsonNumber(Jm,{'global',fn{1}}); end
+      for ext = {'.nii.gz','.nii'}
+        Pw = fullfile(droot,['catDCM2BIDSdwimix_wFA_' name ext{1}]);
+        if isempty(r.mix.PwFA) && exist(Pw,'file'), r.mix.PwFA = Pw; end
+      end
+    end
     Jr = readJSON(fullfile(droot,['catDCM2BIDSrsfmri_' name '.json']));
     for fn = {'FD_mean','FD_max','FD_pct05','DVARS','tSNR'}, r.(fn{1}) = jsonNumber(Jr,{'qc',fn{1}}); end
     r.GCOR = jsonNumber(Jr,{'connectivity','GCOR'}); r.segregation = jsonNumber(Jr,{'connectivity','segregation'});
     r.FC_within = jsonNumber(Jr,{'connectivity','within'}); r.FC_between = jsonNumber(Jr,{'connectivity','between'});
     r.pplevel = max([jsonNumber(Jd,{'method','level'}) jsonNumber(Jr,{'method','level'})]); % (NaN without)
+    r.T1w_other = max([jsonNumber(Jd,{'method','T1w_other_session'}) jsonNumber(Jr,{'method','T1w_other_session'})]); % (T1w of another session)
+    r.Dice_T1w  = max(cellfun(@(c) max([jsonNumber(Jd,c) jsonNumber(Jr,c)]), ...
+      {{'method','coregistration','Dice'},{'method','coregistration','Dice_scanner'},{'method','coregistration','Dice_nonlinear'}})); % (best alignment)
     % regional results (region tables, not columns)
     r.regional_anat = jsonPath(G,{'regional'},struct());
     r.regional_dwi  = jsonPath(Jd,{'regional'},struct());
@@ -312,6 +332,7 @@ function E = sessionRecords(S,types,tnam)
     e.SOR = minValue([Sk.SOR]);
     e.BBR = maxValue([Sk.BBR]);
     e.PRR = maxValue([Sk.PRR]);
+    e.T1w_other = maxValue([Sk.T1w_other]); % (DTI or rs-fMRI with the T1w of another session)
     for tj = 1:numel(types)
       St = Sk(strcmp({Sk.type},types{tj}));
       e.([tnam{tj} '_n'])   = numel(St);
@@ -339,6 +360,13 @@ function E = sessionRecords(S,types,tnam)
         if isempty(St), e.([tf{1}{2} '_' fn{1}]) = nan; else, e.([tf{1}{2} '_' fn{1}]) = St.(fn{1}); end
       end
     end
+    % mixed DTI of the DWI scans of the session (see processMix of 
+    % cat_io_dcm2bids_pp_dwi) as further columns, i.e. the measures of the
+    % best DWI scan stay comparable for sessions without further DWI scans
+    % (the mixed DTI depends on the b-values of the protocols)
+    e.dwi_mix_scans = 0; e.dwi_mix_FA_WM = nan; e.dwi_mix_MD_WM = nan;
+    Sm = Sk(arrayfun(@(s) isstruct(s.mix) && s.mix.n > 1 && isfinite(s.mix.FA_WM),Sk));
+    if ~isempty(Sm), e.dwi_mix_scans = Sm(1).mix.n; e.dwi_mix_FA_WM = Sm(1).mix.FA_WM; e.dwi_mix_MD_WM = Sm(1).mix.MD_WM; end
     if isempty(E), E = e; else, E(end+1) = e; end %#ok<AGROW>
   end
 end
@@ -454,6 +482,8 @@ function [cols,desc] = scanColumns(type)
     'RES_value'           'RMS of the voxel size in mm'
     'BBM'                 'missing brain coverage in percent of the expected coverage'
     'BBR'                 'rating of the brain coverage (marks)'
+    'Dice_scanner'        'Dice of the brain masks of the scan and of the anatomical scan of the session in the scanner space (alignment test, non-anatomical scans)'
+    'repositioned'        'scan not aligned with the anatomical scan of the session (e.g. repositioning of the subject), i.e. coverage and renderings by coregistration (1)'
     'PRM'                 'correlation with the scan of opposite phase-encoding direction (high values: not reversed)'
     'PRR'                 'rating of the phase-encoding reversal (marks)'
     'OTM'                 'session orientation: RMSE of the origin offset to MNI in mm'
@@ -501,6 +531,8 @@ function [cols,desc] = scanColumns(type)
       'MD_brain'        'median mean diffusivity of the brain in mm2/s'
       'DWI_outliers'    'number of outlier volumes of the tensor fit (residual above 3 SD)'
       'pplevel'         'preprocessing level (see levelParameters in cat_io_dcm2bids_pp_anat)'
+      'T1w_other'       '1 if the coregistration, masks, and atlases used the T1w of another session (session without anatomical scan)'
+      'Dice_T1w'        'overlap (Dice) of the brain masks of the scan and the T1w after the coregistration (best alignment, warning below 0.8)'
       }];
   end
   if strncmp(type,'func/',5)
@@ -515,6 +547,8 @@ function [cols,desc] = scanColumns(type)
       'FC_between'  'mean between-network connectivity (Fisher z)'
       'segregation' 'system segregation: (within - between) / within (Chan et al. 2014)'
       'pplevel'     'preprocessing level (see levelParameters in cat_io_dcm2bids_pp_anat)'
+      'T1w_other'   '1 if the coregistration, masks, and atlases used the T1w of another session (session without anatomical scan)'
+      'Dice_T1w'    'overlap (Dice) of the brain masks of the scan and the T1w after the coregistration (best alignment, warning below 0.8)'
       }];
   end
   cols = C(:,1)'; desc = C(:,2)';
@@ -535,6 +569,7 @@ function [cols,desc] = sessionColumns(types,tnam)
     'SOR'            'session orientation rating (marks)'
     'BBR'            'worst brain coverage rating of the scans (marks)'
     'PRR'            'worst phase-encoding reversal rating of the scans (marks)'
+    'T1w_other'      '1 if the DTI or rs-fMRI of the session used the T1w of another session (session without anatomical scan)'
     };
   for ti = 1:numel(types)
     C = [C; {
@@ -559,6 +594,9 @@ function [cols,desc] = sessionColumns(types,tnam)
     'dwi_FA_WM'           'median white matter FA of the best DWI scan (see cat_io_dcm2bids_pp_dwi)'
     'dwi_MD_WM'           'median white matter MD of the best DWI scan in mm2/s'
     'dwi_MD_WM_peakwidth' 'peak width of the white matter MD of the best DWI scan in mm2/s'
+    'dwi_mix_scans'       'number of DWI scans of the mixed DTI of the session (0: none, see processMix of cat_io_dcm2bids_pp_dwi)'
+    'dwi_mix_FA_WM'       'median white matter FA of the mixed DTI (depends on the b-values of the protocols)'
+    'dwi_mix_MD_WM'       'median white matter MD of the mixed DTI in mm2/s'
     'dwi_FA_WM_z'         'z-score of the white matter FA of the robust age/sex model of the sample'
     'dwi_QMZ'             'sample homogeneity of the normalized FA map (wFA): quartic mean Z-score (high values: atypical map)'
     'bold_FD_mean'        'mean framewise displacement of the best BOLD scan in mm (see cat_io_dcm2bids_pp_rsfmri)'

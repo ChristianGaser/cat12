@@ -3,8 +3,10 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
 %  Text and JSON files with UTF-8 encoding (readText, writeText, writeJSON),
 %  paths (absPath, normPath, canonPath), NIfTI header information, single
 %  volumes, the gzip handling of NIfTIs, and their export (niiHeaderInfo, 
-%  niiVolume, prepNii, prepNiigz, gzipFile, exportNii), and tables 
-%  (updateTable, writeTable, and lists of records with catRecords).
+%  niiVolume, prepNii, prepNiigz, gzipFile, exportNii), the realigned 
+%  volumes of 4D data resliced in memory (realignedVolumes, 
+%  realignedVolume), and tables (updateTable, writeTable, and lists of 
+%  records with catRecords).
 %
 %  varargout = cat_io_dcm2bids_helper(action,varargin)
 %
@@ -15,13 +17,16 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
 %    P = cat_io_dcm2bids_helper('absPath',P)
 %    P = cat_io_dcm2bids_helper('normPath',P)
 %    P = cat_io_dcm2bids_helper('canonPath',P)
-%    [vx,dim] = cat_io_dcm2bids_helper('niiHeaderInfo',P)
+%    P = cat_io_dcm2bids_helper('derivativesDir',Pbids)
+%    [vx,dim,mat] = cat_io_dcm2bids_helper('niiHeaderInfo',P)
 %    Y = cat_io_dcm2bids_helper('niiVolume',P,vol)
 %    Po = cat_io_dcm2bids_helper('prepNii',Pi,opts,del)
 %    Po = cat_io_dcm2bids_helper('prepNiigz',Pi,opts)
 %    cat_io_dcm2bids_helper('gzipFile',P)
 %    cat_io_dcm2bids_helper('exportNii',P,Pout,opts)
 %    cat_io_dcm2bids_helper('removeAcquisitionTime',P)
+%    V = cat_io_dcm2bids_helper('realignedVolumes',P,Prp,opts)
+%    Y = cat_io_dcm2bids_helper('realignedVolume',V,t)
 %    entries = cat_io_dcm2bids_helper('updateTable',Ptable,Thdr,Tnewrow,id,reimport)
 %    cat_io_dcm2bids_helper('writeTable',Ptable,T,format)
 %    R = cat_io_dcm2bids_helper('catRecords',R,S)
@@ -29,8 +34,9 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
 %  See also cat_io_dcm2bids.
 
   switch action
-    case {'readText','writeText','writeJSON','absPath','normPath','canonPath', ...
+    case {'readText','writeText','writeJSON','absPath','normPath','canonPath','derivativesDir', ...
           'niiHeaderInfo','niiVolume','prepNii','prepNiigz','gzipFile','exportNii','removeAcquisitionTime', ...
+          'realignedVolumes','realignedVolume', ...
           'updateTable','writeTable','catRecords'}
       [varargout{1:nargout}] = feval(action,varargin{:});
     otherwise
@@ -51,6 +57,12 @@ end
 function writeJSON(P,S)
 %writeJSON. Write a JSON file (UTF-8, readable format).
   fid = fopen(P,'w','n','UTF-8'); fprintf(fid,'%s',jsonencode(S,'PrettyPrint',true)); fclose(fid); 
+end
+% =========================================================================
+function P = derivativesDir(Pbids)
+%derivativesDir. Derivatives directory of catDCM2BIDS of the BIDS dataset
+%  Pbids (BIDS derivatives dataset, i.e. Pbids/derivatives/catDCM2BIDS).
+  P = fullfile(Pbids,'derivatives','catDCM2BIDS');
 end
 % =========================================================================
 function P = absPath(P)
@@ -92,11 +104,14 @@ function P = canonPath(P)
   P = regexprep(P,['[' regexptranslate('escape',filesep) ']+$'],''); 
 end
 % =========================================================================
-function [vx,dim] = niiHeaderInfo(P)
-%niiHeaderInfo. Voxel size (x, y, z) and image dimensions (x, y, z, volumes) 
-%  from the NIfTI header without reading the image data, i.e., for .nii.gz 
-%  files only the header is decompressed. 
-  vx = nan(1,3); dim = nan(1,4); 
+function [vx,dim,mat] = niiHeaderInfo(P)
+%niiHeaderInfo. Voxel size (x, y, z), image dimensions (x, y, z, volumes),
+%  and the voxel-to-world matrix mat (as spm_vol: sform if available, 
+%  otherwise qform, for voxel indices starting at 1) from the NIfTI header
+%  without reading the image data, i.e., for .nii.gz files only the header
+%  is decompressed (whereas spm_vol decompresses the whole file, e.g. for
+%  the field of view of long time series).
+  vx = nan(1,3); dim = nan(1,4); mat = nan(4); 
   try
     if numel(P) > 3 && strcmpi(P(end-2:end),'.gz')
       gis = java.util.zip.GZIPInputStream(java.io.FileInputStream(P)); 
@@ -122,15 +137,52 @@ function [vx,dim] = niiHeaderInfo(P)
     if swap, dm = swapbytes(dm); pd = swapbytes(pd); end
     vx  = double(abs(pd(2:4))); 
     dim = double(dm(2:5)); dim(dim<1 | (1:4) > dm(1)) = 1; 
+    if nargout > 2, mat = niiMat(hdr,hsz,swap,double(pd)); end
   catch
     % fallback that reads the image 
     try
       evalc('V = spm_vol(P);'); 
       vx  = sqrt(sum(V(1).mat(1:3,1:3).^2)); 
       dim = [V(1).dim ones(1,3-numel(V(1).dim)) numel(V)]; 
+      mat = V(1).mat; 
     end
   end
   dim = reshape(dim,1,[]); vx = reshape(vx,1,[]); 
+end
+% =========================================================================
+function M = niiMat(hdr,hsz,swap,pd)
+%niiMat. Voxel-to-world matrix of the NIfTI header bytes hdr (header size
+%  hsz, byte swap, pixdim pd) as the mat of spm_vol (see @nifti/subsref): 
+%  the sform for sform_code > 0, otherwise the qform (quaternion, qfac in
+%  pixdim(1)), otherwise the voxel size around the image center, scaled to 
+%  mm by the spatial units, for voxel indices starting at 1.
+  if hsz == 348 % NIfTI-1 (byte offsets of the codes, quaternion, and sform)
+    code = double(val(253:256,'int16')); q = double(val(257:280,'single')); s = double(val(281:328,'single')); un = hdr(124);
+    dm = double(val(41:56,'int16'));
+  else          % NIfTI-2
+    code = double(val(345:352,'int32')); q = double(val(353:400,'double')); s = double(val(401:496,'double')); un = hdr(501);
+    dm = double(val(17:80,'int64'));
+  end
+  if code(2) > 0
+    M = [reshape(s,4,3)'; 0 0 0 1];
+  elseif code(1) > 0
+    b = q(1); c = q(2); d = q(3); a = sqrt(max(0,1 - b^2 - c^2 - d^2));
+    if a < 1e-7, n = sqrt(b^2 + c^2 + d^2); b = b/n; c = c/n; d = d/n; a = 0; end
+    R = [a^2+b^2-c^2-d^2  2*(b*c-a*d)      2*(b*d+a*c)
+         2*(b*c+a*d)      a^2+c^2-b^2-d^2  2*(c*d-a*b)
+         2*(b*d-a*c)      2*(c*d+a*b)      a^2+d^2-b^2-c^2];
+    Z = pd(2:4); Z(Z < 0) = 1; if pd(1) < 0, Z(3) = -Z(3); end
+    M = [R * diag(Z) q(4:6)'; 0 0 0 1];
+  else
+    vx = pd(2:4); vx(vx <= 0) = 1; o = (dm(2:4) + 1) / 2; % (no orientation: center of the image)
+    M = [diag(vx) (-vx(:) .* (o(:) - 1)); 0 0 0 1];
+  end
+  M = M * [eye(4,3) [-1 -1 -1 1]'];
+  sc = [1000 1 0.001]; u = double(bitand(un,7));
+  if u >= 1 && u <= 3, M = diag([sc(u)*[1 1 1] 1]) * M; end
+  function v = val(i,type)
+    v = typecast(hdr(i),type); if swap, v = swapbytes(v); end
+  end
 end
 % =========================================================================
 function Y = niiVolume(P,vol)
@@ -416,4 +468,58 @@ function R = catRecords(R,S)
   for fn = setdiff(fieldnames(R),fieldnames(S))', [S.(fn{1})] = deal(nan); end
   R = [R(:)' reshape(orderfields(S,R),1,[])];
 end
-
+% =========================================================================
+function V = realignedVolumes(P,Prp,opts)
+%realignedVolumes. Volumes of the (unzipped) 4D image P with the 
+%  realignment of the QC (Prp, rp_*.txt with the rigid parameters of each 
+%  volume relative to the first one, see cat_io_dcm2bids_qc), i.e. the
+%  voxel-to-world mapping of volume t is spm_matrix(rp(t,:)) * V(1).mat, 
+%  as the first volume (of each set) stays at its position (SPM realign), 
+%  for the reslicing in memory (see realignedVolume) instead of a resliced
+%  copy of the data. The first volume gets the mask of the voxels with 
+%  data in all volumes (rmask, as the mask of spm_reslice) and the 
+%  interpolation (rinterp: trilinear, B-spline of degree 4 for 
+%  opts.hrrealign). Without realignment parameters, the volumes of P.
+  V = spm_vol(P);
+  if isempty(Prp) || ~exist(Prp,'file') || numel(V) < 2, return; end
+  rp = load(Prp);
+  if size(rp,1) ~= numel(V) || size(rp,2) < 6
+    error('cat_io_dcm2bids_helper:realignedVolumes', ...
+      'The realignment parameters (%d) do not fit the volumes (%d).',size(rp,1),numel(V));
+  end
+  M1 = V(1).mat; tiny = 5e-2; % (as spm_reslice)
+  [x1,x2,x3] = ndgrid(1:V(1).dim(1),1:V(1).dim(2),1:V(1).dim(3));
+  msk = true(V(1).dim);
+  for t = 1:numel(V)
+    V(t).mat = spm_matrix(rp(t,1:6)) * M1;
+    M = V(t).mat \ M1;
+    for d = 1:3
+      x = M(d,1)*x1 + M(d,2)*x2 + M(d,3)*x3 + M(d,4);
+      msk = msk & x >= 1 - tiny & x <= V(t).dim(d) + tiny;
+    end
+  end
+  V(1).rmask = msk; V(1).rinterp = 1;
+  if isfield(opts,'hrrealign') && opts.hrrealign, V(1).rinterp = 4; end
+end
+% =========================================================================
+function Y = realignedVolume(V,t)
+%realignedVolume. Volume t of the volumes V resliced into the grid of the
+%  first volume with the realignment and mask of realignedVolumes (zeros 
+%  outside the field of view of any volume), otherwise read (e.g. for 3D 
+%  data or without realignment).
+  if ~isfield(V,'rmask') || isempty(V(1).rmask) || t == 1 && isequal(V(1).mat,V(t).mat) && all(V(1).rmask(:))
+    Y = spm_read_vols(V(t)); return
+  end
+  M = V(t).mat \ V(1).mat; d = V(1).dim;
+  [x1,x2,x3] = ndgrid(1:d(1),1:d(2),1:d(3));
+  X = {M(1,1)*x1 + M(1,2)*x2 + M(1,3)*x3 + M(1,4), M(2,1)*x1 + M(2,2)*x2 + M(2,3)*x3 + M(2,4), ...
+       M(3,1)*x1 + M(3,2)*x2 + M(3,3)*x3 + M(3,4)};
+  Vt = rmfield(V(t),intersect(fieldnames(V),{'rmask','rinterp'}));
+  if V(1).rinterp > 1
+    q = [V(1).rinterp*[1 1 1] 0 0 0];
+    Y = spm_bsplins(spm_bsplinc(Vt,q),X{1},X{2},X{3},q);
+  else
+    Y = spm_sample_vol(Vt,X{1},X{2},X{3},1);
+  end
+  Y = reshape(Y,d); Y(~V(1).rmask) = 0;
+end

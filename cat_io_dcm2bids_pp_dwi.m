@@ -1,10 +1,13 @@
 function varargout = cat_io_dcm2bids_pp_dwi(action,varargin)
 %cat_io_dcm2bids_pp_dwi. Basic preprocessing of diffusion-weighted images.
 %  Diffusion tensor imaging (DTI) of each DWI scan of a session with at
-%  least 12 diffusion-weighted volumes with b <= 1300 s/mm2 (DTI shell),
+%  least 12 diffusion-weighted volumes with b <= 1300 s/mm2 (DTI shell, 
+%  otherwise the lowest shell, e.g. of single-shell data with b1500, see
+%  dtiShell),
 %  with the parameters of the preprocessing level opts.pplevel (see 
 %  levelParameters in cat_io_dcm2bids_pp_anat, i.e. the resolution and settings
-%  of SCOPE, and only the first scan for higher levels, whereas subsets of
+%  of SCOPE, and only the first scan of each b-value scheme for higher 
+%  levels, e.g. the standard and the advanced protocol, whereas subsets of
 %  the directions were tested but not used, as they bias the FA):
 %    (1) realigned images of the QC (otherwise the original images),
 %        denoised by sanlm for opts.denoise (each volume)
@@ -49,11 +52,23 @@ function varargout = cat_io_dcm2bids_pp_dwi(action,varargin)
 %  FLAIR, see anatScan in cat_io_dcm2bids_pp_anat). The gradient
 %  directions are not rotated by the realignment (small effect for typical
 %  motion of a few degree).
+%  Mixed DTI (opts.dtimix, see processMix): sessions with several DWI scans
+%  (e.g. the standard and the advanced protocol of the DZPG) get an 
+%  additional DTI of the b0 and DTI shell volumes of all scans in the grid
+%  of the scan with the most DTI volumes (further scans by the rigid 
+%  coregistration of their FA maps and their own distortion correction, 
+%  gradient directions rotated by the coregistration, S0 of each scan, e.g.
+%  for different echo times), saved as catDCM2BIDSdwimix_<scan>.json and
+%  catDCM2BIDSdwimix_<map>_<scan>.nii of this scan. The mixed values depend
+%  on the b-values of the protocols (e.g. b850 of the advanced and b1200 of
+%  the standard DZPG protocol: 3% lower WM FA and 3% higher MD in a pilot,
+%  as the DTI depends on the b-value), i.e. the report uses the best scan.
 %
 %  varargout = cat_io_dcm2bids_pp_dwi(action,varargin)
 %
 %  Actions (see the help of the local functions):
 %    cat_io_dcm2bids_pp_dwi('processSession',Pdbnii,Vjson,datatype,suffix,BIDSpathd,BIDSfile,opts)
+%    (with the mixed DTI of several DWI scans of the session, see processMix)
 %
 %  See also cat_io_dcm2bids_pp_anat, cat_io_dcm2bids_pp_rsfmri.
 
@@ -78,19 +93,35 @@ function processSession(Pdbnii,Vjson,datatype,suffix,BIDSpathd,BIDSfile,opts)
     Pb = [regexprep(Pdbnii{i},'\.nii(\.gz)?$','') '.bval'];
     if exist(Pb,'file'), b{i} = reshape(load(Pb),1,[]); end
   end
-  dti = dwi(cellfun(@(x) sum(x > 500 & x <= 1300) >= 12, b(dwi)));
+  dti = dwi(cellfun(@(x) isfinite(dtiShell(x)), b(dwi)));
   if isempty(dti), return; end
   A = cat_io_dcm2bids_pp_anat('sessionAnat',Pdbnii,datatype,suffix);
-  if ~isempty(A) % BIDS file of the segmented scan (e.g. the T1w as underlay of the rendering)
+  if ~isempty(A) % BIDS file of the segmented scan (e.g. the T1w as underlay of the rendering), also of another session
     A.bids = ''; if ~isempty(BIDSfile{A.i}), A.bids = spm_file(BIDSfile{A.i},'basename'); end
+    A.other = ~strcmp(fileparts(fileparts(Pdbnii{A.i})),fileparts(fileparts(Pdbnii{dti(1)}))); 
   end
   p = cat_io_dcm2bids_pp_anat('levelParameters',opts.pplevel);
-  for i = dti
+  % for higher levels only the first scan of each b-value scheme (shells
+  % rounded to 500 s/mm2, e.g. the standard and the advanced protocol of the
+  % DZPG, but not a repeated scan of a protocol), others only if processed before
+  key  = cellfun(@(x) mat2str(unique(500 * round(x(:)' / 500))),b(dti),'UniformOutput',false);
+  [~,first] = unique(key,'stable'); comp = ~p.onescan | ismember(1:numel(dti),first);
+  for ii = 1:numel(dti)
+    i = dti(ii);
     try
-      % only the first scan for higher levels (others only if processed before)
-      processScan(i,Pdbnii,Vjson,b,dwi,A,BIDSpathd{i},BIDSfile{i},opts,~p.onescan || i == dti(1));
+      processScan(i,Pdbnii,Vjson,b,dwi,A,BIDSpathd{i},BIDSfile{i},opts,comp(ii));
     catch e
       cat_io_cprintf('err','%60s : DTI failed: %s (%s, line %d)\n',scanName(BIDSfile{i}), ...
+        e.message,e.stack(1).name,e.stack(1).line);
+    end
+  end
+  % mixed DTI of several DWI scans of the session (e.g. the standard and
+  % the advanced protocol of the DZPG)
+  if opts.dtimix && numel(dti) > 1
+    try
+      processMix(dti,Pdbnii,Vjson,b,dwi,A,BIDSpathd,BIDSfile,opts);
+    catch e
+      cat_io_cprintf('err','%60s : mixed DTI failed: %s (%s, line %d)\n',scanName(BIDSfile{dti(1)}), ...
         e.message,e.stack(1).name,e.stack(1).line);
     end
   end
@@ -103,84 +134,148 @@ function processScan(i,Pdbnii,Vjson,b,dwi,A,BIDSpathd,BIDSfile,opts,compute)
 %  cat_io_dcm2bids_pp_anat). Without compute, only existing results are 
 %  exported (results of older versions are processed again).
   [pth,nam] = fileparts(regexprep(Pdbnii{i},'\.gz$',''));
-  Pjson = fullfile(pth,['catDCM2BIDSdwi_' nam '.json']);
-  maps  = {'FA','DEC','wFA','DECt1w'}; if opts.dtimaps > 1, maps = [maps {'MD','AD','RD'}]; end
+  pre   = 'catDCM2BIDSdwi_'; Pjson = fullfile(pth,[pre nam '.json']);
+  [maps,req] = mapNames(A,opts);
   % results of older versions or without the maps of the options (e.g. the
   % wFA, or MD, AD, and RD for opts.dtimaps = 2) are processed again (also
   % without compute), where wFA needs the deformation of the segmentation
   % (and DECt1w also the non-linear coregistration)
-  req     = setdiff(maps,{'DECt1w'},'stable'); if isempty(A), req = setdiff(req,{'wFA'},'stable'); end
-  isnii   = @(m) exist(fullfile(pth,['catDCM2BIDSdwi_' m '_' nam '.nii']),'file') || ...
-    exist(fullfile(pth,['catDCM2BIDSdwi_' m '_' nam '.nii.gz']),'file');
-  missing = exist(Pjson,'file') && ~all(cellfun(isnii,req));
+  missing = exist(Pjson,'file') && ~all(cellfun(@(m) hasMap(pth,pre,m,nam),req));
+  % (and results without T1w, if a T1w is available now, e.g. of another session)
+  missing = missing || (exist(Pjson,'file') && ~isempty(A) && ~cat_io_dcm2bids_pp_anat('hasT1w',Pjson));
   compute = compute || (exist(Pjson,'file') && cat_io_dcm2bids_pp_anat('levelOutdated',Pjson)) || missing;
   if ~compute && ~exist(Pjson,'file'), return; end
   if compute && (missing || cat_io_dcm2bids_pp_anat('levelUpdate',Pjson,opts))
     stime = tic;
-    P  = spm_file(Pdbnii{i},'prefix','r'); if ~exist(P,'file'), P = Pdbnii{i}; end % realigned by the QC
-    Pu = cat_io_dcm2bids_helper('prepNii',{P},opts,0);
-    try
-      [J,Ymap] = estimateDTI(i,Pu{1},Pdbnii,Vjson,b,dwi,A,opts);
-    catch e
-      cat_io_dcm2bids_helper('prepNiigz',Pu,opts); rethrow(e);
-    end
-    cat_io_dcm2bids_helper('prepNiigz',Pu,opts);
-    for mi = 1:numel(Ymap) % (maps of the scan and wFA in MNI space, DEC with the volumes red, green, and blue)
-      V = Ymap(mi).V; V.fname = fullfile(pth,['catDCM2BIDSdwi_' Ymap(mi).name '_' nam '.nii']);
-      V.descrip = sprintf('DTI %s (cat_io_dcm2bids_pp_dwi)',Ymap(mi).name);
-      if exist(V.fname,'file'), delete(V.fname); end
-      for ci = 1:size(Ymap(mi).Y,4), V.n = [ci 1]; spm_write_vol(V,Ymap(mi).Y(:,:,:,ci)); end
-      cat_io_dcm2bids_helper('prepNiigz',{V.fname},opts);
-    end
+    J = estimateScans(i,Pdbnii,Vjson,b,dwi,A,opts,pth,pre,nam);
     J.method.duration = round(toc(stime));
     cat_io_json(Pjson,J);
   else
     J = cat_io_json(Pjson);
   end
-
-  % copy to the BIDS derivatives (the maps for opts.preprocessing > 1)
-  bnam = spm_file(BIDSfile,'basename');
-  if ~exist(BIDSpathd,'dir'), mkdir(BIDSpathd); end
-  copyfile(Pjson,fullfile(BIDSpathd,['catDCM2BIDSdwi_' bnam '.json']));
-  if opts.preprocessing > 1
-    for mi = 1:numel(maps)
-      Pmap = fullfile(pth,['catDCM2BIDSdwi_' maps{mi} '_' nam '.nii']);
-      if ~exist(Pmap,'file'), Pmap = fullfile(pth,['catDCM2BIDSdwi_' maps{mi} '_' nam '.nii.gz']); end
-      if exist(Pmap,'file')
-        cat_io_dcm2bids_helper('exportNii',Pmap,fullfile(BIDSpathd,['catDCM2BIDSdwi_' maps{mi} '_' bnam]),opts);
-      end
-    end
-  end
+  exportResults(Pjson,pth,pre,nam,maps,BIDSpathd,BIDSfile,opts);
   G = J.global;
   fprintf('%60s : DTI WM FA %0.3f, MD %0.2f, AD %0.2f, RD %0.2f (10^-3 mm2/s), outlier volumes %d, %s\n', ...
     scanName(BIDSfile),G.FA_WM,G.MD_WM*1000,G.AD_WM*1000,G.RD_WM*1000,J.qc.outlier_volumes, ...
     J.method.distortion_correction);
 end
 % =========================================================================
-function [J,Ymap] = estimateDTI(i,P,Pdbnii,Vjson,b,dwi,A,opts)
-%estimateDTI. DTI of the (unzipped) image P of the DWI scan i with the
-%  result structure J (JSON, with the coregistration to the T1w) and the
-%  maps Ymap (structure array with the name, image Y, and grid V: FA, MD,
-%  AD, and RD for opts.dtimaps > 1, DEC with 4 dimensions, and wFA in MNI
-%  space, i.e. not modulated, as the FA is no volume measure). The
-%  principal direction of the tensor (in the frame of the gradient 
-%  directions of dcm2niix, i.e. of FSL: voxel axes with a flipped first 
-%  axis for images with a positive determinant) is transformed into world
-%  (RAS) coordinates by the rotation of the image and into the head (MNI)
-%  orientation by the rotation of the registration of the T1w (see 
-%  headRotation in cat_io_dcm2bids_pp_anat), i.e. the colors of the DEC map
-%  are independent of the slice orientation and of the head position. The
-%  DEC map is weighted by a soft brain mask (eroded by one voxel and 
-%  smoothed by 1 mm).
-  Vi  = spm_vol(P); dim = Vi(1).dim; bi = b{i};
-  if numel(bi) ~= numel(Vi)
-    error('cat_io_dcm2bids_pp_dwi:bval','%d b-values for %d volumes.',numel(bi),numel(Vi));
+function processMix(dti,Pdbnii,Vjson,b,dwi,A,BIDSpathd,BIDSfile,opts)
+%processMix. Mixed DTI of the DWI scans dti of a session with DTI results
+%  (at least two, e.g. the standard and the advanced protocol of the DZPG):
+%  one tensor fit of the b0 and DTI shell volumes of all scans in the grid
+%  of the scan with the most DTI volumes (see estimateDTI), saved as
+%    catDCM2BIDSdwimix_<scan>.json and catDCM2BIDSdwimix_<map>_<scan>.nii
+%  of this scan (and in its BIDS derivatives), processed again if one of
+%  the DTI results of the scans is newer (or for a higher level or an older
+%  version, see levelUpdate in cat_io_dcm2bids_pp_anat).
+  pj  = @(k) fullfile(fileparts(Pdbnii{k}),['catDCM2BIDSdwi_' spm_file(regexprep(Pdbnii{k},'\.gz$',''),'basename') '.json']);
+  dti = dti(arrayfun(@(k) exist(pj(k),'file') > 0,dti));
+  if numel(dti) < 2, return; end
+  nd  = cellfun(@(x) sum(x > 500 & x <= dtiShell(x)),b(dti)); [~,o] = sort(nd,'descend'); sc = dti(o);
+  i   = sc(1); [pth,nam] = fileparts(regexprep(Pdbnii{i},'\.gz$',''));
+  pre = 'catDCM2BIDSdwimix_'; Pjson = fullfile(pth,[pre nam '.json']);
+  [maps,req] = mapNames(A,opts);
+  fdate = @(f) subsref(dir(f),substruct('.','datenum'));
+  if ~exist(Pjson,'file') || any(arrayfun(@(k) fdate(pj(k)) > fdate(Pjson),sc)) || ...
+      ~all(cellfun(@(m) hasMap(pth,pre,m,nam),req)) || cat_io_dcm2bids_pp_anat('levelUpdate',Pjson,opts)
+    stime = tic;
+    J = estimateScans(sc,Pdbnii,Vjson,b,dwi,A,opts,pth,pre,nam);
+    J.method.duration = round(toc(stime));
+    J.method.mix.scan = scanName(BIDSfile{i});
+    for k = 1:numel(J.method.mix.further), J.method.mix.further(k).scan = scanName(BIDSfile{sc(k+1)}); end
+    cat_io_json(Pjson,J);
+  else
+    J = cat_io_json(Pjson);
   end
-  g   = load([regexprep(Pdbnii{i},'\.nii(\.gz)?$','') '.bvec']);
-  ib0 = find(bi < 100);
-  sel = find(bi <= 1300);                                   % b0 and DTI shell
-  if isempty(ib0), error('cat_io_dcm2bids_pp_dwi:b0','No b0 volume.'); end
-  Yb0 = 0; for vi = ib0, Yb0 = Yb0 + spm_read_vols(Vi(vi)); end; Yb0 = Yb0 / numel(ib0);
+  exportResults(Pjson,pth,pre,nam,maps,BIDSpathd{i},BIDSfile{i},opts);
+  G = J.global;
+  fprintf('%60s : mixed DTI of %d scans (%d volumes) WM FA %0.3f, MD %0.2f (10^-3 mm2/s), outlier volumes %d\n', ...
+    scanName(BIDSfile{i}),numel(sc),J.method.volumes,G.FA_WM,G.MD_WM*1000,J.qc.outlier_volumes);
+end
+% =========================================================================
+function J = estimateScans(sc,Pdbnii,Vjson,b,dwi,A,opts,pth,pre,nam)
+%estimateScans. DTI of the scans sc (see estimateDTI) with the realignment
+%  of the QC (realigned volumes resliced in memory, see realignedVolumes in
+%  cat_io_dcm2bids_helper, otherwise the original volumes) with the maps saved as
+%  <pre><map>_<nam>.nii (e.g. catDCM2BIDSdwi_FA_<scan>.nii) in pth.
+  P  = cell(1,numel(sc)); Prp = P;
+  for k = 1:numel(sc)
+    [P{k},Prp{k}] = cat_io_dcm2bids_pp_anat('qcFiles',Pdbnii{sc(k)},opts,'dwi'); % input and realignment of the QC (of the defaced copy for level 2)
+  end
+  Pu = cat_io_dcm2bids_helper('prepNii',P,opts,0);
+  try
+    [J,Ymap] = estimateDTI(sc,Pu,Prp,Pdbnii,Vjson,b,dwi,A,opts);
+  catch e
+    cat_io_dcm2bids_helper('prepNiigz',Pu,opts); rethrow(e);
+  end
+  cat_io_dcm2bids_helper('prepNiigz',Pu,opts);
+  for mi = 1:numel(Ymap) % (maps of the scan and wFA in MNI space, DEC with the volumes red, green, and blue)
+    V = Ymap(mi).V; V.fname = fullfile(pth,[pre Ymap(mi).name '_' nam '.nii']);
+    V.descrip = sprintf('DTI %s (cat_io_dcm2bids_pp_dwi)',Ymap(mi).name);
+    if exist(V.fname,'file'), delete(V.fname); end
+    for ci = 1:size(Ymap(mi).Y,4), V.n = [ci 1]; spm_write_vol(V,Ymap(mi).Y(:,:,:,ci)); end
+    cat_io_dcm2bids_helper('prepNiigz',{V.fname},opts);
+  end
+end
+% =========================================================================
+function exportResults(Pjson,pth,pre,nam,maps,BIDSpathd,BIDSfile,opts)
+%exportResults. Copy of the results Pjson and of the maps <pre><map>_<nam>
+%  (for opts.preprocessing > 1) to the BIDS derivatives BIDSpathd with the
+%  BIDS name of the scan (e.g. catDCM2BIDSdwi_FA_<BIDS name>).
+  bnam = spm_file(BIDSfile,'basename');
+  if ~exist(BIDSpathd,'dir'), mkdir(BIDSpathd); end
+  copyfile(Pjson,fullfile(BIDSpathd,[pre bnam '.json']));
+  if opts.preprocessing > 1
+    for mi = 1:numel(maps)
+      Pmap = fullfile(pth,[pre maps{mi} '_' nam '.nii']);
+      if ~exist(Pmap,'file'), Pmap = fullfile(pth,[pre maps{mi} '_' nam '.nii.gz']); end
+      if exist(Pmap,'file')
+        cat_io_dcm2bids_helper('exportNii',Pmap,fullfile(BIDSpathd,[pre maps{mi} '_' bnam]),opts);
+      end
+    end
+  end
+end
+% =========================================================================
+function [maps,req] = mapNames(A,opts)
+%mapNames. Maps of the DTI (MD, AD, and RD for opts.dtimaps > 1) and the
+%  required maps (wFA only with the segmentation A, DECt1w only with the
+%  non-linear coregistration).
+  maps = {'FA','DEC','wFA','DECt1w'}; if opts.dtimaps > 1, maps = [maps {'MD','AD','RD'}]; end
+  req  = setdiff(maps,{'DECt1w'},'stable'); if isempty(A), req = setdiff(req,{'wFA'},'stable'); end
+end
+% =========================================================================
+function ok = hasMap(pth,pre,m,nam)
+%hasMap. True if the map <pre><m>_<nam>.nii(.gz) exists in pth.
+  ok = exist(fullfile(pth,[pre m '_' nam '.nii']),'file') || exist(fullfile(pth,[pre m '_' nam '.nii.gz']),'file');
+end
+% =========================================================================
+function [J,Ymap] = estimateDTI(sc,P,Prp,Pdbnii,Vjson,b,dwi,A,opts)
+%estimateDTI. DTI of the (unzipped) images P (cell) of the DWI scans sc of
+%  the session with the realignments Prp of the QC (cell of rp_*.txt, the
+%  realigned volumes are resliced in memory, see realignedVolumes in 
+%  cat_io_dcm2bids_helper), i.e. of one scan or of several scans (mixed DTI, see
+%  processMix) with the volumes of all scans in the grid of the first scan,
+%  with the result structure J (JSON, with the coregistration to the T1w)
+%  and the maps Ymap (structure array with the name, image Y, and grid V:
+%  FA, MD, AD, and RD for opts.dtimaps > 1, DEC with 4 dimensions, and wFA
+%  in MNI space, i.e. not modulated, as the FA is no volume measure). The
+%  gradient directions (frame of dcm2niix, i.e. of FSL: voxel axes with a
+%  flipped first axis for images with a positive determinant) are
+%  transformed into world (RAS) coordinates of the first scan by the
+%  rotation of the image (and of the coregistration of further scans), and
+%  the principal direction of the tensor into the head (MNI) orientation 
+%  by the rotation of the registration of the T1w (see headRotation in
+%  cat_io_dcm2bids_pp_anat), i.e. the colors of the DEC map are independent
+%  of the slice orientation and of the head position. The DEC map is
+%  weighted by a soft brain mask (eroded by one voxel and smoothed by 1 mm).
+%  Further scans are sampled at the positions of the brain voxels of the
+%  first scan by the rigid coregistration of their undistorted b0 images
+%  (spm_coreg) and their own distortion correction (trilinear, see
+%  sampleMatrix), and the tensor fit has an S0 of each scan (e.g. for 
+%  different echo times).
+  i  = sc(1); Vi = cat_io_dcm2bids_helper('realignedVolumes',P{1},Prp{1},opts); dim = Vi(1).dim;
+  [bi,g,sel,Yb0] = scanVolumes(i,Vi,Pdbnii,b);
 
   % (2) distortion correction (sampling at the undistorted positions)
   [vdm,dc] = distortion(i,Pdbnii,Vjson,b,dwi,Vi(1),Yb0,opts);
@@ -199,24 +294,56 @@ function [J,Ymap] = estimateDTI(i,P,Pdbnii,Vjson,b,dwi,A,opts)
   end
   soft = zeros(dim); spm_smooth(double(brain),soft,1 ./ sqrt(sum(Vi(1).mat(1:3,1:3).^2))); % soft mask (1 mm)
   W = Wall(brain(:),:); clear Wall
+  [x1,x2,x3] = ind2sub(dim,find(brain)); XYZ = Vi(1).mat * [x1'; x2'; x3'; ones(1,numel(x1))]; clear x1 x2 x3
 
-  % volumes of the DTI (denoised for opts.denoise) and tensor fit of the
-  % voxels with signal in all volumes (e.g. not the edge slices of the field
-  % of view that are missing in some volumes after the realignment, with
-  % high FA in the direction of the slices)
-  Y = zeros(nnz(brain),numel(sel),'single'); bad = zeros(nnz(brain),1);
-  for si = 1:numel(sel)
-    Yv  = single(spm_read_vols(Vi(sel(si))));
-    bad = bad + W * double(~(Yv(:) > 0));                  % (also NaN, before the denoising)
-    if opts.denoise, cat_sanlm(Yv,3,1,1); end
-    Y(:,si) = W * double(Yv(:));
+  % volumes of the DTI of each scan (denoised for opts.denoise) with the
+  % gradient directions in world coordinates of the first scan, and the 
+  % tensor fit of the voxels with signal in all volumes (e.g. not the edge
+  % slices of the field of view that are missing in some volumes after the
+  % realignment, with high FA in the direction of the slices, or outside 
+  % of the field of view of a further scan)
+  Y = cell(1,numel(sc)); bs = []; gs = zeros(3,0); is = []; bad = zeros(nnz(brain),1);
+  mix = struct('scan',{},'volumes',{},'distortion_correction',{},'coregistration',{},'translation',{},'rotation',{});
+  for k = 1:numel(sc)
+    if k == 1
+      Vk = Vi; bk = bi; gk = g; selk = sel; Wk = W; Rk = eye(3);
+    else
+      Vk = cat_io_dcm2bids_helper('realignedVolumes',P{k},Prp{k},opts); [bk,gk,selk,Yb0k] = scanVolumes(sc(k),Vk,Pdbnii,b); dk = Vk(1).dim;
+      [vdmk,dck] = distortion(sc(k),Pdbnii,Vjson,b,dwi,Vk(1),Yb0k,opts);
+      Yb0k = reshape(cat_io_dcm2bids_pp_anat('unwarpMatrix',dk,vdmk,(1:prod(dk))') * Yb0k(:),dk);
+      % world of scan k to world of the first scan: coregistration of the FA
+      % maps of the DTI of the scans (position of the diffusion-weighted 
+      % volumes, e.g. 0.5 mm more accurate than the b0 images in the DZPG 
+      % pilots), otherwise of the undistorted b0 images
+      [Ff,Vff] = faMap(Pdbnii{i},opts); [Fk,Vfk] = faMap(Pdbnii{sc(k)},opts);
+      if ~isempty(Ff) && ~isempty(Fk)
+        Mk = cat_io_dcm2bids_pp_anat('coregImages',Fk,Vfk,Ff,Vff); cm = 'FA maps (spm_coreg, nmi)';
+      else
+        Mk = cat_io_dcm2bids_pp_anat('coregImages',Yb0k,Vk(1),Yb0u,Vi(1)); cm = 'undistorted b0 images (spm_coreg, nmi)';
+      end
+      U    = Vk(1).mat \ (Mk \ XYZ);                                        % undistorted voxel positions in scan k
+      [Wk,inside] = sampleMatrix(dk,vdmk,U(1:3,:)); bad = bad + ~inside(:);
+      Rk   = Mk(1:3,1:3); Rk = Rk ./ sqrt(sum(Rk.^2,1));
+      q    = spm_imatrix(Mk);
+      mix(end+1) = struct('scan',sprintf('%d',k),'volumes',numel(selk),'distortion_correction',dck, ... % (BIDS name, see processMix)
+        'coregistration',cm,'translation',round(q(1:3),1),'rotation',round(q(4:6) * 180/pi,1)); %#ok<AGROW>
+    end
+    Rv = Vk(1).mat(1:3,1:3); Rv = Rv ./ sqrt(sum(Rv.^2,1));                 % voxel axes in world coordinates
+    Fx = diag([1 - 2*(det(Rv) > 0) 1 1]);                                   % FSL convention of the bvec of dcm2niix
+    Y{k} = zeros(nnz(brain),numel(selk),'single');
+    for si = 1:numel(selk)
+      Yv  = single(cat_io_dcm2bids_helper('realignedVolume',Vk,selk(si)));
+      bad = bad + Wk * double(~(Yv(:) > 0));                              % (also NaN, before the denoising)
+      if opts.denoise, cat_sanlm(Yv,3,1,1); end
+      Y{k}(:,si) = Wk * double(Yv(:));
+    end
+    bs = [bs bk(selk)]; gs = [gs Rk * Rv * Fx * gk(:,selk)]; is = [is k * ones(1,numel(selk))]; %#ok<AGROW>
   end
+  Y  = [Y{:}];
   vb = find(brain); brain(vb(bad > 0)) = false; Y = Y(bad == 0,:);
-  [x,res]          = tensorFit(Y,bi(sel),g(:,sel));
+  [x,res]          = tensorFit(Y,bs,gs,is);
   [FA,MD,AD,RD,V1] = tensorMaps(x);
-  Rv = Vi(1).mat(1:3,1:3); Rv = Rv ./ sqrt(sum(Rv.^2,1)); % voxel axes in world coordinates
-  if det(Rv) > 0, V1(1,:) = -V1(1,:); end                  % FSL convention of the bvec of dcm2niix
-  V1  = Rh * Rv * V1; V1 = V1 ./ max(eps,sqrt(sum(V1.^2,1))); % head (MNI) orientation
+  V1  = Rh * V1; V1 = V1 ./ max(eps,sqrt(sum(V1.^2,1)));   % head (MNI) orientation
   DEC = abs(V1) .* FA .* soft(brain)';                     % red, green, blue (soft brain mask)
 
   % (4) global values in the white matter and (5) Mori WM regions
@@ -233,12 +360,18 @@ function [J,Ymap] = estimateDTI(i,P,Pdbnii,Vjson,b,dwi,A,opts)
   mr = median(res); sr = 1.4826 * median(abs(res - mr));
 
   p = cat_io_dcm2bids_pp_anat('levelParameters',opts.pplevel);
-  J.method = struct('level',opts.pplevel,'version',p.version,'DTI','log-linear least squares fit (b0 and b <= 1300 s/mm2)', ...
-    'volumes',numel(sel),'bvalues',unique(50 * round(bi(sel) / 50)),'denoising',denoising(opts), ...
+  J.method = struct('level',opts.pplevel,'version',p.version,'DTI', ...
+    sprintf('log-linear least squares fit (b0 and b <= %g s/mm2)',round(dtiShell(b{sc(1)}))), ...
+    'volumes',numel(bs),'bvalues',unique(50 * round(bs / 50)),'denoising',denoising(opts), ...
     'distortion_correction',dc,'brain',mask,'atlas','mori (CAT)','gradient_rotation','none', ...
     'DEC','absolute principal direction in the head (MNI) orientation times FA and soft brain mask (red x, green y, blue z)', ...
     'coregistration',Qc);
-  if ~isempty(A), J.method.T1w = A.bids; end
+  if numel(sc) > 1
+    J.method.DTI = 'log-linear least squares fit (b0 and the DTI shell of each scan) of the volumes of all scans with the S0 of each scan';
+    J.method.gradient_rotation = 'rotation of the coregistration of further scans (not of the realignment)';
+    J.method.mix = struct('scan','1','volumes',nnz(is == 1),'further',mix);
+  end
+  if ~isempty(A), J.method.T1w = A.bids; J.method.T1w_other_session = isfield(A,'other') && A.other; end
   J.coreg    = M; % world space of the scan to the world space of the T1w
   J.global   = G;
   J.regional = R;
@@ -272,6 +405,71 @@ function [J,Ymap] = estimateDTI(i,P,Pdbnii,Vjson,b,dwi,A,opts)
   end
 end
 % =========================================================================
+function [Y,V] = faMap(P,opts)
+%faMap. FA map of the DTI of the database image P (NaN as 0, empty if not
+%  available, e.g. for the coregistration of the scans of the mixed DTI).
+  Y = []; V = [];
+  [pth,nam] = fileparts(regexprep(P,'\.gz$',''));
+  Pf = fullfile(pth,['catDCM2BIDSdwi_FA_' nam '.nii']); if ~exist(Pf,'file'), Pf = [Pf '.gz']; end
+  if ~exist(Pf,'file'), return; end
+  Pu = cat_io_dcm2bids_helper('prepNii',{Pf},opts,0);
+  try, V = spm_vol(Pu{1}); Y = spm_read_vols(V); Y(~isfinite(Y)) = 0; catch, Y = []; V = []; end
+  cat_io_dcm2bids_helper('prepNiigz',Pu,opts);
+end
+% =========================================================================
+function [bi,g,sel,Yb0] = scanVolumes(i,Vi,Pdbnii,b)
+%scanVolumes. b-values bi, gradient directions g (3 x volumes, see the 
+%  bvec of dcm2niix), the volumes sel of the DTI (b0 and the DTI shell, see
+%  dtiShell), and the mean b0 image Yb0 of the DWI scan i with the volumes Vi.
+  bi = b{i};
+  if numel(bi) ~= numel(Vi)
+    error('cat_io_dcm2bids_pp_dwi:bval','%d b-values for %d volumes.',numel(bi),numel(Vi));
+  end
+  g   = load([regexprep(Pdbnii{i},'\.nii(\.gz)?$','') '.bvec']);
+  ib0 = find(bi < 100);
+  sel = find(bi <= dtiShell(bi));                           % b0 and DTI shell
+  if isempty(ib0), error('cat_io_dcm2bids_pp_dwi:b0','No b0 volume.'); end
+  Yb0 = 0; for vi = ib0, Yb0 = Yb0 + cat_io_dcm2bids_helper('realignedVolume',Vi,vi); end; Yb0 = Yb0 / numel(ib0);
+end
+% =========================================================================
+function bmax = dtiShell(b)
+%dtiShell. Upper b-value of the DTI shell of the b-values b of a scan, i.e. 
+%  the DTI uses the b0 volumes and the volumes with 500 < b <= bmax: 1300 
+%  s/mm2 for at least 12 volumes with b <= 1300 (e.g. b1000 or b1200 of 
+%  multi-shell data), otherwise the lowest shell with at least 12 volumes
+%  (b-values within 10% of its lowest value, e.g. single-shell data with
+%  b1500), NaN without DTI shell.
+  bmax = nan; b = b(:)';
+  if sum(b > 500 & b <= 1300) >= 12, bmax = 1300; return; end
+  for bk = sort(b(b > 500))
+    if sum(b >= bk & b <= 1.1 * bk) >= 12, bmax = 1.1 * bk; return; end
+  end
+end
+% =========================================================================
+function [W,inside] = sampleMatrix(dim,vdm,U)
+%sampleMatrix. Sparse matrix W (positions x prod(dim)) of the trilinear 
+%  interpolation of a distorted volume (grid dim) at the undistorted voxel
+%  positions U (3 x positions, e.g. of the brain voxels of another scan),
+%  i.e. at U shifted by the voxel displacement map vdm along the phase-
+%  encoding axis j (interpolated, no shift for an empty vdm, see 
+%  unwarpMatrix in cat_io_dcm2bids_pp_anat), with the positions inside of
+%  the volume (only these with weights).
+  n = size(U,2);
+  if ~isempty(vdm)
+    d = spm_sample_vol(double(vdm),U(1,:),U(2,:),U(3,:),1); d(~isfinite(d)) = 0;
+    U(2,:) = U(2,:) + d;
+  end
+  f = floor(U); w = U - f;
+  inside = all(f >= 1 & f <= dim(:) - 1,1);
+  ii = find(inside); m = numel(ii); r = zeros(8*m,1); c = r; v = r;
+  for o = 0:7
+    a  = [bitget(o,1); bitget(o,2); bitget(o,3)];
+    p  = f(:,ii) + a; k = o*m + (1:m);
+    r(k) = ii; c(k) = sub2ind(dim,p(1,:),p(2,:),p(3,:)); v(k) = prod(a .* w(:,ii) + (1 - a) .* (1 - w(:,ii)),1);
+  end
+  W = sparse(r,c,v,n,prod(dim));
+end
+% =========================================================================
 function [vdm,dc] = distortion(i,Pdbnii,Vjson,b,dwi,Vt,Yt,opts)
 %distortion. Voxel displacement map of the DWI scan i by SCOPE of its b0
 %  volumes and the b0 volumes of the closest DWI scan (series number) with
@@ -298,15 +496,19 @@ function [vdm,dc] = distortion(i,Pdbnii,Vjson,b,dwi,Vt,Yt,opts)
     Vt,Yt,pair(1) ~= i,[trt(i) trt(p)],opts);
 end
 % =========================================================================
-function [x,res] = tensorFit(Y,b,g)
+function [x,res] = tensorFit(Y,b,g,s)
 %tensorFit. Log-linear least squares fit of the diffusion tensor of the
-%  signal Y (voxels x volumes) with the b-values b and gradient directions
-%  g (3 x volumes, b0 with zero vectors): x (7 x voxels) with ln(S0) and
-%  the tensor elements Dxx, Dyy, Dzz, Dxy, Dxz, Dyz, and the RMS res of the
-%  residuals of each volume (log signal).
+%  signal Y (voxels x volumes) with the b-values b, gradient directions g
+%  (3 x volumes, b0 with zero vectors), and scan s of each volume (S0 of
+%  each scan, default one scan): x (6 + scans x voxels) with ln(S0) of the
+%  first scan, the tensor elements Dxx, Dyy, Dzz, Dxy, Dxz, Dyz, and ln(S0)
+%  of further scans, and the RMS res of the residuals of each volume (log
+%  signal).
+  if ~exist('s','var'), s = ones(1,numel(b)); end
   g = g ./ max(eps,sqrt(sum(g.^2,1)));
-  B = [ones(numel(b),1) -b(:) .* [g(1,:)'.^2 g(2,:)'.^2 g(3,:)'.^2 ...
-    2*g(1,:)'.*g(2,:)' 2*g(1,:)'.*g(3,:)' 2*g(2,:)'.*g(3,:)']];
+  E = double(s(:) == (1:max(s)));                            % (volumes x scans)
+  B = [E(:,1) -b(:) .* [g(1,:)'.^2 g(2,:)'.^2 g(3,:)'.^2 ...
+    2*g(1,:)'.*g(2,:)' 2*g(1,:)'.*g(3,:)' 2*g(2,:)'.*g(3,:)'] E(:,2:end)];
   y   = log(max(1,double(Y)))';
   x   = B \ y;
   res = sqrt(mean((y - B*x).^2,2));

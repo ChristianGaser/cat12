@@ -12,8 +12,9 @@ function varargout = cat_io_dcm2bids_bids(action,varargin)
 %  writePrivateTSV), the IntendedFor references of BIDS inputs 
 %  (remapIntendedFor), dataset_description.json, README.md, 
 %  participants.json, and .bidsignore (writeDatasetFiles with the information
-%  of the imported BIDS datasets, see getBIDSsources), and the gzip status of
-%  the output (gzipunzipOutputdata).
+%  of the imported BIDS datasets, see getBIDSsources), the generalized MRI
+%  protocols of the scans (writeProtocols), and the gzip status of the 
+%  output (gzipunzipOutputdata).
 %
 %  varargout = cat_io_dcm2bids_bids(action,varargin)
 %
@@ -32,6 +33,7 @@ function varargout = cat_io_dcm2bids_bids(action,varargin)
 %    cat_io_dcm2bids_bids('writePrivateTSV',P,Pprivate)
 %    sources = cat_io_dcm2bids_bids('getBIDSsources',roots)
 %    cat_io_dcm2bids_bids('writeDatasetFiles',Pbids,job,sources,convver)
+%    cat_io_dcm2bids_bids('writeProtocols',Pbids,Pp,Ptbldir)
 %    cat_io_dcm2bids_bids('gzipunzipOutputdata',Poutdir,opts)
 %
 %  See also cat_io_dcm2bids.
@@ -40,7 +42,7 @@ function varargout = cat_io_dcm2bids_bids(action,varargin)
     case {'bidsLabel','sessionLabel','setupDatatype','setupSuffix','entityString','setupTask','BIDSoutputs', ...
           'getBIDSoutputs','remapIntendedFor','writeSubjectTSV', ...
           'writeParticipantTSV','writePrivateTSV','getBIDSsources', ...
-          'writeDatasetFiles','gzipunzipOutputdata'}
+          'writeDatasetFiles','writeProtocols','gzipunzipOutputdata'}
       [varargout{1:nargout}] = feval(action,varargin{:});
     otherwise
       error('cat_io_dcm2bids_bids:unknownAction','Unknown action "%s".',action);
@@ -241,7 +243,9 @@ function [suffix,ent,label] = setupSuffix(datatype,pro,V)
 %    anat  T1w, T2w, ... (by the protocol name, otherwise by the timing of
 %          the sidecar, see anatSuffix), MP2RAGE with inv-<n> for 
 %          the inversion images (e.g. INV1 or inv-1 in the protocol or 
-%          series name), and UNIT1 for the uniform image (UNI)
+%          series name), UNIT1 for the uniform image (UNI, or UNIFORM/UNI
+%          in the ImageType), and T1map for the T1 map (T1 MAP in the 
+%          ImageType, e.g. the T1_Images series of a Siemens MP2RAGE)
 %    func  bold or sbref (SBRef in the protocol or series name)
 %    dwi   dwi or sbref
 %    fmap  epi for EPI field maps (e.g. spin-echo AP/PA) with dir-<label>
@@ -276,12 +280,16 @@ function [suffix,ent,label] = setupSuffix(datatype,pro,V)
 
   if strcmp( datatype , 'anat')
     inv = regexpi([pro ' ' ser],'(?:^|[-_ ])inv[-_ ]?(\d)(?=$|[-_ ])','tokens','once'); 
+    its = [' ' strjoin(reshape(itype,1,[]),' ') ' ']; % (e.g. T1, MAP and T1 MAP of dcm2niix)
     if ~isempty(inv) % inversion images of MP2RAGE
       suffix  = 'MP2RAGE'; 
       ent.inv = str2double(inv{1}); 
       tok     = {sprintf('inv%d',ent.inv)}; 
-    elseif ~isempty(regexpi([pro ' ' ser],'(?:^|[-_ ])uni(?=$|[-_ ])','once')) && ...
-        ~cat_io_contains( lower(pro) , {'t1w'}) % uniform image of MP2RAGE
+    elseif contains(its,{' T1 MAP ',' T1_MAP '}) % T1 map (e.g. of MP2RAGE)
+      suffix = 'T1map'; 
+    elseif contains(its,{' UNIFORM ',' UNI '}) || ...
+        (~isempty(regexpi([pro ' ' ser],'(?:^|[-_ ])uni(?=$|[-_ ])','once')) && ...
+        ~cat_io_contains( lower(pro) , {'t1w'})) % uniform image of MP2RAGE
       suffix = 'UNIT1'; 
     elseif cat_io_contains( lower(pro) , {'t1map'})
       suffix = 'T1map'; 
@@ -406,6 +414,12 @@ function task = setupTask(datatype,pro)
   if strcmp( datatype , 'func')
     if cat_io_contains( lower(pro) , {'rs','rest'})
       task = sprintf('_task-rest');
+    elseif cat_io_contains( lower(pro) , {'checker'})                        % visual checkerboard stimulation (e.g. NKI-RS)
+      task = sprintf('_task-checkerboard');
+    elseif cat_io_contains( lower(pro) , {'breath'})                         % breath holding (cerebrovascular reactivity)
+      task = sprintf('_task-breathhold');
+    elseif cat_io_contains( lower(pro) , {'eye_mov','eyemov','eye-mov','eye mov','saccad','eyecal'}) % eye movement calibration
+      task = sprintf('_task-eyemovement');
     elseif cat_io_contains( lower(pro) , {'motor'})
       task = sprintf('_task-motor');
     elseif cat_io_contains( lower(pro) , {'lang'})
@@ -665,8 +679,10 @@ function writeDatasetFiles(Pbids, job, sources, convver)
 %  dataset_description.json (from job.dataset, with automatic BIDSVersion, 
 %  DatasetType, and GeneratedBy), README.md (head from the job.dataset.README
 %  text file, extended by the README files of imported BIDS datasets), 
-%  participants.json (description of the columns of participants.tsv), and 
-%  .bidsignore (files of catDCM2BIDS that are not part of BIDS). 
+%  participants.json (description of the columns of participants.tsv), 
+%  .bidsignore (files of catDCM2BIDS that are not part of BIDS), and the
+%  dataset_description.json of the derivatives of catDCM2BIDS (BIDS 
+%  derivatives dataset, see derivativesDir in cat_io_dcm2bids_helper). 
 %  sources is an optional structure array of imported BIDS datasets (fields
 %  Name, License, README, participants) for the license, README, and 
 %  column descriptions. convver are the dcm2niix versions of the imports 
@@ -752,7 +768,56 @@ function writeDatasetFiles(Pbids, job, sources, convver)
   % .bidsignore: settings and readme of the output and the protocol 
   % differences of non-conform scans (matchfiles, see cat_io_dcm2bids)
   cat_io_dcm2bids_helper('writeText',fullfile(Pbids,'.bidsignore'), ...
-    sprintf('catDCM2BIDSdb.mat\nreadme.txt\n**/matchfiles/\n')); 
+    sprintf('catDCM2BIDSdb.mat\nreadme.txt\n**/matchfiles/\n'));   
+
+  % dataset_description.json of the derivatives (QC, segmentation, session
+  % registration, DTI, and rs-fMRI measures and maps of catDCM2BIDS)
+  Pd = cat_io_dcm2bids_helper('derivativesDir',Pbids); 
+  if exist(Pd,'dir')
+    Dd = struct('Name',[D.Name ' (catDCM2BIDS derivatives)'],'BIDSVersion',D.BIDSVersion,'DatasetType','derivative', ...
+      'GeneratedBy',{{struct('Name','catDCM2BIDS','Version',char(catver), ...
+      'Description','QC, segmentation, session registration, DTI, and rs-fMRI measures and maps of CAT', ...
+      'CodeURL','https://github.com/ChristianGaser/cat12')}}); 
+    if ~isempty(lic), Dd.License = lic; end
+    cat_io_dcm2bids_helper('writeJSON',fullfile(Pd,'dataset_description.json'), Dd); 
+  end
+end
+% =========================================================================
+function writeProtocols(Pbids,Pp,Ptbldir)
+%writeProtocols. Generalized MRI protocols of the scans of the BIDS 
+%  directory Pbids (with its protocol subdirectories), i.e. the protocol
+%  variants of the database tables Ptbldir (normalized protocol fields 
+%  without personal fields, see protocolVariant in 
+%  cat_io_dcm2bids_protocols) of the scans of this BIDS directory (by the 
+%  datatype and BIDS name without subject and session, i.e. also for other
+%  subject labels of the anonymization) in the report directory Pp, e.g.
+%    <BIDSdir>-report/protocols/<BIDSsubdir>/<datatype>_<variant>.json
+%  with the number of scans of each variant (protocols.tsv), created again
+%  in each run (the old protocols are kept without the database tables).
+  Pold = fullfile(Pbids,'protocols'); % (location of a former version)
+  if exist(fullfile(Pold,'protocols.tsv'),'file'), rmdir(Pold,'s'); end
+  Pmat = fullfile(Ptbldir,'scans.mat'); if ~exist(Pmat,'file'), return; end
+  S = load(Pmat,'R'); R = S.R; if isempty(R) || ~all(isfield(R,{'BIDSfile','Variant','Datatype'})), return; end
+  if exist(Pp,'dir'), rmdir(Pp,'s'); end
+  nos = @(f) regexprep(f,'^sub-[^_]+_(ses-[^_]+_)?|\.json$','');  % BIDS name without subject, session, and extension
+  P   = cat_vol_findfiles(Pbids,'sub-*.json'); P = P(~contains(P,[filesep 'derivatives' filesep]));
+  if isempty(P), return; end
+  [~,dt] = cellfun(@(p) fileparts(fileparts(p)),P,'UniformOutput',false);    % datatype directories
+  kb  = strcat(dt(:),'/',cellfun(@(p) nos(spm_file(p,'filename')),P(:),'UniformOutput',false));
+  kr  = strcat({R.Datatype}','/',cellfun(nos,{R.BIDSfile}','UniformOutput',false));
+  use = ismember(kr,kb) & ~cellfun('isempty',{R.Variant}');
+  if ~any(use), return; end
+  [uv,~,ui] = unique(strcat({R(use).Datatype}','/',{R(use).Variant}'));
+  T = {'file','datatype','variant','scans'};
+  for vi = 1:numel(uv)
+    d = fileparts(uv{vi}); v = uv{vi}(numel(d)+2:end);
+    Ps = fullfile(Ptbldir,'protocols',d,[v '.json']);
+    if ~exist(Ps,'file'), continue; end
+    if ~exist(Pp,'dir'), mkdir(Pp); end
+    copyfile(Ps,fullfile(Pp,[d '_' v '.json']));
+    T(end+1,:) = {[d '_' v '.json'], d, v, nnz(ui == vi)}; %#ok<AGROW>
+  end
+  cat_io_dcm2bids_helper('writeTable',fullfile(Pp,'protocols.tsv'),T,'tsv');
 end
 % =========================================================================
 function lic = mostRestrictiveLicense(lics, name, srcnames)

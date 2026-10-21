@@ -6,13 +6,16 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
 %    ISR .. inhomogeneity to signal ratio
 %    NSR .. noise to signal ratio
 %    RES .. RMS of the voxel resolution
-%  4D data is realigned (prefix r, DWI with separate realignments of the b0
-%  and of the diffusion-weighted volumes). The measures are rated (marks 1-6 for
+%  4D data is realigned (rp_*.txt with the parameters of each volume, DWI 
+%  with separate realignments of the b0 and of the diffusion-weighted 
+%  volumes), and the realigned volumes are resliced in memory (see 
+%  realignedVolumes in cat_io_dcm2bids_helper), i.e. without a resliced 
+%  copy (prefix r of former versions, removed). The measures are rated (marks 1-6 for
 %  the [best worst] measures, see qualityRating) by the QC definition of the
-%  protocol file Pprotocols (qc<protocol>.json) and saved as
-%  catDCM2BIDSqc_<image>.mat/json. The
-%  ratings (or the measures without protocol) are printed in the scan line 
-%  of the command line output. 
+%  protocol file Pprotocols (qc<protocol>.json), otherwise by the default 
+%  definition of the datatype (opts.qcdefault, see cat_io_dcm2bids_defaults),
+%  and saved as catDCM2BIDSqc_<image>.mat/json (with the used definition). 
+%  The ratings are printed in the scan line of the command line output. 
 %  The denoised average of 4D data (of the first 8 volumes) is written next
 %  to the image (<image>_denoisedavg.nii, zipped for opts.gzipi, see
 %  cat_io_dcm2bids for the export as derivative and cat_io_dcm2bids_render
@@ -26,7 +29,7 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
 %  type       .. BIDS datatype (anat, func, dwi, fmap)
 %  opts       .. options of cat_io_dcm2bids (gzipi, hrrealign)
 %  Pprotocols .. protocol file of the scan (empty: print the measures)
-%  Pr         .. realigned image (4D data) or P
+%  Pr         .. the image P (the realignment is in rp_*.txt)
 %  QM         .. quality measures
 %  Pqc        .. QC file (mat)
 %
@@ -56,9 +59,14 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
     end
   end
 
-  if exist(Pqc,'file')
-    [pp,ff,ee] = spm_fileparts(P); 
-    Pr = cat_vol_findfiles( pp, ['r' ff ee]);
+  % resliced copies of former versions (the realigned volumes are resliced
+  % in memory, see realignedVolumes in cat_io_dcm2bids_helper)
+  for Pold = {spm_file([Pbase '.nii'],'prefix','r'), spm_file([Pbase '.nii.gz'],'prefix','r')}
+    if exist(Pold{1},'file'), delete(Pold{1}); end
+  end
+
+  if exist(Pqc,'file') && ~opts.rerun
+    Pr = P; 
     load(Pqc,'QM'); QM.SQR = nan; 
     % test if the structure fits
     QM0 = struct('NSR',[],'ISR',[],'RES',[],'BSM',[],'WSM',[],'vx_vol',[],'SQR',[]);  
@@ -80,12 +88,9 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
     V = spm_vol(P); 
     vx_vol = sqrt(sum(V(1).mat(1:3,1:3).^2));
     
-    % re-slice in 4D data
-    if numel(V) > 1
-      Pr = spm_file(P,'prefix','r'); 
-    else
-      Pr = P; 
-    end
+    % realignment parameters of 4D data (rp_*.txt)
+    Pr  = P; 
+    Prp = spm_file(P,'prefix','rp_','ext','.txt');
    
     if V(1).dim(3) < 5
       % spectroscopy overview image
@@ -143,11 +148,12 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
       isepi = sig75 > mean(sig75); 
     end
   
-    if ~exist(Pr,'file')
-      %% realignment (SPM, register to mean) and reslicing of all volumes
-      % into the grid of the first volume (rp_*.txt with the parameters of
-      % all volumes relative to the first one, without changes of the
-      % header): DWI with separate realignments of the b0 volumes and of the
+    if numel(V) > 1 && (~exist(Prp,'file') || opts.rerun) % (only 4D data)
+      %% realignment (SPM, register to mean) of all volumes (rp_*.txt with 
+      % the parameters of all volumes relative to the first one, without 
+      % changes of the header, i.e. without reslicing, as the realigned 
+      % volumes are resliced in memory into the grid of the first volume, 
+      % see realignedVolumes): DWI with separate realignments of the b0 volumes and of the
       % diffusion-weighted volumes (the first volume of each set unmoved), as
       % one realignment with both sets as sessions registers their first
       % volumes across the contrasts (least squares), which shifted the
@@ -155,15 +161,14 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
       V = spm_vol(P);
       if strcmp(type,'dwi'), ses = {find(isepi), find(~isepi)}; else, ses = {1:numel(V)}; end
       if opts.hrrealign
-        ef = struct('quality',0.95,'sep',1.5,'fwhm',1); ri = 4;
+        ef = struct('quality',0.95,'sep',1.5,'fwhm',1);
       else
-        ef = struct('quality',0.8,'sep',4,'fwhm',2); ri = 1;
+        ef = struct('quality',0.8,'sep',4,'fwhm',2);
       end
       ef.rtm = 1; ef.wrap = [0 0 0]; ef.interp = 2; ef.weight = ''; ef.graphics = 0;
       for si = find(cellfun(@numel,ses) > 1)
         evalc('Vs = spm_realign(V(ses{si}),ef);'); V(ses{si}) = Vs;
       end
-      evalc('spm_reslice(V,struct(''which'',2,''mean'',0,''interp'',ri,''wrap'',[0 0 0],''mask'',1,''prefix'',''r''));');
       rp = zeros(numel(V),6);
       for vi = 1:numel(V), q = spm_imatrix(V(vi).mat / V(1).mat); rp(vi,:) = q(1:6); end
       save(spm_file(P,'prefix','rp_','ext','.txt'),'rp','-ascii');
@@ -179,17 +184,18 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
     opts.denoise        = 1; 
     opts.tlim           = min(size(Y,4),8); 
     Pmaps               = {}; 
+    % realigned volumes (resliced in memory into the grid of the first one)
+    Vr = cat_io_dcm2bids_helper('realignedVolumes',P,Prp,opts);
     for run = 1%:1 + strcmp(type,'dwi')
-      Vr = spm_vol(Pr);
       if strcmp(type,'dwi')
         % sub-set-wise correction
         if run == 1
-          Yr = single(spm_read_vols(Vr(~isepi)));
+          Yr = realignedData(Vr,find(~isepi));
         else
-          Yr = single(spm_read_vols(Vr(isepi)));
+          Yr = realignedData(Vr,find(isepi));
         end
       else
-        Yr = single(spm_read_vols(Vr));
+        Yr = realignedData(Vr,1:numel(Vr));
       end
  
       % basic segmentation of object/background
@@ -254,7 +260,7 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
 
         %%
         Ymn = zeros(V(1).dim,'single');
-        Yr  = single(spm_read_vols(Vr(epiids)));
+        Yr  = realignedData(Vr,epiids);
         Yd  = zeros([size(Yr,1) size(Yr,2) size(Yr,3) min(size(Yr,4),opts.tlim)],'single');
         WSM = nan(1,size(Yr,4));
         for vi = 1:min(size(Yr,4),opts.tlim)
@@ -287,20 +293,14 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
           % Denoising of a single slice to quantify the amount of noise 
           % in the difference image
           Yas = Ya + 0; if opts.denoise, cat_sanlm(Yas,1,3); end
-          Ymn = Ymn + Yas / min(size(Yr,4),opts.tlim); 
-          Vrr = Vr; Vrr(epiids(vi)).fname = spm_file(Vrr(epiids(vi)).fname,'prefix','c'); 
-          if opts.biasCor
-            spm_write_vol(Vrr(epiids(vi)),Yas .* Yw); 
-          else
-            spm_write_vol(Vrr(epiids(vi)),Yas .* mean(Yw(:))); 
-          end
+          Ymn = Ymn + Yas / min(size(Yr,4),opts.tlim); % (the corrected volumes are not written)
           %if run==1 % why only run 1?
           Yd(:,:,:,vi) = sqrt( (Ya-Yas).^2 * 2 ); % Rician noise
           %end
         end
         
-        % remove the temporary corrected volumes (not used further)
-        Pc = spm_file(Vr(1).fname,'prefix','c'); 
+        % temporary corrected volumes of former versions
+        Pc = spm_file(P,'prefix','c'); 
         if exist(Pc,'file'), delete(Pc); end
 
         if run==1 % why only run 1?
@@ -377,8 +377,8 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
     QM.SQR    = nan; 
   end
 
-  QR = qualityRating(QM,Pprotocols);
-  printvals = isempty(Pprotocols); 
+  [QR,qcdef] = qualityRating(QM,Pprotocols,type,opts);
+  printvals = isempty(fieldnames(rmfield(QR,'SQR'))) || isnan(QR.SQR); % (measures without any rating)
   for fni = 1:numel(FNQC)
     if (~printvals && isnan(QR.(FNQC{fni}))) || ...
        ( printvals && isnan(QM.(FNQC{fni})))
@@ -399,12 +399,19 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
   fprintf(' \n');
 
   save(Pqc,'QM');
-  cat_io_json(Pqcj,struct('qualitymeasures',QM,'qualityrating',QR)); 
+  cat_io_json(Pqcj,struct('qualitymeasures',QM,'qualityrating',QR,'qcdefinition',qcdef)); 
 
-  cat_io_dcm2bids_helper('prepNiigz',P ,opts); % repack
-  Pr = cat_io_dcm2bids_helper('prepNiigz',Pr,opts);
+  Pr = cat_io_dcm2bids_helper('prepNiigz',P,opts); % repack (the image itself, no resliced copy)
   if exist('Pmaps','var'), cat_io_dcm2bids_helper('prepNiigz',Pmaps,opts); end
 
+end
+% =========================================================================
+function Y = realignedData(V,ids)
+%realignedData. Volumes ids of the volumes V as 4D array (single), resliced
+%  in memory with the realignment of 4D data (see realignedVolumes in 
+%  cat_io_dcm2bids_helper).
+  Y = zeros([V(1).dim numel(ids)],'single');
+  for k = 1:numel(ids), Y(:,:,:,k) = cat_io_dcm2bids_helper('realignedVolume',V,ids(k)); end
 end
 % =========================================================================
 function f = wmScale(Ym,Yw,Ywm)
@@ -414,14 +421,25 @@ function f = wmScale(Ym,Yw,Ywm)
   if ~isfinite(f) || f <= 0, f = 1; end
 end
 % =========================================================================
-function QR = qualityRating(QM,Pprotocols)
+function [QR,qcdef] = qualityRating(QM,Pprotocols,type,opts)
 %qualityRating. Ratings (marks) of the quality measures QM by the QC
-%  definition of the protocol (qc<protocol>.json) with the [best worst]
-%  measure of the marks 1 and 6 (linear, clipped to 0.5-10.5 as in
-%  cat_stat_marks) or a single value that has to fit exactly (mark 1,
-%  otherwise 10.5). NaN skips a measure. SQR is the RMS of all ratings.
-  Pqcprotocols = spm_file(Pprotocols,'prefix','qc','ext','.json');
-  if exist(Pqcprotocols,'file'), QCP = cat_io_json(Pqcprotocols); else, QCP = struct(); end
+%  definition of the protocol (qc<protocol>.json), otherwise by the default
+%  definition of the BIDS datatype type (opts.qcdefault.<type>, or .other),
+%  with the [best worst] measure of the marks 1 and 6 (linear, clipped to
+%  0.5-10.5 as in cat_stat_marks) or a single value that has to fit exactly
+%  (mark 1, otherwise 10.5). NaN skips a measure. SQR is the RMS of all 
+%  ratings. qcdef names the used definition.
+  Pqcprotocols = '';
+  if ~isempty(Pprotocols), Pqcprotocols = spm_file(Pprotocols,'prefix','qc','ext','.json'); end
+  if ~isempty(Pqcprotocols) && exist(Pqcprotocols,'file')
+    QCP = cat_io_json(Pqcprotocols); qcdef = spm_file(Pqcprotocols,'filename');
+  elseif isfield(opts,'qcdefault') && isfield(opts.qcdefault,char(type))
+    QCP = opts.qcdefault.(char(type)); qcdef = sprintf('default (opts.qcdefault.%s)',char(type));
+  elseif isfield(opts,'qcdefault') && isfield(opts.qcdefault,'other')
+    QCP = opts.qcdefault.other; qcdef = 'default (opts.qcdefault.other)';
+  else
+    QCP = struct(); qcdef = '';
+  end
 
   % prepare output
   FN = fieldnames(QM); 

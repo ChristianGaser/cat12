@@ -22,13 +22,14 @@ function varargout = cat_io_dcm2bids_db(action,varargin)
 %    S = cat_io_dcm2bids_db('readImportJSON',P)
 %    cat_io_dcm2bids_db('writeImportJSON',P,S)
 %    cat_io_dcm2bids_db('checkGzipi',Pdbdir,gzipi,run)
+%    skip = cat_io_dcm2bids_db('ignoredDerived',V)
 %
 %  See also cat_io_dcm2bids.
 
   switch action
     case {'getDBdir','nameParts','getDBscanJSONs','assurePatientDCMfields','getScanID', ...
           'scanKey','getImportIndex','readImportJSON','writeImportJSON', ...
-          'checkGzipi'}
+          'checkGzipi','ignoredDerived'}
       [varargout{1:nargout}] = feval(action,varargin{:});
     otherwise
       error('cat_io_dcm2bids_db:unknownAction','Unknown action "%s".',action);
@@ -224,4 +225,22 @@ function checkGzipi(Pdbdir, gzipi, run)
     end
   end
   if pverb == 0, fprintf(' done.\n'); end % if something was printed before 
+end
+% =========================================================================
+function skip = ignoredDerived(V)
+%ignoredDerived. Derived images that are not imported (opts.ignoreScouts):
+%  images with DERIVED in the ImageType (or ImageTypeText) of the sidecar
+%  V, e.g. maps of the scanner (ADC, TRACEW, FA) or reformats (MPR, 
+%  RESAMPLED), but not the uniform image and the T1 map of MP2RAGE 
+%  (UNIFORM/UNI or T1 MAP, also as T1_MAP or split by dcm2niix as T1 and
+%  MAP, without RESAMPLED, i.e. UNIT1 and T1map of BIDS).
+  it = {};
+  for fn = {'ImageType','ImageTypeText'}
+    if isfield(V,fn{1}) && ~isempty(V.(fn{1}))
+      it = [it, strsplit(upper(strjoin(cellstr(V.(fn{1})),'\\')),'\\')]; %#ok<AGROW>
+    end
+  end
+  s    = [' ' strjoin(it,' ') ' ']; % (e.g. ImageType T1, MAP and ImageTypeText T1 MAP of dcm2niix)
+  skip = any(strcmp(it,'DERIVED')) && ~(contains(s,{' UNIFORM ',' UNI ',' T1_MAP ',' T1 MAP '}) && ...
+    ~any(ismember(it,{'RESAMPLED','REFORMATTED','MPR','PROJECTION IMAGE','MIP'})));
 end

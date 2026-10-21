@@ -45,17 +45,18 @@ function def = cat_io_dcm2bids_defaults
   def.opts.tolerance        = 0.5;   % tolerance in percent for numeric MR parameters (only for rounding, as the same
                                      % protocol results in the same values, see testProtocols in cat_io_dcm2bids_protocols)
   def.opts.Pdcm2nii         = '';    % dcm2niix executable ('' - detected if required, see cat_io_dcm2bids_importDCM)
-  def.opts.output           = 2;     % 0-no, 1-only json, 2-json+nii (input protocols), 3-full
+  def.opts.output           = 2;     % 0-tables only, 1-only json, 2-json+nii of scans with (semi)conform protocol, 3-all
   %def.opts.studies          = '';    % study filter >> file
   def.opts.sitelength       = 3;     % letters of the city in the site abbreviation without site dictionary (city, 
                                      % manufacturer, and field strength, e.g. HeiSI30T, see siteRegistry in 
                                      % cat_io_dcm2bids_protocols)
   def.opts.sitevendor       = 2;     % letters of the manufacturer in the site abbreviation (0 - none, 1 - e.g. S, 
                                      % 2 - e.g. SI for Siemens, GE, PH for Philips, see vendorCode in cat_io_dcm2bids_protocols)
-  def.opts.subIDform        = 2;     % (1) use only PatientID, i.e. sub-PID
-                                     % (2) add the ScannerID, i.e. sub-SITE-PID
-                                     % (3) add also StudyName, i.e. sub-STUDY-SITE-PID
-                                     % (4) i.e. sub-SITE-STUDY-PID
+  def.opts.subIDform        = 2;     % (1) use only PatientID, i.e. sub-PID (links the scanners of a subject in 
+                                     %     the BIDS output and for the T1w of other sessions, only for unique IDs)
+                                     % (2) add the site, i.e. sub-SITE-PID
+                                     % (3) add the StudyName, i.e. sub-STUDY-PID
+                                     % (4) sub-SITE-STUDY-PID, (5) sub-STUDY-SITE-PID
   def.opts.anonymize        = 1;     % anonymization (BIDS directory BIDS-<level> and DICOM export): 0 - no, 1 - pseudonymized 
                                      % (site and PatientID, scan date, defaced anatomical scans), 2 - anonymized (site and
                                      % number, time since the first session, shifted dates, defaced scans, see 
@@ -88,11 +89,14 @@ function def = cat_io_dcm2bids_defaults
                                      % session with T1w, 2 DWI, and rs-fMRI scans (4 for the development, later 2);
                                      % one segmentation per session for all levels (T1w, otherwise UNIT1, T2w, or
                                      % FLAIR, see anatScan in cat_io_dcm2bids_pp_anat)
+  def.opts.dtimix           = 1;     % mixed DTI of several DWI scans of a session (e.g. the standard and advanced
+                                     % protocol of the DZPG, see processMix in cat_io_dcm2bids_pp_dwi)
   def.opts.dtimaps          = 1;     % DTI maps for opts.preprocessing = 2 (see cat_io_dcm2bids_pp_dwi): 1 - FA,
                                      % DEC (direction-encoded colors), and the normalized FA (wFA, e.g. for voxel-
                                      % based analyses), 2 - also MD, AD, and RD (their white matter values are
                                      % always estimated)
-  def.opts.ignoreScouts     = 1;     % remove localizer/scouts ASAP (also derived and 2D images by dcm2niix -i y)
+  def.opts.ignoreScouts     = 1;     % remove localizer/scouts ASAP (also derived images except the MP2RAGE uniform 
+                                     % image and T1 map, and 2D images, see ignoredDerived in cat_io_dcm2bids_db)
   def.opts.protocolsubdirs  = 0;     % use additional sub-directories to separate between protocols
   def.opts.BIDSsep          = '';    % Use extra BIDS-incompatible separator such as - to separate the site
                                      % sub-SITE-SUBJECT
@@ -104,16 +108,40 @@ function def = cat_io_dcm2bids_defaults
   % rating of scans with opposite phase-encoding direction with the
   % [best worst] measure for the marks 1 and 6 (similar to the protocol
   % qc*.json files)
-  def.opts.orientation.OTM  = [ 6 30];   % orientation translation measure: RMSE of the origin offset in mm 
-                                         % (i.e. an offset of 10 and 50 mm along one axis)
-  def.opts.orientation.ORM  = [ 3 12];   % orientation rotation measure: RMSE of the rotation in degree
-                                         % (i.e. a rotation of 5 and 20 degree around one axis)
-  def.opts.coverage.BBM     = [ 0 20];   % coverage measure: missing coverage in percent of the expected 
-                                         % brain (whole brain or protocol mask <protocol>_msk.nii)
+  def.opts.orientation.OTM  = [10 60];   % orientation translation measure: RMSE of the origin offset in mm 
+                                         % (i.e. an offset of about 17 and 100 mm along one axis; typical 
+                                         % sessions of the test data have 10-27 mm)
+  def.opts.orientation.ORM  = [ 5 30];   % orientation rotation measure: RMSE of the rotation in degree
+                                         % (i.e. a rotation of about 9 and 50 degree around one axis; typical
+                                         % sessions of the test data have 5-15 degree)
   def.opts.coverage.fwhm    = 4;         % smoothing of the coverage maps in mm
+  % expected coverage of each datatype (otherwise func, see cat_io_dcm2bids_overlap): brain with CSF 
+  % (csf 1) or GM and WM (0), without the outer erode mm, and the weight of the cerebellum and 
+  % brainstem (of the expected map), i.e. anatomical scans should cover the whole brain, fMRI not 
+  % the CSF and less the cerebellum, and DWI also not the outer 2 mm of the cortex (low signal), 
+  % with the coverage measure BBM (missing coverage in percent of the expected brain, limited by 
+  % the protocol mask <protocol>_msk.nii if available) for the marks 1 and 6, i.e. anatomical 
+  % scans should miss nothing (a partially missing cerebellum of about 1.5% gives about 3), 
+  % whereas fMRI and DWI are more tolerant (median of 0.1-1.6% and 1.2% in NKI-TRT, i.e. about 
+  % 1.2-2.3 and 1.8), and protocols with a smaller coverage need a mask for good ratings
+  def.opts.coverage.anat    = struct('csf',1,'erode',0,'cerebellum',1,  'BBM',[0 4]);
+  def.opts.coverage.func    = struct('csf',0,'erode',0,'cerebellum',0.5,'BBM',[0 6]);
+  def.opts.coverage.dwi     = struct('csf',0,'erode',2,'cerebellum',0.5,'BBM',[0 8]);
   def.opts.reversal.PRM     = [.80 .95]; % phase-encoding reversal measure: correlation of the first volumes of scans
                                          % with opposite phase-encoding direction (e.g. AP/PA field maps), where high
                                          % values indicate a missing reversal (see checkPEreversal in cat_io_dcm2bids_pp_anat)
+
+  % default QC definitions of each BIDS datatype for scans without the QC
+  % definition of a protocol (qc<protocol>.json), i.e. without protocol 
+  % definitions or with a nonconform protocol: [best worst] measures for the
+  % marks 1 and 6 (NaN to skip a measure, see qualityRating in 
+  % cat_io_dcm2bids_qc), broader than the DZPG definitions, as they cover 
+  % different protocols (estimated from the test data, to be refined)
+  def.opts.qcdefault.anat   = struct('BSM',nan,      'WSM',nan,       'ISR',[0.10 0.47],'NSR',[0.02 0.085],'RES',[0.8 2.0]);
+  def.opts.qcdefault.func   = struct('BSM',[0.10 0.30],'WSM',nan,       'ISR',[0.10 0.20],'NSR',[0.03 0.08], 'RES',[2.0 4.0]);
+  def.opts.qcdefault.dwi    = struct('BSM',[0.00 0.30],'WSM',[0.03 0.075],'ISR',[0.10 0.25],'NSR',[0.06 0.12], 'RES',[1.5 3.0]);
+  def.opts.qcdefault.fmap   = struct('BSM',[0.00 0.15],'WSM',nan,       'ISR',[0.05 0.30],'NSR',[0.05 0.20], 'RES',[2.0 4.0]);
+  def.opts.qcdefault.other  = struct('BSM',[0.10 0.30],'WSM',nan,       'ISR',[0.10 0.25],'NSR',[0.03 0.10], 'RES',[2.0 4.0]);
 
   % protocol fit rating of each scan (PFR) of the protocol fit measure PFM,
   % i.e., the weighted number of deviations from the closest protocol (0.5

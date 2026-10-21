@@ -87,6 +87,7 @@ function Psnr = importDICOMheaders(Pdcmdirs, Pmdbdir, Ptmp, opts)
         continue
       end
       V = cat_io_dcm2bids_db('assurePatientDCMfields',cat_io_json(Pjson{ji})); 
+      if opts.ignoreScouts && cat_io_dcm2bids_db('ignoredDerived',V), continue; end % (derived images, see ignoredDerived)
       V.ProtocolName = fnameparts{2}; 
       Pdbdirpath = fullfile(Pmdbdir,cat_io_dcm2bids_db('getDBdir',V)); 
       Pjsondb    = fullfile(Pdbdirpath,spm_file(Pjson{ji},'filename')); 
@@ -232,7 +233,7 @@ function msg = convertImages(Psnr, Pmdbdir, Ptmp, opts)
   for gi = 1:numel(keys)
     Pdcm   = keys{gi}(1:find(keys{gi}=='|',1,'last')-1); 
     gopt   = keys{gi}(find(keys{gi}=='|',1,'last')+1:end); 
-    opts2  = opts; opts2.ignoreScouts = contains(gopt,'-i y'); % options of the import
+    opts2  = opts; opts2.dcm2niixIgnore = contains(gopt,'-i y'); % options of the import
     Pout   = fullfile(Ptmp,sprintf('img%06d',gi)); 
     runDCM2NIIX(Pdcm, Pout, opts2, 0); 
 
@@ -309,8 +310,11 @@ function runDCM2NIIX(Pdcm, Pout, opts, headeronly)
 %  the directory Pout with the file names "folder=protocol=time=series". 
 %  With headeronly, only the JSON sidecars are written (dcm2niix -b o, fast), 
 %  otherwise also the images (and bval/bvec) in the gzip format of 
-%  opts.gzipi. With opts.ignoreScouts, dcm2niix also ignores derived, 
-%  localizer, and 2D images (-i y). 
+%  opts.gzipi. Localizers, scouts, derived images (but not the uniform 
+%  image and T1 map of MP2RAGE, see ignoredDerived in cat_io_dcm2bids_db), 
+%  and 2D images are ignored by the import (opts.ignoreScouts), i.e. not 
+%  by dcm2niix (-i n; imports of former versions with -i y are converted
+%  with their options). 
   if ~exist(Pout,'dir'), mkdir(Pout); end
   if headeronly, b = 'o'; else, b = 'y'; end
   if opts.gzipi, gz = 'y'; else, gz = 'n'; end
@@ -333,8 +337,10 @@ end
 function str = dcm2niixOptions(opts)
 %dcm2niixOptions. Common dcm2niix options of the header and image conversion
 %  (file names, no Philips precise scaling, no BIDS anonymizing, no 
-%  sub-directories, and with opts.ignoreScouts no derived/localizer/2D images).
-  if opts.ignoreScouts, ign = 'y'; else, ign = 'n'; end
+%  sub-directories, and all images, as the import selects the scans, e.g.
+%  the MP2RAGE uniform image and T1 map that are derived images; -i y only
+%  for the conversion of imports of former versions with these options).
+  if isfield(opts,'dcm2niixIgnore') && opts.dcm2niixIgnore, ign = 'y'; else, ign = 'n'; end
   str = sprintf('-f "%%f=%%p=%%t=%%s" -p n -ba n -d 0 -i %s', ign); 
 end
 % =========================================================================

@@ -38,8 +38,10 @@ function varargout = cat_io_dcm2bids_phenotypic(action,varargin)
 %  several rows of a table get no data of this table (conflict). The data
 %  of a table (by its file name) are replaced by each import, i.e.
 %  corrected tables can be imported again. The data of several tables are
-%  combined (by the order of the table names for equal columns). Columns
-%  of the sessions file (session_id, site, age, weight, SOR) get the suffix
+%  combined (by the order of the table names for equal columns). The 
+%  column names are the table headers without a description in brackets at
+%  their end (e.g. "SEX (male = 1, female = 2)" gives SEX). Columns of the
+%  sessions file (session_id, site, age, weight, SOR) get the suffix
 %  "_user". The match of each row (with its key values, i.e. personal data)
 %  is given in the private tables of the database
 %  (catDCM2BIDSdb-tables/phenotypic_<table>.csv).
@@ -155,12 +157,20 @@ function T = readTable(P,keys)
   end
   if isempty(kc), error('cat_io_dcm2bids_phenotypic:noKeys','no key columns (see cat_io_dcm2bids_phenotypic)'); end
   dc   = setdiff(1:numel(hdr),kc);
-  cols = cellfun(@(h) matlab.lang.makeValidName(regexprep(transliterate(h),'\s+','_')),hdr(dc),'UniformOutput',false);
+  cols = cellfun(@(h) matlab.lang.makeValidName(regexprep(transliterate(columnTitle(h)),'\s+','_')),hdr(dc),'UniformOutput',false);
   res  = ismember(lower(cols),{'session_id','site','age','weight','sor'});
   cols(res) = strcat(cols(res),'_user');
   cols = matlab.lang.makeUniqueStrings(cols);
   T = struct('file',P,'name',matlab.lang.makeValidName(spm_file(P,'basename')),'hdr',{hdr},'rows',{rows}, ...
     'kc',kc,'types',{types(kc)},'dc',dc,'cols',{cols});
+end
+% =========================================================================
+function h = columnTitle(h)
+%columnTitle. Column header without a description in brackets at its end
+%  (e.g. "SEX (male = 1, female = 2)" gives "SEX"), the header if nothing
+%  else remains.
+  t = strtrim(regexprep(char(h),'\s*[\(\[][^\(\)\[\]]*[\)\]]\s*$',''));
+  if ~isempty(t), h = t; end
 end
 % =========================================================================
 function t = keyType(h)

@@ -2,6 +2,9 @@ function S = cat_io_json(varargin)
 %cat_io_json. Write and read json files.   
 % Json did not allow separation between row/column matrix's and reading 
 % always result in row matrix's! 
+% The files are read and written as UTF-8 (JSON standard), whereas files
+% that are not valid UTF-8 (e.g. Latin-1 of former versions) are read
+% byte-wise. 
  
   if nargin == 1 && ischar(varargin{1}) && strcmp( varargin{1} , 'unittest')
     unittest;
@@ -32,9 +35,12 @@ function S = readjson(varargin)
       cat_io_cprintf('err','ERROR: Miss "%s"\n',files{fi})
     else
       fid = fopen(files{fi}); 
-      raw = fread(fid,inf); 
-      str = char(raw'); 
+      raw = fread(fid,inf,'*uint8')'; 
       fclose(fid); 
+      str = native2unicode(raw,'UTF-8'); 
+      if any(raw > 127) && any(str == char(65533)) % not UTF-8 (e.g. Latin-1)
+        str = char(raw); 
+      end
       try
         val = jsondecode(str);
       catch e
@@ -81,9 +87,9 @@ function writejson(varargin)
   end
 
   % write data
-  f0  = fopen( varargin{1} ,'w');
+  f0  = fopen( varargin{1} ,'w','n','UTF-8');
   txt = jsonencode(varargin{2}, 'PrettyPrint', true);
-  fwrite( f0, txt); 
+  fprintf( f0, '%s', txt); 
   fclose( f0 );
 
 end
