@@ -3292,6 +3292,7 @@
                 <li><a href="#Schaefer">Local-Global Intrinsic Functional Connectivity Parcellation by Schaefer</a></li>
                 <li><a href="#SUIT">SUIT</a></li>
                 <li><a href="#Subcortex">Melbourne Subcortex Atlas</a></li>
+                <li><a href="#Lotter2025">FreeSurfer parcellations of the MNI template (Lotter 2025)</a></li>
               </ul></li>
               <li><a href="#surfrois">List of FreeSurfer surface-based atlas maps (located in atlases_surfaces or atlases_surfaces_32k)</a>
               <ul>
@@ -3475,6 +3476,24 @@
               <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Tian_Subcortex_S4_7T.nii')}}))">volume map</a>. 
             </p>
             You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Tian_Subcortex_S4_7T.txt'));">here</a>.
+
+            <h5 id="Lotter2025">FreeSurfer parcellations of the MNI template (Lotter 2025)</h5>
+            <p>
+              <a href="#Lotter2025ref">Lotter (2025)</a> ran FreeSurfer recon-all on the MNI152NLin2009cAsym T1w template. 
+              The atlases combine the cortical parcellation of FreeSurfer with the FreeSurfer segmentation (aseg: subcortical structures, cerebellum, brainstem, ventral diencephalon, ventricles, cerebral white matter, corpus callosum, and CSF) and keep the FreeSurfer label IDs, names, and colors, e.g. for comparisons with FreeSurfer or FastSurfer:
+              <em>lotter2025_aparc</em> with the Desikan-Killiany cortex (68 regions, <a href="#DK2006">Desikan et al., 2006</a>),
+              <em>lotter2025_DKT</em> with the Desikan-Killiany-Tourville cortex (62 regions, <a href="#Klein2012">Klein and Tourville, 2012</a>; expert mode), and
+              <em>lotter2025_a2009s</em> with the Destrieux cortex (148 regions, <a href="#Destrieux2010">Destrieux et al., 2010</a>; expert mode). 
+              As the FreeSurfer cortex of the template is too tight for the ROI estimation of CAT, the cortex labels were extended to the GM of the CAT template (up to 4 mm), i.e. 87% of the template GM are in GM labels as for the Neuromorphometrics atlas. 
+              The atlases are licensed under CC BY-SA 4.0.
+            </p>
+            <p>
+              Display the atlases as 
+              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','lotter2025_aparc.nii')}}))">Desikan-Killiany</a>, 
+              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','lotter2025_DKT.nii')}}))">Desikan-Killiany-Tourville</a>, or 
+              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','lotter2025_a2009s.nii')}}))">Destrieux</a> volume map. 
+            </p>
+            You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','lotter2025_aparc.txt'));">here</a>.
 
             <!-- ###################################### -->
             <h4 id="surfrois">List of surface-based atlas maps (FreeSurfer)</h4>
@@ -3931,6 +3950,10 @@ Click on the green play button to run the batch. If it’s gray, fill in the req
             <p id="Gousias2008">Gousias IS, Rueckert D, Heckemann RA, Dyet LE, Boardman JP, Edwards AD, Hammers A (2008). <a href="https://dx.doi.org/10.1016/j.neuroimage.2007.11.034">Automatic segmentation of brain MRIs of 2-year-olds into 83 regions of interest.</a> NeuroImage 40(2):672-684.</p>
 
             <p id="Hammers2003">Hammers A, Allom R, Koepp MJ, Free SL, Myers R, Lemieux L, Mitchell TN, Brooks DJ, Duncan JS (2003). <a href="https://doi.org/10.1002/hbm.10123">Three-dimensional maximum probability atlas of the human brain, with particular reference to the temporal lobe.</a> Human Brain Mapping 19(4):224-247.</p>
+
+            <p id="Klein2012">Klein A, Tourville J (2012). <a href="https://doi.org/10.3389/fnins.2012.00171">101 labeled brain images and a consistent human cortical labeling protocol.</a> Frontiers in Neuroscience 6:171.</p>
+
+            <p id="Lotter2025ref">Lotter LD (2025). <a href="https://doi.org/10.12751/g-node.2mnxpm">FreeSurfer parcellations in MNI space.</a> G-Node.</p>
 
             <p>Luders E, Thompson PM, Narr KL, Toga AW, Jancke L, Gaser C (2006). <a href="https://doi.org/10.1016/j.neuroimage.2005.08.049">A curvature-based approach to estimate local gyrification on the cortical surface.</a> NeuroImage 29(4):1224-1230.</p>
 

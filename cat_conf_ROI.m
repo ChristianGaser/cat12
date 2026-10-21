@@ -217,6 +217,16 @@ for ali=1:numel(atlaslist)
         '    Diedrichsen J., Balsters J.H., Flavell J., Cussans E., Ramnani N. (2009). A probabilistic MR atlas of the human cerebellum. Neuroimage; 46(1), 39-46.'
         ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
   end
+  if any(~cellfun('isempty',strfind(atlaslist(ali),'lotter2025_aparc')))
+    ROI.help = [ROI.help; strrep({
+        '(MAI) FreeSurfer parcellations of the MNI152NLin2009cAsym template (Lotter 2025; lotter2025_aparc, lotter2025_DKT, lotter2025_a2009s):'
+        '    FreeSurfer recon-all of the MNI template with the Desikan-Killiany (68), Desikan-Killiany-Tourville (62), or Destrieux (148) cortex and the FreeSurfer aseg (subcortical structures, cerebellum, brainstem, ventricles, white matter, CSF) with the FreeSurfer label IDs, names, and colors. In the CAT version, the cortex labels were extended to the GM of the CAT template (up to 4 mm). CC BY-SA 4.0.'
+        '    Lotter LD (2025) FreeSurfer parcellations in MNI space. G-Node. https://doi.org/10.12751/g-node.2mnxpm'
+        '    Desikan RS, et al. (2006) An automated labeling system for subdividing the human cerebral cortex on MRI scans into gyral based regions of interest. NeuroImage 31: 968-980.'
+        '    Klein A, Tourville J (2012) 101 labeled brain images and a consistent human cortical labeling protocol. Front Neurosci 6: 171.'
+        '    Destrieux C, Fischl B, Dale A, Halgren E (2010) Automatic parcellation of human cortical gyri and sulci using standard anatomical nomenclature. NeuroImage 53: 1-15.'
+        ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
+  end
   if any(~cellfun('isempty',strfind(atlaslist(ali),'Schaefer2018_200Parcels_17Networks_order')))
     ROI.help = [ROI.help; strrep({
         '(MAI) Local-Global Intrinsic Functional Connectivity Parcellation by Schaefer et al.:'

@@ -316,6 +316,9 @@ cat.extopts.atlas       = { ...
   fullfile(cat.extopts.pth_templates,'Schaefer2018_200Parcels_17Networks_order.nii') 1  {'gm','wm'}         0; ... % atlas based on rsfMRI data from 1489 subjects
   fullfile(cat.extopts.pth_templates,'Schaefer2018_400Parcels_17Networks_order.nii') 1  {'gm','wm'}         0; ... % atlas based on rsfMRI data from 1489 subjects
   fullfile(cat.extopts.pth_templates,'Schaefer2018_600Parcels_17Networks_order.nii') 1  {'gm','wm'}         0; ... % atlas based on rsfMRI data from 1489 subjects
+  fullfile(cat.extopts.pth_templates,'lotter2025_aparc.nii')                         0  {'csf','gm','wm'}   0; ... % FreeSurfer DK cortex (68) and aseg of the MNI template (Lotter 2025)
+  fullfile(cat.extopts.pth_templates,'lotter2025_DKT.nii')                           1  {'csf','gm','wm'}   0; ... % FreeSurfer DKT cortex (62) and aseg of the MNI template (Lotter 2025)
+  fullfile(cat.extopts.pth_templates,'lotter2025_a2009s.nii')                        1  {'csf','gm','wm'}   0; ... % FreeSurfer Destrieux cortex (148) and aseg of the MNI template (Lotter 2025)
 }; 
 
 % { name file-id GUIlevel use } - in development

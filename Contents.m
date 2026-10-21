@@ -161,6 +161,7 @@
 %   hammers.*                        - Hammers atlas
 %   ibsr.*                           - IBSR atlas
 %   julichbrain3.*                   _ JulichBrain3 atlas
+%   lotter2025_aparc/DKT/a2009s.*    - FreeSurfer DK, DKT, and Destrieux atlas with aseg of the MNI template (Lotter 2025)
 %   mori.*                           - Mori atlas
 %   thalamus.*                       - Thalamic Nuclei atlas
 %   neuromorphometrics.*             - Neuromorphometrics atlas

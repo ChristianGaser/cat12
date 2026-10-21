@@ -1,0 +1,63 @@
+FreeSurfer parcellation of the MNI152NLin2009cAsym template (Lotter, 2025):
+Destrieux (aparc.a2009s, 148 cortical regions; Destrieux et al., 2010)
+--------------------------------------------------------------------------------
+
+FreeSurfer recon-all (version 8.0.0) was run on the MNI152NLin2009cAsym T1w
+template by Lotter (2025). This atlas combines the cortical parcellation with
+the FreeSurfer segmentation (aseg: subcortical structures, cerebellum, 
+brainstem, ventral diencephalon, ventricles, cerebral white matter, corpus 
+callosum, and CSF) with the FreeSurfer label IDs and the names and colors of 
+the FreeSurferColorLUT, e.g. for comparisons with FreeSurfer or FastSurfer.
+
+CAT version (see development/Atlas_Lotter2025toCAT.m): The FreeSurfer labels
+were sampled (nearest neighbor) in the grid of the CAT atlases (1 mm). The 
+FreeSurfer cortex of the template is too tight for the ROI estimation of CAT 
+(only 66% of the GM of the CAT shooting template in GM labels). Therefore, 
+voxels of the template GM (GM >= WM and GM > 0.1) up to 4 mm from the 
+FreeSurfer cortex that were labeled as background, CSF, or cerebral white 
+matter got the label of the closest cortex voxel, i.e. 87% of the template GM 
+are in GM labels (as for the neuromorphometrics atlas). The subcortical 
+labels were not changed. Lotter (2025) provides a smoothed version of the 
+cortical labels in a liberal cortical mask (Schaefer 2018), whereas this 
+version keeps the borders of the FreeSurfer labels and also the non-cortical
+aseg labels (cerebellum, brainstem, white matter, ventricles, and CSF).
+Please note that the Destrieux parcellation separates gyri and sulci, which 
+fits less to the averaged MNI template.
+
+License: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA
+4.0), i.e. also for this CAT version. The MNI templates are provided by 
+McGill University (Copyright (C) 1993-2004 Louis Collins, McConnell Brain 
+Imaging Centre, Montreal Neurological Institute, McGill University).
+
+If you use this atlas, please cite:
+
+  Lotter LD (2025) FreeSurfer parcellations in MNI space. G-Node. 
+  https://doi.org/10.12751/g-node.2mnxpm
+
+  Fischl B (2012) FreeSurfer. NeuroImage 62(2):774-781. 
+  https://doi.org/10.1016/j.neuroimage.2012.01.021
+
+  Fonov VS, Evans AC, Botteron K, Almli CR, McKinstry RC, Collins DL (2011) 
+  Unbiased average age-appropriate atlases for pediatric studies. NeuroImage
+  54(1):313-327. https://doi.org/10.1016/j.neuroimage.2010.07.033
+
+and the cortical parcellation:
+
+  Desikan RS, Segonne F, Fischl B, et al. (2006) An automated labeling system
+  for subdividing the human cerebral cortex on MRI scans into gyral based 
+  regions of interest. NeuroImage 31(3):968-980. 
+  https://doi.org/10.1016/j.neuroimage.2006.01.021 (aparc)
+
+  Klein A, Tourville J (2012) 101 labeled brain images and a consistent human
+  cortical labeling protocol. Front Neurosci 6:171. 
+  https://doi.org/10.3389/fnins.2012.00171 (aparc.DKTatlas)
+
+  Destrieux C, Fischl B, Dale A, Halgren E (2010) Automatic parcellation of 
+  human cortical gyri and sulci using standard anatomical nomenclature. 
+  NeuroImage 53(1):1-15. https://doi.org/10.1016/j.neuroimage.2010.06.010 
+  (aparc.a2009s)
+
+Website: https://gin.g-node.org/doi/mni_freesurfer
+
+--------------------------------------------------------------------------------
+$Id$
