@@ -4,8 +4,8 @@
 
 .PHONY: clean install zip docs update cp_binaries archive check_pipeline release standalone tests
 
-OLDVERSION="CAT26.0.rc4"
-NEWVERSION="CAT26.0"
+OLDVERSION="CAT26.0"
+NEWVERSION="CAT26.0.1"
 REVISION=`git rev-list --count HEAD`
 DATE=`git log --date short |grep "Date:"|head -1|cut -f2 -d':'|sed -e s'/ //g'`
 VERSION=`echo ${NEWVERSION} | sed -e 's/CAT//g'`
@@ -94,6 +94,8 @@ docs:
 	-@test ! -d ../cat12-help || perl -0777 -p -i -e "s/matlab:web\(fullfile\(fileparts\(which\('cat12'\)\),'doc','([^']+)'\),'-new'\);?/\1/g; s/matlab:web\('([^']+)','-new'\);?/\1/g; s/\s+href=\"matlab:[^\"]*\"//g" ../cat12-help/*.html
 
 # update version numbers
+# OLDVERSION is matched literally and only as a whole version, so that repeated
+# runs do not turn CAT26.0 into CAT26.0.1.1 if NEWVERSION extends OLDVERSION
 update: docs copy_longmode
 	-@git fetch
 	-@echo '% Computational Anatomy Toolbox' > Contents.m
@@ -104,8 +106,8 @@ update: docs copy_longmode
 	-@echo '% Version ' ${REVISION} ${NEWVERSION} ${DATE} >> INSTALL.txt
 	-@cat INSTALL_info.txt >> INSTALL.txt
 	-@test ! -d ../tfce/ || cp cat_spm_results_ui.m ../tfce/
-	-@perl -p -i -e "s/${OLDVERSION}/${NEWVERSION}/g" spm_CAT.m
-	-@perl -p -i -e "s/${OLDVERSION}/${NEWVERSION}/g" cat_batch_bids.sh
+	-@perl -p -i -e "s/\Q${OLDVERSION}\E(?![.0-9a-z])/${NEWVERSION}/g" spm_CAT.m
+	-@perl -p -i -e "s/\Q${OLDVERSION}\E(?![.0-9a-z])/${NEWVERSION}/g" cat_batch_bids.sh
 	-@cp cat12.m CAT.m
 
 # zip release
