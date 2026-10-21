@@ -6,7 +6,7 @@ function varargout = cat_update(update)
 %        NaN - server not accessible
 %        Inf - no updates available
 %        0   - CAT installation up-to-date
-%        n   - new revision <n> is available for download
+%        1   - a newer release is available for download (see msg)
 % msg    - string describing outcome, that would otherwise be displayed.
 % update - allow installation of update
 % 
@@ -106,9 +106,9 @@ else
 end
 
 valid_versions = ~cellfun('isempty', regexp(tagged_versions, valid_version_pattern));
-sorted_versions = sort(tagged_versions(valid_versions), 'descend');
+tagged_versions = tagged_versions(valid_versions);
 
-if numel(sorted_versions) == 0
+if numel(tagged_versions) == 0
     sts = Inf;
     msg = 'There are no updates available yet.';
     if ~nargout, fprintf([blanks(9) msg '\n']);
@@ -116,12 +116,19 @@ if numel(sorted_versions) == 0
     return
 end
 
-rnew = sorted_versions{1};
+% compare version parts as numbers, because sorting the strings would
+% put 26.9 above 26.10
+rnew = tagged_versions{1};
+for i = 2:numel(tagged_versions)
+  if compare_versions(tagged_versions{i}, rnew) > 0
+    rnew = tagged_versions{i};
+  end
+end
 
 %-Compare versions
 %--------------------------------------------------------------------------
-if string(rnew) > string(r)
-  sts = str2double(rnew);
+if compare_versions(rnew, r) > 0
+  sts = 1;
   msg = sprintf('         A new version of CAT is available on:\n');
   msg = [msg sprintf('   %s\n',url_github)];
   msg = [msg sprintf('        (Your version: %s - New version: %s)\n',r,rnew)];
@@ -241,3 +248,52 @@ if update
     fprintf('Unzip file to %s\n',d);
   end
 end
+
+%=======================================================================
+function cmp = compare_versions(v1, v2)
+% Compare two version strings (e.g. '26.10' vs '26.9' or '26.0' vs '26.0.rc4')
+% Returns: 1 if v1 > v2, -1 if v1 < v2, 0 if equal
+% Missing parts count as 0 (26.0 = 26.0.0) and a release candidate is
+% older than the release (26.0.rc4 < 26.0 < 26.0.1).
+%=======================================================================
+
+  [parts1, rc1] = split_version(v1);
+  [parts2, rc2] = split_version(v2);
+
+  % pad with zeros if needed
+  n = max(numel(parts1), numel(parts2));
+  parts1(end+1:n) = 0;
+  parts2(end+1:n) = 0;
+
+  ind = find(parts1 ~= parts2, 1);
+  if ~isempty(ind)
+    cmp = sign(parts1(ind) - parts2(ind));
+  elseif rc1 == rc2
+    cmp = 0;
+  else
+    cmp = sign(rc1 - rc2);
+  end
+return
+
+%=======================================================================
+function [parts, rc] = split_version(v)
+% Split version string into numeric parts and release candidate number
+% (Inf for a release), e.g. 'CAT26.0.rc4' -> [26 0] and 4
+%=======================================================================
+
+  % two separate calls, because MATLAB drops tokens that are nested in an
+  % optional group such as (?:\.rc(\d+))?
+  v     = char(v);
+  parts = [];
+  rc    = Inf;
+
+  num = regexp(v, '\d+(?:\.\d+)*', 'match', 'once');
+  if ~isempty(num)
+    parts = str2double(strsplit(num, '.'));
+  end
+
+  tok = regexp(v, '\.rc(\d+)$', 'tokens', 'once');
+  if ~isempty(tok)
+    rc = str2double(tok{1});
+  end
+return
