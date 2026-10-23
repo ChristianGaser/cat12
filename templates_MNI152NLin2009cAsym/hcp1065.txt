@@ -1,0 +1,41 @@
+HCP-1065 population-probability tract atlas:
+--------------------------------------------------------------------------------
+
+This atlas is based on the population-probability tract atlas of Yeh (2022, 
+HCP-1065, A): the probability maps of 64 white matter tracts (association, 
+commissural, and projection tracts of the cerebrum, with subcomponents of the
+cingulum, SLF, corticopontine, corticostriatal, and thalamic tracts) of the 
+automatic tractography of the diffusion MRI of 1065 young adults of the Human 
+Connectome Project (HCP) in ICBM 2009a nonlinear asymmetric space. 
+
+For CAT, the probability maps were sampled in MNI152NLin2009cAsym space (the 
+same coordinate system), and each voxel was labeled by the tract with the 
+highest probability (winner takes all, at least 1%). As CAT extracts the 
+regional WM values by the individual WM segmentation, all voxels with a WM 
+probability of the CAT template above 1% but CSF/background below 50% were 
+labeled to keep highly individual WM (e.g. of the gyri), i.e. 89% of the WM 
+of the template (97% above z = -20 mm; the cerebellum and most of the 
+brainstem are not labeled). Hence, the labels also cover the cortex and deep
+GM and are only meant for WM measures (or WM-masked maps). Small tracts 
+that run within larger tracts get only few voxels (e.g. the corticobulbar 
+tract within the corticospinal tract), and the corpus callosum body also 
+covers the lateral parts of its fibers in the centrum semiovale (see 
+development/Atlas_HCP1065toCAT.m). The abbreviations are those of DSI Studio 
+with a leading l/r/b for the hemisphere.
+
+License: Creative Commons Attribution-ShareAlike 4.0 International 
+(CC BY-SA 4.0, B).
+
+If you use this atlas, please cite the reference below.
+
+Websites:
+A) https://brain.labsolver.org/hcp_trk_atlas.html
+B) https://creativecommons.org/licenses/by-sa/4.0/
+
+References:
+Yeh FC (2022) Population-based tract-to-region connectome of the human brain 
+and its hierarchical topology. Nature Communications 13:4933. 
+https://doi.org/10.1038/s41467-022-32595-4
+
+--------------------------------------------------------------------------------
+$Id$

@@ -1,0 +1,43 @@
+JHU ICBM-DTI-81 white-matter labels:
+--------------------------------------------------------------------------------
+
+This atlas is based on the "JHU ICBM-DTI-81 White-Matter Labels" (A) of the 
+Laboratory of Brain Anatomical MRI, Johns Hopkins University, as distributed 
+with FSL (B): 48 white matter tract labels (50 with the tapetum) by hand 
+segmentation of the average of the diffusion tensor maps of 81 subjects of the
+ICBM DTI workgroup (mean age 39 years, range 18-59, 42 males and 39 females).
+It labels the deep white matter (core of the tracts), i.e. not the superficial
+white matter.
+
+CAT12 was used to segment the MNI152 T1 template of FSL (MNI152_T1_1mm, the 
+space of the atlas) and to estimate the normalization parameters to transform 
+the label map to MNI152NLin2009cAsym space (nearest neighbor, see 
+development/Atlas_JHU2CAT12.m). The label IDs and names are those of FSL, the 
+colors were added for CAT (one per tract in both hemispheres).
+
+License: The atlas is released with FSL under the terms of the FSL license, 
+i.e. it should not be used for commercial purposes (please contact the atlas 
+coordinators for commercial use).
+
+If you use this atlas, please cite the references below.
+
+Websites:
+A) https://cmrm.med.jhmi.edu/
+B) https://fsl.fmrib.ox.ac.uk/fsl/docs/other/datasets.html
+
+References:
+Mori S, Wakana S, Nagae-Poetscher LM, van Zijl PCM (2005) MRI Atlas of Human 
+White Matter. Elsevier, Amsterdam.
+
+Wakana S, Caprihan A, Panzenboeck MM, Fallon JH, Perry M, Gollub RL, Hua K, 
+Zhang J, Jiang H, Dubey P, Blitz A, van Zijl P, Mori S (2007) Reproducibility 
+of quantitative tractography methods applied to cerebral white matter. 
+NeuroImage 36(3):630-644. https://doi.org/10.1016/j.neuroimage.2007.02.049
+
+Hua K, Zhang J, Wakana S, Jiang H, Li X, Reich DS, Calabresi PA, Pekar JJ, 
+van Zijl PCM, Mori S (2008) Tract probability maps in stereotaxic spaces: 
+analyses of white matter anatomy and tract-specific quantification. 
+NeuroImage 39(1):336-347. https://doi.org/10.1016/j.neuroimage.2007.07.053
+
+--------------------------------------------------------------------------------
+$Id$

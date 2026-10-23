@@ -1,0 +1,51 @@
+ROIid;ROIabbr;ROIname;ROIcolor
+1;bMidCerPed;Middle cerebellar peduncle;242 109 109
+2;bPonCroTra;Pontine crossing tract (a part of MCP);24 88 242
+3;bGenCorCal;Genu of corpus callosum;138 179 80
+4;bBodCorCal;Body of corpus callosum;179 18 158
+5;bSplCorCal;Splenium of corpus callosum;109 242 220
+6;bFor;Fornix (column and body of fornix);242 142 24
+7;rCorTra;Corticospinal tract R;105 80 179
+8;lCorTra;Corticospinal tract L;105 80 179
+9;rMedLem;Medial lemniscus R;25 179 18
+10;lMedLem;Medial lemniscus L;25 179 18
+11;rInfCerPed;Inferior cerebellar peduncle R;242 109 154
+12;lInfCerPed;Inferior cerebellar peduncle L;242 109 154
+13;rSupCerPed;Superior cerebellar peduncle R;24 161 242
+14;lSupCerPed;Superior cerebellar peduncle L;24 161 242
+15;rCerPed;Cerebral peduncle R;170 179 80
+16;lCerPed;Cerebral peduncle L;170 179 80
+17;rAntLimIntCap;Anterior limb of internal capsule R;145 18 179
+18;lAntLimIntCap;Anterior limb of internal capsule L;145 18 179
+19;rPosLimIntCap;Posterior limb of internal capsule R;109 242 175
+20;lPosLimIntCap;Posterior limb of internal capsule L;109 242 175
+21;rRetIntCap;Retrolenticular part of internal capsule R;242 69 24
+22;lRetIntCap;Retrolenticular part of internal capsule L;242 69 24
+23;rAntCorRad;Anterior corona radiata R;80 89 179
+24;lAntCorRad;Anterior corona radiata L;80 89 179
+25;rSupCorRad;Superior corona radiata R;78 179 18
+26;lSupCorRad;Superior corona radiata L;78 179 18
+27;rPosCorRad;Posterior corona radiata R;242 109 198
+28;lPosCorRad;Posterior corona radiata L;242 109 198
+29;rPosThaRad;Posterior thalamic radiation (include optic radiation) R;24 234 242
+30;lPosThaRad;Posterior thalamic radiation (include optic radiation) L;24 234 242
+31;rSagStr;Sagittal stratum (include inferior longitidinal fasciculus and inferior fronto-occipital fasciculus) R;179 154 80
+32;lSagStr;Sagittal stratum (include inferior longitidinal fasciculus and inferior fronto-occipital fasciculus) L;179 154 80
+33;rExtCap;External capsule R;91 18 179
+34;lExtCap;External capsule L;91 18 179
+35;rCinCinGyr;Cingulum (cingulate gyrus) R;109 242 131
+36;lCinCinGyr;Cingulum (cingulate gyrus) L;109 242 131
+37;rCinHip;Cingulum (hippocampus) R;242 24 52
+38;lCinHip;Cingulum (hippocampus) L;242 24 52
+39;rForCreStrTer;Fornix (cres) / Stria terminalis (can not be resolved with current resolution) R;80 122 179
+40;lForCreStrTer;Fornix (cres) / Stria terminalis (can not be resolved with current resolution) L;80 122 179
+41;rSupLonFas;Superior longitudinal fasciculus R;132 179 18
+42;lSupLonFas;Superior longitudinal fasciculus L;132 179 18
+43;rSupFroOccFas;Superior fronto-occipital fasciculus (could be a part of anterior internal capsule) R;242 109 242
+44;lSupFroOccFas;Superior fronto-occipital fasciculus (could be a part of anterior internal capsule) L;242 109 242
+45;rInfFroOccFas;Inferior fronto-occipital fasciculus R;24 242 178
+46;lInfFroOccFas;Inferior fronto-occipital fasciculus L;24 242 178
+47;rUncFas;Uncinate fasciculus R;179 121 80
+48;lUncFas;Uncinate fasciculus L;179 121 80
+49;rTap;Tapetum R;37 18 179
+50;lTap;Tapetum L;37 18 179

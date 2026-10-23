@@ -1,0 +1,65 @@
+ROIid;ROIabbr;ROIname;ROIcolor
+1;lAF;Left Arcuate Fasciculus;242 109 109
+2;rAF;Right Arcuate Fasciculus;242 109 109
+3;lCFPH;Left Cingulum Frontal Parahippocampal;24 88 242
+4;rCFPH;Right Cingulum Frontal Parahippocampal;24 88 242
+5;lCFP;Left Cingulum Frontal Parietal;138 179 80
+6;rCFP;Right Cingulum Frontal Parietal;138 179 80
+7;lCPH;Left Cingulum Parahippocampal;179 18 158
+8;rCPH;Right Cingulum Parahippocampal;179 18 158
+9;lCPHP;Left Cingulum Parahippocampal Parietal;109 242 220
+10;rCPHP;Right Cingulum Parahippocampal Parietal;109 242 220
+11;lCPO;Left Cingulum Parolfactory;242 142 24
+12;rCPO;Right Cingulum Parolfactory;242 142 24
+13;bCCB;Corpus Callosum Body;105 80 179
+14;bCCFMa;Corpus Callosum Forceps Major;25 179 18
+15;bCCFMi;Corpus Callosum Forceps Minor;242 109 154
+16;bCCT;Corpus Callosum Tapetum;24 161 242
+17;lCBT;Left Corticobulbar Tract;170 179 80
+18;rCBT;Right Corticobulbar Tract;170 179 80
+19;lCPTF;Left Corticopontine Tract Frontal;145 18 179
+20;rCPTF;Right Corticopontine Tract Frontal;145 18 179
+21;lCPTO;Left Corticopontine Tract Occipital;109 242 175
+22;rCPTO;Right Corticopontine Tract Occipital;109 242 175
+23;lCPTP;Left Corticopontine Tract Parietal;242 69 24
+24;rCPTP;Right Corticopontine Tract Parietal;242 69 24
+25;lCST;Left Corticospinal Tract;80 89 179
+26;rCST;Right Corticospinal Tract;80 89 179
+27;lCSA;Left Corticostriatal Tract Anterior;78 179 18
+28;rCSA;Right Corticostriatal Tract Anterior;78 179 18
+29;lCSP;Left Corticostriatal Tract Posterior;242 109 198
+30;rCSP;Right Corticostriatal Tract Posterior;242 109 198
+31;lCSS;Left Corticostriatal Tract Superior;24 234 242
+32;rCSS;Right Corticostriatal Tract Superior;24 234 242
+33;lF;Left Fornix;179 154 80
+34;rF;Right Fornix;179 154 80
+35;lFAT;Left Frontal Aslant Tract;91 18 179
+36;rFAT;Right Frontal Aslant Tract;91 18 179
+37;lIFOF;Left Inferior Fronto Occipital Fasciculus;109 242 131
+38;rIFOF;Right Inferior Fronto Occipital Fasciculus;109 242 131
+39;lILF;Left Inferior Longitudinal Fasciculus;242 24 52
+40;rILF;Right Inferior Longitudinal Fasciculus;242 24 52
+41;lMdLF;Left Middle Longitudinal Fasciculus;80 122 179
+42;rMdLF;Right Middle Longitudinal Fasciculus;80 122 179
+43;lOR;Left Optic Radiation;132 179 18
+44;rOR;Right Optic Radiation;132 179 18
+45;lPAT;Left Parietal Aslant Tract;242 109 242
+46;rPAT;Right Parietal Aslant Tract;242 109 242
+47;lRST;Left Reticulospinal Tract;24 242 178
+48;rRST;Right Reticulospinal Tract;24 242 178
+49;lSLF1;Left Superior Longitudinal Fasciculus 1;179 121 80
+50;rSLF1;Right Superior Longitudinal Fasciculus 1;179 121 80
+51;lSLF2;Left Superior Longitudinal Fasciculus 2;37 18 179
+52;rSLF2;Right Superior Longitudinal Fasciculus 2;37 18 179
+53;lSLF3;Left Superior Longitudinal Fasciculus 3;132 242 109
+54;rSLF3;Right Superior Longitudinal Fasciculus 3;132 242 109
+55;lTRA;Left Thalamic Radiation Anterior;242 24 125
+56;rTRA;Right Thalamic Radiation Anterior;242 24 125
+57;lTRP;Left Thalamic Radiation Posterior;80 154 179
+58;rTRP;Right Thalamic Radiation Posterior;80 154 179
+59;lTRS;Left Thalamic Radiation Superior;179 171 18
+60;rTRS;Right Thalamic Radiation Superior;179 171 18
+61;lUF;Left Uncinate Fasciculus;197 109 242
+62;rUF;Right Uncinate Fasciculus;197 109 242
+63;lVOF;Left Vertical Occipital Fasciculus;24 242 105
+64;rVOF;Right Vertical Occipital Fasciculus;24 242 105

@@ -44,6 +44,7 @@ for ai = 1:size(exatlas,1)
         case 'hammers', lic = 2; 
         case 'lpba40' , lic = 1; 
         case 'suit',    lic = 1; 
+        case 'jhu81',   lic = 1; 
         otherwise,      lic = 0; 
       end
     end
@@ -185,6 +186,21 @@ for ali=1:numel(atlaslist)
     ROI.help = [ROI.help; strrep({
         '(MAI) MORI (128 GM/WM ROIs of 1 subject, 2009):'
         '    Oishi et al. Atlas-based whole brain white matter analysis using large deformation diffeomorphic metric mapping: application to normal elderly and Alzheimer''s disease participants. 2009'
+        ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
+  end
+  if any(~cellfun('isempty',strfind(atlaslist(ali),'jhu81')))
+    ROI.help = [ROI.help; strrep({
+        '(MAI) JHU ICBM-DTI-81 (50 deep WM tract ROIs of the average DTI of 81 subjects, 2008):'
+        '    Hand segmentation of the white matter tracts (core of the tracts) of the average diffusion tensor maps of 81 subjects of the ICBM DTI workgroup (Laboratory of Brain Anatomical MRI, Johns Hopkins University), as distributed with FSL (FSL license, no commercial use).'
+        '    Mori S, Wakana S, Nagae-Poetscher LM, van Zijl PCM (2005) MRI Atlas of Human White Matter. Elsevier, Amsterdam.'
+        '    Hua K, Zhang J, Wakana S, et al. (2008) Tract probability maps in stereotaxic spaces: analyses of white matter anatomy and tract-specific quantification. NeuroImage 39: 336-347.'
+        ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
+  end
+  if any(~cellfun('isempty',strfind(atlaslist(ali),'hcp1065')))
+    ROI.help = [ROI.help; strrep({
+        '(MAI) HCP-1065 (64 WM tract ROIs of the tractography of 1065 subjects, 2022):'
+        '    Population-probability atlas of the association, commissural, and projection tracts of the cerebrum of 1065 young adults of the Human Connectome Project, labeled by the most probable tract (>1%) in all voxels with WM >1% and CSF <50% of the CAT template, as the values are extracted by the individual WM segmentation (CC BY-SA 4.0).'
+        '    Yeh FC (2022) Population-based tract-to-region connectome of the human brain and its hierarchical topology. Nat Commun 13: 4933.'
         ''},'MAI',num2str(mai,'%d'))]; mai = mai+1; 
   end
   if any(~cellfun('isempty',strfind(atlaslist(ali),'anatomy3')))

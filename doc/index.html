@@ -3286,6 +3286,8 @@
                 <li><a href="#ThalamicNuclei">Thalamic Nuclei</a></li>
                 <li><a href="#Hypothalamus">Hypothalamus</a></li>
                 <li><a href="#Mori">Mori</a></li>
+                <li><a href="#JHU81">JHU ICBM-DTI-81 white-matter labels</a></li>
+                <li><a href="#HCP1065">HCP-1065 population-probability tract atlas</a></li>
                 <li><a href="#AAL3">AAL3</a></li>
                 <li><a href="#Anatomy">Anatomy3</a></li>
                 <li><a href="#JulichBrain">JulichBrain</a></li>
@@ -3390,6 +3392,28 @@
               Display Mori atlas as
               <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','mori.nii')}}))">volume map</a>.</p>
             You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','mori.txt'));">here</a>.
+
+            <h5 id="JHU81">JHU ICBM-DTI-81 white-matter labels</h5>
+            <p>
+              This atlas is based on the JHU ICBM-DTI-81 white-matter labels of the Laboratory of Brain Anatomical MRI at Johns Hopkins University as distributed with FSL (<a href="#Mori2005">Mori et al., 2005</a>; <a href="#Hua2008">Hua et al., 2008</a>): 48 white matter tracts (50 with the tapetum) by hand segmentation of the average diffusion tensor maps of 81 subjects, i.e. a population-based atlas of the deep white matter in contrast to the single-subject Mori atlas. 
+              CAT was used to map the labels from the MNI152 space of FSL to MNI152NLin2009cAsym space. 
+              The atlas is released under the terms of the FSL license (no commercial use).
+            </p>
+            <p>
+              Display the JHU atlas as
+              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','jhu81.nii')}}))">volume map</a>.</p>
+            You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','jhu81.txt'));">here</a>.
+
+            <h5 id="HCP1065">HCP-1065 population-probability tract atlas</h5>
+            <p>
+              This atlas is based on the population-probability tract atlas of <a href="#Yeh2022">Yeh (2022)</a>: the probability maps of 64 white matter tracts (association, commissural, and projection tracts of the cerebrum) of the automatic tractography of 1065 young adults of the Human Connectome Project in ICBM 2009a nonlinear asymmetric space. 
+              Each voxel with a WM probability of the CAT template above 1% and a CSF probability below 50% was labeled by the tract with the highest probability (at least 1%), as the regional values are extracted by the individual WM segmentation, i.e. in contrast to the JHU atlas also the superficial and highly individual white matter is labeled (89% of the template WM without the cerebellum and most of the brainstem). 
+              The atlas is released under the CC BY-SA 4.0 license.
+            </p>
+            <p>
+              Display the HCP-1065 atlas as
+              <a class="function" href="matlab:cat_vol_display_label(struct('data',{{fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','Template_T1.nii'); fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','hcp1065.nii')}}))">volume map</a>.</p>
+            You can find more information about this atlas <a href="matlab:edit(fullfile(fileparts(which('cat12')),'templates_MNI152NLin2009cAsym','hcp1065.txt'));">here</a>.
 
             <h5 id="Thalamus">Thalamus</h5>
             <p>
@@ -3951,6 +3975,8 @@ Click on the green play button to run the batch. If it’s gray, fill in the req
 
             <p id="Hammers2003">Hammers A, Allom R, Koepp MJ, Free SL, Myers R, Lemieux L, Mitchell TN, Brooks DJ, Duncan JS (2003). <a href="https://doi.org/10.1002/hbm.10123">Three-dimensional maximum probability atlas of the human brain, with particular reference to the temporal lobe.</a> Human Brain Mapping 19(4):224-247.</p>
 
+            <p id="Hua2008">Hua K, Zhang J, Wakana S, Jiang H, Li X, Reich DS, Calabresi PA, Pekar JJ, van Zijl PCM, Mori S (2008). <a href="https://doi.org/10.1016/j.neuroimage.2007.07.053">Tract probability maps in stereotaxic spaces: analyses of white matter anatomy and tract-specific quantification.</a> NeuroImage 39(1):336-347.</p>
+
             <p id="Klein2012">Klein A, Tourville J (2012). <a href="https://doi.org/10.3389/fnins.2012.00171">101 labeled brain images and a consistent human cortical labeling protocol.</a> Frontiers in Neuroscience 6:171.</p>
 
             <p id="Lotter2025ref">Lotter LD (2025). <a href="https://doi.org/10.12751/g-node.2mnxpm">FreeSurfer parcellations in MNI space.</a> G-Node.</p>
@@ -3962,6 +3988,8 @@ Click on the green play button to run the batch. If it’s gray, fill in the req
             <p>Mangin JF, Régis J, Frouin V (1996). <a href="https://doi.org/10.1109/MMBIA.1996.534084">Shape bottlenecks and conservative flow systems.</a> Proceedings of the Workshop on Mathematical Methods in Biomedical Image Analysis, San Francisco, pp. 319-328.</p>
 
             <p>Manjon J, Coupe P, Marti-Bonmati L, Collins DL, Robles M (2010). <a href="https://doi.org/10.1002/jmri.22003">Adaptive Non-Local Means Denoising of MR Images With Spatially Varying Noise Levels.</a> Journal of Magnetic Resonance Imaging 31:192-203.</p>
+
+            <p id="Mori2005">Mori S, Wakana S, Nagae-Poetscher LM, van Zijl PCM (2005). MRI Atlas of Human White Matter. Elsevier, Amsterdam.</p>
 
             <p id="Najdenovska">Najdenovska E, Alemán-Gómez Y, Battistella G, Descoteaux M, Hagmann P, Jacquemont S, Maeder P, Thiran JP, Fornari E, Bach Cuadra M (2018). <a href="https://doi.org/10.1038/sdata.2018.270">In-vivo probabilistic atlas of human thalamic nuclei based on diffusion-weighted magnetic resonance imaging.</a> Scientific Data 5:180270.</p>
 
@@ -3992,6 +4020,8 @@ Click on the green play button to run the batch. If it’s gray, fill in the req
             <p id="Tzourio2002">Tzourio-Mazoyer N, Landeau B, Papathanassiou D, Crivello F, Etard O, Delcroix N, et al. (2002). <a href="https://doi.org/10.1006/nimg.2001.0978">Automated anatomical labelling of activations in SPM using a macroscopic anatomical parcellation of the MNI MRI single subject brain.</a> NeuroImage 15:273-289.</p>
 
             <p id="Winterburn:2013">Winterburn JL, Pruessner JC, Chavez S, Schira MM, Lobaugh NJ, Voineskos AN, Chakravarty MM (2013). <a href="https://doi.org/10.1016/j.neuroimage.2013.02.003">A novel in vivo atlas of human hippocampal subfields using high-resolution 3 T magnetic resonance imaging.</a> NeuroImage 74:254-265.</p>
+
+            <p id="Yeh2022">Yeh FC (2022). <a href="https://doi.org/10.1038/s41467-022-32595-4">Population-based tract-to-region connectome of the human brain and its hierarchical topology.</a> Nature Communications 13:4933.</p>
 
             <p>Yeo BTT, Sabuncu MR, Vercauteren T, Ayache N, Fischl B, Golland P (2010). <a href="https://doi.org/10.1109/TMI.2009.2030797">Spherical Demons: Fast Diffeomorphic Landmark-Free Surface Registration.</a> IEEE Transactions on Medical Imaging 29(3):650-668.</p>
 

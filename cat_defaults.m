@@ -309,6 +309,8 @@ cat.extopts.atlas       = { ...
   fullfile(cat.extopts.pth_templates,'ibsr.nii')                                     0  {'csf','gm','wm'}   0; ... % less regions, 18 subjects, low-res T1 image quality
   fullfile(cat.extopts.pth_templates,'aal3.nii')                                     1  {'gm'}              0; ... % many regions, but only labeled on one subject 
   fullfile(cat.extopts.pth_templates,'mori.nii')                                     1  {'gm','wm'}         0; ... % only one subject, but with WM regions
+  fullfile(cat.extopts.pth_templates,'jhu81.nii')                                    1  {'wm'}              0; ... % 50 deep WM tracts of the average DTI of 81 subjects (JHU ICBM-DTI-81)
+  fullfile(cat.extopts.pth_templates,'hcp1065.nii')                                  1  {'wm'}              0; ... % 64 WM tracts of the tractography of 1065 HCP subjects (Yeh 2022)
   fullfile(cat.extopts.pth_templates,'anatomy3.nii')                                 1  {'gm','wm'}         0; ... % 93 regions, 10 subjects
   fullfile(cat.extopts.pth_templates,'julichbrain3.nii')                             0  {'gm','wm'}         0; ... % 207 regions, 25 subjects, V3.1, https://www.julich-brain-atlas.de/
   fullfile(cat.extopts.pth_templates,'Tian_Subcortex_S4_7T.nii')                     1  {'gm'}              0; ... % 62 subcortical regions, 183 subjects
