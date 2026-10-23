@@ -541,7 +541,9 @@ function P = getDCM2NIIX
         if ~contains(e.identifier,'notWritable'), break; end % (otherwise try the next directory)
       end
     end
-    cat_io_cprintf('warn','  dcm2niix %s not available (%s), use another installation.\n',R.version,msg); 
+    cat_io_cprintf('warn',['  dcm2niix %s not available (%s), use another installation \n' ...
+      '  (or copy the dcm2niix of %s into DCM2BIDS/dcm2niix/%s/%s).\n'],R.version,msg, ...
+      sprintf('https://github.com/%s/releases/tag/%s',R.repository,R.version),R.version,os); 
   end
 
   % (2) manually copied binary
@@ -585,9 +587,9 @@ end
 % =========================================================================
 function P = downloadDCM2NIIX(R,os,exe,Pdir)
 %downloadDCM2NIIX. Download the dcm2niix release R (see DCM2BIDS/dcm2niix.json)
-%  of the system os (mac, lnx, win) from GitHub into the directory Pdir, 
-%  with the test of the SHA-256 checksum of the zip file (see sha256File) 
-%  and of the version of the executable exe. 
+%  of the system os (mac, lnx, win) from GitHub into the directory Pdir 
+%  (see webDownload), with the test of the SHA-256 checksum of the zip file
+%  (see sha256File) and of the version of the executable exe. 
   A   = R.assets.(os); 
   url = sprintf('https://github.com/%s/releases/download/%s/%s',R.repository,R.version,A.name); 
   try
@@ -599,7 +601,7 @@ function P = downloadDCM2NIIX(R,os,exe,Pdir)
   fprintf('DCM2BIDS - download dcm2niix %s from GitHub (%s)\n',R.version,url); 
   Pzip = fullfile(Pdir,A.name); 
   try
-    websave(Pzip,url,weboptions('Timeout',60)); 
+    webDownload(Pzip,url); 
     h = sha256File(Pzip); 
     if ~strcmpi(h,A.sha256)
       error('cat_io_dcm2bids:checksum','wrong SHA-256 checksum of %s (%s instead of %s)',A.name,h,A.sha256); 
@@ -618,6 +620,42 @@ function P = downloadDCM2NIIX(R,os,exe,Pdir)
     D = dir(fileparts(Pdir)); if all(ismember({D.name},{'.','..'})), rmdir(fileparts(Pdir)); end % (empty version directory)
     rethrow(e); 
   end
+end
+% =========================================================================
+function webDownload(P,url)
+%webDownload. Download of url into the file P by MATLAB, with the system 
+%  certificates or by curl of the system, if the certificates of MATLAB do
+%  not verify the server (e.g. new root certificates of the GitHub release
+%  server or a proxy/VPN with its own certificates in the system store). 
+%  The download is tested by the SHA-256 checksum (see downloadDCM2NIIX).
+  if ismac
+    Pcrt = {'/etc/ssl/cert.pem'}; 
+  elseif ispc
+    Pcrt = {}; 
+  else
+    Pcrt = {'/etc/ssl/certs/ca-certificates.crt','/etc/pki/tls/certs/ca-bundle.crt','/etc/ssl/cert.pem'}; 
+  end
+  Pcrt = Pcrt(cellfun(@(f) exist(f,'file') > 0,Pcrt)); 
+  msg  = {}; 
+
+  % MATLAB with its own and with the system certificates
+  for ci = 0:numel(Pcrt)
+    try
+      if ci == 0, wo = weboptions('Timeout',60); else, wo = weboptions('Timeout',60,'CertificateFilename',Pcrt{ci}); end
+      websave(P,url,wo); return
+    catch e
+      msg{end+1} = sprintf('MATLAB: %s',strtok(e.message,newline)); %#ok<AGROW>
+      if exist(P,'file'), delete(P); end
+    end
+  end
+
+  % curl of the system (macOS, Linux, Windows 10+ with the Windows certificates)
+  [st,out] = system(sprintf('curl -fsSL --retry 2 --connect-timeout 60 -o "%s" "%s"',P,url)); 
+  if st == 0 && exist(P,'file'), return; end
+  if exist(P,'file'), delete(P); end
+  msg{end+1} = sprintf('curl: %s',strtrim(out)); 
+  error('cat_io_dcm2bids:download','download failed (%s)', ...
+    strjoin(regexprep(msg,'"https://[^"]*"','(URL)'),'; ')); 
 end
 % =========================================================================
 function h = sha256File(P)
