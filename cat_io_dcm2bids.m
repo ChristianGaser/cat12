@@ -1034,7 +1034,7 @@ function [same,job] = checkPreviousSetting(Popts,job)
         p = spm_input('Really replace old directory?',1,'Yes|No',[1 0],2); 
         if p
           same = 1; 
-          rmdir(spm_file(Popts,'path'),'Recursive',true)
+          rmdir(spm_file(Popts,'path'), 's'); 
           mkdir(spm_file(Popts,'path')); 
           opts = job.opts; dicts = job.dicts; 
           save(Popts,'opts','dicts');

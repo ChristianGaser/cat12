@@ -1021,17 +1021,13 @@ function S = renderScanSlices(F,K,ropts,Pcache)
       clim = renderWindow(F);
       if isempty(clim)
         Yv   = Ys(Ys~=0);
-<<<<<<< Updated upstream
         clim = [cat_stat_prctile(Yv,1) cat_stat_prctile(Yv,99)];
-=======
-        clim = [prctile(Yv,1) prctile(Yv,99)];
         if ~isempty(F.c0) && ~any(strcmp(F.kind,{'dec','atlas'})) % (composites: the underlay, see below)
           try
             wm = sampleSlices(F.c0,1,F.T,K,ropts) > 2.5 & Ys ~= 0;
             if nnz(wm) > 100, clim(2) = prctile(Ys(wm),98); end
           end
         end
->>>>>>> Stashed changes
         if ~(numel(clim)==2 && all(isfinite(clim)) && diff(clim)>0), clim = [0 max(1,max(Ys(:)))]; end
       end
       S.Y  = uint8(255 * min(1,max(0,(Ys - clim(1)) / diff(clim))));

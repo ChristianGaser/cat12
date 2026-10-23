@@ -65,14 +65,20 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
     if exist(Pold{1},'file'), delete(Pold{1}); end
   end
 
+  % echo images with missing slices are measured by the merged echoes of
+  % their series (complete but with mixed echo times, see conversionInfo in
+  % cat_io_dcm2bids_helper), also if the QC is older than the merged echoes
+  [~,~,Pmerged] = cat_io_dcm2bids_helper('conversionInfo',P);
+
   if exist(Pqc,'file') && ~opts.rerun
-    Pr = P; 
-    load(Pqc,'QM'); QM.SQR = nan; 
+    Pr = P;
+    load(Pqc,'QM'); QM.SQR = nan;
     % test if the structure fits
-    QM0 = struct('NSR',[],'ISR',[],'RES',[],'BSM',[],'WSM',[],'vx_vol',[],'SQR',[]);  
+    QM0 = struct('NSR',[],'ISR',[],'RES',[],'BSM',[],'WSM',[],'vx_vol',[],'SQR',[]);
     run = ~strcmp( char(join(sort(fieldnames(QM0)))) ,char(join(sort(fieldnames(QM)))) );
-  else 
-    run = 1; 
+    if ~isempty(Pmerged), d = [dir(Pqc) dir(Pmerged)]; run = run || d(1).datenum < d(2).datenum; end
+  else
+    run = 1;
   end
 
   if run
@@ -85,7 +91,11 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
       cat_io_cprintf([0.5 0 0],'QC-failed\n');
       return
     end
-    V = spm_vol(P); 
+    V = spm_vol(P); Pimg = P; % (image of the measures)
+    if ~isempty(Pmerged) && isscalar(V)
+      Pmerged = cat_io_dcm2bids_helper('prepNii',Pmerged,opts,0);
+      V = spm_vol(char(Pmerged)); Pimg = char(Pmerged);
+    end
     vx_vol = sqrt(sum(V(1).mat(1:3,1:3).^2));
     
     % realignment parameters of 4D data (rp_*.txt)
@@ -185,7 +195,7 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
     opts.tlim           = min(size(Y,4),8); 
     Pmaps               = {}; 
     % realigned volumes (resliced in memory into the grid of the first one)
-    Vr = cat_io_dcm2bids_helper('realignedVolumes',P,Prp,opts);
+    Vr = cat_io_dcm2bids_helper('realignedVolumes',Pimg,Prp,opts);
     for run = 1%:1 + strcmp(type,'dwi')
       if strcmp(type,'dwi')
         % sub-set-wise correction
@@ -399,9 +409,14 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
   fprintf(' \n');
 
   save(Pqc,'QM');
-  cat_io_json(Pqcj,struct('qualitymeasures',QM,'qualityrating',QR,'qcdefinition',qcdef)); 
+  J = struct('qualitymeasures',QM,'qualityrating',QR,'qcdefinition',qcdef);
+  if ~isempty(Pmerged) % (image of the measures)
+    J.image = sprintf('%s (merged echoes with missing slices, mixed echo times)',spm_file(regexprep(char(Pmerged),'\.gz$',''),'filename'));
+  end
+  cat_io_json(Pqcj,J);
 
   Pr = cat_io_dcm2bids_helper('prepNiigz',P,opts); % repack (the image itself, no resliced copy)
+  if ~isempty(Pmerged), cat_io_dcm2bids_helper('prepNiigz',Pmerged,opts); end
   if exist('Pmaps','var'), cat_io_dcm2bids_helper('prepNiigz',Pmaps,opts); end
 
 end

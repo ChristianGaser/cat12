@@ -25,6 +25,7 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
 %    cat_io_dcm2bids_helper('gzipFile',P)
 %    cat_io_dcm2bids_helper('exportNii',P,Pout,opts)
 %    cat_io_dcm2bids_helper('removeAcquisitionTime',P)
+%    [W,geom,Pmerged] = cat_io_dcm2bids_helper('conversionInfo',P)
 %    V = cat_io_dcm2bids_helper('realignedVolumes',P,Prp,opts)
 %    Y = cat_io_dcm2bids_helper('realignedVolume',V,t)
 %    entries = cat_io_dcm2bids_helper('updateTable',Ptable,Thdr,Tnewrow,id,reimport)
@@ -36,11 +37,40 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
   switch action
     case {'readText','writeText','writeJSON','absPath','normPath','canonPath','derivativesDir', ...
           'niiHeaderInfo','niiVolume','prepNii','prepNiigz','gzipFile','exportNii','removeAcquisitionTime', ...
-          'realignedVolumes','realignedVolume', ...
+          'conversionInfo','realignedVolumes','realignedVolume', ...
           'updateTable','writeTable','catRecords'}
       [varargout{1:nargout}] = feval(action,varargin{:});
     otherwise
       error('cat_io_dcm2bids_helper:unknownAction','Unknown action "%s".',action);
+  end
+end
+% =========================================================================
+function [W,geom,Pmerged] = conversionInfo(P)
+%conversionInfo. Warnings of dcm2niix W (cell) in the sidecar of the 
+%  database image P (also with the prefixes of the anonymization and
+%  denoising, see ConversionWarnings in cat_io_dcm2bids_importDCM), if one
+%  of them describes a wrong geometry (geom, missing slices or varying 
+%  slice distances), and the image of the merged echoes Pmerged of such
+%  echo images (ConversionMergedEchoes, '' if not available), which is only
+%  used for the QC and the alignment (mixed echo times). 
+  W = {}; geom = false; Pmerged = ''; 
+  [pth,nam] = fileparts(regexprep(P,'\.gz$','')); 
+  Pj = fullfile(pth,[regexprep(nam,'^(sanlm_)?(anon_)?','') '.json']); 
+  if ~exist(Pj,'file'), return; end
+  try
+    V = jsondecode(readText(Pj)); 
+  catch
+    return
+  end
+  if isfield(V,'ConversionWarnings') && ~isempty(V.ConversionWarnings)
+    W = cellstr(V.ConversionWarnings); 
+    geom = any(cat_io_contains(W,{'Interslice distance varies','Missing images'})); 
+  end
+  if isfield(V,'ConversionMergedEchoes') && ischar(V.ConversionMergedEchoes)
+    Pm = fullfile(pth,V.ConversionMergedEchoes); 
+    if ~exist(Pm,'file'), Pm = regexprep(Pm,'\.gz$',''); end % (gzip status)
+    if ~exist(Pm,'file'), Pm = [Pm '.gz']; end
+    if exist(Pm,'file'), Pmerged = Pm; end
   end
 end
 % =========================================================================

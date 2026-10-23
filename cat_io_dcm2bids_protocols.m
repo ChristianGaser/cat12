@@ -847,6 +847,7 @@ function Vjson = cleanupVjson(Vjson,type)
           'ArterialSpinLabelingType'; 'PostLabelingDelay'; 'BackgroundSuppression'; 'M0Type'; 
           'TotalAcquiredPairs'; 'LabelingDuration'; 'PCASLType'; 'VascularCrushing'; 
           'AcquisitionVoxelSize'; 'BolusCutOffFlag'; 'LookLocker'; 'Units'; 
+          'ConversionWarnings'; ... warnings of dcm2niix without paths and file names (see conversionWarnings in cat_io_dcm2bids_importDCM)
           'IntendedFor'}]; % remapped to the new file names (see remapIntendedFor in cat_io_dcm2bids_bids)
       end
       RFn = setdiff( fieldnames(Vjson), RFn );   

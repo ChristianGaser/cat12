@@ -157,6 +157,27 @@ function p = levelParameters(level)
 %    onescan      .. only the first DWI scan of each b-value scheme (e.g. the
 %                    standard and the advanced protocol) and the first BOLD
 %                    scan of a session
+%    align        .. spm_coreg settings of the alignment test of the scans
+%                    with the T1w (see scannerAlignment and coregImages):
+%                    sampling distances sep in mm (SPM default [4 2] below
+%                    level 1.5, [6 3] below 2.5, otherwise 6), tolerances tol
+%                    (SPM default, 5 times larger from level 2.5), and voxel
+%                    size vx of the reference (block average, native below
+%                    level 1.5, otherwise 3 mm), and the minimal field of
+%                    view minfov (100 mm in each direction for all levels,
+%                    otherwise the scan keeps the scanner space)
+%
+%  Alignment test (2026-10-23, one NKI-RS session, time per scan): sep [6],
+%  5 x tol, and the 3 mm reference take 0.6 s instead of 3.4 s (SPM default),
+%  sep [6 3] and the 3 mm reference 1.9 s,
+%  for a DTI scan with the same alignment (difference < 0.2 mm translation
+%  and < 1 degree rotation, Dice -0.001), and 0.7-0.9 s instead of 5-9 s for
+%  field maps. The lower resolution of the scan (sep) and of the reference
+%  is most important, larger tolerances alone save 20-40%, and other FWHMs
+%  of the joint histogram (4-14 instead of 7) save no time (default kept).
+%  Note that the coregistration of scans with a small field of view (e.g.
+%  field maps with 60 mm in z) is unstable for all settings (local optima
+%  with a pitch of -43 to 30 degree and the same Dice).
 %
 %  Evaluation with the Berlin pilot session of the DZPG (T1w, 2 DWI, and 
 %  rs-fMRI scans, see 'pplevels' of cat_DCM2BIDS_selftest): processing 
@@ -206,6 +227,12 @@ function p = levelParameters(level)
     f = [8 4 2 1]; p.scope.fwhm = f(f >= p.scope.res / 2); p.scope.interp = 1;
   end
   p.onescan    = L >= 3;
+  tol = [0.02 0.02 0.02 0.001 0.001 0.001];                 % SPM default
+  if L < 1.5,     p.align = struct('sep',[4 2],'tol',tol,    'vx',0);
+  elseif L < 2.5, p.align = struct('sep',[6 3],'tol',tol,    'vx',3);
+  else,           p.align = struct('sep',6,    'tol',5 * tol,'vx',3);
+  end
+  p.align.minfov = 100;                                     % mm, no coregistration of a smaller field of view
   p.version    = 7; % version of the DTI and rs-fMRI results (older results are processed again, see
                     % levelUpdate): 2 - atlas labels by the inverse deformation (see sampleAnat),
                     % 3 - Schaefer2018 100 parcels of the rs-fMRI (before 200), 4 - coregistration to
@@ -641,36 +668,63 @@ function S = writeSessionAffines(Pdbdirpath,Pdbnii,datatype,suffix,BIDSpathd,sub
     % coverage of each scan (added to its QC JSON in the derivatives) with
     % the alignment of the non-anatomical scans with the anatomical scan of
     % the session (not for a given registration, i.e. by the coregistration 
-    % of the session without anatomical scan)
-    BBM = nan(size(ids)); BBR = BBM; rep = false(size(ids)); 
-    Aanat = struct([]); T1 = []; 
+    % of the session without anatomical scan), cached in the database
+    % session directory (see alignmentKey), as the alignment test loads the
+    % T1w and coregisters the scans that are not aligned with it
+    BBM = nan(size(ids)); BBR = BBM; rep = false(size(ids));
+    Aanat = struct([]); T1 = [];
     if isempty(R) && strcmp(method,'seg8'), Aanat = sessionAnat(Pdbnii(ids),datatype(ids),suffix(ids)); end
+    Pcache = fullfile(udb{si},'catDCM2BIDSalign.mat'); C = struct('scan',{},'key',{},'Qa',{},'BBM',{},'BBR',{});
+    if exist(Pcache,'file') && ~opts.rerun
+      try %#ok<TRYNC> (only caches with the same fields)
+        L = load(Pcache,'C'); if isequal(fieldnames(L.C),fieldnames(C)), C = L.C; end
+      end
+    end
+    newC = false;
     for ii = 1:numel(ids)
-      id = ids(ii); 
+      id = ids(ii);
       if isempty(Pdbnii{id}) || ~exist(Pdbnii{id},'file') || isempty(BIDSfile{id}), continue; end
       if isempty(Pprot{id}), Pmsk = ''; else, Pmsk = spm_file(Pprot{id},'suffix','_msk','ext','.nii'); end
-      Mc = eye(4); Qa = []; 
-      if ~isempty(Aanat) && ~strcmp(datatype{id},'anat') && ...
-          isempty(regexp(spm_file(BIDSfile{id},'basename'),'(_part-phase_|_phase(diff|1|2)?|_fieldmap)(\.nii)?$|_part-phase_','once'))
-        try
-          [Mc,Qa,T1] = scannerAlignment(Pdbnii{id},datatype{id},Aanat,T1,opts); rep(ii) = isfield(Qa,'coreg'); 
-        catch e
-          cat_io_cprintf('warn','  alignment test failed for "%s": %s\n',spm_file(BIDSfile{id},'basename'),e.message); 
-          Mc = eye(4); Qa = []; 
+      Mc = eye(4); Qa = [];
+      align = ~isempty(Aanat) && ~strcmp(datatype{id},'anat') && ...
+          isempty(regexp(spm_file(BIDSfile{id},'basename'),'(_part-phase_|_phase(diff|1|2)?|_fieldmap)(\.nii)?$|_part-phase_','once'));
+      scan = Pdbnii{id}(numel(udb{si})+2:end);
+      key  = alignmentKey(Pdbnii{id},datatype{id},Aanat,align,Pmsk,Affine,opts);
+      ci   = find(strcmp({C.scan},scan),1);
+      if ~isempty(ci) && isequaln(C(ci).key,key)
+        Qa = C(ci).Qa; BBM(ii) = C(ci).BBM; BBR(ii) = C(ci).BBR; rep(ii) = isfield(Qa,'coreg');
+      else
+        ok = true;
+        if align
+          try
+            [Mc,Qa,T1] = scannerAlignment(Pdbnii{id},datatype{id},Aanat,T1,opts); rep(ii) = isfield(Qa,'coreg');
+          catch e
+            cat_io_cprintf('warn','  alignment test failed for "%s": %s\n',spm_file(BIDSfile{id},'basename'),e.message);
+            Mc = eye(4); Qa = []; ok = false;
+          end
         end
-      end
-      try
-        [BBM(ii),BBR(ii)] = cat_io_dcm2bids_overlap('coverage',Pdbnii{id},Affine * Mc,Pmsk,opts,datatype{id}); 
-      catch e
-        cat_io_cprintf('err','  coverage failed for "%s": %s\n',Pdbnii{id},e.message); 
-        continue
+        try
+          [~,~,Pcov] = cat_io_dcm2bids_helper('conversionInfo',Pdbnii{id}); % (merged echoes)
+          if isempty(Pcov), Pcov = Pdbnii{id}; end
+          [BBM(ii),BBR(ii)] = cat_io_dcm2bids_overlap('coverage',Pcov,Affine * Mc,Pmsk,opts,datatype{id});
+        catch e
+          cat_io_cprintf('err','  coverage failed for "%s": %s\n',Pdbnii{id},e.message);
+          continue
+        end
+        if ok % (failed alignment tests are not cached)
+          if isempty(ci), ci = numel(C) + 1; end
+          C(ci) = struct('scan',scan,'key',key,'Qa',Qa,'BBM',BBM(ii),'BBR',BBR(ii)); newC = true;
+        end
       end
       Pqcj = fullfile(BIDSpathd{id},['catDCM2BIDSqc_' spm_file(BIDSfile{id},'basename') '.json']); 
       if exist(Pqcj,'file'), J = cat_io_json(Pqcj); else, J = struct(); end
       J.qualitymeasures.BBM = BBM(ii); J.qualityrating.BBR = BBR(ii); 
       if ~isempty(Qa), J.alignment = Qa; elseif isfield(J,'alignment'), J = rmfield(J,'alignment'); end
       if ~exist(BIDSpathd{id},'dir'), mkdir(BIDSpathd{id}); end
-      cat_io_json(Pqcj,J); 
+      cat_io_json(Pqcj,J);
+    end
+    if newC
+      try save(Pcache,'C'); end %#ok<TRYNC>
     end
 
     % session line: orientation measures and ratings, worst coverage
@@ -691,6 +745,32 @@ function S = writeSessionAffines(Pdbdirpath,Pdbnii,datatype,suffix,BIDSpathd,sub
         '',nnz(rep)); 
     end
   end
+end
+% =========================================================================
+function key = alignmentKey(Pnii,datatype,A,align,Pmsk,Affine,opts)
+%alignmentKey. Inputs of the alignment test and coverage of the scan Pnii
+%  (see writeSessionAffines and scannerAlignment): the files (name, date,
+%  and size) of the scan, its sidecar (e.g. the dcm2niix warnings), its
+%  b-values, its merged echoes, its denoised average of the QC, the
+%  bias-corrected image and label map of the anatomical scan A (if align),
+%  and the protocol mask Pmsk, the registration Affine, the alignment
+%  settings of the preprocessing level (see levelParameters), and the coverage
+%  options, i.e. the cached result is only used if none of them changed.
+%  The version is increased if the alignment or coverage is changed.
+  b = regexprep(Pnii,'\.nii(\.gz)?$','');
+  [~,~,Pmerged] = cat_io_dcm2bids_helper('conversionInfo',Pnii);
+  P = {Pnii, [b '.json'], [b '.bval'], [b '_denoisedavg.nii.gz'], [b '_denoisedavg.nii'], ...
+    [spm_file(b,'prefix','anon_') '_denoisedavg.nii.gz'], Pmsk, Pmerged};
+  if align, P = [P {A.Pm, A.Pc0}]; end
+  F = cell(size(P));
+  for fi = 1:numel(P)
+    if ~isempty(P{fi}) && exist(P{fi},'file')
+      d = dir(P{fi}); F{fi} = {P{fi}, d(1).datenum, d(1).bytes};
+    end
+  end
+  a   = []; if align, p = levelParameters(opts.pplevel); a = p.align; end % (settings of the preprocessing level)
+  key = struct('version',1,'datatype',datatype,'align',align,'settings',a,'files',{F},'Affine',Affine, ...
+    'coverage',opts.coverage);
 end
 % =========================================================================
 function R = coregSessionAffine(Pdbnii,Pdbses,Pt1w,datatype,suffix,label,opts)
@@ -1024,22 +1104,42 @@ function L = sampleAnat(V,M,A,Patlas,opts,D)
   end
 end
 % =========================================================================
-function M = coregImages(Ysrc,Vsrc,Yref,Vref)
+function M = coregImages(Ysrc,Vsrc,Yref,Vref,a)
 %coregImages. Rigid coregistration (spm_coreg, normalized mutual 
 %  information) of the image Ysrc (array with the mat of Vsrc) to the 
 %  reference image Yref (array with the mat of Vref) with the 
 %  transformation M from the world space of the source to the world space
-%  of the reference.
+%  of the reference. The optional settings a (see align in levelParameters)
+%  give the sampling distances sep and tolerances tol of spm_coreg and the
+%  voxel size vx of the reference (block average, 0 = native), otherwise 
+%  the SPM defaults are used.
+  flags = struct('cost_fun','nmi','graphics',0);
+  if exist('a','var') && ~isempty(a)
+    flags.sep = a.sep; flags.tol = a.tol; %#ok<STRNU> (evalc)
+    if a.vx > 0, [Yref,Vref] = blockAverage(Yref,Vref,a.vx); end
+  end
   T = tempname; mkdir(T);
   spm_write_vol(struct('fname',fullfile(T,'src.nii'),'dim',size(Ysrc),'mat',Vsrc.mat,'dt',[16 0],'pinfo',[1 0 0]'),Ysrc);
   spm_write_vol(struct('fname',fullfile(T,'ref.nii'),'dim',size(Yref),'mat',Vref.mat,'dt',[16 0],'pinfo',[1 0 0]'),Yref);
   try
-    evalc('x = spm_coreg(spm_vol(fullfile(T,''ref.nii'')),spm_vol(fullfile(T,''src.nii'')),struct(''cost_fun'',''nmi'',''graphics'',0));');
+    evalc('x = spm_coreg(spm_vol(fullfile(T,''ref.nii'')),spm_vol(fullfile(T,''src.nii'')),flags);');
   catch e
     rmdir(T,'s'); rethrow(e);
   end
   rmdir(T,'s');
   M = inv(spm_matrix(x));
+end
+% =========================================================================
+function [Y,V] = blockAverage(Y,V,vx)
+%blockAverage. Average of blocks of about vx mm of the image Y (grid V) with
+%  the grid V (dim and mat) of the blocks (e.g. a 3 mm reference image for
+%  the coregistration, see coregImages).
+  k = max(1,round(vx ./ sqrt(sum(V.mat(1:3,1:3).^2))));
+  d = floor(size(Y) ./ k) .* k; Y = Y(1:d(1),1:d(2),1:d(3));
+  Y = reshape(Y,k(1),d(1)/k(1),k(2),d(2)/k(2),k(3),d(3)/k(3));
+  Y = reshape(mean(mean(mean(Y,1),3),5),d ./ k);
+  % (block voxel i is centered at k*i - (k-1)/2 of the original grid)
+  V = struct('dim',d ./ k,'mat',V.mat * [diag(k) -(k' - 1)/2; 0 0 0 1]);
 end
 % =========================================================================
 function [M,Q,D] = coregAnat(Ysrc,Vsrc,A,opts)
@@ -1126,7 +1226,11 @@ function [M,Q,T1] = scannerAlignment(Pnii,datatype,A,T1,opts)
 %  centers as coregAnat) and the coregistration M (world of the scan to 
 %  the world of the anatomical scan) is used if it improves the Dice by 
 %  more than 0.02 (about 1 mm, as coregAnat; otherwise identity, e.g. for
-%  strong distortions). In NKI-TRT, the EPI of most first sessions had 
+%  strong distortions). Scans with a field of view below align.minfov (see
+%  levelParameters) in one direction or with another slice distance than
+%  in their sidecar (see sliceDistance) or with dcm2niix warnings of their
+%  geometry (without merged echoes, see conversionInfo in
+%  cat_io_dcm2bids_helper) keep the scanner space. In NKI-TRT, the EPI of most first sessions had 
 %  offsets of 10-60 mm to the T1w (Dice 0.42-0.85, all scans of a session
 %  with a similar offset) and a Dice of 0.86-0.93 after the coregistration,
 %  where offsets of 10-15 mm still gave 2-5% "missing" coverage. Q 
@@ -1151,11 +1255,38 @@ function [M,Q,T1] = scannerAlignment(Pnii,datatype,A,T1,opts)
   XYZ  = [x(:)'; y(:)'; z(:)'; ones(1,numel(x))]; mss = ms(1:2:end,1:2:end,1:2:end); mss = mss(:);
   dice = @(T) diceSampled(mss,double(T1.Yc),T1.Vc.mat,(T * V.mat) * XYZ);
   d0   = dice(eye(4)); Q = struct('Dice_scanner',round(d0,3),'method','scanner space');
+  [~,geom,Pmerged] = cat_io_dcm2bids_helper('conversionInfo',Pnii);
+  if ~isempty(Pmerged), Q.image = spm_file(Pmerged,'filename'); end % (merged echoes, see scanImage)
   if d0 >= 0.88 || ~any(ms(:)), return; end
+  % no coregistration of scans with a wrong geometry (dcm2niix warnings of
+  % missing slices or varying slice distances, without merged echoes),
+  if geom && isempty(Pmerged)
+    Q.method = 'scanner space (no coregistration for dcm2niix warnings of missing slices or varying slice distances)';
+    return
+  end
+  % no coregistration of scans with a small field of view (e.g. field maps 
+  % with 60 mm in z), whose coregistration is unstable (see align in 
+  % levelParameters), i.e. they keep the scanner space
+  % and scans whose slice distance differs from the sidecar (by more than
+  % 10%, e.g. incomplete field maps of NKI-RS with 6-10 mm instead of 2-3.3
+  % mm, i.e. a wrong geometry of the converted image)
+  p   = levelParameters(opts.pplevel);
+  vx  = sqrt(sum(V.mat(1:3,1:3).^2)); fov = V.dim .* vx;
+  if min(fov) < p.align.minfov
+    Q.method = sprintf('scanner space (no coregistration for a field of view below %d mm: %s mm)', ...
+      p.align.minfov,mat2str(round(fov)));
+    return
+  end
+  sd = sliceDistance(Pnii);
+  if ~isempty(sd) && abs(vx(3) - sd) > 0.1 * sd
+    Q.method = sprintf(['scanner space (no coregistration for a slice distance of %0.1f mm in the image ' ...
+      'but %0.1f mm in the sidecar, e.g. by missing slices)'],vx(3),sd);
+    return
+  end
   mt  = T1.Yc > 0.5;
   M0  = eye(4); M0(1:3,4) = maskCenter(mt,T1.Vc) - maskCenter(ms,V); % centers of the brain masks
   Vs0 = V; Vs0.mat = M0 * V.mat;
-  M1  = coregImages(Y,Vs0,T1.Ym .* mt,T1.Vm) * M0;
+  M1  = coregImages(Y,Vs0,T1.Ym .* mt,T1.Vm,p.align) * M0;
   d1  = dice(M1); q = spm_imatrix(M1);
   Q.Dice = round(d1,3); Q.translation = round(q(1:3),1); Q.rotation = round(q(4:6) * 180/pi,1);
   if d1 > d0 + 0.02
@@ -1166,6 +1297,22 @@ function [M,Q,T1] = scannerAlignment(Pnii,datatype,A,T1,opts)
   end
 end
 % =========================================================================
+function sd = sliceDistance(Pnii)
+%sliceDistance. Slice distance of the scan Pnii in its JSON sidecar 
+%  (SpacingBetweenSlices, otherwise SliceThickness, empty if unknown).
+  sd = [];
+  Pj = [regexprep(Pnii,'\.nii(\.gz)?$','') '.json']; if ~exist(Pj,'file'), return; end
+  try %#ok<TRYNC>
+    J = cat_io_json(Pj);
+    if isfield(J,'SpacingBetweenSlices') && isnumeric(J.SpacingBetweenSlices) && ~isempty(J.SpacingBetweenSlices)
+      sd = double(J.SpacingBetweenSlices(1));
+    elseif isfield(J,'SliceThickness') && isnumeric(J.SliceThickness) && ~isempty(J.SliceThickness)
+      sd = double(J.SliceThickness(1));
+    end
+  end
+  if ~isempty(sd) && ~(isfinite(sd) && sd > 0), sd = []; end
+end
+% =========================================================================
 function [Y,V] = scanImage(Pnii,datatype,opts)
 %scanImage. Image of a scan (array and header of the first volume) for 
 %  its alignment: the first volume with the lowest b-value of DWI (the b0
@@ -1173,7 +1320,20 @@ function [Y,V] = scanImage(Pnii,datatype,opts)
 %  e.g. a Dice of 0.84-0.91 instead of 0.51-0.83 for aligned NKI-TRT DWI),
 %  otherwise the denoised average of 4D data of the QC (see 
 %  cat_io_dcm2bids_qc, also of the anonymized scan), otherwise the first
-%  volume (without decompressing the whole file, see niiVolume).
+%  volume (without decompressing the whole file, see niiVolume). Echo
+%  images with missing slices use the merged echoes of their series (see
+%  conversionInfo in cat_io_dcm2bids_helper).
+  [~,~,Pmerged] = cat_io_dcm2bids_helper('conversionInfo',Pnii);
+  if ~isempty(Pmerged)
+    Pu = cat_io_dcm2bids_helper('prepNii',Pmerged,opts,0);
+    try
+      V = spm_vol(char(Pu)); V = V(1); Y = spm_read_vols(V);
+    catch e
+      cat_io_dcm2bids_helper('prepNiigz',Pu,opts); rethrow(e);
+    end
+    cat_io_dcm2bids_helper('prepNiigz',Pu,opts);
+    return
+  end
   b = regexprep(Pnii,'\.nii(\.gz)?$','');
   if strcmp(datatype,'dwi')
     vol = 1;

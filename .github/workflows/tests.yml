@@ -46,3 +46,16 @@ jobs:
             [ok2, ~] = cat_tst_unittests(2);           % parsing / option / config unit tests
             if ~(ok1 && ok2), error('CAT:tests', 'CAT12 tests failed.'); end
             disp('All CAT12 tests passed.')
+
+      - name: Test the dcm2niix download of DCM2BIDS
+        uses: matlab-actions/run-command@v1
+        with:
+          command: |
+            ws = getenv('GITHUB_WORKSPACE');
+            addpath(fullfile(ws, 'spm'));
+            cd(fullfile(ws, 'spm', 'toolbox', 'CAT'))
+            R = jsondecode(fileread(fullfile('DCM2BIDS', 'dcm2niix.json')));   % tested release
+            P = cat_io_dcm2bids_importDCM('getDCM2NIIX');                       % download, checksum, version
+            [~, v] = system(['"' P '" --version']); disp(strtrim(v))
+            if ~contains(v, R.version), error('CAT:dcm2niix', 'dcm2niix %s was not installed (%s).', R.version, P); end
+            disp('dcm2niix download passed.')

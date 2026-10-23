@@ -1,0 +1,102 @@
+name: dcm2niix update
+
+# Checks for a new dcm2niix release (rordenlab/dcm2niix) and opens a pull
+# request that updates the release used by DCM2BIDS (DCM2BIDS/dcm2niix.json,
+# downloaded on first use by getDCM2NIIX in cat_io_dcm2bids_importDCM).
+# The assets of all systems are downloaded and verified by the SHA-256 digests
+# of the GitHub release, and the Linux binary has to report the new version.
+# The DCM2BIDS self-test with real DICOM data (cat_DCM2BIDS_selftest) has to
+# be run locally before the pull request is merged.
+#
+# Requires "Allow GitHub Actions to create and approve pull requests" in the
+# repository settings (Actions > General). Pull requests opened with the
+# GITHUB_TOKEN do not trigger other workflows (e.g. tests.yml), i.e. close and
+# reopen the pull request (or push to its branch) to run them.
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'   # Mondays, 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout CAT
+        uses: actions/checkout@v4
+
+      - name: Check the latest dcm2niix release
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pin=DCM2BIDS/dcm2niix.json
+          repo=$(jq -r .repository "$pin")
+          current=$(jq -r .version "$pin")
+          gh api "repos/$repo/releases/latest" > latest.json
+          latest=$(jq -r .tag_name latest.json)
+          echo "repo=$repo" >> "$GITHUB_OUTPUT"
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          update=true
+          if [ "$latest" = "$current" ]; then
+            echo "dcm2niix $current is up to date."; update=false
+          elif git ls-remote --exit-code --heads origin "dcm2niix-$latest" > /dev/null; then
+            echo "Branch dcm2niix-$latest exists (pull request already open)."; update=false
+          fi
+          echo "update=$update" >> "$GITHUB_OUTPUT"
+
+      - name: Download and verify the release assets
+        if: steps.check.outputs.update == 'true'
+        env:
+          REPO: ${{ steps.check.outputs.repo }}
+          LATEST: ${{ steps.check.outputs.latest }}
+        run: |
+          pin=DCM2BIDS/dcm2niix.json
+          cp "$pin" pin.json
+          for os in mac lnx win; do
+            name=$(jq -r ".assets.$os.name" "$pin")
+            digest=$(jq -r --arg n "$name" '.assets[] | select(.name == $n) | .digest' latest.json)
+            if [ -z "$digest" ] || [ "$digest" = "null" ]; then
+              echo "::error::Release $LATEST has no asset $name (or no digest)."; exit 1
+            fi
+            curl -fsSL -o "$name" "https://github.com/$REPO/releases/download/$LATEST/$name"
+            sha=$(sha256sum "$name" | cut -d' ' -f1)
+            if [ "sha256:$sha" != "$digest" ]; then
+              echo "::error::Checksum of $name does not fit the release digest."; exit 1
+            fi
+            jq --tab --arg os "$os" --arg sha "$sha" '.assets[$os].sha256 = $sha' pin.json > tmp.json && mv tmp.json pin.json
+          done
+          unzip -o dcm2niix_lnx.zip -d lnx
+          chmod +x lnx/dcm2niix
+          ./lnx/dcm2niix --version | tee version.txt
+          grep -q "$LATEST" version.txt || { echo "::error::The binary does not report $LATEST."; exit 1; }
+          jq --tab --arg v "$LATEST" '.version = $v' pin.json > "$pin"
+
+      - name: Open a pull request
+        if: steps.check.outputs.update == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ steps.check.outputs.repo }}
+          CURRENT: ${{ steps.check.outputs.current }}
+          LATEST: ${{ steps.check.outputs.latest }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "dcm2niix-$LATEST"
+          git add DCM2BIDS/dcm2niix.json
+          git commit -m "Update dcm2niix of DCM2BIDS to $LATEST"
+          git push origin "dcm2niix-$LATEST"
+          gh pr create --base "${{ github.event.repository.default_branch }}" \
+            --title "Update dcm2niix of DCM2BIDS to $LATEST" \
+            --body "Updates the dcm2niix release of DCM2BIDS from $CURRENT to $LATEST ([release notes](https://github.com/$REPO/releases/tag/$LATEST)).
+
+          The assets of macOS, Linux, and Windows were verified by the SHA-256 digests of the release, and the Linux binary reports $LATEST.
+
+          Before merging:
+          - [ ] run \`cat_DCM2BIDS_selftest\` locally with real DICOM data
+          - [ ] check the dcm2niix warnings (\`ConversionWarnings\` in the sidecars) and the merged echoes of incomplete field maps (e.g. NKI-RS)"

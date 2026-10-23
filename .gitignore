@@ -49,3 +49,6 @@ check_pipeline/
 !check_pipeline/*.m
 
 debug_*.mat
+
+# dcm2niix binaries (downloaded on first use, see DCM2BIDS/dcm2niix.json)
+DCM2BIDS/dcm2niix/

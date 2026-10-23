@@ -1,0 +1,41 @@
+{
+  "Modality": "MR",
+  "MagneticFieldStrength": 3,
+  "Manufacturer": "Siemens",
+  "MRAcquisitionType": "3D",
+  "ScanningSequence": "GR\\IR",
+  "SequenceVariant": "MP\\SP",
+  "ScanOptions": "IR",
+  "ImageType": [
+    "M",
+    "ND",
+    "NORM",
+    "ORIGINAL",
+    "PRIMARY"
+  ],
+  "NonlinearGradientCorrection": false,
+  "SliceThickness": 1,
+  "EchoTime": 0.0035,
+  "RepetitionTime": 2.5,
+  "InversionTime": 1.2,
+  "FlipAngle": 8,
+  "PartialFourier": 1,
+  "BaseResolution": 256,
+  "PhaseResolution": 1,
+  "CoilCombinationMethod": "Adaptive Combine",
+  "MatrixCoilMode": "SENSE",
+  "PercentPhaseFOV": 100,
+  "PercentSampling": 100,
+  "AcquisitionMatrixPE": 256,
+  "ReconMatrixPE": 256,
+  "PixelBandwidth": 190,
+  "DwellTime": 1.03E-5,
+  "InPlanePhaseEncodingDirectionDICOM": "ROW",
+  "NumberOfSlices": 256,
+  "NumberOfVolumes": 1,
+  "VoxelSize": [
+    1,
+    1,
+    1
+  ]
+}
