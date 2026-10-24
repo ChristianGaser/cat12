@@ -13,7 +13,7 @@ function varargout = cat_io_dcm2bids_importDCM(action,varargin)
 %
 %  Actions (see the help of the local functions):
 %    Psnr = cat_io_dcm2bids_importDCM('importDICOMheaders',Pdcmdirs,Pmdbdir,Ptmp,opts)
-%    msg = cat_io_dcm2bids_importDCM('convertImages',Psnr,Pmdbdir,Ptmp,opts)
+%    msg = cat_io_dcm2bids_importDCM('convertImages',Psnr,Pmdbdir,Ptmp,opts[,Psub])
 %    P = cat_io_dcm2bids_importDCM('getDCM2NIIX')
 %
 %  See also cat_io_dcm2bids.
@@ -189,7 +189,7 @@ function revokeScan(Pjsondb)
   if all([D.isdir]), rmdir(fileparts(Pjsondb)); end
 end
 % =========================================================================
-function msg = convertImages(Psnr, Pmdbdir, Ptmp, opts)
+function msg = convertImages(Psnr, Pmdbdir, Ptmp, opts, Psub)
 %convertImages. Convert the missing images of the scans of the scan 
 %  directories Psnr. The DICOM directory of the import information 
 %  (catDCM2BIDSimport_*.json) of each scan is converted once with its 
@@ -202,8 +202,13 @@ function msg = convertImages(Psnr, Pmdbdir, Ptmp, opts)
 %  of former versions (checked once by a header-only conversion of their 
 %  DICOM directory and a full conversion only if dcm2niix gives warnings),
 %  with the merged echoes of incomplete echo images (see mergeEchoes). 
+%  Psub limits the assigned images to these subject directories of the 
+%  database (e.g. the subject package of a parallel process, as a DICOM 
+%  directory can contain scans of several subjects that are converted by 
+%  their own process; empty for all). 
 %  msg is a containers.Map with the reason for scans without image. 
   msg = containers.Map('KeyType','char','ValueType','char'); 
+  if ~exist('Psub','var') || isempty(Psub), Psub = {}; else, Psub = cellfun(@(p) cat_io_dcm2bids_helper('normPath',p),cellstr(Psub),'UniformOutput',false); end
   if opts.gzipi, niiext = '.nii.gz'; else, niiext = '.nii'; end
 
   % scans without image grouped by DICOM directory and dcm2niix options
@@ -282,6 +287,9 @@ function msg = convertImages(Psnr, Pmdbdir, Ptmp, opts)
       V.ProtocolName = fnameparts{2}; 
       Pdbdirpath = fullfile(Pmdbdir,cat_io_dcm2bids_db('getDBdir',V)); 
       Pjsondb    = fullfile(Pdbdirpath,[name '.json']); 
+      if ~isempty(Psub) && ~any(strcmp(cat_io_dcm2bids_helper('normPath',fileparts(fileparts(Pdbdirpath))),Psub))
+        continue % scan of another subject package
+      end
       if exist(Pjsondb,'file')
         if exist(fullfile(Pdbdirpath,[name niiext]),'file'), continue; end % image exists
         Pimp = spm_file(Pjsondb,'prefix','catDCM2BIDSimport_'); 

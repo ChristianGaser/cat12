@@ -142,6 +142,11 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 %                 degree (default: trilinear for dpi<=300 (fast), otherwise 
 %                 4th degree B-spline for the finer sampling (slower))
 %   .dpi       .. print resolution (300)
+%   .subfilter .. only the subject and session reports (R3) of these 
+%                 subjects (BIDS labels, e.g. sub-01) with the slice cache 
+%                 and the slice rows for R1/R2, e.g. of a subject package of
+%                 a parallel process (see cat_io_dcm2bids_parallel), whereas 
+%                 R1/R2 of all subjects are rendered after all packages ({})
 %
 %  The intensities of a scan are scaled for all its slices together
 %  (1-99% percentile) to keep the slices of a scan comparable. The colored
@@ -217,6 +222,10 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
   switch ropts.source
     case 1, P = P(~isderiv); isderiv = isderiv(~isderiv);
     case 2, P = P( isderiv); isderiv = isderiv( isderiv);
+  end
+  if ~isempty(ropts.subfilter) % (subject packages, see cat_io_dcm2bids_parallel)
+    psub = cellfun(@(f) regexp(f,'sub-[^_]+','match','once'),spm_file(P,'filename'),'UniformOutput',false); 
+    P    = P(ismember(psub,cellstr(ropts.subfilter))); isderiv = isderiv(ismember(psub,cellstr(ropts.subfilter))); 
   end
   if isempty(P), return; end
 
@@ -430,11 +439,14 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
     [~,k1] = ismember(unique(epiSlices(Fg(1),ropts.slices),'rows','stable'),Kg,'rows');
     [~,k2] = ismember(epiSlices(Fg(1),rowslices),Kg,'rows');
 
-    % prepare output directory (remove old pages)
+    % prepare output directory (remove old pages, not for the subject 
+    % packages that only fill the cache, see ropts.subfilter)
     Pout = fullfile(Preport,groups{gi});
     if ~exist(Pout,'dir'), mkdir(Pout); end
-    Pold = cat_vol_findfiles(Pout,'render_*.png',struct('depth',0));
-    for oi = 1:numel(Pold), delete(Pold{oi}); end
+    if isempty(ropts.subfilter)
+      Pold = cat_vol_findfiles(Pout,'render_*.png',struct('depth',0));
+      for oi = 1:numel(Pold), delete(Pold{oi}); end
+    end
 
     % sample all slices of each scan once (or load them from the cache)
     Y = zeros(n,n,size(Kg,1),numel(Fg),'uint8'); Yov = Y; Yc = cell(1,numel(Fg)); nnew = 0;
@@ -456,6 +468,7 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
     end
 
     np1 = 0; np2 = 0;
+    if ~isempty(ropts.subfilter), continue; end % (R1/R2 of all subjects after all packages)
     if ~isempty(k1)
       np1 = renderOverviewPages(fh,Fg,Y(:,:,k1,:),Yov(:,:,k1,:),colorSlices(Yc,k1),Kg(k1,:),groups{gi},Pout,ropts,G);
     end
@@ -471,7 +484,7 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
   % anymore (e.g. maps of former versions), i.e. other directories with a
   % slice cache (and their then empty datatype directories), only if all
   % images were rendered (raw images and derivatives, ropts.source = 3)
-  Pc = {}; if ropts.source == 3, Pc = cat_vol_findfiles(Preport,'cache',struct('dirs',1)); end
+  Pc = {}; if ropts.source == 3 && isempty(ropts.subfilter), Pc = cat_vol_findfiles(Preport,'cache',struct('dirs',1)); end
   for ci = 1:numel(Pc)
     Pg = fileparts(Pc{ci});
     if strncmp(Pg,Preport,numel(Preport)) && ~any(endsWith(Pg,strcat(filesep,groups))) % (keeps all rendered groups)

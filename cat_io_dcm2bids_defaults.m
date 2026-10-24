@@ -17,6 +17,8 @@ function def = cat_io_dcm2bids_defaults
   def.outdir                = {pwd}; % main output directory
   def.subdir                = 'study'; % default
   def.BIDSdir               = 'BIDS';
+  def.nproc                 = 0;     % parallel background MATLAB processes for the subject packages (0 - none, i.e.
+                                     % this process; each process needs about 4 GB RAM, see cat_io_dcm2bids_parallel)
 
   % dataset description (dataset_description.json and README.md)
   def.dataset.Name               = '';         % empty: study subdirectory
@@ -184,6 +186,9 @@ function def = cat_io_dcm2bids_defaults
   def.opts.render.interp    = [];      % interpolation: 0-nearest, 1-trilinear, 2-7 B-spline degree
                                        % ([] - trilinear for dpi<=300, otherwise 4th degree B-spline)
   def.opts.render.dpi       = 300;     % print resolution
+  def.opts.render.subfilter = {};      % only the subject and session reports (R3) of these subjects (BIDS labels, 
+                                       % e.g. of a subject package, see cat_io_dcm2bids_parallel), with the slice
+                                       % cache for R1/R2 (empty - all subjects and outputs)
 
   % report figure of each BIDS directory (see cat_io_dcm2bids_reportfig): A4
   % overview page and one page per site (for several sites) with diagrams 

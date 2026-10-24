@@ -125,9 +125,11 @@ function writeSites(Ptbldir,R,sites,opts)
 %  cat_io_dcm2bids_protocols) with the abbreviation of the dictionary (or
 %  of the site registry of the database without dictionary, see 
 %  siteRegistry in cat_io_dcm2bids_protocols) or a proposal for new 
-%  scanners (city, manufacturer, and field strength, e.g. MagSI30T), and an
-%  empty Color of the site in the report figure (e.g. #A82117, see 
-%  siteColors in cat_io_dcm2bids_protocols).
+%  scanners (city, manufacturer, and field strength, e.g. MagSI30T), the 
+%  siteID of the anonymization level 2 (defined manually, e.g. given 
+%  centrally for a federated study, see setupSites in 
+%  cat_io_dcm2bids_protocols), and an empty Color of the site in the report
+%  figure (e.g. #A82117, see siteColors in cat_io_dcm2bids_protocols).
   dev = {R.DeviceSerialNumber}; dev(cellfun('isempty',dev)) = {R(cellfun('isempty',dev)).Site};
   [udev,~,di] = unique(dev,'stable');
   [types,tnam] = scanTypes(opts);
@@ -137,7 +139,7 @@ function writeSites(Ptbldir,R,sites,opts)
     'ReceiveCoilName','FirstScan','LastScan','Subjects','Sessions','Scans'}, ...
     reshape([strcat(tnam,'_scans'); strcat(tnam,'_subjects')],1,[]), ...
     {'conform','semiconform','nonconform','PFR','SQR','TxRefAmp','ProcedureStepDescription'}];
-  J = struct('DeviceSerialNumber',{},'InstitutionAbbreviation',{},'Color',{},'InstitutionName',{}, ...
+  J = struct('DeviceSerialNumber',{},'InstitutionAbbreviation',{},'siteID',{},'Color',{},'InstitutionName',{}, ...
     'InstitutionalDepartmentName',{},'InstitutionAddress',{},'MagneticFieldStrength',{}, ...
     'Manufacturer',{},'ManufacturersModelName',{},'StationName',{});
   for si = 1:numel(udev)
@@ -160,13 +162,14 @@ function writeSites(Ptbldir,R,sites,opts)
     T(end+1,:) = row; %#ok<AGROW>
 
     % site dictionary entry (abbreviation of the dictionary or proposal)
-    abbr = '';
+    abbr = ''; sid = '';
     if ~isempty(sites)
       id = find(cat_io_contains(sites(:,1),udev{si}),1); % as setupSites in cat_io_dcm2bids_protocols
       if ~isempty(id), abbr = char(sites{id,2}); end
+      if ~isempty(id) && size(sites,2) > 2, sid = char(string(sites{id,3})); end
     end
     if isempty(abbr), abbr = cat_io_dcm2bids_protocols('siteProposal',row{5},row{9},row{7},opts); end
-    J(end+1) = struct('DeviceSerialNumber',udev{si},'InstitutionAbbreviation',abbr,'Color','', ...
+    J(end+1) = struct('DeviceSerialNumber',udev{si},'InstitutionAbbreviation',abbr,'siteID',sid,'Color','', ...
       'InstitutionName',row{3},'InstitutionalDepartmentName',row{4},'InstitutionAddress',row{5}, ...
       'MagneticFieldStrength',row{9},'Manufacturer',row{7},'ManufacturersModelName',row{8}, ...
       'StationName',row{6}); %#ok<AGROW>

@@ -33,7 +33,7 @@ function varargout = cat_io_dcm2bids_bids(action,varargin)
 %    cat_io_dcm2bids_bids('writePrivateTSV',P,Pprivate)
 %    sources = cat_io_dcm2bids_bids('getBIDSsources',roots)
 %    cat_io_dcm2bids_bids('writeDatasetFiles',Pbids,job,sources,convver)
-%    cat_io_dcm2bids_bids('writeProtocols',Pbids,Pp,Ptbldir)
+%    cat_io_dcm2bids_bids('writeProtocols',Pbids,Pp,Ptbldir[,level])
 %    cat_io_dcm2bids_bids('gzipunzipOutputdata',Poutdir,opts)
 %
 %  See also cat_io_dcm2bids.
@@ -541,10 +541,15 @@ function remapIntendedFor(intended, srcmap)
   end
 end
 % =========================================================================
-function writeSubjectTSV(Vjson,sub,ses,Poutdir,BIDSsubdir,anon,SOR,site,extra)
+function writeSubjectTSV(Vjson,sub,ses,Poutdir,BIDSsubdir,anon,SOR,site,extra,acqtime)
 %writeSubjectTSV. BIDS sessions file of a subject (sub-<label>_sessions.tsv) 
-%  with one row per session: site (abbreviation, see setupSites in 
-%  cat_io_dcm2bids_protocols), age, weight, the session orientation rating
+%  with one row per session: the acquisition time acq_time of the session
+%  (start of the study by the anonymization level: date and time, date and
+%  full hour, or date of the session label and the center of the 3-hour 
+%  interval of the time of the day, e.g. 1900-12-31T10:30:00, see acqTime
+%  in cat_io_dcm2bids_anonymize), site 
+%  (abbreviation, see setupSites in cat_io_dcm2bids_protocols), age, 
+%  weight, the session orientation rating
 %  SOR (see writeSessionAffines in cat_io_dcm2bids_pp_anat), and the 
 %  phenotypic data of the session (structure extra, see 
 %  cat_io_dcm2bids_phenotypic). The rows of other sessions are kept (by 
@@ -553,10 +558,14 @@ function writeSubjectTSV(Vjson,sub,ses,Poutdir,BIDSsubdir,anon,SOR,site,extra)
   if ~exist('SOR','var') || isempty(SOR), SOR = nan; end
   if ~exist('site','var') || isempty(site), site = 'n/a'; end
   if ~exist('extra','var') || ~isstruct(extra), extra = struct(); end
+  if ~exist('acqtime','var') || isempty(acqtime), acqtime = 'n/a'; end
   Psubject = fullfile(Poutdir,BIDSsubdir,sub,sprintf('%s_sessions.tsv',sub)); % BIDS sessions file
   hdr = {'session_id','site','age','weight','SOR'}; T0 = {};
   if exist(Psubject,'file')
     T0 = cat_io_csv(Psubject, '','', struct('delimiter','\t','convert2double',-1)); 
+  end
+  if ~strcmp(acqtime,'n/a') || (~isempty(T0) && any(strcmp(T0(1,:),'acq_time'))) % (BIDS column after session_id)
+    hdr = [hdr(1) {'acq_time'} hdr(2:end)]; 
   end
   ext = fieldnames(extra)'; old = {};
   if ~isempty(T0), old = T0(1,~ismember(T0(1,:),hdr)); end
@@ -568,7 +577,8 @@ function writeSubjectTSV(Vjson,sub,ses,Poutdir,BIDSsubdir,anon,SOR,site,extra)
     Tsubject(end+1,:) = {'n/a'}; Tsubject(end,isc) = T0(ri,ci(isc)); %#ok<AGROW>
   end
   row = repmat({'n/a'},1,numel(hdr)); 
-  row(1:5) = {ses, site, round(Vjson.PatientAge,2-anon), round(Vjson.PatientWeight), round(SOR,2)}; 
+  row(strcmp(hdr,'session_id')) = {ses}; row(strcmp(hdr,'acq_time')) = {acqtime}; 
+  row(ismember(hdr,{'site','age','weight','SOR'})) = {site, round(Vjson.PatientAge,2-anon), round(Vjson.PatientWeight), round(SOR,2)}; 
   for e = ext, row{strcmp(hdr,e{1})} = extra.(e{1}); end
   Tsubject(end+1,:) = row; 
   Tsubject(cellfun(@(v) (isnumeric(v) && isscalar(v) && isnan(v)) || (ischar(v) && isempty(v)), Tsubject)) = {'n/a'}; 
@@ -783,7 +793,7 @@ function writeDatasetFiles(Pbids, job, sources, convver)
   end
 end
 % =========================================================================
-function writeProtocols(Pbids,Pp,Ptbldir)
+function writeProtocols(Pbids,Pp,Ptbldir,level)
 %writeProtocols. Generalized MRI protocols of the scans of the BIDS 
 %  directory Pbids (with its protocol subdirectories), i.e. the protocol
 %  variants of the database tables Ptbldir (normalized protocol fields 
@@ -794,6 +804,10 @@ function writeProtocols(Pbids,Pp,Ptbldir)
 %    <BIDSdir>-report/protocols/<BIDSsubdir>/<datatype>_<variant>.json
 %  with the number of scans of each variant (protocols.tsv), created again
 %  in each run (the old protocols are kept without the database tables).
+%  For the anonymization level 2 (level > 1), the protocols contain no 
+%  scanner model and coil and only the type of the software version (see 
+%  sidecar in cat_io_dcm2bids_anonymize).
+  if ~exist('level','var'), level = 0; end
   Pold = fullfile(Pbids,'protocols'); % (location of a former version)
   if exist(fullfile(Pold,'protocols.tsv'),'file'), rmdir(Pold,'s'); end
   Pmat = fullfile(Ptbldir,'scans.mat'); if ~exist(Pmat,'file'), return; end
@@ -814,7 +828,11 @@ function writeProtocols(Pbids,Pp,Ptbldir)
     Ps = fullfile(Ptbldir,'protocols',d,[v '.json']);
     if ~exist(Ps,'file'), continue; end
     if ~exist(Pp,'dir'), mkdir(Pp); end
-    copyfile(Ps,fullfile(Pp,[d '_' v '.json']));
+    if level > 1
+      cat_io_json(fullfile(Pp,[d '_' v '.json']),cat_io_dcm2bids_anonymize('sidecar',cat_io_json(Ps),level)); 
+    else
+      copyfile(Ps,fullfile(Pp,[d '_' v '.json']));
+    end
     T(end+1,:) = {[d '_' v '.json'], d, v, nnz(ui == vi)}; %#ok<AGROW>
   end
   cat_io_dcm2bids_helper('writeTable',fullfile(Pp,'protocols.tsv'),T,'tsv');

@@ -115,6 +115,7 @@ function writeReadme(type,Pdir,job,level)
         '  catDCM2BIDSanonymization.json              numbers and date offsets of the anonymization level 2, i.e. the'
         '                                             key of the anonymized data (never changed)'
         '  catDCM2BIDStmp_*                           temporary directories (removed automatically)'
+        '  catDCM2BIDSpar_*                           queues of parallel processes (removed automatically, kept with the logs after errors)'
         ''
         'Directories of this database (the database itself, sub-*, ses-*, or snr-*) can be selected as input to'
         'export the imported data again (e.g. with other protocols or options).'
@@ -159,14 +160,17 @@ function writeReadme(type,Pdir,job,level)
         'month, whereas the fields used by catDCM2BIDS are kept (e.g. PatientID, sex, age, dates, UIDs, scanner,'
         'protocol, private fields). The PatientID has to be a pseudonym!'
         'Anonymized (level 2): furthermore, the PatientID and PatientName are replaced by the BIDS subject label'
-        '(site and number, e.g. BerSI30T00001) and the StudyID by the session label (time since the first session,'
+        '(site and number, e.g. 07SI30T00001) and the StudyID by the session label (time since the first session,'
         'e.g. w0052), the dates of a session are shifted to the date of its label (first session of a subject at'
-        '1900-01-01, e.g. 1901-01-01 for w0052) and its times to the time since its start (00:00:00, i.e. the timing'
-        'of the scans and slices is kept), the UIDs are replaced by UIDs of the same length (also in private'
-        'fields), the scanner and institution are replaced by the site abbreviation and city, the station,'
-        'department, and the study and procedure descriptions are removed, parts of the patient name, the'
-        'PatientID, and the serial number in other fields are replaced by X, and the export uses the BIDS labels'
-        'as names. Its import gives the labels of the anonymized BIDS export (also with the anonymization level 1).'
+        '1900-01-01, e.g. 1900-12-31 for w0052) and its times so that it starts at the center of its 3-hour interval'
+        'of the day (01:30, 04:30, ..., 22:30, i.e. the timing of the scans and slices is kept), the birth date is'
+        'shifted by the offset of the subject (on the 15th of the month), the UIDs are replaced by UIDs of the same length (also in private'
+        'fields), the scanner and institution are replaced by the site label (siteID, manufacturer, and field'
+        'strength, without location), the address, station, model, coils, department, and the study and procedure'
+        'descriptions are removed (the software version is kept for the conversion), parts of the patient name,'
+        'the PatientID, the serial number, and the institution, city, model, and coil names in other fields are'
+        'replaced by X, and the export uses the BIDS labels as names. Its import gives the labels of the anonymized'
+        'BIDS export (also with the anonymization level 1).'
         'Images: defaced (anatomical scans for level 1, all scans for level 2).'
         ''
         'Can be removed: all scans are exported again by the next run.'
@@ -222,19 +226,26 @@ function txt = levelText(level)
   switch level
     case 0
       txt = {
-        'NOT ANONYMIZED: subject labels with the PatientID, session labels with the scan date and time, images with'
-        'faces (besides the defacing settings), i.e. personal data: NOT FOR SHARING!'};
+        'NOT ANONYMIZED: subject labels with the PatientID, session labels and acquisition times of the sessions'
+        '(acq_time of the sessions files) with the scan date and time, images with faces (besides the defacing'
+        'settings), i.e. personal data: NOT FOR SHARING!'};
     case 1
       txt = {
         'PSEUDONYMIZED: subject labels with the site and the PatientID (has to be a pseudonym), session labels with the'
-        'scan date, age with one decimal, defaced anatomical images, no acquisition times in the NIfTI headers, i.e.'
-        'intended for sharing according to the data protection rules of the study.'};
+        'scan date, acquisition time of the sessions with the full hour (acq_time of the sessions files, rounded'
+        'down, e.g. 2025-03-10T11:00:00 for 11:00 to 11:59), age with one decimal, defaced anatomical images, no'
+        'acquisition times in the NIfTI headers, i.e. intended for sharing according to the data protection rules of'
+        'the study.'};
     otherwise
       txt = {
         'ANONYMIZED (for recipients without the key): subject labels with the site and a number (e.g.'
-        'sub-BerSI30T00001), session labels with the time since the first session of the subject (e.g. ses-w0000 and'
-        'ses-w0052 one year later, unit d-days, w-weeks, m-months, or y-years), age in years, defaced images of all'
-        'scans, no acquisition times in the NIfTI headers. The key (numbers and date offsets) stays in the database'
+        'sub-07SI30T00001, site label without location: siteID of the site dictionary, manufacturer, and field'
+        'strength), session labels with the time since the first session of the subject (e.g. ses-w0000 and'
+        'ses-w0052 one year later, unit d-days, w-weeks, m-months, or y-years), acquisition time of the sessions'
+        '(acq_time of the sessions files: date of the session label, first session at 1900-01-01, and the center of'
+        'the 3-hour interval of the time of the day, e.g. 1900-12-31T10:30:00), age in years, defaced images of all'
+        'scans, no acquisition times in the NIfTI headers, no scanner model and coils and only the type of the'
+        'software version in the sidecars. The key (numbers and date offsets) stays in the database'
         '(catDCM2BIDSanonymization.json) and the private tables, i.e. the creator can identify the subjects (e.g. in'
         'case of findings).'};
   end

@@ -18,7 +18,8 @@ function varargout = cat_io_dcm2bids_protocols(action,varargin)
 %  Actions (see the help of the local functions):
 %    sites = cat_io_dcm2bids_protocols('getSites',Pcenterdict)
 %    protocols = cat_io_dcm2bids_protocols('getProtocols',Pprodictdirs)
-%    site = cat_io_dcm2bids_protocols('setupSites',Vjson,sites)
+%    site = cat_io_dcm2bids_protocols('setupSites',Vjson,sites[,opts])
+%    siteID = cat_io_dcm2bids_protocols('siteID',serial,sites)
 %    sites = cat_io_dcm2bids_protocols('siteRegistry',Pmdbdir,opts,dict)
 %    [abbr,city,rest] = cat_io_dcm2bids_protocols('siteProposal',address,field,vendor,opts)
 %    C = cat_io_dcm2bids_protocols('siteColors',Pcenterdict,Pmdbdir,labels)
@@ -31,7 +32,7 @@ function varargout = cat_io_dcm2bids_protocols(action,varargin)
 %  See also cat_io_dcm2bids.
 
   switch action
-    case {'getSites','getProtocols','setupSites','siteRegistry','siteProposal','siteColors','acquisitionDuration','testProtocols', ...
+    case {'getSites','getProtocols','setupSites','siteID','siteRegistry','siteProposal','siteColors','acquisitionDuration','testProtocols', ...
           'protocolVariant','cleanupVjson','updateDBtables'}
       [varargout{1:nargout}] = feval(action,varargin{:});
     otherwise
@@ -43,11 +44,12 @@ function sites = getSites(Pcenterdict)
 %getSites. Site dictionary of the JSON file Pcenterdict{1}, i.e. a list of
 %  scanners with the fields DeviceSerialNumber and InstitutionAbbreviation
 %  (further fields are optional and can differ between the scanners, e.g.
-%  the Color of the site in the report figure, see siteColors) as cell
-%  array with the serial number and abbreviation of each scanner. Color
-%  entries (Cities and Color, see siteColors) are skipped and other entries
-%  without these two fields are ignored (warning).
-  sites = cell(0,2);
+%  the Color of the site in the report figure, see siteColors, and the 
+%  siteID of the anonymization level 2, see setupSites) as cell array with
+%  the serial number, abbreviation, and siteID ('' if not defined) of each
+%  scanner. Color entries (Cities and Color, see siteColors) are skipped 
+%  and other entries without these two fields are ignored (warning).
+  sites = cell(0,3);
   if isempty(Pcenterdict) || isempty(Pcenterdict{1}), return; end
   if ~exist(Pcenterdict{1},'file')
     error('cat_io_dcm2bids:Pcenterdict','Center dictionary file "%s" is not existing.', Pcenterdict{1});
@@ -55,7 +57,8 @@ function sites = getSites(Pcenterdict)
   S = jsonList(cat_io_json(Pcenterdict{1}));
   for si = 1:numel(S)
     if isstruct(S{si}) && all(isfield(S{si},{'DeviceSerialNumber','InstitutionAbbreviation'}))
-      sites(end+1,:) = {char(string(S{si}.DeviceSerialNumber)), char(string(S{si}.InstitutionAbbreviation))}; %#ok<AGROW>
+      sites(end+1,:) = {char(string(S{si}.DeviceSerialNumber)), char(string(S{si}.InstitutionAbbreviation)), ...
+        char(string(fieldOr(S{si},'siteID')))}; %#ok<AGROW>
     elseif ~(isstruct(S{si}) && all(isfield(S{si},{'Cities','Color'})))
       cat_io_cprintf('warn','  Site dictionary: entry %d without DeviceSerialNumber or InstitutionAbbreviation ignored.\n',si);
     end
@@ -169,23 +172,56 @@ function protocols = getProtocols(Pprodictdirs)
   end
 end
 % =========================================================================
-function site = setupSites(Vjson,sites)
+function site = setupSites(Vjson,sites,opts)
 %setupSites. Site label of a scan by its DeviceSerialNumber and the site
-%  dictionary sites (serial number and abbreviation of each scanner, first
-%  the same serial number, then a serial number that contains it), 
-%  otherwise the serial number. 
-  if ~isempty(sites)
-    DevNam = strcmp( cellfun(@(x) char(string(x)),sites(:,1),'UniformOutput',false) , char(Vjson.DeviceSerialNumber) );
-    if ~any(DevNam), DevNam = cat_io_contains( sites(:,1) , Vjson.DeviceSerialNumber ); end
+%  dictionary sites (serial number, abbreviation, and siteID of each 
+%  scanner, first the same serial number, then a serial number that 
+%  contains it), otherwise the serial number. 
+%  For the anonymization level 2 (opts.anonymize > 1), the label contains 
+%  no location (city or abbreviation of the dictionary): the siteID of the
+%  scanner (a manually defined code, e.g. given centrally for all sites of
+%  a federated study, empty by default) with the code of the manufacturer 
+%  and the field strength (see siteRest), e.g. 07SI30T, or without siteID 
+%  only the manufacturer and field strength, e.g. SI30T, i.e. the site is 
+%  not available (and subject labels of other databases are not unique).
+%  Scans of an anonymized DICOM export keep their site label (serial number
+%  with the form of a site label, see isSiteLabel).
+  if ~exist('opts','var'), opts = struct(); end
+  serial = char(string(Vjson.DeviceSerialNumber)); 
+  [sid,k] = siteID(serial,sites); 
+  if isfield(opts,'anonymize') && opts.anonymize > 1
+    if isSiteLabel(serial)
+      site = serial; % (anonymized DICOM export)
+    else
+      site = [cat_io_dcm2bids_bids('bidsLabel',sid,1) siteRest(numField(Vjson,'MagneticFieldStrength'), ...
+        textField(Vjson,'Manufacturer'),opts)]; 
+    end
+  elseif ~isempty(k)
+    site = sites{k,2};
   else
-    DevNam = 0; 
-  end
-  if any(DevNam)
-    site = sites{find(DevNam,1,'first'),2};
-  else
-    site = Vjson.DeviceSerialNumber; 
+    site = serial; 
   end
   site = cat_io_dcm2bids_bids('bidsLabel',site,1); 
+end
+% =========================================================================
+function [sid,k] = siteID(serial,sites)
+%siteID. siteID (anonymization level 2, '' if not defined) and row k of 
+%  the scanner with the serial number in the site dictionary sites (see 
+%  getSites and siteRegistry: first the same serial number, then a serial
+%  number that contains it, empty if not available).
+  sid = ''; k = []; 
+  if isempty(sites), return; end
+  k = find(strcmp(cellfun(@(x) char(string(x)),sites(:,1),'UniformOutput',false),char(serial)),1); 
+  if isempty(k), k = find(cat_io_contains(sites(:,1),char(serial)),1); end
+  if ~isempty(k) && size(sites,2) > 2, sid = char(string(sites{k,3})); end
+end
+% =========================================================================
+function ok = isSiteLabel(s)
+%isSiteLabel. Serial number with the form of a site label of an anonymized
+%  DICOM export, i.e. a code (abbreviation or siteID, optional) and the 
+%  manufacturer (letters) and field strength (two digits and T), e.g. 
+%  BerSI30T, 07SI30T, or SI30T.
+  ok = ~isempty(regexp(char(s),'^[A-Za-z0-9]{0,16}[A-Z]\d{2}T$','once'));
 end
 % =========================================================================
 function sites = siteRegistry(Pmdbdir,opts,dict)
@@ -204,17 +240,24 @@ function sites = siteRegistry(Pmdbdir,opts,dict)
 %  abbreviations of the registry are never changed, as they are part of
 %  the BIDS labels, i.e. a new scanner with the abbreviation (proposal) of
 %  a registered scanner gets the next free letter. Abbreviations are 
-%  compared without case (e.g. directories of macOS).
+%  compared without case (e.g. directories of macOS). The entries have an
+%  empty siteID (the code of the anonymization level 2 that has to be 
+%  defined manually, see setupSites), which is added to the entries of 
+%  former versions. sites contains the serial number, abbreviation, and 
+%  siteID of each scanner (dictionary first).
   Preg = fullfile(Pmdbdir,'catDCM2BIDSsites.json');
-  R = struct('DeviceSerialNumber',{},'InstitutionAbbreviation',{},'Proposal',{},'InstitutionName',{}, ...
+  R = struct('DeviceSerialNumber',{},'InstitutionAbbreviation',{},'siteID',{},'Proposal',{},'InstitutionName',{}, ...
     'InstitutionAddress',{},'MagneticFieldStrength',{},'Manufacturer',{},'Registered',{});
+  nosid = false; 
   if exist(Preg,'file') % (entries with other fields, e.g. without manufacturer of older versions)
     J = jsonList(cat_io_json(Preg)); fn = fieldnames(R)'; 
     for ji = 1:numel(J)
       e = cell2struct(cellfun(@(f) fieldOr(J{ji},f),fn,'UniformOutput',false),fn,2); R(end+1) = e; %#ok<AGROW>
+      nosid = nosid || ~isfield(J{ji},'siteID'); 
     end
   end
-  if ~exist('dict','var') || isempty(dict), dict = cell(0,2); end
+  if ~exist('dict','var') || isempty(dict), dict = cell(0,3); end
+  if size(dict,2) < 3, dict(:,3) = {''}; end
   known = [cellfun(@(x) char(string(x)),{R.DeviceSerialNumber},'UniformOutput',false) ...
            cellfun(@(x) char(string(x)),dict(:,1)','UniformOutput',false)];
 
@@ -239,7 +282,7 @@ function sites = siteRegistry(Pmdbdir,opts,dict)
     prop = cell(1,numel(N)); city = prop; rest = prop;
     for ni = 1:numel(N)
       [prop{ni},city{ni},rest{ni}] = siteProposal(N(ni).address,N(ni).field,N(ni).vendor,opts);
-      if ~isempty(regexp(N(ni).serial,'^[A-Z][A-Za-z]{1,9}\d{2}T$','once')) % site label of an anonymized DICOM export
+      if isSiteLabel(N(ni).serial) % site label of an anonymized DICOM export
         prop{ni} = N(ni).serial; 
       end
     end
@@ -259,14 +302,17 @@ function sites = siteRegistry(Pmdbdir,opts,dict)
         end
       end
       used{end+1} = abbr; %#ok<AGROW>
-      R(end+1) = struct('DeviceSerialNumber',N(ni).serial,'InstitutionAbbreviation',abbr,'Proposal',prop{ni}, ...
+      R(end+1) = struct('DeviceSerialNumber',N(ni).serial,'InstitutionAbbreviation',abbr,'siteID','','Proposal',prop{ni}, ...
         'InstitutionName',N(ni).name,'InstitutionAddress',N(ni).address,'MagneticFieldStrength',N(ni).field, ...
         'Manufacturer',N(ni).vendor,'Registered',char(datetime('now','Format','yyyy-MM-dd'))); %#ok<AGROW>
       fprintf('  New site abbreviation %s of scanner %s (%s)\n',abbr,N(ni).serial,N(ni).address);
     end
+  end
+  if ~isempty(N) || nosid % (new scanners or the siteID field of former versions)
     cat_io_json(Preg,R);
   end
-  sites = [dict(:,1:2); {R.DeviceSerialNumber}' {R.InstitutionAbbreviation}']; % dictionary first
+  sid   = cellfun(@(x) char(string(x)),{R.siteID},'UniformOutput',false); 
+  sites = [dict(:,1:3); {R.DeviceSerialNumber}' {R.InstitutionAbbreviation}' sid']; % dictionary first
 end
 % =========================================================================
 function [abbr,city,rest] = siteProposal(address,field,vendor,opts)
@@ -284,9 +330,19 @@ function [abbr,city,rest] = siteProposal(address,field,vendor,opts)
   city  = regexprep(cat_io_dcm2bids_bids('bidsLabel',char(parts(min(2,numel(parts))))),'[^a-zA-Z]','');
   if numel(parts) < 2 || numel(city) < max(2,n), city = 'Unknown'; end
   city = [upper(city(1)) lower(city(2:n))]; 
-  if isfinite(field), fstr = sprintf('%02dT',round(10*field - 0.01)); else, fstr = '00T'; end
-  rest = [vendorCode(vendor,opts.sitevendor) fstr];
+  rest = siteRest(field,vendor,opts);
   abbr = [city rest];
+end
+% =========================================================================
+function rest = siteRest(field,vendor,opts)
+%siteRest. Manufacturer and field strength part of the site label: the 
+%  code of the manufacturer vendor with opts.sitevendor letters (see 
+%  vendorCode, default 2) and the field strength in tenths of Tesla with 
+%  two digits (rounded, e.g. 15T, 30T, or 70T for 1.5, 3, and 6.98 T, 00T 
+%  if not available), e.g. SI30T.
+  if ~isfield(opts,'sitevendor'), opts.sitevendor = 2; end
+  if ~isempty(field) && isfinite(field), fstr = sprintf('%02dT',round(10*field - 0.01)); else, fstr = '00T'; end
+  rest = [vendorCode(vendor,opts.sitevendor) fstr];
 end
 % =========================================================================
 function v = vendorCode(vendor,n)

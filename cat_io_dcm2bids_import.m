@@ -3,20 +3,23 @@ function varargout = cat_io_dcm2bids_import(action,varargin)
 %  The input directories are classified as DICOM directories, BIDS datasets,
 %  or directories of the database of the output before any output is 
 %  written (getInputSources). Then, the DICOM headers of new scans and the 
-%  scans of BIDS datasets are imported into the database and the images are
-%  converted (DICOM) or copied (BIDS) if required (importSources, see 
-%  cat_io_dcm2bids_importDCM and cat_io_dcm2bids_importBIDS).
+%  scans of BIDS datasets are imported into the database (importSources) 
+%  and the images are converted (DICOM) or copied (BIDS) if required, i.e.
+%  for each subject package of the processing (convertSources, see 
+%  cat_io_dcm2bids_importDCM, cat_io_dcm2bids_importBIDS, and 
+%  cat_io_dcm2bids_parallel).
 %
 %  varargout = cat_io_dcm2bids_import(action,varargin)
 %
 %  Actions (see the help of the local functions):
 %    Psrc = cat_io_dcm2bids_import('getInputSources',Pdata,Pmdbdir,ignoreScouts)
-%    [Psnr,convmsg] = cat_io_dcm2bids_import('importSources',Psrc,Pmdbdir,opts)
+%    Psnr = cat_io_dcm2bids_import('importSources',Psrc,Pmdbdir,opts)
+%    convmsg = cat_io_dcm2bids_import('convertSources',Psnr,Pmdbdir,opts[,Psub])
 %
 %  See also cat_io_dcm2bids.
 
   switch action
-    case {'getInputSources','importSources'}
+    case {'getInputSources','importSources','convertSources'}
       [varargout{1:nargout}] = feval(action,varargin{:});
     otherwise
       error('cat_io_dcm2bids_import:unknownAction','Unknown action "%s".',action);
@@ -160,45 +163,50 @@ function R = bidsRoot(P)
   end
 end
 % =========================================================================
-function [Psnr,convmsg] = importSources(Psrc,Pmdbdir,opts)
+function Psnr = importSources(Psrc,Pmdbdir,opts)
 %importSources. Import the input sources Psrc (see getInputSources) into 
-%  the database Pmdbdir and convert (or copy) the images if required. 
-%  (1) The DICOM headers of new scans (fast, dcm2niix header only) and the 
-%      scans of BIDS datasets are imported into the database, see 
-%      importDICOMheaders in cat_io_dcm2bids_importDCM and 
-%      cat_io_dcm2bids_importBIDS. 
-%  (2) The images of these scans are converted (DICOM) or copied (BIDS) if 
-%      required (not for the JSON-only outputs 0 and 1), see convertImages 
-%      in cat_io_dcm2bids_importDCM. 
+%  the database Pmdbdir: the DICOM headers of new scans (fast, dcm2niix 
+%  header only) and the scans of BIDS datasets, see importDICOMheaders in 
+%  cat_io_dcm2bids_importDCM and cat_io_dcm2bids_importBIDS. The images 
+%  are converted later for each subject package (see convertSources). 
 %  Psnr are the scan directories of all selected scans (DICOM, BIDS, and 
-%  database input) and convmsg is a containers.Map with the reason of scans
-%  without image. 
-
-  % temporary directory of this run for the dcm2niix conversions (removed 
-  % at the end, also after errors or interruptions; directories of other 
-  % runs are only removed if they are older than one day)
+%  database input). 
+  Ptmp     = tmpDir(Pmdbdir); 
+  tmpclean = onCleanup(@() rmTmpDir(Ptmp)); % removes Ptmp at the end
+  Psnr     = unique([cat_io_dcm2bids_importDCM('importDICOMheaders',Psrc.dicom, Pmdbdir, Ptmp, opts); ...
+                     cat_io_dcm2bids_importBIDS(Psrc.bids, Pmdbdir, opts); Psrc.database]); 
+end
+% =========================================================================
+function convmsg = convertSources(Psnr,Pmdbdir,opts,Psub)
+%convertSources. Convert (DICOM) or copy (BIDS) the images of the scan 
+%  directories Psnr if required (not for the JSON-only outputs 0 and 1), 
+%  see convertImages in cat_io_dcm2bids_importDCM. Psub limits the 
+%  converted images to these subject directories of the database (e.g. 
+%  the subject package of a parallel process, as a DICOM directory can 
+%  contain scans of several subjects; empty for all). convmsg is a 
+%  containers.Map with the reason of scans without image. 
+  if ~exist('Psub','var'), Psub = {}; end
+  if opts.output > 1 && ~isempty(Psnr)
+    Ptmp     = tmpDir(Pmdbdir); 
+    tmpclean = onCleanup(@() rmTmpDir(Ptmp)); % removes Ptmp at the end
+    convmsg  = cat_io_dcm2bids_importDCM('convertImages',Psnr, Pmdbdir, Ptmp, opts, Psub); 
+  else
+    convmsg  = containers.Map('KeyType','char','ValueType','char'); 
+  end
+end
+% =========================================================================
+function Ptmp = tmpDir(Pmdbdir)
+%tmpDir. Temporary directory of this process for the dcm2niix conversions
+%  (removed by the caller at the end, also after errors or interruptions),
+%  where directories of other runs are only removed if they are older than 
+%  one day (e.g. of parallel processes). 
   [~,tmpname] = fileparts(tempname); 
-  Ptmp     = fullfile(Pmdbdir,['catDCM2BIDStmp_' tmpname]); 
-  Dtmp     = dir(fullfile(Pmdbdir,'catDCM2BIDStmp*')); 
+  Ptmp = fullfile(Pmdbdir,['catDCM2BIDStmp_' tmpname]); 
+  Dtmp = dir(fullfile(Pmdbdir,'catDCM2BIDStmp*')); 
   for ti = 1:numel(Dtmp)
     if Dtmp(ti).isdir && datetime(Dtmp(ti).datenum,'ConvertFrom','datenum') < datetime('now') - days(1)
       rmTmpDir(fullfile(Pmdbdir,Dtmp(ti).name)); 
     end
-  end
-  tmpclean = onCleanup(@() rmTmpDir(Ptmp)); % removes Ptmp at the end
-
-  % (1) import the DICOM headers of new scans and the scans of BIDS datasets
-  % into the database and get the scan directories of all selected scans 
-  % (DICOM, BIDS, and database input)
-  Psnr = unique([cat_io_dcm2bids_importDCM('importDICOMheaders',Psrc.dicom, Pmdbdir, Ptmp, opts); ...
-                 cat_io_dcm2bids_importBIDS(Psrc.bids, Pmdbdir, opts); Psrc.database]); 
-
-  % (2) convert the images of these scans if required (not for the JSON-only
-  % outputs 0 and 1)
-  if opts.output > 1
-    convmsg = cat_io_dcm2bids_importDCM('convertImages',Psnr, Pmdbdir, Ptmp, opts); 
-  else
-    convmsg = containers.Map('KeyType','char','ValueType','char'); 
   end
 end
 % =========================================================================

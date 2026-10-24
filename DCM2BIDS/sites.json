@@ -2,6 +2,7 @@
   {
     "DeviceSerialNumber":           "000815",
     "InstitutionAbbreviation":      "Site01",
+    "siteID":                       "",
     "Color":                        "#A82117",
     "InstitutionName":              "Hospital",
     "InstitutionalDepartmentName":  "Neurologie",
@@ -13,6 +14,7 @@
   {
     "DeviceSerialNumber":           "000816",
     "InstitutionAbbreviation":      "Site02",
+    "siteID":                       "",
     "Color":                        "",
     "InstitutionName":              "Hospital",
     "InstitutionalDepartmentName":  "Neurologie",

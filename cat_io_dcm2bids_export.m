@@ -42,20 +42,27 @@ function varargout = cat_io_dcm2bids_export(action,varargin)
 %  - cleaned: name of the patient (replaced by the PatientID), names of
 %    physicians and operators, addresses, phone numbers, other patient IDs,
 %    accession and procedure IDs, and comments (see cleanedElements)
-%  - birth date: the 15th of the month for opts.anonymize = 1 (the age
-%    estimate of the import uses the 15th, i.e. the original and exported
-%    data give the same age, see assurePatientDCMfields in cat_io_dcm2bids_db)
+%  - birth date: the 15th of the month for opts.anonymize > 0 (for level 2
+%    of the shifted date, i.e. the age with an accuracy of about a month; 
+%    the age estimate of the import uses the 15th, i.e. the original and 
+%    exported data give the same age, see assurePatientDCMfields in 
+%    cat_io_dcm2bids_db)
 %  - anonymization level 2 (opts.anonymize = 2, see anonymizeFile and
 %    cat_io_dcm2bids_anonymize): the BIDS subject label as PatientID and
 %    PatientName and the session label as StudyID, the dates of a session 
-%    shifted to the date of its label and its times to the time since its
-%    start (00:00:00, i.e. the timing of scans and slices is kept, also 
-%    dates and times in private elements, the birth date with the offset of
-%    the subject's first session), UIDs replaced by UIDs of the same length
+%    shifted to the date of its label and its times so that it starts at 
+%    the center of its 3-hour interval of the day (01:30, 04:30, ..., 22:30,
+%    i.e. the timing of scans and slices is kept, also dates and times in 
+%    private elements, the birth date with the offset of the subject's 
+%    first session), UIDs replaced by UIDs of the same length
 %    (also in private elements), the scanner and institution by the site 
-%    and city, no station, department, and study and procedure descriptions
-%    (see anonymizedElements), parts of the patient name, the PatientID, 
-%    and the serial number in further elements replaced by X, and the names
+%    label (siteID, manufacturer, and field strength, without location, see
+%    setupSites in cat_io_dcm2bids_protocols), no address, station, model,
+%    coils, department, and study and procedure descriptions (see 
+%    anonymizedElements; the SoftwareVersions are kept for the conversion),
+%    parts of the patient name, the PatientID, the serial number, and the 
+%    institution, city, model, and coil names in further elements (e.g. the
+%    Siemens CSA headers) replaced by X, and the names
 %    of the zip files and directories with the BIDS labels of the subject 
 %    and session
 %  - kept (level 1): PatientID (that has to be a pseudonym), sex, age, 
@@ -193,17 +200,21 @@ function U = selectSeries(Pjson,datatype,status,site,sub,ses,BIDSfile,opts,A)
       if ~isempty(A) % anonymization level 2
         [~,boffset] = cat_io_dcm2bids_anonymize('subject',A,subname);
         t = regexp(fnameparts{min(3,end)},'^(\d{8})(\d{6})?','tokens','once'); % study date and time
-        offset = boffset; date = ''; time = 0;
-        if ~isempty(t) && ~isempty(t{2}), time = [3600 60 1] * str2double({t{2}(1:2); t{2}(3:4); t{2}(5:6)}); end
+        offset = boffset; date = ''; time = 0; start = 0; % (start of the session at 00:00:00 without study time)
+        if ~isempty(t) && ~isempty(t{2})
+          time  = [3600 60 1] * str2double({t{2}(1:2); t{2}(3:4); t{2}(5:6)}); 
+          start = cat_io_dcm2bids_anonymize('dayInterval',time); % (center of the 3-hour interval of the day)
+        end
         try % (without valid study date only the shift of the subject)
           [~,offset] = cat_io_dcm2bids_anonymize('session',t{1},boffset,opts.sesunit); date = t{1};
         catch
           offset = boffset; date = '';
         end
-        addr = strtrim(strsplit(char(fieldText(J,'InstitutionAddress')),',')); % city of the site (see siteProposal)
-        if numel(addr) < 2, addr = {'',''}; end
+        addr = strtrim(strsplit(fieldText(J,'InstitutionAddress'),',')); % (location, model, and coils replaced by X)
+        wrd  = {fieldText(J,'InstitutionName'),addr{min(2,end)},fieldText(J,'ManufacturersModelName'), ...
+          fieldText(J,'ReceiveCoilName'),fieldText(J,'CoilString')};
         X    = struct('code',sub{si}(5:end),'ses',regexprep(ses{si},'^ses-',''),'offset',offset, ...
-          'boffset',boffset,'date',date,'time',time,'site',site{si},'city',addr{2},'salt',A.salt);
+          'boffset',boffset,'date',date,'time',time,'start',start,'site',site{si},'words',{wrd(cellfun(@numel,wrd) >= 4)},'salt',A.salt);
         subname = sub{si}; sesname = ses{si};
         key  = cat_io_dcm2bids_anonymize('hashUID',key,A.salt);
       end
@@ -369,17 +380,22 @@ function [b,info] = anonymizeFile(b,plane,opts,X)
 %  as info. Nested elements are blanked (same length), top-level elements
 %  get new values (see cleanedElements). For the anonymization level 2 (X 
 %  with the subject and session label, the date offsets of the session and
-%  subject, site, city, and secret salt, see cat_io_dcm2bids_anonymize), 
-%  the PatientID and PatientName are the subject label, the StudyID is the
-%  session label, the scanner and institution are the site and city, the
-%  station, department, and descriptions of the study and procedure are 
-%  removed (see anonymizedElements), and in place all dates and times are
-%  shifted (DA, DT, and TM to the session start at 00:00:00, the birth 
-%  date with the offset of the subject, and dates in private elements, see
+%  subject, site label, institution, city, model, and coil names, and the
+%  secret salt, see 
+%  cat_io_dcm2bids_anonymize), the PatientID and PatientName are the 
+%  subject label, the StudyID is the session label, the scanner and 
+%  institution are the site label (without location), the
+%  address, station, model, coils, department, and descriptions of the 
+%  study and procedure are removed (see anonymizedElements), and in place
+%  all dates and times are
+%  shifted (DA, DT, and TM to the session start at the center of its 
+%  3-hour interval of the day, the birth date with the offset of the 
+%  subject, and dates in private elements, see
 %  shiftSession in cat_io_dcm2bids_anonymize), all 
 %  UIDs (UI and in private elements, e.g. the Siemens CSA header) are 
 %  replaced by UIDs of the same length, and parts of the patient name, the
-%  PatientID, and the serial number in further elements are replaced by X.
+%  PatientID, the serial number, and the institution, city, model, and coil
+%  names (X.words) in further elements are replaced by X.
   if ~exist('X','var'), X = []; end
   E   = dicomElements(b);
   top = E.depth == 0;
@@ -416,7 +432,7 @@ function [b,info] = anonymizeFile(b,plane,opts,X)
       if ~strcmp(vr{ei},'TM'), dates = [dates regexp(char(b(v)),'(?<!\d)\d{8}','match')]; end %#ok<AGROW>
       if E.tag(ei) == hex2dec('00100030') % birth date of the subject
         b(v) = uint8(cat_io_dcm2bids_anonymize('shiftDate',char(b(v)),X.boffset));
-      else % dates and times of the session (start at 00:00:00)
+      else % dates and times of the session (start at the center of its 3-hour interval)
         b(v) = uint8(cat_io_dcm2bids_anonymize('shiftSession',char(b(v)),vr{ei},X));
       end
     end
@@ -435,7 +451,7 @@ function [b,info] = anonymizeFile(b,plane,opts,X)
         for k = 1:numel(i0), b(v(i0(k):i1(k))) = 'X'; end
       end
     end
-    ids = lower({pid sn});
+    ids = lower([{pid sn} X.words]);
     [~,pos] = nameCheck(b,E,[parts ids(cellfun(@numel,ids) >= 4)],cln);
     for k = 1:size(pos,1), b(pos(k,1):pos(k,2)) = 'X'; end
     pid = X.code;
@@ -449,7 +465,7 @@ function [b,info] = anonymizeFile(b,plane,opts,X)
     chg(end+1,:) = {ei,v}; %#ok<AGROW>
   end
   bd = el('00100030'); d = elementValue(b,E,bd);
-  if opts.anonymize == 1 && numel(d) == 8 && all(isstrprop(d,'digit'))
+  if opts.anonymize > 0 && numel(d) == 8 && all(isstrprop(d,'digit')) % (level 2: shifted date)
     chg(end+1,:) = {bd,[d(1:6) '15']};
   end
   b = spliceValues(b,E,chg);
@@ -462,13 +478,18 @@ end
 % =========================================================================
 function new = anonymizedElements(X)
 %anonymizedElements. Elements (group and element) with their new values of
-%  the anonymization level 2 (X with the subject and session label, site,
-%  and city, see anonymizeFile). Nested elements are blanked.
+%  the anonymization level 2 (X with the subject and session label and the
+%  site label without location, see anonymizeFile). Nested elements are 
+%  blanked. The SoftwareVersions are kept, as dcm2niix uses them for the 
+%  conversion (e.g. of Siemens XA data).
   new = {
     '00100020', X.code              % PatientID
     '00181000', X.site              % DeviceSerialNumber
     '00080080', X.site              % InstitutionName
-    '00080081', [',' X.city ',']    % InstitutionAddress
+    '00080081', ''                  % InstitutionAddress
+    '00081090', ''                  % ManufacturerModelName
+    '00181250', ''                  % ReceiveCoilName
+    '00181251', ''                  % TransmitCoilName
     '00081040', ''                  % InstitutionalDepartmentName
     '00081010', ''                  % StationName
     '00200010', X.ses               % StudyID (session label, e.g. w0052)
