@@ -768,19 +768,25 @@ function exportSegmentation(Pdbnii,BIDSpathd,BIDSfile,opts)
 %  segmentanat in cat_io_dcm2bids_pp_anat): the volumes (JSON) and for
 %  opts.preprocessing > 1 the label map c0, the bias-corrected image m, 
 %  the modulated normalized GM map mwc1, and the atlas label map 
-%  neuromorphometrics_ (of the anonymized or denoised image).
+%  neuromorphometrics_ (of the anonymized or denoised image), which are 
+%  otherwise only registered in the derivatives index of the database (for
+%  the renderings and the report tables, see registerDerivative in 
+%  cat_io_dcm2bids_helper).
   [pth,nam] = fileparts(regexprep(Pdbnii,'\.gz$',''));
   bnam = spm_file(BIDSfile,'basename');
   Pj   = fullfile(pth,['catDCM2BIDSsegus_' nam '.json']);
   if ~exist(Pj,'file'), return; end
   if ~exist(BIDSpathd,'dir'), mkdir(BIDSpathd); end
   copyfile(Pj,fullfile(BIDSpathd,['catDCM2BIDSsegus_' bnam '.json']));
-  if opts.preprocessing < 2, return; end
   for pre = {'c0','m','mwc1','neuromorphometrics_'}
     for p2 = {'anon_','sanlm_anon_','sanlm_',''}
       P = fullfile(pth,[pre{1} p2{1} nam '.nii.gz']); if ~exist(P,'file'), P = P(1:end-3); end
       if exist(P,'file')
-        cat_io_dcm2bids_helper('exportNii',P,fullfile(BIDSpathd,[pre{1} bnam]),opts); break
+        cat_io_dcm2bids_helper('registerDerivative',P,fullfile(BIDSpathd,[pre{1} bnam]));
+        if opts.preprocessing > 1
+          cat_io_dcm2bids_helper('exportNii',P,fullfile(BIDSpathd,[pre{1} bnam]),opts); 
+        end
+        break
       end
     end
   end

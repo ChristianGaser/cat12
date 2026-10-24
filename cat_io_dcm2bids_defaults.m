@@ -80,7 +80,8 @@ function def = cat_io_dcm2bids_defaults
   def.opts.runqc            = 1;     % run QC (all data)
   def.opts.preprocessing    = 1;     % basic preprocessing of all scans: 0 - none, 1 - processing (segmentation 
                                      % of anat, DTI of dwi, rs-fMRI measures of func, see cat_io_dcm2bids_pp_anat*), 
-                                     % 2 - processing with derivatives (maps)
+                                     % 2 - processing with derivatives (maps), whereas the maps of 1 stay in the 
+                                     % database and are used for the renderings and report (derivatives index)
   def.opts.denoise          = 0;     % denoising (sanlm) of anat before the segmentation and of the DWI volumes 
                                      % before the tensor fit (see cat_io_dcm2bids_pp_dwi)
   def.opts.pplevel          = 4;     % preprocessing level, i.e. accuracy and time of the DTI and rs-fMRI measures 
@@ -189,6 +190,9 @@ function def = cat_io_dcm2bids_defaults
   def.opts.render.subfilter = {};      % only the subject and session reports (R3) of these subjects (BIDS labels, 
                                        % e.g. of a subject package, see cat_io_dcm2bids_parallel), with the slice
                                        % cache for R1/R2 (empty - all subjects and outputs)
+  def.opts.render.dbdir     = '';      % database directory with the index of the derivatives that were not exported
+                                       % (opts.preprocessing = 1, see registerDerivative in cat_io_dcm2bids_helper)
+                                       % ('' - catDCM2BIDSdb of the output directory)
 
   % report figure of each BIDS directory (see cat_io_dcm2bids_reportfig): A4
   % overview page and one page per site (for several sites) with diagrams 

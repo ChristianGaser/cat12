@@ -153,12 +153,15 @@ function datatype = setupDatatype(pro,V)
 %  protocol names without this information (e.g. of other vendors or sites)
 %  by its sidecar V (see sidecarDatatype), otherwise other.
   if ~exist('V','var') || ~isstruct(V), V = struct(); end
+  pro = cat_io_strrep(pro,{'_','-'},{'',''}); 
   if cat_io_contains( lower(pro) , {'mpr','mp2r','t1w','t2w','pdw','flair','inv','uni','t1','t2','tse'} ) && ...
-    ~cat_io_contains( lower(pro) , {'fmri','rest','bold','func','rmri','dti','dwi','diff','dmri','field',} )
+    ~cat_io_contains( lower(pro) , {'fmri','rest','bold','func','rmri','dti','dwi','diff','dmri','field'} )
     datatype  = 'anat'; 
-  elseif cat_io_contains( lower(pro) , {'fmri','rest','bold','func','rmri','rs','tb'} )
+  elseif cat_io_contains( lower(pro) , {'fmri','rest','bold','func','rmri','rs','tb'} ) && ...
+    ~cat_io_contains( lower(pro) , {'fmap','fieldmap','phase'} )
     datatype  = 'func'; 
-  elseif cat_io_contains( lower(pro) , {'dti','dwi','diff','dmri'} )
+  elseif cat_io_contains( lower(pro) , {'dti','dwi','diff','dmri'} ) && ...
+    ~cat_io_contains( lower(pro) , {'fmap','fieldmap','phase'} )
     datatype  = 'dwi';
   elseif cat_io_contains( lower(pro) , {'mrs'} )
     datatype  = 'mrs';

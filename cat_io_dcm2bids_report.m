@@ -2,7 +2,9 @@ function varargout = cat_io_dcm2bids_report(action,varargin)
 %cat_io_dcm2bids_report. Report tables of cat_io_dcm2bids.
 %  The report tables are created from the BIDS directory and its
 %  derivatives (i.e., they can be created again at any time and fit to the
-%  exported data) and contain only the BIDS labels of the subjects, i.e.,
+%  exported data, besides the maps of the sample homogeneity that are used 
+%  from the database if they were not exported, see opts.preprocessing) 
+%  and contain only the BIDS labels of the subjects, i.e.,
 %  they are for sharing and the evaluation by other software (e.g. R):
 %    scans.<fmt>       one row per scan (BIDS image or sidecar) with the
 %                      subject, session, site, age, sex, BIDS type, protocol
@@ -65,7 +67,7 @@ function writeReportTables(Poutdir,job)
 %  created again in each run (the old tables are kept without scans).
   PBIDS   = fullfile(Poutdir,job.BIDSdir,job.BIDSsubdir);
   Preport = fullfile(Poutdir,[job.BIDSdir '-report'],'tables',job.BIDSsubdir);
-  S = collectScans(PBIDS);
+  S = collectScans(PBIDS,cat_io_dcm2bids_helper('derivativeIndex',fullfile(Poutdir,'catDCM2BIDSdb')));
   if isempty(S), return; end
   Pold    = fullfile(Poutdir,[job.BIDSdir '-report'],sprintf('report_%s.%s',job.BIDSsubdir,job.opts.tableformat));
   if exist(Pold,'file'), delete(Pold); end % report table of older versions
@@ -100,11 +102,14 @@ function writeReportTables(Poutdir,job)
   writeRegionTables(fullfile(Poutdir,[job.BIDSdir '-report'],'regions',job.BIDSsubdir),S,fmt);
 end
 % =========================================================================
-function S = collectScans(PBIDS)
+function S = collectScans(PBIDS,D)
 %collectScans. Records of all raw scans (sidecars of the MRI datatypes) of
 %  the BIDS directory PBIDS (with its protocol subdirectories) with the
 %  data of the participants and sessions files, the sidecar, and the
-%  derivatives (QC, segmentation, and session registration).
+%  derivatives (QC, segmentation, and session registration), where the
+%  maps of the sample homogeneity that were not exported (see 
+%  opts.preprocessing) are used from the database (derivatives index D,
+%  see derivativeFile).
   S = struct([]);
   if ~exist(PBIDS,'dir'), return; end
   P = cat_vol_findfiles(PBIDS,'sub-*.json');
@@ -197,8 +202,7 @@ function S = collectScans(PBIDS)
       r.mix.n = 1 + numel(jsonPath(Jm,{'method','mix','further'},[]));
       for fn = {'FA_WM','MD_WM','MD_WM_peakwidth'}, r.mix.(fn{1}) = jsonNumber(Jm,{'global',fn{1}}); end
       for ext = {'.nii.gz','.nii'}
-        Pw = fullfile(droot,['catDCM2BIDSdwimix_wFA_' name ext{1}]);
-        if isempty(r.mix.PwFA) && exist(Pw,'file'), r.mix.PwFA = Pw; end
+        if isempty(r.mix.PwFA), r.mix.PwFA = derivativeFile(D,fullfile(droot,['catDCM2BIDSdwimix_wFA_' name ext{1}])); end
       end
     end
     Jr = readJSON(fullfile(droot,['catDCM2BIDSrsfmri_' name '.json']));
@@ -217,12 +221,20 @@ function S = collectScans(PBIDS)
     % homogeneity, not columns)
     r.Pmwc1 = ''; r.PwFA = ''; r.Pconn = '';
     for ext = {'.nii.gz','.nii'}
-      if isempty(r.Pmwc1) && exist(fullfile(droot,['mwc1' name ext{1}]),'file'), r.Pmwc1 = fullfile(droot,['mwc1' name ext{1}]); end
-      if isempty(r.PwFA) && exist(fullfile(droot,['catDCM2BIDSdwi_wFA_' name ext{1}]),'file'), r.PwFA = fullfile(droot,['catDCM2BIDSdwi_wFA_' name ext{1}]); end
+      if isempty(r.Pmwc1), r.Pmwc1 = derivativeFile(D,fullfile(droot,['mwc1' name ext{1}])); end
+      if isempty(r.PwFA),  r.PwFA  = derivativeFile(D,fullfile(droot,['catDCM2BIDSdwi_wFA_' name ext{1}])); end
     end
-    if exist(fullfile(droot,['catDCM2BIDSrsfmri_conn_' name '.tsv']),'file'), r.Pconn = fullfile(droot,['catDCM2BIDSrsfmri_conn_' name '.tsv']); end
+    r.Pconn = derivativeFile(D,fullfile(droot,['catDCM2BIDSrsfmri_conn_' name '.tsv']));
     if isempty(S), S = r; else, S(end+1) = r; end %#ok<AGROW>
   end
+end
+% =========================================================================
+function P = derivativeFile(D,P)
+%derivativeFile. Existing BIDS derivative P, otherwise its database file 
+%  of the derivatives index D (not exported for opts.preprocessing = 1, see
+%  registerDerivative in cat_io_dcm2bids_helper), otherwise ''.
+  if exist(P,'file'), return; end
+  if isKey(D,P), P = D(P); else, P = ''; end
 end
 % =========================================================================
 function writeRegionTables(Preg,S,fmt)

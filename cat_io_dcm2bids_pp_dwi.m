@@ -46,7 +46,8 @@ function varargout = cat_io_dcm2bids_pp_dwi(action,varargin)
 %  T1w segmentation, e.g. for voxel-based analyses, see warpToMNI, and the 
 %  DEC map in the space of the T1w DECt1w by the non-linear coregistration,
 %  e.g. as overlay of the T1w, see toT1w) and copied to the BIDS 
-%  derivatives (the maps only for opts.preprocessing > 1, rendered with 
+%  derivatives (the maps only for opts.preprocessing > 1, otherwise only in
+%  the derivatives index of the database, rendered with 
 %  their scan besides wFA and DECt1w, see cat_io_dcm2bids_render). The
 %  segmentation is the one of the session (T1w, otherwise UNIT1, T2w, or
 %  FLAIR, see anatScan in cat_io_dcm2bids_pp_anat). The gradient
@@ -221,16 +222,19 @@ end
 % =========================================================================
 function exportResults(Pjson,pth,pre,nam,maps,BIDSpathd,BIDSfile,opts)
 %exportResults. Copy of the results Pjson and of the maps <pre><map>_<nam>
-%  (for opts.preprocessing > 1) to the BIDS derivatives BIDSpathd with the
+%  (for opts.preprocessing > 1, otherwise only registered in the 
+%  derivatives index of the database, see registerDerivative in 
+%  cat_io_dcm2bids_helper) to the BIDS derivatives BIDSpathd with the
 %  BIDS name of the scan (e.g. catDCM2BIDSdwi_FA_<BIDS name>).
   bnam = spm_file(BIDSfile,'basename');
   if ~exist(BIDSpathd,'dir'), mkdir(BIDSpathd); end
   copyfile(Pjson,fullfile(BIDSpathd,[pre bnam '.json']));
-  if opts.preprocessing > 1
-    for mi = 1:numel(maps)
-      Pmap = fullfile(pth,[pre maps{mi} '_' nam '.nii']);
-      if ~exist(Pmap,'file'), Pmap = fullfile(pth,[pre maps{mi} '_' nam '.nii.gz']); end
-      if exist(Pmap,'file')
+  for mi = 1:numel(maps)
+    Pmap = fullfile(pth,[pre maps{mi} '_' nam '.nii']);
+    if ~exist(Pmap,'file'), Pmap = fullfile(pth,[pre maps{mi} '_' nam '.nii.gz']); end
+    if exist(Pmap,'file')
+      cat_io_dcm2bids_helper('registerDerivative',Pmap,fullfile(BIDSpathd,[pre maps{mi} '_' bnam]));
+      if opts.preprocessing > 1
         cat_io_dcm2bids_helper('exportNii',Pmap,fullfile(BIDSpathd,[pre maps{mi} '_' bnam]),opts);
       end
     end

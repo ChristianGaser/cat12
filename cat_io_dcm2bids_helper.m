@@ -3,7 +3,9 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
 %  Text and JSON files with UTF-8 encoding (readText, writeText, writeJSON),
 %  paths (absPath, normPath, canonPath), NIfTI header information, single
 %  volumes, the gzip handling of NIfTIs, and their export (niiHeaderInfo, 
-%  niiVolume, prepNii, prepNiigz, gzipFile, exportNii), the realigned 
+%  niiVolume, prepNii, prepNiigz, gzipFile, exportNii), the index of the
+%  derivatives in the database (registerDerivative, derivativeIndex), the
+%  realigned 
 %  volumes of 4D data resliced in memory (realignedVolumes, 
 %  realignedVolume), and tables (updateTable, writeTable, and lists of 
 %  records with catRecords).
@@ -24,6 +26,8 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
 %    Po = cat_io_dcm2bids_helper('prepNiigz',Pi,opts)
 %    cat_io_dcm2bids_helper('gzipFile',P)
 %    cat_io_dcm2bids_helper('exportNii',P,Pout,opts)
+%    cat_io_dcm2bids_helper('registerDerivative',P,Pout)
+%    D = cat_io_dcm2bids_helper('derivativeIndex',Pmdbdir)
 %    cat_io_dcm2bids_helper('removeAcquisitionTime',P)
 %    [W,geom,Pmerged] = cat_io_dcm2bids_helper('conversionInfo',P)
 %    V = cat_io_dcm2bids_helper('realignedVolumes',P,Prp,opts)
@@ -37,6 +41,7 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
   switch action
     case {'readText','writeText','writeJSON','absPath','normPath','canonPath','derivativesDir', ...
           'niiHeaderInfo','niiVolume','prepNii','prepNiigz','gzipFile','exportNii','removeAcquisitionTime', ...
+          'registerDerivative','derivativeIndex', ...
           'conversionInfo','realignedVolumes','realignedVolume', ...
           'updateTable','writeTable','catRecords'}
       [varargout{1:nargout}] = feval(action,varargin{:});
@@ -361,6 +366,58 @@ function exportNii(P,Pout,opts)
       gunzip(P); movefile(P(1:end-3),[Pout '.nii']); 
     else
       copyfile(P,[Pout '.nii']); 
+    end
+  end
+end
+% =========================================================================
+function registerDerivative(P,Pout)
+%registerDerivative. Index of the derivatives of the database: the result
+%  P of the database (e.g. the label map c0 or a DTI map of a scan) as the
+%  BIDS derivative Pout (without extension, i.e. with the extension of P, 
+%  as for exportNii), also if it is not exported (opts.preprocessing = 1).
+%  The renderings and the report tables use the database file for such 
+%  derivatives (see derivativeIndex), i.e. the database is not part of the
+%  BIDS directories. The index catDCM2BIDSderivatives.json is stored in the
+%  session directory of the database (one process per subject, see 
+%  cat_io_dcm2bids_parallel) with paths relative to the session directory
+%  (P) and to the output directory (Pout) of the database.
+  Pses    = fileparts(fileparts(P));                  % <db>/sub-*/ses-*/snr-*/P
+  Poutdir = fileparts(fileparts(fileparts(Pses)));
+  if ~strncmp(Pout,[Poutdir filesep],numel(Poutdir)+1), return; end
+  ext  = regexp(P,'\.[^.\\/]+(\.gz)?$','match','once');
+  Pidx = fullfile(Pses,'catDCM2BIDSderivatives.json');
+  E    = struct('derivative',strrep([Pout(numel(Poutdir)+2:end) ext],filesep,'/'), ...
+               'source',strrep(P(numel(Pses)+2:end),filesep,'/'));
+  I = struct('Description','Database files of the BIDS derivatives (see registerDerivative in cat_io_dcm2bids_helper)', ...
+    'derivatives',E([]));
+  if exist(Pidx,'file')
+    try
+      J = jsondecode(readText(Pidx)); 
+      if isfield(J,'derivatives') && isstruct(J.derivatives) && all(isfield(J.derivatives,{'derivative','source'}))
+        I.derivatives = struct('derivative',{J.derivatives.derivative},'source',{J.derivatives.source})';
+      end
+    end
+  end
+  I.derivatives(strcmp({I.derivatives.derivative},E.derivative)) = [];
+  I.derivatives(end+1) = E; 
+  writeJSON(Pidx,I);
+end
+% =========================================================================
+function D = derivativeIndex(Pmdbdir)
+%derivativeIndex. Index of the derivatives of the database Pmdbdir (see
+%  registerDerivative) as map of the BIDS derivative (full path) to its 
+%  existing database file.
+  D = containers.Map('KeyType','char','ValueType','char');
+  if isempty(Pmdbdir) || ~exist(Pmdbdir,'dir'), return; end
+  Poutdir = fileparts(regexprep(Pmdbdir,'[\\/]+$',''));
+  Pidx    = dir(fullfile(Pmdbdir,'sub-*','ses-*','catDCM2BIDSderivatives.json'));
+  for ii = 1:numel(Pidx)
+    try
+      J = jsondecode(readText(fullfile(Pidx(ii).folder,Pidx(ii).name)));
+      for ei = 1:numel(J.derivatives)
+        P = fullfile(Pidx(ii).folder,strrep(J.derivatives(ei).source,'/',filesep));
+        if exist(P,'file'), D(fullfile(Poutdir,strrep(J.derivatives(ei).derivative,'/',filesep))) = P; end
+      end
     end
   end
 end

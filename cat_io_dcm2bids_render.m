@@ -147,6 +147,12 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 %                 and the slice rows for R1/R2, e.g. of a subject package of
 %                 a parallel process (see cat_io_dcm2bids_parallel), whereas 
 %                 R1/R2 of all subjects are rendered after all packages ({})
+%   .dbdir     .. database directory with the derivatives index, i.e. the 
+%                 derivatives that were not exported to the BIDS 
+%                 derivatives (opts.preprocessing = 1, see registerDerivative
+%                 in cat_io_dcm2bids_helper) are rendered from the database
+%                 as if they were exported ('' - catDCM2BIDSdb of the output
+%                 directory of PBIDS if available)
 %
 %  The intensities of a scan are scaled for all its slices together
 %  (1-99% percentile) to keep the slices of a scan comparable. The colored
@@ -194,6 +200,11 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
   end
   if ~exist(PBIDS,'dir'), return; end
 
+  % derivatives index of the database (see sourceFile)
+  if isempty(ropts.dbdir), ropts.dbdir = databaseDir(PBIDS); end
+  Ddb = cat_io_dcm2bids_helper('derivativeIndex',ropts.dbdir); 
+  sourceFile('',Ddb);
+
   % all slices (K) of R1 and of the scan rows of R2/R3 to sample each scan
   % only once (the sagittal slice of EPI images at x=+30, see epiSlices)
   rowslices = [3 10; 1 0; 2 0];
@@ -211,7 +222,11 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 
 
   %% find and describe images
-  P = cat_vol_findfiles(PBIDS,'*sub-*.nii*');
+  % (with the derivatives that are only in the database, see sourceFile)
+  P  = cat_vol_findfiles(PBIDS,'*sub-*.nii*');
+  Pv = keys(Ddb); Pv = Pv(strncmp(Pv,[PBIDS filesep],numel(PBIDS)+1)); 
+  Pv = Pv(~cellfun(@(f) exist(f,'file')>0,Pv)); 
+  P  = [P(:); Pv(:)];
   P = P( ~cellfun('isempty',regexp(P,'\.nii(\.gz)?$','once')) );
   P = P( cellfun('isempty',regexp(spm_file(P,'filename'),'^catDCM2BIDS(qc|dwi_wFA|dwi_DECt1w|dwimix_wFA|dwimix_DECt1w)_','once')) ); % QC maps (shown with their scan), wFA (analyses), and DECt1w (composite)
   P = P( cellfun('isempty',regexp(spm_file(P,'filename'),'^rsub-','once')) );          % realigned 4D data (equals its scan)
@@ -369,6 +384,11 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
       end
     end
   end
+  % derivatives of the database without their raw scan (e.g. of former 
+  % runs with other BIDS names)
+  idb = find(ismember({F.file},Pv)); 
+  F(idb(~arrayfun(@(f) exist(f.json,'file')>0,F(idb)))) = []; 
+  if isempty(F), return; end
 
 
   % sessions without anatomical scan: the T1w of another session (BIDS 
@@ -414,7 +434,7 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
         end
       case 'mean'
         Pc = fullfile(pp,['catDCM2BIDSrsfmri_conn_' F(fi).bidsname '.tsv']);
-        if exist(Pc,'file'), Fc(end+1) = composite(F(fi),'conn','',Pc,'conn'); end %#ok<AGROW>
+        if exist(sourceFile(Pc),'file'), Fc(end+1) = composite(F(fi),'conn','',Pc,'conn'); end %#ok<AGROW>
     end
   end
   F = [F(:); Fc(:)];
@@ -972,8 +992,7 @@ function S = renderScanSlices(F,K,ropts,Pcache)
 %  S.K (slices), S.readerr, header information of the scan (S.dim, S.vx, 
 %  S.nvol), S.qc (1 - denoised average), and S.new (newly sampled).
   n   = round(ropts.fov / ropts.res);
-  D   = dir(F.file);
-  if isempty(D), srcdate = nan; else, srcdate = D(1).datenum; end
+  srcdate = dateOf(F.file);
   qcmaps = struct2cell(F.qcmaps); qcdate = nan(1,numel(qcmaps)); 
   for mi = 1:numel(qcmaps), D = dir(qcmaps{mi}); if ~isempty(D), qcdate(mi) = D(1).datenum; end; end
   par = struct('version',13,'srcdate',srcdate,'qc',{fieldnames(F.qcmaps)'},'qcdate',qcdate, ...
@@ -997,7 +1016,8 @@ function S = renderScanSlices(F,K,ropts,Pcache)
   S = struct('K',K,'Y',zeros(n,n,size(K,1),'uint8'),'Yov',zeros(n,n,size(K,1),'uint8'),'C',[], ...
     'readerr',0,'dim',[],'vx',[],'nvol',nan,'qc',0,'new',1);
   try
-    txt = evalc('V = spm_vol(F.file);'); %#ok<NASGU> % avoid gz-messages
+    Pf  = sourceFile(F.file);
+    txt = evalc('V = spm_vol(Pf);'); %#ok<NASGU> % avoid gz-messages
     S.nvol = numel(V); Vall = V; V = V(1);
     S.dim  = V.dim; S.vx = sqrt(sum(V.mat(1:3,1:3).^2));
   catch
@@ -1244,14 +1264,38 @@ function C = composite(F,kind,under,over,tag)
 end
 % =========================================================================
 function P = niiOf(P)
-%niiOf. Existing NIfTI of the name P without extension (.nii.gz or .nii),
-%  otherwise ''.
-  if exist([P '.nii.gz'],'file'), P = [P '.nii.gz']; elseif exist([P '.nii'],'file'), P = [P '.nii']; else, P = ''; end
+%niiOf. Existing NIfTI of the name P without extension (.nii.gz or .nii,
+%  also in the database, see sourceFile), otherwise ''.
+  if exist(sourceFile([P '.nii.gz']),'file'), P = [P '.nii.gz']; elseif exist(sourceFile([P '.nii']),'file'), P = [P '.nii']; else, P = ''; end
+end
+% =========================================================================
+function P = sourceFile(P,D)
+%sourceFile. File of the BIDS derivative P that is read, i.e. its database
+%  file for a derivative that was not exported (opts.preprocessing = 1, 
+%  see registerDerivative in cat_io_dcm2bids_helper), otherwise P. All 
+%  names and outputs of the rendering use the BIDS name P, only the reading
+%  uses the database file. The derivatives index D (map of the BIDS 
+%  derivatives to their database files, see derivativeIndex) is set once 
+%  per call of cat_io_dcm2bids_render by sourceFile('',D).
+  persistent index
+  if nargin > 1, index = D; return; end
+  if ~isempty(index) && ~isempty(P) && isKey(index,P) && ~exist(P,'file'), P = index(P); end
+end
+% =========================================================================
+function Pdb = databaseDir(PBIDS)
+%databaseDir. Database directory catDCM2BIDSdb of the output directory of
+%  the BIDS directory PBIDS (outdir/BIDSdir/BIDSsubdir), otherwise ''.
+  Pdb = ''; P = PBIDS;
+  for i = 1:3
+    P = fileparts(P);
+    if exist(fullfile(P,'catDCM2BIDSdb'),'dir'), Pdb = fullfile(P,'catDCM2BIDSdb'); return; end
+  end
 end
 % =========================================================================
 function d = dateOf(P)
-%dateOf. Modification date of the file P (NaN if not available).
-  d = nan; if ~isempty(P), D = dir(P); if ~isempty(D), d = D(1).datenum; end, end
+%dateOf. Modification date of the file P (also in the database, see 
+%  sourceFile, NaN if not available).
+  d = nan; if ~isempty(P), D = dir(sourceFile(P)); if ~isempty(D), d = D(1).datenum; end, end
 end
 % =========================================================================
 function Ys = sampleSlices(P,vol,T,K,ropts,hold)
@@ -1260,6 +1304,7 @@ function Ys = sampleSlices(P,vol,T,K,ropts,hold)
 %  outside) by the transformation T to MNI space (see renderSlice).
   if ~exist('hold','var'), hold = 1; end
   n = round(ropts.fov / ropts.res); Ys = zeros(n,n,size(K,1),'single');
+  P = sourceFile(P); 
   txt = evalc('V = spm_vol(P);'); V = V(min(vol,numel(V))); o = ropts; o.interp = hold; %#ok<NASGU>
   for ki = 1:size(K,1), Ys(:,:,ki) = renderSlice([],V,T,K(ki,1),K(ki,2),o); end
 end
@@ -1510,7 +1555,7 @@ function R = readConn(P)
 %  row and column, see cat_io_dcm2bids_pp_rsfmri).
   R = [];
   try
-    C = cat_io_csv(P,'','',struct('delimiter','\t','convert2double',1)); C = C(2:end,2:end);
+    C = cat_io_csv(sourceFile(P),'','',struct('delimiter','\t','convert2double',1)); C = C(2:end,2:end);
     R = nan(size(C));
     for i = 1:numel(C), if isnumeric(C{i}) && ~isempty(C{i}), R(i) = double(C{i}(1)); end, end
   end

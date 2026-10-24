@@ -43,7 +43,8 @@ function varargout = cat_io_dcm2bids_pp_rsfmri(action,varargin)
 %  catDCM2BIDSrsfmri_mean_<scan>.nii in the space of the scan, e.g. as 
 %  underlay of the network rendering via the coregistration and the 
 %  registration of the session, see cat_io_dcm2bids_render) and copied to 
-%  the BIDS derivatives (the matrix and map only for opts.preprocessing > 1).
+%  the BIDS derivatives (the matrix and map only for opts.preprocessing > 1,
+%  otherwise only in the derivatives index of the database).
 %  The segmentation is the one of the session (T1w, otherwise UNIT1, T2w, 
 %  or FLAIR, see anatScan in cat_io_dcm2bids_pp_anat). The
 %  measures (4) and (6) without T1w segmentation are restricted to the
@@ -142,18 +143,24 @@ function processScan(i,Pdbnii,Vjson,datatype,suffix,A,BIDSpathd,BIDSfile,opts,co
     J = cat_io_json(Pjson);
   end
 
-  % copy to the BIDS derivatives (the matrix for opts.preprocessing > 1)
+  % copy to the BIDS derivatives (the matrix and map for opts.preprocessing
+  % > 1, otherwise only registered in the derivatives index of the 
+  % database, see registerDerivative in cat_io_dcm2bids_helper)
   bnam = spm_file(BIDSfile,'basename');
   if ~exist(BIDSpathd,'dir'), mkdir(BIDSpathd); end
   copyfile(Pjson,fullfile(BIDSpathd,['catDCM2BIDSrsfmri_' bnam '.json']));
-  if opts.preprocessing > 1 && exist(Pconn,'file')
-    copyfile(Pconn,fullfile(BIDSpathd,['catDCM2BIDSrsfmri_conn_' bnam '.tsv']));
+  if exist(Pconn,'file')
+    cat_io_dcm2bids_helper('registerDerivative',Pconn,fullfile(BIDSpathd,['catDCM2BIDSrsfmri_conn_' bnam]));
+    if opts.preprocessing > 1
+      copyfile(Pconn,fullfile(BIDSpathd,['catDCM2BIDSrsfmri_conn_' bnam '.tsv']));
+    end
   end
-  if opts.preprocessing > 1
-    for m = {'mean'}
-      Pmap = fullfile(pth,['catDCM2BIDSrsfmri_' m{1} '_' nam '.nii']);
-      if ~exist(Pmap,'file'), Pmap = [Pmap '.gz']; end
-      if exist(Pmap,'file')
+  for m = {'mean'}
+    Pmap = fullfile(pth,['catDCM2BIDSrsfmri_' m{1} '_' nam '.nii']);
+    if ~exist(Pmap,'file'), Pmap = [Pmap '.gz']; end
+    if exist(Pmap,'file')
+      cat_io_dcm2bids_helper('registerDerivative',Pmap,fullfile(BIDSpathd,['catDCM2BIDSrsfmri_' m{1} '_' bnam]));
+      if opts.preprocessing > 1
         cat_io_dcm2bids_helper('exportNii',Pmap,fullfile(BIDSpathd,['catDCM2BIDSrsfmri_' m{1} '_' bnam]),opts);
       end
     end

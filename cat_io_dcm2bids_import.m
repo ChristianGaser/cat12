@@ -54,7 +54,10 @@ function Psrc = getInputSources(Pdata, Pmdbdir, ignoreScouts)
   if ignoreScouts
     cat_io_cprintf('blue','\n  Skip all localizer and scouts!\n\n'); 
   end
+  
+  spm_progress_bar('init',numel(Pdata),'Check import directories','Directories')
   for di = 1:numel(Pdata)
+    spm_progress_bar('Set',di)
     Pdi = regexprep(Pdata{di},['[' fs ']+$'],''); % no final filesep
     
     % database directory: last path component "catDCM2BIDSdb" and the rest
@@ -149,6 +152,7 @@ function Psrc = getInputSources(Pdata, Pmdbdir, ignoreScouts)
   if ~isempty(Psrc.database)
     cat_io_cprintf('blue','  Export %d database scan directories.\n\n', numel(Psrc.database)); 
   end
+  spm_progress_bar('Clear')
 end
 % =========================================================================
 function R = bidsRoot(P)

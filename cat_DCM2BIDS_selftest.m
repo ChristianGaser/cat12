@@ -1081,8 +1081,9 @@ function R = testParallel(E)
 %  sessions (two subjects) with QC, preprocessing, and rendering (real 
 %  dcm2niix): the same BIDS files (raw data and derivatives), tables of the
 %  database (scans, subjects, sites, protocol variants), participants and 
-%  sessions files, quality ratings, and rendered pages, without remaining
-%  queue directory, and the processing time of both runs. 
+%  sessions files, quality ratings, and rendered pages, the renderings of
+%  the maps that were not exported (derivatives index of the database),
+%  without remaining queue directory, and the processing time of both runs.
   R = struct('name',{},'ok',{},'info',{});
   O = fullfile(E.Pout,'parallel'); fresh(O); 
   run = {'serial',0; 'parallel',2}; t = zeros(1,2); txt = cell(1,2); 
@@ -1136,7 +1137,20 @@ function R = testParallel(E)
   Gp = names(listing(fullfile(P,'BIDS-pseudonymized-report','render'))); 
   pg = @(L) L(cellfun('isempty',regexp(L,'/(cache|rows)/','once'))); 
   R(end+1) = struct('name','rendering','ok',isequal(pg(Gs),pg(Gp)) && ~isempty(sel(Gp,'/subjects/p01_')), ...
-    'info',sprintf('%d pages (%d parallel), %d subject pages',numel(pg(Gs)),numel(pg(Gp)),numel(sel(Gp,'/subjects/p')))); 
+    'info',sprintf('%d pages (%d parallel), %d subject pages',numel(pg(Gs)),numel(pg(Gp)),numel(sel(Gp,'/subjects/p'))));
+
+  % maps of the preprocessing without export (preprocessing 1): no maps in
+  % the BIDS derivatives, but the derivatives index in the database and
+  % the renderings of the maps (see registerDerivative in
+  % cat_io_dcm2bids_helper)
+  Mx = sel(names(Lp),'/(c0|m|mwc1|neuromorphometrics_|catDCM2BIDS(dwi|dwimix|rsfmri)_[A-Za-z0-9]+_)sub-[^/]*\.(nii|tsv)');
+  Di = dir(fullfile(P,'catDCM2BIDSdb','sub-*','ses-*','catDCM2BIDSderivatives.json'));
+  Dm = cat_io_dcm2bids_helper('derivativeIndex',fullfile(P,'catDCM2BIDSdb'));
+  Gm = unique(regexprep(sel(pg(Gp),'/render_[^/]*_(c0|mwc1|FA|DEC|mean)_'),'/render_.*$',''));
+  R(end+1) = struct('name','database derivatives','ok',isempty(Mx) && ~isempty(Di) && Dm.Count > 0 && ...
+    ~isempty(sel(Gm,'_c0$')) && ~isempty(sel(Gm,'_mwc1$')), ...
+    'info',sprintf('%d exported maps, %d index files with %d maps, %d rendered map types (%s)', ...
+    numel(Mx),numel(Di),Dm.Count,numel(Gm),strjoin(spm_file(Gm,'filename'),', ')));
 
   % parallel processing: packages of the workers, no queue directory, time
   npk = regexp(txt{2},'(\d+) of (\d+) packages processed','tokens'); 

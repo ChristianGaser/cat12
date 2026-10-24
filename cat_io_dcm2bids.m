@@ -303,6 +303,7 @@ function out = cat_io_dcm2bids(job)
       % (the subject and session reports of the parallel processes are 
       % already rendered, see cat_io_dcm2bids_parallel)
       ropts = job.opts.render; if R.rendered, ropts.subjects = 0; end
+      ropts.dbdir = Pmdbdir; % (derivatives of the database, see opts.preprocessing = 1)
       cat_io_dcm2bids_render( fullfile(Poutdir,job.BIDSdir,job.BIDSsubdir), ...
         fullfile(Poutdir,[job.BIDSdir '-report'],'render',job.BIDSsubdir), ropts);
       

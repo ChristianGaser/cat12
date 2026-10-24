@@ -165,7 +165,7 @@ function R = processPackage(C,Psnr,render)
   R       = cat_io_dcm2bids_process('processScans',C,Psnr,convmsg);
   sub     = unique(R.sub(~cellfun('isempty',R.sub) & ~cellfun('isempty',R.BIDSsub)));
   if render && ~isempty(sub)
-    ropts = C.job.opts.render; ropts.subfilter = sub;
+    ropts = C.job.opts.render; ropts.subfilter = sub; ropts.dbdir = C.Pmdbdir;
     cat_io_dcm2bids_render(fullfile(C.Poutdir,C.job.BIDSdir,C.job.BIDSsubdir), ...
       fullfile(C.Poutdir,[C.job.BIDSdir '-report'],'render',C.job.BIDSsubdir), ropts);
   end
