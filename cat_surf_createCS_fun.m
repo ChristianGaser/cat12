@@ -371,7 +371,7 @@ function useprior = setupprior(opt,surffolder,P,si)
     useprior = useprior & copyfile(fullfile(surffolder,sprintf('%s.sphere.reg.%s.gii',opt.surf{si},ff1)),P(si).Pspherereg,'f');
     
     if ~useprior
-      warn_str = sprintf('Surface files for %s not found. Move on with individual surface extraction.\n',pp1_surffolder);
+      warn_str = sprintf('Surface files for %s not found. Move on with individual surface extraction.\n',surffolder);
       fprintf('\nWARNING: %s',warn_str);
       cat_io_addwarning('cat_surf_createCS4:noPriorSurface', warn_str);
     else

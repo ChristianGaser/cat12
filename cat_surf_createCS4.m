@@ -431,9 +431,11 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
       end
      
       % create "gold-standard" surface 
+      % (remove the surface of a previous run that would be loaded if the binary fails)
+      if exist(P(si).Pcentral,'file'), delete(P(si).Pcentral); end
       cmd = sprintf('CAT_VolMarchingCubes "%s" "%s" -thresh "%0.2f" -fast', Vppmi.fname, P(si).Pcentral,gth);
-      cat_system(cmd ,opt.verb-3);  
-      CSG05 = loadSurf(P(si).Pcentral);
+      [~,RS] = cat_system(cmd ,opt.verb-3);
+      CSG05 = loadSurf(P(si).Pcentral,cmd,RS);
       res.area_gt(si) = sum(cat_surf_fun('area',CSG05)) / 100; 
       if ~debug, clear CSG05; end 
 
@@ -450,20 +452,21 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
  
         % create basic surface to know the real surface geometry
         cmd = sprintf('CAT_VolMarchingCubes  "%s" "%s" -thresh "%0.4f" -fast', Vppmi.fname, P(si).Pcentral, gycon);
-        cat_system(cmd ,opt.verb-3);  
-        CSG{thi} = loadSurf(P(si).Pcentral); %#ok<AGROW>
+        [~,RS] = cat_system(cmd ,opt.verb-3);
+        CSG{thi} = loadSurf(P(si).Pcentral,cmd,RS); %#ok<AGROW>
+        delete(P(si).Pcentral); % otherwise this surface would be loaded as CST if the next call fails
 
         if iscerebellum
           % RD202603: just as quick placeholder ...
           cmd = sprintf('CAT_VolMarchingCubes -strength-sulci 1 -verbose "%s" "%s"  -thresh "%0.4f" -iter 1 -median-filter "%d"',  ...
-            Vppmi.fname, P(si).Pcentral, gycon, 0); %#ok<NASGU>
+            Vppmi.fname, P(si).Pcentral, gycon, 0);
           txt = evalc('cat_system(cmd ,3)');
         else
           cmd = sprintf('CAT_VolMarchingCubes  -strength-sulci 1 -verbose "%s" "%s"  -thresh "%0.4f" -iter %d -label "%s" -median-filter "%d"',  ...
-            Vppmi.fname, P(si).Pcentral, gycon, 1+final, Vp0.fname, min(1,floor( .5 / opt.interpV ) )); %#ok<NASGU>
+            Vppmi.fname, P(si).Pcentral, gycon, 1+final, Vp0.fname, min(1,floor( .5 / opt.interpV ) ));
           txt = evalc('cat_system(cmd ,3)'); 
         end
-        CST{thi} = loadSurf(P(si).Pcentral); %#ok<AGROW>
+        CST{thi} = loadSurf(P(si).Pcentral,cmd,txt); %#ok<AGROW>
 
         % position and intensity errors
         pe  = max(eps,cat_surf_fun('isocolors',Yppi,CST{thi}.vertices,Smat.matlabIBB_mm)) - .5;
@@ -1053,7 +1056,22 @@ function bi = binindex(V,org,bs,dim)
   bi = s(:,1) + (s(:,2)-1)*dim(1) + (s(:,3)-1)*dim(1)*dim(2);
 end
 %=======================================================================
-function CS1 = loadSurf(P)
+function CS1 = loadSurf(P,cmd,RS)
+%loadSurf. Load surface P. Optionally, the binary call cmd that wrote P and
+%  its output RS are used for the error message, because cat_system only
+%  prints the errors of binaries and the reason for the missing surface
+%  (eg. a blocked or crashed binary) would otherwise not be reported.
+  if nargin < 3
+    errstr = 'previous processing errors';
+  else
+    % the last lines of the output typically contain the error message or
+    % the exit code of the binary
+    RS = strtrim(RS);
+    if isempty(RS), RS = 'no output'; end
+    RS = regexp(RS,'\s*[\r\n]+\s*','split');
+    errstr = sprintf('a failed %s call (%s)',strtok(cmd),strjoin(RS(max(1,end-2):end),'; '));
+  end
+
   % add 5s + 10s because sometimes surface is not yet ready to read (i.e. NAS)
   if ~exist(P,'file')
     pause(5)
@@ -1064,7 +1082,7 @@ function CS1 = loadSurf(P)
         CS1.vertices = CS.vertices; CS1.faces = CS.faces; 
         if isfield(CS,'cdata'), CS1.cdata = CS.cdata; end
       catch
-        error('Surface file %s could not be read due to previous processing errors.',P);
+        error('Surface file %s could not be read due to %s.',P,errstr);
       end
     end 
   end 
@@ -1072,7 +1090,7 @@ function CS1 = loadSurf(P)
   try
     CS = gifti(P);
   catch
-    error('Surface file %s could not be read due to previous processing errors.',P);
+    error('Surface file %s could not be read due to %s.',P,errstr);
   end
   
   CS1.vertices = CS.vertices; CS1.faces = CS.faces; 

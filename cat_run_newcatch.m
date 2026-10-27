@@ -87,7 +87,12 @@ function cat_run_newcatch(job,tpm,subj)
     
     % again check for filenames indicated by slashes/backslashes ... , 
     caterr_id          = cat_io_strrep(caterr_id         ,{'\\','\n','\t','\a','\f','\r','\v'},' ');  
-    caterr_message_str = cat_io_strrep(caterr_message_str,{'\\','\n','\t','\a','\f','\r','\v'},' ');  
+    % Escape sequences of unformatted messages (eg. error('...\n')) are only
+    % replaced at the end of words, because the message is already formatted
+    % and a '\n' or '\t' within a word is part of a Windows path. Replacing
+    % them would split eg. 'E:\test\rh.central.gii' into words without
+    % backslash (here 'h.central.gii') that are not anonymized below.
+    caterr_message_str = regexprep(caterr_message_str,'\\[ntafrv](?=\s|$)',' ');  
     caterr_message_str = cat_io_strrep(caterr_message_str,{'   '},' ');  
     caterr_message_str = cat_io_strrep(caterr_message_str,{'  '},' ');  
     

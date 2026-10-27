@@ -34,16 +34,34 @@ function varargout = cat_check_system_output(status,result,debugON,trerr)
   % mention an error value, eg. "root mean square error" or "errors : %d"
   % (the lookahead excludes the plural and is used rather than a word
   % boundary because MATLAB does not support \b and Octave does not \>).
-  haserror = status > 1 || ...
+  % On Windows, a crashed binary returns its NTSTATUS code as exit code, eg.
+  % 0xC0000005 for an access violation or 0xC0000135 for a missing DLL, that
+  % MATLAB reports as negative status. As the binary usually prints nothing
+  % in this case, such crashes also passed unnoticed.
+  haserror = status > 1 || status < 0 || ...
      ~isempty(regexpi(result,'(^|[\r\n])\s*error(?![a-zA-Z])','once')) || ...
      ~isempty(strfind(result,'ERROR')) || ...
      ~isempty(strfind(result,'Segmentation fault'));
+
+  % add the exit code of failed calls (NTSTATUS codes in hex) to see the
+  % reason of a crash without output also in the error message of the caller
+  if status > 1 || status < 0
+    if status < 0 || status >= 2^31
+      code = sprintf('0x%08X',mod(status,2^32));
+    else
+      code = sprintf('%d',status);
+    end
+    if isempty(deblank(result)), result = ''; else, result = [deblank(result) char(10)]; end
+    result = sprintf('%sExit code %s\n',result,code);
+  end
+
+  % return the raw output, eg. to be used in error messages of the caller
+  if haserror && nargout>0, varargout{1} = true; varargout{2} = result; end
 
   % replace special characters
   result = genstrarray(result);
 
   if haserror
-    if nargout>0, varargout{1} = true; varargout{2} = result; end
     if trerr
       try
         error('CAT:system_error',sprintf('CAT System_error: %s',result)); 
