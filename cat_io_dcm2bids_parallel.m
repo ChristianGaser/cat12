@@ -1,7 +1,7 @@
 function varargout = cat_io_dcm2bids_parallel(action,varargin)
 %cat_io_dcm2bids_parallel. Subject-wise (parallel) processing of cat_io_dcm2bids.
 %  The scans of a run are processed in subject packages, i.e. all scans of
-%  a subject (PatientID, also of several scanners and sessions, see
+%  a BIDS subject (PatientID, for subject labels with site per site, see
 %  packages) together, as the sessions of a subject depend on each other
 %  (e.g. the T1w of another session for sessions without anatomical scan
 %  and the sessions file of the subject). A package converts its images
@@ -27,7 +27,7 @@ function varargout = cat_io_dcm2bids_parallel(action,varargin)
 %
 %  Actions (see the help of the local functions):
 %    R  = cat_io_dcm2bids_parallel('run',C,Psnr,nproc)
-%    pk = cat_io_dcm2bids_parallel('packages',Psnr)
+%    pk = cat_io_dcm2bids_parallel('packages',Psnr[,C])
 %         cat_io_dcm2bids_parallel('worker',Pq,wi)   (background process)
 %
 %  See also cat_io_dcm2bids, cat_io_dcm2bids_process.
@@ -47,10 +47,15 @@ function R = run(C,Psnr,nproc)
 %  merged results of all packages (see processScans in
 %  cat_io_dcm2bids_process) with R.rendered (subject reports rendered by
 %  the packages) and R.failed (number of failed packages).
-  pk = packages(Psnr);
+  pk = packages(Psnr,C);
   nw = min(nproc,numel(pk));
   if nw > 0 && ispc && contains(matlabroot,' ')
     cat_io_cprintf('warn','  No parallel processes, as the MATLAB directory contains spaces.\n'); nw = 0;
+  end
+  % no parallel processes without new packages (e.g. a new export of the
+  % processed database), as the start of the workers takes longer
+  if nw > 1 && ~any(newPackages(Psnr,pk,C))
+    fprintf('DCM2BIDS - no new subjects, i.e. no parallel processes.\n'); nw = 0;
   end
   if nw < 2 % (one process)
     R = processPackage(C,Psnr,0); R.rendered = 0; R.failed = 0;
@@ -130,12 +135,21 @@ function R = run(C,Psnr,nproc)
   end
 end
 % =========================================================================
-function pk = packages(Psnr)
+function pk = packages(Psnr,C)
 %packages. Subject packages of the scan directories Psnr (sorted,
 %  catDCM2BIDSdb/sub-<serial>-<PatientID>/ses-*/snr-*) as cell of indices,
-%  i.e. all scan directories of the same PatientID (BIDS label, i.e. also
-%  of several scanners, see the subject labels of opts.subIDform) in the
-%  order of their first scan directory.
+%  i.e. all scan directories of the same BIDS subject in the order of their
+%  first scan directory: the same PatientID (BIDS label), i.e. also of 
+%  several scanners for subject labels without site (opts.subIDform 1 and 
+%  3, e.g. for the T1w of other sessions), and otherwise the same site
+%  label and PatientID (opts.subIDform 2, 4, and 5, e.g. sub-SITE-PID, with
+%  the site label of the scanner, see setupSites in cat_io_dcm2bids_protocols,
+%  i.e. scanners with the same label of the site dictionary stay together), 
+%  e.g. the scanners of a traveling subject are processed in parallel. 
+%  Without context C of the run (job options and sites), the packages are
+%  given by the PatientID.
+  persite = exist('C','var') && isfield(C,'job') && isfield(C.job.opts,'subIDform') && ...
+    ismember(C.job.opts.subIDform,[2 4 5]);
   Psub = cellfun(@(p) fileparts(fileparts(p)),Psnr,'UniformOutput',false);
   [usub,~,si] = unique(Psub,'stable');
   key = usub;
@@ -145,7 +159,12 @@ function pk = packages(Psnr)
       try
         V = cat_io_json(Pjson{ji});
         if isfield(V,'PatientID') && ~isempty(V.PatientID)
-          key{ui} = lower(strrep(cat_io_dcm2bids_bids('bidsLabel',char(V.PatientID)),'_','')); break
+          key{ui} = lower(strrep(cat_io_dcm2bids_bids('bidsLabel',char(V.PatientID)),'_','')); 
+          if persite
+            V = cat_io_dcm2bids_db('assurePatientDCMfields',V); 
+            key{ui} = [cat_io_dcm2bids_protocols('setupSites',V,C.sites,C.job.opts) '|' key{ui}]; 
+          end
+          break
         end
       catch % (unreadable sidecar: the subject directory as package)
       end
@@ -153,6 +172,37 @@ function pk = packages(Psnr)
   end
   [~,~,ki] = unique(key(si),'stable');
   pk = arrayfun(@(k) find(ki == k)',1:max([0; ki(:)]),'UniformOutput',false);
+end
+% =========================================================================
+function new = newPackages(Psnr,pk,C)
+%newPackages. Packages pk of the scan directories Psnr with new scans, i.e.
+%  sessions that are not in the cumulative scan list of the database
+%  (scans.mat, see writeTables in cat_io_dcm2bids_tables) or scans without
+%  image (conversion, for the outputs 2 and 3, besides localizer and scouts
+%  that are ignored, see processScans in cat_io_dcm2bids_process), and all
+%  packages for opts.rerun (the test ends with the first new package, i.e.
+%  the following packages stay new).
+  new = true(1,numel(pk));
+  if C.job.opts.rerun, return; end
+  Pmat = fullfile(C.Ptbldir,'scans.mat');
+  if exist(Pmat,'file'), S = load(Pmat,'R'); known = unique({S.R.Session}); else, return; end
+  if C.job.opts.gzipi, niiext = '.nii.gz'; else, niiext = '.nii'; end
+  for k = 1:numel(pk)
+    new(k) = false;
+    for di = pk{k}
+      if ~ismember(fileparts(Psnr{di}(numel(C.Pmdbdir)+2:end)),known), new(k) = true; break; end
+      if C.job.opts.output < 2, continue; end
+      Pjson = cat_io_dcm2bids_db('getDBscanJSONs',Psnr{di});
+      for ji = 1:numel(Pjson)
+        parts = cat_io_dcm2bids_db('nameParts',spm_file(Pjson{ji},'basename'));
+        if ~any(cat_io_contains(lower(parts),{'localizer','scout'})) && ~exist(spm_file(Pjson{ji},'ext',niiext),'file')
+          new(k) = true; break
+        end
+      end
+      if new(k), break; end
+    end
+    if new(k), return; end % (one new package is enough)
+  end
 end
 % =========================================================================
 function R = processPackage(C,Psnr,render)
@@ -277,8 +327,19 @@ end
 % =========================================================================
 function printLog(P)
 %printLog. Print the log of a package (the command line output of its
-%  processing).
-  if exist(P,'file'), fprintf('%s',fileread(P)); end
+%  processing) with the colors of cat_io_cprintf (style markup of the
+%  workers, see setPrint).
+  if ~exist(P,'file'), return; end
+  str = fileread(P);
+  [tok,txt] = regexp(str,[char(17) '([^' char(18) ']*)' char(18) '([^' char(19) ']*)' char(19)],'tokens','split');
+  for ti = 1:numel(txt)
+    fprintf('%s',txt{ti});
+    if ti <= numel(tok)
+      style = tok{ti}{1};
+      if ~isempty(style) && style(1) == '[', style = str2num(style); end %#ok<ST2NM> % RGB, e.g. [0 0 0.5]
+      cat_io_cprintf(style,'%s',tok{ti}{2});
+    end
+  end
 end
 % =========================================================================
 function touch(P)
@@ -287,9 +348,10 @@ function touch(P)
 end
 % =========================================================================
 function setPrint
-%setPrint. Simple printing of cat_io_cprintf (without colors) in the log.
+%setPrint. Printing of cat_io_cprintf with markup of the style in the log
+%  (without colors), i.e. printLog of the main process shows the colors.
   global cprintferror %#ok<GVMIS>
-  cprintferror = 1;
+  cprintferror = 2;
 end
 % =========================================================================
 function [spmdef,catdef] = getDefaults

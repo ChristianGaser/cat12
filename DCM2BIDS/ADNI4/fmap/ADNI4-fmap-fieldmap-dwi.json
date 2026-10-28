@@ -1,0 +1,11 @@
+{
+  "_Description": "3T EPI field map of the diffusion MRI of ADNI4 (reverse phase-encoding b0 images): dMRI parameters with up to 6 volumes (i.e. only for converted images, JSON-only scans are dMRI)",
+  "Modality": "MR",
+  "MagneticFieldStrength": 3,
+  "MRAcquisitionType": "2D",
+  "EchoTime": {"min": 0.045, "max": 0.13},
+  "RepetitionTime": {"min": 2.5, "max": 20},
+  "FlipAngle": {"min": 70, "max": 95},
+  "SliceThickness": {"min": 1.2, "max": 3},
+  "NumberOfVolumes": {"max": 6}
+}

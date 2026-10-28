@@ -1,0 +1,11 @@
+{
+  "_Description": "3T EPI field map of the fMRI of ADNI4 (reverse phase encoding): fMRI parameters with up to 6 volumes (i.e. only for converted images, JSON-only scans are fMRI)",
+  "Modality": "MR",
+  "MagneticFieldStrength": 3,
+  "MRAcquisitionType": "2D",
+  "EchoTime": {"min": 0.02, "max": 0.045},
+  "RepetitionTime": {"min": 0.4, "max": 3.5},
+  "FlipAngle": {"min": 40, "max": 95},
+  "SliceThickness": {"min": 2, "max": 4.5},
+  "NumberOfVolumes": {"max": 6}
+}

@@ -1,0 +1,10 @@
+{
+  "_Description": "3T T2w of ADNI4 (Siemens SPACE, GE Cube, Philips VISTA): major parameters of all vendors",
+  "Modality": "MR",
+  "MagneticFieldStrength": 3,
+  "MRAcquisitionType": "3D",
+  "EchoTime": {"min": 0.06, "max": 0.6},
+  "RepetitionTime": {"min": 2, "max": 3.6},
+  "FlipAngle": {"min": 60, "max": 180},
+  "SliceThickness": {"min": 0.7, "max": 1.3}
+}

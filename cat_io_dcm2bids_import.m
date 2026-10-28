@@ -5,7 +5,9 @@ function varargout = cat_io_dcm2bids_import(action,varargin)
 %  written (getInputSources). Then, the DICOM headers of new scans and the 
 %  scans of BIDS datasets are imported into the database (importSources) 
 %  and the images are converted (DICOM) or copied (BIDS) if required, i.e.
-%  for each subject package of the processing (convertSources, see 
+%  the new DICOM scans directly by their import (outputs with images) and
+%  all missing images for each subject package of the processing 
+%  (convertSources, see 
 %  cat_io_dcm2bids_importDCM, cat_io_dcm2bids_importBIDS, and 
 %  cat_io_dcm2bids_parallel).
 %

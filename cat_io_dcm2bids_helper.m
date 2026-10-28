@@ -3,7 +3,9 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
 %  Text and JSON files with UTF-8 encoding (readText, writeText, writeJSON),
 %  paths (absPath, normPath, canonPath), NIfTI header information, single
 %  volumes, the gzip handling of NIfTIs, and their export (niiHeaderInfo, 
-%  niiVolume, prepNii, prepNiigz, gzipFile, exportNii), the index of the
+%  niiVolume, prepNii, prepNiigz, gzipFile, exportNii) with the work 
+%  directory on a faster disk (workSetup, workClear), the estimate of the
+%  disk space of a run (diskCheck), the index of the
 %  derivatives in the database (registerDerivative, derivativeIndex), the
 %  realigned 
 %  volumes of 4D data resliced in memory (realignedVolumes, 
@@ -25,6 +27,10 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
 %    Po = cat_io_dcm2bids_helper('prepNii',Pi,opts,del)
 %    Po = cat_io_dcm2bids_helper('prepNiigz',Pi,opts)
 %    cat_io_dcm2bids_helper('gzipFile',P)
+%    S = cat_io_dcm2bids_helper('diskSpeed',Pdir)
+%    root = cat_io_dcm2bids_helper('workSetup',Pmdbdir,opts,nproc)
+%    need = cat_io_dcm2bids_helper('diskCheck',Psnr,Pmdbdir,Pbids,opts,nproc)
+%    cat_io_dcm2bids_helper('workClear')
 %    cat_io_dcm2bids_helper('exportNii',P,Pout,opts)
 %    cat_io_dcm2bids_helper('registerDerivative',P,Pout)
 %    D = cat_io_dcm2bids_helper('derivativeIndex',Pmdbdir)
@@ -41,7 +47,7 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
   switch action
     case {'readText','writeText','writeJSON','absPath','normPath','canonPath','derivativesDir', ...
           'niiHeaderInfo','niiVolume','prepNii','prepNiigz','gzipFile','exportNii','removeAcquisitionTime', ...
-          'registerDerivative','derivativeIndex', ...
+          'registerDerivative','derivativeIndex','diskSpeed','workSetup','workClear','diskCheck', ...
           'conversionInfo','realignedVolumes','realignedVolume', ...
           'updateTable','writeTable','catRecords'}
       [varargout{1:nargout}] = feval(action,varargin{:});
@@ -283,6 +289,13 @@ function b = readBytes(ch,n)
 end
 % =========================================================================
 function Po = prepNii(Pi,opts,del)
+%prepNii. Unzipped NIfTIs Po of the database images Pi (for opts.gzipi, 
+%  otherwise Pi) for SPM, i.e. the .nii next to the .nii.gz (removed by 
+%  prepNiigz, the .nii.gz is deleted for del). With a work directory 
+%  (opts.workroot, see workSetup), the .nii is a symbolic link to the 
+%  unzipped copy in the work directory (see workLink), i.e. the processing
+%  reads it from the faster disk, whereas all paths (and the outputs next 
+%  to the image) stay in the database.
   if opts.gzipi
     waschar = 0; 
     if ischar(Pi)
@@ -294,7 +307,17 @@ function Po = prepNii(Pi,opts,del)
       if strcmp( spm_file(Pi{fi},'ext'),'gz') 
         Po{fi} = spm_file(Pi{fi},'ext',''); 
       end
+      removeDanglingLink(Po{fi}); % (e.g. of an interrupted run)
       if ~exist(Po{fi},'file') && exist(Pi{fi},'file')
+        if workActive(opts) && ~strcmp(Po{fi},Pi{fi}) && ~(exist('del','var') && del)
+          try
+            workLink(Pi{fi},Po{fi},opts); 
+            continue
+          catch e
+            cat_io_cprintf('warn','  Work directory not used for "%s": %s\n',spm_file(Pi{fi},'filename'),e.message); 
+            removeDanglingLink(Po{fi}); 
+          end
+        end
         try
           gunzip(Pi{fi});
         catch
@@ -329,10 +352,162 @@ function Po = prepNiigz(Pi,opts)
     if exist(Pnii,'file')
       Dnii = dir(Pnii); Dgz = dir(Po{fi}); 
       if isempty(Dgz) || Dnii.datenum > Dgz.datenum, gzipFile(Pnii); end
-      delete(Pnii); 
+      delete(Pnii); % (only the link of a file of the work directory, see workLink)
+      workUpdate(Pnii); 
     end
   end
   if waschar, Po = char(Po); end
+end
+% =========================================================================
+function root = workSetup(Pmdbdir,opts,nproc)
+%workSetup. Work directory root of the unzipped images (see prepNii) for 
+%  opts.workdir: 'native' (or '') - none, i.e. the images are unzipped in 
+%  the database, a directory, or 'auto' - the temporary directory of the 
+%  system (tempdir) if its disk is at least two times faster than the disk
+%  of the database Pmdbdir (see diskSpeed, e.g. an external USB hard disk 
+%  vs. the internal SSD) and has enough free space for nproc processes 
+%  (opts.workcache GB each), only for zipped databases (opts.gzipi) on 
+%  macOS/Linux (symbolic links). Each process uses its own subdirectory
+%  (see workLink).
+  root = ''; 
+  if ~opts.gzipi || ~isunix || isempty(opts.workdir) || strcmp(opts.workdir,'native'), return; end
+  if ~strcmp(opts.workdir,'auto')
+    root = opts.workdir; 
+    if ~exist(root,'dir'), mkdir(root); end
+    fprintf('  Work directory: %s\n',root); 
+    return
+  end
+  Sdb  = diskSpeed(Pmdbdir); 
+  Sloc = diskSpeed(tempdir); 
+  need = max(1,nproc) * opts.workcache + 5; 
+  if Sloc.MBps > 2 * Sdb.MBps && Sloc.GB > need
+    root = tempdir; 
+    fprintf('  Work directory: %s (%0.0f MB/s, database disk %0.0f MB/s)\n',root,Sloc.MBps,Sdb.MBps); 
+  else
+    fprintf('  Work directory: database (%0.0f MB/s, system disk %0.0f MB/s with %0.0f GB free)\n', ...
+      Sdb.MBps,Sloc.MBps,Sloc.GB); 
+  end
+end
+% =========================================================================
+function workClear
+%workClear. Remove the links in the database and the unzipped copies of the
+%  work directory of this process (e.g. at the end of a session, see 
+%  cat_io_dcm2bids_process), where modified images are zipped before (as 
+%  prepNiigz).
+  W = workState; 
+  for key = W.map.keys
+    if isLink(key{1})
+      if exist(key{1},'file') 
+        Dnii = dir(key{1}); Dgz = dir([key{1} '.gz']); 
+        if isempty(Dgz) || Dnii.datenum > Dgz.datenum, gzipFile(key{1}); end
+      end
+      deleteLink(key{1}); 
+    end
+  end
+  if ~isempty(W.dir) && exist(W.dir,'dir'), rmdir(W.dir,'s'); end
+  workState(struct('dir','','map',containers.Map('KeyType','char','ValueType','any'),'n',0)); 
+end
+% =========================================================================
+function W = workState(W)
+%workState. Work directory W.dir of this process with the unzipped copies
+%  W.map (database .nii -> struct with the copy, the date and size of the
+%  .nii.gz, and the last use) and the number of copies W.n.
+  persistent state
+  if nargin > 0, state = W; end
+  if isempty(state), state = struct('dir','','map',containers.Map('KeyType','char','ValueType','any'),'n',0); end
+  W = state; 
+end
+% =========================================================================
+function ok = workActive(opts)
+%workActive. True with a work directory (see workSetup).
+  ok = isfield(opts,'workroot') && ~isempty(opts.workroot) && isunix; 
+end
+% =========================================================================
+function workLink(Pgz,Pnii,opts)
+%workLink. Symbolic link Pnii (the unzipped database image) to the 
+%  unzipped copy of Pgz in the work directory of this process, where the 
+%  copy is reused (cached) until it is removed by workClear or as the 
+%  least recently used copy that is not linked if all copies exceed 
+%  opts.workcache GB. Work directories of other processes that are older
+%  than one day are removed (e.g. of interrupted runs).
+  W = workState; 
+  if isempty(W.dir) || ~exist(W.dir,'dir')
+    D = dir(fullfile(opts.workroot,'catDCM2BIDSwork_*')); 
+    for di = 1:numel(D)
+      if D(di).isdir && datetime(D(di).datenum,'ConvertFrom','datenum') < datetime('now') - days(1)
+        rmdir(fullfile(opts.workroot,D(di).name),'s'); 
+      end
+    end
+    [~,tmpname] = fileparts(tempname); 
+    W.dir = fullfile(opts.workroot,['catDCM2BIDSwork_' tmpname]); mkdir(W.dir); 
+    workState(W); 
+  end
+  Dgz = dir(Pgz); E = []; 
+  if isKey(W.map,Pnii)
+    E = W.map(Pnii); 
+    if ~exist(E.copy,'file') || E.gzdate ~= Dgz.datenum || E.gzbytes ~= Dgz.bytes % (replaced .nii.gz)
+      if exist(E.copy,'file'), delete(E.copy); end
+      E = []; 
+    end
+  end
+  if isempty(E)
+    workEvict(opts); W = workState; 
+    W.n = W.n + 1; workState(W); 
+    Pd = fullfile(W.dir,sprintf('%06d',W.n)); mkdir(Pd); 
+    E  = struct('copy',char(gunzip(Pgz,Pd)),'gzdate',Dgz.datenum,'gzbytes',Dgz.bytes,'used',now); 
+  end
+  q  = @(s) ['''' strrep(s,'''','''\''''') '''']; % single-quoted shell argument
+  [st,out] = system(sprintf('ln -s %s %s',q(E.copy),q(Pnii))); 
+  if st ~= 0, error('cat_io_dcm2bids_helper:workLink','%s',strtrim(out)); end
+  E.used = now; W.map(Pnii) = E; 
+end
+% =========================================================================
+function workUpdate(Pnii)
+%workUpdate. Date and size of the (re)zipped image of the copy of Pnii in
+%  the work directory (if available), i.e. a modified copy stays valid.
+  W = workState; 
+  if isKey(W.map,Pnii) && exist([Pnii '.gz'],'file')
+    E = W.map(Pnii); Dgz = dir([Pnii '.gz']); E.gzdate = Dgz.datenum; E.gzbytes = Dgz.bytes; W.map(Pnii) = E; 
+  end
+end
+% =========================================================================
+function workEvict(opts)
+%workEvict. Remove the least recently used copies of the work directory 
+%  that are not linked until all copies need less than opts.workcache GB.
+  W = workState; 
+  if isempty(W.map), return; end
+  keys = W.map.keys; E = cellfun(@(k) W.map(k),keys,'UniformOutput',false); E = [E{:}]; 
+  bytes = arrayfun(@(e) fileBytes(e.copy),E); 
+  [~,o] = sort([E.used]); 
+  for i = o
+    if sum(bytes) < opts.workcache * 1e9, break; end
+    if isLink(keys{i}), continue; end
+    if exist(E(i).copy,'file'), delete(E(i).copy); end
+    bytes(i) = 0; remove(W.map,keys{i}); 
+  end
+end
+% =========================================================================
+function b = fileBytes(P)
+%fileBytes. Size of the file P (0 if not available).
+  D = dir(P); b = 0; if ~isempty(D), b = D(1).bytes; end
+end
+% =========================================================================
+function ok = isLink(P)
+%isLink. True if P is a symbolic link (also a dangling one).
+  ok = false; 
+  try ok = java.nio.file.Files.isSymbolicLink(java.io.File(P).toPath()); end %#ok<TRYNC>
+end
+% =========================================================================
+function removeDanglingLink(P)
+%removeDanglingLink. Remove the symbolic link P if its target does not 
+%  exist (e.g. the work directory of an interrupted run).
+  if isunix && ~exist(P,'file') && isLink(P), deleteLink(P); end
+end
+% =========================================================================
+function deleteLink(P)
+%deleteLink. Remove the symbolic link P (not its target, also a dangling 
+%  link).
+  java.nio.file.Files.deleteIfExists(java.io.File(P).toPath()); 
 end
 % =========================================================================
 function gzipFile(P)
@@ -346,6 +521,130 @@ function gzipFile(P)
     if st == 0, return; end
   end
   gzip(P); 
+end
+% =========================================================================
+function S = diskSpeed(Pdir)
+%diskSpeed. Write speed of the disk of the directory Pdir: S.MBps of a 
+%  sequential write of 64 MB and S.ms per random write of 4 kB (16 writes 
+%  in the 64 MB file), each written to the disk (fsync), i.e. without the 
+%  file cache of the operating system, and the free space S.GB (NaN for 
+%  errors, e.g. without write access).
+  S = struct('MBps',nan,'ms',nan,'GB',nan); 
+  Pt = fullfile(Pdir,['catDCM2BIDSspeed_' char(java.util.UUID.randomUUID()) '.tmp']); 
+  try
+    S.GB = double(java.io.File(Pdir).getUsableSpace()) / 1e9; 
+    buf = int8(randi([-128 127],1,2^20)); n = 64; 
+    t = tic; 
+    fos = java.io.FileOutputStream(Pt); 
+    for i = 1:n, fos.write(buf); end
+    fos.getFD().sync(); fos.close(); 
+    S.MBps = n / toc(t); 
+    raf = java.io.RandomAccessFile(Pt,'rw'); pos = randperm(n*256,16) - 1; 
+    t = tic; 
+    for i = 1:numel(pos), raf.seek(pos(i)*4096); raf.write(buf(1:4096)); raf.getFD().sync(); end
+    S.ms = 1000 * toc(t) / numel(pos); 
+    raf.close(); 
+  catch
+    try fos.close(); end %#ok<TRYNC>
+    try raf.close(); end %#ok<TRYNC>
+  end
+  if exist(Pt,'file'), delete(Pt); end
+end
+% =========================================================================
+function need = diskCheck(Psnr,Pmdbdir,Pbids,opts,nproc)
+%diskCheck. Rough estimate of the disk space of the run with the scan 
+%  directories Psnr (only a warning, e.g. for the system disk): 
+%  - database Pmdbdir: the images of the scans without image (conversion, 
+%    about 0.6 times the DICOM data for opts.gzipi, otherwise 1.2 times, of
+%    the DICOM directory of the import information, shared by its scans of
+%    the directory index catDCM2BIDSimportdirs.json, or the source file of
+%    BIDS imports) and their derivatives (opts.preprocessing, about 0.2 GB
+%    per new session)
+%  - BIDS directory Pbids: the export of these images (opts.gzipe) with
+%    the QC and derivatives (about 0.1 GB per new session, 0.3 GB for 
+%    opts.preprocessing = 2), also the images of all other scans for the 
+%    export of only the selected scans (opts.exportmode = 2)
+%  - DICOM export of the new scans (opts.dicomexport, about 0.6 times their
+%    DICOM data, zipped) next to the database
+%  - work directory (opts.workroot, opts.workcache GB per process)
+%  The estimates of the same disk are summed up, and a warning is given for
+%  less free space than the estimate (and 5 GB reserve). need is a 
+%  containers.Map of the disks with the estimate and the free space in GB.
+%  (calibrated by the DZPG pilots: 0.6 GB zipped images per GB DICOM data)
+  need = containers.Map('KeyType','char','ValueType','any'); 
+  if opts.output < 2 || isempty(Psnr), return; end
+  if opts.gzipi, niiext = '.nii.gz'; fi = 0.6; else, niiext = '.nii'; fi = 1.2; end
+  if opts.gzipe, fe = 0.6; else, fe = 1.2; end
+  X = struct('DICOMdirectory',{},'Scans',{}); 
+  Pidx = fullfile(Pmdbdir,'catDCM2BIDSimportdirs.json'); 
+  if exist(Pidx,'file'), try X = cat_io_dcm2bids_db('readImportJSON',Pidx); catch, end, end %#ok<CTCH>
+
+  % scans without image by DICOM directory, source files of BIDS imports, 
+  % images of the other scans, and new sessions
+  miss = containers.Map('KeyType','char','ValueType','double'); 
+  src = 0; img = 0; nses = 0; Pses0 = ''; 
+  for di = 1:numel(Psnr)
+    Pjson = cat_io_dcm2bids_db('getDBscanJSONs',Psnr{di}); new = false; 
+    for ji = 1:numel(Pjson)
+      Pnii = spm_file(Pjson{ji},'ext',niiext); 
+      if exist(Pnii,'file'), img = img + fileBytes(Pnii); continue; end
+      Pimp = spm_file(Pjson{ji},'prefix','catDCM2BIDSimport_'); 
+      if ~exist(Pimp,'file'), continue; end
+      try I = cat_io_dcm2bids_db('readImportJSON',Pimp); catch, continue; end %#ok<CTCH>
+      if isfield(I,'DICOMdirectory')
+        k = I.DICOMdirectory; if isKey(miss,k), miss(k) = miss(k) + 1; else, miss(k) = 1; end
+      elseif isfield(I,'SourceFile')
+        src = src + fileBytes(I.SourceFile); 
+      end
+      new = true; 
+    end
+    if new && ~strcmp(fileparts(Psnr{di}),Pses0), nses = nses + 1; Pses0 = fileparts(Psnr{di}); end
+  end
+  dcm = 0; 
+  for k = miss.keys
+    D = dir(k{1}); D = D(~[D.isdir] & ~strncmp({D.name},'.',1)); 
+    n = miss(k{1}); % (scans of the directory)
+    if isfield(X,'Scans') && isfield(X,'DICOMdirectory'), n = max([n X(strcmp({X.DICOMdirectory},k{1})).Scans]); end
+    dcm = dcm + sum([D.bytes]) * min(1,miss(k{1}) / n); 
+  end
+
+  % estimates of the targets (GB) summed up by disk
+  GB = 1e9; 
+  T  = {Pmdbdir, (dcm * fi + src) / GB + 0.2 * nses * (opts.preprocessing > 0), 'database'; 
+        Pbids,   (dcm * fe + src * fe / fi) / GB + nses * (0.1 + 0.2 * (opts.preprocessing > 1)) + ...
+                 (opts.exportmode == 2) * img * fe / fi / GB, 'BIDS'; 
+        fileparts(Pmdbdir), (opts.dicomexport > 0) * 0.6 * dcm / GB, 'DICOM export'}; 
+  if isfield(opts,'workroot') && ~isempty(opts.workroot)
+    T(end+1,:) = {opts.workroot, max(1,nproc) * opts.workcache, 'work directory'}; 
+  end
+  for ti = 1:size(T,1)
+    if T{ti,2} < 0.01, continue; end
+    [disk,free] = diskOf(T{ti,1}); 
+    if isKey(need,disk), E = need(disk); else, E = struct('GB',0,'free',free,'targets',{{}}); end
+    E.GB = E.GB + T{ti,2}; E.targets{end+1} = sprintf('%s %0.1f',T{ti,3},T{ti,2}); need(disk) = E; 
+  end
+  for disk = need.keys
+    E = need(disk{1}); 
+    if E.GB + 5 > E.free
+      cat_io_cprintf('warn',['  Disk space: about %0.0f GB required on %s (%s GB), but only %0.0f GB free ' ...
+        '(rough estimate, see diskCheck in cat_io_dcm2bids_helper).\n'],E.GB,disk{1},strjoin(E.targets,', '),E.free); 
+    elseif E.GB >= 1
+      fprintf('  Disk space: about %0.0f GB required on %s (%s GB), %0.0f GB free\n',E.GB,disk{1},strjoin(E.targets,', '),E.free); 
+    end
+  end
+end
+% =========================================================================
+function [disk,free] = diskOf(P)
+%diskOf. Name of the disk (file store, e.g. the mount point) of the path P
+%  (of its first existing parent directory) and its free space in GB.
+  while ~exist(P,'dir') && ~strcmp(fileparts(P),P), P = fileparts(P); end
+  disk = P; free = nan; 
+  try
+    S = java.nio.file.Files.getFileStore(java.io.File(P).toPath()); 
+    disk = char(S.toString()); free = double(S.getUsableSpace()) / 1e9; 
+  catch
+    try free = double(java.io.File(P).getUsableSpace()) / 1e9; end %#ok<TRYNC>
+  end
 end
 % =========================================================================
 function exportNii(P,Pout,opts)

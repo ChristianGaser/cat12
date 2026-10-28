@@ -1,0 +1,10 @@
+{
+  "_Description": "3T resting-state fMRI of ADNI4 (single-band and multiband EPI): major parameters of all vendors",
+  "Modality": "MR",
+  "MagneticFieldStrength": 3,
+  "MRAcquisitionType": "2D",
+  "EchoTime": {"min": 0.02, "max": 0.045},
+  "RepetitionTime": {"min": 0.4, "max": 3.5},
+  "FlipAngle": {"min": 40, "max": 95},
+  "SliceThickness": {"min": 2, "max": 4.5}
+}

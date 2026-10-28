@@ -3,7 +3,10 @@ function varargout = cat_io_dcm2bids_importDCM(action,varargin)
 %  The DICOM headers of new scans are imported into the database 
 %  (importDICOMheaders, dcm2niix header only, i.e. fast), whereas the images
 %  are converted only if they are required (convertImages, e.g. not for the
-%  JSON-only outputs). convertImages also copies the images of imported BIDS
+%  JSON-only outputs), i.e. for the outputs with images directly after the
+%  header of each new DICOM directory (files read once from the disk), 
+%  otherwise by the subject packages (e.g. images of a former JSON-only 
+%  import). convertImages also copies the images of imported BIDS
 %  datasets (see cat_io_dcm2bids_importBIDS). The dcm2niix executable 
 %  (opts.Pdcm2nii) is detected only if DICOM data has to be read or converted
 %  (see getDCM2NIIX), i.e., dcm2niix is not required for BIDS inputs or the 
@@ -13,7 +16,7 @@ function varargout = cat_io_dcm2bids_importDCM(action,varargin)
 %
 %  Actions (see the help of the local functions):
 %    Psnr = cat_io_dcm2bids_importDCM('importDICOMheaders',Pdcmdirs,Pmdbdir,Ptmp,opts)
-%    msg = cat_io_dcm2bids_importDCM('convertImages',Psnr,Pmdbdir,Ptmp,opts[,Psub])
+%    msg = cat_io_dcm2bids_importDCM('convertImages',Psnr,Pmdbdir,Ptmp,opts[,Psub,quiet])
 %    P = cat_io_dcm2bids_importDCM('getDCM2NIIX')
 %
 %  See also cat_io_dcm2bids.
@@ -36,10 +39,18 @@ function Psnr = importDICOMheaders(Pdcmdirs, Pmdbdir, Ptmp, opts)
 %  with the JSON sidecar "folder=protocol=time=series.json" and the import 
 %  information "catDCM2BIDSimport_folder=protocol=time=series.json" with the
 %  DICOM directory and the dcm2niix options (used to convert the image only
-%  if required, see convertImages). The import information of a directory 
-%  is written after all its scans, i.e., an interrupted directory is read 
-%  again. DICOM directories that were imported before (with the same 
-%  options) are not read again (only with opts.rerun). 
+%  if required, see convertImages). The import information of a directory
+%  is written after all its scans, i.e., an interrupted directory is read
+%  again. Each read directory is registered in the directory index of the
+%  database (catDCM2BIDSimportdirs.json, also directories without scans,
+%  e.g. with only localizers, see dirIndex) with its files (number, size,
+%  and the last modification), i.e., DICOM directories that were imported
+%  before (with the same options) are not read again (only with opts.rerun
+%  or changed files, e.g. an incomplete transfer, with a warning, where the
+%  images of existing scans are kept). For outputs with images (opts.output
+%  > 1), the new scans of a directory are converted directly after its
+%  header (see convertImages), i.e., the files are read once from the disk
+%  (cached by the system, see prefetchFiles).
 %  The same scan (series and image) from another DICOM directory is a copy
 %  if both directories contain the same files (not imported again) or 
 %  otherwise a series that is split over several directories, which is 
@@ -52,28 +63,46 @@ function Psnr = importDICOMheaders(Pdcmdirs, Pmdbdir, Ptmp, opts)
   if isempty(Pdcmdirs), return; end
   fprintf('DCM2BIDS - import DICOM headers of %d directories\n', numel(Pdcmdirs)); 
   
-  % DICOM directories imported before (with the same dcm2niix options)
-  [Pimpdcm, Pimpsnr, Pimpopt] = cat_io_dcm2bids_db('getImportIndex',Pmdbdir); 
-  dopt  = dcm2niixOptions(opts); 
+  % DICOM directories imported before (with the same dcm2niix options):
+  % scans of the import information and the directory index
+  [Pimpdcm, Pimpsnr, Pimpopt] = cat_io_dcm2bids_db('getImportIndex',Pmdbdir);
+  X     = dirIndex('read',Pmdbdir);
+  dopt  = dcm2niixOptions(opts);
   ver   = ''; % dcm2niix version (only if required)
   seen  = containers.Map('KeyType','char','ValueType','any'); % scans of this run
   flist = containers.Map('KeyType','char','ValueType','any'); % files of directories
-  split = {}; % IDs of split series 
+  split = {}; % IDs of split series
+  physio = cell(0,1); % physiological recordings (see attachPhysio)
+  convert = opts.output > 1; % images of the new scans (see convertImages)
+  nread = 0; nchanged = 0;
 
   spm_progress_bar('init',numel(Pdcmdirs),'DICOM header import','DICOM directories')
   for di = 1:numel(Pdcmdirs)
     spm_progress_bar('Set',di)
 
-    % previously imported directory: scans of the database
-    imported = strcmp(Pimpdcm, Pdcmdirs{di}) & strcmp(Pimpopt, dopt); 
-    if any(imported) && ~opts.rerun
+    % directories without files (e.g. only with sub-directories)
+    F = dirFiles(Pdcmdirs{di},flist);
+    if isempty(F.name), continue; end
+
+    % previously imported directory with the same files (directory index or,
+    % for databases of former versions, the import information): scans of
+    % the database
+    imported = strcmp(Pimpdcm, Pdcmdirs{di}) & strcmp(Pimpopt, dopt);
+    xi = find(strcmp({X.DICOMdirectory}, Pdcmdirs{di}) & strcmp({X.dcm2niixOptions}, dopt), 1);
+    changed = ~isempty(xi) && ~(X(xi).Files == F.Files && X(xi).Bytes == F.Bytes && strcmp(X(xi).Modified,F.Modified));
+    if ~opts.rerun && ~changed && (~isempty(xi) || any(imported))
+      if isempty(xi), X = dirIndex('add',X,Pdcmdirs{di},dopt,F,nnz(imported)); end
       Psnr = [Psnr; Pimpsnr(imported)]; %#ok<AGROW>
-      nold = nold + 1; 
+      nold = nold + 1;
       continue
     end
-
-    % directories without files (e.g. only with sub-directories)
-    if isempty(dirFiles(Pdcmdirs{di},flist)), continue; end
+    if changed && ~opts.rerun
+      cat_io_cprintf('warn',['  The files of the DICOM directory changed since its import (e.g. an incomplete ' ...
+        'transfer), i.e. it is imported again (the images of existing scans are kept, use opts.rerun ' ...
+        'to convert them again):\n    %s\n'],Pdcmdirs{di});
+      nchanged = nchanged + 1;
+    end
+    tdi = tic; nnewdi = nnew;
 
     % header only conversion of the directory
     if isempty(ver)
@@ -82,11 +111,25 @@ function Psnr = importDICOMheaders(Pdcmdirs, Pmdbdir, Ptmp, opts)
       ver = regexp(ver,'v[0-9]+\.[0-9]+\.[0-9]+','match','once'); 
     end
     Ptmpdi = fullfile(Ptmp,sprintf('hdr%06d',di)); 
-    runDCM2NIIX(Pdcmdirs{di}, Ptmpdi, opts, 1); 
+    optsh = opts; if convert, optsh.prefetch = inf; end % (whole files for the conversion below)
+    runDCM2NIIX(Pdcmdirs{di}, Ptmpdi, optsh, 1);
     Pjson  = cat_vol_findfiles(Ptmpdi,'*.json',struct('depth',1)); 
     rec    = struct('Pimp',{},'S',{}); % import information of this directory
     for ji = 1:numel(Pjson)
-      fnameparts = cat_io_dcm2bids_db('nameParts',spm_file(Pjson{ji},'basename')); 
+      % physiological recordings of Siemens PhysioLog series (dcm2niix
+      % "_physio" files without patient and session fields, also of the
+      % header-only conversion) are attached to their fMRI scan after all
+      % directories (see attachPhysio)
+      if endsWith(spm_file(Pjson{ji},'basename'),'_physio')
+        Pph = fullfile(Ptmp,'physio',sprintf('%06d',di));
+        if ~exist(Pph,'dir'), mkdir(Pph); end
+        for ext = {'.json','.tsv.gz'}
+          if exist(spm_file(Pjson{ji},'ext',ext{1}),'file'), movefile(spm_file(Pjson{ji},'ext',ext{1}),Pph); end
+        end
+        physio{end+1,1} = fullfile(Pph,spm_file(Pjson{ji},'filename')); %#ok<AGROW>
+        continue
+      end
+      fnameparts = cat_io_dcm2bids_db('nameParts',spm_file(Pjson{ji},'basename'));
       if numel(fnameparts) < 4 || any(cat_io_contains(lower(fnameparts),{'localizer','scout'}))
         continue
       end
@@ -114,7 +157,7 @@ function Psnr = importDICOMheaders(Pdcmdirs, Pmdbdir, Ptmp, opts)
         end
       end
       if ~isempty(Pexist) && ~isempty(Pprev) && ~strcmp(Pprev,Pdcmdirs{di})
-        if exist(Pprev,'dir') && ~isequal(dirFiles(Pprev,flist),dirFiles(Pdcmdirs{di},flist))
+        if exist(Pprev,'dir') && ~isequal(dirFiles(Pprev,flist).name,F.name)
           % split series: incomplete, not imported 
           cat_io_cprintf('err',['  Series %d "%s" (%s) is split over several directories and therefore ' ...
             'incomplete - not imported:\n    %s\n    %s\n'], V.SeriesNumber, V.ProtocolName, ...
@@ -155,41 +198,141 @@ function Psnr = importDICOMheaders(Pdcmdirs, Pmdbdir, Ptmp, opts)
     end
 
     % import information of the complete directory
+    Psnrdi = {};
     for ri = 1:numel(rec)
       if exist(strrep(rec(ri).Pimp,'catDCM2BIDSimport_',''),'file') % not revoked
-        cat_io_dcm2bids_db('writeImportJSON',rec(ri).Pimp, rec(ri).S); 
+        cat_io_dcm2bids_db('writeImportJSON',rec(ri).Pimp, rec(ri).S);
+        Psnrdi{end+1,1} = fileparts(rec(ri).Pimp); %#ok<AGROW>
       end
     end
-    rmdir(Ptmpdi,'s'); 
+    rmdir(Ptmpdi,'s');
+
+    % images of the new scans while the files are cached (no prefetch)
+    if convert && nnew > nnewdi
+      opts0 = opts; opts0.prefetch = 0;
+      convertImages(unique(Psnrdi), Pmdbdir, Ptmp, opts0, {}, 1);
+    end
+    X = dirIndex('add',X,Pdcmdirs{di},dopt,F,numel(Psnrdi));
+    nread = nread + 1;
+    if mod(nread,20) == 0, dirIndex('write',Pmdbdir,X); end % (interruptions)
+    fprintf('  %4d/%d  %-60s %5d files %8.1f MB  %3d new scans  %6.1f s\n', di, numel(Pdcmdirs), ...
+      spm_str_manip(Pdcmdirs{di},'a60'), F.Files, F.Bytes/2^20, nnew - nnewdi, toc(tdi));
   end
   spm_progress_bar('Clear')
+  dirIndex('write',Pmdbdir,X);
+  if ~isempty(physio), attachPhysio(physio, unique([Pimpsnr; Psnr])); end
 
   % existing scan directories (without revoked split series)
-  Psnr = unique(Psnr); 
-  Psnr = Psnr( cellfun(@(P) exist(P,'dir') && ~isempty(cat_io_dcm2bids_db('getDBscanJSONs',P)), Psnr) ); 
-  fprintf('  %d new scans, %d directories imported before\n\n', nnew, nold); 
+  Psnr = unique(Psnr);
+  Psnr = Psnr( cellfun(@(P) exist(P,'dir') && ~isempty(cat_io_dcm2bids_db('getDBscanJSONs',P)), Psnr) );
+  fprintf('  %d new scans, %d directories read (%d changed), %d directories imported before\n\n', ...
+    nnew, nread, nchanged, nold);
 end
 % =========================================================================
 function F = dirFiles(P,flist)
-%dirFiles. Sorted names of the (non-hidden) files of a directory (cached in
-%  the containers.Map flist). 
+%dirFiles. Sorted names of the (non-hidden) files of a directory with their
+%  number, size in bytes, and the last modification (cached in the
+%  containers.Map flist).
   if isKey(flist,P), F = flist(P); return; end
-  D = dir(P); 
-  F = sort({D( ~[D.isdir] & ~strncmp({D.name},'.',1) ).name}); 
+  D = dir(P); D = D( ~[D.isdir] & ~strncmp({D.name},'.',1) );
+  F = struct('name',{sort({D.name})},'Files',numel(D),'Bytes',sum([D.bytes]),'Modified','');
+  if ~isempty(D), F.Modified = char(datetime(max([D.datenum]),'ConvertFrom','datenum','Format','yyyy-MM-dd''T''HH:mm:ss')); end
   flist(P) = F; %#ok<NASGU> handle object
 end
 % =========================================================================
+function X = dirIndex(action,varargin)
+%dirIndex. Directory index of the DICOM import (catDCM2BIDSimportdirs.json
+%  of the database): the read DICOM directories with their dcm2niix options,
+%  files (number, size in bytes, and the last modification, see dirFiles),
+%  the number of their scans (0 for directories without scans, e.g. only
+%  localizers), and the import date.
+%    X = dirIndex('read',Pmdbdir)
+%    X = dirIndex('add',X,Pdcm,dopt,F,nscans)   (replaces an entry of Pdcm)
+%        dirIndex('write',Pmdbdir,X)
+  X0 = struct('DICOMdirectory',{},'dcm2niixOptions',{},'Files',{},'Bytes',{},'Modified',{}, ...
+    'Scans',{},'ImportDate',{});
+  switch action
+    case 'read'
+      X = X0; P = fullfile(varargin{1},'catDCM2BIDSimportdirs.json');
+      if exist(P,'file')
+        try
+          X = cat_io_dcm2bids_db('readImportJSON',P);
+          if ~isempty(X), X = orderfields(reshape(X,1,[]),X0); else, X = X0; end
+        catch e
+          cat_io_cprintf('warn','  Cannot read the directory index "%s" (%s), i.e. directories are read again.\n',P,e.message);
+          X = X0;
+        end
+      end
+    case 'add'
+      [X,Pdcm,dopt,F,nscans] = deal(varargin{:});
+      X(strcmp({X.DICOMdirectory},Pdcm) & strcmp({X.dcm2niixOptions},dopt)) = [];
+      X(end+1) = struct('DICOMdirectory',Pdcm,'dcm2niixOptions',dopt,'Files',F.Files,'Bytes',F.Bytes, ...
+        'Modified',F.Modified,'Scans',nscans,'ImportDate',char(datetime('now','Format','yyyy-MM-dd''T''HH:mm:ss')));
+    case 'write'
+      [Pmdbdir,X] = deal(varargin{:});
+      cat_io_dcm2bids_helper('writeJSON',fullfile(Pmdbdir,'catDCM2BIDSimportdirs.json'),X);
+  end
+end
+% =========================================================================
 function revokeScan(Pjsondb)
-%revokeScan. Remove a scan that was imported in this run (sidecar and import
-%  information, and the scan directory if it is empty). 
-  Pimp = spm_file(Pjsondb,'prefix','catDCM2BIDSimport_'); 
-  if exist(Pjsondb,'file'), delete(Pjsondb); end
+%revokeScan. Remove a scan that was imported in this run (sidecar, image of
+%  the conversion of the import, and import information, and the scan
+%  directory if it is empty).
+  Pimp = spm_file(Pjsondb,'prefix','catDCM2BIDSimport_');
+  for ext = {'.json','.nii','.nii.gz','.bval','.bvec'}
+    if exist(spm_file(Pjsondb,'ext',ext{1}),'file'), delete(spm_file(Pjsondb,'ext',ext{1})); end
+  end
   if exist(Pimp,'file'), delete(Pimp); end
-  D = dir(fileparts(Pjsondb)); 
+  D = dir(fileparts(Pjsondb));
   if all([D.isdir]), rmdir(fileparts(Pjsondb)); end
 end
 % =========================================================================
-function msg = convertImages(Psnr, Pmdbdir, Ptmp, opts, Psub)
+function attachPhysio(Pphysio, Psnr)
+%attachPhysio. Attach the physiological recordings (dcm2niix sidecars
+%  "folder=protocol=time=series_recording-<type>_physio.json" with their
+%  tsv.gz) to their fMRI scan of the scan directories Psnr, i.e., the scan
+%  with the same protocol name and study time (time part of the name) and
+%  the closest lower series number (e.g. series 13 of the PhysioLog of the
+%  fMRI series 11 with its SBRef 10). The files are stored as associated
+%  files of the scan (catDCM2BIDSassoc_<sidecar>_recording-<type>_physio.*)
+%  that are exported with the BIDS name of the scan (see processScans in
+%  cat_io_dcm2bids_process). Recordings without (unique) scan are skipped.
+
+  % sidecars of the scan directories with their name parts
+  Pjson = {};
+  for si = 1:numel(Psnr)
+    if exist(Psnr{si},'dir'), Pjson = [Pjson; cat_io_dcm2bids_db('getDBscanJSONs',Psnr{si})]; end %#ok<AGROW>
+  end
+  parts = cellfun(@(P) cat_io_dcm2bids_db('nameParts',spm_file(P,'basename')), Pjson, 'UniformOutput', false);
+  ok    = cellfun(@numel,parts) == 4; Pjson = Pjson(ok); parts = parts(ok);
+  sn    = cellfun(@(p) str2double(regexp(p{4},'^\d+','match','once')), parts);
+
+  for phi = 1:numel(Pphysio)
+    p   = cat_io_dcm2bids_db('nameParts',spm_file(Pphysio{phi},'basename'));
+    psn = str2double(regexp(p{end},'^\d+','match','once'));
+    rec = regexprep(p{end},'^\d+[a-z]*_',''); % e.g. recording-cardiac_physio
+    cand = [];
+    if numel(p) == 4 && ~isempty(p{3}) && ~isnan(psn)
+      cand = find(cellfun(@(q) strcmp(q{2},p{2}) && strcmp(q{3},p{3}), parts) & sn < psn);
+      cand = cand(sn(cand) == max(sn(cand)));
+    end
+    if isempty(cand) || numel(unique(cellfun(@fileparts,Pjson(cand),'UniformOutput',false))) > 1
+      cat_io_cprintf('warn','  Physiological recording "%s" without (unique) fMRI scan - not imported.\n', ...
+        spm_file(Pphysio{phi},'basename'));
+      continue
+    end
+    for ci = 1:numel(cand) % (e.g. the echoes of multi-echo fMRI)
+      for ext = {'.json','.tsv.gz'}
+        if exist(spm_file(Pphysio{phi},'ext',ext{1}),'file')
+          copyfile(spm_file(Pphysio{phi},'ext',ext{1}), fullfile(fileparts(Pjson{cand(ci)}), ...
+            sprintf('catDCM2BIDSassoc_%s_%s%s',spm_file(Pjson{cand(ci)},'basename'),rec,ext{1})));
+        end
+      end
+    end
+  end
+end
+% =========================================================================
+function msg = convertImages(Psnr, Pmdbdir, Ptmp, opts, Psub, quiet)
 %convertImages. Convert the missing images of the scans of the scan 
 %  directories Psnr. The DICOM directory of the import information 
 %  (catDCM2BIDSimport_*.json) of each scan is converted once with its 
@@ -205,10 +348,12 @@ function msg = convertImages(Psnr, Pmdbdir, Ptmp, opts, Psub)
 %  Psub limits the assigned images to these subject directories of the 
 %  database (e.g. the subject package of a parallel process, as a DICOM 
 %  directory can contain scans of several subjects that are converted by 
-%  their own process; empty for all). 
+%  their own process; empty for all). quiet suppresses the progress output
+%  (e.g. for the conversion of each directory of the import). 
 %  msg is a containers.Map with the reason for scans without image. 
   msg = containers.Map('KeyType','char','ValueType','char'); 
   if ~exist('Psub','var') || isempty(Psub), Psub = {}; else, Psub = cellfun(@(p) cat_io_dcm2bids_helper('normPath',p),cellstr(Psub),'UniformOutput',false); end
+  if ~exist('quiet','var'), quiet = 0; end
   if opts.gzipi, niiext = '.nii.gz'; else, niiext = '.nii'; end
 
   % scans without image grouped by DICOM directory and dcm2niix options
@@ -259,12 +404,12 @@ function msg = convertImages(Psnr, Pmdbdir, Ptmp, opts, Psub)
   if isempty(opts.Pdcm2nii), opts.Pdcm2nii = getDCM2NIIX; end % only if required
   checkWarnings(chk, Ptmp, opts, niiext); 
   if grp.Count == 0, return; end
-  fprintf('DCM2BIDS - convert images of %d DICOM directories\n', grp.Count);
+  if ~quiet, fprintf('DCM2BIDS - convert images of %d DICOM directories\n', grp.Count); end
 
   keys = grp.keys; 
-  spm_progress_bar('init',numel(keys),'DICOM image import','DICOM directories')
+  if ~quiet, spm_progress_bar('init',numel(keys),'DICOM image import','DICOM directories'); end
   for gi = 1:numel(keys)
-    spm_progress_bar('Set',gi)
+    if ~quiet, spm_progress_bar('Set',gi); end
 
     Pdcm   = keys{gi}(1:find(keys{gi}=='|',1,'last')-1); 
     gopt   = keys{gi}(find(keys{gi}=='|',1,'last')+1:end); 
@@ -324,8 +469,7 @@ function msg = convertImages(Psnr, Pmdbdir, Ptmp, opts, Psub)
     end
     rmdir(Pout,'s'); 
   end
-  spm_progress_bar('Clear')
-  fprintf('\n'); 
+  if ~quiet, spm_progress_bar('Clear'); fprintf('\n'); end
 end
 % =========================================================================
 function W = conversionWarnings(cmdout, Pdcm)
@@ -478,8 +622,14 @@ function cmdout = runDCM2NIIX(Pdcm, Pout, opts, headeronly)
 %  and 2D images are ignored by the import (opts.ignoreScouts), i.e. not 
 %  by dcm2niix (-i n; imports of former versions with -i y are converted
 %  with their options). cmdout is the console output of dcm2niix (e.g. for
-%  its warnings, see conversionWarnings).
+%  its warnings, see conversionWarnings). The files are read sequentially
+%  before (see prefetchFiles): the whole files for the images, the first
+%  MB for the header (about the part that dcm2niix reads), or the bytes of
+%  opts.prefetch (internal, e.g. inf for the header import with the image
+%  conversion afterwards and 0 for files that are already cached).
   if ~exist(Pout,'dir'), mkdir(Pout); end
+  if isfield(opts,'prefetch'), nb = opts.prefetch; elseif headeronly, nb = 2^20; else, nb = inf; end
+  prefetchFiles(Pdcm,nb);
   if headeronly, b = 'o'; else, b = 'y'; end
   if opts.gzipi, gz = 'y'; else, gz = 'n'; end
   cmd = sprintf('"%s" %s -z %s -b %s -o "%s" "%s"', ...
@@ -495,6 +645,28 @@ function cmdout = runDCM2NIIX(Pdcm, Pout, opts, headeronly)
       P = cat_vol_findfiles( Pout , '*.nii.gz' ,struct('depth',1)); 
       for fi=1:numel(P), gunzip(P{fi}); delete(P{fi}); end
     end
+  end
+end
+% =========================================================================
+function prefetchFiles(Pdcm,nb)
+%prefetchFiles. Read the files of the DICOM directory Pdcm (without its
+%  sub-directories, the first nb bytes of each file, all for inf, none for
+%  0) once sequentially, i.e. into the file cache of the
+%  operating system, before dcm2niix reads them. The import is limited by
+%  the disk and not by the CPU (dcm2niix needs about 2 s for 4000 cached 
+%  files), and dcm2niix reads the files in a seek-intensive order, i.e. the 
+%  sequential reading before is faster on hard disks (e.g. external USB 
+%  disks: header import about 1.8 times and image conversion about 1.3 
+%  times faster), whereas it costs little on SSDs. Parallel processes 
+%  are slower on hard disks (concurrent seeks).
+  if nb <= 0, return; end
+  D = dir(Pdcm); D = D(~[D.isdir]);
+  for fi = 1:numel(D)
+    fid = fopen(fullfile(Pdcm,D(fi).name),'r');
+    if fid < 0, continue; end
+    n = 0;
+    while ~feof(fid) && n < nb, n = n + numel(fread(fid,min(2^24,nb - n),'*uint8')); end
+    fclose(fid);
   end
 end
 % =========================================================================

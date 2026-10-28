@@ -4,8 +4,10 @@ function varargout = cat_io_dcm2bids_reportfig(action,varargin)
 %  for the project manager (data per site and time), the principal
 %  investigator (sample and brain markers), and the scanner operator
 %  (ratings, outliers, and systematic scan issues): an overview page of the
-%  BIDS directory and one page per site (for several sites) with the header
-%  and the panels (rows)
+%  BIDS directory and one page per site (for 2 to opts.reportfig.maxsites 
+%  sites, i.e. a large number of sites, e.g. of a traveling-subject study, 
+%  is only shown together, without site columns, site labels, and site 
+%  pages) with the header and the panels (rows)
 %    header        logos of the design, project, BIDS directory (site and
 %                  scanner), numbers of subjects, sessions, and scans, and
 %                  the median ratings of the sessions with icons (protocol
@@ -21,13 +23,15 @@ function varargout = cat_io_dcm2bids_reportfig(action,varargin)
 %                  mean age, its SD, and the age range as yellow-orange
 %                  boxes for older subjects and more variable ages) and the
 %                  sex pie, age pyramid (age at the first session of each
-%                  subject, males left, females right, see
-%                  opts.reportfig.agerange and agestep), and the pyramid of
-%                  the subjects per site with the mean age and its SD
+%                  subject, males left, females right, other or unknown sex
+%                  half on each side in the center, see opts.reportfig.
+%                  agerange and agestep, by default the age range of the
+%                  sample, see ageRange), and the pyramid of the subjects
+%                  per site with the mean age and its SD
 %    markers       relative tissue volumes (best T1w scan), white matter FA
 %                  (best DWI scan), and system segregation (best BOLD scan)
 %                  by age with the robust age/sex model of the sample (see
-%                  cat_io_dcm2bids_stats, points by site)
+%                  cat_io_dcm2bids_stats, points by site, with grid)
 %    homogeneity   sample homogeneity (quartic mean Z-score, corrected for
 %                  age and sex for at least 10 sessions) of the mwc1 maps,
 %                  the normalized FA maps, and the connectivity matrices by
@@ -96,9 +100,10 @@ function Ppdf = writeReportFigure(Poutdir,job)
     job.opts.reportfig.design = designs{di};
     F = setupFigure(job,E,Q);
 
-    % overview page and one page per site (for several sites)
+    % overview page and one page per site (for several sites, but not for 
+    % more than opts.reportfig.maxsites sites, see manySites)
     pages = {''};
-    if numel(F.sites) > 1, pages = [pages F.sites]; end %#ok<AGROW>
+    if numel(F.sites) > 1 && ~manySites(F), pages = [pages F.sites]; end %#ok<AGROW>
     fh = figure('Visible','off','Color',F.bg,'Units','centimeters','Position',[1 1 F.pw F.ph], ...
       'PaperUnits','centimeters','PaperSize',[F.pw F.ph],'PaperPosition',[0 0 F.pw F.ph], ...
       'MenuBar','none','ToolBar','none');
@@ -139,6 +144,7 @@ function F = setupFigure(job,E,Q)
   F.pw = 21; F.ph = 29.7; F.mx = 0.3;               % A4 portrait in cm and side margin
   F.project = job.subdir; F.dataset = job.BIDSsubdir;
   F.ropts   = job.opts.reportfig;
+  [F.ropts.agerange,F.ropts.agestep] = ageRange(numCol(E,'age'),F.ropts); % (the same for all pages)
   F.fs      = F.ropts.fontsize;                     % text
   F.fsh     = F.fs * F.ropts.fontscale(1);          % header-like elements (titles of the diagrams)
   F.fss     = F.fs * F.ropts.fontscale(2);          % axes, table entries, and legends
@@ -277,9 +283,13 @@ function drawPage(fh,F,S,E,site,pgi,npg)
   drawHeader(fh,F,S,E,site,[F.mx F.ph-F.mx-2.1 w 2.1]);
 
   % data: sessions per month and sites (panel)
+  % (the site table gets more space for more site columns, about 1.3 cm 
+  % each, down to a third of the panel for the timeline)
   p = [F.mx 22.5 w 4.6]; drawPanel(fh,F,p);
-  drawTimeline(fh,F,E,[p(1)+0.15 p(2)+0.1 11.6 p(4)-0.2]);
-  drawSiteTable(fh,F,site,[p(1)+12.05 p(2)+0.15 p(3)-12.2 p(4)-0.3]);
+  nc = ~isempty(site) + numel(F.sites) * (isempty(site) && ~manySites(F)) + (numel(F.sites) > 1); % (see drawSiteTable)
+  ws = min(p(3) * 2/3, max(p(3) - 12.2, 1.8 + 1.3 * nc));
+  drawTimeline(fh,F,E,[p(1)+0.15 p(2)+0.1 p(3)-ws-0.6 p(4)-0.2]);
+  drawSiteTable(fh,F,site,[p(1)+p(3)-ws-0.15 p(2)+0.15 ws p(4)-0.3]);
 
   % sample: age/sex table with the sex pie, age pyramid, and subjects per
   % site (panel)
@@ -450,6 +460,7 @@ function drawTimeline(fh,F,E,c)
     lab = arrayfun(@(m) sprintf('%04d-%02d',floor((m-1)/12)+1,mod(m-1,12)+1),m0:m0+nm-1,'UniformOutput',false);
     str = sprintf('%s (%d sessions, %s to %s)',str,sum(ok),lab{1},lab{end});
     if any(~ok), str = sprintf('%s, %d without date',str,sum(~ok)); end
+    if c(3) < 10, str = sprintf('Sessions (%d, %s to %s)',sum(ok),lab{1},lab{end}); end % (narrow cell for many sites)
   end
   ax = cellAxes(fh,F,c,str,0);
   if ~any(ok)
@@ -490,13 +501,15 @@ function drawSiteTable(fh,F,site,c)
 %  colors.
   Q  = F.Q; qs = textCol(Q,'site');
   if isempty(site), cols = F.sites; else, cols = {site}; end
+  if isempty(site) && manySites(F), cols = {}; end % (only all sites together)
   if any(strcmp(qs,'all')) && ~isscalar(F.sites), cols = [cols {'all'}]; end
   if ~isfield(Q,'PCP') && isfield(Q,'conform'), [Q.PCP] = Q.conform; end % (tables of former versions)
   rows = {'subjects','subjects'; 'sessions','sessions'; 'scans','scans'; ...
           'SQR (median)','SQR'; 'PFR (median)','PFR'; 'SOR (median)','SOR'; 'PCP','PCP'};
   ax = textAxes(fh,F,c);
-  text(ax,0.0,1.0,'Sites','FontSize',F.fsh,'FontWeight','bold','Color',F.fg,'VerticalAlignment','top');
-  nc = numel(cols); x0 = 0.22; cw = (1 - x0) / max(1,nc); rh = 0.88 / (size(rows,1) + 1.3);
+  ttl = 'Sites'; if isempty(site) && manySites(F), ttl = sprintf('Sites (%d, all together)',numel(F.sites)); end
+  text(ax,0.0,1.0,ttl,'FontSize',F.fsh,'FontWeight','bold','Color',F.fg,'VerticalAlignment','top');
+  nc = numel(cols); x0 = 1.8 / c(3); cw = (1 - x0) / max(1,nc); rh = 0.88 / (size(rows,1) + 1.3); % (row names 1.8 cm)
   V  = nan(size(rows,1),nc);
   for ci = 1:nc
     qi = find(strcmp(qs,cols{ci}),1);
@@ -560,13 +573,23 @@ function fitTexts(h,w,fs,split)
   end
   e = ext();
   if e > w, set(h,'FontSize',max(0.6 * fs,fs1 * w / e)); end
-  for hi = 1:numel(h)
-    s = cellstr(get(h(hi),'String'));
-    while h(hi).Extent(3) > w && max(cellfun('length',s)) > 3
-      [~,li] = max(cellfun('length',s)); s{li} = shortLabel(s{li},numel(s{li}) - 1);
-      set(h(hi),'String',s);
+  for hi = 1:numel(h) % (shortened by the ratio of the widths, i.e. few steps)
+    s = cellstr(get(h(hi),'String')); e = h(hi).Extent(3);
+    while e > w && max(cellfun('length',s)) > 3
+      [n,li] = max(cellfun('length',s)); s0 = s{li};
+      s{li} = shortLabel(s0,max(3,min(n - 1,floor(n * w / e))));
+      if strcmp(s{li},s0), break; end % (no shorter label, e.g. 'x...' for 3 characters)
+      set(h(hi),'String',s); e = h(hi).Extent(3);
     end
   end
+end
+% =========================================================================
+function many = manySites(F)
+%manySites. True for more than opts.reportfig.maxsites sites (default 20), 
+%  which are only shown together (without site columns, site labels, and 
+%  site pages), as the diagrams are not readable for so many sites.
+  maxs = 20; if isfield(F.ropts,'maxsites'), maxs = F.ropts.maxsites; end
+  many = numel(F.sites) > maxs;
 end
 % =========================================================================
 function s = splitLabel(s)
@@ -655,11 +678,11 @@ end
 function col = ageColor(F,v,kind)
 %ageColor. Box color (on a panel) of the age value v in years of the kind 
 %  'mean' (mean age), 'sd' (its SD), or 'range' (range of the ages) with 
-%  more yellow-orange for older subjects (relative to the age range of the
-%  age pyramid, see opts.reportfig.agerange), a larger SD (up to a quarter
-%  of this range), and a larger range (up to this range), i.e. transparent
-%  for young subjects with similar ages.
-  ar = F.ropts.agerange; r = diff(ar);
+%  more yellow-orange for older subjects (relative to 0 to 100 years, i.e.
+%  not the age range of the diagrams of the sample, see ageRange), a larger
+%  SD (up to 25 years), and a larger range (up to 100 years), i.e. 
+%  transparent for young subjects with similar ages.
+  ar = [0 100]; r = diff(ar);
   switch kind
     case 'mean', a = (v - ar(1)) / r;
     case 'sd',   a = v / (r / 4);
@@ -685,43 +708,68 @@ end
 % =========================================================================
 function drawAge(fh,F,E,c)
 %drawAge. Age pyramid of the subjects (age at the first session, males
-%  left, females right) with the counts of each bin.
+%  left, females right, other or unknown sex half on each side in the 
+%  center) with the counts of each bin.
   [age,sex] = subjects(E);
   edges = F.ropts.agerange(1):F.ropts.agestep:F.ropts.agerange(2);
   cen   = edges(1:end-1) + diff(edges)/2;
   agec  = min(edges(end),max(edges(1),age));      % ages outside the range in the first/last bin
   cM = histcounts(agec(strcmp(sex,'M')),edges);
   cF = histcounts(agec(strcmp(sex,'F')),edges);
-  ax = cellAxes(fh,F,c,sprintf('Age at the first session (%d-year bins)',F.ropts.agestep),0);
+  cU = histcounts(agec(~ismember(sex,{'M','F'})),edges);
+  ax = cellAxes(fh,F,c,sprintf('Age at the first session (%g-year bins)',F.ropts.agestep),0);
   hold(ax,'on');
-  xm = max([cM cF 1]) * 1.3;
-  barh(ax,cen,-cM,1,'FaceColor',F.sexcol(1,:),'EdgeColor',F.bg,'LineWidth',0.3);
-  barh(ax,cen, cF,1,'FaceColor',F.sexcol(2,:),'EdgeColor',F.bg,'LineWidth',0.3);
-  for bi = find(cM > 0), text(ax,-cM(bi) - xm*0.02,cen(bi),num2str(cM(bi)),'FontSize',F.fss, ...
-      'HorizontalAlignment','right','VerticalAlignment','middle','Color',F.fg); end
-  for bi = find(cF > 0), text(ax, cF(bi) + xm*0.02,cen(bi),num2str(cF(bi)),'FontSize',F.fss, ...
-      'HorizontalAlignment','left','VerticalAlignment','middle','Color',F.fg); end
-  plot(ax,[0 0],edges([1 end]),'Color',F.fgl,'LineWidth',0.5);
+  xm = max([cU/2 + cM, cU/2 + cF, 1]) * 1.3;
+  plot(ax,[0 0],edges([1 end]),'Color',F.fgl,'LineWidth',0.5); % (below the bars and numbers)
+  pyramidBars(ax,F,[cen cen(end) + F.ropts.agestep],[cM; cF; cU]',1,1,xm,c(3) - 1.15); % (empty row to stack one bin)
   xt = 0:niceStep(max([cM cF 1])/3):max([cM cF 1]);
-  set(ax,'XLim',[-xm xm],'YLim',edges([1 end]),'YTick',edges(1):20:edges(end), ...
+  set(ax,'XLim',[-xm xm],'YLim',edges([1 end]),'YTick',ageTicks(F), ...
     'XTick',unique([-xt xt]),'XTickLabel',arrayfun(@(x) num2str(abs(x)),unique([-xt xt]),'UniformOutput',false));
   xlabel(ax,'subjects','FontSize',F.fss,'Color',F.fg); ylabel(ax,'age in years','FontSize',F.fss,'Color',F.fg);
   text(ax,-xm*0.95,edges(end) - diff(edges([1 end]))*0.04,F.sexlab{1},'FontSize',F.fss,'Color',F.sexcol(1,:), ...
     'FontWeight','bold','VerticalAlignment','top');
   text(ax, xm*0.95,edges(end) - diff(edges([1 end]))*0.04,F.sexlab{2},'FontSize',F.fss,'Color',F.sexcol(2,:), ...
     'FontWeight','bold','VerticalAlignment','top','HorizontalAlignment','right');
+  if any(cU), text(ax,0,edges(end) - diff(edges([1 end]))*0.04,'other/n/a','FontSize',F.fss,'Color',F.sexcol(3,:), ...
+    'FontWeight','bold','VerticalAlignment','top','HorizontalAlignment','center','BackgroundColor',F.bg,'Margin',0.5); end
+end
+% =========================================================================
+function pyramidBars(ax,F,y,C,bw,labels,xm,aw)
+%pyramidBars. Bars of a pyramid at the positions y with the counts C (rows
+%  of males, females, and other or unknown sex) of the width bw (1 for 
+%  touching bars): males left, females right, and other or unknown sex half
+%  on each side in the center (as they are neither male nor female), with 
+%  the numbers at the bars for labels (and in the center bar if it is wide
+%  enough for the x-limit xm and the axes width aw in cm).
+  n  = size(C,1); C(end+1:numel(y),:) = 0; h = C(:,3) / 2; 
+  hl = barh(ax,y,-[h C(:,1)],bw,'stacked','EdgeColor',F.bg,'LineWidth',0.3);
+  hr = barh(ax,y, [h C(:,2)],bw,'stacked','EdgeColor',F.bg,'LineWidth',0.3);
+  set([hl(1) hr(1)],'FaceColor',F.sexcol(3,:)); set(hl(2),'FaceColor',F.sexcol(1,:)); set(hr(2),'FaceColor',F.sexcol(2,:));
+  if ~labels, return; end
+  cmpu = aw / (2 * xm);                            % cm per subject
+  for i = 1:n
+    if C(i,1) > 0, text(ax,-h(i) - C(i,1) - xm*0.02,y(i),num2str(C(i,1)),'FontSize',F.fss, ...
+        'HorizontalAlignment','right','VerticalAlignment','middle','Color',F.fg); end
+    if C(i,2) > 0, text(ax, h(i) + C(i,2) + xm*0.02,y(i),num2str(C(i,2)),'FontSize',F.fss, ...
+        'HorizontalAlignment','left','VerticalAlignment','middle','Color',F.fg); end
+    if C(i,3) > 0 && C(i,3) * cmpu > 0.14 * numel(num2str(C(i,3))) + 0.08
+      text(ax,0,y(i),num2str(C(i,3)),'FontSize',F.fss,'HorizontalAlignment','center', ...
+        'VerticalAlignment','middle','Color','w');
+    end
+  end
 end
 % =========================================================================
 function drawSiteSample(fh,F,E,c)
-%drawSiteSample. Pyramid of the subjects per site (males left, females and
-%  gray other or unknown sex right) with the mean age and its SD of each
-%  site in boxes next to the pyramid (colors as the age/sex table, see
-%  ageColor).
+%drawSiteSample. Pyramid of the subjects per site (males left, females
+%  right, gray other or unknown sex half on each side in the center, see
+%  pyramidBars) with the mean age and its SD of each site in boxes next to
+%  the pyramid (colors as the age/sex table, see ageColor).
   sites = F.sites; site = textCol(E,'site');
   if isempty(sites), sites = {''}; end
   sites = sites(cellfun(@(s) any(strcmp(site,s)),sites));
   if isempty(sites), sites = {''}; end
   ns = numel(sites); C = zeros(ns,3); A = nan(ns,2);
+  many = manySites(F) && ns > 1;                   % (only the bars, without site labels, numbers, and ages)
   for si = 1:ns
     [a,s] = subjects(E(strcmp(site,sites{si})));
     C(si,:) = [sum(strcmp(s,'M')) sum(strcmp(s,'F')) sum(~ismember(s,{'M','F'}))];
@@ -729,29 +777,27 @@ function drawSiteSample(fh,F,E,c)
     if numel(a) > 1, A(si,2) = std(a); end
   end
   sw = 1.5; [ax,tax] = cellAxes(fh,F,c,'Subjects per site',sw);
-  xm = max([C(:,1); C(:,2) + C(:,3); 1]) * 1.5;  % (room for the numbers)
-  barh(ax,1:ns+1,-[C(:,1); 0],0.7,'FaceColor',F.sexcol(1,:),'EdgeColor',F.bg,'LineWidth',0.3);
-  hb = barh(ax,1:ns+1,[C(:,2:3); 0 0],0.7,'stacked','EdgeColor',F.bg,'LineWidth',0.3); % (empty row to stack one site)
-  set(hb(1),'FaceColor',F.sexcol(2,:)); set(hb(2),'FaceColor',F.sexcol(3,:));
-  for si = 1:ns % numbers at the bars (females+others)
-    if C(si,1) > 0
-      text(ax,-C(si,1) - xm*0.03,si,num2str(C(si,1)),'FontSize',F.fss,'Color',F.fg, ...
-        'HorizontalAlignment','right','VerticalAlignment','middle');
-    end
-    str = num2str(C(si,2)); if C(si,3) > 0, str = sprintf('%d+%d',C(si,2),C(si,3)); end
-    if any(C(si,2:3) > 0)
-      text(ax,sum(C(si,2:3)) + xm*0.03,si,str,'FontSize',F.fss,'Color',F.fg,'VerticalAlignment','middle');
-    end
-  end
-  pad = max(0,(3 - ns)/2);                         % (thinner bars for less than 3 sites)
-  plot(ax,[0 0],[0.4 - pad ns + 0.6 + pad],'Color',F.fgl,'LineWidth',0.5);
+  xm = max([C(:,3)/2 + C(:,1); C(:,3)/2 + C(:,2); 1]) * 1.5; % (room for the numbers)
+  % bars of the thickness of the age pyramid bars (see drawAge) with at
+  % least 0.3 cm per site (for the age boxes), i.e. thinner bars only for 
+  % many sites
+  th  = c(4) - 1.45;                               % height of the axes in cm (see cellAxes)
+  nb  = max(1,round(diff(F.ropts.agerange) / F.ropts.agestep)); 
+  sp  = min(th / (ns + 0.2),max(th / nb / 0.85,0.3)); % space per site in cm
+  bw  = min(0.85,th / nb / sp);                    % bar width (of the space per site)
+  pad = max(0,(th / sp - ns - 0.2) / 2);           % (empty space above and below the sites)
+  plot(ax,[0 0],[0.4 - pad ns + 0.6 + pad],'Color',F.fgl,'LineWidth',0.5); % (below the bars and numbers)
+  pyramidBars(ax,F,1:ns+1,C,bw,~many,xm,c(3) - 1.15 - sw); % (empty row to stack one site)
   xt = 0:niceStep(xm/1.5/2):xm/1.5; xt = unique([-xt xt]);
   set(ax,'YDir','reverse','YLim',[0.4 - pad ns + 0.6 + pad],'YTick',1:ns,'XLim',[-xm xm],'TickLabelInterpreter','tex', ...
     'YTickLabel',strcat({'\bf '},regexprep(sites,'([_^{}\\])','\\$1')), ...   % (bold site codes)
     'XTick',xt,'XTickLabel',arrayfun(@(x) num2str(abs(x)),xt,'UniformOutput',false));
   xlabel(ax,'subjects','FontSize',F.fss,'Color',F.fg);
+  if many
+    set(ax,'YTick',[]); ylabel(ax,sprintf('%d sites',ns),'FontSize',F.fss,'Color',F.fg); 
+    return
+  end
   % mean age and SD of each site (boxes aligned with the bars)
-  th = c(4) - 1.45;                                % height of the axes in cm (see cellAxes)
   X  = [0.04 0.62; 0.72 0.72] / sw;               % boxes (left edge and width, normalized)
   bh = min(0.36,0.85 * th / (ns + 0.2 + 2*pad)) / th;
   kind = {'mean','sd'}; hdr = {'age','SD'};
@@ -797,6 +843,7 @@ function drawVolumes(fh,F,E,c)
     modelLine(ax,F,F.M(ti),xr,F.tiscol(ti,:));
   end
   set(ax,'XLim',F.ropts.agerange,'XTick',ageTicks(F),'YLim',[0 max(60,ceil(max(Y(:))/10)*10)]);
+  gridOn(ax,F);
   xlabel(ax,'age in years','FontSize',F.fss,'Color',F.fg); ylabel(ax,'volume in % of TIV','FontSize',F.fss,'Color',F.fg);
   % statistics next to the diagram
   tiv = numCol(E,'T1w_TIV'); y = 0.98; dy = 0.095; ds = 0.062; % (lines and lines of a measure)
@@ -842,6 +889,7 @@ function drawMarker(fh,F,E,c,fn,M,ttl,ylab,nd)
   modelLine(ax,F,M,xr,F.fgl);
   yr = [min(v(ok)) max(v(ok))]; yr = yr + [-0.15 0.15] * max(diff(yr),abs(mean(yr))*0.05 + eps);
   set(ax,'XLim',F.ropts.agerange,'XTick',ageTicks(F),'YLim',yr);
+  gridOn(ax,F);
   xlabel(ax,'age in years','FontSize',F.fss,'Color',F.fg); ylabel(ax,ylab,'FontSize',F.fss,'Color',F.fg);
   % statistics next to the diagram
   y = 0.98; dy = 0.095; ds = 0.062; fmt = sprintf('%%0.%df',nd); % (lines and lines of the measure)
@@ -855,8 +903,36 @@ function drawMarker(fh,F,E,c,fn,M,ttl,ylab,nd)
 end
 % =========================================================================
 function t = ageTicks(F)
-%ageTicks. Ticks of the age range of the brain markers (e.g. 20 years).
+%ageTicks. Ticks of the age range of the age pyramid and the brain markers
+%  (e.g. 20 years for 0 to 100 years).
   ar = F.ropts.agerange; t = ar(1):niceStep(diff(ar)/5):ar(2);
+end
+% =========================================================================
+function [ar,st] = ageRange(age,ropts)
+%ageRange. Age range ar of the diagrams and bin size st of the age pyramid
+%  in years (opts.reportfig.agerange and agestep), by default the range of
+%  the ages of the sample rounded to 10 years for a range of at least 20
+%  years, to 5 years for 10 to 20 years, and to 1 year below (0 to 100 
+%  years without ages), and a bin size of 1, 2, 5, or 10 years for at 
+%  most 20 bins.
+  ar = []; st = [];
+  if isfield(ropts,'agerange'), ar = double(ropts.agerange); end
+  if isfield(ropts,'agestep'),  st = double(ropts.agestep);  end
+  if numel(ar) ~= 2 || ~(ar(2) > ar(1))
+    a = age(isfinite(age)); if isempty(a), a = [0 100]; end
+    r = max(a) - min(a);
+    if r >= 20, u = 10; elseif r >= 10, u = 5; else, u = 1; end
+    ar = floor(min(a) / u) * u; ar(2) = max(ar(1) + u,ceil(max(a) / u) * u);
+  end
+  if isempty(st) || ~(st > 0)
+    m = [1 2 5 10]; st = m(find(diff(ar) ./ m <= 20,1));
+    if isempty(st), st = niceStep(diff(ar) / 20); end
+  end
+end
+% =========================================================================
+function gridOn(ax,F)
+%gridOn. Light grid of the diagram ax below the data (brain markers).
+  set(ax,'XGrid','on','YGrid','on','GridColor',F.fgl,'GridAlpha',0.25,'Layer','bottom');
 end
 % =========================================================================
 function subjectLines(ax,F,E,x,y,ok,col)

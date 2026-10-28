@@ -35,6 +35,7 @@ function varargout = cat_io_dcm2bids_bids(action,varargin)
 %    cat_io_dcm2bids_bids('writeDatasetFiles',Pbids,job,sources,convver)
 %    cat_io_dcm2bids_bids('writeProtocols',Pbids,Pp,Ptbldir[,level])
 %    cat_io_dcm2bids_bids('gzipunzipOutputdata',Poutdir,opts)
+%    ver = cat_io_dcm2bids_bids('namingVersion')
 %
 %  See also cat_io_dcm2bids.
 
@@ -42,11 +43,25 @@ function varargout = cat_io_dcm2bids_bids(action,varargin)
     case {'bidsLabel','sessionLabel','setupDatatype','setupSuffix','entityString','setupTask','BIDSoutputs', ...
           'getBIDSoutputs','remapIntendedFor','writeSubjectTSV', ...
           'writeParticipantTSV','writePrivateTSV','getBIDSsources', ...
-          'writeDatasetFiles','writeProtocols','gzipunzipOutputdata'}
+          'writeDatasetFiles','writeProtocols','gzipunzipOutputdata','namingVersion'}
       [varargout{1:nargout}] = feval(action,varargin{:});
     otherwise
       error('cat_io_dcm2bids_bids:unknownAction','Unknown action "%s".',action);
   end
+end
+% =========================================================================
+function ver = namingVersion
+%namingVersion. Version of the BIDS naming, i.e. of the code that defines 
+%  the BIDS names of the scans (protocol test, status, and names). It has 
+%  to be increased for changes that can rename the scans of an existing
+%  BIDS directory, as the scans with their former names remain (see 
+%  checkPreviousSetting in cat_io_dcm2bids, that asks to replace the BIDS 
+%  directory if the version or the protocol definitions changed).
+%    1 .. initial version (BIDS directories without version)
+%    2 .. image component of the ImageType as one entry (e.g. M and the 
+%         MAGNITUDE of dcm2niix 2026), i.e. conform instead of semiconform
+%         scans (see normalizeFields in cat_io_dcm2bids_protocols)
+  ver = 2; 
 end
 % =========================================================================
 function label = bidsLabel(str,camelCase)

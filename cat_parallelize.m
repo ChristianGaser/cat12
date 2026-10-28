@@ -124,7 +124,7 @@ function varargout = cat_parallelize(job,func,datafield)
 
 
   tmp_array = cell(job.nproc,1);
-  logdate   = char(datetime('now','Format','yyyyMMdd-hhmmss'));
+  logdate   = char(datetime('now','Format','yyyyMMdd-HHmmss'));
   PID       = zeros(1,job.nproc);
   %catSID    = zeros(1,job.nproc);
   SID       = cell(1,job.nproc); 

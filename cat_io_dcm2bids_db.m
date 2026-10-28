@@ -53,7 +53,7 @@ function p = nameParts(name)
 %  series of dcm2niix, without extension), also for a protocol name with 
 %  the separator (e.g. EPI_PE=AP), i.e. the time and series are the last 
 %  parts.
-  p = strsplit(name,'=');
+  p = strsplit(name,'=','CollapseDelimiters',false); % (empty parts, e.g. without protocol name)
   if numel(p) > 4, p = [p(1) {strjoin(p(2:end-2),'=')} p(end-1:end)]; end
 end
 % =========================================================================
@@ -149,8 +149,15 @@ function id = getScanID(V,fnameparts)
 %  dcm2niix image suffix of the series number (last part of the filename 
 %  "folder=protocol=time=series", e.g. 7, 7a, or 17_e2). The folder name is
 %  ignored as the same series can be converted from different directories. 
+%  A SeriesInstanceUID that is not a DICOM UID (e.g. replaced by the 
+%  acquisition time by older anonymization tools, i.e. not unique) is 
+%  combined with the StudyInstanceUID. 
   if isfield(V,'SeriesInstanceUID') && ~isempty(V.SeriesInstanceUID)
-    id = sprintf('%s|%s', V.SeriesInstanceUID, fnameparts{end}); 
+    uid = char(string(V.SeriesInstanceUID)); 
+    if isempty(regexp(uid,'^\d+(\.\d+)+$','once')) && isfield(V,'StudyInstanceUID') && ~isempty(V.StudyInstanceUID)
+      uid = sprintf('%s|%s', uid, char(string(V.StudyInstanceUID))); 
+    end
+    id = sprintf('%s|%s', uid, fnameparts{end}); 
   else
     % without series UID (e.g. BIDS input): site/dataset, subject, and name
     id = sprintf('%s|%s|%s', V.DeviceSerialNumber, V.PatientID, strjoin(fnameparts(2:end),'=')); 

@@ -195,7 +195,18 @@ if strcmp(style,'reset') || strcmp(style,'silentreset')
   return
 end
   
-if cprintferror
+if cprintferror == 2 && nargin > 1
+  % markup of the style for a log that is printed again with colors (e.g.
+  % the logs of the parallel processes of cat_io_dcm2bids_parallel):
+  % char(17) style char(18) text char(19), numeric styles as [r g b]
+  if isnumeric(style), style = mat2str(double(style),4); end
+  fprintf(1,'%s',[char(17) char(style) char(18)]);
+  count1 = safe_fprintf(1, format, varargin);
+  fprintf(1,'%s',char(19));
+  if nargout
+      count = count1;
+  end
+elseif cprintferror
   warning off
   count1 = safe_fprintf(1, format, varargin);
   if nargout

@@ -58,6 +58,7 @@ function R = processScans(C,Psnr,convmsg)
   QM = struct('NSR',[],'ISR',[],'RES',[],'BSM',[],'WSM',[],'vx_vol',[],'SQR',[]); 
   varg = Vjson; dbV = {}; % deferred protocol variants and subject table rows (see scanRecord)
   if job.opts.gzipi, niiext = '.nii.gz'; else, niiext = '.nii'; end
+  wclean = onCleanup(@() cat_io_dcm2bids_helper('workClear')); % unzipped images of the work directory (see workSetup), also after errors
   for fdiri = 1:numel(Psnr)
     
     % (3) process the scans of each scan directory of the database
@@ -516,8 +517,10 @@ function R = processScans(C,Psnr,convmsg)
         Vjsonp = cat_io_dcm2bids_anonymize('sidecar',Vjsonp,job.opts.anonymize); 
         cat_io_json( spm_file( fullfile(BIDSpath{sci},BIDSfile{sci}),'ext','.json'), Vjsonp); 
 
-        % files that belong to the scan (BIDS input, e.g. events, physio, 
-        % aslcontext) with the new name (see bidsAssociated in cat_io_dcm2bids_importBIDS)
+        % files that belong to the scan (BIDS input, e.g. events, physio,
+        % aslcontext, and the physio of DICOM PhysioLog series) with the new
+        % name (see bidsAssociated in cat_io_dcm2bids_importBIDS and
+        % attachPhysio in cat_io_dcm2bids_importDCM)
         newbase = regexprep(spm_file(BIDSfile{sci},'basename'),'_[^_]+$',''); 
         Passoc  = dir(fullfile(Pdirfi,['catDCM2BIDSassoc_' spm_file(Pjson{fscni},'basename') '_*'])); 
         for ai = 1:numel(Passoc)
@@ -574,6 +577,9 @@ function R = processScans(C,Psnr,convmsg)
     % cat_io_dcm2bids_pp_anat), the phase-encoding reversal test of its scans 
     % (checkPEreversal), and the session data of the subject (sessions.tsv) 
     if job.opts.output > 0 && (fdiri == numel(Psnr) || ~strcmp(fileparts(Psnr{fdiri+1}),fileparts(Pdirfi)))
+      % (BIDSsub is only set for exported scans, i.e. shorter than sci if the
+      % last scans are not exported and a scan directory has several images)
+      BIDSsub(end+1:sci) = {''};
       sesids = find(strcmp(cellfun(@fileparts,Pdbdirpath(1:sci),'UniformOutput',false),fileparts(Pdirfi)) & ...
         ~cellfun('isempty',BIDSsub(1:sci))); 
       SOR = nan; 
@@ -623,6 +629,7 @@ function R = processScans(C,Psnr,convmsg)
         cat_io_dcm2bids_bids('writeSubjectTSV',Vjson{id}, sub{id}, ses{id}, Poutdir, bsd{1}, job.opts.anonymize, SOR, site{id}, ...
           cat_io_dcm2bids_phenotypic('sessionData',fileparts(Pdbdirpath{id})), acqtime{id}); 
       end
+      cat_io_dcm2bids_helper('workClear'); % (unzipped images of the session)
     end
   end 
   if sci>1
@@ -666,8 +673,10 @@ function R = processScans(C,Psnr,convmsg)
         cat_io_dcm2bids_bids('writeSubjectTSV',Vjson{id}, sub{id}, ses{id}, Poutdir, bsd{1}, job.opts.anonymize, SOR, site{id}, ...
           cat_io_dcm2bids_phenotypic('sessionData',fileparts(Pdbdirpath{id})), acqtime{id}); 
       end
+      cat_io_dcm2bids_helper('workClear'); 
     end
   end
+  clear wclean
 
   % results of the scans for the outputs of all packages (see cat_io_dcm2bids)
   % (fields of the scans with sci elements, e.g. without BIDS name for output 0)

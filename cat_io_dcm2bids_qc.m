@@ -135,8 +135,16 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
     end
 
 
+    % 75th percentile of each volume (e.g. b0 and DWI volumes), read volume
+    % by volume (4D data as a whole would need several GB, e.g. 2.6 GB for
+    % a 112x112x64x403 BOLD as double)
+    nvol = numel(V); sig75 = nan(1,nvol); 
     try
-      Y = single(spm_read_vols(V));
+      for di = 1:nvol
+        Ydi = single(spm_read_vols(V(di))); 
+        sig75(di) = cat_stat_prctile(Ydi(:),75); 
+      end
+      clear Ydi; 
     catch e
       if cat_io_contains(e.message,'Unknown datatype.')
         cat_io_cprintf('err','Cannot read Nifti.\n');
@@ -148,12 +156,6 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
       %rmdir(fileparts(P),'Recursive',true);
       %error('cat_io_dcm2bids:runQC','Remove "%s" to reimport. Please rerun!\n',P); 
     end
-    sig75 = nan(1,size(Y,4)); 
-    for di = 1:size(Y,4)
-      Ydi = Y(:,:,:,di); 
-      sig75(di) = cat_stat_prctile(Ydi(:),75); 
-      clear Ydi; 
-    end 
     if strcmp(type,'dwi') 
       isepi = sig75 > mean(sig75); 
     end
@@ -192,7 +194,7 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
     opts.sliceMotionCor = 1; 
     opts.biasCor        = 1; 
     opts.denoise        = 1; 
-    opts.tlim           = min(size(Y,4),8); 
+    opts.tlim           = min(nvol,8); 
     Pmaps               = {}; 
     % realigned volumes (resliced in memory into the grid of the first one)
     Vr = cat_io_dcm2bids_helper('realignedVolumes',Pimg,Prp,opts);

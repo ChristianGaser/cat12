@@ -413,6 +413,37 @@ function dcm2bids = cat_conf_dcm2bids(expert)
     ''
     };
 
+  exportmode        = cfg_menu;
+  exportmode.tag    = 'exportmode';
+  exportmode.name   = 'Export mode';
+  exportmode.labels = {'Extend','Only selected'};
+  exportmode.values = {1,2};
+  exportmode.val    = {def.opts.exportmode};
+  exportmode.help   = {
+   ['Extend adds the scans of this run to the BIDS directory and the DICOM export, i.e. they contain the scans of ' ...
+    'all runs (e.g. for a growing study). ']
+    ''
+   ['Only selected writes the scans of this run (input selection, also of previously imported data, e.g. directories ' ...
+    'of the database) into separate directories <BIDS>-selected and catDCM2BIDSdb-dicom-selected (with their own ' ...
+    'reports), which are removed and written again by each run of this mode, e.g. to share a subset. The directories ' ...
+    'of the mode extend are not changed, and the internal database is always extended. ']
+    ''
+    };
+
+  agelimit          = cfg_entry;
+  agelimit.tag      = 'agelimit';
+  agelimit.name     = 'Age limit';
+  agelimit.strtype  = 'r';
+  agelimit.num      = [1 2];
+  agelimit.val      = {def.opts.agelimit};
+  agelimit.help     = {
+   ['Age range [min max] of the sessions in years. Sessions outside the range or without age are not processed ' ...
+    '(listed as warning and in the table catDCM2BIDSdb-tables/excluded_sessions), e.g. the age 0 of many DICOMs is ' ...
+    'an undefined age, and the preprocessing of infants below one year is not robust enough for most studies. ' ...
+    '[-Inf Inf] keeps all sessions (also sessions without age). ']
+    ''
+    };
+
   % anonymize .. always required !
   anonymize         = cfg_menu;
   anonymize.tag     = 'anonymize';
@@ -990,7 +1021,7 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   opts.tag        = 'opts';
   opts.name       = 'Options';
   opts.val        = {ProtocolFileName, studies, anonymize, tolerance, preprocessing, pplevel, dtimaps, dtimix, ...
-                      gzipi, gzipe, output, dicomexport, protocolsubdirs, subIDform, render, reportfig};
+                      gzipi, gzipe, output, agelimit, dicomexport, exportmode, protocolsubdirs, subIDform, render, reportfig};
   opts.help       = {['Parameters to control the processing and output of ' ...
                       'the converted data and its export to BIDS. ']}; 
 

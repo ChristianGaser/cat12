@@ -1,0 +1,9 @@
+{
+  "_Description": "3T pCASL of ADNI4 (Philips 3D GRASE, source images of the post-labeling delays): major parameters",
+  "Modality": "MR",
+  "MagneticFieldStrength": 3,
+  "MRAcquisitionType": "3D",
+  "EchoTime": {"min": 0.005, "max": 0.03},
+  "RepetitionTime": {"min": 3.5, "max": 25},
+  "SliceThickness": {"min": 2.5, "max": 6}
+}

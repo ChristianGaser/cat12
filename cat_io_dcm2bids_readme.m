@@ -134,6 +134,7 @@ function writeReadme(type,Pdir,job,level)
         sprintf('  protocols_sites.%-10s one row per site and protocol variant',fmt)
         '  protocols-details/         deviations of the scans of each site from the closest protocol'
         sprintf('  subjects.%-17s one row per patient',fmt)
+        sprintf('  excluded_sessions.%-8s sessions outside the age limit (opts.agelimit, also of former runs)',fmt)
         '  phenotypic_<table>.csv     match of the rows of the phenotypic data tables to the sessions'
         ''
         'Can be removed: the tables are created again by the next run for its scans (i.e. run the batch with the'

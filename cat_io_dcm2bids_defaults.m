@@ -67,16 +67,31 @@ function def = cat_io_dcm2bids_defaults
                                      % since the first session of the subject (rounded): 'd' - days, 'w' - weeks, 
                                      % 'm' - months, 'y' - years, e.g. ses-w0000 and ses-w0052 one year later
 
-  def.opts.dicomexport      = 0;     % anonymized DICOM export of the imported scans (cleaned headers, defaced images,
+  def.opts.agelimit         = [1 inf]; % age limit of the sessions in years ([min max], see ageLimit in cat_io_dcm2bids):
+                                     % sessions outside the limit or without age (e.g. age 0, the undefined age of
+                                     % many DICOMs) are not processed and are listed in the table excluded_sessions of
+                                     % catDCM2BIDSdb-tables, [-inf inf] keeps all sessions (also without age)
+
+  def.opts.dicomexport      = 0;    % anonymized DICOM export of the imported scans (cleaned headers, defaced images,
                                      % birth date by opts.anonymize, see cat_io_dcm2bids_export): 0 - no, 1 - scans with
                                      % conform or semiconform protocol (all scans without protocols), 2 - all scans
-  def.opts.hrrealign        = 0;     % highres-realignment for further use? difficult to keep this persistent
+  def.opts.exportmode       = 1;     % BIDS and DICOM export: 1 - extend (the exports of all runs, i.e. the scans of this
+                                     % run are added), 2 - only selected (the exports contain only the scans of this run,
+                                     % i.e. the directories <BIDS>-selected and catDCM2BIDSdb-dicom-selected are written
+                                     % again by each run, whereas the database is always extended)
+  def.opts.hrrealign       = 0;     % highres-realignment for further use? difficult to keep this persistent
   def.opts.rerun            = 0;     % rerun - overwrite existing
   def.opts.tableformat      = 'csv'; % csv/tsv
   def.opts.scantypes        = {'anat/T1w','anat/T2w','dwi/dwi','func/bold'}; % typical scan types (datatype/
                                      % suffix) for the counts of the site table and the columns of the session
                                      % table (see cat_io_dcm2bids_tables and cat_io_dcm2bids_report)
   def.opts.checkgzipi       = 1;     % look for unzipped data and zip it
+  def.opts.workdir          = 'auto';% work directory of the unzipped images of the processing (see workSetup in 
+                                     % cat_io_dcm2bids_helper): 'auto' - the temporary directory of the system if
+                                     % its disk is at least 2 times faster than the database disk (e.g. internal SSD
+                                     % vs. external hard disk), 'native' - in the database, or a directory
+  def.opts.workcache        = 8;     % maximum size of the unzipped images of the work directory per process in GB
+  def.opts.workroot         = '';    % (internal: work directory of this run, see workSetup)
   def.opts.runqc            = 1;     % run QC (all data)
   def.opts.preprocessing    = 1;     % basic preprocessing of all scans: 0 - none, 1 - processing (segmentation 
                                      % of anat, DTI of dwi, rs-fMRI measures of func, see cat_io_dcm2bids_pp_anat*), 
@@ -137,13 +152,17 @@ function def = cat_io_dcm2bids_defaults
   % default QC definitions of each BIDS datatype for scans without the QC
   % definition of a protocol (qc<protocol>.json), i.e. without protocol 
   % definitions or with a nonconform protocol: [best worst] measures for the
-  % marks 1 and 6 (NaN to skip a measure, see qualityRating in 
-  % cat_io_dcm2bids_qc), broader than the DZPG definitions, as they cover 
-  % different protocols (estimated from the test data, to be refined)
-  def.opts.qcdefault.anat   = struct('BSM',nan,      'WSM',nan,       'ISR',[0.10 0.47],'NSR',[0.02 0.085],'RES',[0.8 2.0]);
-  def.opts.qcdefault.func   = struct('BSM',[0.10 0.30],'WSM',nan,       'ISR',[0.10 0.20],'NSR',[0.03 0.08], 'RES',[2.0 4.0]);
-  def.opts.qcdefault.dwi    = struct('BSM',[0.00 0.30],'WSM',[0.03 0.075],'ISR',[0.10 0.25],'NSR',[0.06 0.12], 'RES',[1.5 3.0]);
-  def.opts.qcdefault.fmap   = struct('BSM',[0.00 0.15],'WSM',nan,       'ISR',[0.05 0.30],'NSR',[0.05 0.20], 'RES',[2.0 4.0]);
+  % marks 1 and 6 (NaN to skip a measure, see qualityRating in
+  % cat_io_dcm2bids_qc), broader than the DZPG definitions, as they cover
+  % different protocols: 0.75 times the median of the measure (mark 1) and
+  % 2.5 times the median or its 90th percentile (mark 6) of the scans of the
+  % NKI-RS, NKI-TRT, and Buchert test data with the default definition
+  % (2026-10, n = 470-1290 per datatype; the DZPG definitions use the same
+  % factors of the DZPG pilot data without percentile, see DCM2BIDS/DZPG3T)
+  def.opts.qcdefault.anat   = struct('BSM',nan,          'WSM',nan,           'ISR',[0.0667 0.222],'NSR',[0.00127 0.039], 'RES',[0.8 2.0]);
+  def.opts.qcdefault.func   = struct('BSM',[0.065 0.237],  'WSM',nan,           'ISR',[0.0509 0.170],'NSR',[0.0246 0.0819],'RES',[2.0 4.0]);
+  def.opts.qcdefault.dwi    = struct('BSM',[0.0622 0.213],'WSM',[0.0299 0.0995],'ISR',[0.0347 0.116],'NSR',[0.0503 0.168], 'RES',[1.5 3.0]);
+  def.opts.qcdefault.fmap   = struct('BSM',[0.00 0.15],    'WSM',nan,           'ISR',[0.0688 0.229],'NSR',[0.0199 0.0663],'RES',[2.0 4.0]);
   def.opts.qcdefault.other  = struct('BSM',[0.10 0.30],'WSM',nan,       'ISR',[0.10 0.25],'NSR',[0.03 0.10], 'RES',[2.0 4.0]);
 
   % protocol fit rating of each scan (PFR) of the protocol fit measure PFM,
@@ -204,8 +223,13 @@ function def = cat_io_dcm2bids_defaults
   def.opts.reportfig.fontsize  = 8;            % font size of the text in pt
   def.opts.reportfig.fontscale = [0.96 0.8];   % relative font size of header-like elements (titles of the diagrams) 
                                               % and of axes, table entries, and legends
-  def.opts.reportfig.agerange  = [0 100];      % age range of the age pyramid in years
-  def.opts.reportfig.agestep   = 5;            % bin size of the age pyramid in years
+  def.opts.reportfig.agerange  = [];           % age range of the age pyramid and the brain markers in years (empty: 
+                                              % the ages of the sample rounded to 10 years for a range of at least 20 
+                                              % years, to 5 years for 10 to 20 years, and to 1 year below)
+  def.opts.reportfig.agestep   = [];           % bin size of the age pyramid in years (empty: 1, 2, 5, or 10 years
+                                              % for at most 20 bins)
+  def.opts.reportfig.maxsites  = 20;           % maximum number of sites shown separately (site table columns, 
+                                              % site labels, and site pages), more sites only together 
 
   % datatypes and (lower case) suffixes of the output structure that is
   % used by the batch dependencies (see BIDSoutputs in cat_io_dcm2bids_bids),

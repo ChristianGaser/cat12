@@ -29,6 +29,9 @@ function varargout = cat_io_dcm2bids_tables(action,varargin)
 %                      protocolVariant, variants without scans are removed)
 %    subjects.<fmt>    one row per patient (see updateDBtables in
 %                      cat_io_dcm2bids_protocols)
+%    excluded_sessions.<fmt>  sessions outside the age limit opts.agelimit
+%                      (see ageLimit in cat_io_dcm2bids, cumulative list in
+%                      excluded_sessions.mat)
 %  where <fmt> is opts.tableformat (csv or tsv). The tables (besides the
 %  subjects and protocol variants) are created again at the end of each run
 %  from the cumulative scan list.

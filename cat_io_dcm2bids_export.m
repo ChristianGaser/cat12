@@ -110,9 +110,15 @@ function exportDICOM(Pjson,datatype,status,site,sub,ses,BIDSfile,Pmdbdir,opts)
 %  and BIDS file into the directory <Pmdbdir>-dicom, i.e. of the series that were not 
 %  exported before (for this anonymization level). The lists of the tables
 %  are saved after each session. The anonymization level 2 uses the BIDS 
-%  labels and the date offsets of the registry of the database (see 
-%  cat_io_dcm2bids_anonymize).
+%  labels and the date offsets of the registry of the database (see
+%  cat_io_dcm2bids_anonymize). The export of only the selected scans
+%  (opts.exportmode = 2) uses the directory <Pmdbdir>-dicom-selected that is
+%  written again by each run (i.e. with all scans of the run).
   Pexp = [Pmdbdir '-dicom'];
+  if isfield(opts,'exportmode') && opts.exportmode == 2
+    Pexp = [Pmdbdir '-dicom-selected'];
+    if exist(Pexp,'dir'), rmdir(Pexp,'s'); end
+  end
   Plst = fullfile(Pexp,'exports.mat');
   R = struct([]); Z = struct([]);
   if exist(Plst,'file'), load(Plst,'R','Z'); end % (records of older versions with other fields, see catRecords)

@@ -1,0 +1,10 @@
+{
+  "_Description": "3T FLAIR of ADNI4 (Siemens SPACE, GE Cube, Philips VISTA): major parameters of all vendors",
+  "Modality": "MR",
+  "MagneticFieldStrength": 3,
+  "MRAcquisitionType": "3D",
+  "EchoTime": {"min": 0.06, "max": 0.6},
+  "RepetitionTime": {"min": 4, "max": 10},
+  "InversionTime": {"min": 1.4, "max": 2.6},
+  "SliceThickness": {"min": 0.7, "max": 1.3}
+}

@@ -1016,10 +1016,20 @@ function S = renderScanSlices(F,K,ropts,Pcache)
   S = struct('K',K,'Y',zeros(n,n,size(K,1),'uint8'),'Yov',zeros(n,n,size(K,1),'uint8'),'C',[], ...
     'readerr',0,'dim',[],'vx',[],'nvol',nan,'qc',0,'new',1);
   try
-    Pf  = sourceFile(F.file);
-    txt = evalc('V = spm_vol(Pf);'); %#ok<NASGU> % avoid gz-messages
-    S.nvol = numel(V); Vall = V; V = V(1);
-    S.dim  = V.dim; S.vx = sqrt(sum(V.mat(1:3,1:3).^2));
+    % header (for .nii.gz without decompressing the whole file), where 4D 
+    % data is represented by its denoised average or first volume (see
+    % below), i.e. only images with up to 3 volumes are read completely 
+    % (spm_vol of a .nii.gz reads all volumes as double, e.g. 2.6 GB for a
+    % 112x112x64x403 BOLD), e.g. the DEC map
+    Pf = sourceFile(F.file);
+    [~,dim,mat] = cat_io_dcm2bids_helper('niiHeaderInfo',Pf);
+    S.nvol = dim(4); S.dim = dim(1:3); S.vx = sqrt(sum(mat(1:3,1:3).^2));
+    if S.nvol > 3
+      V = struct('dim',S.dim,'mat',mat); Vall = V; % (geometry of the volume, see renderSlice)
+    else
+      txt = evalc('V = spm_vol(Pf);'); %#ok<NASGU> % avoid gz-messages
+      Vall = V; V = V(1);
+    end
   catch
     S.readerr = 1; % e.g. corrupted files
   end
@@ -1030,6 +1040,14 @@ function S = renderScanSlices(F,K,ropts,Pcache)
       if isfield(F.qcmaps,'denoisedavg')
         [Yvol,Vu] = renderAverage(F.qcmaps.denoisedavg); 
         if ~isempty(Yvol), V = Vu; S.qc = 1; end
+      end
+      % first volume of other 4D data (without reading the whole file)
+      if isempty(Yvol) && S.nvol > 3
+        try
+          Yvol = cat_io_dcm2bids_helper('niiVolume',Pf,1); 
+        catch % (e.g. NIfTI-2)
+          txt = evalc('V = spm_vol(Pf);'); V = V(1); %#ok<NASGU>
+        end
       end
 
       % B-spline coefficients of the volume (non-finite values set to 0) 

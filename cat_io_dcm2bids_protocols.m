@@ -319,7 +319,9 @@ function [abbr,city,rest] = siteProposal(address,field,vendor,opts)
 %siteProposal. Abbreviation of a scanner with a constant length: the first
 %  opts.sitelength letters of the city of its address (second entry of the
 %  Siemens address, e.g. "Street,City,District,...", transliterated, first
-%  letter as capital, Unk if not available), the code of the manufacturer
+%  letter as capital, Unk if not available, with digits after the first 
+%  letter, e.g. S001 of a scanner code as city for opts.sitelength = 4, 
+%  but without leading digits, e.g. of a postal code), the code of the manufacturer
 %  vendor with opts.sitevendor letters (see vendorCode, e.g. SI or S for 
 %  Siemens), and the field strength in tenths of Tesla with two digits 
 %  (rounded, e.g. 15T, 30T, or 70T for 1.5, 3, and 6.98 T, 00T if not 
@@ -327,7 +329,7 @@ function [abbr,city,rest] = siteProposal(address,field,vendor,opts)
 %  abbreviation.
   n = opts.sitelength; 
   parts = strtrim(strsplit(char(address),','));
-  city  = regexprep(cat_io_dcm2bids_bids('bidsLabel',char(parts(min(2,numel(parts))))),'[^a-zA-Z]','');
+  city  = regexprep(cat_io_dcm2bids_bids('bidsLabel',char(parts(min(2,numel(parts))))),{'[^a-zA-Z0-9]','^\d+'},{'',''});
   if numel(parts) < 2 || numel(city) < max(2,n), city = 'Unknown'; end
   city = [upper(city(1)) lower(city(2:n))]; 
   rest = siteRest(field,vendor,opts);
@@ -404,7 +406,9 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname,PT] = testProtocols(Pjson,Vj
 %  same protocol results in the same values for different scanner software
 %  versions (VE/XA) or dcm2niix versions (see normalizeFields). Numeric
 %  fields have to match within the tolerance tol (in percent, only for the
-%  rounding of the values), text fields and the entries of lists (order
+%  rounding of the values) or have to be within the range of the protocol
+%  (e.g. "InversionTime": {"min": 0.3, "max": 1.3} for the major parameters
+%  of protocols of several vendors), text fields and the entries of lists (order
 %  independent) have to be equal (see compareProtocol). Protocol fields
 %  that are not available for the scan are listed as 'n/a' without counting.
 %  Deviations of key parameters (contrast and resolution) count at least 1
@@ -450,17 +454,25 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname,PT] = testProtocols(Pjson,Vj
     sdesc = ''; if isfield(Vjson,'SeriesDescription'), sdesc = char(Vjson.SeriesDescription); end
     sdir  = nameDirection([char(Vjson.ProtocolName) ' ' sdesc]); 
     for pri = 1:size(protocols,1)
-      [mismatchcnt(pri),mismatchstr{pri},seqdiff,keydiff] = ...
+      [mismatchcnt(pri),mismatchstr{pri},seqdiff,keydiff,~,nna,nmatch] = ...
         compareProtocol(Vjsonn,protocols{pri,3},tol,job.opts);
       % direction of the series name vs. direction of the protocol name (critical)
-      pdir = nameDirection(spm_file(protocols{pri,2},'basename')); 
-      if ~isempty(sdir) && ~isempty(pdir) && ~strcmp(sdir,pdir)
-        mismatchcnt(pri) = mismatchcnt(pri) + 10; 
-        mismatchstr{pri}(end+1,:) = {'NameDirection', sdir, pdir}; 
-        keydiff = true; 
+      pdir = nameDirection(spm_file(protocols{pri,2},'basename'));
+      namediff = ~isempty(sdir) && ~isempty(pdir) && ~strcmp(sdir,pdir);
+      if namediff
+        mismatchcnt(pri) = mismatchcnt(pri) + 10;
+        mismatchstr{pri}(end+1,:) = {'NameDirection', sdir, pdir};
+        keydiff = true;
       end
-      % protocol selection: same sequence and key parameters first
-      rankcnt(pri) = mismatchcnt(pri) + 100*seqdiff + 10*keydiff;
+      % protocol selection: same sequence and key parameters first, and of
+      % equal ranks the protocol with the direction of the series name (e.g.
+      % a PA field map with AP phase encoding is shown with the PA protocol
+      % and its PhaseEncodingDirection deviation), and then the protocol with
+      % fewer fields that are not available for the scan and with more equal
+      % fields (e.g. the bold protocol for a JSON-only scan without volumes
+      % but the field-map protocol with up to 6 volumes for converted scans)
+      rankcnt(pri) = mismatchcnt(pri) + 100*seqdiff + 10*keydiff + 0.1*namediff + ...
+        1e-3*nna - 1e-5*nmatch;
     end
   end
   [~,bestid] = min(rankcnt);
@@ -625,7 +637,10 @@ function V = normalizeFields(V)
 %    ImageType     merged with ImageTypeText (XA) as sorted list of upper
 %                  case entries without format entries (MOSAIC, NONE,
 %                  FMRI), i.e., e.g. ND/DIS2D/DIS3D (distortion correction),
-%                  M/P, or NORM (prescan normalize) remain
+%                  or NORM (prescan normalize) remain, and with one entry of
+%                  the image component (MAGNITUDE, PHASE, REAL, or IMAGINARY
+%                  for M/P/R/I and their long forms, e.g. dcm2niix 2026 adds
+%                  MAGNITUDE to M)
 %    ScanOptions, ScanningSequence, SequenceVariant
 %                  sorted entries without the external trigger EXT (that
 %                  does not change the images)
@@ -662,6 +677,8 @@ function V = normalizeFields(V)
   end
   if isfield(V,'ImageType') && (iscellstr(V.ImageType) || ischar(V.ImageType))
     V.ImageType = setdiff(upper(reshape(cellstr(V.ImageType),[],1)),{'MOSAIC','NONE','FMRI'});
+    V.ImageType = union(setdiff(V.ImageType,{'M','P','R','I','MAGNITUDE','PHASE','REAL','IMAGINARY'}), ...
+      {upper(imageComponent(V.ImageType))});
   end
   for fn = {'ScanOptions','ScanningSequence','SequenceVariant'}
     if isfield(V,fn{1}) && ischar(V.(fn{1}))
@@ -688,7 +705,9 @@ function V = normalizeFields(V)
 
   % number of volumes and slices (image fields without image, e.g. NaN, are missing)
   for fn = {'Dimensions','VoxelSize'}
-    if isfield(V,fn{1}) && (~isnumeric(V.(fn{1})) || any(isnan(V.(fn{1})(:)))), V = rmfield(V,fn{1}); end
+    if isfield(V,fn{1}) && ~isRange(V.(fn{1})) && (~isnumeric(V.(fn{1})) || any(isnan(V.(fn{1})(:))))
+      V = rmfield(V,fn{1});
+    end
   end
   if isfield(V,'Dimensions') && numel(V.Dimensions) >= 3
     dm = [reshape(V.Dimensions,1,[]) 1];
@@ -714,11 +733,13 @@ function V = normalizeFields(V)
   end
 end
 % =========================================================================
-function [cnt,str,seqdiff,keydiff,nfields] = compareProtocol(V,P,tol,opts)
+function [cnt,str,seqdiff,keydiff,nfields,nna,nmatch] = compareProtocol(V,P,tol,opts)
 %compareProtocol. Mismatches of the (normalized) scan fields V with the
 %  (normalized) protocol P: numeric fields count 0.5 if they differ by more
-%  than tol percent (b-value shells by more than 10%), text fields 1, and 
-%  lists the number of different entries (independent of their order). 
+%  than tol percent (b-value shells by more than 10%) or are outside of the
+%  range of the protocol (a JSON object with "min" and/or "max", e.g. for
+%  protocols of several vendors, see isRange), text fields 1, and
+%  lists the number of different entries (independent of their order).
 %  The key parameters opts.protocol.key (contrast and resolution, e.g. TE, 
 %  TR, voxel size) count at least 1, the critical parameters 
 %  opts.protocol.critical (e.g. phase-encoding direction, sequence) and the
@@ -729,10 +750,12 @@ function [cnt,str,seqdiff,keydiff,nfields] = compareProtocol(V,P,tol,opts)
 %  the protocol fields that are not available for the scan (as 'n/a', 
 %  without counting). seqdiff and keydiff indicate a different sequence 
 %  (PulseSequenceDetails) or key or critical parameter for the selection of
-%  the protocol, and nfields is the number of tested protocol fields.
+%  the protocol, nfields is the number of tested protocol fields, nna the
+%  number of these fields that are not available for the scan, and nmatch
+%  the number of equal fields.
 
-  crit = opts.protocol.critical; key = opts.protocol.key; 
-  cnt  = 0; str = cell(0,3); seqdiff = false; keydiff = false;
+  crit = opts.protocol.critical; key = opts.protocol.key;
+  cnt  = 0; str = cell(0,3); seqdiff = false; keydiff = false; nna = 0;
   FN   = fieldnames(P);
   FN   = FN(~strncmp(FN,'x_',2)); % comments and disabled fields (e.g. "_ImageType")
   nfields = numel(FN);
@@ -741,9 +764,16 @@ function [cnt,str,seqdiff,keydiff,nfields] = compareProtocol(V,P,tol,opts)
     if isfield(V,FN{fni}), v = V.(FN{fni}); end
     if isempty(v) && ~isempty(p)
       str(end+1,:) = {FN{fni}, 'n/a', val2str(p)}; %#ok<AGROW>
+      nna = nna + 1;
       continue
     end
-    if strcmp(FN{fni},'BValueShells') && isnumeric(v) && isnumeric(p)
+    if isRange(p) && (isnumeric(v) || islogical(v))
+      % range of the values (e.g. of protocols of several vendors)
+      v = double(v(:)); lim = [-inf inf];
+      if isfield(p,'min') && ~isempty(p.min), lim(1) = double(p.min); end
+      if isfield(p,'max') && ~isempty(p.max), lim(2) = double(p.max); end
+      d = 0.5 * ~all(v >= lim(1) - tol/100 * abs(lim(1)) & v <= lim(2) + tol/100 * abs(lim(2)));
+    elseif strcmp(FN{fni},'BValueShells') && isnumeric(v) && isnumeric(p)
       % shells within 10% (e.g. the rounded b-values of XA)
       v = double(v(:)); p = double(p(:));
       d = 0.5 * ~(numel(v) == numel(p) && all(abs(v - p) <= 0.1*p + 25));
@@ -775,17 +805,24 @@ function [cnt,str,seqdiff,keydiff,nfields] = compareProtocol(V,P,tol,opts)
       keydiff = keydiff || any(strcmp(FN{fni},[crit key])) || d >= 10;
     end
   end
+  nmatch = nfields - size(str,1);
+end
+% =========================================================================
+function r = isRange(p)
+%isRange. Range of a protocol field, i.e. a JSON object with the lower
+%  and/or upper limit, e.g. "EchoTime": {"min": 0.0015, "max": 0.006}.
+  r = isstruct(p) && isscalar(p) && any(isfield(p,{'min','max'}));
 end
 % =========================================================================
 function c = imageComponent(it)
 %imageComponent. Image component of the ImageType entries: phase (P or
-%  PHASE), real, imaginary, otherwise magnitude.
+%  PHASE), real (R or REAL), imaginary (I or IMAGINARY), otherwise magnitude.
   it = upper(cellstr(it));
   if any(ismember(it,{'P','PHASE'}))
     c = 'phase';
-  elseif any(strcmp(it,'REAL'))
+  elseif any(ismember(it,{'R','REAL'}))
     c = 'real';
-  elseif any(strcmp(it,'IMAGINARY'))
+  elseif any(ismember(it,{'I','IMAGINARY'}))
     c = 'imaginary';
   else
     c = 'magnitude';
@@ -804,6 +841,11 @@ function s = val2str(v)
 %val2str. Value as text for the mismatch tables.
   if ischar(v)
     s = v;
+  elseif isRange(v)
+    lim = {'',''};
+    if isfield(v,'min') && ~isempty(v.min), lim{1} = sprintf('%g',v.min); end
+    if isfield(v,'max') && ~isempty(v.max), lim{2} = sprintf('%g',v.max); end
+    s = sprintf('[%s,%s]',lim{:});
   elseif iscell(v)
     s = strjoin(cellfun(@val2str,reshape(v,1,[]),'UniformOutput',false),' ');
   elseif islogical(v)
