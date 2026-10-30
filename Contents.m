@@ -1,5 +1,5 @@
 % Computational Anatomy Toolbox
-% Version 3486 (CAT26.0.1) 2026-10-19
+% Version 3499 (CAT26.0.1) 2026-10-30
 % ______________________________________________________________________
 %
 % Christian Gaser, Robert Dahnke
@@ -161,10 +161,7 @@
 %   hammers.*                        - Hammers atlas
 %   ibsr.*                           - IBSR atlas
 %   julichbrain3.*                   _ JulichBrain3 atlas
-%   lotter2025_aparc/DKT/a2009s.*    - FreeSurfer DK, DKT, and Destrieux atlas with aseg of the MNI template (Lotter 2025)
 %   mori.*                           - Mori atlas
-%   jhu81.*                          - JHU ICBM-DTI-81 white-matter labels
-%   hcp1065.*                        - HCP-1065 population-probability tract atlas (Yeh 2022)
 %   thalamus.*                       - Thalamic Nuclei atlas
 %   neuromorphometrics.*             - Neuromorphometrics atlas
 %   lpba40.nii                       - LPBA40 atlas
