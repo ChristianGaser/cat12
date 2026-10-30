@@ -285,6 +285,10 @@ cat.extopts.send_info    = 1;     % send Matlab and CAT version to SBM server fo
                                   % information set this flag to "0". See online help CAT->CAT user statistics for more information
 cat.extopts.gifti_dat    = 1;     % save gifti files after resampling with external dat-file, which increases speed of gifti-processing and keeps SPM.mat file small
                                   % because the cdata field is not saved with full data in SPM.mat.
+cat.extopts.workdir      = 'auto';% work directory of the parallel processing of CAT preprocessing (see cat_parallelize): '' - none (processing in the input 
+                                  % directories); 'auto' - system temporary directory if its disk is at least two times faster than the disk of the input (e.g. an 
+                                  % external hard disk) and has enough free space; or a directory. The images (and their sidecars) are copied into the work directory 
+                                  % and all results are copied back after the processing of each subject.
                                   
 % always use expert mode for standalone installations
 if isdeployed, cat.extopts.expertgui = 1; end

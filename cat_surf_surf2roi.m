@@ -54,8 +54,6 @@ function varargout = cat_surf_surf2roi(job)
   if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
     cat_parallelize(job,mfilename,'cdata'); %,'cat_surf_surf2roi');
     return
-  elseif isfield(job,'printPID') && job.printPID 
-    cat_display_matlab_PID
   end 
   
   % display something

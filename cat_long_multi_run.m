@@ -201,11 +201,19 @@ for i=1:numel(job.subj)
 end
 
 % split job and data into separate processes to save computation time
+% (one subject per package, the outputs for dependencies are given by out)
 if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index')) && numel(job.subj) > 1
-  if nargout==1
-    varargout{1} = cat_parallelize(job,mfilename,'subj');
-  else
-    cat_parallelize(job,mfilename,'subj');
+  cat_parallelize(job,mfilename,'subj',struct('psize',1));
+
+  % overview of the result directories (of all time points)
+  movs    = cellfun(@(c) c(:),{job.subj.mov},'UniformOutput',false);
+  Bmov    = cat_io_BIDS( vertcat(movs{:}), job );
+  [resdirs,udi] = unique({Bmov.mridir}');
+  isBIDS  = [Bmov(udi).isBIDS]';
+  BIDSstr = {'[noBIDS]','[BIDS]'};
+  fprintf('\nResult directories:\n')
+  for ri = 1:numel(resdirs)
+    cat_io_cprintf('blue','%10s %s\n', BIDSstr{isBIDS(ri)+1}, strrep(resdirs{ri},[filesep 'mri'],[filesep '[*subdir*]']));
   end
   return
 else

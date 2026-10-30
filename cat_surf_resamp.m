@@ -113,8 +113,7 @@ function vout = cat_surf_resamp(varargin)
 
   % split job and data into separate processes to save computation time
   if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index')) && (size(P,1)>1)
-    %if nargout==1
-    vout.Psdata = cat_parallelize(job,mfilename,'data_surf');
+    vout = cat_parallelize(job,mfilename,'data_surf');
     return
   end  
   
@@ -478,7 +477,7 @@ function vout = cat_surf_resamp(varargin)
       n = cumsum(cellfun(@numel,varargin{1}.data_surf)); 
       a = [1 n+1]; a(end) = [];  
       for i=1:numel(varargin{1}.data_surf)
-        vout.sample(1).lPsdata = lPsdata( a(i) : n(i));
+        vout.sample(i).lPsdata = lPsdata( a(i) : n(i));
       end
     else
       vout.sample(1).lPsdata = lPsdata; 

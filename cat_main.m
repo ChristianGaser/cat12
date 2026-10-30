@@ -912,9 +912,9 @@ if numel(Ycls)>6 && numel(Ycls{6})>0
   if job.extopts.WMHC > 2       % extra class
     qa.subjectmeasures.vol_abs_CGW(4) = prod(vx_vol)/1000/255 .* sum(Ycls{7}(:));
   elseif job.extopts.WMHC == 2  % count as WM
-    qa.subjectmeasures.vol_abs_CGW(2) = qa.subjectmeasures.vol_abs_CGW(2) + prod(vx_vol)/1000/255 .* sum(Ycls{7}(:));
+    qa.subjectmeasures.vol_abs_CGW(3) = qa.subjectmeasures.vol_abs_CGW(3) + prod(vx_vol)/1000/255 .* sum(Ycls{7}(:));
   else                          % count as GM
-    qa.subjectmeasures.vol_abs_CGW(1) = qa.subjectmeasures.vol_abs_CGW(1) + prod(vx_vol)/1000/255 .* sum(Ycls{7}(:));
+    qa.subjectmeasures.vol_abs_CGW(2) = qa.subjectmeasures.vol_abs_CGW(2) + prod(vx_vol)/1000/255 .* sum(Ycls{7}(:));
   end
   qa.subjectmeasures.vol_rel_WMH = qa.subjectmeasures.vol_abs_WMH ./ sum(qa.subjectmeasures.vol_abs_CGW);
 end
