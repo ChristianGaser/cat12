@@ -1259,7 +1259,15 @@ function job = update_job(job,verbatlas)
   % prepare tissue priors and number of gaussians for all tissue classes
   [pth,nam,ext] = spm_fileparts(job.opts.tpm{1});
   clsn = numel(spm_vol(fullfile(pth,[nam ext])));
-  if clsn <= numel( job.opts.ngaus )
+  if clsn == 5
+     % prepare tpyical 6-class TPMs (or less classes but where the gaussians are defined)
+    job.opts.ngaus = [1 1 1 3 3];
+    tissue = struct();
+    for i=1:clsn
+      tissue(i).ngaus = job.opts.ngaus(i);
+      tissue(i).tpm = [fullfile(pth,[nam ext]) ',' num2str(i)];
+    end
+  elseif clsn <= numel( job.opts.ngaus )
     % prepare tpyical 6-class TPMs (or less classes but where the gaussians are defined)
     tissue = struct();
     for i=1:clsn
@@ -1274,6 +1282,8 @@ function job = update_job(job,verbatlas)
       case  8, job.opts.ngaus = [ 1 1 1, 2 1, 1 1,      3 ]; % GM-WM-CSF, mid-high, bonetable-bonemarrow, BG
       case  9, job.opts.ngaus = [ 1 1 1, 3 2, 1 1, 1,   3 ]; % GM-WM-CSF, mid-high, bonetable-bonemarrow,low, BG
       case 10, job.opts.ngaus = [ 1 1 1, 3 2, 1 1, 1 1, 3 ]; % GM-WM-CSF, mid-high, bonetable-bonemarrow,low, BG
+      case 11, job.opts.ngaus = [ 1 1 1, 3 2, 1 1, 1 1, 1 3 ]; % GM-WM-CSF, mid-high, bonetable-bonemarrow,low, BG
+      case 12, job.opts.ngaus = [ 1 1 1, 3 2, 1 1, 1 1, 1 1 3 ]; % GM-WM-CSF, mid-high, bonetable-bonemarrow,low, BG
     end
     tissue = struct();
     for i=1:clsn

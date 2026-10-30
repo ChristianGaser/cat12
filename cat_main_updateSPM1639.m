@@ -145,13 +145,16 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   % add zero and NaN areas to background 
   Ybg0 = cat_vol_morph( cat_vol_morph( cat_vol_morph( Ysrc == 0 | isnan(Ysrc) ,'o') ,'l',[4 .5]) ,'c'); 
   P(:,:,:,1:end-1) = P(:,:,:,1:end-1) .* uint8( repmat( Ybg0<.5 , [1,1,1,size(P,4)-1]) ); 
-  P(:,:,:,end)     = P(:,:,:,end)     .* uint8( Ybg0>.5 );  clear Ybg0 
+  P(:,:,:,end)     = max(P(:,:,:,end), 255 .* uint8( Ybg0>.5 ));  clear Ybg0 
   
   % Create brain mask based on the the TPM classes
   % cleanup with brain mask - required for ngaus [1 1 2 4 3 2] and R1/MP2Rage like data 
   %YbA = zeros(d,'single');
   Vb = tpm.V(1); Vb.pinfo(3) = 0; Vb.dt=16; 
   Vb.dat = single(exp(tpm.dat{1}) + exp(tpm.dat{2}) + exp(tpm.dat{3})); 
+  for addi = 9:12
+    if numel(tpm.V) > addi, Vb.dat = Vb.dat + single(exp(tpm.dat{addi})); end
+  end
   YbA = cat_vol_sample(res.tpm(1),Vb,Yy,1);
   %for z=1:d(3)
    % YbA(:,:,z) = spm_sample_vol(Vb,double(Yy(:,:,z,1)),double(Yy(:,:,z,2)),double(Yy(:,:,z,3)),1); 
@@ -163,7 +166,8 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   
   if size(P,4)==3
     % create background class that is required later
-    Yb = cat_vol_morph( smooth3( sum(P(:,:,:,1:2),4) ) > 192 , 'ldc' , 5 , vx_vol ); 
+    if size(P,4) > 9, x = 9:size(P,4)-1; else, x = []; end
+    Yb = cat_vol_morph( smooth3( sum(P(:,:,:,[1:2 x]),4) ) > 192 , 'ldc' , 5 , vx_vol ); 
     Yb = cat_vol_morph( Yb , 'ldo' ); 
     for i=1:3, P(:,:,:,i) = P(:,:,:,i) .* cat_vol_ctype(Yb); end 
     P(:,:,:,4) = cat_vol_ctype((1 - Yb) * 255); 
@@ -180,7 +184,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   % Cleanup for high resolution data
   % Alghough the old cleanup is very slow for high resolution data, the   
   % reduction of image resolution removes spatial segmentation information. 
-  if job.opts.redspmres==0 % already done in case of redspmres
+  if job.opts.redspmres==0 && size(P,4)==6 % already done in case of redspmres
     if max(vx_vol)<1.5 && mean(vx_vol)<1.3
       % RD202102: resizing adds maybe too much blurring that can trouble other functions
       %for i=1:size(P,4), [Pc1(:,:,:,i),RR] = cat_vol_resize(P(:,:,:,i),'reduceV',vx_vol,job.extopts.uhrlim,32); end %#ok<AGROW>
@@ -194,7 +198,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   end
   if ~( (isfield(job,'useprior') && ~isempty(job.useprior) ) && ... 
         (isfield(res,'ppe') && ~res.ppe.affreg.highBG) )
-    clear YbA;
+    %clear YbA;
   end
   
   % some reports
@@ -230,12 +234,125 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
     Ysrc = Ysrc .* Ybx;
     for ci = 1:(size(P,4)-1), P(:,:,:,ci) = P(:,:,:,ci) .* uint8(Ybx); end
     P(:,:,:,end) = uint8(1-Ybx)*255; 
+  elseif size(P,4)==5 % GM,WM,CSF,head,background 
+  % in this case we have to separate the head into hard and soft tissue
+    P(:,:,:,6) = P(:,:,:,5); % new background
+    % estimate percentage position 
+    Ybr        = smooth3( sum(P(:,:,:,1:3),4) > 128); 
+    Ybg        = smooth3( P(:,:,:,6) ) > 128; 
+    Ybrd       = cat_vbdist3( Ybr , ~Ybg ); 
+    Ybgd       = cat_vbdist3( Ybg , ~Ybr );
+    Ypp        = max(0,max(Ybrd,Ybgd/2)) ./ (Ybrd+Ybgd); clear Ybrd Ybgd
+    Ypp        = (Ypp>0) .* min(1,abs(Ypp - 1/3)*6); 
+    % approximate bone and head
+    lth        = min(T3th); 
+    if T3th(1) < T3th(3), hth = T3th(3); else, hth = T3th(2); end % use WMth in T1w else use GMth
+    Yhd        = cat_vol_ctype( max( smooth3(255 * (Ypp>.99)) ,  single(P(:,:,:,4)) .* max(Ybr,min(1,Ypp .* ( (Ysrc - lth) ./ (hth-lth)))))); clear Ypp lth hth;
+    P(:,:,:,4) = P(:,:,:,4) - Yhd; 
+    P(:,:,:,5) = Yhd;
+    clear Yhd Ybr Ybg; 
+  elseif size(P,4)>6
+    if size(P,4)>6,  Yp0 = Yp0 + single(P(:,:,:,4))/255*1/3 .* smooth3(YbA); end
+    if size(P,4)>6,  Yp0 = Yp0 + single(P(:,:,:,5))/255*1/3 .* smooth3(YbA); end
+    if size(P,4)>6,  Yp0 = Yp0 + single(P(:,:,:,7))/255*1/3 .* smooth3(YbA); end
+    if size(P,4)>9,  Yp0 = Yp0 + single(P(:,:,:,9))/255*1/3; end
+    if size(P,4)>10, Yp0 = Yp0 + single(P(:,:,:,10))/255*2/3; end
+    if size(P,4)>11, Yp0 = Yp0 + single(P(:,:,:,11))/255*2/3; end
+    if size(P,4)>12, Yp0 = Yp0 + single(P(:,:,:,12))/255*2/3; end
   end
   if isfield(res,'Ylesion') && sum(res.Ylesion(:)>0)
     res.Ylesion = cat_vol_ctype( single(res.Ylesion) .* (Yp0>0.2) ); 
     for k=1:size(P,4), Yl = P(:,:,:,k); Yl(res.Ylesion>0.5) = 0; P(:,:,:,k) = Yl; end  
     Yl = P(:,:,:,3); Yl(res.Ylesion>0.5) = 255; P(:,:,:,3) = Yl; clear Yl; 
     Yp0  = single(P(:,:,:,3))/255/3 + single(P(:,:,:,1))/255*2/3 + single(P(:,:,:,2))/255;
+  end
+  if cat_io_contains( spm_file(job.opts.tpm,'basename') , 'BlaiottaTPM')
+    %% Simplify Blaiotta TPM to bone (4) and head (5):
+    %  RD202607: In case of the original BlaiottaTPM the low class 6  
+    %  would need to be separated by bone, skin, and air/background.  
+    %  Moreover, fatty bone-marrow would have to be mapped from class 5
+    %  to class 4 (same in principle for the origial SPM TPM). 
+    %
+    %  RD202607: Besides tissue maps maybe also other thresholds would require updates!
+    
+    % correct for fat supressed images
+    if T3th(1) < T3th(2)
+      Ycsf = P(:,:,:,5) .* uint8((Ysrc < mean( T3th(2) ) ) .* YbA); 
+    else
+      Ycsf = P(:,:,:,5) .* uint8((Ysrc > mean( T3th(2) ) ) .* YbA); 
+    end
+    if size(P,4)
+      if T3th(1) < T3th(2)
+        Ycsf = Ycsf + P(:,:,:,7) .* uint8((Ysrc < mean( T3th(2) ) ) .* YbA); 
+      else
+        Ycsf = Ycsf + P(:,:,:,7) .* uint8((Ysrc > mean( T3th(2) ) ) .* YbA); 
+      end
+    end
+    P(:,:,:,3) = P(:,:,:,3) + Ycsf; 
+    P(:,:,:,5) = P(:,:,:,5) - Ycsf;
+    clear Ycsf; 
+
+    % udpate
+    PO = P; reso = res; 
+
+    % add cerebellum
+    if size(P,4) > 12
+      P(:,:,:,1) = P(:,:,:,1) + PO(:,:,:,12);
+      res.lkp(reso.lkp==12) = 1; 
+    end
+    if size(P,4) > 11
+      P(:,:,:,1) = P(:,:,:,1) + PO(:,:,:,11);
+      res.lkp(reso.lkp==11) = 1; 
+    end
+
+    % add subcortical
+    if size(P,4) > 10
+      P(:,:,:,1) = P(:,:,:,1) + PO(:,:,:,10);
+      res.lkp(reso.lkp==10) = 1; 
+    end
+
+    % combine extraventricular and ventricular CSF
+    if size(P,4) > 9
+      P(:,:,:,3) = P(:,:,:,3) + PO(:,:,:,9);
+      res.lkp(reso.lkp==9) = 3; 
+    end
+
+    % bone
+    if size(P,4) == 7
+      P(:,:,:,4) = PO(:,:,:,6); % bone
+      res.lkp(reso.lkp==6) = 4; 
+    elseif size(P,4) > 7
+      P(:,:,:,4) = sum(PO(:,:,:,6:7),4); % bonetable + bonemarrow
+      res.lkp(reso.lkp==6 | reso.lkp==7) = 4; 
+    end
+    
+    % head
+    if size(P,4)==7 || size(P,4)==8
+      P(:,:,:,5) = sum(PO(:,:,:,4:5),4); % mid-high
+      res.lkp(reso.lkp==4 | reso.lkp==5) = 5; 
+    elseif size(P,4)>8
+      P(:,:,:,5) = sum(PO(:,:,:,[4:5 8]),4); % mid-high-low
+      res.lkp(reso.lkp==4 | reso.lkp==5 | reso.lkp==8) = 5; 
+    end
+
+    % background
+    P(:,:,:,6) = PO(:,:,:,end); 
+    res.lkp(reso.lkp==size(PO,4)) = 6; 
+
+    % remove additional classes
+    P(:,:,:,7:end) = [];      
+    
+    % Update SPM estimates
+    for ci = 1:size(P,4)
+      res.mg(res.lkp==ci) = res.mg(res.lkp==ci) ./ sum(res.mg(res.lkp==ci)); 
+    end
+    [~,sorti] = sort( res.lkp(:) );
+    res.mg  = res.mg(sorti); 
+    res.mn  = res.mn(sorti); 
+    res.vr  = res.vr(sorti); 
+    res.lkp = res.lkp(sorti); 
+
+    clear PO reso;
   end
   if sum(Yp0(:)>0.3)<100 
     % this error often depends on a failed affine registration, where SPM
@@ -298,7 +415,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   %  Update Skull-Stripping 1
   %  ----------------------------------------------------------------------
   stime2 = cat_io_cmd('  Update Skull-Stripping','g5','',job.extopts.verb-1,stime2); 
-  if size(P,4)>4 && (isfield(job,'useprior') && ~isempty(job.useprior) && strcmp(job.opts.affreg,'prior') ) && ... 
+  if size(P,4)==6 && (isfield(job,'useprior') && ~isempty(job.useprior) && strcmp(job.opts.affreg,'prior') ) && ... 
      (isfield(res,'ppe') && ~res.ppe.affreg.highBG) && ~res.ppe.affreg.skullstripped
     % RD202010: use longitudinal skull-stripping 
     [pp,ff,ee] = spm_fileparts(char(job.useprior));
@@ -380,7 +497,11 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   else
     [Yb,Ybb,Yg,Ydiv] = cat_main_updateSPM_gcutold(Ysrc,P,res,vx_vol,T3th);
   end
-
+  if cat_io_contains( spm_file(job.opts.tpm,'basename') , 'BlaiottaTPM') && size(P,4)>4
+    Ybb = max(Ybb,cat_vol_ctype( smooth3(sum(P(:,:,:,1:3),4) .* cat_vol_morph(smooth3(sum(P(:,:,:,1:3),4))>192,'ldo',2))));
+    Yb  = Ybb > 128; 
+  end
+  
   
   % RD202101: cleanup+ remove small unconnected components
   %{
@@ -402,7 +523,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
   if ~exist('Ym0','var')
     Ym0 = single(P(:,:,:,3))/255 + single(P(:,:,:,1))/255 + single(P(:,:,:,2))/255;
   end
-  if cat_io_contains( job.opts.tpm , 'BlaiottaTPM')
+  if cat_io_contains( spm_file(job.opts.tpm,'basename') , 'BlaiottaTPM')
     Ym0 = max( Ym0 , .51 * Yb); 
     % cleanup of low intensity head structures within the brain 
     P(:,:,:,3)     = max(P(:,:,:,3), uint8(255 * (cat_vol_morph( Yb>.5 ,'de',2,vx_vol) & Ysrc < WMth*.5))); 
@@ -507,7 +628,7 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
     end
 
     %%
-    if size(P,4)>=6
+    if size(P,4)==6
       P4   = cat_vol_ctype( single(P(:,:,:,end)) .* (Ysrc<T3th(2))  .* (Ybg<0.5) + single(P(:,:,:,4)) .* (Ybg<0.5) ); % remove air in head
       P5   = cat_vol_ctype( single(P(:,:,:,end)) .* (Ysrc>=T3th(2)) .* (Ybg<0.5) + single(P(:,:,:,5)) .* (Ybg<0.5) ); % remove air in head
       Pe   = cat_vol_ctype( single(sum(P(:,:,:,4:end),4)) .* (Ybg>0.5) ); % add objects/artifacts to background
@@ -528,46 +649,9 @@ function [Ysrc,Ycls,Yb,Yb0,job,res,T3th,stime2] = cat_main_updateSPM1639(Ysrc,P,
       P(:,:,:,5) = P(:,:,:,5) + sumP .* uint8( Ybg<0.5  & ~Yb & Ysrc>=T3th(2));
       P(:,:,:,end) = P(:,:,:,end) + sumP .* uint8( Ybg>=0.5 & ~Yb );
       clear Ybg sumP;
+    end 
     
-      if cat_io_contains( job.opts.tpm , 'BlaiottaTPM')
-        %% Simplify Blaiotta TPM to bone (4) and head (5):
-        %  RD202607: In case of the original BlaiottaTPM the low class 6  
-        %  would need to be separated by bone, skin, and air/background.  
-        %  Moreover, fatty bone-marrow would have to be mapped from class 5
-        %  to class 4 (same in principle for the origial SPM TPM). 
-        %
-        %  RD202607: Besides tissue maps maybe also other thresholds would require updates!
-        PO = P; 
-
-        % combine extraventricular and ventricular CSF
-        if size(P,4) == 10
-          P(:,:,:,3) = PO(:,:,:,3) + PO(:,:,:,9);
-        end
-
-        % bone
-        switch size(P,4) 
-          case 7
-            P(:,:,:,4) = PO(:,:,:,6); % bone
-          case {8,9}
-            P(:,:,:,4) = sum(PO(:,:,:,6:7),4); % bonetable + bonemarrow
-        end
-        
-        % head
-        switch size(P,4)
-          case {7,8}
-            P(:,:,:,5) = sum(PO(:,:,:,4:5),4); % mid-high
-          case 9
-            P(:,:,:,5) = sum(PO(:,:,:,[4:5 8]),4); % mid-high-low
-        end
-
-        % background
-        P(:,:,:,6) = PO(:,:,:,end); 
-
-        % remove additional classes
-        P(:,:,:,7:end) = [];      
-        clear PO; 
-      end
-    
+    if ~cat_io_contains( spm_file(job.opts.tpm,'basename') , 'BlaiottaTPM')
       %% head to WM 
       % Undercorrection of strong inhomogeneities in high field scans 
       % (>1.5T) can cause missalignments of the template and therefore 

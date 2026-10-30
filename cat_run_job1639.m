@@ -1087,7 +1087,8 @@ function cat_run_job1639(job,tpm,subj)
         if ~any(any(isnan(Affine3(1:3,:))))
           scl3 = abs(det(Affine3(1:3,1:3)));
           % check for > 5% larger scaling 
-          if ~strcmp(affreg,'prior')  &&  scl2 > 1.05*scl3 && job.extopts.setCOM ~= 11 % setcom == 11 - use always
+          if ~cat_io_contains( spm_file(job.opts.tpm,'basename') , 'BlaiottaTPM')  &&  ...
+             ~strcmp(affreg,'prior')  &&  scl2 > 1.05*scl3 && job.extopts.setCOM ~= 11 % setcom == 11 - use always
             stime = cat_io_cmd('  Use previous fine affine registration.','warn','',1,stime);
             %fprintf('\n  Final fine affine registration failed.\n  Use fine affine registration from previous step.                ');
             Affine = Affine2;
