@@ -668,7 +668,7 @@ if ~isfield(res,'spmpp')
   clear Yclsb;
 
   if job.extopts.verb>2
-    tpmci=tpmci+1; tmpmat = fullfile(pth,job.BIDS(job.subj).reportdir,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'preDartel'));
+    tpmci=tpmci+1; tmpmat = fullfile(job.BIDS(job.subj).reportdir,sprintf('%s_%s%02d%s.mat',nam,'write',tpmci,'preDartel'));
     save(tmpmat,'Yp0','Ycls','Ymi','T3th','vx_vol','Yl1');
     clear Yp0;
   end
@@ -990,7 +990,7 @@ if job.output.surface
   clear th; 
    
   %qam = cat_stat_marks('eval',job.cati,qa,'cat12'); % ... not ready
-  cat_io_xml(fullfile(pth,job.BIDS(job.subj).reportdir,['cat_' namspm nam '.xml']),struct(...
+  cat_io_xml(fullfile(job.BIDS(job.subj).reportdir,['cat_' namspm nam '.xml']),struct(...
     ... 'subjectratings',qam.subjectmeasures, ... not ready
     'subjectmeasures',qa.subjectmeasures,'ppe',res.ppe),'write+'); % here we have to use the write+!
 end
@@ -1138,7 +1138,7 @@ function [res,job,VT,VT0,pth,nam,vx_vol,d] = cat_main_updatepara(res,tpm,job)
   res.vx_vol = vx_vol; 
   
   % delete old xml file 
-  oldxml = fullfile(pth,job.BIDS(job.subj).reportdir,['cat_' nam '.xml']);  
+  oldxml = fullfile(job.BIDS(job.subj).reportdir,['cat_' nam '.xml']);  
   if exist(oldxml,'file'), delete(oldxml); end
   clear oldxml
 

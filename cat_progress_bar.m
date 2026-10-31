@@ -121,7 +121,9 @@ switch bartype
                   
                   % don't know whether this works, but I have used the parameters from spm_progress_bar
                   set(Fwaitbar,'IntegerHandle','off','InvertHardcopy','on','PaperPositionMode','auto','Tag','Interactive');
-      
+                  % normal text instead of TeX (e.g. underscores of function names)
+                  set(findall(Fwaitbar,'Type','text'),'Interpreter','none');
+
                 case 'cmd'
                   fprintf('% 6d/% 6d',0,n_iterations); 
                 case 'cmd%'

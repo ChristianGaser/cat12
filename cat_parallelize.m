@@ -466,6 +466,7 @@ function output = workOut(W,output)
     if ~isempty(ii) && W.date(ii) == D(di).datenum && W.bytes(ii) == D(di).bytes, continue; end % (input)
     Po = Pw(numel(W.root)+1:end);
     if ispc, Po = [Po(2) ':' Po(3:end)]; end % (drive, see workPath)
+    if strcmp(D(di).name,'dataset_description.json') && exist(Po,'file'), continue; end % (written by cat_io_BIDS if missing)
     if ~exist(fileparts(Po),'dir'), mkdir(fileparts(Po)); end
     copyfile(Pw,Po);
     [~,~,ee] = fileparts(Po);

@@ -202,8 +202,13 @@ end
 
 % split job and data into separate processes to save computation time
 % (one subject per package, the outputs for dependencies are given by out)
+% (and in the work directory extopts.workdir, e.g. the system disk for
+% data on an external hard disk, with the disk space of all time points,
+% see cat_parallelize)
 if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index')) && numel(job.subj) > 1
-  cat_parallelize(job,mfilename,'subj',struct('psize',1));
+  popts = struct('psize',1,'workspace',5);
+  try, popts.workdir = cat_get_defaults('extopts.workdir'); end %#ok<TRYNC>
+  cat_parallelize(job,mfilename,'subj',popts);
 
   % overview of the result directories (of all time points)
   movs    = cellfun(@(c) c(:),{job.subj.mov},'UniformOutput',false);
