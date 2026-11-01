@@ -103,7 +103,7 @@ function writeReadme(type,Pdir,job,level)
         '  anon_*.nii.gz                              defaced image (anonymization)'
         '  catDCM2BIDSqc_*.json/.mat, *_denoisedavg.nii.gz'
         '                                             quality control (denoised average of 4D data)'
-        '  catDCM2BIDSsegus_*.json, c0/m/wc1/mwc1/y_/neuromorphometrics_anon_*.nii.gz, *_seg8.mat'
+        '  catDCM2BIDSsegus_*.json, c0/m/wc1/mwc1/y_/lotter2025_/hcp1065_anon_*.nii.gz, *_seg8.mat'
         '                                             segmentation of the anatomical scan of each session'
         '                                             (T1w, otherwise UNIT1, T2w, or FLAIR; volumes, regions)'
         '  catDCM2BIDSdwi_*, catDCM2BIDSrsfmri_*, rp_*.txt'
@@ -185,7 +185,7 @@ function writeReadme(type,Pdir,job,level)
         '  sub-<label>/sub-<label>_sessions.tsv  sessions (site, age, weight, orientation rating, phenotypic data)'
         '  participants.tsv/.json                participants (age, sex)'
         '  derivatives/catDCM2BIDS/              quality control, segmentation, DTI, and rs-fMRI measures and maps'
-        '  dataset_description.json, README.md   description of the dataset (dataset descriptor of the batch)'
+        '  dataset_description.json, README.md   description of the dataset (study JSON and study README of the batch)'
         '  catDCM2BIDSdb.mat                     settings of the batch that define the BIDS structure'
         ''}; levelText(level); {
         ''

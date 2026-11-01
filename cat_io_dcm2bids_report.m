@@ -38,9 +38,9 @@ function varargout = cat_io_dcm2bids_report(action,varargin)
 %  figure (see cat_io_dcm2bids_reportfig) shows the tables as diagrams.
 %  The regional results of each session (see writeRegionTables) are in
 %  <outdir>/<subdir>/<BIDSdir>-report/regions/<BIDSsubdir>/:
-%    <sub>_<ses>_anat.<fmt>  tissue volumes of the neuromorphometrics regions
+%    <sub>_<ses>_anat.<fmt>  tissue volumes of the lotter2025 regions 
 %                            (segmentation of each anatomical scan)
-%    <sub>_<ses>_dwi.<fmt>   FA and MD of the Mori white-matter regions
+%    <sub>_<ses>_dwi.<fmt>   FA and MD of the hcp1065 white-matter tracts
 %    <sub>_<ses>_func.<fmt>  within-network connectivity of the 7 networks
 %  with one row per scan and region and the JSON files anat.json, 
 %  dwi.json, and func.json with the description of the columns.
@@ -207,6 +207,7 @@ function S = collectScans(PBIDS,D)
     end
     Jr = readJSON(fullfile(droot,['catDCM2BIDSrsfmri_' name '.json']));
     for fn = {'FD_mean','FD_max','FD_pct05','DVARS','tSNR'}, r.(fn{1}) = jsonNumber(Jr,{'qc',fn{1}}); end
+    for fn = {'FDR','TNR'}, r.(fn{1}) = jsonNumber(Q,{'qualityrating',fn{1}}); end % (ratings of FD_mean and 1/tSNR in the QC JSON)
     r.GCOR = jsonNumber(Jr,{'connectivity','GCOR'}); r.segregation = jsonNumber(Jr,{'connectivity','segregation'});
     r.FC_within = jsonNumber(Jr,{'connectivity','within'}); r.FC_between = jsonNumber(Jr,{'connectivity','between'});
     r.pplevel = max([jsonNumber(Jd,{'method','level'}) jsonNumber(Jr,{'method','level'})]); % (NaN without)
@@ -241,20 +242,21 @@ function writeRegionTables(Preg,S,fmt)
 %writeRegionTables. Tables of the regional results of the scans S of each
 %  session in the directory Preg (created again in each run, one 
 %  subdirectory per dataset for several datasets): tissue volumes of the
-%  neuromorphometrics regions (anat), FA and MD of the Mori white-matter 
-%  regions (dwi), and the within-network connectivity of the 7 networks 
+%  lotter2025 regions (anat), FA and MD of the hcp1065 white-matter 
+%  tracts (dwi), and the within-network connectivity of the 7 networks 
 %  (func), with one row per scan and region (see the JSON files of the
 %  columns, i.e. anat.json, dwi.json, and func.json). 
   if exist(Preg,'dir'), rmdir(Preg,'s'); end
   types = {
     'anat', 'regional_anat', {'scan','region','name','Vgm','Vwm','Vcsf'}, ...
       {'scan of the session (BIDS name without subject and session)', ...
-       'region of the neuromorphometrics atlas of CAT (l/r for left/right)','name of the region', ...
+       ['region of the lotter2025 atlas of CAT (FreeSurfer Desikan-Killiany and aseg labels of the MNI template, ' ...
+        'l/r/b for left/right/both hemispheres and the abbreviation of the region)'],'name of the region', ...
        'gray matter volume in ml (native space, SPM segmentation, n/a for regions without this tissue)', ...
        'white matter volume in ml','cerebrospinal fluid volume in ml'}
     'dwi',  'regional_dwi',  {'scan','region','name','FA','MD','voxels'}, ...
       {'scan of the session (BIDS name without subject and session)', ...
-       'white-matter region of the Mori atlas of CAT (l/r for left/right)','name of the region', ...
+       'white-matter tract of the hcp1065 atlas of CAT (Yeh 2022, l/r/b for left/right/both hemispheres)','name of the tract', ...
        'median fractional anisotropy in the white matter of the region (T1w segmentation)', ...
        'median mean diffusivity in mm2/s','number of voxels'}
     'func', 'regional_func', {'scan','network','FC_within'}, ...
@@ -262,7 +264,7 @@ function writeRegionTables(Preg,S,fmt)
        'network of Yeo et al. 2011 (7 networks of the Schaefer2018 parcels of CAT)', ...
        'mean within-network connectivity of the parcels (Fisher z)'}
     };
-  mori = atlasNames('mori'); neuro = atlasNames('neuromorphometrics');
+  tract = atlasNames('hcp1065'); region = atlasNames('lotter2025_aparc');
   multi = numel(unique({S.dataset})) > 1; 
   key = strcat({S.dataset},'|',{S.participant_id},'|',{S.session_id}); 
   for k = unique(key)
@@ -278,8 +280,8 @@ function writeRegionTables(Preg,S,fmt)
         for fn = fieldnames(R)'
           v = R.(fn{1}); 
           switch types{ti,1}
-            case 'anat', T(end+1,:) = {scan,fn{1},regionName(neuro,v,'ROIid'),field(v,'Vgm'),field(v,'Vwm'),field(v,'Vcsf')}; %#ok<AGROW>
-            case 'dwi',  T(end+1,:) = {scan,fn{1},regionName(mori,fn{1},'ROIabbr'),field(v,'FA'),field(v,'MD'),field(v,'voxels')}; %#ok<AGROW>
+            case 'anat', T(end+1,:) = {scan,fn{1},regionName(region,v,'ROIid'),field(v,'Vgm'),field(v,'Vwm'),field(v,'Vcsf')}; %#ok<AGROW>
+            case 'dwi',  T(end+1,:) = {scan,fn{1},regionName(tract,fn{1},'ROIabbr'),field(v,'FA'),field(v,'MD'),field(v,'voxels')}; %#ok<AGROW>
             case 'func', T(end+1,:) = {scan,fn{1},v}; %#ok<AGROW>
           end
         end
@@ -554,6 +556,8 @@ function [cols,desc] = scanColumns(type)
       'FD_pct05'    'percentage of volumes with a framewise displacement above 0.5 mm'
       'DVARS'       'median signal change between volumes (RMS) in percent of the mean signal'
       'tSNR'        'temporal signal-to-noise ratio (median of the gray matter)'
+      'FDR'         'rating of the mean framewise displacement (marks, not part of the SQR)'
+      'TNR'         'rating of the temporal noise 1/tSNR (marks, not part of the SQR)'
       'GCOR'        'global correlation of the gray matter (Saad et al. 2013)'
       'FC_within'   'mean within-network connectivity (Fisher z, 7 networks of the Schaefer2018 100 parcels)'
       'FC_between'  'mean between-network connectivity (Fisher z)'

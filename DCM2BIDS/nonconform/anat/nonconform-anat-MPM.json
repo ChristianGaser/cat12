@@ -1,0 +1,10 @@
+{
+  "_Description": "Fallback protocol (see opts.protocol.fallback): multi-parameter mapping (MPM, Weiskopf 2013) of all vendors and field strengths, i.e. the echoes of the 3D multi-echo spoiled gradient echo with PD, T1, and MT weighting (flip angles 4-25 degree, TR 15-40 ms), also the later echoes that do not fit the T1w fallback",
+  "Modality": "MR",
+  "MagneticFieldStrength": {"min": 0.9, "max": 7.1},
+  "MRAcquisitionType": "3D",
+  "EchoTime": {"min": 0.0015, "max": 0.025},
+  "RepetitionTime": {"min": 0.015, "max": 0.04},
+  "FlipAngle": {"min": 4, "max": 25},
+  "SliceThickness": {"min": 0.75, "max": 1.5}
+}

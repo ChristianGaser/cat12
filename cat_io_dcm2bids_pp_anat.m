@@ -2,8 +2,9 @@ function varargout = cat_io_dcm2bids_pp_anat(action,varargin)
 %cat_io_dcm2bids_pp_anat. Anatomical and shared processing of cat_io_dcm2bids.
 %  Anonymization by defacing (anonymize), basic preprocessing of anatomical
 %  scans by the SPM segmentation (segmentanat, with the tissue volumes of
-%  the brain and of the regions of the neuromorphometrics atlas of CAT,
-%  see regionalVolumes), the affine registration of
+%  the brain and of the regions of the lotter2025 atlas of CAT, and the 
+%  label maps of its GM regions and of the hcp1065 tracts in the WM, see 
+%  regionalVolumes and atlasTable), the affine registration of
 %  each session to MNI space with the orientation rating of the session 
 %  and the coverage rating of its scans (writeSessionAffines, e.g. for the
 %  rendering, see cat_io_dcm2bids_render, and cat_io_dcm2bids_overlap, and
@@ -45,12 +46,16 @@ function varargout = cat_io_dcm2bids_pp_anat(action,varargin)
 %    R = cat_io_dcm2bids_pp_anat('headRotation',A,M)
 %    [vdm,info] = cat_io_dcm2bids_pp_anat('scopeVDM',Ppair,vols,Vt,Yt,flip,TRT,opts)
 %    W = cat_io_dcm2bids_pp_anat('unwarpMatrix',dim,vdm,ind)
+%    T = cat_io_dcm2bids_pp_anat('atlasTable',name)
+%    G = cat_io_dcm2bids_pp_anat('majorTracts')
+%    L = cat_io_dcm2bids_pp_anat('lobeVolumes',R,TIV)
 %
 %  See also cat_io_dcm2bids, cat_io_dcm2bids_pp_dwi, cat_io_dcm2bids_pp_rsfmri.
 
   switch action
     case {'anonymize','qcFiles','levelParameters','levelUpdate','levelOutdated','hasT1w','segmentanat','writeSessionAffines','coregSessionAffine','checkPEreversal', ...
-          'anatScan','sessionAnat','sampleAnat','coregImages','coregAnat','toT1w','warpToMNI','headRotation','scopeVDM','unwarpMatrix'}
+          'anatScan','sessionAnat','sampleAnat','coregImages','coregAnat','toT1w','warpToMNI','headRotation','scopeVDM','unwarpMatrix','atlasTable', ...
+          'majorTracts','lobeVolumes'}
       [varargout{1:nargout}] = feval(action,varargin{:});
     otherwise
       error('cat_io_dcm2bids_pp_anat:unknownAction','Unknown action "%s".',action);
@@ -143,6 +148,10 @@ function p = levelParameters(level)
 %    3 - quick review: lower resolution of SCOPE and only the first DWI scan
 %        of each b-value scheme (protocol) and the first BOLD scan of a session
 %    4 - preview: lowest resolution of SCOPE (rough maps)
+%    0 - high reliability: level 1 with the rs-fMRI denoising for the
+%        test-retest reliability (rsfmri, see below and processScan in
+%        cat_io_dcm2bids_pp_rsfmri), i.e. other measures than the levels
+%        1 to 4 (the results of the other levels are processed again)
 %  The parameters are given for the levels 1 to 4 and interpolated between
 %  them (log-linear, levels below 1 are level 1, levels above 4 are level 4):
 %    scope.res    .. resolution limit of SCOPE in mm (see scopeVDM, 1.5 mm
@@ -166,6 +175,49 @@ function p = levelParameters(level)
 %                    level 1.5, otherwise 3 mm), and the minimal field of
 %                    view minfov (100 mm in each direction for all levels,
 %                    otherwise the scan keeps the scanner space)
+%    rsfmri       .. denoising of the rs-fMRI (see estimateMeasures in
+%                    cat_io_dcm2bids_pp_rsfmri): low-pass filter of the
+%                    signal in Hz (lowpass, Inf without), number of motion
+%                    regressors (motion, 24 for the parameters, their
+%                    derivatives, and their squares, 6 for the parameters),
+%                    low-pass filter of the motion parameters in Hz
+%                    (rpfilter, Inf without, for the regression and the FD
+%                    of the censoring), and the FD limit of the censoring in
+%                    mm (censor, Inf without), i.e. levels 1 to 4: 0.1 Hz,
+%                    24, Inf, Inf; levels below 1: Inf, 6, 0.1 Hz, 0.5 mm
+%
+%  Evaluation of the rs-fMRI denoising of level 0 (2026-11-01, NKI-RS
+%  multiband test-retest pilot, 22 subjects with T1w and two sessions one
+%  week apart, REST_645 (TR 0.645 s, 10 min), REST_1400 (TR 1.4 s, 10 min),
+%  and REST_CAP (TR 2.5 s, 5 min), and the mean z-matrix of the 3 scans of
+%  a session; ICC(2,1) of the session pairs for the global measures and
+%  the edges of the connectivity matrix, the identification rate of the
+%  subject by its matrix (Finn et al. 2015), and the median absolute
+%  correlation of the edges with the mean FD over the subjects (QC-FC):
+%
+%    measure (645/1400/CAP/session)  levels 1-4               level 0
+%    ICC within-network            0.46/0.49/0.74/0.75   0.60/0.58/0.88/0.84
+%    ICC between-network           0.50/0.48/0.83/0.79   0.65/0.57/0.89/0.87
+%    ICC segregation               0.59/0.50/0.74/0.78   0.72/0.61/0.78/0.84
+%    ICC edges (mean)              0.47/0.42/0.37/0.63   0.50/0.43/0.50/0.67
+%    identification                0.91/0.77/0.68/0.95   0.89/0.84/0.75/0.95
+%    QC-FC                         0.19/0.19/0.18/0.24   0.23/0.17/0.19/0.20
+%
+%  The FD of the multiband scans is dominated by the respiration (peak of
+%  the motion parameters at 0.28-0.30 Hz, i.e. near the Nyquist frequency
+%  at TR 1.4 s with a twice as high FD as at TR 0.645 s, whereas the FD of
+%  the low-pass filtered parameters is about 80% lower, see Fair et al.
+%  2020, Gratton et al. 2020), i.e. the censoring of the unfiltered FD
+%  removes many volumes and lowers the reliability (e.g. the edges of
+%  REST_1400 to 0.25 for 0.3 mm), whereas the filtered parameters improve
+%  the global measures. The low-pass filter of 0.1 Hz removes most of the
+%  degrees of freedom of fast TRs and of short scans (e.g. CAP: edges 0.37
+%  vs. 0.45 without), as do the 24 motion regressors. Not used, as they
+%  lowered the reliability: aCompCor (5 PCs of WM and CSF, edges 0.39/0.42
+%  /0.18), global signal regression (0.43/0.38/0.25), and 200 or 400
+%  parcels (edges 0.45/0.40/0.32 for 200, but a higher identification),
+%  whereas the average of the scans of a session is the most reliable
+%  measure (edges 0.63-0.67).
 %
 %  Alignment test (2026-10-23, one NKI-RS session, time per scan): sep [6],
 %  5 x tol, and the 3 mm reference take 0.6 s instead of 3.4 s (SPM default),
@@ -233,6 +285,11 @@ function p = levelParameters(level)
   else,           p.align = struct('sep',6,    'tol',5 * tol,'vx',3);
   end
   p.align.minfov = 100;                                     % mm, no coregistration of a smaller field of view
+  if level < 1                                              % high reliability (level 0)
+    p.rsfmri = struct('lowpass',inf,'motion',6,'rpfilter',0.1,'censor',0.5);
+  else
+    p.rsfmri = struct('lowpass',0.1,'motion',24,'rpfilter',inf,'censor',inf);
+  end
   p.version    = 7; % version of the DTI and rs-fMRI results (older results are processed again, see
                     % levelUpdate): 2 - atlas labels by the inverse deformation (see sampleAnat),
                     % 3 - Schaefer2018 100 parcels of the rs-fMRI (before 200), 4 - coregistration to
@@ -286,9 +343,10 @@ function [Pm,Pc0,Pwc1,Pseg] = segmentanat(Pin,datatype,opts)
     if opts.denoise, prefn = 'sanlm_'; else, prefn = ''; end
 
     % label maps of former versions (l0 and wl0 of all classes, normalized
-    % label map wc0), which are not written anymore (see SPMsegment)
+    % label map wc0, and the neuromorphometrics atlas), which are not
+    % written anymore (see SPMsegment and regionalVolumes)
     [pth,nam] = spm_fileparts(regexprep(Pin,'\.gz$',''));
-    for pre = {'l0','wl0','wc0'}
+    for pre = {'l0','wl0','wc0','neuromorphometrics_'}
       for p2 = unique({'',prefn})
         for ext = {'.nii','.nii.gz'}
           Po = fullfile(pth,[pre{1} p2{1} nam ext{1}]); if exist(Po,'file'), delete(Po); end
@@ -300,7 +358,8 @@ function [Pm,Pc0,Pwc1,Pseg] = segmentanat(Pin,datatype,opts)
     Pc0  = spm_file(Pin,'prefix',['c0' prefn]); 
     Pwc1 = spm_file(Pin,'prefix',['wc1' prefn]); 
     Py   = spm_file(Pin,'prefix',['y_' prefn]); 
-    Pl   = spm_file(Pin,'prefix',['neuromorphometrics_' prefn]); Plu = regexprep(Pl,'\.gz$',''); % (atlas labels)
+    Pl   = spm_file(Pin,'prefix',['lotter2025_' prefn]); Plu = regexprep(Pl,'\.gz$',''); % (atlas labels of the GM
+    Pt   = spm_file(Pin,'prefix',['hcp1065_' prefn]);    Ptu = regexprep(Pt,'\.gz$',''); %  and tracts of the WM)
     Pmat = spm_file(strrep(Pin,'.nii.gz','.nii'),'prefix',prefn,'suffix','_seg8','ext','mat'); 
     Pseg = spm_file(strrep(strrep(Pin,'.nii.gz','.nii'),[filesep 'anon_'], filesep), ...
       'prefix','catDCM2BIDSsegus_','ext','json');
@@ -314,27 +373,21 @@ function [Pm,Pc0,Pwc1,Pseg] = segmentanat(Pin,datatype,opts)
     if ~run
       J   = cat_io_json(Pseg);
       run = ~isfield(J,'method') || ~isfield(J.method,'samp') || J.method.samp ~= samp;
-      if ~run && ~isfield(J,'regional') && exist(Py,'file') 
-        % regional volumes of segmentations of older versions
+      % regional volumes and atlas label maps of segmentations of older
+      % versions (also of another atlas, e.g. neuromorphometrics before
+      % 2026-11, or of the GM regions without the nearest region)
+      if ~run && (~isfield(J,'regional') || ~isfield(J.method,'atlas') || ~strcmp(J.method.atlas,regionAtlas) || ...
+          ~(exist(Pl,'file') || exist(Plu,'file')) || ~(exist(Pt,'file') || exist(Ptu,'file'))) && exist(Py,'file')
         P = cat_io_dcm2bids_helper('prepNii',{Pc0; Py},opts,0);
         try
-          V = spm_vol(P{1}); 
-          [J.regional,J.method.atlas] = regionalVolumes(spm_read_vols(V),V,P{2});
+          V = spm_vol(P{1});
+          [J.regional,J.method.atlas,Yl,Yt] = regionalVolumes(spm_read_vols(V),V,P{2});
+          J.software_regional = cat_io_dcm2bids_helper('software'); % (update of the segmentation of another version)
           cat_io_json(Pseg,J);
+          writeLabelMap(Yl,V,Plu,'lotter2025_aparc'); writeLabelMap(Yt,V,Ptu,'hcp1065'); clear Yl Yt
+          if opts.gzipi, cat_io_dcm2bids_helper('prepNiigz',{Plu; Ptu},opts); end
         catch e
           cat_io_cprintf('err','  Regional volumes failed: %s\n',e.message);
-        end
-        cat_io_dcm2bids_helper('prepNiigz',P,opts);
-      end
-      % atlas label map of segmentations of former versions
-      if ~run && ~exist(Pl,'file') && ~exist(Plu,'file') && exist(Py,'file')
-        P = cat_io_dcm2bids_helper('prepNii',{Pc0; Py},opts,0);
-        try
-          V = spm_vol(P{1}); [~,~,Yl] = regionalVolumes(spm_read_vols(V),V,P{2});
-          writeLabelMap(Yl,V,Plu); clear Yl
-          if opts.gzipi, cat_io_dcm2bids_helper('prepNiigz',Plu,opts); end
-        catch e
-          cat_io_cprintf('err','  Atlas label map failed: %s\n',e.message);
         end
         cat_io_dcm2bids_helper('prepNiigz',P,opts);
       end
@@ -400,18 +453,20 @@ function [Pm,Pc0,Pwc1,Pseg] = segmentanat(Pin,datatype,opts)
                         mean( [ abs(spmus.iGM-spmus.iWM) abs(spmus.iGM-spmus.iCSF) ...
                                 abs(spmus.iWM-spmus.iCSF)] * 2 * 3);
 
-      % tissue volumes of the regions of the neuromorphometrics atlas and
-      % its label map (in the space of the scan)
+      % tissue volumes of the regions of the lotter2025 atlas and the label
+      % maps of its GM regions and of the hcp1065 tracts in the WM (in the 
+      % space of the scan)
       Pyu = regexprep(Py,'\.gz$',''); if ~exist(Pyu,'file'), Pyu = Py; end
-      [spmus.regional,atlas,Yl] = regionalVolumes(Y,V(1),Pyu);
-      writeLabelMap(Yl,V(1),Plu); clear Yl
+      [spmus.regional,atlas,Yl,Yt] = regionalVolumes(Y,V(1),Pyu);
+      writeLabelMap(Yl,V(1),Plu,'lotter2025_aparc'); writeLabelMap(Yt,V(1),Ptu,'hcp1065'); clear Yl Yt
       spmus.method    = struct('samp',samp,'duration',round(toc(stime)),'atlas',atlas);
+      spmus.software  = cat_io_dcm2bids_helper('software');
       cat_io_json(Pseg,spmus);
 
       % zip the segmentation outputs and remove all unzipped copies (also
       % of the input and denoised image, and the unzipped c0 of the CAT QC)
       if opts.gzipi
-        prefixes = {'','c0','wc1','mwc1','m','y_','neuromorphometrics_'};
+        prefixes = {'','c0','wc1','mwc1','m','y_','lotter2025_','hcp1065_'};
         prefns   = unique({'',prefn}); 
         for pri = 1:numel(prefixes)
           for pfi = 1:numel(prefns)
@@ -424,51 +479,225 @@ function [Pm,Pc0,Pwc1,Pseg] = segmentanat(Pin,datatype,opts)
   end
 end
 % =========================================================================
-function [R,atlas,Yl] = regionalVolumes(Y,V,Py)
-%regionalVolumes. Tissue volumes in ml of the regions of the 
-%  neuromorphometrics atlas of CAT in the native space of the label map Y
+function [R,atlas,Yl,Yt] = regionalVolumes(Y,V,Py)
+%regionalVolumes. Tissue volumes in ml of the regions of the lotter2025 
+%  atlas of CAT (FreeSurfer Desikan-Killiany parcellation and segmentation
+%  of the MNI template, Lotter 2025) in the native space of the label map Y
 %  of the segmentation (V, CSF 1, GM 2, WM 3), i.e. its labels by the 
 %  inverse of the deformation Py of the segmentation (nearest neighbor, see
-%  inverseDeformation), 
-%  for the tissues of each region by the atlas table (Vgm, Vwm, and Vcsf, 
-%  e.g. Vgm of cortical regions and Vcsf of the ventricles), as structure 
-%  with the region names (see regionKey) and the ROIid of the atlas, and
-%  the atlas label map Yl of the brain voxels (uint16, grid of Y, see 
-%  writeLabelMap). 
-  atlas = 'neuromorphometrics (CAT)';
-  Pa  = fullfile(fileparts(mfilename('fullpath')),'templates_MNI152NLin2009cAsym','neuromorphometrics.nii');
-  C   = regexp(fileread(spm_file(Pa,'ext','.csv')),'\r?\n','split'); C = C(~cellfun('isempty',strtrim(C)));
-  C   = cellfun(@(l) strsplit(l,';'),C,'UniformOutput',false); hdr = C{1}; C = vertcat(C{2:end});
-  col = @(name) C(:,strcmp(hdr,name));
-  id  = str2double(col('ROIid')); nam = strtrim(col('ROIname')); 
-  tis = str2double([col('Vcsf') col('Vgm') col('Vwm')]) > 0; % tissues of the labels 1 to 3
+%  inverseDeformation), for the tissues of each region (see atlasTable,
+%  e.g. Vgm of cortical regions and Vcsf of the ventricles), as structure
+%  with the region keys (hemisphere and abbreviation, e.g. lSFG) and the
+%  ROIid of the atlas, the label map Yl of its GM regions in the GM of the
+%  segmentation (uint16, grid of Y, see writeLabelMap), as the atlas is a
+%  GM parcellation, and the label map Yt of the tracts of the hcp1065
+%  atlas of CAT (Yeh 2022) in the WM of the segmentation. The GM of the
+%  segmentation gets the nearest GM region of the atlas (see sampleAtlas),
+%  as its GM is not exactly the GM of the atlas after the registration
+%  (otherwise holes and isolated voxels of the GM regions).
+  atlas = regionAtlas;
+  T   = atlasTable('lotter2025_aparc');
 
   % atlas labels and tissues of the brain voxels
-  b   = find(Y > 0.5); 
-  iy  = reshape(inverseDeformation(Py,V),[],3); 
+  b   = find(Y > 0.5);
+  iy  = reshape(inverseDeformation(Py,V),[],3);
   mni = [double(iy(b,:))'; ones(1,numel(b))]; clear iy
-  Va  = spm_vol(Pa); X = Va.mat \ mni; 
-  lab = round(spm_sample_vol(Va,X(1,:),X(2,:),X(3,:),0)); 
-  t   = round(Y(b))'; 
-  vx  = abs(det(V.mat(1:3,1:3))) / 1000; 
+  lab = sampleAtlas('lotter2025_aparc',mni);       % (WM and CSF regions)
+  lgm = sampleAtlas('lotter2025_aparc',mni,true);  % (GM regions)
+  t   = round(Y(b))';
+  vx  = abs(det(V.mat(1:3,1:3))) / 1000;
 
   R = struct(); fn = {'Vcsf','Vgm','Vwm'};
-  for ri = 1:numel(id)
-    r = struct('ROIid',id(ri)); 
-    for ti = find(tis(ri,:)), r.(fn{ti}) = nnz(lab == id(ri) & t == ti) * vx; end
-    R.(regionKey(nam{ri})) = r; 
+  for ri = 1:numel(T.id)
+    r = struct('ROIid',T.id(ri));
+    for ti = find(T.tissue(ri,:))
+      if ti == 2, l = lgm; else, l = lab; end
+      r.(fn{ti}) = nnz(l == T.id(ri) & t == ti) * vx;
+    end
+    R.(T.key{ri}) = r;
   end
-  if nargout > 2, Yl = zeros(size(Y),'uint16'); Yl(b) = lab; end
+  if nargout > 2
+    gm = t == 2 & lgm > 0;
+    Yl = zeros(size(Y),'uint16'); Yl(b(gm)) = lgm(gm);
+  end
+  if nargout > 3
+    wm = t == 3; tr = sampleAtlas('hcp1065',mni); 
+    Yt = zeros(size(Y),'uint16'); Yt(b(wm)) = tr(wm);
+  end
 end
 % =========================================================================
-function writeLabelMap(Yl,V,P)
-%writeLabelMap. Atlas label map Yl (neuromorphometrics of CAT, see 
-%  regionalVolumes) in the grid V of the label map of the segmentation as 
-%  uint16 image P (e.g. for the rendering, see cat_io_dcm2bids_render).
+function atlas = regionAtlas
+%regionAtlas. Name of the atlas of the regional volumes (see 
+%  regionalVolumes), e.g. to update the results of other atlases.
+  atlas = 'lotter2025_aparc (CAT, nearest GM region)';
+end
+% =========================================================================
+function lab = sampleAtlas(name,mni,gmfill)
+%sampleAtlas. Labels of the CAT atlas name (templates_MNI152NLin2009cAsym)
+%  at the MNI coordinates mni (4 x n, nearest neighbor) as row vector,
+%  with gmfill the label of the nearest GM region (see atlasTable) also
+%  outside the GM regions of the atlas (e.g. its WM and CSF, prepared once).
+  persistent cache
+  if ~exist('gmfill','var'), gmfill = false; end
+  Va  = spm_vol(fullfile(fileparts(mfilename('fullpath')),'templates_MNI152NLin2009cAsym',[name '.nii']));
+  X   = Va.mat \ mni;
+  if gmfill
+    if isempty(cache) || ~strcmp(cache.name,name)
+      Ya = single(round(spm_read_vols(Va))); T = atlasTable(name);
+      [~,I] = cat_vbdist(single(ismember(Ya,T.id(T.tissue(:,2)))));
+      cache = struct('name',name,'Y',Ya(I));
+    end
+    lab = round(spm_sample_vol(cache.Y,X(1,:),X(2,:),X(3,:),0));
+  else
+    lab = round(spm_sample_vol(Va,X(1,:),X(2,:),X(3,:),0));
+  end
+end
+% =========================================================================
+function writeLabelMap(Yl,V,P,name)
+%writeLabelMap. Label map Yl of the atlas name (lotter2025_aparc or 
+%  hcp1065 of CAT, see regionalVolumes) in the grid V of the label map of
+%  the segmentation as uint16 image P (e.g. for the rendering, see 
+%  cat_io_dcm2bids_render).
   Vl = struct('fname',P,'dim',V.dim(1:3),'mat',V.mat,'dt',[spm_type('uint16') spm_platform('bigend')], ...
-    'pinfo',[1;0;0],'descrip','neuromorphometrics labels (CAT, inverse deformation of the segmentation)');
+    'pinfo',[1;0;0],'descrip',sprintf('%s labels (CAT, inverse deformation of the segmentation)',name));
   if exist(P,'file'), delete(P); end
   spm_write_vol(Vl,Yl);
+end
+% =========================================================================
+function T = atlasTable(name)
+%atlasTable. Regions of the CAT atlas name (templates_MNI152NLin2009cAsym/
+%  <name>.csv) with their ROIid (id), key (hemisphere l/r/b and 
+%  abbreviation, e.g. lSFG, as field name of the regional results), short
+%  abbreviation (abbr, without hemisphere, e.g. for the labels in the 
+%  rendering), name (ROIname), color (rgb, 0-1), tissues (logical
+%  columns CSF, GM, WM), lobe (e.g. frontal, see lobeVolumes), and group
+%  (major tract, see majorTracts). The regions of the lotter2025 atlases
+%  (FreeSurfer names) get the common abbreviations of the Desikan-Killiany
+%  regions and the aseg structures and their lobes (see dkAbbr), the GM
+%  tissue for the cortex and the subcortical structures (also the WM for
+%  the brainstem and ventral diencephalon), the WM for white matter and
+%  corpus callosum, and the CSF for the ventricles and CSF. The tracts of
+%  hcp1065 (abbreviations of DSI Studio) are WM regions, where the major
+%  tracts form groups (AF, SLF I-III, IFOF, ILF, UF, CST, and the corpus
+%  callosum CC with body, forceps major and minor, and tapetum). Other
+%  atlases use the tissue columns of their table (Vcsf, Vgm, Vwm). The
+%  tables are read once.
+  persistent cache
+  if isempty(cache), cache = containers.Map('KeyType','char','ValueType','any'); end
+  if isKey(cache,name), T = cache(name); return; end
+  C   = regexp(fileread(fullfile(fileparts(mfilename('fullpath')),'templates_MNI152NLin2009cAsym',[name '.csv'])),'\r?\n','split');
+  C   = C(~cellfun('isempty',strtrim(C)));
+  C   = cellfun(@(l) strsplit(l,';'),C,'UniformOutput',false); hdr = C{1}; C = vertcat(C{2:end});
+  col = @(f) strtrim(C(:,strcmp(hdr,f)));
+  T   = struct('id',str2double(col('ROIid')),'key',{col('ROIabbr')},'abbr',{col('ROIabbr')}, ...
+    'name',{col('ROIname')},'rgb',0.6 * ones(size(C,1),3),'tissue',false(size(C,1),3), ...
+    'lobe',{repmat({''},size(C,1),1)},'group',{repmat({''},size(C,1),1)});
+  rgb = col('ROIcolor');
+  for ri = 1:numel(rgb)
+    v = str2double(strsplit(rgb{ri},' ')); if numel(v) == 3 && all(isfinite(v)), T.rgb(ri,:) = v / 255; end
+  end
+  if startsWith(name,'lotter2025')
+    for ri = 1:numel(T.id)
+      [T.abbr{ri},T.tissue(ri,:),T.lobe{ri}] = dkAbbr(T.key{ri}(2:end));
+      T.key{ri} = matlab.lang.makeValidName([T.key{ri}(1) T.abbr{ri}]);
+    end
+  elseif strcmp(name,'hcp1065')
+    T.abbr = cellfun(@(a) a(2:end),T.abbr,'UniformOutput',false); T.tissue(:,3) = true;
+    T.group(ismember(T.abbr,{'AF','IFOF','ILF','UF','CST'})) = T.abbr(ismember(T.abbr,{'AF','IFOF','ILF','UF','CST'}));
+    T.group(ismember(T.abbr,{'SLF1','SLF2','SLF3'}))         = {'SLF'};
+    T.group(ismember(T.abbr,{'CCB','CCFMa','CCFMi','CCT'}))  = {'CC'};
+  else
+    T.key  = cellfun(@regionKey,T.name,'UniformOutput',false); T.abbr = T.key;
+    T.tissue = str2double([col('Vcsf') col('Vgm') col('Vwm')]) > 0;
+  end
+  cache(name) = T;
+end
+% =========================================================================
+function [abbr,tissue,lobe] = dkAbbr(name)
+%dkAbbr. Common abbreviation of a region of the lotter2025 atlases (FreeSurfer
+%  name without hemisphere, e.g. superiorfrontal or Thalamus), its
+%  tissues [CSF GM WM], and its lobe (see lobeVolumes): the Desikan-Killiany
+%  regions (cortex, GM, lobes of FreeSurfer with cingulate and insula), the
+%  aseg structures (subcortical GM, WM, ventricles, and CSF, no lobe for
+%  the brainstem and ventral diencephalon), otherwise the name (e.g.
+%  regions of the DKT or Destrieux parcellation, GM, no lobe).
+  D = {
+    'bankssts','BSTS'; 'caudalanteriorcingulate','cACC'; 'caudalmiddlefrontal','cMFG'; 'cuneus','CUN'; 
+    'entorhinal','ENT'; 'fusiform','FUS'; 'inferiorparietal','IPL'; 'inferiortemporal','ITG'; 
+    'isthmuscingulate','iCC'; 'lateraloccipital','LOC'; 'lateralorbitofrontal','lOFC'; 'lingual','LING'; 
+    'medialorbitofrontal','mOFC'; 'middletemporal','MTG'; 'parahippocampal','PHG'; 'paracentral','PCL'; 
+    'parsopercularis','pOPER'; 'parsorbitalis','pORB'; 'parstriangularis','pTRI'; 'pericalcarine','PCAL'; 
+    'postcentral','PoCG'; 'posteriorcingulate','PCC'; 'precentral','PrCG'; 'precuneus','PCUN'; 
+    'rostralanteriorcingulate','rACC'; 'rostralmiddlefrontal','rMFG'; 'superiorfrontal','SFG'; 
+    'superiorparietal','SPL'; 'superiortemporal','STG'; 'supramarginal','SMG'; 'frontalpole','FP'; 
+    'temporalpole','TP'; 'transversetemporal','TTG'; 'insula','INS'; 
+    'Thalamus','THA'; 'Caudate','CAU'; 'Putamen','PUT'; 'Pallidum','PAL'; 'Hippocampus','HIP'; 
+    'Amygdala','AMY'; 'Accumbensarea','NAcc'; 'VentralDC','VDC'; 'CerebellumCortex','CB'; 'BrainStem','BS'; 
+    'CerebralWhiteMatter','WM'; 'CerebellumWhiteMatter','CBWM'; 'WMhypointensities','WMH'; 
+    'CC_Posterior','CCp'; 'CC_Mid_Posterior','CCmp'; 'CC_Central','CCc'; 'CC_Mid_Anterior','CCma'; 'CC_Anterior','CCa'; 
+    'LateralVentricle','LV'; 'InfLatVent','ILV'; '3rdVentricle','V3'; '4thVentricle','V4'; 'CSF','CSF'};
+  k = find(strcmp(D(:,1),name),1);
+  if isempty(k), abbr = name; else, abbr = D{k,2}; end
+  if any(strcmp(abbr,{'WM','CBWM','WMH','CCp','CCmp','CCc','CCma','CCa'}))
+    tissue = [false false true];
+  elseif any(strcmp(abbr,{'LV','ILV','V3','V4','CSF'}))
+    tissue = [true false false];
+  elseif any(strcmp(abbr,{'BS','VDC'}))
+    tissue = [false true true];
+  else
+    tissue = [false true false];
+  end
+  L = {
+    'frontal',     {'SFG','rMFG','cMFG','pOPER','pTRI','pORB','lOFC','mOFC','PrCG','PCL','FP'};
+    'temporal',    {'STG','MTG','ITG','BSTS','FUS','TTG','ENT','PHG','TP'};
+    'parietal',    {'SPL','IPL','SMG','PoCG','PCUN'};
+    'occipital',   {'LOC','LING','CUN','PCAL'};
+    'cingulate',   {'cACC','rACC','PCC','iCC'};
+    'insula',      {'INS'};
+    'subcortical', {'THA','CAU','PUT','PAL','NAcc','AMY'};
+    'hippocampus', {'HIP'};
+    'cerebellum',  {'CB'}};
+  k = find(cellfun(@(r) any(strcmp(r,abbr)),L(:,2)),1);
+  if isempty(k), lobe = ''; else, lobe = L{k,1}; end
+end
+% =========================================================================
+function L = lobeVolumes(R,TIV)
+%lobeVolumes. GM volumes of the lobes (frontal, temporal, parietal,
+%  occipital, cingulate, insula) and of the subcortical structures (basal
+%  ganglia, thalamus, and amygdala), hippocampus, and cerebellum (cortex)
+%  in % of the TIV, i.e. the sum of their regions of both hemispheres of
+%  the regional volumes R of the lotter2025 atlas (see regionalVolumes and
+%  atlasTable, without the brainstem and ventral diencephalon of GM and
+%  WM), and the asymmetry of these regions (left - right in % of their
+%  mean volume).
+  T = atlasTable('lotter2025_aparc');
+  L = struct('frontal',0,'temporal',0,'parietal',0,'occipital',0,'cingulate',0,'insula',0, ...
+    'subcortical',0,'hippocampus',0,'cerebellum',0,'asymmetry',nan);
+  vh = [0 0];
+  for ri = 1:numel(T.id)
+    if isempty(T.lobe{ri}) || ~isfield(R,T.key{ri}), continue; end
+    r = R.(T.key{ri}); v = 0;
+    for f = {'Vcsf','Vgm','Vwm'}, if isfield(r,f{1}) && isfinite(r.(f{1})), v = v + r.(f{1}); end; end
+    L.(T.lobe{ri}) = L.(T.lobe{ri}) + 100 * v / TIV;
+    h = find('lr' == T.key{ri}(1)); if ~isempty(h), vh(h) = vh(h) + v; end
+  end
+  if sum(vh) > 0, L.asymmetry = 200 * (vh(1) - vh(2)) / sum(vh); end
+end
+% =========================================================================
+function G = majorTracts
+%majorTracts. Major tracts of the hcp1065 atlas (groups of its tracts, see
+%  atlasTable) of each hemisphere (or both, e.g. bCC) with their key (e.g.
+%  lSLF), abbreviation (e.g. SLF), color (of the first tract of the group),
+%  and the ROIid of the tracts (cell).
+  T = atlasTable('hcp1065');
+  G = struct('key',{{}},'abbr',{{}},'rgb',zeros(0,3),'ids',{{}});
+  for gr = {'AF','SLF','IFOF','ILF','UF','CST','CC'}
+    for h = 'lrb'
+      ri = find(strcmp(T.group,gr{1}) & cellfun(@(k) k(1) == h,T.key));
+      if isempty(ri), continue; end
+      G.key{end+1} = [h gr{1}]; G.abbr{end+1} = gr{1}; G.rgb(end+1,:) = T.rgb(ri(1),:); G.ids{end+1} = T.id(ri)';
+    end
+  end
 end
 % =========================================================================
 function iy = inverseDeformation(Py,Vn)

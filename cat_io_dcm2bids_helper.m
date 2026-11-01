@@ -9,8 +9,9 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
 %  derivatives in the database (registerDerivative, derivativeIndex), the
 %  realigned 
 %  volumes of 4D data resliced in memory (realignedVolumes, 
-%  realignedVolume), and tables (updateTable, writeTable, and lists of 
-%  records with catRecords).
+%  realignedVolume), tables (updateTable, writeTable, and lists of 
+%  records with catRecords), and the software versions of the results
+%  (software).
 %
 %  varargout = cat_io_dcm2bids_helper(action,varargin)
 %
@@ -41,6 +42,7 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
 %    entries = cat_io_dcm2bids_helper('updateTable',Ptable,Thdr,Tnewrow,id,reimport)
 %    cat_io_dcm2bids_helper('writeTable',Ptable,T,format)
 %    R = cat_io_dcm2bids_helper('catRecords',R,S)
+%    S = cat_io_dcm2bids_helper('software')
 %
 %  See also cat_io_dcm2bids.
 
@@ -49,7 +51,7 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
           'niiHeaderInfo','niiVolume','prepNii','prepNiigz','gzipFile','exportNii','removeAcquisitionTime', ...
           'registerDerivative','derivativeIndex','diskSpeed','workSetup','workClear','diskCheck', ...
           'conversionInfo','realignedVolumes','realignedVolume', ...
-          'updateTable','writeTable','catRecords'}
+          'updateTable','writeTable','catRecords','software'}
       [varargout{1:nargout}] = feval(action,varargin{:});
     otherwise
       error('cat_io_dcm2bids_helper:unknownAction','Unknown action "%s".',action);
@@ -98,6 +100,19 @@ end
 function writeJSON(P,S)
 %writeJSON. Write a JSON file (UTF-8, readable format).
   fid = fopen(P,'w','n','UTF-8'); fprintf(fid,'%s',jsonencode(S,'PrettyPrint',true)); fclose(fid); 
+end
+% =========================================================================
+function S = software
+%software. Date and software versions of a result (MATLAB, SPM, and CAT 
+%  with revision and date, e.g. in the QC and preprocessing JSONs, see 
+%  cat_io_dcm2bids_qc and cat_io_dcm2bids_pp_anat), where the versions 
+%  are read once.
+  persistent V
+  if isempty(V)
+    [sv,sr] = spm('Ver'); [cn,cr,cd] = cat_version;
+    V = struct('MATLAB',version,'SPM',sprintf('%s (%s)',sv,sr),'CAT',sprintf('%s (r%s, %s)',cn,cr,cd));
+  end
+  S = struct('date',char(datetime('now','Format','yyyy-MM-dd''T''HH:mm:ss')),'MATLAB',V.MATLAB,'SPM',V.SPM,'CAT',V.CAT);
 end
 % =========================================================================
 function P = derivativesDir(Pbids)

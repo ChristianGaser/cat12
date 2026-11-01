@@ -361,7 +361,9 @@ function dcm2bids = cat_conf_dcm2bids(expert)
       'Option 1 exports the sidecars (JSON) of all scans to BIDS, i.e. without images. ' 
       ['Option 2 exports the scans with a conform or semiconform protocol (protocol fit rating PFR of at most 4.5, ' ...
       'see opts.protocol.status), i.e. scans with a nonconform protocol are only part of the tables of the database ' ...
-      '(all scans without protocol definitions). ']
+      '(all scans without protocol definitions), unless they fit a broad fallback protocol of the scans that are ' ...
+      'required for the evaluation (T1w, T2w, FLAIR, BOLD, and DWI of all vendors, see DCM2BIDS/nonconform), e.g. the ' ...
+      'T1w of another sequence, which are exported with "nonconform" in the acq label and preprocessed. ']
       'Option 3 exports all scans to BIDS (with protocolsubdirs the scans without conform protocol in "mismatch"). '
       ['The options 0 and 1 only use the DICOM header information (JSON), i.e., the images are not ' ...
       'converted (they are converted later if required by option 2 or 3). ']
@@ -530,7 +532,11 @@ function dcm2bids = cat_conf_dcm2bids(expert)
     pplevel.val         = {def.opts.pplevel};
     pplevel.help        = { ...
       ['Accuracy and processing time of the DTI and rs-fMRI measures as continuous level from 1 to 4 (the ' ...
-       'segmentation of the anatomical scans is the same for all levels, see levelParameters in cat_io_dcm2bids_pp_anat): ']
+       'segmentation of the anatomical scans is the same for all levels, see levelParameters in cat_io_dcm2bids_pp_anat), ' ...
+       'and level 0 for the high reliability of the rs-fMRI measures: ']
+      ['  0 - high reliability: level 1 with the rs-fMRI denoising for the test-retest reliability (without low-pass ' ...
+       'filter, with the 6 low-pass filtered motion parameters, and the censoring of volumes with motion), i.e. other ' ...
+       'rs-fMRI measures than the levels 1 to 4']
       '  1 - full quality: SPM default parameters of the distortion correction (SCOPE) at the native resolution (reference)'
       '  2 - optimized: fast settings of SCOPE at 2.5 mm'
       '  3 - quick review: SCOPE at 4 mm, the first DWI scan of each protocol (b-values), and the first rs-fMRI scan per session (one segmentation per session for all levels)'
@@ -549,21 +555,31 @@ function dcm2bids = cat_conf_dcm2bids(expert)
       ''
       ['I.e., the global measures are the same for all levels, whereas the maps differ slightly. Nevertheless, ' ...
        'the data of a study should be processed with the same level. Results of a lower level (higher accuracy) ' ...
-       'are kept. ']
+       'are kept, besides the rs-fMRI results of level 0 and of the levels 1 to 4 that are processed again for ' ...
+       'the other denoising. ']
+      ''
+      ['Evaluation of level 0 with the NKI-RS multiband test-retest pilot (22 subjects, two sessions one week ' ...
+       'apart, ICC of the sessions for the rest scans with TR 0.645, 1.4, and 2.5 s): ']
+      '  measure          levels 1-4         level 0'
+      '  ICC segregation  0.59/0.50/0.74     0.72/0.61/0.78'
+      '  ICC edges        0.47/0.42/0.37     0.50/0.43/0.50'
       };
   else
     pplevel             = cfg_menu;
     pplevel.tag         = 'pplevel';
     pplevel.name        = 'Preprocessing accuracy';
-    pplevel.labels      = {'Optimized','Preview'};
-    pplevel.values      = {2,4};
-    [~,li]              = min(abs([2 4] - def.opts.pplevel)); 
+    pplevel.labels      = {'High reliability','Optimized','Preview'};
+    pplevel.values      = {0,2,4};
+    [~,li]              = min(abs([0 2 4] - def.opts.pplevel)); 
     pplevel.val         = pplevel.values(li);
     pplevel.help        = { ...
       ['Accuracy and processing time of the DTI and rs-fMRI measures: "Optimized" for the final results ' ...
        '(about 9 min for a session with T1w, 2 DWI, and rs-fMRI scans) and "Preview" for a fast review ' ...
        '(about 2.5 min, with the same global measures, e.g. the white matter FA, but rougher maps). The data of ' ...
-       'a study should be processed with the same accuracy. Results of the higher accuracy are kept. ']};
+       'a study should be processed with the same accuracy. Results of the higher accuracy are kept. ' ...
+       '"High reliability" (about the time of the full quality) improves the test-retest reliability of the ' ...
+       'rs-fMRI measures (e.g. the ICC of the system segregation from 0.59 to 0.72 for 10 min rs-fMRI with ' ...
+       'TR 0.645 s) by another denoising, i.e. its rs-fMRI measures differ from the other levels. ']};
   end
 
   % DTI maps of the preprocessing (see cat_io_dcm2bids_pp_dwi)
@@ -815,117 +831,41 @@ function dcm2bids = cat_conf_dcm2bids(expert)
 
   % dataset description (dataset_description.json, README.md)
   % =======================================================================
-  dsname           = cfg_entry;
-  dsname.tag       = 'Name';
-  dsname.name      = 'Name';
-  dsname.strtype   = 's';
-  dsname.num       = [0 Inf];
-  dsname.val       = {def.dataset.Name};
-  dsname.help      = {'Name of the dataset (BIDS "Name"). If empty, the study subdirectory name is used. '};
-
-  dsauthors        = cfg_entry;
-  dsauthors.tag    = 'Authors';
-  dsauthors.name   = 'Authors';
-  dsauthors.strtype = 's+';
-  dsauthors.num    = [0 Inf];
-  dsauthors.val    = {{''}};
-  dsauthors.help   = {
-   ['List of the authors of the dataset (BIDS "Authors"), one author per line, ideally with e-mail ' ...
-    'address, e.g. "Jane Doe <jane.doe@uni-example.de>". ']};
-
-  dshowto          = cfg_entry;
-  dshowto.tag      = 'HowToAcknowledge';
-  dshowto.name     = 'How to acknowledge';
-  dshowto.strtype  = 's';
-  dshowto.num      = [0 Inf];
-  dshowto.val      = {def.dataset.HowToAcknowledge};
-  dshowto.help     = {
-   ['Text that describes how to acknowledge the dataset in publications (BIDS "HowToAcknowledge"), ' ...
-    'e.g. a reference or a sentence for the acknowledgements. ']};
-
-  dslicense        = cfg_menu;
-  dslicense.tag    = 'License';
-  dslicense.name   = 'License';
-  dslicense.labels = {
-    'CC0-1.0 (public domain, no restriction, most common)', ...
-    'PDDL-1.0 (public domain for databases)', ...
-    'CC-BY-4.0 (free use with attribution of the authors)', ...
-    'CC-BY-SA-4.0 (as CC-BY, derived data under the same license', ...
-    'CC-BY-NC-4.0 (as CC-BY, but no commercial use)', ...
-    'ODC-BY-1.0 (free use of the database with attribution)', ...
-    'other / not specified'};
-  dslicense.values = {'CC0-1.0','PDDL-1.0','CC-BY-4.0','CC-BY-SA-4.0','CC-BY-NC-4.0','ODC-BY-1.0',''};
-  dslicense.val    = {def.dataset.License};
-  dslicense.help   = {
-   ['License of the dataset (BIDS "License") as SPDX identifier, as recommended by BIDS. For the import ' ...
-    'of BIDS datasets, the most restrictive license of this setting and the source datasets is used ' ...
-    '(with a warning). ']
+  dsstudy          = cfg_files;
+  dsstudy.tag      = 'study';
+  dsstudy.name     = 'Study JSON';
+  dsstudy.filter   = 'any';
+  dsstudy.ufilter  = '.*\.(json|JSON)$';
+  dsstudy.num      = [0 1];
+  dsstudy.val      = {def.dataset.study};
+  dsstudy.help     = {
+   ['JSON file with the BIDS fields of the dataset_description.json of the BIDS dataset, i.e. Name, License, ' ...
+    'Authors, Acknowledgements, HowToAcknowledge, Funding, EthicsApprovals, ReferencesAndLinks, and DatasetDOI. ' ...
+    'Copy the empty DCM2BIDS/study/cat_study_default.json (or the filled DCM2BIDS/study/cat_study_example.json) ' ...
+    'to your study, fill in the fields, and select it here. ']
     ''
-    '  CC0-1.0 .. Creative Commons Zero: public domain, no restrictions (most common for open data)'
-    '  PDDL-1.0 .. Open Data Commons Public Domain Dedication: public domain for databases'
-    '  CC-BY-4.0 .. Creative Commons Attribution: free use with attribution of the authors'
-    '  CC-BY-SA-4.0 .. Creative Commons Attribution-ShareAlike: as CC-BY, derived data under the same license'
-    '  CC-BY-NC-4.0 .. Creative Commons Attribution-NonCommercial: as CC-BY, but no commercial use'
-    '  ODC-BY-1.0 .. Open Data Commons Attribution: free use of the database with attribution'
-    '  other / not specified .. no license entry (e.g. data under a data use agreement)'
+   ['Empty fields are not written, and an empty Name is replaced by the study subdirectory. BIDSVersion, ' ...
+    'DatasetType, and GeneratedBy (catDCM2BIDS and dcm2niix) are set automatically, and fields with a leading ' ...
+    'underscore (e.g. "_Description") are ignored. Further BIDS fields (e.g. Keywords) are written as given. ']
+    ''
+   ['The License is given as SPDX identifier (e.g. CC0-1.0, PDDL-1.0, CC-BY-4.0, CC-BY-SA-4.0, CC-BY-NC-4.0, ' ...
+    'ODC-BY-1.0, or empty, e.g. for data under a data use agreement). For the import of BIDS datasets, the ' ...
+    'most restrictive license of the study and the source datasets is used (with a warning). ']
     };
 
   dsreadme         = cfg_files;
   dsreadme.tag     = 'README';
-  dsreadme.name    = 'README file';
+  dsreadme.name    = 'Study README';
   dsreadme.filter  = 'any';
   dsreadme.ufilter = '.*\.(txt|md|TXT|MD)$';
   dsreadme.num     = [0 1];
-  dsreadme.val     = {{''}};
+  dsreadme.val     = {def.dataset.README};
   dsreadme.help    = {
    ['Text file (txt/md) that defines the head of the README.md file of the BIDS dataset, e.g. with a ' ...
-    'description of the study. For the import of BIDS datasets, it is extended by their README files ' ...
-    'with the dataset name as header. ']};
-
-  dsack            = cfg_entry;
-  dsack.tag        = 'Acknowledgements';
-  dsack.name       = 'Acknowledgements (expert)';
-  dsack.strtype    = 's';
-  dsack.num        = [0 Inf];
-  dsack.val        = {def.dataset.Acknowledgements};
-  dsack.hidden     = expert<1;
-  dsack.help       = {'Text acknowledging contributions of individuals or institutions beyond the authors (BIDS "Acknowledgements"). '};
-
-  dsfunding        = cfg_entry;
-  dsfunding.tag    = 'Funding';
-  dsfunding.name   = 'Funding (expert)';
-  dsfunding.strtype = 's+';
-  dsfunding.num    = [0 Inf];
-  dsfunding.val    = {{''}};
-  dsfunding.hidden = expert<1;
-  dsfunding.help   = {'List of the sources of funding, e.g. grant numbers, one per line (BIDS "Funding"). '};
-
-  dsethics         = cfg_entry;
-  dsethics.tag     = 'EthicsApprovals';
-  dsethics.name    = 'Ethics approvals (expert)';
-  dsethics.strtype = 's+';
-  dsethics.num     = [0 Inf];
-  dsethics.val     = {{''}};
-  dsethics.hidden  = expert<1;
-  dsethics.help    = {'List of the ethics committee approvals of the research protocols, one per line, e.g. committee and approval number (BIDS "EthicsApprovals"). '};
-
-  dsrefs           = cfg_entry;
-  dsrefs.tag       = 'ReferencesAndLinks';
-  dsrefs.name      = 'References and links (expert)';
-  dsrefs.strtype   = 's+';
-  dsrefs.num       = [0 Inf];
-  dsrefs.val       = {{''}};
-  dsrefs.hidden    = expert<1;
-  dsrefs.help      = {'List of references to publications that contain information on the dataset, or links, one per line (BIDS "ReferencesAndLinks"). '};
-
-  dsdoi            = cfg_entry;
-  dsdoi.tag        = 'DatasetDOI';
-  dsdoi.name       = 'Dataset DOI (expert)';
-  dsdoi.strtype    = 's';
-  dsdoi.num        = [0 Inf];
-  dsdoi.val        = {def.dataset.DatasetDOI};
-  dsdoi.hidden     = expert<1;
-  dsdoi.help       = {'The Digital Object Identifier of the dataset (not the corresponding paper), e.g. "doi:10.18112/openneuro.ds000001.v1.0.0" (BIDS "DatasetDOI"). '};
+    'description of the study, where "<Name>" is replaced by the name of the dataset. The default ' ...
+    'DCM2BIDS/study/cat_study_readme.txt contains only a short standard text, i.e. copy it to your study ' ...
+    'and extend it. For the import of BIDS datasets, it is extended by their README files with the dataset ' ...
+    'name as header. ']};
 
   % phenotypic data of the sessions (see cat_io_dcm2bids_phenotypic)
   dspheno          = cfg_files;
@@ -941,21 +881,50 @@ function dcm2bids = cat_conf_dcm2bids(expert)
     'all other columns are added to the BIDS sessions files (sub-<label>_sessions.tsv). The key columns are not ' ...
     'exported, but please check the other columns for personal data. ']
     ''
-   ['Key columns (if not given by their numbers): PatientID (patientid, pid), name (name, patientname, firstname, ' ...
+   ['Key columns (if not given by their numbers): participantID (participantid, subject, patientid, pid; the ID of ' ...
+    'the participant as stored in the DICOM PatientID by the scanner, not the BIDS participant label sub-<label> that ' ...
+    'is created by this batch), name (name, patientname, firstname, ' ...
     'lastname, surname, vorname, nachname; the words of all name columns and of the DICOM name in any order), birth ' ...
     'date (birthdate, dateofbirth, dob, geburtsdatum; year and month), scan date (scandate, date, datetime, ' ...
     'acquisitiondate, datum; day and the closest time), and visit (visit, session, timepoint; number of the session ' ...
-    'of the subject by date). Dates as yyyy-mm-dd, yyyymmdd, dd.mm.yyyy, or dd/mm/yyyy (with optional time). ']
+    'of the participant by date). Dates as yyyy-mm-dd, yyyymmdd, dd.mm.yyyy, or dd/mm/yyyy (with optional time). ']
     ''
-   ['Rows with a scan date or visit have to match exactly one session, rows without all sessions of one subject. ' ...
-    'Sessions with several rows of a table get no data of this table. The data of a table are replaced by each ' ...
-    'import of the table (by its file name). The match of each row is given in the private table ' ...
-    'catDCM2BIDSdb-tables/phenotypic_<table>.csv. ']
+   ['Rows with a scan date or visit (session rows) have to match one session, rows without (participant rows) all ' ...
+    'sessions of one participant (also of several scanners). Key values can also be patterns: "*" for all values, ' ...
+    'wildcards (e.g. 002_S_* for all participants of the ADNI site 002, or Muster*), a year or month (e.g. 2023 or ' ...
+    '2023-05), and ranges of dates or visits (e.g. 2023-09-01..2026-12-31, 2023.., or 2..3). The values of a session ' ...
+    'are combined from all its rows by their specificity: session rows replace participant rows, and these replace ' ...
+    'pattern rows, where pattern rows replace the values of former pattern rows (e.g. study defaults in a first row ' ...
+    '"*,*,*,*,DZPG,JE1,NC" and the site or participant values below). Empty cells replace nothing. Different values ' ...
+    'of rows of the same specificity (participant or session) are a conflict, i.e. the session gets no value of ' ...
+    'this column. The data of a table are replaced by each import of the table (by its file name). The match of ' ...
+    'each row is given in the private table catDCM2BIDSdb-tables/phenotypic_<table>.csv. ']
     ''
-    'E.g. a "visits.csv" with:'
-    '  name, surname, scandate, MMSE, group'
-    '  Max, Mustermann, 2025-11-20, 29, control'
+   ['See DCM2BIDS/study/cat_study_phenotype.csv as template with the key columns name, surname, scandate, and ' ...
+    'participantID and the data columns organizationName (e.g. DZPG, ADNI, NKI), studyName (substudy or version, ' ...
+    'e.g. JE1, ADNI4), participantGroup (analysis group, e.g. NC, MCI, AD), sex, and handedness (described in ' ...
+    'cat_study_phenotype.json), e.g.:']
+    '  name, surname, scandate, participantID, organizationName, studyName, participantGroup, sex, handedness'
+    '  Max, Mustermann, 2025-11-20, , DZPG, JE1, NC, M, R'
     ''
+    };
+
+  dsphenodict         = cfg_files;
+  dsphenodict.tag     = 'phenotypicdict';
+  dsphenodict.name    = 'Phenotype dictionary';
+  dsphenodict.filter  = 'any';
+  dsphenodict.ufilter = '.*\.(json|JSON)$';
+  dsphenodict.num     = [0 1];
+  dsphenodict.val     = {def.dataset.phenotypicdict};
+  dsphenodict.help    = {
+   ['JSON file for a common coding of the phenotypic data tables of different studies. Columns with a variant of ' ...
+    'a field name are renamed (e.g. gender, geschlecht -> sex; Research Group -> participantGroup), and their ' ...
+    'values with a variant of a level are replaced by its code (e.g. female, weiblich -> F; CN, HC -> NC). Numbers ' ...
+    'are never recoded by the dictionary (e.g. 1 is male in one study and female in another), but by the coding ' ...
+    'of each table, i.e. by the description of its header (e.g. "SEX (male = 1, female = 2)") or by the Levels of ' ...
+    'its JSON sidecar (e.g. table.json of table.csv). Other values are kept (with a warning). The default ' ...
+    'DCM2BIDS/study/cat_study_phenotype_dictionary.json contains organizationName, studyName, participantGroup, ' ...
+    'sex, and handedness, i.e. copy and extend it for your studies. ']
     };
 
   dsphenokeys         = cfg_entry;
@@ -973,12 +942,11 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   dataset          = cfg_branch;
   dataset.tag      = 'dataset';
   dataset.name     = 'Dataset Descriptor';
-  dataset.val      = {dsauthors, dsname, dshowto, dslicense, dsreadme, dsack, dsfunding, dsethics, dsrefs, dsdoi, ...
-                      dspheno, dsphenokeys};
+  dataset.val      = {dsstudy, dsreadme, dspheno, dsphenokeys, dsphenodict};
   dataset.help     = {
-   ['Description of the BIDS dataset that is written to the dataset_description.json and README.md ' ...
-    'files of the BIDS directory. BIDSVersion, DatasetType, and GeneratedBy (catDCM2BIDS and dcm2niix) are ' ...
-    'set automatically. ']};
+   ['Description of the BIDS dataset that is written to the dataset_description.json (by the study JSON) and ' ...
+    'README.md (by the study README) files of the BIDS directory, and phenotypic data of the sessions. ' ...
+    'BIDSVersion, DatasetType, and GeneratedBy (catDCM2BIDS and dcm2niix) are set automatically. ']};
 
 
   % main fields

@@ -1,0 +1,13 @@
+{
+  "_Description": "Study description of catDCM2BIDS for the dataset_description.json of the BIDS dataset (see cat_study_example.json). Empty fields are not written, an empty Name is replaced by the study subdirectory. BIDSVersion, DatasetType, and GeneratedBy are set automatically, fields with a leading underscore are ignored.",
+  "_License": "SPDX identifier, e.g. CC0-1.0 (public domain), PDDL-1.0, CC-BY-4.0, CC-BY-SA-4.0, CC-BY-NC-4.0, ODC-BY-1.0, or empty (e.g. data use agreement)",
+  "Name": "",
+  "License": "",
+  "Authors": [],
+  "Acknowledgements": "",
+  "HowToAcknowledge": "",
+  "Funding": [],
+  "EthicsApprovals": [],
+  "ReferencesAndLinks": [],
+  "DatasetDOI": ""
+}

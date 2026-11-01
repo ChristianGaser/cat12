@@ -292,29 +292,55 @@ function attachPhysio(Pphysio, Psnr)
 %  "folder=protocol=time=series_recording-<type>_physio.json" with their
 %  tsv.gz) to their fMRI scan of the scan directories Psnr, i.e., the scan
 %  with the same protocol name and study time (time part of the name) and
-%  the closest lower series number (e.g. series 13 of the PhysioLog of the
-%  fMRI series 11 with its SBRef 10). The files are stored as associated
-%  files of the scan (catDCM2BIDSassoc_<sidecar>_recording-<type>_physio.*)
-%  that are exported with the BIDS name of the scan (see processScans in
+%  the closest series number (at most 2 apart, the lower one for equal
+%  distances, without SBRef series), as the PhysioLog series can follow or
+%  precede its fMRI series (e.g. series 11 of the fMRI series 10 with its
+%  SBRef 9, but series 13 of the fMRI series 14 with its SBRef 12), and
+%  only the closest recording of each type of a scan (e.g. not the
+%  recording of a repeated fMRI scan that is missing in the DICOM data).
+%  The files are stored as associated files of the scan
+%  (catDCM2BIDSassoc_<sidecar>_recording-<type>_physio.*) that are
+%  exported with the BIDS name of the scan (see processScans in
 %  cat_io_dcm2bids_process). Recordings without (unique) scan are skipped.
 
-  % sidecars of the scan directories with their name parts
+  % sidecars of the scan directories with their name parts (without SBRef)
   Pjson = {};
   for si = 1:numel(Psnr)
     if exist(Psnr{si},'dir'), Pjson = [Pjson; cat_io_dcm2bids_db('getDBscanJSONs',Psnr{si})]; end %#ok<AGROW>
   end
   parts = cellfun(@(P) cat_io_dcm2bids_db('nameParts',spm_file(P,'basename')), Pjson, 'UniformOutput', false);
   ok    = cellfun(@numel,parts) == 4; Pjson = Pjson(ok); parts = parts(ok);
+  ok    = ~cellfun(@(P) isSBRef(cat_io_json(P)), Pjson); Pjson = Pjson(ok); parts = parts(ok);
   sn    = cellfun(@(p) str2double(regexp(p{4},'^\d+','match','once')), parts);
 
+  % scan series of each recording, and only the closest recording of each
+  % type and scan series
+  psn = nan(numel(Pphysio),1); ssn = nan(numel(Pphysio),1); rec = cell(numel(Pphysio),1); key = rec;
   for phi = 1:numel(Pphysio)
     p   = cat_io_dcm2bids_db('nameParts',spm_file(Pphysio{phi},'basename'));
-    psn = str2double(regexp(p{end},'^\d+','match','once'));
-    rec = regexprep(p{end},'^\d+[a-z]*_',''); % e.g. recording-cardiac_physio
+    psn(phi) = str2double(regexp(p{end},'^\d+','match','once'));
+    rec{phi} = regexprep(p{end},'^\d+[a-z]*_',''); % e.g. recording-cardiac_physio
+    if numel(p) == 4 && ~isempty(p{3}) && ~isnan(psn(phi))
+      c = find(cellfun(@(q) strcmp(q{2},p{2}) && strcmp(q{3},p{3}), parts) & abs(sn - psn(phi)) <= 2);
+      if ~isempty(c)
+        d = abs(sn(c) - psn(phi)) + 0.5 * (sn(c) > psn(phi)); % (the lower series for equal distances)
+        ssn(phi) = sn(c(find(d == min(d),1)));
+        key{phi} = sprintf('%s=%s=%d=%s',p{2},p{3},ssn(phi),rec{phi});
+      end
+    end
+  end
+  for phi = find(~isnan(ssn))'
+    o = find(strcmp(key,key{phi}));
+    if abs(psn(phi) - ssn(phi)) > min(abs(psn(o) - ssn(o))) % another recording is closer
+      ssn(phi) = nan;
+    end
+  end
+
+  for phi = 1:numel(Pphysio)
     cand = [];
-    if numel(p) == 4 && ~isempty(p{3}) && ~isnan(psn)
-      cand = find(cellfun(@(q) strcmp(q{2},p{2}) && strcmp(q{3},p{3}), parts) & sn < psn);
-      cand = cand(sn(cand) == max(sn(cand)));
+    if ~isnan(ssn(phi))
+      p    = cat_io_dcm2bids_db('nameParts',spm_file(Pphysio{phi},'basename'));
+      cand = find(cellfun(@(q) strcmp(q{2},p{2}) && strcmp(q{3},p{3}), parts) & sn == ssn(phi));
     end
     if isempty(cand) || numel(unique(cellfun(@fileparts,Pjson(cand),'UniformOutput',false))) > 1
       cat_io_cprintf('warn','  Physiological recording "%s" without (unique) fMRI scan - not imported.\n', ...
@@ -325,11 +351,17 @@ function attachPhysio(Pphysio, Psnr)
       for ext = {'.json','.tsv.gz'}
         if exist(spm_file(Pphysio{phi},'ext',ext{1}),'file')
           copyfile(spm_file(Pphysio{phi},'ext',ext{1}), fullfile(fileparts(Pjson{cand(ci)}), ...
-            sprintf('catDCM2BIDSassoc_%s_%s%s',spm_file(Pjson{cand(ci)},'basename'),rec,ext{1})));
+            sprintf('catDCM2BIDSassoc_%s_%s%s',spm_file(Pjson{cand(ci)},'basename'),rec{phi},ext{1})));
         end
       end
     end
   end
+end
+% =========================================================================
+function sb = isSBRef(V)
+%isSBRef. True for single-band reference images (SBRef in the series
+%  description, as their protocol name is that of the fMRI or DWI scan).
+  sb = isfield(V,'SeriesDescription') && cat_io_contains(lower(char(V.SeriesDescription)),{'sbref'});
 end
 % =========================================================================
 function msg = convertImages(Psnr, Pmdbdir, Ptmp, opts, Psub, quiet)

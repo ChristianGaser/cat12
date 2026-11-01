@@ -36,8 +36,12 @@ function varargout = cat_io_dcm2bids_pp_dwi(action,varargin)
 %        MD in the white matter (95th - 5th percentile, similar to the PSMD
 %        marker of small vessel disease but without skeleton), and the
 %        median MD of the brain
-%    (5) regional values: median FA and MD of the white matter regions of
-%        the Mori atlas of CAT (by the deformation of the T1w segmentation)
+%    (5) regional values: median FA and MD of the white matter tracts of
+%        the hcp1065 atlas of CAT (Yeh 2022, by the deformation of the T1w
+%        segmentation, in the WM of the T1w) and of the major tracts
+%        (groups of tracts, e.g. SLF I-III, see majorTracts in
+%        cat_io_dcm2bids_pp_anat), e.g. for the rendering (results of the
+%        former Mori regions or without major tracts are processed again)
 %  The results are saved in the database (catDCM2BIDSdwi_<scan>.json with
 %  the coregistration to the T1w, and the maps
 %  catDCM2BIDSdwi_<FA|DEC>_<scan>.nii in the undistorted space of the scan
@@ -144,12 +148,18 @@ function processScan(i,Pdbnii,Vjson,b,dwi,A,BIDSpathd,BIDSfile,opts,compute)
   missing = exist(Pjson,'file') && ~all(cellfun(@(m) hasMap(pth,pre,m,nam),req));
   % (and results without T1w, if a T1w is available now, e.g. of another session)
   missing = missing || (exist(Pjson,'file') && ~isempty(A) && ~cat_io_dcm2bids_pp_anat('hasT1w',Pjson));
+  % (and results of the former atlas of the regional values or without the
+  % major tracts)
+  if exist(Pjson,'file') && ~isempty(A)
+    Jo = cat_io_json(Pjson);
+    missing = missing || ~strcmp(fieldValue(fieldValue(Jo,'method',struct()),'atlas',''),atlasName) || ~isfield(Jo,'major');
+  end
   compute = compute || (exist(Pjson,'file') && cat_io_dcm2bids_pp_anat('levelOutdated',Pjson)) || missing;
   if ~compute && ~exist(Pjson,'file'), return; end
   if compute && (missing || cat_io_dcm2bids_pp_anat('levelUpdate',Pjson,opts))
     stime = tic;
     J = estimateScans(i,Pdbnii,Vjson,b,dwi,A,opts,pth,pre,nam);
-    J.method.duration = round(toc(stime));
+    J.method.duration = round(toc(stime)); J.software = cat_io_dcm2bids_helper('software');
     cat_io_json(Pjson,J);
   else
     J = cat_io_json(Pjson);
@@ -182,7 +192,7 @@ function processMix(dti,Pdbnii,Vjson,b,dwi,A,BIDSpathd,BIDSfile,opts)
       ~all(cellfun(@(m) hasMap(pth,pre,m,nam),req)) || cat_io_dcm2bids_pp_anat('levelUpdate',Pjson,opts)
     stime = tic;
     J = estimateScans(sc,Pdbnii,Vjson,b,dwi,A,opts,pth,pre,nam);
-    J.method.duration = round(toc(stime));
+    J.method.duration = round(toc(stime)); J.software = cat_io_dcm2bids_helper('software');
     J.method.mix.scan = scanName(BIDSfile{i});
     for k = 1:numel(J.method.mix.further), J.method.mix.further(k).scan = scanName(BIDSfile{sc(k+1)}); end
     cat_io_json(Pjson,J);
@@ -290,7 +300,7 @@ function [J,Ymap] = estimateDTI(sc,P,Prp,Pdbnii,Vjson,b,dwi,A,opts)
   M = eye(4); Qc = struct(); Rh = eye(3); Dn = []; 
   if ~isempty(A) % (rigid and non-linear coregistration to the T1w)
     [M,Qc,Dn] = cat_io_dcm2bids_pp_anat('coregAnat',Yb0u,Vi(1),A,opts);
-    L     = cat_io_dcm2bids_pp_anat('sampleAnat',Vi(1),M,A,{atlasFile('mori')},opts,Dn);
+    L     = cat_io_dcm2bids_pp_anat('sampleAnat',Vi(1),M,A,{atlasFile('hcp1065')},opts,Dn);
     brain = cat_vol_morph(L.c0 > 0.5,'e',1); wmT1 = L.c0 > 2.5; atlas = L.atlas{1}; mask = 'T1w segmentation (eroded by one voxel, with signal in all volumes)';
     Rh    = cat_io_dcm2bids_pp_anat('headRotation',A,M);
   else
@@ -350,16 +360,21 @@ function [J,Ymap] = estimateDTI(sc,P,Prp,Pdbnii,Vjson,b,dwi,A,opts)
   V1  = Rh * V1; V1 = V1 ./ max(eps,sqrt(sum(V1.^2,1)));   % head (MNI) orientation
   DEC = abs(V1) .* FA .* soft(brain)';                     % red, green, blue (soft brain mask)
 
-  % (4) global values in the white matter and (5) Mori WM regions
+  % (4) global values in the white matter and (5) hcp1065 WM tracts
   wm = wmT1(brain)' & FA > 0.2;
   G  = struct('FA_WM',median(FA(wm)),'MD_WM',median(MD(wm)),'AD_WM',median(AD(wm)),'RD_WM',median(RD(wm)), ...
     'MD_WM_peakwidth',diff(cat_stat_prctile(MD(wm),[5 95])),'MD_brain',median(MD),'WM_voxels',nnz(wm));
   R  = struct();
-  [id,abbr] = atlasRegions('mori','Vwm');
+  T   = cat_io_dcm2bids_pp_anat('atlasTable','hcp1065');
   lab = atlas(brain)';
-  for ri = 1:numel(id)
-    v = lab == id(ri) & wmT1(brain)';
-    if nnz(v) >= 10, R.(abbr{ri}) = struct('FA',median(FA(v)),'MD',median(MD(v)),'voxels',nnz(v)); end
+  for ri = 1:numel(T.id)
+    v = lab == T.id(ri) & wmT1(brain)';
+    if nnz(v) >= 10, R.(T.key{ri}) = struct('FA',median(FA(v)),'MD',median(MD(v)),'voxels',nnz(v)); end
+  end
+  Mj = struct(); Gt = cat_io_dcm2bids_pp_anat('majorTracts'); % (groups of tracts, e.g. SLF I-III)
+  for gi = 1:numel(Gt.key)
+    v = ismember(lab,Gt.ids{gi}) & wmT1(brain)';
+    if nnz(v) >= 10, Mj.(Gt.key{gi}) = struct('FA',median(FA(v)),'MD',median(MD(v)),'voxels',nnz(v)); end
   end
   mr = median(res); sr = 1.4826 * median(abs(res - mr));
 
@@ -367,7 +382,7 @@ function [J,Ymap] = estimateDTI(sc,P,Prp,Pdbnii,Vjson,b,dwi,A,opts)
   J.method = struct('level',opts.pplevel,'version',p.version,'DTI', ...
     sprintf('log-linear least squares fit (b0 and b <= %g s/mm2)',round(dtiShell(b{sc(1)}))), ...
     'volumes',numel(bs),'bvalues',unique(50 * round(bs / 50)),'denoising',denoising(opts), ...
-    'distortion_correction',dc,'brain',mask,'atlas','mori (CAT)','gradient_rotation','none', ...
+    'distortion_correction',dc,'brain',mask,'atlas',atlasName,'gradient_rotation','none', ...
     'DEC','absolute principal direction in the head (MNI) orientation times FA and soft brain mask (red x, green y, blue z)', ...
     'coregistration',Qc);
   if numel(sc) > 1
@@ -379,6 +394,7 @@ function [J,Ymap] = estimateDTI(sc,P,Prp,Pdbnii,Vjson,b,dwi,A,opts)
   J.coreg    = M; % world space of the scan to the world space of the T1w
   J.global   = G;
   J.regional = R;
+  J.major    = Mj;
   J.qc       = struct('outlier_volumes',sum(res > mr + 3*sr),'residual',reshape(res,1,[]), ...
     'voxels_without_signal',nnz(bad));                     % (brain voxels without signal in some volumes)
   Vo = struct('dim',dim,'mat',Vi(1).mat,'dt',[16 0],'pinfo',[1 0 0]');
@@ -548,15 +564,10 @@ function P = atlasFile(name)
   P = fullfile(fileparts(mfilename('fullpath')),'templates_MNI152NLin2009cAsym',[name '.nii']);
 end
 % =========================================================================
-function [id,abbr] = atlasRegions(name,col)
-%atlasRegions. Regions (ROIid and ROIabbr) of a CAT atlas with the value 1
-%  in the column col of its csv file (e.g. Vwm for white matter regions).
-  C = regexp(fileread(spm_file(atlasFile(name),'ext','.csv')),'\r?\n','split');
-  C = C(~cellfun('isempty',strtrim(C)));
-  H = strsplit(C{1},';'); D = cellfun(@(l) strsplit(l,';'),C(2:end),'UniformOutput',false);
-  D = vertcat(D{:});
-  ok = strcmp(strtrim(D(:,strcmp(H,col))),'1');
-  id = str2double(D(ok,strcmp(H,'ROIid'))); abbr = matlab.lang.makeValidName(strtrim(D(ok,strcmp(H,'ROIabbr'))));
+function name = atlasName
+%atlasName. Atlas of the regional values (see estimateDTI), e.g. to update
+%  the results of the former atlas.
+  name = 'hcp1065 (CAT)';
 end
 % =========================================================================
 function s = denoising(opts)

@@ -1,0 +1,22 @@
+{
+  "_Description": "Example study description of catDCM2BIDS for the dataset_description.json of the BIDS dataset (see cat_study_default.json).",
+  "Name": "Example MRI study",
+  "License": "CC-BY-4.0",
+  "Authors": [
+    "Jane Doe <jane.doe@uni-example.de>",
+    "John Smith <john.smith@uni-example.de>"
+  ],
+  "Acknowledgements": "We thank the MRI team of the University Example for the acquisition of the data.",
+  "HowToAcknowledge": "Please cite Doe J, Smith J (2026) An example MRI study. Journal of Examples 1:1-10.",
+  "Funding": [
+    "Example Research Foundation, grant EX 123/4-5"
+  ],
+  "EthicsApprovals": [
+    "Ethics committee of the University Example, approval 2025-123"
+  ],
+  "ReferencesAndLinks": [
+    "Doe J, Smith J (2026) An example MRI study. Journal of Examples 1:1-10.",
+    "https://www.uni-example.de/example-study"
+  ],
+  "DatasetDOI": "doi:10.12345/example.v1.0.0"
+}

@@ -20,20 +20,18 @@ function def = cat_io_dcm2bids_defaults
   def.nproc                 = 0;     % parallel background MATLAB processes for the subject packages (0 - none, i.e.
                                      % this process; each process needs about 4 GB RAM, see cat_io_dcm2bids_parallel)
 
-  % dataset description (dataset_description.json and README.md)
-  def.dataset.Name               = '';         % empty: study subdirectory
-  def.dataset.Authors            = {};         % one author per cell, e.g. 'Jane Doe <jane.doe@uni.de>'
-  def.dataset.HowToAcknowledge   = '';
-  def.dataset.License            = 'CC0-1.0';  % SPDX identifier, '' for none
-  def.dataset.README             = {''};       % text file with the head of the README.md
-  def.dataset.Acknowledgements   = '';
-  def.dataset.Funding            = {};
-  def.dataset.EthicsApprovals    = {};
-  def.dataset.ReferencesAndLinks = {};
-  def.dataset.DatasetDOI         = '';
+  % dataset description (dataset_description.json and README.md) by the study
+  % files of DCM2BIDS/study (cat_study_example.json as filled example), where
+  % scripts can still set the BIDS fields directly (e.g. def.dataset.Name),
+  % which replace the fields of the study JSON
+  Pstudy                         = fullfile(fileparts(mfilename('fullpath')),'DCM2BIDS','study');
+  def.dataset.study              = {fullfile(Pstudy,'cat_study_default.json')}; % BIDS fields of dataset_description.json
+  def.dataset.README             = {fullfile(Pstudy,'cat_study_readme.txt')};   % head of the README.md (<Name> is replaced)
   def.dataset.phenotypic         = {};         % tables (CSV/TSV) with phenotypic data of the sessions (see 
                                                % cat_io_dcm2bids_phenotypic), exported to the sessions files
   def.dataset.phenotypickeys     = [];         % key columns of the tables (numbers, empty: detected by their names)
+  def.dataset.phenotypicdict     = {fullfile(Pstudy,'cat_study_phenotype_dictionary.json')}; % column names and value
+                                               % codes of the tables (e.g. gender -> sex, weiblich -> F)
 
   def.dicts.Pprotocoldirs   = {};    % input DCM protocol directories
   def.dicts.Pcenterdict     = {};    % dictionary for center names (otherwise scanner ID)
@@ -100,7 +98,8 @@ function def = cat_io_dcm2bids_defaults
   def.opts.denoise          = 0;     % denoising (sanlm) of anat before the segmentation and of the DWI volumes 
                                      % before the tensor fit (see cat_io_dcm2bids_pp_dwi)
   def.opts.pplevel          = 4;     % preprocessing level, i.e. accuracy and time of the DTI and rs-fMRI measures 
-                                     % (see levelParameters in cat_io_dcm2bids_pp_anat): 1 - full quality (SPM default 
+                                     % (see levelParameters in cat_io_dcm2bids_pp_anat): 0 - high reliability (level 1
+                                     % with the rs-fMRI denoising for the test-retest reliability), 1 - full quality (SPM default 
                                      % parameters, reference), 2 - optimized (fast parameters, slight resolution 
                                      % limits), 3 - quick review (lower resolution, only the first DWI and BOLD
                                      % scan), 4 - preview; continuous levels with about 26, 9, 4, and 2.5 min for a
@@ -159,8 +158,14 @@ function def = cat_io_dcm2bids_defaults
   % NKI-RS, NKI-TRT, and Buchert test data with the default definition
   % (2026-10, n = 470-1290 per datatype; the DZPG definitions use the same
   % factors of the DZPG pilot data without percentile, see DCM2BIDS/DZPG3T)
+  % The rs-fMRI measures of the preprocessing (not part of the SQR, see 
+  % qualityRatings in cat_io_dcm2bids_pp_rsfmri) are the mean framewise 
+  % displacement FDM (mm) and the temporal noise TNM (1/tSNR of the GM) 
+  % with 0.75 and 2.5 times their median of the NKI-RS, NKI-TRT, and 
+  % TueKetCBASP test data (2026-11, n = 452).
   def.opts.qcdefault.anat   = struct('BSM',nan,          'WSM',nan,           'ISR',[0.0667 0.222],'NSR',[0.00127 0.039], 'RES',[0.8 2.0]);
-  def.opts.qcdefault.func   = struct('BSM',[0.065 0.237],  'WSM',nan,           'ISR',[0.0509 0.170],'NSR',[0.0246 0.0819],'RES',[2.0 4.0]);
+  def.opts.qcdefault.func   = struct('BSM',[0.065 0.237],  'WSM',nan,           'ISR',[0.0509 0.170],'NSR',[0.0246 0.0819],'RES',[2.0 4.0], ...
+                                     'FDM',[0.11 0.37],'TNM',[0.011 0.037]);
   def.opts.qcdefault.dwi    = struct('BSM',[0.0622 0.213],'WSM',[0.0299 0.0995],'ISR',[0.0347 0.116],'NSR',[0.0503 0.168], 'RES',[1.5 3.0]);
   def.opts.qcdefault.fmap   = struct('BSM',[0.00 0.15],    'WSM',nan,           'ISR',[0.0688 0.229],'NSR',[0.0199 0.0663],'RES',[2.0 4.0]);
   def.opts.qcdefault.other  = struct('BSM',[0.10 0.30],'WSM',nan,       'ISR',[0.10 0.25],'NSR',[0.03 0.10], 'RES',[2.0 4.0]);
@@ -174,6 +179,14 @@ function def = cat_io_dcm2bids_defaults
   def.opts.protocol.PFM     = [ 0 3.5];  % PFM for the marks 0.5 and 4.5 (i.e. about 1.1 marks per deviation point)
   def.opts.protocol.status  = [1.5 4.5]; % PFR limits of the protocol status: conform (PFR < 1.5, scans are named by
                                          % the protocol), semiconform, and nonconform (PFR > 4.5, unknown protocol)
+  % broad protocols of the scans that are required for the evaluation (T1w,
+  % T2w, FLAIR, BOLD, DWI of all vendors and field strengths), i.e. scans
+  % that are nonconform to the protocols of the study but fit one of these
+  % protocols are exported with "nonconform" in the acq label (also by
+  % opts.output 2) and preprocessed (e.g. the T1w of another sequence for
+  % the segmentation, see fallbackProtocol in cat_io_dcm2bids_protocols,
+  % '' - nonconform scans are only part of the tables of the database)
+  def.opts.protocol.fallback = fullfile(fileparts(mfilename('fullpath')),'DCM2BIDS','nonconform');
   % critical parameters, which are never the same if they differ (10 points,
   % i.e., nonconform), as well as the image component of the ImageType
   % (magnitude/phase) and the direction in the series name (e.g. PA of

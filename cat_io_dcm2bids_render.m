@@ -86,7 +86,14 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 %  report): the DEC map on the darkened bias-corrected image of the 
 %  segmentation of the session (e.g. dwi_DECt1w, FA as opacity, the DEC map
 %  in the space of the T1w by the non-linear coregistration if available,
-%  see toT1w in cat_io_dcm2bids_pp_anat), and the mean EPI with the network of the  
+%  see toT1w in cat_io_dcm2bids_pp_anat, with the abbreviations of the
+%  major WM tracts of the hcp1065 atlas of the T1w in the slices and their
+%  FA in the information panel, see majorTracts in cat_io_dcm2bids_pp_anat),
+%  the atlas label map of the segmentation (lotter2025 GM regions with the
+%  FreeSurfer colors and the GM as opacity, the abbreviations of the larger
+%  GM regions in the slices of the scan rows, see sliceLabels, and the
+%  volumes of the lobes in the information panel, see lobeVolumes in
+%  cat_io_dcm2bids_pp_anat), and the mean EPI with the network of the
 %  rs-fMRI (bold_conn: schematic network as vector graphics on the pages,
 %  i.e. axial slices with the 7 networks of both hemispheres, sagittal 
 %  slices with the parts of the networks (hemispheres averaged, ring for 
@@ -230,6 +237,7 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
   P = P( ~cellfun('isempty',regexp(P,'\.nii(\.gz)?$','once')) );
   P = P( cellfun('isempty',regexp(spm_file(P,'filename'),'^catDCM2BIDS(qc|dwi_wFA|dwi_DECt1w|dwimix_wFA|dwimix_DECt1w)_','once')) ); % QC maps (shown with their scan), wFA (analyses), and DECt1w (composite)
   P = P( cellfun('isempty',regexp(spm_file(P,'filename'),'^rsub-','once')) );          % realigned 4D data (equals its scan)
+  P = P( cellfun('isempty',regexp(spm_file(P,'filename'),'^hcp1065_','once')) );       % WM tracts (labels of the DEC composite)
   P = P( cellfun('isempty',regexp(P,'[\\/]fmap[\\/][^\\/]*$','once')) );                   % field maps
   isderiv = cat_io_contains(P,[filesep 'derivatives' filesep]);
   P = P( ~isderiv | cat_io_contains(P,[filesep 'derivatives' filesep 'catDCM2BIDS' filesep]) ); % (no derivatives of other pipelines)
@@ -247,7 +255,7 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
   F = struct('file',P,'name','','bidsname','','prefix','','sub','','ses','','dataset','', ...
     'datatype','','subtype','','group','','json','','SQR',nan,'QR',[],'T',[],'reg',[], ...
     'readerr',0,'dim',[],'vx',[],'nvol',nan,'qcmaps',struct(),'qcused',0,'pp',[],'kind','','under','','over','','Tu',[], ...
-    'seg',[],'dwi','','c0','','foreign','','t1other','');
+    'seg',[],'dwi','','c0','','foreign','','t1other','','lab',{{}});
   for fi = 1:numel(P)
     [pp,ff]  = fileparts(P{fi});
     ff       = regexprep(ff,'\.nii$','');
@@ -344,20 +352,21 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
     % segmentation (TIV and relative volumes, see cat_io_dcm2bids_pp_anat)
     % of the label map and the normalized GM, and the diffusion directions
     % of the b-value shells of DWI scans and their maps (bval of the scan)
-    if any(strcmp(prefix,{'c0','mwc1','neuromorphometrics'}))
+    if any(strcmp(prefix,{'c0','mwc1','lotter2025'}))
       Ps = fullfile(droot,reldir,['catDCM2BIDSsegus_' bidsname '.json']);
       if exist(Ps,'file'), try, F(fi).seg = cat_io_json(Ps); end, end %#ok<TRYNC>
     end
     % label map of the segmented anatomical scan for the scan and its bias-
     % corrected image (intensity window of the WM, see renderScanSlices)
-    if strcmp(F(fi).datatype,'anat') && any(strcmp(prefix,{'','m','neuromorphometrics'}))
+    if strcmp(F(fi).datatype,'anat') && any(strcmp(prefix,{'','m','lotter2025'}))
       F(fi).c0 = niiOf(fullfile(droot,reldir,['c0' bidsname]));
     end
-    % atlas label map of the segmentation (see regionalVolumes in 
-    % cat_io_dcm2bids_pp_anat): colored labels on the bias-corrected image 
-    % (otherwise the scan) with the registration of the session
-    if strcmp(F(fi).datatype,'anat') && strcmp(prefix,'neuromorphometrics')
-      F(fi).kind  = 'atlas'; F(fi).Tu = F(fi).T; 
+    % atlas label map of the segmentation (see regionalVolumes in
+    % cat_io_dcm2bids_pp_anat): colored GM regions (lotter2025) on the
+    % bias-corrected image (otherwise the scan) with the registration of
+    % the session
+    if strcmp(F(fi).datatype,'anat') && strcmp(prefix,'lotter2025')
+      F(fi).kind  = 'atlas'; F(fi).Tu = F(fi).T;
       F(fi).under = niiOf(fullfile(droot,reldir,['m' bidsname]));
       if isempty(F(fi).under), F(fi).under = niiOf(fullfile(rroot,reldir,bidsname)); end
     end
@@ -426,6 +435,7 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
             st = regexp(ba,'_([^_]+)$','tokens','once'); % suffix of the underlay (e.g. T1w)
             C  = composite(F(fi),'dec',Fm(1).file,'',[F(fi).prefix lower(st{1})]); C.Tu = Fm(1).T;
             C.c0 = Fm(1).c0; % (window of the underlay by its WM, see renderScanSlices)
+            C.over = niiOf(fullfile(fileparts(Fm(1).file),['hcp1065_' ba])); % (WM tracts of the T1w, labels)
             pf = 'catDCM2BIDSdwi'; if strcmp(F(fi).prefix,'mixDEC'), pf = 'catDCM2BIDSdwimix'; end
             Pt = niiOf(fullfile(pp,[pf '_DECt1w_' F(fi).bidsname]));
             if ~isempty(Pt), C.file = Pt; C.T = Fm(1).T; end % (DEC map in the space of the T1w)
@@ -472,7 +482,7 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
     Y = zeros(n,n,size(Kg,1),numel(Fg),'uint8'); Yov = Y; Yc = cell(1,numel(Fg)); nnew = 0;
     for fi = 1:numel(Fg)
       S = renderScanSlices(Fg(fi),Kg,ropts,Pcache(Fg(fi)));
-      Y(:,:,:,fi) = S.Y; Yov(:,:,:,fi) = S.Yov; Yc{fi} = S.C; nnew = nnew + S.new;
+      Y(:,:,:,fi) = S.Y; Yov(:,:,:,fi) = S.Yov; Yc{fi} = S.C; nnew = nnew + S.new; Fg(fi).lab = S.lab;
       Fg(fi).readerr = S.readerr; Fg(fi).dim = S.dim; Fg(fi).vx = S.vx; Fg(fi).nvol = S.nvol; Fg(fi).qcused = S.qc;
 
       % slice row without text (e.g. for a later HTML report)
@@ -493,7 +503,8 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
       np1 = renderOverviewPages(fh,Fg,Y(:,:,k1,:),Yov(:,:,k1,:),colorSlices(Yc,k1),Kg(k1,:),groups{gi},Pout,ropts,G);
     end
     if ropts.rows
-      np2 = renderRowPages(fh,Fg,Y(:,:,k2,:),Yov(:,:,k2,:),colorSlices(Yc,k2),Kg(k2,:),groups{gi}, ...
+      Fr = Fg; for fi = 1:numel(Fr), Fr(fi).lab = Fr(fi).lab(k2); end % (labels of the row slices)
+      np2 = renderRowPages(fh,Fr,Y(:,:,k2,:),Yov(:,:,k2,:),colorSlices(Yc,k2),Kg(k2,:),groups{gi}, ...
         fullfile(Pout,['render_' Fg(1).subtype '_rows_p%02d.png']),0,ropts,G);
     end
     cat_io_cprintf('blue',sprintf('  Rendered %4d images (%4d new) in %3d overview and %3d row page(s): %s\n', ...
@@ -524,7 +535,7 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
       for fi = 1:numel(Fs)
         Ks(:,:,fi) = epiSlices(Fs(fi),rowslices); % (slices of each scan, e.g. sagittal x=+30 for EPI)
         S = renderScanSlices(Fs(fi),Ks(:,:,fi),ropts,Pcache(Fs(fi)));
-        Y(:,:,:,fi) = S.Y; Yov(:,:,:,fi) = S.Yov; Yc{fi} = S.C;
+        Y(:,:,:,fi) = S.Y; Yov(:,:,:,fi) = S.Yov; Yc{fi} = S.C; Fs(fi).lab = S.lab;
         Fs(fi).readerr = S.readerr; Fs(fi).dim = S.dim; Fs(fi).vx = S.vx; Fs(fi).nvol = S.nvol; Fs(fi).qcused = S.qc;
       end
       Pout = fullfile(Preport,Fs(1).dataset,'subjects');
@@ -579,7 +590,7 @@ function bi = summaryScans(Fs)
 %  mixed DTI if available), and the network of the rs-fMRI.
   st  = regexprep({Fs(~cellfun('isempty',regexp({Fs.subtype},'_c0$','once'))).subtype},'_c0$','');
   dec = {Fs(strcmp({Fs.kind},'dec')).subtype}; mix = dec(contains(dec,'mix')); if ~isempty(mix), dec = mix; end
-  types = {st, strcat(st,'_c0'), strcat(st,'_neuromorphometrics'), strcat(st,'_mwc1'), dec, {'bold_conn'}}; bi = [];
+  types = {st, strcat(st,'_c0'), strcat(st,'_lotter2025'), strcat(st,'_mwc1'), dec, {'bold_conn'}}; bi = [];
   for ti = 1:numel(types)
     k = find(ismember({Fs.subtype},types{ti}));
     if isempty(k), continue; end
@@ -747,6 +758,7 @@ function np = renderRowPages(fh,Fg,Y,Yov,Yc,K,ttl,Ppage,showgroup,ropts,G)
       fi = (pgi-1)*nps + si;
       for ci = 1:3
         if ~ism(fi,ci), drawOverlayLines(ax,Lv{fi},ci,x0 + (ci-1)*n,pht + (si-1)*bh + phh,G.ovc); end
+        if numel(Fg(fi).lab) >= ci, drawSliceLabels(ax,Fg(fi).lab{ci},x0 + (ci-1)*n,pht + (si-1)*bh + phh,fs-3); end
         if ~isempty(Gn{fi}), drawNetworkVector(ax,Gn{fi},ci,x0 + (ci-1)*n,pht + (si-1)*bh + phh); end
       end
     end
@@ -781,9 +793,9 @@ function np = renderRowPages(fh,Fg,Y,Yov,Yc,K,ttl,Ppage,showgroup,ropts,G)
         text(ax,x0 + (ci-1)*n + n/2,y0 + phh + 2,ao,'Color',[1 0.3 0.3],'FontSize',fs-1,'Interpreter','tex', ...
           'HorizontalAlignment','center','VerticalAlignment','top','BackgroundColor','k','Margin',1);
       end
-      ti = renderInfoText(Fg(fi),G.col2mark); % (one text per line for the line height)
-      for li = 1:numel(ti)
-        text(ax,xi + 3,y0 + phh + 3 + (li-1)*lh,ti{li},'Color','w','FontSize',fs,'Interpreter','tex','VerticalAlignment','top');
+      ti = renderInfoText(Fg(fi),G.col2mark); % (one text per line for the line height,
+      for li = 1:numel(ti)                     %  baseline: superscripts do not shift the line)
+        text(ax,xi + 3,y0 + phh + 3 + (li-0.2)*lh,ti{li},'Color','w','FontSize',fs,'Interpreter','tex','VerticalAlignment','baseline');
       end
     end
 
@@ -805,11 +817,16 @@ function txt = renderInfoText(F,col2mark)
 %  and timing of the sidecar of the raw scan, only for scans, their 
 %  bias-corrected images, and maps of DWI and fMRI, i.e. not for the 
 %  segmentation), image size, and the results of the preprocessing, with
-%  the MNI registration (with the session orientation rating SOR, the 
-%  coverage BBR, and the phase-encoding reversal PRR) after the quality.
+%  the MNI registration (with the session orientation rating SOR, the
+%  coverage BBR, the phase-encoding reversal PRR, and the protocol PFR)
+%  after the quality. Measures are gray and their values white (e.g. "TR"
+%  and "2400 ms", see pv), ratings and regions in their colors.
   tex    = @(s) regexprep(s,'([_\\{}^])','\\$1');
   colstr = @(v) sprintf('\\color[rgb]{%0.2f %0.2f %0.2f}',col2mark(v));
   wht    = '\color[rgb]{1 1 1}';
+  gry    = '\color[rgb]{0.7 0.7 0.7}';
+  pv     = @(m,v) [gry m ' ' wht v];                 % measure and value
+  sep    = strrep([gry ', '],'\','\\');              % gray separator (strjoin processes escape sequences of the delimiter)
   red    = '\color[rgb]{1 0.3 0.3}';
   if isnan(F.SQR), c = wht; else, c = colstr(F.SQR); end
 
@@ -831,20 +848,26 @@ function txt = renderInfoText(F,col2mark)
   % registration (rotation of the scanner space to MNI) before the further
   % ratings (e.g. the coverage BBR)
   if ~isempty(F.reg) && strcmp(F.reg.method,'template')
-    txt{end+1} = sprintf('%sMNI: template space (spatially normalized)',wht);
+    txt{end+1} = [gry 'MNI: ' wht 'template space (spatially normalized)'];
   elseif ~isempty(F.reg)
     ro = round(F.reg.imat(4:6)*1800/pi)/10; ro(ro==0) = 0; % avoid "-0"
-    txt{end+1} = sprintf('%sMNI: %s, rotation %+0.1f %+0.1f %+0.1f%s',wht,tex(F.reg.method),ro,char(176));
+    txt{end+1} = [gry 'MNI: ' wht tex(F.reg.method) ', ' pv('rotation',sprintf('%+0.1f %+0.1f %+0.1f%s',ro,char(176)))];
     if isfinite(F.reg.SOR), txt{end} = sprintf('%s  %sSOR %0.1f',txt{end},colstr(F.reg.SOR),F.reg.SOR); end
   end
   if isempty(F.T), txt{end+1} = [red 'no MNI registration']; end
-  % further ratings: coverage and phase-encoding reversal at the end of
-  % the registration line, the others (e.g. PFR) in their own line
+  % further ratings: coverage, phase-encoding reversal, and protocol at the
+  % end of the registration line (a new line only for ratings beyond the
+  % panel, about 65 characters without the TeX commands, e.g. for the
+  % coregistration to the T1w of another session), the others in their
+  % own line
   if isstruct(F.QR)
-    fn = setdiff(fieldnames(F.QR),[qm {'BSM','ISR','NSR','WSM','RES','SQR','vx_vol'}],'stable'); fn = fn(cellfun(isr,fn));
-    fg = fn(ismember(fn,{'BBR','PRR'})); fn = fn(~ismember(fn,{'BBR','PRR'}));
+    fn = setdiff(fieldnames(F.QR),[qm {'BSM','ISR','NSR','WSM','RES','SQR','vx_vol','FDR','TNR'}],'stable'); fn = fn(cellfun(isr,fn)); % (FDR and TNR: color of FD and tSNR)
+    fg = intersect({'BBR','PRR','PFR'},fn,'stable')'; fn = fn(~ismember(fn,fg));
     if ~isempty(fg) && (~isempty(F.reg) || isempty(F.T))
-      txt{end} = [txt{end} '  ' strjoin(cellfun(rt,fg(:)','UniformOutput',false),'  ')];
+      vis = @(s) numel(regexprep(s,'\\color\[rgb\]\{[^}]*\}|\\bf|[{}\\]',''));
+      for k = 1:numel(fg)
+        if vis([txt{end} '  ' rt(fg{k})]) > 65, txt{end+1} = rt(fg{k}); else, txt{end} = [txt{end} '  ' rt(fg{k})]; end %#ok<AGROW>
+      end
     elseif ~isempty(fg)
       fn = [fg; fn];
     end
@@ -866,36 +889,53 @@ function txt = renderInfoText(F,col2mark)
     tim = {'RepetitionTime','TR'; 'EchoTime','TE'; 'InversionTime','TI'};
     for i = 1:size(tim,1)
       if isfield(J,tim{i,1}) && isnumeric(J.(tim{i,1})) && ~isempty(J.(tim{i,1}))
-        str{end+1} = sprintf('%s %0.5g ms',tim{i,2},round(1000*J.(tim{i,1})(1),2)); %#ok<AGROW>
+        str{end+1} = pv(tim{i,2},sprintf('%0.5g ms',round(1000*J.(tim{i,1})(1),2))); %#ok<AGROW>
       end
     end
-    if isfield(J,'FlipAngle') && isnumeric(J.FlipAngle) && ~isempty(J.FlipAngle), str{end+1} = sprintf('flip %g%s',J.FlipAngle(1),char(176)); end
-    if ~isempty(str), txt{end+1} = [wht strjoin(str,', ')]; end
+    if isfield(J,'FlipAngle') && isnumeric(J.FlipAngle) && ~isempty(J.FlipAngle), str{end+1} = pv('flip',sprintf('%g%s',J.FlipAngle(1),char(176))); end
+    if ~isempty(str), txt{end+1} = [wht strjoin(str,sep)]; end
   end
 
   % image (and QC maps)
   if ~isempty(F.dim)
-    txt{end+1} = sprintf('%smatrix: %dx%dx%d (%d volume(s)), voxel: %0.2fx%0.2fx%0.2f mm',wht,F.dim(1:3),F.nvol,F.vx);
+    txt{end+1} = [pv('matrix:',sprintf('%dx%dx%d (%d volume(s))',F.dim(1:3),F.nvol)) gry ', ' pv('voxel:',sprintf('%0.2fx%0.2fx%0.2f mm',F.vx))];
   end
   if F.qcused, txt{end+1} = [wht 'denoised average of the QC']; end
 
   % segmentation (label map and normalized GM) and diffusion directions
   sg = @(f) fieldValue(F.seg,f,nan);
   if isstruct(F.seg) && strcmp(F.prefix,'c0')
-    txt{end+1} = sprintf('%sTIV %0.0f ml, rGMV %0.1f%%, rWMV %0.1f%%, rCSFV %0.1f%%, ll %0.0f',wht,sg('TIV'), ...
-      100*sg('rGMV'),100*sg('rWMV'),100*sg('rCSFV'),fieldValue(fieldValue(F.seg,'qc',struct()),'TPMll',nan));
+    txt{end+1} = strjoin({pv('TIV',sprintf('%0.0f ml',sg('TIV'))),pv('rGMV',sprintf('%0.1f%%',100*sg('rGMV'))), ...
+      pv('rWMV',sprintf('%0.1f%%',100*sg('rWMV'))),pv('rCSFV',sprintf('%0.1f%%',100*sg('rCSFV'))), ...
+      pv('ll',sprintf('%0.0f',fieldValue(fieldValue(F.seg,'qc',struct()),'TPMll',nan)))},sep);
   elseif isstruct(F.seg) && strcmp(F.prefix,'mwc1')
-    txt{end+1} = sprintf('%sTIV %0.0f ml, rGMV %0.1f%%, aGMV %0.0f ml, ll %0.0f',wht,sg('TIV'),100*sg('rGMV'), ...
-      sg('aGMV'),fieldValue(fieldValue(F.seg,'qc',struct()),'TPMll',nan));
+    txt{end+1} = strjoin({pv('TIV',sprintf('%0.0f ml',sg('TIV'))),pv('rGMV',sprintf('%0.1f%%',100*sg('rGMV'))), ...
+      pv('aGMV',sprintf('%0.0f ml',sg('aGMV'))),pv('ll',sprintf('%0.0f',fieldValue(fieldValue(F.seg,'qc',struct()),'TPMll',nan)))},sep);
   elseif strcmp(F.kind,'atlas')
-    nr = numel(fieldnames(fieldValue(F.seg,'regional',struct())));
-    txt{end+1} = sprintf('%satlas: %s (CAT), %d regions',wht,tex(F.prefix),nr);
+    % atlas and the volumes of the lobes and further parts (both
+    % hemispheres) in % of the TIV with the asymmetry (see lobeVolumes in
+    % cat_io_dcm2bids_pp_anat)
+    R = fieldValue(F.seg,'regional',struct());
+    txt{end+1} = pv('GM:',sprintf('lotter2025 (CAT, Desikan-Killiany and aseg, %d regions)',numel(fieldnames(R))));
+    if isfinite(sg('TIV')) && sg('TIV') > 0
+      L  = cat_io_dcm2bids_pp_anat('lobeVolumes',R,sg('TIV'));
+      fl = setdiff(fieldnames(L),{'asymmetry'},'stable');
+      if any(cellfun(@(f) L.(f),fl) > 0)
+        vol = @(v) sprintf('%0.*f',1 + (v < 1),v); % (e.g. 12.1 or 0.54)
+        str = [cellfun(@(f) pv(f,vol(L.(f))),fl(:)','UniformOutput',false), ...
+          {pv('asymmetry (L-R)',sprintf('%+0.1f%%',L.asymmetry))}];
+        for k = 1:4:numel(str)
+          pre = [gry '% TIV: ']; if k > 1, pre = ''; end
+          txt{end+1} = [pre strjoin(str(k:min(end,k+3)),sep)]; %#ok<AGROW>
+        end
+      end
+    end
   end
   if startsWith(F.prefix,'mix') && isstruct(F.pp) && isfield(F.pp,'method') && isfield(F.pp.method,'mix')
-    txt{end+1} = sprintf('%smixed DTI of %d scans: %d volumes (b <= 1300)',wht, ...
-      1 + numel(fieldValue(F.pp.method.mix,'further',[])),fieldValue(F.pp.method,'volumes',nan));
+    txt{end+1} = pv(sprintf('mixed DTI of %d scans:',1 + numel(fieldValue(F.pp.method.mix,'further',[]))), ...
+      sprintf('%d volumes (b <= 1300)',fieldValue(F.pp.method,'volumes',nan)));
   elseif ~isempty(F.dwi)
-    txt{end+1} = [wht 'directions: ' F.dwi];
+    txt{end+1} = pv('directions:',F.dwi);
   end
 
   % DTI and rs-fMRI: coregistration to the T1w (Dice of the brain masks),
@@ -903,20 +943,40 @@ function txt = renderInfoText(F,col2mark)
   if isstruct(F.pp)
     if isfield(F.pp,'method') && isfield(F.pp.method,'coregistration') && isfield(F.pp.method.coregistration,'Dice')
       Qc = F.pp.method.coregistration; dn = nan; if isfield(Qc,'Dice_nonlinear'), dn = Qc.Dice_nonlinear; end
-      cc = wht; if max([Qc.Dice Qc.Dice_scanner dn]) < 0.8, cc = red; end
-      txt{end+1} = sprintf('%sDice to T1w %0.2f (scanner %0.2f)',cc,Qc.Dice,Qc.Dice_scanner);
+      txt{end+1} = [pv('Dice to T1w',sprintf('%0.2f',Qc.Dice)) gry ' (' pv('scanner',sprintf('%0.2f',Qc.Dice_scanner)) gry ')'];
       if isfinite(dn) && isfield(Qc,'displacement')
-        txt{end} = sprintf('%s, non-linear %0.2f (%0.1f mm)',txt{end},dn,Qc.displacement(1));
-        if isfield(Qc,'method') && ischar(Qc.method) && contains(Qc.method,'not used'), txt{end} = [txt{end} ' not used']; end
+        txt{end} = [txt{end} gry ', ' pv('non-linear',sprintf('%0.2f',dn)) gry ' (' wht sprintf('%0.1f mm',Qc.displacement(1)) gry ')'];
+        if isfield(Qc,'method') && ischar(Qc.method) && contains(Qc.method,'not used'), txt{end} = [txt{end} gry ' not used']; end
       end
+      if max([Qc.Dice Qc.Dice_scanner dn]) < 0.8, txt{end} = [red regexprep(txt{end},'\\color\[rgb\]\{[^}]*\}','')]; end % (warning)
     end
     if isfield(F.pp,'global') && isfield(F.pp.global,'FA_WM')
       g = F.pp.global;
-      txt{end+1} = sprintf('%sWM: FA %0.3f, MD %0.2f, AD %0.2f, RD %0.2f (10^{-3} mm^2/s)',wht,g.FA_WM,1000*[g.MD_WM g.AD_WM g.RD_WM]);
+      txt{end+1} = [gry 'WM: ' strjoin({pv('FA',sprintf('%0.3f',g.FA_WM)),pv('MD',sprintf('%0.2f',1000*g.MD_WM)), ...
+        pv('AD',sprintf('%0.2f',1000*g.AD_WM)),pv('RD',sprintf('%0.2f',1000*g.RD_WM))},sep) gry ' (10^{-3} mm^2/s)'];
+    end
+    if isfield(F.pp,'major') && isstruct(F.pp.major) && (strcmp(F.kind,'dec') || any(strcmp(F.prefix,{'DEC','mixDEC','FA','mixFA'})))
+      % FA of the major tracts (left/right or both, lighter colors of the
+      % tracts, see majorTracts in cat_io_dcm2bids_pp_anat)
+      Gt = cat_io_dcm2bids_pp_anat('majorTracts'); [nam,ia] = unique(Gt.abbr,'stable'); str = {};
+      for k = 1:numel(nam)
+        v = cellfun(@(h) fieldValue(fieldValue(F.pp.major,h,struct()),'FA',nan),Gt.key(strcmp(Gt.abbr,nam{k})));
+        if all(isnan(v)), continue; end
+        str{end+1} = sprintf('\\color[rgb]{%0.2f %0.2f %0.2f}%s %s',0.5 * Gt.rgb(ia(k),:) + 0.5,nam{k}, ...
+          strjoin(arrayfun(@fmtValue,v,'UniformOutput',false),'/')); %#ok<AGROW>
+      end
+      for k = 1:4:numel(str)
+        pre = [gry 'FA (l/r) ']; if k > 1, pre = ''; end
+        txt{end+1} = [pre strjoin(str(k:min(end,k+3)),' ')]; %#ok<AGROW>
+      end
     end
     if isfield(F.pp,'qc') && isfield(F.pp.qc,'FD_mean') && isfield(F.pp,'connectivity')
-      txt{end+1} = sprintf('%sFD %0.2f mm, tSNR %0.0f, GCOR %0.3f, segregation %0.2f',wht,F.pp.qc.FD_mean, ...
-        F.pp.qc.tSNR,F.pp.connectivity.GCOR,F.pp.connectivity.segregation);
+      % (FD and tSNR in the color of their ratings FDR and TNR of the QC 
+      % JSON, see qualityRatings in cat_io_dcm2bids_pp_rsfmri)
+      fc = wht; if isr('FDR'), fc = colstr(F.QR.FDR); end
+      tc = wht; if isr('TNR'), tc = colstr(F.QR.TNR); end
+      txt{end+1} = strjoin({[gry 'FD ' fc sprintf('%0.2f mm',F.pp.qc.FD_mean)],[gry 'tSNR ' tc sprintf('%0.0f',F.pp.qc.tSNR)], ...
+        pv('GCOR',sprintf('%0.3f',F.pp.connectivity.GCOR)),pv('segregation',sprintf('%0.2f',F.pp.connectivity.segregation))},sep);
     end
   end
   if any(strcmp(F.prefix,{'DEC','mixDEC'})) || strcmp(F.kind,'dec')
@@ -931,9 +991,9 @@ function txt = renderInfoText(F,col2mark)
     N = networkNodes; nets = {'Vis','SMN','DAN','VAN','Lim','FPN','DMN'}; % (visual, somatomotor, dorsal and
     lc = 0.65 * N.col + 0.35;                        % ventral attention, limbic, frontoparietal control, default mode; lighter text)
     R  = readConn(F.over); sg = nan(1,7); if ~isempty(R) && size(R,1) == numel(N.net), sg = networkSegregation(R,N.net); end
-    txt{end+1} = [wht 'seg. ' strjoin(arrayfun(@(i) sprintf('\\color[rgb]{%0.2f %0.2f %0.2f}%s %s',lc(i,:),nets{i}, ...
+    txt{end+1} = [gry 'seg. ' strjoin(arrayfun(@(i) sprintf('\\color[rgb]{%0.2f %0.2f %0.2f}%s %s',lc(i,:),nets{i}, ...
       regexprep(sprintf('%0.2f',sg(i)),'^(-?)0\.','$1.')),1:numel(nets),'UniformOutput',false),' ')]; % (e.g. .83)
-    txt{end+1} = [wht 'axial: networks per side, sagittal: parts (ring: left-right), matrix: z'];
+    txt{end+1} = [gry 'axial: networks per side, sagittal: parts (ring: left-right), matrix: z'];
   end
 end
 % =========================================================================
@@ -942,7 +1002,7 @@ function Fs = renderSubjectOrder(Fs,ropts)
 %  selected images of the subject perspective (if available) in the order
 %  (1) original anatomical scans of the type of the segmentation (e.g. 
 %  T1w), (2) label map of the segmentation (c0) and the atlas labels 
-%  (neuromorphometrics), (3) normalized GM (mwc1), (4) DEC map with the 
+%  (lotter2025 GM regions), (3) normalized GM (mwc1), (4) DEC map with the 
 %  bias-corrected image as underlay, and (5)  
 %  mean EPI with the network, i.e. similar images of several scans 
 %  together (e.g. first all original T1w), ordered by session and BIDS 
@@ -954,7 +1014,7 @@ function Fs = renderSubjectOrder(Fs,ropts)
   st  = regexprep({Fs(~cellfun('isempty',regexp({Fs.subtype},'_c0$','once'))).subtype},'_c0$',''); % (e.g. t1w)
   if isempty(st), st = {'t1w'}; end
   dec = unique({Fs(strcmp({Fs.kind},'dec')).subtype});
-  sel = [st strcat(st,'_c0') strcat(st,'_neuromorphometrics') strcat(st,'_mwc1') dec {'bold_conn'}];
+  sel = [st strcat(st,'_c0') strcat(st,'_lotter2025') strcat(st,'_mwc1') dec {'bold_conn'}];
   nr  = [ones(1,numel(st)) 2*ones(1,numel(st)) 3*ones(1,numel(st)) 4*ones(1,numel(st)) 5*ones(1,numel(dec)) 6];
   [iss,ri] = ismember({Fs.subtype},sel);
   if any(iss)
@@ -989,13 +1049,14 @@ function S = renderScanSlices(F,K,ropts,Pcache)
 %  map (volumes red, green, blue) and the composite images give color 
 %  slices S.C (uint8 n x n x 3 x slices, otherwise empty).
 %  S.Y (uint8 slices), S.Yov (overlay labels: 1-3 lines of the x/y/z-planes),
-%  S.K (slices), S.readerr, header information of the scan (S.dim, S.vx, 
+%  S.lab (text labels of the regions of each slice of the atlas and DEC 
+%  composites, see sliceLabels), S.K (slices), S.readerr, header information of the scan (S.dim, S.vx, 
 %  S.nvol), S.qc (1 - denoised average), and S.new (newly sampled).
   n   = round(ropts.fov / ropts.res);
   srcdate = dateOf(F.file);
   qcmaps = struct2cell(F.qcmaps); qcdate = nan(1,numel(qcmaps)); 
   for mi = 1:numel(qcmaps), D = dir(qcmaps{mi}); if ~isempty(D), qcdate(mi) = D(1).datenum; end; end
-  par = struct('version',13,'srcdate',srcdate,'qc',{fieldnames(F.qcmaps)'},'qcdate',qcdate, ...
+  par = struct('version',18,'srcdate',srcdate,'qc',{fieldnames(F.qcmaps)'},'qcdate',qcdate, ...
     'kind',F.kind,'part',{{F.under F.over}},'partdate',[dateOf(F.under) dateOf(F.over)], ...
     'T',F.T,'Tu',F.Tu,'fov',ropts.fov,'res',ropts.res,'interp',ropts.interp, ...
     'c0',F.c0,'c0date',dateOf(F.c0),'other',~isempty(otherT1w(F)));
@@ -1006,7 +1067,7 @@ function S = renderScanSlices(F,K,ropts,Pcache)
       C = load(Pcache,'S','par');
       [isK,ki] = ismember(K,C.S.K,'rows');
       if isequal(C.par,par) && all(isK)
-        S = C.S; S.K = K; S.Y = S.Y(:,:,ki); S.Yov = S.Yov(:,:,ki); S.new = 0;
+        S = C.S; S.K = K; S.Y = S.Y(:,:,ki); S.Yov = S.Yov(:,:,ki); S.lab = S.lab(ki); S.new = 0;
         if ~isempty(S.C), S.C = S.C(:,:,:,ki); end
         return
       end
@@ -1014,7 +1075,7 @@ function S = renderScanSlices(F,K,ropts,Pcache)
   end
 
   S = struct('K',K,'Y',zeros(n,n,size(K,1),'uint8'),'Yov',zeros(n,n,size(K,1),'uint8'),'C',[], ...
-    'readerr',0,'dim',[],'vx',[],'nvol',nan,'qc',0,'new',1);
+    'lab',{cell(1,size(K,1))},'readerr',0,'dim',[],'vx',[],'nvol',nan,'qc',0,'new',1);
   try
     % header (for .nii.gz without decompressing the whole file), where 4D 
     % data is represented by its denoised average or first volume (see
@@ -1111,9 +1172,17 @@ function S = renderScanSlices(F,K,ropts,Pcache)
           g  = 0.6 * g;
           d  = cat(4,sampleSlices(F.file,1,F.T,K,ropts),sampleSlices(F.file,2,F.T,K,ropts),sampleSlices(F.file,3,F.T,K,ropts));
           fa = sqrt(sum(d.^2,4)); a = 0.9 * min(1,max(0,(fa - 0.1) / 0.35)); % (no colors for low FA, e.g. GM)
-          S.C = uint8(255 * permute((1-a).*g + a.*(d ./ max(eps,max(d,[],4))),[1 2 4 3]));
-        case 'atlas' % labels of the atlas (colors of its table, nearest neighbor, 50% opacity) on the 
-                     % underlay (window by the WM of the label map of the segmentation as for anatomical scans)
+          S.C = (1-a).*g + a.*(d ./ max(eps,max(d,[],4)));
+          if ~isempty(F.over) % (abbreviations of the major WM tracts of the T1w, their FA in the information panel)
+            [Lt,Gt] = majorTractSlices(round(sampleSlices(F.over,1,F.Tu,K,ropts,0))); Lt = modeFilter(Lt);
+            S.lab = arrayfun(@(ki) sliceLabels(Lt(:,:,ki),1:numel(Gt.abbr),Gt.abbr,[1 1 1],40,ropts,false),1:size(K,1),'UniformOutput',false);
+          end
+          S.C = uint8(255 * permute(S.C,[1 2 4 3]));
+        case 'atlas' % GM regions of the lotter2025 atlas (FreeSurfer colors, nearest neighbor with 3x3 majority, see
+                     % modeFilter, also in the partial volume of the GM, see fillLabels) with the GM of the label map
+                     % of the segmentation as opacity (up to 70%, as the FA of the DEC map), and the abbreviations
+                     % of the larger GM regions (see sliceLabels), on the underlay (window by the WM of the label
+                     % map of the segmentation as for anatomical scans)
           u  = sampleSlices(F.under,1,F.Tu,K,ropts); g = windowSlices(u);
           if ~isempty(F.c0)
             try
@@ -1121,12 +1190,14 @@ function S = renderScanSlices(F,K,ropts,Pcache)
               if nnz(wm) > 100, g = min(1,max(0,(u - prctile(v,1)) / max(eps,prctile(u(wm),98) - prctile(v,1)))); end
             end
           end
-          L  = round(sampleSlices(F.file,1,F.T,K,ropts,0));
-          [lc,la] = atlasColors(F.prefix,max(L(:)));
-          c  = zeros([size(L) 3],'single'); 
-          for d = 1:3, cd = lc(:,d); c(:,:,:,d) = reshape(cd(max(1,L(:))),size(L)); end
-          a  = 0.5 * single(L > 0) .* reshape(la(max(1,L(:))),size(L)); % (white matter uncolored)
+          an = atlasOf(F.prefix);
+          L  = modeFilter(round(sampleSlices(F.file,1,F.T,K,ropts,0)));
+          if isempty(F.c0), gm = single(L > 0); else, gm = max(0,1 - abs(sampleSlices(F.c0,1,F.Tu,K,ropts) - 2)); end
+          gm = convn(gm,[1 2 1]' * [1 2 1] / 16,'same'); % (less noise of the GM/WM partial volume, e.g. in the thalamus)
+          L  = fillLabels(L,gm > 0); [c,a] = labelColors(L,an); a = 0.7 * gm .* (a > 0);
           S.C = uint8(255 * permute((1-a).*g + a.*c,[1 2 4 3]));
+          T  = cat_io_dcm2bids_pp_anat('atlasTable',an);
+          S.lab = arrayfun(@(ki) sliceLabels(L(:,:,ki) .* (gm(:,:,ki) > 0.5),T.id,T.abbr,[1 1 1],150,ropts,false),1:size(K,1),'UniformOutput',false);
         case 'conn' % mean EPI (the network is drawn as vector graphics on the pages, see networkGeometry)
           S.C = [];
       end
@@ -1356,6 +1427,102 @@ function [lc,la] = atlasColors(name,n)
   A  = cache(name); lc = 0.6 * ones(max(1,n),3); la = ones(max(1,n),1);
   ok = A.id >= 1 & A.id <= n; lc(A.id(ok),:) = A.rgb(ok,:);
   w  = A.wm(A.wm >= 1 & A.wm <= n); la(w) = 0;
+end
+% =========================================================================
+function an = atlasOf(prefix)
+%atlasOf. CAT atlas (table) of the atlas label map with the prefix (e.g.
+%  lotter2025_aparc for lotter2025, see regionalVolumes in 
+%  cat_io_dcm2bids_pp_anat), otherwise the prefix.
+  if strcmp(prefix,'lotter2025'), an = 'lotter2025_aparc'; else, an = prefix; end
+end
+% =========================================================================
+function [c,a] = labelColors(L,name)
+%labelColors. Colors c (0-1, size(L) x 3) and opacity a (0.5 for labels,
+%  otherwise 0, without white matter, see atlasColors) of the label slices
+%  L of the CAT atlas name.
+  [lc,la] = atlasColors(name,max(1,max(L(:))));
+  c  = zeros([size(L) 3],'single'); 
+  for d = 1:3, cd = lc(:,d); c(:,:,:,d) = reshape(cd(max(1,L(:))),size(L)) .* (L > 0); end
+  a  = 0.5 * single(L > 0) .* reshape(la(max(1,L(:))),size(L)); 
+end
+% =========================================================================
+function L = fillLabels(L,m)
+%fillLabels. Label slices L (n x n x slices) with the label of the nearest
+%  labeled pixel of the slice in the mask m (e.g. the partial volume of the
+%  GM around the label map of the GM, see cat_vbdist).
+  for ki = 1:size(L,3)
+    Ls = L(:,:,ki); f = m(:,:,ki) & Ls == 0; if ~any(Ls(:)) || ~any(f(:)), continue; end
+    [~,I] = cat_vbdist(single(repmat(Ls > 0,1,1,3))); I = double(I(:,:,2));
+    f = f & I > 0; Ls(f) = Ls(mod(I(f) - 1,numel(Ls)) + 1); L(:,:,ki) = Ls; % (index of the 3 slices)
+  end
+end
+% =========================================================================
+function [L,G] = majorTractSlices(L)
+%majorTractSlices. Label slices L of the hcp1065 tracts as label slices of
+%  the major tracts G (index, see majorTracts in cat_io_dcm2bids_pp_anat,
+%  e.g. lSLF of SLF I-III, other tracts 0).
+  G = cat_io_dcm2bids_pp_anat('majorTracts'); M = L; L(:) = 0;
+  for gi = 1:numel(G.key), L(ismember(M,G.ids{gi})) = gi; end
+end
+% =========================================================================
+function s = fmtValue(v)
+%fmtValue. Short text of a value, e.g. .45 for 0.45 (two decimals).
+  s = regexprep(sprintf('%0.2f',v),'^(-?)0\.','$1.');
+end
+% =========================================================================
+function lab = sliceLabels(L,id,str,col,minarea,ropts,box)
+%sliceLabels. Text labels of the regions id (texts str, colors col, one
+%  row or one per region) of the label slice L that cover at least minarea
+%  mm2 of the slice, at the point of the region with the largest distance
+%  to its border (i.e. within curved regions), without labels that would
+%  overlap the label of a larger region (text size of drawSliceLabels in 
+%  the scan rows, i.e. about 0.85 x 1.6 mm per character on a tile of 42 
+%  mm), with pixel positions x and y of the slice and a black box (e.g. on
+%  the colored DEC map, see drawSliceLabels).
+  lab = struct('x',{},'y',{},'str',{},'col',{},'box',{});
+  if size(col,1) == 1, col = repmat(col,numel(id),1); end
+  u = unique(L(L > 0)); u = u(ismember(u,id)); 
+  if isempty(u), return; end
+  area = arrayfun(@(k) nnz(L == k),u) * ropts.res^2; [area,o] = sort(area,'descend'); u = u(o);
+  px = size(L,1) / 42; xyw = zeros(0,3);                       % pixel per mm of the tile, boxes of the labels
+  for k = 1:numel(u)
+    if area(k) < minarea, break; end
+    m = L == u(k); 
+    try
+      D = cat_vbdist(single(repmat(~m,1,1,3)),true(size(m,1),size(m,2),3)); D = D(:,:,2) .* m;
+      [~,i] = max(D(:)); [y,x] = ind2sub(size(m),i);
+    catch % (centroid of the region)
+      [r,c] = find(m); [~,i] = min((r - mean(r)).^2 + (c - mean(c)).^2); y = r(i); x = c(i);
+    end
+    ri = find(id == u(k),1); w = (numel(str{ri}) * 0.85 + 0.6) * px; 
+    if ~isempty(xyw) && any(abs(xyw(:,1) - x) < (xyw(:,3) + w)/2 & abs(xyw(:,2) - y) < 1.8 * px), continue; end
+    xyw(end+1,:) = [x y w]; %#ok<AGROW>
+    lab(end+1) = struct('x',x,'y',y,'str',str{ri},'col',col(ri,:),'box',box); %#ok<AGROW>
+  end
+end
+% =========================================================================
+function L = modeFilter(L)
+%modeFilter. Majority of the 3x3 neighborhood of the labeled pixels of the
+%  label slices L (n x n x slices, background 0 unchanged), i.e. without
+%  isolated pixels of the nearest-neighbor sampling of the label maps
+%  (smoother borders between the regions).
+  for ki = 1:size(L,3)
+    Ls = L(:,:,ki); u = unique(Ls(Ls > 0)); if numel(u) < 2, continue; end
+    cnt = zeros([size(Ls) numel(u)],'single');
+    for k = 1:numel(u), cnt(:,:,k) = conv2(single(Ls == u(k)),ones(3,'single'),'same'); end
+    [~,i] = max(cnt,[],3); m = Ls > 0; Ls(m) = u(i(m)); L(:,:,ki) = Ls;
+  end
+end
+% =========================================================================
+function drawSliceLabels(ax,lab,x0,y0,fs)
+%drawSliceLabels. Text labels lab of a slice (see sliceLabels) in the
+%  axes ax of a page image (tile with the upper left corner x0,y0), with a
+%  black box for labels on colored images (e.g. the DEC map).
+  for k = 1:numel(lab)
+    bg = 'none'; if lab(k).box, bg = 'k'; end
+    text(ax,x0 + lab(k).x,y0 + lab(k).y,lab(k).str,'Color',lab(k).col,'FontSize',fs,'Interpreter','none', ...
+      'HorizontalAlignment','center','VerticalAlignment','middle','BackgroundColor',bg,'Margin',0.1);
+  end
 end
 % =========================================================================
 function g = windowSlices(Y)

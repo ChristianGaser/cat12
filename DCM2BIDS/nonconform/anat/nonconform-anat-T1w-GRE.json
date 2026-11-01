@@ -1,0 +1,10 @@
+{
+  "_Description": "Fallback protocol (see opts.protocol.fallback): 3D spoiled gradient-echo T1w without inversion of all vendors and field strengths (Philips T1W 3D FFE, Siemens FLASH, GE SPGR) with a higher flip angle than the inversion-recovery T1w and at least 0.8 mm slices (i.e. not the thinner slices of TOF angiography)",
+  "Modality": "MR",
+  "MagneticFieldStrength": {"min": 0.9, "max": 7.1},
+  "MRAcquisitionType": "3D",
+  "EchoTime": {"min": 0.001, "max": 0.008},
+  "RepetitionTime": {"min": 0.004, "max": 0.03},
+  "FlipAngle": {"min": 15, "max": 35},
+  "SliceThickness": {"min": 0.8, "max": 1.5}
+}

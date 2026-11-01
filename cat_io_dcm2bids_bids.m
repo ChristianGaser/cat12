@@ -33,6 +33,7 @@ function varargout = cat_io_dcm2bids_bids(action,varargin)
 %    cat_io_dcm2bids_bids('writePrivateTSV',P,Pprivate)
 %    sources = cat_io_dcm2bids_bids('getBIDSsources',roots)
 %    cat_io_dcm2bids_bids('writeDatasetFiles',Pbids,job,sources,convver)
+%    cat_io_dcm2bids_bids('checkStudy',ds)
 %    cat_io_dcm2bids_bids('writeProtocols',Pbids,Pp,Ptbldir[,level])
 %    cat_io_dcm2bids_bids('gzipunzipOutputdata',Poutdir,opts)
 %    ver = cat_io_dcm2bids_bids('namingVersion')
@@ -43,7 +44,7 @@ function varargout = cat_io_dcm2bids_bids(action,varargin)
     case {'bidsLabel','sessionLabel','setupDatatype','setupSuffix','entityString','setupTask','BIDSoutputs', ...
           'getBIDSoutputs','remapIntendedFor','writeSubjectTSV', ...
           'writeParticipantTSV','writePrivateTSV','getBIDSsources', ...
-          'writeDatasetFiles','writeProtocols','gzipunzipOutputdata','namingVersion'}
+          'writeDatasetFiles','checkStudy','writeProtocols','gzipunzipOutputdata','namingVersion'}
       [varargout{1:nargout}] = feval(action,varargin{:});
     otherwise
       error('cat_io_dcm2bids_bids:unknownAction','Unknown action "%s".',action);
@@ -602,8 +603,10 @@ function writeSubjectTSV(Vjson,sub,ses,Poutdir,BIDSsubdir,anon,SOR,site,extra,ac
   Tsubject(cellfun(@(v) (isnumeric(v) && isscalar(v) && isnan(v)) || (ischar(v) && isempty(v)), Tsubject)) = {'n/a'}; 
   [~,so] = sort(Tsubject(2:end,1)); Tsubject(2:end,:) = Tsubject(so+1,:); 
   
-  % write
-  cat_io_csv(Psubject,Tsubject,'','',struct('delimiter','\t')); 
+  % write (compact numbers, i.e. the same text for the numbers of the
+  % rows read from the file and for the phenotypic data given as text,
+  % e.g. 27.6 and not 27.6000)
+  cat_io_csv(Psubject,Tsubject,'','',struct('delimiter','\t','format','%g'));
 end
 % =========================================================================
 function writeParticipantTSV(P,Pparticipants,anon)
@@ -704,9 +707,11 @@ end
 % =========================================================================
 function writeDatasetFiles(Pbids, job, sources, convver)
 %writeDatasetFiles. BIDS dataset files of the BIDS directory Pbids: 
-%  dataset_description.json (from job.dataset, with automatic BIDSVersion, 
-%  DatasetType, and GeneratedBy), README.md (head from the job.dataset.README
-%  text file, extended by the README files of imported BIDS datasets), 
+%  dataset_description.json (from the study JSON job.dataset.study, see
+%  studyDescription, with automatic BIDSVersion, DatasetType, and
+%  GeneratedBy), README.md (head from the job.dataset.README text file with
+%  "<Name>" replaced by the dataset name, extended by the README files of
+%  imported BIDS datasets),
 %  participants.json (description of the columns of participants.tsv), 
 %  .bidsignore (files of catDCM2BIDS that are not part of BIDS), and the
 %  dataset_description.json of the derivatives of catDCM2BIDS (BIDS 
@@ -717,23 +722,20 @@ function writeDatasetFiles(Pbids, job, sources, convver)
 %  (from the import information of the scans). 
   if ~exist('sources','var'), sources = struct('Name',{},'License',{},'README',{},'participants',{}); end
   if ~exist('convver','var'), convver = {}; end
-  ds    = job.dataset; 
-  clean = @(c) reshape(c(~cellfun('isempty',strtrim(cellstr(c)))),1,[]); 
+  ds = job.dataset;
+  S  = studyDescription(ds);
 
-  % dataset_description.json (only non-empty fields)
-  D = struct(); 
-  if isempty(strtrim(ds.Name)), D.Name = job.subdir; else, D.Name = strtrim(ds.Name); end
-  D.BIDSVersion = '1.10.0'; 
-  D.DatasetType = 'raw'; 
-  lic = mostRestrictiveLicense([{ds.License}, {sources.License}], D.Name, {sources.Name}); 
-  if ~isempty(lic),                             D.License            = lic; end
-  if ~isempty(clean(ds.Authors)),               D.Authors            = clean(ds.Authors); end
-  if ~isempty(strtrim(ds.HowToAcknowledge)),    D.HowToAcknowledge   = strtrim(ds.HowToAcknowledge); end
-  if ~isempty(strtrim(ds.Acknowledgements)),    D.Acknowledgements   = strtrim(ds.Acknowledgements); end
-  if ~isempty(clean(ds.Funding)),               D.Funding            = clean(ds.Funding); end
-  if ~isempty(clean(ds.EthicsApprovals)),       D.EthicsApprovals    = clean(ds.EthicsApprovals); end
-  if ~isempty(clean(ds.ReferencesAndLinks)),    D.ReferencesAndLinks = clean(ds.ReferencesAndLinks); end
-  if ~isempty(strtrim(ds.DatasetDOI)),          D.DatasetDOI         = strtrim(ds.DatasetDOI); end
+  % dataset_description.json (only non-empty fields, the automatic fields
+  % first and the fields of the study in their order)
+  D = struct();
+  if isfield(S,'Name'), D.Name = S.Name; else, D.Name = job.subdir; end
+  D.BIDSVersion = '1.10.0';
+  D.DatasetType = 'raw';
+  if isfield(S,'License'), slic = S.License; else, slic = ''; end
+  lic = mostRestrictiveLicense([{slic}, {sources.License}], D.Name, {sources.Name});
+  if ~isempty(lic), D.License = lic; end
+  fn = setdiff(fieldnames(S),[fieldnames(D);{'License';'GeneratedBy'}],'stable');
+  for fi = 1:numel(fn), D.(fn{fi}) = S.(fn{fi}); end
   try
     [~,catver] = cat_version; 
   catch
@@ -749,9 +751,9 @@ function writeDatasetFiles(Pbids, job, sources, convver)
   cat_io_dcm2bids_helper('writeJSON',fullfile(Pbids,'dataset_description.json'), D); 
 
   % README.md: head and the README files of imported BIDS datasets
-  Preadme = char(ds.README); 
+  Preadme = char(ds.README);
   if ~isempty(Preadme) && exist(Preadme,'file')
-    txt = cat_io_dcm2bids_helper('readText',Preadme); 
+    txt = strrep(cat_io_dcm2bids_helper('readText',Preadme),'<Name>',D.Name);
   else
     txt = sprintf(['# %s\n\nBIDS dataset created by catDCM2BIDS (CAT), including the evaluation ' ...
       'of the MRI protocols, anonymization, and quality control.\n'], D.Name); 
@@ -809,6 +811,80 @@ function writeDatasetFiles(Pbids, job, sources, convver)
     if ~isempty(lic), Dd.License = lic; end
     cat_io_dcm2bids_helper('writeJSON',fullfile(Pd,'dataset_description.json'), Dd); 
   end
+end
+% =========================================================================
+function S = studyDescription(ds)
+%studyDescription. Non-empty BIDS fields of the study JSON ds.study (e.g.
+%  DCM2BIDS/study/cat_study_default.json) without the fields with a leading
+%  underscore (comments), where BIDS fields of the job (ds.Name etc. of
+%  scripts and batches of former versions) replace the fields of the JSON.
+  S = struct();
+  Pstudy = ''; if isfield(ds,'study'), Pstudy = char(ds.study); end
+  if ~isempty(Pstudy)
+    if ~exist(Pstudy,'file')
+      cat_io_cprintf('warn','  Study JSON "%s" not found - no study description.\n',Pstudy);
+    else
+      try
+        S = jsondecode(cat_io_dcm2bids_helper('readText',Pstudy));
+      catch e
+        cat_io_cprintf('warn','  Study JSON "%s" is no valid JSON file (%s) - no study description.\n',Pstudy,e.message);
+      end
+    end
+  end
+  if ~isstruct(S) || ~isscalar(S), S = struct(); end
+  fn = fieldnames(S); S = rmfield(S,fn(strncmp(fn,'x_',2))); % "_..." fields (named "x_..." by jsondecode)
+  fn = setdiff(fieldnames(ds),{'study','README','phenotypic','phenotypickeys','phenotypicdict'});
+  for fi = 1:numel(fn), S.(fn{fi}) = ds.(fn{fi}); end
+
+  % only non-empty fields (texts, lists of texts, and other values), where
+  % the BIDS lists are also lists for a single text
+  fn = fieldnames(S);
+  for fi = 1:numel(fn)
+    v = S.(fn{fi});
+    if (ischar(v) || isstring(v)) && ~any(strcmp(fn{fi},bidsLists))
+      v = strtrim(char(v));
+    elseif ischar(v) || isstring(v) || (iscell(v) && all(cellfun(@(c) ischar(c) || isstring(c),v)))
+      v = reshape(strtrim(cellstr(v)),1,[]); v = v(~cellfun('isempty',v));
+    end
+    if isempty(v), S = rmfield(S,fn{fi}); else, S.(fn{fi}) = v; end
+  end
+end
+% =========================================================================
+function checkStudy(ds)
+%checkStudy. Check of the study JSON and README of the job (ds =
+%  job.dataset) at the start of the batch, as they are only used at its
+%  end: missing or invalid files (see studyDescription), fields that are no
+%  BIDS fields of the dataset_description.json (e.g. "Author" instead of
+%  "Authors"), and licenses without SPDX identifier (e.g. "CC BY-NC" is
+%  written as CC-BY-NC-4.0, see licenseSPDX).
+  S = studyDescription(ds);
+  Pstudy = ''; if isfield(ds,'study'), Pstudy = spm_file(char(ds.study),'filename'); end
+  bids = [{'Name','BIDSVersion','HEDVersion','DatasetLinks','DatasetType','License','Acknowledgements', ...
+    'HowToAcknowledge','DatasetDOI','GeneratedBy','SourceDatasets'} bidsLists];
+  for f = setdiff(fieldnames(S),bids)'
+    sim = bids(strcmpi(bids,[f{1} 's']) | strcmpi(strcat(bids,'s'),f{1}) | strncmpi(bids,f{1},max(4,numel(f{1}) - 2)));
+    if isempty(sim), hint = ''; else, hint = sprintf(' (%s?)',strjoin(sim,', ')); end
+    cat_io_cprintf('warn','  Study JSON %s: "%s" is no BIDS field of the dataset_description.json%s.\n',Pstudy,f{1},hint);
+  end
+  if isfield(S,'License')
+    known = {'CC0-1.0','PDDL-1.0','ODC-BY-1.0','CC-BY-4.0','CC-BY-SA-4.0','CC-BY-NC-4.0'};
+    spdx  = licenseSPDX(S.License);
+    if ~any(strcmp(known,spdx))
+      cat_io_cprintf('warn',['  Study JSON %s: unknown license "%s" (written as given and treated as most ' ...
+        'restrictive, see the SPDX identifiers, e.g. %s).\n'],Pstudy,S.License,strjoin(known,', '));
+    elseif ~strcmp(spdx,S.License)
+      fprintf('  Study JSON %s: license "%s" is written as "%s".\n',Pstudy,S.License,spdx);
+    end
+  end
+  Preadme = ''; if isfield(ds,'README'), Preadme = strtrim(char(ds.README)); end
+  if ~isempty(Preadme) && ~exist(Preadme,'file')
+    cat_io_cprintf('warn','  Study README "%s" not found - standard text.\n',Preadme);
+  end
+end
+% =========================================================================
+function f = bidsLists
+%bidsLists. Fields of the dataset_description.json that are lists of texts.
+  f = {'Authors','Keywords','Funding','EthicsApprovals','ReferencesAndLinks'};
 end
 % =========================================================================
 function writeProtocols(Pbids,Pp,Ptbldir,level)

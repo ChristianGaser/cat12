@@ -105,6 +105,11 @@ function out = cat_io_dcm2bids(job)
     any(~cellfun('isempty',strtrim(cellstr(job.dataset.phenotypic))));
   if disclaimer, cat_io_cprintf('err','\n%s\n',cat_io_dcm2bids_readme('disclaimer',job.opts.anonymize)); end
 
+  % check of the study files and phenotypic tables before the (time-
+  % consuming) import, as they are only used at its end
+  cat_io_dcm2bids_bids('checkStudy',job.dataset);
+  cat_io_dcm2bids_phenotypic('checkTables',job.dataset.phenotypic,job.dataset.phenotypickeys,job.dataset.phenotypicdict);
+
   % GUI render choice: "norender" or "render" with the (expert) subfields
   if isfield(job.opts.render,'norender')
     job.opts.render     = rmfield(job.opts.render,'norender');
@@ -231,7 +236,8 @@ function out = cat_io_dcm2bids(job)
 
   % phenotypic data of the sessions (user tables matched to the sessions of
   % the database, exported to the sessions files, see cat_io_dcm2bids_phenotypic)
-  cat_io_dcm2bids_phenotypic('importTables',job.dataset.phenotypic,job.dataset.phenotypickeys,Pmdbdir,Ptbldir);
+  cat_io_dcm2bids_phenotypic('importTables',job.dataset.phenotypic,job.dataset.phenotypickeys,Pmdbdir,Ptbldir, ...
+    job.dataset.phenotypicdict);
 
   % age limit of the sessions (opts.agelimit): sessions outside the limit
   % or without age (e.g. age 0 of an undefined age) are not processed and
@@ -386,7 +392,7 @@ function [same,job] = checkPreviousSetting(Popts,job)
       end
       
       % Request user interaction 
-      p = spm_input('Different BIDS setup detected. Select how to go on.',1,'m', ...
+      p = userChoice('Different BIDS setup detected. Select how to go on.', ...
         {'Stop processing to update settings','Use old BIDS settings','Replace old BIDS directory'},[0 1 2],1); 
       if p == 1
         same      = 1;
@@ -423,7 +429,7 @@ function [same,job] = checkPreviousSetting(Popts,job)
           'BIDS directory, i.e. scans can get other names, whereas the files of their former names remain.\n']);
         if S.namingver ~= nver, cat_io_cprintf('blue','    BIDS naming version %d (old %d)\n',nver,S.namingver); end
         if ~isempty(chg), cat_io_cprintf('blue','    Changed protocols:\n      %s\n',strjoin(sort(chg),sprintf('\n      '))); end
-        p = spm_input('Changed protocols or BIDS naming. Select how to go on.',1,'m', ...
+        p = userChoice('Changed protocols or BIDS naming. Select how to go on.', ...
           {'Stop processing','Keep BIDS directory (old names remain)','Replace old BIDS directory'},[0 1 2],1);
         if p == 1
           saveSetting(Popts,job);
@@ -445,6 +451,20 @@ function [same,job] = checkPreviousSetting(Popts,job)
     if ~exist(spm_file(Popts,'path'),'dir'), mkdir(spm_file(Popts,'path')); end
     saveSetting(Popts,job);
     same = 1;
+  end
+end
+% =========================================================================
+function p = userChoice(question,labels,values,def)
+%userChoice. Answer of the user to the question with the options labels
+%  (spm_input menu with the values and the default option def), or in a 
+%  non-interactive session (matlab -batch, e.g. cluster jobs or parallel
+%  processes, where spm_input would wait forever) the default option.
+  try batch = batchStartupOptionUsed; catch, batch = false; end
+  if batch
+    p = values(def);
+    cat_io_cprintf('err','  %s Non-interactive session (matlab -batch): "%s".\n',question,labels{def});
+  else
+    p = spm_input(question,1,'m',labels,values,def);
   end
 end
 % =========================================================================

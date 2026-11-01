@@ -30,7 +30,12 @@ function varargout = cat_io_dcm2bids_pp_rsfmri(action,varargin)
 %    (5) nuisance regression of the GM signal (24 motion parameters, mean
 %        WM and CSF signal, linear trend, and DCT high-pass filter of
 %        0.01 Hz) and low-pass filter of 0.1 Hz (FFT), without global
-%        signal regression
+%        signal regression; for the high reliability of level 0 (see
+%        rsfmri in levelParameters of cat_io_dcm2bids_pp_anat) without
+%        low-pass filter, with the 6 low-pass filtered motion parameters
+%        (0.1 Hz, i.e. without the respiration of fast TRs), and with the
+%        censoring of the volumes with a FD of the filtered parameters
+%        above 0.5 mm (and of the following volume, Power et al. 2014)
 %    (6) functional connectivity: global correlation (GCOR, Saad et al.
 %        2013, average correlation of all GM voxels), Fisher-z correlation
 %        matrix of the parcels, average within-network connectivity of the
@@ -44,7 +49,9 @@ function varargout = cat_io_dcm2bids_pp_rsfmri(action,varargin)
 %  underlay of the network rendering via the coregistration and the 
 %  registration of the session, see cat_io_dcm2bids_render) and copied to 
 %  the BIDS derivatives (the matrix and map only for opts.preprocessing > 1,
-%  otherwise only in the derivatives index of the database).
+%  otherwise only in the derivatives index of the database), where the 
+%  mean FD and the temporal noise (1/tSNR) are rated in the QC JSON of the
+%  scan in the BIDS derivatives (FDR and TNR, see qualityRatings).
 %  The segmentation is the one of the session (T1w, otherwise UNIT1, T2w, 
 %  or FLAIR, see anatScan in cat_io_dcm2bids_pp_anat). The
 %  measures (4) and (6) without T1w segmentation are restricted to the
@@ -103,17 +110,20 @@ function processScan(i,Pdbnii,Vjson,datatype,suffix,A,BIDSpathd,BIDSfile,opts,co
 %  processSession), that are skipped if the results of the same or a lower
 %  preprocessing level exist (besides opts.rerun, see levelUpdate in
 %  cat_io_dcm2bids_pp_anat). Without compute, only existing results are
-%  exported (results of older versions are processed again).
+%  exported (results of older versions are processed again, as well as
+%  results of another denoising, i.e. of level 0 for the levels 1 to 4
+%  and vice versa, see denoisingText).
   [pth,nam] = fileparts(regexprep(Pdbnii{i},'\.gz$',''));
   Pjson = fullfile(pth,['catDCM2BIDSrsfmri_' nam '.json']);
   Pconn = fullfile(pth,['catDCM2BIDSrsfmri_conn_' nam '.tsv']);
-  % results of older versions and results without T1w (if a T1w is 
-  % available now, e.g. of another session) are processed again (also 
-  % without compute)
+  % results of older versions, of another denoising, and results without
+  % T1w (if a T1w is available now, e.g. of another session) are processed
+  % again (also without compute)
   noT1w   = exist(Pjson,'file') && ~isempty(A) && ~cat_io_dcm2bids_pp_anat('hasT1w',Pjson);
-  compute = compute || (exist(Pjson,'file') && cat_io_dcm2bids_pp_anat('levelOutdated',Pjson)) || noT1w;
+  other   = exist(Pjson,'file') && ~strcmp(resultDenoising(Pjson),denoisingText(opts.pplevel));
+  compute = compute || (exist(Pjson,'file') && cat_io_dcm2bids_pp_anat('levelOutdated',Pjson)) || noT1w || other;
   if ~compute && ~exist(Pjson,'file'), return; end
-  if compute && (noT1w || cat_io_dcm2bids_pp_anat('levelUpdate',Pjson,opts))
+  if compute && (noT1w || other || cat_io_dcm2bids_pp_anat('levelUpdate',Pjson,opts))
     stime = tic;
     [P,Prp] = cat_io_dcm2bids_pp_anat('qcFiles',Pdbnii{i},opts,'func'); % input and realignment of the QC (of the defaced copy for level 2)
     if isempty(Prp)
@@ -131,7 +141,7 @@ function processScan(i,Pdbnii,Vjson,datatype,suffix,A,BIDSpathd,BIDSfile,opts,co
       cat_io_cprintf([.5 .5 .5],'%60s : rs-fMRI skipped (less than 100 volumes or no motion parameters)\n',scanName(BIDSfile));
       return
     end
-    J.method.duration = round(toc(stime));
+    J.method.duration = round(toc(stime)); J.software = cat_io_dcm2bids_helper('software');
     cat_io_json(Pjson,J);
     if ~isempty(C), cat_io_dcm2bids_helper('writeTable',Pconn,C,'tsv'); end
     for mi = 1:numel(Ymap) % mean EPI in the space of the scan and in MNI space
@@ -166,8 +176,29 @@ function processScan(i,Pdbnii,Vjson,datatype,suffix,A,BIDSpathd,BIDSfile,opts,co
     end
   end
   Q = J.qc; F = J.connectivity;
-  fprintf('%60s : rs-fMRI FD %0.2f mm (%0.0f%% > 0.5), tSNR %0.0f, GCOR %0.3f, segregation %0.2f, %s\n', ...
-    scanName(BIDSfile),Q.FD_mean,Q.FD_pct05,Q.tSNR,F.GCOR,F.segregation,J.method.distortion_correction);
+  qualityRatings(fullfile(BIDSpathd,['catDCM2BIDSqc_' bnam '.json']),Q,opts);
+  cens = ''; if isfield(Q,'censored_pct'), cens = sprintf(', %0.0f%% censored',Q.censored_pct); end % (level 0)
+  fprintf('%60s : rs-fMRI FD %0.2f mm (%0.0f%% > 0.5%s), tSNR %0.0f, GCOR %0.3f, segregation %0.2f, %s\n', ...
+    scanName(BIDSfile),Q.FD_mean,Q.FD_pct05,cens,Q.tSNR,F.GCOR,F.segregation,J.method.distortion_correction);
+end
+% =========================================================================
+function qualityRatings(Pqcj,Q,opts)
+%qualityRatings. Quality measures of the rs-fMRI measures Q in the QC JSON
+%  Pqcj of the scan (in the BIDS derivatives, as the protocol rating PFR, 
+%  see cat_io_dcm2bids_process, not part of the SQR): mean framewise 
+%  displacement FDM (mm) and temporal noise TNM (1/tSNR of the GM) with 
+%  their ratings FDR and TNR (marks 1 and 6 for the [best worst] measures
+%  of opts.qcdefault.func, linear, clipped to 0.5-10.5, as qualityRating in
+%  cat_io_dcm2bids_qc).
+  if ~exist(Pqcj,'file') || ~isfield(opts,'qcdefault') || ~isfield(opts.qcdefault,'func'), return; end
+  D = opts.qcdefault.func; M = struct('FDM',Q.FD_mean,'TNM',1 / Q.tSNR); 
+  J = cat_io_json(Pqcj); 
+  for fn = {'FDM','TNM'}
+    if ~isfield(D,fn{1}) || numel(D.(fn{1})) ~= 2 || ~isfinite(M.(fn{1})), continue; end
+    J.qualitymeasures.(fn{1}) = M.(fn{1}); 
+    J.qualityrating.([fn{1}(1:2) 'R']) = max(0.5,min(10.5,(M.(fn{1}) - D.(fn{1})(1)) / diff(D.(fn{1})) * 5 + 1));
+  end
+  cat_io_json(Pqcj,J);
 end
 % =========================================================================
 function [J,C,Ymap] = estimateMeasures(i,P,Prp,Pdbnii,Vjson,datatype,suffix,A,opts)
@@ -216,7 +247,9 @@ function [J,C,Ymap] = estimateMeasures(i,P,Prp,Pdbnii,Vjson,datatype,suffix,A,op
   gm = ok & c0 >= 1.5 & c0 <= 2.5; wm = ok & c0 >= 2.9; csf = ok & c0 >= 0.5 & c0 <= 1.1;
 
   % (4) quality measures
-  FD   = [0; sum(abs(diff(rp(:,1:3))),2) + 50 * sum(abs(diff(rp(:,4:6))),2)];
+  p    = cat_io_dcm2bids_pp_anat('levelParameters',opts.pplevel); d = p.rsfmri; % (denoising of the level)
+  fd   = @(r) [0; sum(abs(diff(r(:,1:3))),2) + 50 * sum(abs(diff(r(:,4:6))),2)];
+  FD   = fd(rp);
   X1   = single([ones(T,1) (1:T)' / T]);
   mu   = mean(Y,1);
   sd   = std(Y(:,gm) - X1 * (X1 \ Y(:,gm)),0,1);
@@ -224,9 +257,22 @@ function [J,C,Ymap] = estimateMeasures(i,P,Prp,Pdbnii,Vjson,datatype,suffix,A,op
     'DVARS',median(sqrt(mean(diff(Y(:,ok),1,1).^2,2))) / mean(mu(ok)) * 100,'tSNR',median(mu(gm) ./ sd), ...
     'voxels_without_signal',nnz(bad));                     % (brain voxels without signal in some volumes)
 
-  % (5) nuisance regression of the GM signal and low-pass filter
-  dR = [zeros(1,6); diff(rp)];
-  Xn = [rp rp.^2 dR dR.^2];
+  % (5) nuisance regression of the GM signal and low-pass filter, with the
+  % low-pass filtered motion parameters and the censoring of level 0 (the
+  % regression is fitted to the remaining volumes, whose correlation is
+  % used, and the censored volumes are interpolated for the low-pass filter)
+  rpm = rp(:,1:6); keep = true(T,1);
+  if isfinite(d.rpfilter)
+    rpm = lowpass(rpm,TR,d.rpfilter); FDf = fd(rpm);
+    Q.FD_filtered_mean = mean(FDf); Q.FD_filtered_max = max(FDf);
+    if isfinite(d.censor)
+      b = find(FDf > d.censor); keep([b; min(T,b + 1)]) = false;
+      if nnz(keep) < T / 2, keep(:) = true; end             % (no censoring of more than half of the volumes)
+      Q.censored_pct = 100 * mean(~keep);
+    end
+  end
+  dR = [zeros(1,6); diff(rpm)];
+  if d.motion == 24, Xn = [rpm rpm.^2 dR dR.^2]; else, Xn = rpm; end
   if any(wm),  Xn = [Xn mean(Y(:,wm),2)];  end
   if any(csf), Xn = [Xn mean(Y(:,csf),2)]; end
   Xn = (Xn - mean(Xn,1)) ./ max(eps,std(Xn,0,1));
@@ -234,15 +280,18 @@ function [J,C,Ymap] = estimateMeasures(i,P,Prp,Pdbnii,Vjson,datatype,suffix,A,op
   Xd = spm_dctmtx(T,K + 1);
   X  = single([Xd (1:T)' / T Xn]);
   Yg = Y(:,gm); clear Y
-  Yg = Yg - X * (X \ Yg);
-  f  = (0:T-1)' / (T * TR); f = min(f,1/TR - f);
-  F  = fft(Yg,[],1); F(f > 0.1,:) = 0; Yg = real(ifft(F,[],1)); clear F
+  Yg = Yg - X * (X(keep,:) \ Yg(keep,:));
+  if isfinite(d.lowpass)
+    if ~all(keep), t = (1:T)'; Yg(~keep,:) = interp1(t(keep),Yg(keep,:),t(~keep),'linear','extrap'); end
+    Yg = lowpass(Yg,TR,d.lowpass);
+  end
+  Yg = Yg(keep,:);
 
   % (6) functional connectivity
   Z  = Yg ./ max(eps,sqrt(sum(Yg.^2,1)));                   % unit norm (zero mean after the regression)
   N  = struct('GCOR',double(sum(mean(Z,2).^2)),'within',nan,'between',nan,'segregation',nan,'parcels',0);
   [names,net,nets] = networks(parc);
-  pg = par(gm); np = numel(net); TS = nan(T,np,'single');
+  pg = par(gm); np = numel(net); TS = nan(size(Yg,1),np,'single');
   for p = 1:np
     v = pg == p;
     if nnz(v) >= 5, TS(:,p) = mean(Yg(:,v),2); end
@@ -259,15 +308,49 @@ function [J,C,Ymap] = estimateMeasures(i,P,Prp,Pdbnii,Vjson,datatype,suffix,A,op
     end
     C = [{'parcel'} names(:)'; names(:) num2cell(R)];
   end
-  p = cat_io_dcm2bids_pp_anat('levelParameters',opts.pplevel);
+  p = cat_io_dcm2bids_pp_anat('levelParameters',opts.pplevel); [nuis,lp] = denoisingFields(d);
   J.method = struct('level',opts.pplevel,'version',p.version,'volumes',T,'RepetitionTime',TR,'distortion_correction',dc,'masks',mask, ...
-    'nuisance','24 motion parameters, mean WM and CSF signal, linear trend, DCT high-pass 0.01 Hz', ...
-    'lowpass','0.1 Hz (FFT)','parcellation','Schaefer2018 100 parcels, 17 networks (CAT), 7 networks of Yeo 2011', ...
+    'nuisance',nuis,'lowpass',lp,'parcellation','Schaefer2018 100 parcels, 17 networks (CAT), 7 networks of Yeo 2011', ...
     'coregistration',Qc);
   if ~isempty(A), J.method.T1w = A.bids; J.method.T1w_other_session = isfield(A,'other') && A.other; end
   J.coreg = M; % world space of the scan to the world space of the T1w
   J.qc = Q;
   J.connectivity = N;
+end
+% =========================================================================
+function Y = lowpass(Y,TR,lp)
+%lowpass. Low-pass filter of the columns of Y (time series with the
+%  repetition time TR) with the cut-off frequency lp in Hz (FFT, the mean
+%  is kept).
+  T = size(Y,1); f = (0:T-1)' / (T * TR); f = min(f,1/TR - f);
+  F = fft(Y,[],1); F(f > lp,:) = 0; Y = real(ifft(F,[],1));
+end
+% =========================================================================
+function [nuis,lp] = denoisingFields(d)
+%denoisingFields. Description of the denoising d (rsfmri of levelParameters
+%  in cat_io_dcm2bids_pp_anat) for the method fields nuisance and lowpass
+%  of the results.
+  if d.motion == 24, mot = '24 motion parameters'; else, mot = sprintf('%d motion parameters',d.motion); end
+  if isfinite(d.rpfilter), mot = sprintf('%s (low-pass %g Hz)',mot,d.rpfilter); end
+  nuis = [mot ', mean WM and CSF signal, linear trend, DCT high-pass 0.01 Hz'];
+  if isfinite(d.censor), nuis = sprintf('%s, censoring of FD > %g mm (and the following volume)',nuis,d.censor); end
+  if isfinite(d.lowpass), lp = sprintf('%g Hz (FFT)',d.lowpass); else, lp = 'none'; end
+end
+% =========================================================================
+function s = denoisingText(level)
+%denoisingText. Denoising of the preprocessing level (see denoisingFields)
+%  to test whether existing results have another denoising.
+  p = cat_io_dcm2bids_pp_anat('levelParameters',level); [nuis,lp] = denoisingFields(p.rsfmri); s = [nuis '; ' lp];
+end
+% =========================================================================
+function s = resultDenoising(Pjson)
+%resultDenoising. Denoising of the result Pjson (see denoisingText; the
+%  denoising of the levels 1 to 4 for results without description).
+  s = denoisingText(1);
+  try
+    J = cat_io_json(Pjson);
+    if isfield(J,'method') && all(isfield(J.method,{'nuisance','lowpass'})), s = [J.method.nuisance '; ' J.method.lowpass]; end
+  end
 end
 % =========================================================================
 function [vdm,dc] = distortion(i,Pdbnii,Vjson,datatype,suffix,Vt,Yt,opts)

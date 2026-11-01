@@ -1,0 +1,10 @@
+{
+  "_Description": "Fallback protocol (see opts.protocol.fallback): T1w of all vendors and field strengths (3D MPRAGE, IR-FSPGR/BRAVO, TFE, MP2RAGE), broader than ADNI4 (field strengths 1-7 T, without TR, which is the TR of the inversion or of the readout), for scans that are nonconform to the protocols of the study but required for the evaluation (segmentation)",
+  "Modality": "MR",
+  "MagneticFieldStrength": {"min": 0.9, "max": 7.1},
+  "MRAcquisitionType": "3D",
+  "EchoTime": {"min": 0.001, "max": 0.008},
+  "InversionTime": {"min": 0.3, "max": 1.5},
+  "FlipAngle": {"min": 4, "max": 20},
+  "SliceThickness": {"min": 0.6, "max": 1.5}
+}

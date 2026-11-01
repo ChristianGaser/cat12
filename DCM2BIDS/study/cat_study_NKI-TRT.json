@@ -1,0 +1,33 @@
+{
+  "_Description": "Study description of the NKI-RS multiband test-retest pilot (NKI-TRT) of the 1000 Functional Connectomes Project / INDI (public information of https://fcon_1000.projects.nitrc.org/indi/pro/eNKI_RS_TRT/FrontPage.html, please check before publication).",
+  "_License": "INDI: Creative Commons Attribution-NonCommercial (without version).",
+  "Name": "NKI-RS multiband test-retest pilot (NKI-TRT)",
+  "License": "CC-BY-NC-4.0",
+  "Authors": [
+    "Nathan Kline Institute for Psychiatric Research (NKI)",
+    "Michael P. Milham",
+    "Stanley J. Colcombe"
+  ],
+  "Acknowledgements": "Data of the Enhanced Nathan Kline Institute - Rockland Sample (NKI-RS) multiband test-retest pilot, shared by the International Neuroimaging Data-sharing Initiative (INDI). Multiband sequences of the Center for Magnetic Resonance Research (CMRR), University of Minnesota.",
+  "HowToAcknowledge": "Please cite Nooner KB et al. (2012) The NKI-Rockland Sample: A Model for Accelerating the Pace of Discovery Science in Psychiatry. Front Neurosci 6:152, and acknowledge the NKI-RS multiband test-retest pilot of INDI.",
+  "Funding": [
+    "NIMH BRAINS R01MH094639-01 (PI: Michael P. Milham)",
+    "New York State Office of Mental Health",
+    "Research Foundation for Mental Hygiene",
+    "Child Mind Institute (1FDN2012-1)",
+    "NIMH R01MH081218, R01MH083246, R21MH084126",
+    "NKI Center for Advanced Brain Imaging",
+    "Brain Research Foundation",
+    "Stavros Niarchos Foundation"
+  ],
+  "EthicsApprovals": [
+    "Institutional Review Board of the Nathan Kline Institute for Psychiatric Research"
+  ],
+  "ReferencesAndLinks": [
+    "https://fcon_1000.projects.nitrc.org/indi/pro/eNKI_RS_TRT/FrontPage.html",
+    "Nooner KB et al. (2012) The NKI-Rockland Sample: A Model for Accelerating the Pace of Discovery Science in Psychiatry. Front Neurosci 6:152. doi:10.3389/fnins.2012.00152",
+    "Feinberg DA et al. (2010) Multiplexed echo planar imaging for sub-second whole brain FMRI and fast diffusion imaging. PLoS One 5:e15710. doi:10.1371/journal.pone.0015710",
+    "Moeller S et al. (2010) Multiband multislice GE-EPI at 7 tesla, with 16-fold acceleration using partial parallel imaging with application to high spatial and temporal whole-brain fMRI. Magn Reson Med 63:1144-1153. doi:10.1002/mrm.22361"
+  ],
+  "DatasetDOI": ""
+}

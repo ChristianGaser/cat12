@@ -1,0 +1,11 @@
+{
+  "_Description": "Fallback protocol (see opts.protocol.fallback): proton-density weighted (turbo) spin echo of all vendors and field strengths (2D, e.g. the dual-echo PD/T2 of NKI or clinical protocols, or 3D) with long TR and short TE, with up to 2 volumes and the spin-echo scanning sequence (i.e. without EPI, e.g. SBRef or time series)",
+  "Modality": "MR",
+  "MagneticFieldStrength": {"min": 0.9, "max": 7.1},
+  "ScanningSequence": "SE",
+  "EchoTime": {"min": 0.006, "max": 0.045},
+  "RepetitionTime": {"min": 1.5, "max": 10},
+  "FlipAngle": {"min": 90, "max": 180},
+  "SliceThickness": {"min": 0.6, "max": 5},
+  "NumberOfVolumes": {"max": 2}
+}

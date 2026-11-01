@@ -275,11 +275,13 @@ function R = processScans(C,Psnr,convmsg)
           datatype{sci},suffix{sci},ent{sci},PT,''); 
         fprintf('\n'); continue
       end
-      if job.opts.output == 2 && strcmp(PT.status,'nonconform') 
-        % output 2: only scans with a conform or semiconform protocol (PFR 
-        % <= opts.protocol.status(2), all scans without protocols), i.e. 
-        % scans with a nonconform protocol are only part of the tables of 
-        % the database (output 3 for all scans)
+      if job.opts.output == 2 && strcmp(PT.status,'nonconform') && isempty(PT.fallback)
+        % output 2: only scans with a conform or semiconform protocol (PFR
+        % <= opts.protocol.status(2), all scans without protocols) or with a
+        % fallback protocol (e.g. the T1w of another sequence, see
+        % fallbackProtocol in cat_io_dcm2bids_protocols), i.e. other scans
+        % with a nonconform protocol are only part of the tables of the
+        % database (output 3 for all scans)
         [datatype{sci},suffix{sci},ent{sci}] = scanType(pname,Vjson{sci},Isrc,isbids); 
         [rec{sci},varg{sci}] = scanRecord(Vjson{sci},scanid{sci},siteDB,fileparts(Pdbdir{sci}), ...
           datatype{sci},suffix{sci},ent{sci},PT,''); 
@@ -308,8 +310,10 @@ function R = processScans(C,Psnr,convmsg)
       % label of the acq entity, i.e., the protocol name without the 
       % information of the suffix and entities (e.g. SBRef, phase, echo, 
       % direction), and the task 
-      [datatype{sci},suffix{sci},ent{sci},label] = scanType(pro{sci},Vjson{sci},Isrc,isbids); 
-      lab{sci} = cat_io_dcm2bids_bids('bidsLabel',label,1); 
+      % (scans of a fallback protocol with "nonconform" in the acq label)
+      [datatype{sci},suffix{sci},ent{sci},label] = scanType(pro{sci},Vjson{sci},Isrc,isbids);
+      if ~isempty(PT.fallback), label = ['nonconform ' label]; end %#ok<AGROW>
+      lab{sci} = cat_io_dcm2bids_bids('bidsLabel',label,1);
       series = pro{sci}; 
       FN = {'ProtocolName', 'SeriesDescription', 'SequenceName'};
       for fni = 1:numel(FN)
@@ -443,7 +447,7 @@ function R = processScans(C,Psnr,convmsg)
           Dold = Dold(~[Dold.isdir]);
           if ~job.opts.preprocessing
             pre  = regexprep({Dold.name},'sub-.*$','');
-            Dold = Dold(cellfun('isempty',regexp(pre,'^(c0|m|mwc1|neuromorphometrics_|catDCM2BIDS(segus|dwi|dwimix|rsfmri)_.*)$','once')));
+            Dold = Dold(cellfun('isempty',regexp(pre,'^(c0|m|mwc1|lotter2025_|hcp1065_|catDCM2BIDS(segus|dwi|dwimix|rsfmri)_.*)$','once')));
           end
           for di = 1:numel(Dold), delete(fullfile(Dold(di).folder,Dold(di).name)); end
           % scan, b-values and directions, QC, and the realignment of 4D data
@@ -776,8 +780,9 @@ function exportSegmentation(Pdbnii,BIDSpathd,BIDSfile,opts)
 %  image Pdbnii (the anatomical scan of a session, see anatScan and
 %  segmentanat in cat_io_dcm2bids_pp_anat): the volumes (JSON) and for
 %  opts.preprocessing > 1 the label map c0, the bias-corrected image m, 
-%  the modulated normalized GM map mwc1, and the atlas label map 
-%  neuromorphometrics_ (of the anonymized or denoised image), which are 
+%  the modulated normalized GM map mwc1, and the atlas label maps 
+%  lotter2025_ (GM regions) and hcp1065_ (WM tracts, of the anonymized or
+%  denoised image), which are 
 %  otherwise only registered in the derivatives index of the database (for
 %  the renderings and the report tables, see registerDerivative in 
 %  cat_io_dcm2bids_helper).
@@ -787,7 +792,7 @@ function exportSegmentation(Pdbnii,BIDSpathd,BIDSfile,opts)
   if ~exist(Pj,'file'), return; end
   if ~exist(BIDSpathd,'dir'), mkdir(BIDSpathd); end
   copyfile(Pj,fullfile(BIDSpathd,['catDCM2BIDSsegus_' bnam '.json']));
-  for pre = {'c0','m','mwc1','neuromorphometrics_'}
+  for pre = {'c0','m','mwc1','lotter2025_','hcp1065_'}
     for p2 = {'anon_','sanlm_anon_','sanlm_',''}
       P = fullfile(pth,[pre{1} p2{1} nam '.nii.gz']); if ~exist(P,'file'), P = P(1:end-3); end
       if exist(P,'file')

@@ -1,0 +1,9 @@
+{
+  "_Description": "Fallback protocol (see opts.protocol.fallback): 3D T2w of all vendors and field strengths (SPACE, CUBE, VISTA) without inversion (FLAIR with TR > 4.5 s)",
+  "Modality": "MR",
+  "MagneticFieldStrength": {"min": 0.9, "max": 7.1},
+  "MRAcquisitionType": "3D",
+  "EchoTime": {"min": 0.06, "max": 0.6},
+  "RepetitionTime": {"min": 1.5, "max": 4.5},
+  "SliceThickness": {"min": 0.6, "max": 1.5}
+}

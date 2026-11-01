@@ -1,0 +1,10 @@
+{
+  "_Description": "Fallback protocol (see opts.protocol.fallback): 3D (multi-echo) gradient echo for susceptibility-weighted imaging and QSM of all vendors and field strengths (SWI, SWAN, VenoBOLD; magnitude, phase, and the SWI/minIP images) with long echo times",
+  "Modality": "MR",
+  "MagneticFieldStrength": {"min": 0.9, "max": 7.1},
+  "MRAcquisitionType": "3D",
+  "EchoTime": {"min": 0.01, "max": 0.06},
+  "RepetitionTime": {"min": 0.015, "max": 0.08},
+  "FlipAngle": {"min": 8, "max": 25},
+  "SliceThickness": {"min": 0.5, "max": 3}
+}

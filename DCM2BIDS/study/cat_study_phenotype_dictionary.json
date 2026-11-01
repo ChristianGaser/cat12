@@ -1,0 +1,60 @@
+{
+  "_Description": "Phenotype dictionary of catDCM2BIDS for a common coding of the phenotypic data tables of different studies. Columns whose (normalized) name is one of the Variants are renamed to the field name (e.g. gender -> sex), and their values that are one of the Variants (or the Code or Description) of a level are replaced by its Code (e.g. weiblich -> F). Names and values are compared in lower case without spaces and special characters (e.g. 'Research Group' = researchgroup, 'ADNI 4' = adni4). Numbers are never recoded by the dictionary (e.g. 1 is male in one study and female in another), but by the coding of each table: the description of the header (e.g. 'SEX (male = 1, female = 2)') or the Levels of the JSON sidecar of the table (e.g. table.json of table.csv). Other values are kept (with a warning). Copy and extend this file for your studies (field Phenotype dictionary of the batch).",
+  "organizationName": {
+    "Description": "Main organization, project, or institution of the data (organization reports).",
+    "Variants": ["organization", "organisation", "institution", "consortium", "project", "organisationname"],
+    "Levels": [
+      {"Code": "DZPG", "Description": "German Center for Mental Health (Deutsches Zentrum fuer Psychische Gesundheit)"},
+      {"Code": "ADNI", "Description": "Alzheimer's Disease Neuroimaging Initiative"},
+      {"Code": "NKI", "Description": "Nathan Kline Institute", "Variants": ["nathanklineinstitute", "nathankline"]}
+    ]
+  },
+  "studyName": {
+    "Description": "Substudy or version within the organization (study reports).",
+    "Variants": ["study", "substudy", "studyid", "phase", "studyphase"],
+    "Levels": [
+      {"Code": "ADNI1"},
+      {"Code": "ADNIGO"},
+      {"Code": "ADNI2"},
+      {"Code": "ADNI3"},
+      {"Code": "ADNI4"},
+      {"Code": "NKI-RS1", "Description": "NKI Rockland Sample (initial release)"},
+      {"Code": "NKI-RS-TRT", "Description": "NKI Rockland Sample multiband test-retest pilot"},
+      {"Code": "NKI-RS", "Description": "Enhanced NKI Rockland Sample"}
+    ]
+  },
+  "participantGroup": {
+    "Description": "Analysis group of the participant (e.g. for the comparison of brain measures).",
+    "Variants": ["group", "researchgroup", "diagnosticgroup", "diagnosisgroup", "dxgroup", "dx", "gruppe", "studygroup"],
+    "Levels": [
+      {"Code": "NC", "Description": "normal control", "Variants": ["cn", "hc", "con", "ctrl", "ctl", "control", "controls", "healthy", "healthycontrol", "healthycontrols", "normal", "cognitivelynormal", "kontrolle", "kontrollgruppe", "gesund"]},
+      {"Code": "SMC", "Description": "subjective memory complaints", "Variants": ["scd", "subjectivecognitivedecline", "sci", "subjectivecognitiveimpairment"]},
+      {"Code": "EMCI", "Description": "early mild cognitive impairment (ADNI)"},
+      {"Code": "MCI", "Description": "mild cognitive impairment"},
+      {"Code": "LMCI", "Description": "late mild cognitive impairment (ADNI)"},
+      {"Code": "AD", "Description": "Alzheimer's disease", "Variants": ["alzheimer", "alzheimers", "alzheimersdisease", "dementia", "ad dementia"]},
+      {"Code": "MDD", "Description": "major depressive disorder", "Variants": ["depression", "majordepression", "depressed", "depressive", "depressiveepisode"]},
+      {"Code": "BD", "Description": "bipolar disorder", "Variants": ["bipolar", "bipolardisorder"]},
+      {"Code": "SZ", "Description": "schizophrenia", "Variants": ["scz", "schizophrenic"]},
+      {"Code": "PSY", "Description": "other psychiatric diagnosis", "Variants": ["psychiatric"]}
+    ]
+  },
+  "sex": {
+    "Description": "Sex of the participant (also given by the DICOM PatientSex of the participants.tsv).",
+    "Variants": ["gender", "geschlecht", "ptgender", "patientsex", "sexe"],
+    "Levels": [
+      {"Code": "M", "Description": "male", "Variants": ["man", "men", "mann", "maennlich", "masculine"]},
+      {"Code": "F", "Description": "female", "Variants": ["woman", "women", "frau", "weiblich", "w", "feminine"]},
+      {"Code": "O", "Description": "other", "Variants": ["divers", "diverse", "d", "x", "nonbinary"]}
+    ]
+  },
+  "handedness": {
+    "Description": "Handedness of the participant.",
+    "Variants": ["hand", "handed", "handpreference", "haendigkeit"],
+    "Levels": [
+      {"Code": "R", "Description": "right", "Variants": ["righthanded", "righthand", "rh", "rechts", "rechtshaendig", "rechtshaender"]},
+      {"Code": "L", "Description": "left", "Variants": ["lefthanded", "lefthand", "lh", "links", "linkshaendig", "linkshaender"]},
+      {"Code": "A", "Description": "ambidextrous", "Variants": ["ambi", "ambidexter", "both", "mixed", "beidhaendig", "beidhaender"]}
+    ]
+  }
+}

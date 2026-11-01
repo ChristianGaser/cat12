@@ -48,7 +48,8 @@ function [ok,res] = cat_DCM2BIDS_selftest(Pdata,Pout,tests,levels)
 %                          preprocessing, and rendering, about 30 min)
 %  levels .. preprocessing levels of 'pplevels' (default: 1:0.5:4), where
 %            level 1 is the reference (its results are kept in Pout and
-%            only processed once)
+%            only processed once), e.g. 0 for the rs-fMRI denoising of
+%            level 0 (the same segmentation and DTI as level 1)
 %  ok     .. true if all tests passed
 %  res    .. structure array of the tests (group, name, ok, info)
 %
@@ -349,7 +350,7 @@ function R = testSpecial(E)
   % stored settings of a previous version (with longDBnames)
   resetBIDS(E.T); job = E.job0; job.data = {E.DB}; job.opts.Pdcm2nii = E.fake; evalc('cat_io_dcm2bids(job);');
   Popts = fullfile(E.B,'BIDS','catDCM2BIDSdb.mat');
-  load(Popts,'opts','dicts'); opts.longDBnames = 1; save(Popts,'opts','dicts');
+  St = load(Popts); St.opts.longDBnames = 1; save(Popts,'-struct','St'); % (with the protocols and naming version)
   try txt = evalc('cat_io_dcm2bids(job);'); id = 'none'; catch e, id = e.message; txt = ''; end
   R(end+1) = struct('name','old-settings','ok',strcmp(id,'none') && ~contains(txt,'does not fit') && ...
     isequal(names(scans(listing(E.B))),Lb),'info',id);
@@ -607,7 +608,7 @@ function R = testInputs(E)
   system(sprintf('ln -s ../../.git/annex/objects/cc/dd/MISSING/MISSING "%s"',fullfile(ds,'sub-02','anat','sub-02_T1w.nii.gz')));
   cat_io_dcm2bids_helper('writeText',fullfile(ds,'dataset_description.json'),'{"Name":"DataLad test","BIDSVersion":"1.9.0"}');
   mkdir(fullfile(ds,'.datalad')); mkdir(fullfile(Dl,'out','.datalad')); 
-  job = E.job0; job.outdir = {fullfile(Dl,'out')}; job.data = {ds}; 
+  job = E.job0; job.outdir = {fullfile(Dl,'out')}; job.data = {ds}; job.opts.agelimit = [-inf inf]; % (sidecars without age)
   try out = evalc('cat_io_dcm2bids(job);'); id = 'none'; catch e, out = ''; id = e.message; end
   Pdb = cat_vol_findfiles(fullfile(Dl,'out','study','catDCM2BIDSdb'),'ds=*.nii*'); wr = false;
   if isscalar(Pdb), [~,a] = fileattrib(Pdb{1}); wr = a.UserWrite == 1; end
@@ -624,7 +625,7 @@ function R = testPhenotypic(E)
 %  the JE7 sessions (JSON-only output): session rows by name (German column
 %  names, other order than the DICOM name), birth date (dd.mm.yyyy), and 
 %  scan date with their data in the sessions files (also of a reserved 
-%  column name), subject rows with an unknown name and a conflict, key 
+%  column name), subject rows with an unknown name and a visit, key 
 %  columns by number with other names, no names and birth dates in the BIDS
 %  directory, the data of the database without these tables, and a 
 %  corrected table. The tables are created from the imported data.
@@ -654,8 +655,9 @@ function R = testPhenotypic(E)
 
   % (1) session rows (name, birth date, scan date) and subject rows (name):
   % the subject with one session, the subject with two sessions, an unknown
-  % name, and a conflict (the first session of the subject with two sessions
-  % by a subject row and a visit)
+  % name, and a visit of the subject with two sessions, that replaces the 
+  % value of its subject row in the first session (session rows are more
+  % specific); the column Group is renamed by the phenotype dictionary
   C1 = {'Vorname','Nachname','Geburtsdatum','Scan date','MMSE','Group','age'};
   for k = 1:numel(S)
     C1(end+1,:) = {given(S(k)),family(S(k)),birth(S(k)),S(k).date,sprintf('%d',20+k),sprintf('g%d',k),sprintf('%d',60+k)}; %#ok<AGROW>
@@ -665,16 +667,16 @@ function R = testPhenotypic(E)
   P1 = fullfile(Pp,'visits.csv'); P2 = fullfile(Pp,'diagnoses.tsv');
   cat_io_csv(P1,C1); cat_io_csv(P2,C2,'','',struct('delimiter','\t'));
   job1 = job; job1.dataset.phenotypic = {P1; P2}; evalc('cat_io_dcm2bids(job1);');
-  [V,ok1] = sessionValues(B,S,{'MMSE','Group','age_user','Diagnosis'});
+  [V,ok1] = sessionValues(B,S,{'MMSE','participantGroup','age_user','Diagnosis'});
   exp1 = arrayfun(@(k) {sprintf('%d',20+k),sprintf('g%d',k),sprintf('%d',60+k)},1:numel(S),'UniformOutput',false);
   st1 = reportStatus(fullfile(T,'study','catDCM2BIDSdb-tables','phenotypic_visits.csv'));
   st2 = reportStatus(fullfile(T,'study','catDCM2BIDSdb-tables','phenotypic_diagnoses.csv'));
   okv = ok1 && isequal(cellfun(@(v) v(1:3),V,'UniformOutput',false),exp1) && ...
-    isequal(cellfun(@(v) v{4},V,'UniformOutput',false),{'n/a','dx1','dx3'});
+    isequal(cellfun(@(v) v{4},V,'UniformOutput',false),{'dx9','dx1','dx3'});
   R(end+1) = struct('name','session-rows','ok',okv && all(startsWith(st1,'assigned (1 sessions)')), ...
     'info',sprintf('%d sessions, values in the sessions files: %d, visits: %s',numel(S),okv,strjoin(unique(st1),'; ')));
   R(end+1) = struct('name','subject-rows','ok',strcmp(st2{1},'assigned (1 sessions)') && ...
-    startsWith(st2{2},'conflict (1 of 2') && strcmp(st2{3},'no session') && startsWith(st2{4},'conflict'), ...
+    strcmp(st2{2},'assigned (2 sessions)') && strcmp(st2{3},'no session') && strcmp(st2{4},'assigned (1 sessions)'), ...
     'info',strjoin(st2,'; '));
 
   % (2) key columns by number with other names (name, name, scan date as
@@ -993,9 +995,12 @@ function R = testExport(E)
   U5  = fullfile(T5,'unzip'); for zi = 1:numel(Pz5), unzip(Pz5{zi},U5); end
   F5  = cat_vol_findfiles(U5,'*.dcm');
   orig = [pats {char(J5.StudyInstanceUID),char(J5.SeriesInstanceUID)}]; nf = 0; % (also location, model, and coils)
+  % (numbers, e.g. the serial number, not within a longer number, e.g. the
+  % random digits of the new UIDs, but e.g. the date of a date-time)
+  orig = cellfun(@(q) regexprep(regexptranslate('escape',lower(q)),'^(\d+)$','(?<!\\d)$1'),orig,'UniformOutput',false);
   for k = 1:numel(F5)
     fid = fopen(F5{k}); t = lower(char(fread(fid,inf,'*uint8')')); fclose(fid);
-    nf = nf + any(cellfun(@(q) contains(t,lower(q)),orig));
+    nf = nf + any(~cellfun('isempty',regexp(t,orig,'once')));
   end
   hp = ''; hd = ''; hs = ''; ht = ''; hb = ''; at = nan(1,numel(F5));
   for k = 1:numel(F5) % times since the start of the session (acquisition times of all files)
@@ -1143,7 +1148,7 @@ function R = testParallel(E)
   % the BIDS derivatives, but the derivatives index in the database and
   % the renderings of the maps (see registerDerivative in
   % cat_io_dcm2bids_helper)
-  Mx = sel(names(Lp),'/(c0|m|mwc1|neuromorphometrics_|catDCM2BIDS(dwi|dwimix|rsfmri)_[A-Za-z0-9]+_)sub-[^/]*\.(nii|tsv)');
+  Mx = sel(names(Lp),'/(c0|m|mwc1|lotter2025_|hcp1065_|catDCM2BIDS(dwi|dwimix|rsfmri)_[A-Za-z0-9]+_)sub-[^/]*\.(nii|tsv)');
   Di = dir(fullfile(P,'catDCM2BIDSdb','sub-*','ses-*','catDCM2BIDSderivatives.json'));
   Dm = cat_io_dcm2bids_helper('derivativeIndex',fullfile(P,'catDCM2BIDSdb'));
   Gm = unique(regexprep(sel(pg(Gp),'/render_[^/]*_(c0|mwc1|FA|DEC|mean)_'),'/render_.*$',''));
@@ -1197,7 +1202,7 @@ function R = testLevels(E,levels)
   end
 
   % table of the deviations from level 1 (sorted by level)
-  [~,so] = sort([L.level]); L = L(so); ref = L(1);
+  [~,so] = sort([L.level]); L = L(so); ref = L([L.level] == 1); % (level 0 has another rs-fMRI denoising)
   hdr = {'level','time_s','time_ratio','total_s','TIV_pct','GMV_pct','WMV_pct','DiceGM','DiceWM', ...
     'FA_WM','MD_WM','r_FA','tSNR','GCOR','within','between','segregation','r_conn'};
   C = cell(numel(L),numel(hdr));
@@ -1228,7 +1233,11 @@ function R = testLevels(E,levels)
   % distortion correction) recovers the true positions of the displaced 
   % brain voxels (median residual of the voxels with more than 1 mm below 
   % 1 mm and below 60% of the residual of the rigid coregistration).
-  Pn = cat_vol_findfiles(DB,'*=*=*=*.nii.gz');
+  Ps = cat_vol_findfiles(DB,'*_seg8.mat'); Pn = {}; % (segmented images, without the derivatives)
+  for k = 1:numel(Ps)
+    nam = regexprep(regexprep(spm_file(Ps{k},'basename'),'_seg8$',''),'^(sanlm_)?(anon_)?','');
+    if exist(fullfile(fileparts(Ps{k}),[nam '.nii.gz']),'file'), Pn{end+1,1} = fullfile(fileparts(Ps{k}),[nam '.nii.gz']); end %#ok<AGROW>
+  end
   A  = cat_io_dcm2bids_pp_anat('sessionAnat',Pn,repmat({'anat'},size(Pn)),repmat({'T1w'},size(Pn)));
   ok = false; info = 'no T1w segmentation'; okn = false; infon = info;
   if ~isempty(A)

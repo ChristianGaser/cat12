@@ -421,20 +421,29 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname,PT] = testProtocols(Pjson,Vj
 %  The protocol is selected in two steps to avoid the assignment to another
 %  protocol with more equal fields: the protocols with the same sequence
 %  (PulseSequenceDetails) and key and critical parameters are preferred, 
-%  and of these the protocol with the fewest mismatches is used.
+%  and of these the protocol with the fewest mismatches is used, and of
+%  protocols with the same rating (e.g. task runs with the same sequence
+%  parameters) the protocol whose name fits best to the series name (see
+%  nameSimilarity, instead of the first protocol in alphabetical order).
+%  The acquisition duration of the scan (see acquisitionDuration, e.g.
+%  volumes times TR) is tested by protocols with an AcquisitionDuration
+%  (e.g. the protocol variants of the tables, see protocolVariant).
 %  The protocol fit measure PFM is the (weighted) number of deviations from
 %  the closest protocol and PFR its rating (marks 0.5-10.5), which defines 
 %  the protocol status by job.opts.protocol (see protocolRating): conform 
 %  scans are named by the protocol, semiconform scans are rated by the QC 
-%  definition of the closest protocol, and nonconform scans are unknown. 
+%  definition of the closest protocol, and nonconform scans are unknown,
+%  unless they fit a broad fallback protocol (PT.fallback and Pfname, see
+%  fallbackProtocol, e.g. the T1w of another sequence for the evaluation).
 %  The scan line shows the (closest) protocol and the PFR in the colors of
 %  the marks. The shortened (normalized) protocol of the scan is saved next
 %  to its sidecar in the database as template for protocol definitions.
 %  match is the index of the conform protocol (0 if not conform), pname its
 %  name (otherwise the DICOM protocol name), mismatchstr the mismatches of
 %  each protocol {field, scan value, protocol value}, Pnfailedid the index
-%  of the closest protocol(s), Pfname the protocol file of conform and 
-%  semiconform scans, and PT the result of the test for the tables of the 
+%  of the closest protocol(s), Pfname the protocol file of conform and
+%  semiconform scans (or the fallback protocol of nonconform scans), and
+%  PT the result of the test for the tables of the
 %  database (see cat_io_dcm2bids_tables): the protocol fit measure and 
 %  rating (PFM, PFR, NaN without protocols), the status, the closest 
 %  protocol (name, file, and tested fields), its deviations ({field, scan
@@ -442,45 +451,23 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname,PT] = testProtocols(Pjson,Vj
 %  normalized sidecar (Vn).
 
   Vjsonn = normalizeFields(Vjson);
+  if ~isfield(Vjsonn,'AcquisitionDuration') % (not in the sidecars of dcm2niix for classic DICOM)
+    d = acquisitionDuration(Vjsonn); if ~isnan(d), Vjsonn.AcquisitionDuration = d; end
+  end
   if isempty(protocols) || isempty(protocols{1,1})
   % no given protocols
     mismatchstr{1}  = cell(0,3);
     mismatchcnt(1)  = 0;
     rankcnt(1)      = 0;
   else
-    mismatchstr = cell(1,size(protocols,1));
-    mismatchcnt = zeros(1,size(protocols,1));
-    rankcnt     = zeros(1,size(protocols,1));
-    sdesc = ''; if isfield(Vjson,'SeriesDescription'), sdesc = char(Vjson.SeriesDescription); end
-    sdir  = nameDirection([char(Vjson.ProtocolName) ' ' sdesc]); 
-    for pri = 1:size(protocols,1)
-      [mismatchcnt(pri),mismatchstr{pri},seqdiff,keydiff,~,nna,nmatch] = ...
-        compareProtocol(Vjsonn,protocols{pri,3},tol,job.opts);
-      % direction of the series name vs. direction of the protocol name (critical)
-      pdir = nameDirection(spm_file(protocols{pri,2},'basename'));
-      namediff = ~isempty(sdir) && ~isempty(pdir) && ~strcmp(sdir,pdir);
-      if namediff
-        mismatchcnt(pri) = mismatchcnt(pri) + 10;
-        mismatchstr{pri}(end+1,:) = {'NameDirection', sdir, pdir};
-        keydiff = true;
-      end
-      % protocol selection: same sequence and key parameters first, and of
-      % equal ranks the protocol with the direction of the series name (e.g.
-      % a PA field map with AP phase encoding is shown with the PA protocol
-      % and its PhaseEncodingDirection deviation), and then the protocol with
-      % fewer fields that are not available for the scan and with more equal
-      % fields (e.g. the bold protocol for a JSON-only scan without volumes
-      % but the field-map protocol with up to 6 volumes for converted scans)
-      rankcnt(pri) = mismatchcnt(pri) + 100*seqdiff + 10*keydiff + 0.1*namediff + ...
-        1e-3*nna - 1e-5*nmatch;
-    end
+    [mismatchcnt,mismatchstr,rankcnt] = rankProtocols(Vjsonn,Vjson,protocols,tol,job.opts);
   end
   [~,bestid] = min(rankcnt);
   mincnt     = mismatchcnt(bestid);
 
   % protocol fit measure and rating with the protocol status
   PT = struct('PFM',nan,'PFR',nan,'status','','protocol','','file','','fields',{{}}, ...
-    'deviations',{cell(0,3)},'Vn',Vjsonn); 
+    'deviations',{cell(0,3)},'Vn',Vjsonn,'fallback','');
   if ~isempty(protocols) && ~isempty(protocols{1,1})
     [PT.PFR,PT.status] = protocolRating(mincnt,job.opts); 
     PT.PFM      = mincnt; 
@@ -523,10 +510,15 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname,PT] = testProtocols(Pjson,Vj
       Pfname = protocols{bestid,2};
       pname0 = spm_str_manip(spm_file(protocols{bestid,2},'basename'),'l50'); 
     otherwise % nonconform
-      match  = 0; 
+      match  = 0;
       pname  = Vjson.ProtocolName;
-      Pfname = '';
-      pname0 = sprintf('Unknown %s protocol',cat_io_dcm2bids_bids('setupDatatype',pname,Vjson)); 
+      Pfname = fallbackProtocol(Vjsonn,Vjson,tol,job.opts);
+      if isempty(Pfname)
+        pname0 = sprintf('Unknown %s protocol',cat_io_dcm2bids_bids('setupDatatype',pname,Vjson));
+      else
+        PT.fallback = spm_file(Pfname,'basename');
+        pname0 = spm_str_manip(PT.fallback,'l50');
+      end
   end
   MarkColor = cat_io_colormaps('marks+',40); % as the QC ratings (see cat_io_dcm2bids_qc)
   col2mark  = @(val) MarkColor(min(size(MarkColor,1)-3,max(1,floor( val/9.5 * size(MarkColor,1)))),:); 
@@ -546,6 +538,70 @@ function [match,pname,mismatchstr,Pnfailedid,Pfname,PT] = testProtocols(Pjson,Vj
     Vjson4.(FNM{fni}) = Vjsonn.(FNM{fni});
   end
   cat_io_json(fullfile(fileparts(Pjson),sprintf('%s-%s.json',proname,site)), cleanupVjson(Vjson4));
+end
+% =========================================================================
+function [mismatchcnt,mismatchstr,rankcnt] = rankProtocols(Vjsonn,Vjson,protocols,tol,opts)
+%rankProtocols. Mismatches of the normalized scan fields Vjsonn (sidecar
+%  Vjson for the series name) with each protocol (weighted count and list,
+%  see compareProtocol) and the rank of the protocols for the selection
+%  of the closest protocol (see testProtocols).
+  mismatchstr = cell(1,size(protocols,1));
+  mismatchcnt = zeros(1,size(protocols,1));
+  rankcnt     = zeros(1,size(protocols,1));
+  sdesc = ''; if isfield(Vjson,'SeriesDescription'), sdesc = char(Vjson.SeriesDescription); end
+  sdir  = nameDirection([char(Vjson.ProtocolName) ' ' sdesc]);
+  for pri = 1:size(protocols,1)
+    [mismatchcnt(pri),mismatchstr{pri},seqdiff,keydiff,~,nna,nmatch] = ...
+      compareProtocol(Vjsonn,protocols{pri,3},tol,opts);
+    % direction of the series name vs. direction of the protocol name (critical)
+    pdir = nameDirection(spm_file(protocols{pri,2},'basename'));
+    namediff = ~isempty(sdir) && ~isempty(pdir) && ~strcmp(sdir,pdir);
+    if namediff
+      mismatchcnt(pri) = mismatchcnt(pri) + 10;
+      mismatchstr{pri}(end+1,:) = {'NameDirection', sdir, pdir};
+      keydiff = true;
+    end
+    % protocol selection: same sequence and key parameters first, and of
+    % equal ranks the protocol with the direction of the series name (e.g.
+    % a PA field map with AP phase encoding is shown with the PA protocol
+    % and its PhaseEncodingDirection deviation), and then the protocol with
+    % fewer fields that are not available for the scan and with more equal
+    % fields (e.g. the bold protocol for a JSON-only scan without volumes
+    % but the field-map protocol with up to 6 volumes for converted scans),
+    % and finally the protocol with the name of the series (e.g. the
+    % CHECKERBOARD and BREATH-HOLD runs of NKI with the same parameters)
+    rankcnt(pri) = mismatchcnt(pri) + 100*seqdiff + 10*keydiff + 0.1*namediff + ...
+      1e-3*nna - 1e-5*nmatch - 1e-7*nameSimilarity([char(Vjson.ProtocolName) ' ' sdesc],protocols{pri,2});
+  end
+end
+% =========================================================================
+function Pfname = fallbackProtocol(Vjsonn,Vjson,tol,opts)
+%fallbackProtocol. Protocol file of the fallback protocols that the
+%  nonconform scan fits (normalized fields Vjsonn, sidecar Vjson), i.e.
+%  the broad protocol definitions opts.protocol.fallback (default
+%  DCM2BIDS/nonconform, ranges of the major parameters of all vendors and
+%  field strengths, similar to DCM2BIDS/ADNI4) of the scans that are
+%  required for the evaluation (T1w, T2w, FLAIR, BOLD, DWI), e.g. the T1w
+%  of another sequence for the segmentation and the preprocessing of the
+%  DWI and rs-fMRI of the session. These scans keep the nonconform status
+%  but are exported (also by opts.output 2) with "nonconform" in the acq
+%  label (see cat_io_dcm2bids_process) and rated by the QC defaults of the
+%  datatype. Empty if the scan does not fit a fallback protocol (without
+%  any deviation, as one deviation of conform scans would accept e.g. the
+%  SBRef or EPI field maps with less volumes) or without fallback
+%  protocols. The protocols are read once per process.
+  persistent FB
+  Pfname = '';
+  if ~isfield(opts.protocol,'fallback') || isempty(opts.protocol.fallback), return; end
+  Pfb = char(cellstr(opts.protocol.fallback));
+  if isempty(FB) || ~strcmp(FB.dir,Pfb)
+    FB = struct('dir',Pfb,'protocols',{cell(0,3)});
+    if exist(Pfb,'dir'), FB.protocols = getProtocols({Pfb}); end
+  end
+  if isempty(FB.protocols) || isempty(FB.protocols{1,1}), return; end
+  [mismatchcnt,~,rankcnt] = rankProtocols(Vjsonn,Vjson,FB.protocols,tol,opts);
+  [~,bestid] = min(rankcnt);
+  if mismatchcnt(bestid) == 0, Pfname = FB.protocols{bestid,2}; end
 end
 % =========================================================================
 function [PFR,status] = protocolRating(PFM,opts)
@@ -835,6 +891,16 @@ function d = nameDirection(str)
 %  empty. 
   t = regexpi(str,'(?:^|[_ -])(AP|PA|LR|RL|SI|IS)(?=$|[_ -])','tokens','once');
   if isempty(t), d = ''; else, d = upper(t{1}); end
+end
+% =========================================================================
+function s = nameSimilarity(sname,Pprot)
+%nameSimilarity. Fraction of the words of the protocol name (file name of
+%  the protocol Pprot without datatype, e.g. CHECKERBOARD, 1400, and RR of
+%  func_CHECKERBOARD-1400-RR_bold.json) that are words of the series name
+%  sname (protocol name and series description, case-insensitive).
+  words = @(str) regexp(lower(str),'[a-z0-9]+','match');
+  pw = setdiff(words(spm_file(Pprot,'basename')),{'anat','func','dwi','fmap','perf'});
+  s  = 0; if ~isempty(pw), s = mean(ismember(pw,words(sname))); end
 end
 % =========================================================================
 function s = val2str(v)

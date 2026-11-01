@@ -411,7 +411,14 @@ function [Pr,QM,Pqc] = cat_io_dcm2bids_qc(P, type, opts, Pprotocols)
   fprintf(' \n');
 
   save(Pqc,'QM');
-  J = struct('qualitymeasures',QM,'qualityrating',QR,'qcdefinition',qcdef);
+  % software of the measures (of the former run for existing measures, 
+  % i.e. only the ratings are updated, otherwise unknown)
+  sw = cat_io_dcm2bids_helper('software');
+  if ~run
+    sw = struct(); 
+    if exist(Pqcj,'file'), Jo = cat_io_json(Pqcj); if isfield(Jo,'software'), sw = Jo.software; end, end
+  end
+  J = struct('qualitymeasures',QM,'qualityrating',QR,'qcdefinition',qcdef,'software',sw);
   if ~isempty(Pmerged) % (image of the measures)
     J.image = sprintf('%s (merged echoes with missing slices, mixed echo times)',spm_file(regexprep(char(Pmerged),'\.gz$',''),'filename'));
   end
@@ -467,6 +474,7 @@ function [QR,qcdef] = qualityRating(QM,Pprotocols,type,opts)
   % quality rating
   FN = fieldnames(QCP); 
   if isfield(QCP,'RES'), QCP.vx_vol = QCP.RES; FN = [FN; intersect(fieldnames(QM),'vx_vol')]; end
+  FN = FN(isfield(QM,FN)); % (definitions of other measures, e.g. FDM and TNM of the rs-fMRI preprocessing)
   for fni = 1:numel(FN)
     if isfield(QM,FN{fni}) && all(~(isnan(QCP.(FN{fni})))) && all(~isnan(QM.(FN{fni})))
       if numel(QCP.(FN{fni}))==2 && abs(diff(QCP.(FN{fni}))) > 0.001

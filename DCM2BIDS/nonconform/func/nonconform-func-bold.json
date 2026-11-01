@@ -1,0 +1,11 @@
+{
+  "_Description": "Fallback protocol (see opts.protocol.fallback): 2D gradient-echo EPI BOLD of all vendors and field strengths (single-band and multiband, resting-state and task), with at least 50 volumes (i.e. without SBRef and EPI field maps)",
+  "Modality": "MR",
+  "MagneticFieldStrength": {"min": 0.9, "max": 7.1},
+  "MRAcquisitionType": "2D",
+  "EchoTime": {"min": 0.015, "max": 0.05},
+  "RepetitionTime": {"min": 0.3, "max": 3.5},
+  "FlipAngle": {"min": 30, "max": 95},
+  "SliceThickness": {"min": 1, "max": 5},
+  "NumberOfVolumes": {"min": 50}
+}

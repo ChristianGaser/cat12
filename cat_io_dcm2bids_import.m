@@ -119,7 +119,10 @@ function Psrc = getInputSources(Pdata, Pmdbdir, ignoreScouts)
       end
       Pdirsdi(isbids | cellfun('isempty',Pdirsdi)) = []; 
       if ignoreScouts
-        Pdirsdi(cat_io_contains(lower(Pdirsdi),{'localizer','scout'})) = []; 
+        % only by the name of the directory (series), not of its parents,
+        % e.g. a study "head library localizer" with all series below
+        [~,nam,ext] = cellfun(@fileparts,Pdirsdi,'UniformOutput',false);
+        Pdirsdi(cat_io_contains(lower(strcat(nam,ext)),{'localizer','scout'})) = [];
       end
       Psrc.dicom = [Psrc.dicom; Pdirsdi]; 
       continue

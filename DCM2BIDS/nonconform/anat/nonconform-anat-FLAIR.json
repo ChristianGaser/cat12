@@ -1,0 +1,10 @@
+{
+  "_Description": "Fallback protocol (see opts.protocol.fallback): 3D FLAIR of all vendors and field strengths (SPACE, CUBE, VISTA)",
+  "Modality": "MR",
+  "MagneticFieldStrength": {"min": 0.9, "max": 7.1},
+  "MRAcquisitionType": "3D",
+  "EchoTime": {"min": 0.06, "max": 0.6},
+  "RepetitionTime": {"min": 4.5, "max": 10},
+  "InversionTime": {"min": 1.4, "max": 3},
+  "SliceThickness": {"min": 0.6, "max": 1.5}
+}

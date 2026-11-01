@@ -1,0 +1,27 @@
+{
+  "_Description": "Study description of the initial release of the NKI-Rockland Sample (NKI-RS1, 207 participants, 4-85 years) of the 1000 Functional Connectomes Project / INDI (public information of https://fcon_1000.projects.nitrc.org/indi/pro/nki.html, please check before publication).",
+  "_License": "INDI: Creative Commons Attribution-NonCommercial (without version).",
+  "Name": "NKI-Rockland Sample, initial release (NKI-RS1)",
+  "License": "CC-BY-NC-4.0",
+  "Authors": [
+    "Nathan Kline Institute for Psychiatric Research (NKI)",
+    "Stanley J. Colcombe",
+    "Michael P. Milham"
+  ],
+  "Acknowledgements": "Data of the Nathan Kline Institute - Rockland Sample (NKI-RS), shared by the International Neuroimaging Data-sharing Initiative (INDI) of the 1000 Functional Connectomes Project.",
+  "HowToAcknowledge": "Please cite Nooner KB et al. (2012) The NKI-Rockland Sample: A Model for Accelerating the Pace of Discovery Science in Psychiatry. Front Neurosci 6:152.",
+  "Funding": [
+    "New York State Office of Mental Health",
+    "Research Foundation for Mental Hygiene",
+    "NKI Center for Advanced Brain Imaging"
+  ],
+  "EthicsApprovals": [
+    "Institutional Review Board of the Nathan Kline Institute for Psychiatric Research"
+  ],
+  "ReferencesAndLinks": [
+    "https://fcon_1000.projects.nitrc.org/indi/pro/nki.html",
+    "https://rocklandsample.org",
+    "Nooner KB et al. (2012) The NKI-Rockland Sample: A Model for Accelerating the Pace of Discovery Science in Psychiatry. Front Neurosci 6:152. doi:10.3389/fnins.2012.00152"
+  ],
+  "DatasetDOI": ""
+}

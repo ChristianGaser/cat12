@@ -36,7 +36,7 @@
   "PhaseEncodingDirection": "j-",
   "InPlanePhaseEncodingDirectionDICOM": "COL",
   "NumberOfSlices": 64,
-  "NumberOfVolumes": 79,
+  "_NumberOfVolumes": 79,
   "VoxelSize": [
     2,
     2,
