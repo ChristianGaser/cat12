@@ -1,19 +1,19 @@
 {
 	"Description": "dcm2niix release used by DCM2BIDS (downloaded on first use by getDCM2NIIX in cat_io_dcm2bids_importDCM, updated by .github/workflows/dcm2niix_update.yml)",
 	"repository": "rordenlab/dcm2niix",
-	"version": "v1.0.20260724",
+	"version": "v1.0.20261029",
 	"assets": {
 		"mac": {
 			"name": "dcm2niix_mac.zip",
-			"sha256": "d393006dd1edfba4013bc4b8eccc875b23d611ecbc53fda5a5542f629591008f"
+			"sha256": "ff8765a5380faa917306c4c10041598a734f298d8fd1dc7cfcf52527bae9c165"
 		},
 		"lnx": {
 			"name": "dcm2niix_lnx.zip",
-			"sha256": "2916a7bc64511eb20fb976a994799183cc1bfdd03395bf5d8edef54a58dee06f"
+			"sha256": "decc03fe9c08e696700876bd0e28fbc1dda5be11979905dfa5a5e01063cdf758"
 		},
 		"win": {
 			"name": "dcm2niix_win.zip",
-			"sha256": "8310549ef7340b1b169c26f4721aeac69423fd73643fbbd22eec47b36cc70ada"
+			"sha256": "71ab03724075c2bf95841588a12efa64c89aff5cc52a36b04d40ac378e9c31fd"
 		}
 	}
 }
