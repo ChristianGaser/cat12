@@ -206,6 +206,8 @@
             <p class="doc-version">For <span id="cat-version">CAT26.0.2 (r3501) from 2026-10-30</span></p>
           </header>
 
+          <p class="callout callout-notice"><strong>The old server neuro.uni-jena.de is no longer available.</strong> Links to www.neuro.uni-jena.de or dbm.neuro.uni-jena.de, e.g. in older documents or scripts, no longer work. Please obtain CAT and all updates from <a href="https://github.com/ChristianGaser/cat12/releases">GitHub</a>, either directly or with <a class="function" href="matlab:cat_update(1);">Check for Updates</a> in the CAT window (Updates/Add&#8209;Ons).</p>
+
           <p class="callout">Links marked with a play symbol, such as <span class="function">Segment</span>, run CAT and SPM functions directly. They only work when this manual is opened in MATLAB, e.g. from the CAT window.</p>
 
           <nav class="toc" aria-label="Table of contents">
@@ -364,7 +366,7 @@
               </li>
               <li>On newer macOS systems (10.15 or higher), the binaries and MEX files of a downloaded zip file are quarantined by Gatekeeper. CAT removes this quarantine for its own files when it is started; if this fails, run <code>xattr -dr com.apple.quarantine /path/to/spm/toolbox/CAT</code> in a Terminal. For SPM itself, you may need to follow the <a href="https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)#macOS_Catalina">SPM installation</a> instructions to prevent issues with MEX files.
               </li>
-              <li>Older CAT versions can be found <a href="https://www.neuro.uni-jena.de/cat12/">here</a>.</li>
+              <li>Older CAT versions (from CAT12.8.2 on) can be found on <a href="https://github.com/ChristianGaser/cat12/releases">GitHub</a>.</li>
             </ul>
 
             <!-- ############################# -->
@@ -3135,38 +3137,21 @@
             <!-- ################################################################################# -->
             <h3 id="user_stat">CAT user statistics</h3>
 
-            <p>CAT uses the anonymized IP address (e.g. 192.168.100.xxx) for geolocation and sends information about MATLAB version, CAT version, computer platform, preprocessing runs, and error messages to our SBM server. This is invaluable to us to get statistics about the use of CAT and more importantly about possible errors and helps us to fix them.<br>
-            
-            You can set the flag "cat.extopts.send_info" in <a class="function" href="matlab:edit('cat_defaults');">cat_defaults.m</a> to "0" to prevent sending any (anonymized) information to our SBM server and to PostHog. However, keep in mind that we need this information to fix possible errors and to get statistics about MATLAB and CAT versions.</p>
-            
-            <p>Description of CAT statistics:</p>
-            <ul>
-              <li>Start: Information about MATLAB version. This data is sent to our SBM server when CAT is started and provides the approximate number of (unique) users (see unique pageviews)</li>
-              <li>TotalUsers: Information about computer platform (and whether the standalone version is used). This data is also sent to our SBM server when CAT is started and provides the approximate number of users for each platform.</li>
-              <li>CATxx.x (e.g. CAT26.0): Information about CAT version, computer platform, preprocessing runs and unsuccessful preprocessing. This data is sent to our SBM server during preprocessing to obtain information about the use of CAT and possible errors (see pageviews).</li>
-            </ul>
-              
-<!--            <div id="widgetIframe"><iframe width="100%" height="300" src="https://www.neuro.uni-jena.de/piwik/index.php?module=Widgetize&amp;action=iframe&amp;forceView=1&amp;viewDataTable=graphEvolution&amp;disableLink=0&amp;widget=1&amp;moduleToWidgetize=VisitsSummary&amp;actionToWidgetize=getEvolutionGraph&amp;idSite=1&amp;period=day&amp;date=today&amp;columns=nb_uniq_visitors&amp;disableLink=1&amp;widget=1&amp;language=en" scrolling="yes" frameborder="0" marginheight="0" marginwidth="0"></iframe></div>
--->    
-            <a href="https://www.neuro.uni-jena.de/piwik/index.php?module=CoreHome&amp;action=index&amp;idSite=1&amp;period=day&amp;date=today#?idSite=1&amp;period=day&amp;date=today&amp;category=General_Actions&amp;subcategory=Actions_SubmenuPageTitles">Here</a> you can see the CAT user statistics from today.
-    
+            <p>CAT sends anonymous information about MATLAB version, CAT version, computer platform, preprocessing runs, and error messages to <a href="https://posthog.com">PostHog</a> (EU cloud). This is invaluable to us to get statistics about the use of CAT and more importantly about possible errors and helps us to fix them.<br>
+
+            You can set the flag "cat.extopts.send_info" in <a class="function" href="matlab:edit('cat_defaults');">cat_defaults.m</a> to "0" to prevent sending any (anonymized) information. However, keep in mind that we need this information to fix possible errors and to get statistics about MATLAB and CAT versions.</p>
+
             <!-- ############################# -->
-            <h4 id="user_stat_info">Which information is sent?</h4>      
+            <h4 id="user_stat_info">Which information is sent?</h4>
 
             <ul>
-              <li>Anonymized IP address (e.g. 192.168.100.xxx) is sent to the SBM server for geolocation and to get the number of unique users.</li>
-              <li>Information about MATLAB version and computer platform is sent when CAT is started using the following MATLAB commands (for the standalone version &quot;_standalone&quot; is added to the platform):
-                <br><i> urlread(sprintf('http://dbm.neuro.uni-jena.de/piwik/piwik.php?idsite=1&amp;rec=1&amp;action_name=%s%s%s','Start','%2F',version('-release')));</i>
-                <br><i> urlread(sprintf('http://dbm.neuro.uni-jena.de/piwik/piwik.php?idsite=1&amp;rec=1&amp;action_name=%s%s%s','TotalUsers','%2F',computer));</i>
-              </li>
-              <li>Information about CAT version and computer platform is sent each time preprocessing is started (together with the number of datasets if the job is split into separate processes) using the MATLAB command:
-                <br><i> urlread(sprintf('http://dbm.neuro.uni-jena.de/piwik/piwik.php?idsite=1&amp;rec=1&amp;action_name=%s%s%s%s%s%s%d',cat_version,'%2F',computer,'%2F','processed','%2F',n_subjects));</i>
-              </li>
-              <li>If an error occurs during preprocessing, information about CAT version, revision and GUI mode (default or expert), computer platform (with &quot;_standalone&quot; for the standalone version), MATLAB release, error identifier, error message (file paths are removed) and error stack (names and line numbers of the functions) is sent using the MATLAB command:
-                <br><i> urlread(sprintf('http://dbm.neuro.uni-jena.de/piwik/piwik.php?idsite=1&amp;rec=1&amp;action_name=%s/%s/%s/%s/%s/%s/%s/%s',CATrel,computer,'errors',['r' CATver],caterr_id,version('-release'),caterr_message_str,str_err));</i>
-              </li>
-              <li>In addition, the same information is sent as anonymous events to <a href="https://posthog.com">PostHog</a> (EU cloud), which will replace the Piwik statistics in the future: &quot;cat12_start&quot; when CAT is started, &quot;cat12_run&quot; with the number of datasets when preprocessing is started, and &quot;cat12_error&quot; if an error occurs (error identifier, error message with file paths removed, GUI mode, location of the error and error stack). Errors are also sent as &quot;$exception&quot; events for PostHog error tracking with the same information and the names, file names (without paths) and line numbers of the functions in the error stack. All events contain CAT release and revision, computer platform, standalone flag and MATLAB release. Instead of a user ID, a random ID that changes with each MATLAB session is used, no user profiles are created, and the IP address is only used for geolocation and is not stored. The events are sent with <a class="function" href="matlab:edit('cat_io_send_to_posthog');">cat_io_send_to_posthog.m</a>.</li>
+              <li>&quot;cat12_start&quot; is sent when CAT is started.</li>
+              <li>&quot;cat12_run&quot; is sent with the number of datasets each time preprocessing is started.</li>
+              <li>&quot;cat12_error&quot; is sent if an error occurs during preprocessing, with error identifier, error message (file paths are removed), GUI mode (default or expert), location of the error, calling CAT function and error stack (names and line numbers of the functions). Errors are also sent as &quot;$exception&quot; events for PostHog error tracking with the same information and the names, file names (without paths) and line numbers of the functions in the error stack.</li>
+              <li>All events contain CAT release and revision, computer platform, standalone flag and MATLAB release.</li>
+              <li>Instead of a user ID, a random ID that changes with each MATLAB session is used, no user profiles are created, and the IP address is only used for geolocation and is not stored.</li>
             </ul>
+            <p>The events are sent with <a class="function" href="matlab:edit('cat_io_send_to_posthog');">cat_io_send_to_posthog.m</a>.</p>
 
             <!-- ################################################################################# -->
             <h2 id="methods">Methods</h2>
@@ -3187,7 +3172,7 @@
             <p>To improve the initial SPM segmentation, an initial affine registration is applied to a bias-corrected image and the intensity range is limited to avoid problems in special protocols. If the preprocessing fails a more aggressive version is available that applies a rough bias correction and removes non-brain parts of the image before the initial affine registration.</p>
             
             <span class="subhead">Local Adaptive Segmentation (LAS)</span>
-            <p>GM intensity can vary for different regions such as the motor cortex, the basal ganglia, or the occipital lobe. These changes have an anatomical background (e.g. iron content, myelination), but are dependent on the MR-protocol and often lead to GM-underestimations at higher intensities and CSF-overestimations at lower intensities. Therefore, a local intensity transformation of all tissue classes is used to reduce these effects in the image before the final AMAP segmentation. In addition to our adaptive MAP approach for partial volume segmentation, this approach allows us to adapt local intensity changes to deal with varying tissue contrasts (<a href="https://www.neuro.uni-jena.de/hbm2012/HBM2012-Dahnke02.pdf">Dahnke et al., 2012</a>). The strength of the changes is controlled by the LASstr parameter, with 0 for no LAS, small values (0.01-0.5) for small adjustments, 0.5 for medium adjustments (default), and higher values (0.5-1) for strong adjustments.</p>
+            <p>GM intensity can vary for different regions such as the motor cortex, the basal ganglia, or the occipital lobe. These changes have an anatomical background (e.g. iron content, myelination), but are dependent on the MR-protocol and often lead to GM-underestimations at higher intensities and CSF-overestimations at lower intensities. Therefore, a local intensity transformation of all tissue classes is used to reduce these effects in the image before the final AMAP segmentation. In addition to our adaptive MAP approach for partial volume segmentation, this approach allows us to adapt local intensity changes to deal with varying tissue contrasts. The strength of the changes is controlled by the LASstr parameter, with 0 for no LAS, small values (0.01-0.5) for small adjustments, 0.5 for medium adjustments (default), and higher values (0.5-1) for strong adjustments.</p>
             
             <span class="subhead">AMAP Segmentation</span>
             <p>The segmentation approach is based on an Adaptive Maximum A Posteriori (AMAP) technique without the need for a priori information on the tissue probabilities. This means that the Tissue Probability Maps (TPM) are not constantly used in the sense of the classical Unified Segmentation approach (<a href="https://doi.org/10.1016/j.neuroimage.2005.02.018">Ashburner and Friston, 2005</a>), but only for spatial normalization, initial skull-stripping, and as initial segmentation estimate. The subsequent AMAP estimation is adaptive in the sense that local variations of the parameters (i.e., means and variance) are modelled as slowly varying spatial functions (<a href="https://doi.org/10.1109/42.563663">Rajapakse et al., 1997</a>). This accounts not only for intensity inhomogeneities, but also for other local intensity variations.</p>
@@ -3249,7 +3234,6 @@
             <span class="subhead">Spherical Registration</span>
             <p>
               Subsequently, the individual central surfaces are spatially registered to the FreeSurfer &quot;FsAverage&quot; template using this spherical mapping with minimal distortions.
-              We have adapted the volume-based diffeomorphic Dartel algorithm to the surface (<a href="https://doi.org/10.1016/j.neuroimage.2007.07.007">Ashburner, 2007</a>) to work with spherical maps (<a href="https://www.neuro.uni-jena.de/hbm2011/Yotter02.pdf">Yotter et al., 2011d</a>). We apply a multi-grid approach that uses reparameterized values of sulcal depth and shape index defined on the sphere to estimate a flow field that allows the deformation of a spherical grid.
               Since CAT26, the default surface pipeline uses a Spherical Demons registration (<a href="https://doi.org/10.1109/TMI.2009.2030797">Yeo et al., 2010</a>) instead, and the Dartel-based approach is only used by the older surface pipelines that can be selected in expert mode.
             </p>
             
@@ -3943,8 +3927,6 @@ Click on the green play button to run the batch. If it’s gray, fill in the req
 
             <p id="Collins1998">Collins DL, Zijdenbos AP, Kollokian V, Sled JG, Kabani NJ, Holmes CJ, Evans AC (1998). <a href="https://doi.org/10.1109/42.712135">Design and construction of a realistic digital brain phantom.</a> IEEE Transactions on Medical Imaging 17(3):463-468.</p>
 
-            <p>Dahnke R, Ziegler G, Gaser C (2012). <a href="https://www.neuro.uni-jena.de/hbm2012/HBM2012-Dahnke02.pdf">Local Adaptive Segmentation.</a> OHBM 2012.</p>
-
             <p>Dahnke R, Yotter RA, Gaser C (2013). <a href="https://doi.org/10.1016/j.neuroimage.2012.09.050">Cortical thickness and central surface estimation.</a> NeuroImage 65:336-348.</p>
 
             <p id="Dahnke:2025">Dahnke R, Ziegler G, Großkreutz J, Gaser C (2025). <a href="https://doi.org/10.1093/gigascience/giaf146">Segmentation-based quality control of structural MRI using the CAT toolbox.</a> GigaScience 14:giaf146.</p>
@@ -4030,8 +4012,6 @@ Click on the green play button to run the batch. If it’s gray, fill in the req
             <p>Yotter RA, Nenadic I, Ziegler G, Thompson PM, Gaser C (2011b). <a href="https://doi.org/10.1016/j.neuroimage.2011.02.007">Local cortical surface complexity maps from spherical harmonic reconstructions.</a> NeuroImage 56(3):961-973.</p>
 
             <p>Yotter RA, Thompson PM, Gaser C (2011c). <a href="https://doi.org/10.1111/j.1552-6569.2010.00484.x">Algorithms to Improve the Re-Parameterization of Spherical Mappings of Brain Surface Meshes.</a> Journal of Neuroimaging 21(2):e134-e147.</p>
-
-            <p>Yotter RA, Ziegler G, Thompson PM, Gaser C (2011d). <a href="https://www.neuro.uni-jena.de/hbm2011/Yotter02.pdf">Diffeomorphic Anatomical Registration on the Surface.</a> OHBM 2011.</p>
 
             <!-- ################################################################################# -->
             <h2 id="version">Version information</h2>
@@ -4244,7 +4224,7 @@ Click on the green play button to run the batch. If it’s gray, fill in the req
                 <li>Added simple batches for cross-sectional and longitudinal data that combine several processing steps from preprocessing to smoothing. These batches are available via the <a class="function" href="matlab:spm_jobman('interactive')">SPM batch editor</a> (SPM &rarr; Tools &rarr; CAT) or through expert mode.</li>
                 <li>The function <a class="function" href="matlab:y=cat_surf_results;">Display surface results</a> can now also visualise results from VBM analysis and map the 3D volume information onto the surface using an absmax mapping function inside the cortical band. The function is now renamed to &quot;Surface Overlay&quot;.</li>
                 <li>You can call <a class="function" href="matlab:[hReg xSPM SPM] = cat_spm_results_ui('Setup');">Results</a> now from the CAT GUI with some new functionality for surfaces and the option to call TFCE results.</li>
-                <li>CAT now uses Piwik for anonymized CAT user statistics (i.e. version information, potential errors). See <a href="#user_stat">CAT user statistics</a> for more information. This can optionally be disabled in <a class="function" href="matlab:edit('cat_defaults');">cat_defaults.m</a>.</li>
+                <li>CAT now collects anonymized CAT user statistics (i.e. version information, potential errors). See <a href="#user_stat">CAT user statistics</a> for more information. This can optionally be disabled in <a class="function" href="matlab:edit('cat_defaults');">cat_defaults.m</a>.</li>
                 <li>The extraction of ROI-based thickness is no longer necessary because this is now included in the segmentation pipeline in cat_main.m.</li>
                 <li>Changed gifti-format after resampling to use external dat-files. This increases processing speed and prevents the SPM.mat file for surfaces from becoming too large. This can optionally be disabled in <a class="function" href="matlab:edit('cat_defaults');">cat_defaults.m</a>.</li>
                 <li>The use of own atlases for ROI processing is now supported.</li>

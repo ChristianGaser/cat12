@@ -635,6 +635,10 @@ mark {
   line-height: 1.6;
 }
 
+.doc .callout + .callout {
+  margin-top: 0.75rem;
+}
+
 .doc .toc {
   margin: 2.5rem 0 0;
 }
@@ -1435,6 +1439,11 @@ mark {
   .skip-link,
   .callout {
     display: none !important;
+  }
+
+  /* notices also apply to the printed manual */
+  .doc .callout-notice {
+    display: block !important;
   }
 
   .content {
