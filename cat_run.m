@@ -114,9 +114,6 @@ if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index'))
   n_subjects = numel(job.data);
 
   if cat_get_defaults('extopts.send_info')
-    urlinfo = sprintf('%s%s%s%s%s%s%d',cat_version,'%2F',computer,'%2F','processed',...
-       '%2F',n_subjects);
-    cat_io_send_to_server(urlinfo);
     cat_io_send_to_posthog('cat12_run', struct('processed', n_subjects, 'nproc', job.nproc));
   end
 
@@ -188,9 +185,6 @@ end
 
 % (parallel processes are already counted by the calling process)
 if cat_get_defaults('extopts.send_info') && ~isfield(job,'process_index')
-  urlinfo = sprintf('%s%s%s%s%s%s%d',cat_version,'%2F',computer,'%2F','processed',...
-     '%2F',1);
-  cat_io_send_to_server(urlinfo);
   cat_io_send_to_posthog('cat12_run', struct('processed', numel(job.data), 'nproc', 0));
 end
 

@@ -2,17 +2,19 @@ function cat_io_send_to_posthog(event, props)
 % ______________________________________________________________________
 %
 % Send an anonymous event to PostHog (EU cloud) for CAT user statistics.
-% This is sent in addition to the Piwik information of
-% cat_io_send_to_server and is also disabled by the flag
-% cat.extopts.send_info in cat_defaults.m.
+% Sending can be disabled by the flag cat.extopts.send_info in
+% cat_defaults.m.
 %
 %   cat_io_send_to_posthog(event[, props]);
 %
 %   event  .. event name, e.g. 'cat12_start', 'cat12_run', 'cat12_error'
 %   props  .. struct with event properties (char, numeric or logical);
 %             a field 'stack' with an MException stack is converted to
-%             'function:line | ...' (innermost first, without paths) and
-%             its first entry is added as 'error_location'
+%             'function:line | ...' (innermost first, without paths), its
+%             first entry is added as 'error_location' and the calling
+%             function as 'error_caller', i.e. the first CAT function
+%             outside the file of the error (e.g. the function that called
+%             cat_io_xml for an error in 'cat_io_xml:241')
 %
 %   Events with a stack are additionally sent as '$exception' event for
 %   PostHog error tracking, with error_id and error_message as exception
@@ -58,6 +60,7 @@ function cat_io_send_to_posthog(event, props)
       stack  = props.stack;
       str    = cell(1,numel(stack));
       frames = cell(1,numel(stack));
+      in_app = false(1,numel(stack));
       for si = 1:numel(stack)
         [~, fname, ext] = fileparts(stack(si).file);
         if isempty(fname) || strcmp(fname,stack(si).name)
@@ -65,12 +68,28 @@ function cat_io_send_to_posthog(event, props)
         else
           str{si} = sprintf('%s>%s:%d',fname,stack(si).name,stack(si).line);
         end
+        in_app(si) = strncmp(stack(si).file,catdir,numel(catdir));
         frames{si} = struct('platform', 'custom', 'lang', 'matlab', ...
           'function_', stack(si).name, 'filename', [fname ext], 'lineno', stack(si).line, ...
-          'resolved', true, 'in_app', strncmp(stack(si).file,catdir,numel(catdir)));
+          'resolved', true, 'in_app', in_app(si));
       end
+
+      % the error location alone is ambiguous for functions that are called
+      % from many places (e.g. cat_io_xml), so the caller is added: the first
+      % CAT function outside the file of the error (this also skips SPM
+      % functions between an SPM error and the calling CAT function) or the
+      % first function of another file if no CAT function follows
+      caller = '';
+      if ~isempty(stack)
+        other = ~strcmp({stack.file}, stack(1).file);
+        ind   = find(other & in_app, 1);
+        if isempty(ind), ind = find(other, 1); end
+        if ~isempty(ind), caller = str{ind}; end
+      end
+
       if isempty(str), str = {''}; end
       if ~isfield(props,'error_location'), props.error_location = str{1}; end
+      if ~isfield(props,'error_caller'),   props.error_caller   = caller; end
       props.stack = strjoin(str,' | ');
 
       % for error tracking only use the frames up to the CAT error handler,

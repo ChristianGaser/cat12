@@ -173,17 +173,6 @@ function cat_run_newcatch(job,tpm,subj)
 
     %% send error information, CAT version and computer system
     if cat_get_defaults('extopts.send_info') && ~ignore_message && job.extopts.expertgui<2 && job.extopts.ignoreErrors<2
-      [CATrel,CATver] = cat_version; expertguistr = ' ed';
-      str_err = sprintf('%s%s|',['r' CATver],deblank(expertguistr(job.extopts.expertgui + 1))); % revision and guilevel
-      for si=1:numel(caterr.stack)
-        str_err = [str_err '|' caterr.stack(si).name ':' num2str(caterr.stack(si).line)];
-      end
-      system_str = computer;
-      if isdeployed
-        system_str = [system_str '_standalone'];
-      end
-      urlinfo = sprintf('%s/%s/%s/%s/%s/%s/%s/%s',CATrel,system_str,'errors',['r' CATver],caterr_id,version('-release'),caterr_message_str,str_err);
-      cat_io_send_to_server(urlinfo);
       cat_io_send_to_posthog('cat12_error', struct('error_id', caterr_id, ...
         'error_message', caterr_message_str, 'expertgui', job.extopts.expertgui, ...
         'stack', caterr.stack));

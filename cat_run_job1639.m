@@ -700,9 +700,6 @@ function cat_run_job1639(job,tpm,subj)
             cat_io_addwarning([mfilename ':APPerror'],'APP failed. Use simple scaling.',1,[0 0],apperr);
             [Ym,Yt,Ybg,WMth] = APPmini(obj,VF); %#ok<ASGLU>
             if cat_get_defaults('extopts.send_info')
-              urlinfo = sprintf('%s%s%s%s%s%s%s%s%s%s',cat_version,'%2F',computer,'%2F','errors',...
-                 '%2F','cat_run_job:failedAPP','%2F','WARNING: APP failed. Use simple scaling.','cat_run_job');
-              cat_io_send_to_server(urlinfo);
               cat_io_send_to_posthog('cat12_error', struct('error_id', [mfilename ':failedAPP'], ...
                 'error_message', 'WARNING: APP failed. Use simple scaling.', ...
                 'expertgui', job.extopts.expertgui, 'stack', apperr.stack));

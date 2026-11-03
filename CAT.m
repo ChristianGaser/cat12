@@ -1319,16 +1319,8 @@ end
 %-------------------------------------------------------------------
 function call_server(varargin)
 
-% send Matlab version to server
+% send anonymous start event with CAT and MATLAB version and platform
 if cat_get_defaults('extopts.send_info')
-  urlinfo = sprintf('%s%s%s','Start','%2F',version('-release'));
-  cat_io_send_to_server(urlinfo);
-  system_str = computer;
-  if isdeployed
-    system_str = [system_str '_standalone'];
-  end
-  urlinfo = sprintf('%s%s%s','TotalUsers','%2F',system_str);
-  cat_io_send_to_server(urlinfo);
   cat_io_send_to_posthog('cat12_start');
 end
 

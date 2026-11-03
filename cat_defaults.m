@@ -281,7 +281,7 @@ cat.extopts.experimental = 0;     % experimental functions: 0 - default, 1 - cal
 cat.extopts.print        = 2;     % display and print out pdf-file of results: 0 - off, 1 - volume only (use this to avoid problems on servers that do not support openGL), 
                                   % 2 - volume and surface (default)
 cat.extopts.fontsize     = get(0,'defaultuicontrolFontSize'); % default font size for GUI; 
-cat.extopts.send_info    = 1;     % send Matlab and CAT version to SBM server for internal statistics only. If you don't want to send this
+cat.extopts.send_info    = 1;     % send anonymous usage and error information to PostHog for internal statistics only. If you don't want to send this
                                   % information set this flag to "0". See online help CAT->CAT user statistics for more information
 cat.extopts.gifti_dat    = 1;     % save gifti files after resampling with external dat-file, which increases speed of gifti-processing and keeps SPM.mat file small
                                   % because the cdata field is not saved with full data in SPM.mat.
