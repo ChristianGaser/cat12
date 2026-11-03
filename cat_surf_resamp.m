@@ -113,7 +113,8 @@ function vout = cat_surf_resamp(varargin)
 
   % split job and data into separate processes to save computation time
   if isfield(job,'nproc') && job.nproc>0 && (~isfield(job,'process_index')) && (size(P,1)>1)
-    vout = cat_parallelize(job,mfilename,'data_surf');
+    %if nargout==1
+    vout.Psdata = cat_parallelize(job,mfilename,'data_surf');
     return
   end  
   

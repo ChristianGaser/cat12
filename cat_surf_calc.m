@@ -108,6 +108,8 @@ function varargout = cat_surf_calc(job)
     if job.nproc>0 && (~isfield(job,'process_index'))
       cat_parallelize(job,mfilename,'cdata');
       return
+    elseif isfield(job,'printPID') && job.printPID 
+      cat_display_matlab_PID
     end 
     
     if job.nproc==0 
@@ -170,6 +172,8 @@ function varargout = cat_surf_calc(job)
     if job.nproc>0 && (~isfield(job,'process_index'))
       cat_parallelize(job,mfilename,'cdata');
       return
+    elseif isfield(job,'printPID') && job.printPID 
+      cat_display_matlab_PID
     end 
     
     if job.nproc==0 

@@ -4,7 +4,7 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
 %  paths (absPath, normPath, canonPath), NIfTI header information, single
 %  volumes, the gzip handling of NIfTIs, and their export (niiHeaderInfo, 
 %  niiVolume, prepNii, prepNiigz, gzipFile, exportNii) with the work 
-%  directory on a faster disk (workSetup, workClear), the estimate of the
+%  directory on a faster disk (workSetup, workCheck, workClear), the estimate of the
 %  disk space of a run (diskCheck), the index of the
 %  derivatives in the database (registerDerivative, derivativeIndex), the
 %  realigned 
@@ -30,6 +30,7 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
 %    cat_io_dcm2bids_helper('gzipFile',P)
 %    S = cat_io_dcm2bids_helper('diskSpeed',Pdir)
 %    root = cat_io_dcm2bids_helper('workSetup',Pmdbdir,opts,nproc)
+%    [ok,msg,free] = cat_io_dcm2bids_helper('workCheck',root,need)
 %    need = cat_io_dcm2bids_helper('diskCheck',Psnr,Pmdbdir,Pbids,opts,nproc)
 %    cat_io_dcm2bids_helper('workClear')
 %    cat_io_dcm2bids_helper('exportNii',P,Pout,opts)
@@ -49,7 +50,7 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
   switch action
     case {'readText','writeText','writeJSON','absPath','normPath','canonPath','derivativesDir', ...
           'niiHeaderInfo','niiVolume','prepNii','prepNiigz','gzipFile','exportNii','removeAcquisitionTime', ...
-          'registerDerivative','derivativeIndex','diskSpeed','workSetup','workClear','diskCheck', ...
+          'registerDerivative','derivativeIndex','diskSpeed','workSetup','workCheck','workClear','diskCheck', ...
           'conversionInfo','realignedVolumes','realignedVolume', ...
           'updateTable','writeTable','catRecords','software'}
       [varargout{1:nargout}] = feval(action,varargin{:});
@@ -380,28 +381,59 @@ function root = workSetup(Pmdbdir,opts,nproc)
 %  the database, a directory, or 'auto' - the temporary directory of the 
 %  system (tempdir) if its disk is at least two times faster than the disk
 %  of the database Pmdbdir (see diskSpeed, e.g. an external USB hard disk 
-%  vs. the internal SSD) and has enough free space for nproc processes 
-%  (opts.workcache GB each), only for zipped databases (opts.gzipi) on 
-%  macOS/Linux (symbolic links). Each process uses its own subdirectory
-%  (see workLink).
-  root = ''; 
+%  vs. the internal SSD) and has enough free space for nproc processes
+%  (opts.workcache GB each), only for zipped databases (opts.gzipi) on
+%  macOS/Linux (symbolic links). A given directory needs write access and
+%  the same free space (see workCheck), otherwise the images are unzipped
+%  in the database. Each process uses its own subdirectory (see workLink).
+  root = '';
   if ~opts.gzipi || ~isunix || isempty(opts.workdir) || strcmp(opts.workdir,'native'), return; end
+  need = max(1,nproc) * opts.workcache + 5;
   if ~strcmp(opts.workdir,'auto')
-    root = opts.workdir; 
-    if ~exist(root,'dir'), mkdir(root); end
-    fprintf('  Work directory: %s\n',root); 
+    [ok,msg] = workCheck(opts.workdir,need);
+    if ok
+      root = opts.workdir;
+      fprintf('  Work directory: %s (%0.0f GB required)\n',root,need);
+    else
+      cat_io_cprintf('warn','  Work directory "%s" not used (%s), i.e. the images are unzipped in the database.\n', ...
+        opts.workdir,msg);
+    end
     return
   end
-  Sdb  = diskSpeed(Pmdbdir); 
-  Sloc = diskSpeed(tempdir); 
-  need = max(1,nproc) * opts.workcache + 5; 
-  if Sloc.MBps > 2 * Sdb.MBps && Sloc.GB > need
-    root = tempdir; 
-    fprintf('  Work directory: %s (%0.0f MB/s, database disk %0.0f MB/s)\n',root,Sloc.MBps,Sdb.MBps); 
+  Sdb  = diskSpeed(Pmdbdir);
+  Sloc = diskSpeed(tempdir);
+  if isnan(Sloc.MBps) % (test file not written)
+    fprintf('  Work directory: database (no write access to the system disk %s)\n',tempdir);
+  elseif Sloc.MBps > 2 * Sdb.MBps && Sloc.GB > need
+    root = tempdir;
+    fprintf('  Work directory: %s (%0.0f MB/s, database disk %0.0f MB/s, %0.0f GB required, %0.0f GB free)\n', ...
+      root,Sloc.MBps,Sdb.MBps,need,Sloc.GB);
   else
-    fprintf('  Work directory: database (%0.0f MB/s, system disk %0.0f MB/s with %0.0f GB free)\n', ...
-      Sdb.MBps,Sloc.MBps,Sloc.GB); 
+    fprintf('  Work directory: database (%0.0f MB/s, system disk %0.0f MB/s, %0.0f GB required, %0.0f GB free)\n', ...
+      Sdb.MBps,Sloc.MBps,need,Sloc.GB);
   end
+end
+% =========================================================================
+function [ok,msg,free] = workCheck(root,need)
+%workCheck. Test if the work directory root (created if missing) can be
+%  used: write access (a small test file) and at least need GB free space
+%  (free, NaN if unknown, which is accepted). msg gives the reason if not.
+  ok = false; msg = ''; free = nan;
+  if ~exist(root,'dir')
+    [st,mmsg] = mkdir(root);
+    if ~st, msg = sprintf('cannot create the directory: %s',mmsg); return; end
+  end
+  Pt  = fullfile(root,['catWorkCheck_' char(java.util.UUID.randomUUID()) '.tmp']);
+  fid = fopen(Pt,'w');
+  if fid < 0, msg = 'no write access'; return; end
+  n = fwrite(fid,zeros(1,4096,'uint8')); st = fclose(fid);
+  if exist(Pt,'file'), delete(Pt); end
+  if n < 4096 || st ~= 0, msg = 'no write access (test file not written)'; return; end
+  [~,free] = diskOf(root);
+  if free < need
+    msg = sprintf('%0.0f GB free, but %0.0f GB required',free,need); return
+  end
+  ok = true;
 end
 % =========================================================================
 function workClear

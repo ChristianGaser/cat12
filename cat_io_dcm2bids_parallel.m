@@ -10,7 +10,7 @@ function varargout = cat_io_dcm2bids_parallel(action,varargin)
 %  of its subjects (with the slice cache for the rendering of all subjects,
 %  see cat_io_dcm2bids_render).
 %  For nproc > 0, nproc background MATLAB processes (workers, see
-%  cat_parallelize) take the next package of a queue until all packages
+%  cat_parallelize2) take the next package of a queue until all packages
 %  are processed (i.e. long and short packages are balanced), whereas the
 %  main process shows the log of each finished package.
 %  Outputs of all subjects (tables of the database, participants, DICOM
@@ -30,9 +30,9 @@ function varargout = cat_io_dcm2bids_parallel(action,varargin)
 %  Actions (see the help of the local functions):
 %    R  = cat_io_dcm2bids_parallel('run',C,Psnr,nproc)
 %    pk = cat_io_dcm2bids_parallel('packages',Psnr[,C])
-%    R  = cat_io_dcm2bids_parallel(job)   (package of cat_parallelize)
+%    R  = cat_io_dcm2bids_parallel(job)   (package of cat_parallelize2)
 %
-%  See also cat_io_dcm2bids, cat_io_dcm2bids_process, cat_parallelize.
+%  See also cat_io_dcm2bids, cat_io_dcm2bids_process, cat_parallelize2.
 
   if isstruct(action) % (package with job.data, job.C, and job.render)
     varargout{1} = processPackage(action.C,action.data,action.render);
@@ -65,13 +65,13 @@ function R = run(C,Psnr,nproc)
     return
   end
 
-  % packages by the workers of cat_parallelize with the queue directory in
+  % packages by the workers of cat_parallelize2 with the queue directory in
   % the database and the logs of the packages with colors
   render = C.job.opts.render.run && C.job.opts.output > 1 && C.job.opts.gzipi == C.job.opts.gzipe; % (otherwise the BIDS images are zipped again, see gzipunzipOutputdata)
   job    = struct('nproc',nw,'data',{Psnr},'C',C,'render',render);
   popts  = struct('packages',{pk},'replay',1,'mergefun',@mergeResults,'qroot',C.Pmdbdir, ...
     'qprefix','catDCM2BIDSpar_','logdir',fullfile(C.Ptbldir,'logs'),'logname','log_DCM2BIDS','name','DCM2BIDS');
-  [R,status] = cat_parallelize(job,mfilename,'data',popts);
+  [R,status] = cat_parallelize2(job,mfilename,'data',popts);
   failed = nnz(~cellfun('isempty',{status.err}));
   if isempty(R)
     error('cat_io_dcm2bids_parallel:failed','All %d packages failed.',numel(pk));
