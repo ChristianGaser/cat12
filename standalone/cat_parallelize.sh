@@ -162,11 +162,35 @@ get_no_of_cpus () {
 }
 
 ########################################################
+# keep the system from idle sleep while the jobs run
+########################################################
+# macOS: caffeinate holds the assertion as long as the command runs, and the
+# command keeps its PID. Linux: systemd-inhibit (logind). It does not start
+# the command at all if logind refuses the inhibitor (e.g. in containers or
+# on cluster nodes), so it is only used after a successful test call.
+# The prefix wraps the whole job shell, so that a command made of several
+# commands (e.g. "a; b") is covered as well.
+
+get_sleep_inhibitor ()
+{
+  SLEEP_INHIBITOR=""
+  if [ -x /usr/bin/caffeinate ]; then
+    SLEEP_INHIBITOR="/usr/bin/caffeinate -i"
+  elif command -v systemd-inhibit >/dev/null 2>&1; then
+    local cmd="systemd-inhibit --what=idle:sleep --who=CAT --why=parallel_processing --mode=block"
+    if timeout 5 $cmd true </dev/null >/dev/null 2>&1; then
+      SLEEP_INHIBITOR="$cmd"
+    fi
+  fi
+}
+
+########################################################
 # run parallelize
 ########################################################
 
 parallelize ()
 {
+  get_sleep_inhibitor
   SIZE_OF_ARRAY="${#ARRAY[@]}"
   BLOCK=$((10000* $SIZE_OF_ARRAY / $NUMBER_OF_JOBS ))
 
@@ -197,7 +221,7 @@ parallelize ()
       echo $COMMAND ${ARG_LIST[$i]}
       if [ ! -n "${TEST}" ]; then
         echo job ${j}/"$NUMBER_OF_JOBS": $COMMAND ${ARG_LIST[$i]} >> $log
-        nohup bash -c "for k in ${ARG_LIST[$i]}; do $COMMAND \$k; done" >> $log 2>&1 &
+        nohup ${SLEEP_INHIBITOR} bash -c "for k in ${ARG_LIST[$i]}; do $COMMAND \$k; done" >> $log 2>&1 &
       fi
     fi
     ((i++))
