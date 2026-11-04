@@ -14,11 +14,12 @@ jobs:
   tests:
     runs-on: ubuntu-22.04
     steps:
-      # OS version kept as old as possible for mex compatibility (see compile_mex.yml)
+      # OS version kept as old as possible for mex compatibility (see compile_mex.yml).
+      # R2020b is the oldest release MathWorks still licenses in CI on Linux.
       - name: Set up MATLAB
-        uses: matlab-actions/setup-matlab@v1
+        uses: matlab-actions/setup-matlab@v3
         with:
-          release: R2020a
+          release: R2020b
 
       - name: Checkout SPM
         uses: actions/checkout@v4
@@ -35,7 +36,7 @@ jobs:
         run: find spm/toolbox/CAT -type f -name "*.mex*" -delete
 
       - name: Compile mex-files and run tests
-        uses: matlab-actions/run-command@v1
+        uses: matlab-actions/run-command@v3
         with:
           command: |
             ws = getenv('GITHUB_WORKSPACE');
@@ -48,7 +49,7 @@ jobs:
             disp('All CAT12 tests passed.')
 
       - name: Test the dcm2niix download of DCM2BIDS
-        uses: matlab-actions/run-command@v1
+        uses: matlab-actions/run-command@v3
         with:
           command: |
             ws = getenv('GITHUB_WORKSPACE');

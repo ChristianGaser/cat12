@@ -15,23 +15,25 @@ jobs:
     strategy:
       matrix:
         include:
+          # The MATLAB releases are the oldest ones MathWorks still licenses in CI:
+          # matlab-batch starts at R2020b on Linux and Mac Intel, R2021a on Windows
+          # and R2023b on Apple silicon. R2020a ran only through the v1 actions,
+          # whose licensing (MATLAB_Distrib_Comp_Engine) MathWorks switched off in
+          # October 2026.
           # On Linux, the OS version should be as old as possible for mex compatibility.
           - os: ubuntu-22.04
             os_name: Linux
             mex_ext: mexa64
-            matlab_release: R2020a
-            matlab_legacy: true
+            matlab_release: R2020b
           # On Mac and Windows, only the Matlab version matters for mex compatibility, so the OS can be the latest.
           - os: macos-15-intel
             os_name: macOS_Intel
             mex_ext: mexmaci64
-            matlab_release: R2020a
-            matlab_legacy: true
+            matlab_release: R2020b
           - os: macos-latest
             os_name: macOS_Apple_Silicon
             mex_ext: mexmaca64
             matlab_release: R2023b
-            matlab_legacy: false
           # Pinned to windows-2022 because that image still ships Visual Studio 2022.
           # windows-latest now resolves to windows-2025-vs2026 (VS 2026 only), whose
           # compiler is not supported by R2022a, so every mex call fails there.
@@ -39,17 +41,10 @@ jobs:
             os_name: Windows
             mex_ext: mexw64
             matlab_release: R2022a
-            matlab_legacy: true
 
     steps:
-      - name: Set up MATLAB (legacy)
-        if: ${{ matrix.matlab_legacy }}
-        uses: matlab-actions/setup-matlab@v1
-        with:
-          release: ${{ matrix.matlab_release }}
       - name: Set up MATLAB
-        if: ${{ !matrix.matlab_legacy }}
-        uses: matlab-actions/setup-matlab@v2
+        uses: matlab-actions/setup-matlab@v3
         with:
           release: ${{ matrix.matlab_release }}
 
@@ -97,19 +92,8 @@ jobs:
             --exclude='Makefile' \
             ./ spm/toolbox/CAT/
 
-      - name: Compile CAT mex-files (legacy)
-        if: ${{ matrix.matlab_legacy }}
-        uses: matlab-actions/run-command@v1
-        with:
-          command: |
-            ws = getenv('GITHUB_WORKSPACE');
-            addpath(fullfile(ws, 'spm'));
-            cd(fullfile(ws, 'spm', 'toolbox', 'CAT'))
-            compile(1,0)
-
       - name: Compile CAT mex-files
-        if: ${{ !matrix.matlab_legacy }}
-        uses: matlab-actions/run-command@v2
+        uses: matlab-actions/run-command@v3
         with:
           command: |
             ws = getenv('GITHUB_WORKSPACE');
