@@ -123,10 +123,6 @@ function varargout = cat_parallelize(job,func,datafield)
 
 
 
-  % keep the system from idle sleep while the background jobs run, otherwise
-  % unattended jobs are frozen as soon as the computer goes to sleep
-  sleep_prefix = sleep_inhibit_prefix;
-
   tmp_array = cell(job.nproc,1);
   logdate   = char(datetime('now','Format','yyyyMMdd-HHmmss'));
   PID       = zeros(1,job.nproc);
@@ -211,9 +207,9 @@ function varargout = cat_parallelize(job,func,datafield)
       system_cmd = ['start matlab -nodesktop -nosplash -r ' matlab_cmd ' -logfile ' log_name{i}];
     else
       if cat_io_matlabversion>=20191
-        system_cmd = [sleep_prefix fullfile(matlabroot,'bin') '/matlab -batch ' matlab_cmd ' -logfile ' log_name{i} ' 2>&1 & '];
+        system_cmd = [fullfile(matlabroot,'bin') '/matlab -batch ' matlab_cmd ' -logfile ' log_name{i} ' 2>&1 & '];
       else
-        system_cmd = [sleep_prefix fullfile(matlabroot,'bin') '/matlab -nodesktop -nosplash -r ' matlab_cmd ' -logfile ' log_name{i} ' 2>&1 & '];
+        system_cmd = [fullfile(matlabroot,'bin') '/matlab -nodesktop -nosplash -r ' matlab_cmd ' -logfile ' log_name{i} ' 2>&1 & '];
       end
     end
     [status,result] = system(system_cmd);
@@ -726,25 +722,4 @@ function varargout = cat_parallelize(job,func,datafield)
 
   cat_progress_bar('Clear');
   return
-end
-%=======================================================================
-function prefix = sleep_inhibit_prefix
-% Command prefix that keeps the system from idle sleep while a job runs.
-% macOS: caffeinate holds the assertion as long as the command runs, and the
-% command keeps its PID. Linux: systemd-inhibit (logind). It does not start
-% the command at all if logind refuses the inhibitor (e.g. in containers or
-% on cluster nodes), so it is only used after a successful test call.
-  prefix = '';
-  if ismac
-    if exist('/usr/bin/caffeinate','file')
-      prefix = '/usr/bin/caffeinate -i ';
-    end
-  elseif isunix
-    cmd = 'systemd-inhibit --what=idle:sleep --who=CAT --why=parallel_processing --mode=block';
-    status = system(['command -v systemd-inhibit >/dev/null 2>&1 && timeout 5 ' ...
-      cmd ' true </dev/null >/dev/null 2>&1']);
-    if status == 0
-      prefix = [cmd ' '];
-    end
-  end
 end
