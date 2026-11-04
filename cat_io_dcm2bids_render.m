@@ -1137,7 +1137,7 @@ function S = renderScanSlices(F,K,ropts,Pcache)
         if ~isempty(F.c0) && ~any(strcmp(F.kind,{'dec','atlas'})) % (composites: the underlay, see below)
           try
             wm = sampleSlices(F.c0,1,F.T,K,ropts) > 2.5 & Ys ~= 0;
-            if nnz(wm) > 100, clim(2) = prctile(Ys(wm),98); end
+            if nnz(wm) > 100, clim(2) = cat_stat_prctile(Ys(wm),98); end
           end
         end
         if ~(numel(clim)==2 && all(isfinite(clim)) && diff(clim)>0), clim = [0 max(1,max(Ys(:)))]; end
@@ -1166,7 +1166,7 @@ function S = renderScanSlices(F,K,ropts,Pcache)
           if ~isempty(F.c0)
             try
               wm = sampleSlices(F.c0,1,F.Tu,K,ropts) > 2.5 & u ~= 0; v = u(u ~= 0);
-              if nnz(wm) > 100, g = min(1,max(0,(u - prctile(v,1)) / max(eps,prctile(u(wm),98) - prctile(v,1)))); end
+              if nnz(wm) > 100, g = min(1,max(0,(u - cat_stat_prctile(v,1)) / max(eps,cat_stat_prctile(u(wm),98) - cat_stat_prctile(v,1)))); end
             end
           end
           g  = 0.6 * g;
@@ -1187,7 +1187,7 @@ function S = renderScanSlices(F,K,ropts,Pcache)
           if ~isempty(F.c0)
             try
               wm = sampleSlices(F.c0,1,F.Tu,K,ropts) > 2.5 & u ~= 0; v = u(u ~= 0);
-              if nnz(wm) > 100, g = min(1,max(0,(u - prctile(v,1)) / max(eps,prctile(u(wm),98) - prctile(v,1)))); end
+              if nnz(wm) > 100, g = min(1,max(0,(u - cat_stat_prctile(v,1)) / max(eps,cat_stat_prctile(u(wm),98) - cat_stat_prctile(v,1)))); end
             end
           end
           an = atlasOf(F.prefix);

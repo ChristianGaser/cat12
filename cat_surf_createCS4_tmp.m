@@ -404,7 +404,7 @@ function [Yth,S,P,res] = cat_surf_createCS4(V,V0,Ym,Yp0,Ya,YMF,Yb0,opt,job)
         opt0  = opt; opt0.reconres = min(0.5,opt.reconres);   % minimum resolution 
         Yppi  = Pcb.Yta + Pcb.Yppi; 
         Yppi  = cat_ornlm(Yppi,3,4,.33);
-        Yppi  = max(0,Yppi - prctile(Yppi(:),0.01)) ./ ( prctile(Yppi(:),99.99) - prctile(Yppi(:),0.01) );
+        Yppi  = max(0,Yppi - cat_stat_prctile(Yppi(:),0.01)) ./ ( cat_stat_prctile(Yppi(:),99.99) - cat_stat_prctile(Yppi(:),0.01) );
         Yppi  = min(1,max(0,Yppi + .5*(Yppi - smooth3(Yppi))));
         Vppmi = exportPPmap( Yppi , Vmfs, opt0); % write temporary file only for surface reconstruction 
       else

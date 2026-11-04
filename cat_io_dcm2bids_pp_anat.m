@@ -1479,7 +1479,7 @@ function [M,Q,T1] = scannerAlignment(Pnii,datatype,A,T1,opts)
     end
     cat_io_dcm2bids_helper('prepNiigz',P,opts);
   end
-  Y(~isfinite(Y)) = 0; ms = Y > 0.25 * prctile(Y(:),99); 
+  Y(~isfinite(Y)) = 0; ms = Y > 0.25 * cat_stat_prctile(Y(:),99); 
   [x,y,z] = ndgrid(1:2:V.dim(1),1:2:V.dim(2),1:2:V.dim(3)); 
   XYZ  = [x(:)'; y(:)'; z(:)'; ones(1,numel(x))]; mss = ms(1:2:end,1:2:end,1:2:end); mss = mss(:);
   dice = @(T) diceSampled(mss,double(T1.Yc),T1.Vc.mat,(T * V.mat) * XYZ);

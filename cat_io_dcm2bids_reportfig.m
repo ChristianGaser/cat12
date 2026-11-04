@@ -213,7 +213,7 @@ function L = sqrLimits(q)
 %  than 5 values.
   q = q(isfinite(q)); L = nan(1,3);
   if numel(q) < 5, return; end
-  q25 = prctile(q,25); iqr = prctile(q,75) - q25;
+  q25 = cat_stat_prctile(q,25); iqr = cat_stat_prctile(q,75) - q25;
   L = [q25 q25 + max(0.25,iqr) q25 + max(0.75,2*iqr)];
 end
 % =========================================================================

@@ -29,7 +29,8 @@ function cat_tst_createCS
       'cat_surf_createCS'              .05  42  .5; % internal pbtsimpleCS4 function 
     };
   
-    ni=1; 
+    ni=1;
+    rms = @(x) cat_stat_nanmean( x(:).^2 )^0.5; % RMS error function (rms needs the Signal Processing Toolbox before R2022a)
 %% loop over methods (and testcases)
     rmse_gmt = nan( size(pbtmethod,1), 8, 2);
     rmse_CT  = nan( size(pbtmethod,1), 8, 2);
