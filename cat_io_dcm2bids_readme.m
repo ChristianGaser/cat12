@@ -135,10 +135,12 @@ function writeReadme(type,Pdir,job,level)
         '  protocols-details/         deviations of the scans of each site from the closest protocol'
         sprintf('  subjects.%-17s one row per patient',fmt)
         sprintf('  excluded_sessions.%-8s sessions outside the age limit (opts.agelimit, also of former runs)',fmt)
+        sprintf('  quarantined_sessions.%-5s sessions with left-right mirrored scans (not exported, also of former',fmt)
+        '                             runs): correct the DICOM data or set the Action "pass" (export as they are)'
         '  phenotypic_<table>.csv     match of the rows of the phenotypic data tables to the sessions'
         ''
         'Can be removed: the tables are created again by the next run for its scans (i.e. run the batch with the'
-        'database as input to get the tables of all scans).'
+        'database as input to get the tables of all scans), but not quarantined_sessions (actions of the user).'
         };
     case 'dicom'
       txt = [{
@@ -198,6 +200,8 @@ function writeReadme(type,Pdir,job,level)
         'Private tables of the BIDS export: <BIDSsubdir>/private_participants.tsv with the BIDS subject label and'
         'the PatientID, PatientName, sex, age, weight, birth date, and acquisition date of each subject, i.e. the key'
         'to identify the subjects of the BIDS export (e.g. in case of findings).'
+        'Participant reports (opts.participantreport): <BIDSsubdir>/participantreports/<sub>_<ses>_participantreport_<lang>.pdf'
+        'with the name and birth date of the person (see cat_io_dcm2bids_participantreport).'
         ''
         'Can be removed: created again by the batch.'
         };
@@ -210,6 +214,7 @@ function writeReadme(type,Pdir,job,level)
         '  protocols/<BIDSsubdir>/   generalized MRI protocols of the scans (<datatype>_<variant>.json, protocols.tsv)'
         '  render/<BIDSsubdir>/      rendered slices of the BIDS images (PDF of each subject and session)'
         '  report_<BIDSsubdir>_<design>.pdf   report figure (one PDF per design, e.g. CAT_bright)'
+        '  report_<BIDSsubdir>.xlsx           report tables as Excel file with colored ratings'
         ''}; levelText(level); {
         ''
         'Can be removed: created again by the batch.'
@@ -296,8 +301,8 @@ function txt = mainText(Poutdir,job)
   o = job.opts;
   set = sprintf('output level %d, anonymization %d, preprocessing %d (level %g), DICOM export %d', ...
     o.output,o.anonymize,o.preprocessing,o.pplevel,o.dicomexport);
-  if isfield(job,'dicts') && isfield(job.dicts,'Pprotocoldirs') && ~isempty(char(job.dicts.Pprotocoldirs))
-    set = sprintf('%s, protocols %s',set,strjoin(spm_file(cellstr(job.dicts.Pprotocoldirs),'basename'),', '));
+  if isfield(job,'dataset') && isfield(job.dataset,'Pprotocoldirs') && ~isempty(char(job.dataset.Pprotocoldirs))
+    set = sprintf('%s, protocols %s',set,strjoin(spm_file(cellstr(job.dataset.Pprotocoldirs),'basename'),', '));
   end
   txt = {
     'catDCM2BIDS output directory'

@@ -1,0 +1,77 @@
+{
+  "Language": "es",
+  "Name": "Español",
+  "Status": "draft, to be checked by a native speaker",
+  "Direction": "ltr",
+  "Font": "Helvetica",
+  "Render": "text",
+  "ImageFont": "",
+  "Title": "Su cerebro en imágenes",
+  "Subtitle": "Información personal de la resonancia magnética para participantes del estudio",
+  "Identity": {
+    "PID": "ID de participante",
+    "Name": "Nombre",
+    "Birth": "Fecha de nacimiento",
+    "Sex": "Sexo",
+    "Weight": "Peso",
+    "Scan": "Fecha del examen",
+    "Age": "Edad en el examen"
+  },
+  "Sex": {
+    "M": "masculino",
+    "F": "femenino",
+    "O": "otro"
+  },
+  "Intro": {
+    "BrainHead": "Su cerebro",
+    "Brain": "El cerebro está formado por tres tejidos principales. La sustancia gris (GM) forma la capa externa plegada, la corteza, donde miles de millones de neuronas procesan la información. La sustancia blanca (WM) está formada por fibras nerviosas que conectan las regiones cerebrales como cables. El líquido cefalorraquídeo (CSF) rodea y protege el cerebro y llena sus cavidades internas.",
+    "ScannerHead": "El escáner de resonancia magnética",
+    "Scanner": "La resonancia magnética (MRI) utiliza un campo magnético potente y ondas de radio para medir la señal del agua de su cuerpo, sin rayos X.",
+    "ImagesHead": "Imágenes y medidas",
+    "Images": "La imagen potenciada en T1 (T1w) muestra la anatomía: la GM en gris, la WM en gris claro y el CSF en oscuro. La imagen de difusión mide el movimiento del agua a lo largo de las fibras y muestra su dirección principal en color (DEC). A partir de las imágenes estimamos el grosor de la corteza (CT) y los volúmenes de la GM, la WM y el hipocampo (HC), una estructura importante para la memoria.",
+    "Disclaimer": "Este informe es una estimación automática rápida solo como información visual y no tiene fines diagnósticos."
+  },
+  "Notes": {
+    "Head": "Bueno saber",
+    "QualityHead": "Calidad de imagen",
+    "Quality": "El procesamiento de las imágenes depende mucho de su calidad, que puede verse reducida por los movimientos durante el examen. El control de calidad (QC) califica sus imágenes de A (excelente) a F (no utilizable).",
+    "IndividualHead": "Cada cerebro es único",
+    "Individual": "Los patrones y las medidas del cerebro son muy individuales. Las estadísticas de grupos muestran patrones claros, pero un diagnóstico individual es muy difícil y requiere médicos especializados.",
+    "PrivacyHead": "Privacidad",
+    "Privacy": "En nuestro estudio, sus datos personales e imágenes se anonimizan: por ejemplo, se eliminó la cara de las imágenes (defacing, ver figura)."
+  },
+  "Captions": {
+    "Slices": "Su cerebro de lado, de frente y desde abajo, cortado a través del hipocampo (HC, contorneado). Los colores de la WM muestran la dirección de las fibras (DEC), los colores claros de la GM los lóbulos cerebrales. Para proteger su privacidad, se eliminó la cara (rayado).",
+    "SlicesNoDEC": "Su cerebro de lado, de frente y desde abajo, cortado a través del hipocampo (HC, contorneado). Los colores claros de la GM muestran los lóbulos cerebrales. Para proteger su privacidad, se eliminó la cara (rayado).",
+    "Surface": "La superficie de su cerebro vista desde la derecha y un poco desde delante y arriba, dentro de su cabeza (transparente). El color muestra el grosor de la corteza (CT), de fino y oscuro (2 mm) a grueso y claro (4 mm); los pliegues profundos (surcos) aparecen sombreados.",
+    "SurfaceNoCT": "La superficie de su cerebro vista desde la derecha y un poco desde delante y arriba, dentro de su cabeza (transparente).",
+    "Norms": "Sus valores (punto) comparados con personas de la misma edad: la banda oscura contiene la mitad central y la banda clara el 90 % de todas las personas."
+  },
+  "Labels": {
+    "Age": "edad (años)",
+    "Values": "Sus valores",
+    "Measure": "medida",
+    "Value": "valor",
+    "Typical": "típico",
+    "Percentile": "percentil (P): porcentaje de personas de su edad con valores más bajos",
+    "Abbreviations": "Abreviaturas"
+  },
+  "Abbreviations": {
+    "MRI": "resonancia magnética",
+    "T1w": "imagen potenciada en T1",
+    "DEC": "color de la dirección de las fibras: rojo izquierda-derecha, verde delante-detrás, azul arriba-abajo",
+    "GM": "sustancia gris (corteza)",
+    "WM": "sustancia blanca (fibras)",
+    "CSF": "líquido cefalorraquídeo",
+    "HC": "hipocampo",
+    "CT": "grosor cortical",
+    "QC": "control de calidad: calificación de la calidad de imagen de A (excelente) a F (no utilizable)",
+    "GMV": "volumen de sustancia gris",
+    "WMV": "volumen de sustancia blanca",
+    "HCV": "volumen del hipocampo",
+    "P": "percentil",
+    "T": "tesla, intensidad del campo magnético",
+    "LRAPSI": "izquierda, derecha, anterior (delante), posterior (detrás), superior (arriba), inferior (abajo)"
+  },
+  "Footer": "Informe automático de CAT para los participantes del estudio {Study} ({Organization}, {Website}). Resonancia magnética: {Institution}, {Address}. Esto no es un diagnóstico médico. Si tiene preguntas, póngase en contacto con el equipo del estudio."
+}

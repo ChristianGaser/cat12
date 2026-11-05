@@ -134,7 +134,7 @@ function E = setup(Pdata,Pout)
   Fa    = dir(fullfile(E.TU,'*_ADC')); E.ADC = fullfile(E.TU,Fa(1).name);
   B     = dir(fullfile(P,'site_berlin_pilot202511')); B = B([B.isdir] & ~startsWith({B.name},'.'));
   E.BER = fullfile(P,'site_berlin_pilot202511',B(1).name);
-  E.dicts = struct('Pprotocoldirs',{{fullfile(Pdata,'protocols','DZPG3T')}}, ...
+  E.dataset = struct('Pprotocoldirs',{{fullfile(Pdata,'protocols','DZPG3T')}}, ...
     'Pcenterdict',{{fullfile(Pdata,'protocols','sites.json')}});
 
   % runs of the import tests
@@ -183,9 +183,10 @@ function R = testImport(E)
     ~exist(fullfile(E.DB,'catDCM2BIDSimportpath'),'dir') && isempty(dir(fullfile(E.DB,'catDCM2BIDStmp*'))) && ...
     exist(I.DICOMdirectory,'dir') > 0, 'info',sprintf('%0.0f s, %d BIDS files, %d scans',t,numel(L0),numel(snr)));
 
-  % report figure of the report tables of the import for all designs (see
-  % cat_io_dcm2bids_reportfig, the default): one PDF per design with the
-  % overview and one page per site
+  % report figure of the report tables of the import for the study design
+  % (colormap.json of DCM2BIDS/studies/DZPG with the icon of the protocol
+  % directory) and the CAT designs (see cat_io_dcm2bids_reportfig): one PDF
+  % per design with the overview and one page per site
   Prep = cat_vol_findfiles(fullfile(E.T,'study'),'*-report',struct('dirs',1,'depth',0)); ok = false; info = 'no report tables';
   if ~isempty(Prep)
     Ptab = cat_vol_findfiles(fullfile(Prep{1},'tables'),'*',struct('dirs',1,'depth',0));
@@ -194,10 +195,15 @@ function R = testImport(E)
     T = readcell(fullfile(Ptab{1},['sessions.' def.opts.tableformat]),'FileType','text');
     s = T(2:end,strcmp(T(1,:),'site')); s = s(cellfun(@(x) (ischar(x) && ~isempty(x)) || isnumeric(x),s));
     nsite = numel(unique(cellfun(@num2str,s,'UniformOutput',false))); np = 1 + nsite*(nsite > 1);
-    designs = cellstr(def.opts.reportfig.design); npg = zeros(1,numel(designs)); tic;
+    job.opts.reportfig.design = {'study','CAT_bright','CAT_dark'};
+    job.dataset = struct('study',{{fullfile(fileparts(which('cat_io_dcm2bids')),'DCM2BIDS','studies','DZPG','study.json')}}, ...
+      'Pprotocoldirs',{E.dataset.Pprotocoldirs});
+    designs = {'DZPG_bright','CAT_bright','CAT_dark'}; npg = zeros(1,numel(designs)); tic;
     evalc('Ppdf = cat_io_dcm2bids_reportfig(''writeReportFigure'',fullfile(E.T,''study''),job);');
     for di = 1:min(numel(designs),numel(Ppdf))
-      if exist(Ppdf{di},'file'), npg(di) = numel(regexp(fileread(Ppdf{di}),'/Type\s*/Page[^s]')); end
+      if endsWith(Ppdf{di},['_' designs{di} '.pdf']) && exist(Ppdf{di},'file')
+        npg(di) = numel(regexp(fileread(Ppdf{di}),'/Type\s*/Page[^s]')); 
+      end
     end
     ok   = all(npg == np);
     info = sprintf('%0.0f s, pages %s of %d (%s)',toc,mat2str(npg),np,strjoin(designs,', '));
@@ -212,11 +218,11 @@ function R = testImport(E)
   % of sites with the same color), and a color of the dictionary
   ok = false; info = 'no report tables';
   if ~isempty(Prep)
-    jobc = job; jobc.dicts = E.dicts; evalc('cat_io_dcm2bids_report(''writeReportTables'',fullfile(E.T,''study''),jobc);'); %#ok<NASGU>
+    jobc = job; jobc.dataset = E.dataset; evalc('cat_io_dcm2bids_report(''writeReportTables'',fullfile(E.T,''study''),jobc);'); %#ok<NASGU>
     Q  = readcell(fullfile(Ptab{1},['project.' def.opts.tableformat]),'FileType','text');
     qs = cellfun(@num2str,Q(2:end,strcmp(Q(1,:),'site')),'UniformOutput',false); st = ~strcmp(qs,'all');
     qc = cellfun(@num2str,Q(2:end,strcmp(Q(1,:),'color')),'UniformOutput',false);
-    J  = cat_io_json(E.dicts.Pcenterdict{1}); if isstruct(J), J = num2cell(J); end
+    J  = cat_io_json(E.dataset.Pcenterdict{1}); if isstruct(J), J = num2cell(J); end
     dc = cellfun(@(e) upper(char(string(e.Color))),J(cellfun(@(e) isfield(e,'Color'),J)),'UniformOutput',false);
     hex  = ~cellfun('isempty',regexp(qc,'^#[0-9A-F]{6}$','once'));
     ok   = any(st) && all(hex(st)) && numel(unique(qc(st))) == nnz(st) && any(ismember(qc(st),dc));
@@ -224,6 +230,22 @@ function R = testImport(E)
       nnz(ismember(qc(st),dc)),numel(unique(qc(st))));
   end
   R(end+1) = struct('name','site-colors','ok',ok,'info',info);
+
+  % Excel file of the report tables (see writeWorkbook in
+  % cat_io_dcm2bids_report and cat_io_xls): one sheet per table (project,
+  % sessions, scans, ...) with the values of the tables
+  ok = false; info = 'no report tables';
+  if ~isempty(Prep)
+    Px = fullfile(Prep{1},['report_' spm_file(Ptab{1},'filename') '.xlsx']); info = 'no Excel file';
+    if exist(Px,'file')
+      [X,xs] = cat_io_xls(Px,'project');
+      xc   = cellfun(@num2str,X(2:end,strcmp(X(1,:),'color')),'UniformOutput',false);
+      ok   = numel(xs) >= 3 && isequal(xs(1:3),{'project','sessions','scans'}) && isequal(size(X),size(Q)) && ...
+        isequal(X(1,:),Q(1,:)) && isequal(xc(st),qc(st));
+      info = sprintf('%d sheets (%s), project %dx%d',numel(xs),strjoin(xs,', '),size(X));
+    end
+  end
+  R(end+1) = struct('name','report-xlsx','ok',ok,'info',info);
 
   % (2) export of the whole database (no conversion)
   resetBIDS(E.T); job = E.job0; job.data = {E.DB}; job.opts.Pdcm2nii = E.fake; tic; evalc('cat_io_dcm2bids(job);'); t = toc;
@@ -759,7 +781,7 @@ function R = testExport(E)
   R  = struct('name',{},'ok',{},'info',{});
   T  = fullfile(E.Pout,'export'); fresh(T);
   DB = fullfile(T,'study','catDCM2BIDSdb'); X = [DB '-dicom'];
-  job = E.job0; job.outdir = {T}; job.data = {E.BER; E.dcmses}; job.dicts = E.dicts; job.opts.dicomexport = 2;
+  job = E.job0; job.outdir = {T}; job.data = {E.BER; E.dcmses}; job.dataset = E.dataset; job.opts.dicomexport = 2;
 
   % (1) import with the export of all scans: one run directory with a zip
   % file and its content table per session
@@ -806,7 +828,7 @@ function R = testExport(E)
   % the anonymized images of the first import, and other images identical
   T2 = fullfile(E.Pout,'export2'); fresh(T2); U = fullfile(T2,'dicom');
   for zi = 1:numel(Pz), unzip(Pz{zi},U); end
-  job2 = E.job0; job2.outdir = {T2}; job2.data = {U}; job2.dicts = E.dicts;
+  job2 = E.job0; job2.outdir = {T2}; job2.data = {U}; job2.dataset = E.dataset;
   tic; evalc('cat_io_dcm2bids(job2);'); t = toc;
   DB2 = fullfile(T2,'study','catDCM2BIDSdb');
   S1  = sidecars(DB); S1 = S1(ismember(cellfun(@(P) sidecarKey(P,1),S1,'UniformOutput',false),{L.R.SeriesInstanceUID}));
@@ -847,8 +869,8 @@ function R = testExport(E)
   % converted only for the defaced scans
   T3 = fullfile(E.Pout,'export3'); fresh(T3); DB3 = fullfile(T3,'study','catDCM2BIDSdb');
   Pp = fullfile(T3,'protocols','anat'); mkdir(Pp);
-  copyfile(fullfile(E.dicts.Pprotocoldirs{1},'anat','*T1w*.json'),Pp);
-  job3 = job; job3.outdir = {T3}; job3.data = {E.BER}; job3.dicts.Pprotocoldirs = {fileparts(Pp)};
+  copyfile(fullfile(E.dataset.Pprotocoldirs{1},'anat','*T1w*.json'),Pp);
+  job3 = job; job3.outdir = {T3}; job3.data = {E.BER}; job3.dataset.Pprotocoldirs = {fileparts(Pp)};
   job3.opts.output = 1; job3.opts.dicomexport = 1;
   tic; evalc('cat_io_dcm2bids(job3);'); t = toc;
   L5 = load(fullfile([DB3 '-dicom'],'exports.mat'));
@@ -973,7 +995,7 @@ function R = testExport(E)
   Pd = fullfile(T7,'sites.json'); 
   cat_io_json(Pd,struct('DeviceSerialNumber',char(J5.DeviceSerialNumber),'InstitutionAbbreviation','Tst','siteID','07')); 
   job7 = job5; job7.outdir = {T7}; job7.opts.dicomexport = 0; 
-  job7.dicts = struct('Pprotocoldirs',{{''}},'Pcenterdict',{{Pd}}); 
+  job7.dataset.Pprotocoldirs = {''}; job7.dataset.Pcenterdict = {Pd}; 
   evalc('cat_io_dcm2bids(job7);'); 
   sub7 = dir(fullfile(T7,'study','BIDS-anonymized','BIDS','sub-*')); sub7 = sub7([sub7.isdir]); site7 = '';
   if isscalar(sub7)
@@ -1093,7 +1115,7 @@ function R = testParallel(E)
   O = fullfile(E.Pout,'parallel'); fresh(O); 
   run = {'serial',0; 'parallel',2}; t = zeros(1,2); txt = cell(1,2); 
   for ri = 1:2
-    job = struct('outdir',{{fullfile(O,run{ri,1})}},'subdir','study','dicts',E.dicts,'nproc',run{ri,2}); 
+    job = struct('outdir',{{fullfile(O,run{ri,1})}},'subdir','study','dataset',E.dataset,'nproc',run{ri,2}); 
     job.data = E.dcm; 
     job.opts = struct('runqc',1,'preprocessing',1,'Pdcm2nii',E.dcm2niix,'reportfig',struct('run',0)); %#ok<STRNU>
     tic; txt{ri} = evalc('cat_io_dcm2bids(job);'); t(ri) = toc; 
@@ -1181,7 +1203,7 @@ function R = testLevels(E,levels)
 %  estimateDTI in cat_io_dcm2bids_pp_dwi).
   R = struct('name',{},'ok',{},'info',{});
   O = fullfile(E.Pout,'pplevels'); if ~exist(O,'dir'), mkdir(O); end
-  job0 = struct('outdir',{{O}},'subdir','study','dicts',E.dicts);
+  job0 = struct('outdir',{{O}},'subdir','study','dataset',E.dataset);
   job0.opts = struct('runqc',1,'preprocessing',0,'render',struct('run',0),'reportfig',struct('run',0));
   DB = fullfile(O,'study','catDCM2BIDSdb');
   if ~exist(DB,'dir') % import with QC (once)

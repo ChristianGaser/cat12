@@ -45,20 +45,23 @@ function varargout = cat_io_dcm2bids_reportfig(action,varargin)
 %                  report), and the completeness and protocol status of the
 %                  sessions
 %  The values are given in or next to the diagrams. The pages are saved for
-%  each design of opts.reportfig.design (one or several, by default all) as
+%  each design of opts.reportfig.design (one or several, by default the 
+%  study design, see reportDesigns) as
 %    <outdir>/<subdir>/<BIDSdir>-report/report_<BIDSsubdir>_<design>.pdf
 %  and the overview of the first design is shown in the SPM Graphics window
 %  in interactive sessions. The statistics are columns of the session table
 %  (see cat_io_dcm2bids_stats).
-%  A design (DCM2BIDS/colormaps/<design>.json, e.g. CAT_bright, CAT_dark,
-%  or DZPG_bright) defines the logos (one or two image files of the CAT
-%  directory, top left and top right of the header), the icon of
-%  the ratings, the colors of the text and background (foreground full and
+%  A design (colormap.json of the study directory, e.g. DCM2BIDS/studies/
+%  DZPG, or DCM2BIDS/colormaps/<design>.json, i.e. CAT_bright or CAT_dark)
+%  defines the logos (one or two image files relative to the design file or
+%  to the CAT directory, top left and top right of the header), the colors
+%  of the text and background (foreground full and
 %  light, background light and full), and the colormaps of discrete values
 %  (sites without color of the site dictionary, see the color column of the
 %  project table) and of continuous values (name of cat_io_colormaps or of
 %  MATLAB, or RGB matrix), whereas the ratings use the colors of the marks of the
-%  QC (cat_io_colormaps('marks+'), as the command line output). The font
+%  QC (cat_io_colormaps('marks+'), as the command line output) and the icon
+%  of the protocol directory (see reportIcon). The font
 %  size opts.reportfig.fontsize (8 pt) is scaled by opts.reportfig.fontscale
 %  for header-like elements (0.96, titles of the diagrams) and for axes,
 %  table entries, and legends (0.8), whereas the header of the page has
@@ -68,11 +71,15 @@ function varargout = cat_io_dcm2bids_reportfig(action,varargin)
 %
 %  Actions (see the help of the local functions):
 %    Ppdf = cat_io_dcm2bids_reportfig('writeReportFigure',Poutdir,job)
+%    [P,names] = cat_io_dcm2bids_reportfig('reportDesigns',job)
+%    D    = cat_io_dcm2bids_reportfig('loadDesign',P)
+%    C    = cat_io_dcm2bids_reportfig('colormapOf',c,n)
 %
-%  See also cat_io_dcm2bids_report, cat_io_dcm2bids_stats, cat_plot_boxplot.
+%  See also cat_io_dcm2bids_report, cat_io_dcm2bids_stats, cat_plot_boxplot,
+%  cat_io_dcm2bids_participantreport.
 
   switch action
-    case {'writeReportFigure'}
+    case {'writeReportFigure','reportDesigns','loadDesign','colormapOf'}
       [varargout{1:nargout}] = feval(action,varargin{:});
     otherwise
       error('cat_io_dcm2bids_reportfig:unknownAction','Unknown action "%s".',action);
@@ -89,12 +96,12 @@ function Ppdf = writeReportFigure(Poutdir,job)
   S    = readTable(fullfile(Ptab,['scans.' fmt]));
   E    = readTable(fullfile(Ptab,['sessions.' fmt]));
   Q    = readTable(fullfile(Ptab,['project.' fmt]));
-  designs = cellstr(job.opts.reportfig.design);
-  Ppdf = strcat(fullfile(Prep,['report_' job.BIDSsubdir '_']),designs(:)','.pdf');
+  [designs,dnames] = reportDesigns(job);
+  Ppdf = strcat(fullfile(Prep,['report_' job.BIDSsubdir '_']),dnames,'.pdf');
   if isempty(E), Ppdf = {}; return; end % (the PDFs of former runs are kept without tables)
-  Pold = [{fullfile(Prep,['report_' job.BIDSsubdir '.pdf'])}, ...   % (all designs of former runs)
-    strcat(fullfile(Prep,['report_' job.BIDSsubdir '_']),designNames(),'.pdf')];
-  for oi = 1:numel(Pold), if exist(Pold{oi},'file'), delete(Pold{oi}); end, end
+  Pold = [dir(fullfile(Prep,['report_' job.BIDSsubdir '.pdf'])); ... % (all designs of former runs)
+    dir(fullfile(Prep,['report_' job.BIDSsubdir '_*.pdf']))];
+  for oi = 1:numel(Pold), delete(fullfile(Pold(oi).folder,Pold(oi).name)); end
   ws = warning('off','MATLAB:print:ContentTypeImageSuggested'); % vector output of many objects
   for di = 1:numel(designs)
     job.opts.reportfig.design = designs{di};
@@ -106,7 +113,7 @@ function Ppdf = writeReportFigure(Poutdir,job)
     if numel(F.sites) > 1 && ~manySites(F), pages = [pages F.sites]; end %#ok<AGROW>
     fh = figure('Visible','off','Color',F.bg,'Units','centimeters','Position',[1 1 F.pw F.ph], ...
       'PaperUnits','centimeters','PaperSize',[F.pw F.ph],'PaperPosition',[0 0 F.pw F.ph], ...
-      'MenuBar','none','ToolBar','none');
+      'MenuBar','none','ToolBar','none','InvertHardcopy','off');
     fhclean = onCleanup(@() close(fh));
     for pgi = 1:numel(pages)
       clf(fh); set(fh,'Color',F.bg);
@@ -116,11 +123,7 @@ function Ppdf = writeReportFigure(Poutdir,job)
         si = strcmp(textCol(S,'site'),pages{pgi}); ei = strcmp(textCol(E,'site'),pages{pgi});
       end
       drawPage(fh,F,S(si),E(ei),pages{pgi},pgi,numel(pages));
-      try
-        exportgraphics(fh,Ppdf{di},'ContentType','vector','BackgroundColor',F.bg,'Padding','figure','Append',pgi > 1);
-      catch % (no Padding in older MATLAB versions, e.g. R2023b)
-        exportgraphics(fh,Ppdf{di},'ContentType','vector','BackgroundColor',F.bg,'Append',pgi > 1);
-      end
+      cat_io_dcm2bids_helper('printPDF',fh,Ppdf{di},pgi > 1); % (A4 page, see printPDF)
       if pgi == 1 && di == 1, showSPM(fh,F); end
     end
     clear fhclean
@@ -129,11 +132,49 @@ function Ppdf = writeReportFigure(Poutdir,job)
   warning(ws);
 end
 % =========================================================================
-function names = designNames()
-%designNames. Names of the designs of the report figure (JSON files of
-%  DCM2BIDS/colormaps, see loadDesign).
-  D = dir(fullfile(fileparts(mfilename('fullpath')),'DCM2BIDS','colormaps','*.json'));
-  names = regexprep({D.name},'\.json$','');
+function [P,names] = reportDesigns(job)
+%reportDesigns. Files and names of the designs of opts.reportfig.design:
+%  'study' is the colormap.json of the study directory (directory of the
+%  study JSON job.dataset.study, e.g. DCM2BIDS/studies/DZPG) or the bright
+%  CAT design without it, other names are designs of DCM2BIDS/colormaps
+%  (CAT_bright, CAT_dark), and unknown names the bright CAT design. The
+%  name of a design (of the PDF file) is its Name field (e.g. DZPG_bright).
+  Pd = fullfile(fileparts(mfilename('fullpath')),'DCM2BIDS','colormaps');
+  P  = {};
+  for d = reshape(cellstr(job.opts.reportfig.design),1,[])
+    if strcmp(d{1},'study')
+      p = ''; if isfield(job,'dataset') && isfield(job.dataset,'study'), p = char(job.dataset.study); end
+      if ~isempty(p), p = fullfile(fileparts(p),'colormap.json'); end
+      if isempty(p) || ~exist(p,'file'), p = fullfile(Pd,'CAT_bright.json'); end
+    else
+      p = fullfile(Pd,[d{1} '.json']);
+      if ~exist(p,'file')
+        cat_io_cprintf('warn','  Report figure: unknown design "%s" (CAT_bright is used).\n',d{1});
+        p = fullfile(Pd,'CAT_bright.json');
+      end
+    end
+    P{end+1} = p; %#ok<AGROW>
+  end
+  P = unique(P,'stable'); names = cell(size(P));
+  for di = 1:numel(P)
+    [pth,names{di}] = fileparts(P{di});
+    if strcmp(names{di},'colormap'), [~,names{di}] = fileparts(pth); end % (study directory)
+    try J = jsondecode(fileread(P{di})); if isfield(J,'Name') && ~isempty(J.Name), names{di} = char(J.Name); end, end %#ok<TRYNC>
+    names{di} = regexprep(names{di},'[^\w-]','');
+  end
+end
+% =========================================================================
+function P = reportIcon(job)
+%reportIcon. Icon of the ratings: icon.png of the first protocol directory
+%  with icon (e.g. DCM2BIDS/protocols/DZPG3T), otherwise the CAT icon
+%  (DCM2BIDS/icon.png).
+  P = fullfile(fileparts(mfilename('fullpath')),'DCM2BIDS','icon.png');
+  if isfield(job,'dataset') && isfield(job.dataset,'Pprotocoldirs')
+    Pp = cellstr(job.dataset.Pprotocoldirs); Pp = fullfile(Pp(~cellfun('isempty',Pp)),'icon.png');
+    Pp = Pp(cellfun(@(f) exist(f,'file') == 2,Pp));
+    if ~isempty(Pp), P = Pp{1}; end
+  end
+  if ~exist(P,'file'), P = ''; end
 end
 % =========================================================================
 function F = setupFigure(job,E,Q)
@@ -150,7 +191,7 @@ function F = setupFigure(job,E,Q)
   F.fss     = F.fs * F.ropts.fontscale(2);          % axes, table entries, and legends
   F.fst     = F.fs * 1.5;                           % title of the page (see drawHeader)
   D = loadDesign(F.ropts.design);
-  F.design  = D.Name; F.logos = D.Logos; F.icon = D.Icons;
+  F.design  = D.Name; F.logos = D.Logos; F.icon = reportIcon(job);
   F.fg  = D.Colors(1,:); F.fgl = D.Colors(2,:);    % foreground full and light (text)
   F.bgl = D.Colors(3,:); F.bg  = D.Colors(4,:);    % background light (panels) and full (page)
   F.mix  = @(c,a) a .* c + (1 - a) .* F.bg;        % color c with the opacity a on the page
@@ -232,31 +273,25 @@ function E = sessionPCP(E,S)
   end
 end
 % =========================================================================
-function D = loadDesign(name)
-%loadDesign. Design of the report figure (DCM2BIDS/colormaps/<name>.json,
-%  see the help of this file) with the logos and the icon as files of the
-%  CAT directory (only existing ones), and the bright CAT design for
-%  unknown designs.
+function D = loadDesign(P)
+%loadDesign. Design of the report figure (JSON file P, see reportDesigns
+%  and the help of this file) with the logos as files relative to the 
+%  design file or to the CAT directory (only existing ones).
   Pcat = fileparts(mfilename('fullpath'));
-  Pd   = fullfile(Pcat,'DCM2BIDS','colormaps');
-  D    = struct('Name','CAT_bright','Logos',{{}},'Icons','', ...
+  D    = struct('Name','CAT_bright','Logos',{{}}, ...
     'Colors',[0.15 0.15 0.17; 0.45 0.45 0.50; 0.93 0.94 0.96; 1 1 1],'Discrete','nejm','Continuous','cool');
-  P    = fullfile(Pd,[char(name) '.json']);
-  if ~exist(P,'file')
-    cat_io_cprintf('warn','  Report figure: unknown design "%s" (CAT_bright is used).\n',char(name));
-    P = fullfile(Pd,'CAT_bright.json');
-  end
   if exist(P,'file')
     J = jsondecode(fileread(P));
     for fn = fieldnames(D)'
       if isfield(J,fn{1}), D.(fn{1}) = J.(fn{1}); end
     end
   end
-  D.Logos = cellstr(D.Logos);
-  D.Logos = fullfile(Pcat,D.Logos(~cellfun('isempty',D.Logos)));
-  D.Logos = D.Logos(cellfun(@(f) exist(f,'file') > 0,D.Logos));
-  if ~isempty(D.Icons), D.Icons = fullfile(Pcat,char(D.Icons)); end
-  if ~exist(D.Icons,'file'), D.Icons = ''; end
+  L = cellstr(D.Logos); L = L(~cellfun('isempty',L)); D.Logos = {};
+  for li = 1:numel(L)
+    Pl = {fullfile(fileparts(P),L{li}), fullfile(Pcat,L{li}), L{li}}; 
+    Pl = Pl(cellfun(@(f) exist(f,'file') == 2,Pl));
+    if ~isempty(Pl), D.Logos{end+1} = Pl{1}; end
+  end
   D.Colors = double(D.Colors);
   if ~isequal(size(D.Colors),[4 3]), error('cat_io_dcm2bids_reportfig:design','The colors of the design need 4 RGB rows.'); end
 end
@@ -851,7 +886,7 @@ function drawVolumes(fh,F,E,c)
     v = Y(isfinite(Y(:,ti)),ti); M = F.M(ti);
     text(tax,0.08,y,sprintf('%s %0.1f\\pm%0.1f%%',F.tisnam{ti},mean(v),std(v)),'FontSize',F.fss, ...
       'Color',F.tiscol(ti,:),'FontWeight','bold');
-    if startsWith(M.method,'robust linear')
+    if startsWith(M.method,'robust') && ~contains(M.method,'z-score')
       y = y - ds; text(tax,0.08,y,sprintf(' %+0.2f%%/10 y',10*M.b(2)),'FontSize',F.fss,'Color',F.fg);
     end
     y = y - dy;
@@ -859,6 +894,7 @@ function drawVolumes(fh,F,E,c)
   t = tiv(isfinite(tiv));
   if ~isempty(t), text(tax,0.08,y,sprintf('TIV %0.0f\\pm%0.0f ml',mean(t),std(t)),'FontSize',F.fss,'Color',F.fg); y = y - dy; end
   text(tax,0.08,y,sprintf('n = %d',sum(ok)),'FontSize',F.fss,'Color',F.fg); y = y - dy;
+  y = slopeAge(tax,F,F.M(1),y,dy);
   sexLegend(tax,F,y,sum(any(abs(Z(ok,:)) > 3,2)));
 end
 % =========================================================================
@@ -894,11 +930,12 @@ function drawMarker(fh,F,E,c,fn,M,ttl,ylab,nd)
   % statistics next to the diagram
   y = 0.98; dy = 0.095; ds = 0.062; fmt = sprintf('%%0.%df',nd); % (lines and lines of the measure)
   text(tax,0.08,y,sprintf(['mean ' fmt '\\pm' fmt],mean(v(ok)),std(v(ok))),'FontSize',F.fss,'Color',F.fg,'FontWeight','bold');
-  if startsWith(M.method,'robust linear')
+  if startsWith(M.method,'robust') && ~contains(M.method,'z-score')
     y = y - ds; text(tax,0.08,y,sprintf([' %+' fmt(2:end) '/10 y'],10*M.b(2)),'FontSize',F.fss,'Color',F.fg);
     if contains(M.method,'sex'), y = y - ds; text(tax,0.08,y,sprintf([' %+' fmt(2:end) ' male'],M.b(3)),'FontSize',F.fss,'Color',F.fg); end
   end
   y = y - dy; text(tax,0.08,y,sprintf('n = %d',sum(ok)),'FontSize',F.fss,'Color',F.fg); y = y - dy;
+  y = slopeAge(tax,F,M,y,dy);
   sexLegend(tax,F,y,sum(o));
 end
 % =========================================================================
@@ -959,11 +996,20 @@ function points(ax,x,y,mk,col)
 end
 % =========================================================================
 function modelLine(ax,F,M,xr,col)
-%modelLine. Line of the robust age model M at the mean sex (median for the
-%  robust z-score) in the age range xr.
+%modelLine. Line (curve of the quadratic model) of the robust age model M 
+%  at the mean sex (median for the robust z-score) in the age range xr.
   if M.n == 0, return; end
-  xa = [0 0]; if isfinite(M.mage), xa = xr - M.mage; end
-  plot(ax,xr,M.b(1) + M.b(2) * xa,'-','Color',col,'LineWidth',1);
+  x  = linspace(xr(1),xr(2),50); xa = zeros(size(x)); if isfinite(M.mage), xa = x - M.mage; end
+  plot(ax,x,M.b(1) + M.b(2) * xa + M.b(4) * xa.^2,'-','Color',col,'LineWidth',1);
+end
+% =========================================================================
+function y = slopeAge(tax,F,M,y,dy)
+%slopeAge. Line with the age of the slopes of a quadratic age model M (its
+%  mean age) at the position y of the statistics next to a diagram (next
+%  line y), nothing for a linear model.
+  if M.b(4) ~= 0 && isfinite(M.mage)
+    text(tax,0.08,y,sprintf('slope at %0.0f y',M.mage),'FontSize',F.fss,'Color',F.fg); y = y - dy;
+  end
 end
 % =========================================================================
 function sexLegend(tax,F,y,nout)

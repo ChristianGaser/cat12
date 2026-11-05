@@ -1,0 +1,4 @@
+name,surname,scandate,participantID,organizationName,studyName,participantGroup,sex,handedness
+*,*,*,*,MyOrganization,MyStudy,NC,,R
+Max,Mustermann,,,,,MDD,M,
+,,2025-11-20,P0012,,,NC,F,L

@@ -1,0 +1,77 @@
+{
+  "Language": "en",
+  "Name": "English",
+  "Status": "reference text",
+  "Direction": "ltr",
+  "Font": "Helvetica",
+  "Render": "text",
+  "ImageFont": "",
+  "Title": "Your brain in pictures",
+  "Subtitle": "Personal MRI feedback for study participants",
+  "Identity": {
+    "PID": "Participant ID",
+    "Name": "Name",
+    "Birth": "Date of birth",
+    "Sex": "Sex",
+    "Weight": "Weight",
+    "Scan": "Scan date",
+    "Age": "Age at scan"
+  },
+  "Sex": {
+    "M": "male",
+    "F": "female",
+    "O": "other"
+  },
+  "Intro": {
+    "BrainHead": "Your brain",
+    "Brain": "The brain consists of three main tissues. The gray matter (GM) forms the folded outer layer, the cortex, where billions of nerve cells process information. The white matter (WM) consists of nerve fibres that connect the brain regions like cables. The cerebrospinal fluid (CSF) surrounds and protects the brain and fills its inner cavities.",
+    "ScannerHead": "The MRI scanner",
+    "Scanner": "Magnetic resonance imaging (MRI) uses a strong magnetic field and radio waves to measure the signal of the water in your body - without X-rays.",
+    "ImagesHead": "Images and measures",
+    "Images": "The T1-weighted image (T1w) shows the anatomy: GM in gray, WM in light gray, and CSF in dark. The diffusion image measures the movement of water along the fibres and shows their main direction in color (DEC). From the images, we estimate the thickness of the cortex (CT) and the volumes of GM, WM, and the hippocampus (HC), a structure that is important for memory.",
+    "Disclaimer": "This report is a fast automatic estimate for visual feedback only and not for diagnostic purposes."
+  },
+  "Notes": {
+    "Head": "Good to know",
+    "QualityHead": "Image quality",
+    "Quality": "Image processing depends strongly on the image quality, which can be reduced by movements during the scan. The quality control (QC) rates your images from A (excellent) to F (not usable).",
+    "IndividualHead": "Every brain is unique",
+    "Individual": "Brain patterns and measures are highly individual. Group statistics show clear patterns, but individual diagnoses are very challenging and require trained physicians.",
+    "PrivacyHead": "Privacy",
+    "Privacy": "In our study, your personal data and images are anonymised: for example, the face was removed from the images (defaced, see figure)."
+  },
+  "Captions": {
+    "Slices": "Your brain from the side, from the front, and from below, cut through the hippocampus (HC, outlined). The colors of the WM show the direction of the fibres (DEC), the light colors of the GM the brain lobes. For your privacy, the face was removed (hatched).",
+    "SlicesNoDEC": "Your brain from the side, from the front, and from below, cut through the hippocampus (HC, outlined). The light colors of the GM show the brain lobes. For your privacy, the face was removed (hatched).",
+    "Surface": "The surface of your brain seen from the right and a bit from the front and top, inside your head (transparent). The color shows the thickness of the cortex (CT) from thin and dark (2 mm) to thick and bright (4 mm), deep folds (sulci) are shaded.",
+    "SurfaceNoCT": "The surface of your brain seen from the right and a bit from the front and top, inside your head (transparent).",
+    "Norms": "Your values (dot) compared with people of the same age: the dark band contains the middle half and the light band 90% of all people."
+  },
+  "Labels": {
+    "Age": "age (years)",
+    "Values": "Your values",
+    "Measure": "measure",
+    "Value": "value",
+    "Typical": "typical",
+    "Percentile": "percentile (P): percentage of people of your age with lower values",
+    "Abbreviations": "Abbreviations"
+  },
+  "Abbreviations": {
+    "MRI": "magnetic resonance imaging",
+    "T1w": "T1-weighted image",
+    "DEC": "direction-encoded color of the fibres: red left-right, green front-back, blue up-down",
+    "GM": "gray matter (cortex)",
+    "WM": "white matter (fibres)",
+    "CSF": "cerebrospinal fluid",
+    "HC": "hippocampus",
+    "CT": "cortical thickness",
+    "QC": "quality control: rating of the image quality from A (excellent) to F (not usable)",
+    "GMV": "gray matter volume",
+    "WMV": "white matter volume",
+    "HCV": "hippocampus volume",
+    "P": "percentile",
+    "T": "tesla, strength of the magnetic field",
+    "LRAPSI": "left, right, anterior (front), posterior (back), superior (top), inferior (bottom)"
+  },
+  "Footer": "Automatic report of CAT for the participants of the study {Study} ({Organization}, {Website}). MRI: {Institution}, {Address}. This is not a medical finding. If you have questions, please contact the study team."
+}

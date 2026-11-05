@@ -6,13 +6,17 @@ function varargout = cat_io_dcm2bids_parallel(action,varargin)
 %  (e.g. the T1w of another session for sessions without anatomical scan
 %  and the sessions file of the subject). A package converts its images
 %  (see convertSources in cat_io_dcm2bids_import), processes its scans (see
-%  cat_io_dcm2bids_process), and renders the subject and session reports
-%  of its subjects (with the slice cache for the rendering of all subjects,
-%  see cat_io_dcm2bids_render).
-%  For nproc > 0, nproc background MATLAB processes (workers, see
+%  cat_io_dcm2bids_process), renders the subject and session reports of
+%  its subjects (with the slice cache for the rendering of all subjects,
+%  see cat_io_dcm2bids_render), and writes the participant reports of its
+%  sessions (see cat_io_dcm2bids_participantreport), with one line of the
+%  processing times of the package (conversion, QC and export, 
+%  preprocessing, and reports) and the subject number of the run.
+%  For nproc > 1, nproc background MATLAB processes (workers, see
 %  cat_parallelize2) take the next package of a queue until all packages
 %  are processed (i.e. long and short packages are balanced), whereas the
-%  main process shows the log of each finished package.
+%  main process shows the log of each finished package (otherwise the
+%  packages are processed one after another by the main process).
 %  Outputs of all subjects (tables of the database, participants, DICOM
 %  export, report, rendering of all subjects) are written by cat_io_dcm2bids
 %  with the merged results of all packages (in the order of the packages,
@@ -34,8 +38,9 @@ function varargout = cat_io_dcm2bids_parallel(action,varargin)
 %
 %  See also cat_io_dcm2bids, cat_io_dcm2bids_process, cat_parallelize2.
 
-  if isstruct(action) % (package with job.data, job.C, and job.render)
-    varargout{1} = processPackage(action.C,action.data,action.render);
+  if isstruct(action) % (package with job.data, job.C, job.render, and job.report)
+    if ~isfield(action,'report'), action.report = 0; end
+    varargout{1} = processPackage(action.C,action.data,action.render,action.report);
     return
   end
   switch action
@@ -52,23 +57,33 @@ function R = run(C,Psnr,nproc)
 %  processes (one process for nproc = 0 or one package). R contains the
 %  merged results of all packages (see processScans in
 %  cat_io_dcm2bids_process) with R.rendered (subject reports rendered by
-%  the packages) and R.failed (number of failed packages).
+%  the packages), R.reported (participant reports written by the packages),
+%  and R.failed (number of failed packages).
   pk = packages(Psnr,C);
   nw = min(nproc,numel(pk));
-  % no parallel processes without new packages (e.g. a new export of the
-  % processed database), as the start of the workers takes longer
-  if nw > 1 && ~any(newPackages(Psnr,pk,C))
-    fprintf('DCM2BIDS - no new subjects, i.e. no parallel processes.\n'); nw = 0;
+  % subject number of the run of each subject directory of the database
+  % (the package number, for the subject lines of the packages)
+  C.subnum = containers.Map('KeyType','char','ValueType','double'); C.nsub = numel(pk); 
+  for k = 1:numel(pk)
+    for P = unique(cellfun(@(p) fileparts(fileparts(p)),Psnr(pk{k}),'UniformOutput',false))', C.subnum(P{1}) = k; end
   end
-  if nw < 2 % (one process)
-    R = processPackage(C,Psnr,0); R.rendered = 0; R.failed = 0;
+  % subject reports (otherwise the BIDS images are zipped again, see
+  % gzipunzipOutputdata) and participant reports (at the end of the run
+  % with the CAT preprocessing, see cat_io_dcm2bids) of the packages
+  opts   = C.job.opts; 
+  render = opts.render.run && opts.output > 1 && opts.gzipi == opts.gzipe; 
+  report = isfield(opts,'participantreport') && opts.participantreport.run && opts.output > 1 && ...
+    ~(isfield(opts,'cat') && opts.cat.run); 
+  if nw < 2 % (one process: the packages one after another)
+    res = cell(1,numel(pk)); 
+    for k = 1:numel(pk), res{k} = processPackage(C,Psnr(pk{k}),render,report); end
+    R = mergeResults(res); R.rendered = render; R.reported = report; R.failed = 0;
     return
   end
 
   % packages by the workers of cat_parallelize2 with the queue directory in
   % the database and the logs of the packages with colors
-  render = C.job.opts.render.run && C.job.opts.output > 1 && C.job.opts.gzipi == C.job.opts.gzipe; % (otherwise the BIDS images are zipped again, see gzipunzipOutputdata)
-  job    = struct('nproc',nw,'data',{Psnr},'C',C,'render',render);
+  job    = struct('nproc',nw,'data',{Psnr},'C',C,'render',render,'report',report);
   popts  = struct('packages',{pk},'replay',1,'mergefun',@mergeResults,'qroot',C.Pmdbdir, ...
     'qprefix','catDCM2BIDSpar_','logdir',fullfile(C.Ptbldir,'logs'),'logname','log_DCM2BIDS','name','DCM2BIDS');
   [R,status] = cat_parallelize2(job,mfilename,'data',popts);
@@ -76,7 +91,7 @@ function R = run(C,Psnr,nproc)
   if isempty(R)
     error('cat_io_dcm2bids_parallel:failed','All %d packages failed.',numel(pk));
   end
-  R.rendered = render; R.failed = failed;
+  R.rendered = render; R.reported = report; R.failed = failed;
   if failed > 0
     cat_io_cprintf('err','  %d package(s) failed, i.e. their scans are processed again by the next run.\n',failed);
   end
@@ -87,16 +102,16 @@ function pk = packages(Psnr,C)
 %  catDCM2BIDSdb/sub-<serial>-<PatientID>/ses-*/snr-*) as cell of indices,
 %  i.e. all scan directories of the same BIDS subject in the order of their
 %  first scan directory: the same PatientID (BIDS label), i.e. also of 
-%  several scanners for subject labels without site (opts.subIDform 1 and 
-%  3, e.g. for the T1w of other sessions), and otherwise the same site
-%  label and PatientID (opts.subIDform 2, 4, and 5, e.g. sub-SITE-PID, with
+%  several scanners for subject labels without site (opts.subIDform 1, 
+%  e.g. for the T1w of other sessions), and otherwise the same site label
+%  and PatientID (opts.subIDform 2, i.e. sub-SITE-PID, with
 %  the site label of the scanner, see setupSites in cat_io_dcm2bids_protocols,
 %  i.e. scanners with the same label of the site dictionary stay together), 
 %  e.g. the scanners of a traveling subject are processed in parallel. 
 %  Without context C of the run (job options and sites), the packages are
 %  given by the PatientID.
   persite = exist('C','var') && isfield(C,'job') && isfield(C.job.opts,'subIDform') && ...
-    ismember(C.job.opts.subIDform,[2 4 5]);
+    C.job.opts.subIDform == 2;
   Psub = cellfun(@(p) fileparts(fileparts(p)),Psnr,'UniformOutput',false);
   [usub,~,si] = unique(Psub,'stable');
   key = usub;
@@ -121,51 +136,38 @@ function pk = packages(Psnr,C)
   pk = arrayfun(@(k) find(ki == k)',1:max([0; ki(:)]),'UniformOutput',false);
 end
 % =========================================================================
-function new = newPackages(Psnr,pk,C)
-%newPackages. Packages pk of the scan directories Psnr with new scans, i.e.
-%  sessions that are not in the cumulative scan list of the database
-%  (scans.mat, see writeTables in cat_io_dcm2bids_tables) or scans without
-%  image (conversion, for the outputs 2 and 3, besides localizer and scouts
-%  that are ignored, see processScans in cat_io_dcm2bids_process), and all
-%  packages for opts.rerun (the test ends with the first new package, i.e.
-%  the following packages stay new).
-  new = true(1,numel(pk));
-  if C.job.opts.rerun, return; end
-  Pmat = fullfile(C.Ptbldir,'scans.mat');
-  if exist(Pmat,'file'), S = load(Pmat,'R'); known = unique({S.R.Session}); else, return; end
-  if C.job.opts.gzipi, niiext = '.nii.gz'; else, niiext = '.nii'; end
-  for k = 1:numel(pk)
-    new(k) = false;
-    for di = pk{k}
-      if ~ismember(fileparts(Psnr{di}(numel(C.Pmdbdir)+2:end)),known), new(k) = true; break; end
-      if C.job.opts.output < 2, continue; end
-      Pjson = cat_io_dcm2bids_db('getDBscanJSONs',Psnr{di});
-      for ji = 1:numel(Pjson)
-        parts = cat_io_dcm2bids_db('nameParts',spm_file(Pjson{ji},'basename'));
-        if ~any(cat_io_contains(lower(parts),{'localizer','scout'})) && ~exist(spm_file(Pjson{ji},'ext',niiext),'file')
-          new(k) = true; break
-        end
-      end
-      if new(k), break; end
-    end
-    if new(k), return; end % (one new package is enough)
-  end
-end
-% =========================================================================
-function R = processPackage(C,Psnr,render)
+function R = processPackage(C,Psnr,render,report)
 %processPackage. Convert the images of the scan directories Psnr (only
 %  into their subject directories, see convertSources in
 %  cat_io_dcm2bids_import), process the scans (see cat_io_dcm2bids_process),
-%  and render the subject and session reports of its subjects (render).
+%  render the subject and session reports of its subjects (render), and
+%  write the participant reports of its sessions (report), with the line
+%  of the processing times: conversion (DCM2NII), protocol test, export,
+%  and QC of the scans (QC/export), preprocessing of the sessions (PP, see
+%  R.tpp of processScans), and reports.
+  t0      = tic; 
   Psub    = unique(cellfun(@(p) fileparts(fileparts(p)),Psnr,'UniformOutput',false));
   convmsg = cat_io_dcm2bids_import('convertSources',Psnr,C.Pmdbdir,C.job.opts,Psub);
+  tconv   = toc(t0); 
   R       = cat_io_dcm2bids_process('processScans',C,Psnr,convmsg);
+  t1      = tic; 
   sub     = unique(R.sub(~cellfun('isempty',R.sub) & ~cellfun('isempty',R.BIDSsub)));
   if render && ~isempty(sub)
     ropts = C.job.opts.render; ropts.subfilter = sub; ropts.dbdir = C.Pmdbdir;
     cat_io_dcm2bids_render(fullfile(C.Poutdir,C.job.BIDSdir,C.job.BIDSsubdir), ...
       fullfile(C.Poutdir,[C.job.BIDSdir '-report'],'render',C.job.BIDSsubdir), ropts);
   end
+  if report && ~isempty(sub)
+    try
+      cat_io_dcm2bids_participantreport('writeReports',C.Poutdir,C.job,Psub);
+    catch e
+      cat_io_cprintf('err','  Participant reports failed: %s (%s, line %d)\n',e.message,e.stack(1).name,e.stack(1).line);
+    end
+  end
+  t   = round([tconv 0 R.tpp toc(t1) toc(t0)]); t(2) = max(0,t(5) - t(1) - t(3) - t(4)); % (QC/export as rest, i.e. the sum fits)
+  hms = @(t) char(duration(0,0,t,'Format','hh:mm:ss')); 
+  fprintf('%s\n',repmat('-',1,154)); 
+  fprintf('%154s\n',sprintf('DCM2NII %s + QC/export %s + PP %s + reports %s = %s',hms(t(1)),hms(t(2)),hms(t(3)),hms(t(4)),hms(t(5)))); 
 end
 % =========================================================================
 function R = mergeResults(res)
@@ -174,7 +176,7 @@ function R = mergeResults(res)
 %  participant data of a subject in several packages keeps the data of
 %  the first scan (minimum age, see processScans).
   R = res{1};
-  FN = {'rec','varg','dbV','Pdbjson','datatype','pstatus','site','sub','ses','BIDSfile','BIDSsub','intended','bidsroots','convver'};
+  FN = {'rec','varg','dbV','Pdbjson','datatype','pstatus','site','sub','ses','BIDSfile','BIDSsub','intended','bidsroots','convver','quarantine'};
   for ri = 2:numel(res)
     for fni = 1:numel(FN), R.(FN{fni}) = [R.(FN{fni}) res{ri}.(FN{fni})]; end
     for key = res{ri}.srcmap.keys, R.srcmap(key{1}) = res{ri}.srcmap(key{1}); end

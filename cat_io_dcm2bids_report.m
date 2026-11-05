@@ -34,8 +34,11 @@ function varargout = cat_io_dcm2bids_report(action,varargin)
 %                      of cat_io_dcm2bids_protocols)
 %  in <outdir>/<subdir>/<BIDSdir>-report/tables/<BIDSsubdir>/ with a JSON
 %  file of each table with the description of its columns, where <fmt> is
-%  opts.tableformat (csv or tsv) and missing values are n/a. The report 
+%  opts.tableformat (csv or tsv) and missing values are n/a. The report
 %  figure (see cat_io_dcm2bids_reportfig) shows the tables as diagrams.
+%  The tables are also given as Excel file with one sheet per table and
+%  colored ratings (<outdir>/<subdir>/<BIDSdir>-report/
+%  report_<BIDSsubdir>.xlsx, see opts.reportxlsx and writeWorkbook).
 %  The regional results of each session (see writeRegionTables) are in
 %  <outdir>/<subdir>/<BIDSdir>-report/regions/<BIDSsubdir>/:
 %    <sub>_<ses>_anat.<fmt>  tissue volumes of the lotter2025 regions 
@@ -76,27 +79,32 @@ function writeReportTables(Poutdir,job)
 
   % scans (all and the typical scan types)
   [cols,desc] = scanColumns('');
-  writeReport(fullfile(Preport,['scans.' fmt]),S,cols,desc,fmt);
+  X = writeReport(fullfile(Preport,['scans.' fmt]),S,cols,desc,fmt);
   [types,tnam] = scanTypes(job.opts);
   for ti = 1:numel(types)
     St = S(strcmp({S.type},types{ti}));
     if isempty(St), continue; end
     [cols,desc] = scanColumns(types{ti});
-    writeReport(fullfile(Preport,sprintf('scans_%s.%s',strrep(types{ti},'/','-'),fmt)),St,cols,desc,fmt);
+    X(end+1) = writeReport(fullfile(Preport,sprintf('scans_%s.%s',strrep(types{ti},'/','-'),fmt)),St,cols,desc,fmt); %#ok<AGROW>
   end
 
   % sessions and project
   E = sessionRecords(S,types,tnam);
   E = sessionStats(E);
   [cols,desc] = sessionColumns(types,tnam);
-  writeReport(fullfile(Preport,['sessions.' fmt]),E,cols,desc,fmt);
+  X(end+1) = writeReport(fullfile(Preport,['sessions.' fmt]),E,cols,desc,fmt);
   Q = projectRecords(S,E,job.subdir,types,tnam);
-  Pdict = {}; if isfield(job,'dicts') && isfield(job.dicts,'Pcenterdict'), Pdict = job.dicts.Pcenterdict; end
+  Pdict = {}; if isfield(job,'dataset') && isfield(job.dataset,'Pcenterdict'), Pdict = job.dataset.Pcenterdict; end
   col = cat_io_dcm2bids_protocols('siteColors',Pdict,fullfile(Poutdir,'catDCM2BIDSdb'),{Q.site}); % (site dictionary)
   [Q.color] = col{:};
   [cols,desc] = projectColumns(types,tnam);
-  writeReport(fullfile(Preport,['project.' fmt]),Q,cols,desc,fmt);
+  X(end+1) = writeReport(fullfile(Preport,['project.' fmt]),Q,cols,desc,fmt);
   fprintf('  Report tables: %s\n',Preport);
+
+  % Excel file of the tables (project, sessions, and scans)
+  mode = 'fixed'; if isfield(job.opts,'reportxlsx'), mode = job.opts.reportxlsx; end
+  writeWorkbook(fullfile(Poutdir,[job.BIDSdir '-report'],sprintf('report_%s.xlsx',job.BIDSsubdir)), ...
+    X([end end-1 1:end-2]),mode);
 
   % regional results of each session
   writeRegionTables(fullfile(Poutdir,[job.BIDSdir '-report'],'regions',job.BIDSsubdir),S,fmt);
@@ -656,10 +664,11 @@ function [cols,desc] = projectColumns(types,tnam)
   cols = C(:,1)'; desc = C(:,2)';
 end
 % =========================================================================
-function writeReport(Ptable,R,cols,desc,fmt)
+function X = writeReport(Ptable,R,cols,desc,fmt)
 %writeReport. Write the records R with the columns cols as table and the
 %  description of the columns as JSON file (BIDS style, with the rating
-%  scale of the marks).
+%  scale of the marks). The table X (name, data, and the columns of the
+%  ratings) is the sheet of the Excel file (see writeWorkbook).
   T = cols;
   for ri = 1:numel(R)
     T(end+1,:) = cellfun(@(c) R(ri).(c),cols,'UniformOutput',false); %#ok<AGROW>
@@ -672,6 +681,43 @@ function writeReport(Ptable,R,cols,desc,fmt)
   D.RatingScale = ['Ratings are school marks from 0.5 (best) to 10.5 (worst), i.e. 1 very good, ' ...
     '2 good, 3 satisfactory, 4 sufficient, 5 critical, 6 unacceptable. Missing values are n/a.'];
   cat_io_dcm2bids_helper('writeJSON',spm_file(Ptable,'ext','.json'),D);
+  X = struct('name',spm_file(Ptable,'basename'),'data',{T},'marks',{cols(contains(desc,'(marks'))});
+end
+% =========================================================================
+function writeWorkbook(P,X,mode)
+%writeWorkbook. Excel file P of the report tables X (one sheet per table,
+%  see writeReport and cat_io_xls) with the colors of the ratings as in the
+%  report figure (mode 'fixed', see opts.reportxlsx) or as color scale
+%  (mode 'scale', conditional formatting, e.g. of Google Sheets), the
+%  colors of the protocol status and of the sites (color column of the
+%  project table), and empty cells for missing values (mode 'none' - no
+%  file).
+  if exist(P,'file'), delete(P); end
+  if ~ismember(mode,{'fixed','scale'}), return; end
+  stat = {'conform','semiconform','nonconform'; '1','3','5.5'}; % ratings of the status colors (as the report figure)
+  C    = {X.data};
+  for xi = 1:numel(C)
+    for k = find(strcmp(C{xi}(1,:),'protocol_status'))
+      for r = 2:size(C{xi},1)
+        i = find(strcmp(C{xi}{r,k},stat(1,:)),1);
+        if ~isempty(i), C{xi}{r,k} = sprintf('\\bf\\color[marks]{%s}%s',stat{2,i},C{xi}{r,k}); end
+      end
+    end
+    for k = find(strcmp(C{xi}(1,:),'color'))
+      for r = 2:size(C{xi},1)
+        h = C{xi}{r,k};
+        if ischar(h) && ~isempty(regexp(h,'^#[0-9A-Fa-f]{6}$','once')), C{xi}{r,k} = ['\cellcolor[HTML]{' h(2:end) '}' h]; end
+      end
+    end
+  end
+  opt = struct('sheet',{X.name},'colorscale',cellfun(@(c) struct('cols',{c},'map','marks'),{X.marks},'UniformOutput',false), ...
+    'colormode',mode);
+  try
+    cat_io_xls(P,C,opt);
+    fprintf('  Report Excel file: %s\n',P);
+  catch e
+    cat_io_cprintf('err','  Report Excel file not written (%s).\n',e.message);
+  end
 end
 % =========================================================================
 function [types,names] = scanTypes(opts)

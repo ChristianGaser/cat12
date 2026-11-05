@@ -6,10 +6,10 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 %  Therefore, the scans are rendered separately for each image type
 %  (dataset/datatype/subtype, e.g. anat/t1w or fmap/epi_part-phase with the
 %  suffix, the image part and inversion, and the prefix of derivatives) and
-%  are comparable, as all images are sampled at the same positions in MNI 
+%  are comparable, as all images are sampled at the same positions in MNI
 %  space using the registration of the session (catDCM2BIDSaffine_sub-*_
-%  ses-*.json in the derivatives directory of the session, see 
-%  writeSessionAffines in cat_io_dcm2bids_pp_anat), i.e., independent of the 
+%  ses-*.json in the derivatives directory of the session, see
+%  writeSessionAffines in cat_io_dcm2bids_pp_anat), i.e., independent of the
 %  matrix size, slice
 %  orientation, and the position of the origin. Spatially normalized
 %  derivatives (prefix w or mw, e.g. mwc1) are already in MNI space and are
@@ -26,7 +26,7 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 %    coronal y=0       .. subcortical structures
 %    sagittal x=0      .. between the hemispheres, shows the origin offset
 %                         (x=+30 for EPI images, i.e. func, dwi, and perf with
-%                         their maps and composites, as the midline shows 
+%                         their maps and composites, as the midline shows
 %                         little of their lower resolution, see epiSlices)
 %  One slice is limited to understand the whole volume, whereas the three
 %  orientations already show much better what is happening in the volume.
@@ -43,28 +43,33 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 %         [dataset/]datatype/subtype/render_<subtype>_slice_<orientation>_<axis><pos>_p##.png
 %       This gives a very brief overview of many images but is biased by
 %       the selected slice, i.e., it is useful for a rough global review.
-%       Each tile shows the subject, the session with the quality rating 
-%       SQR, and the scan (BIDS entities, e.g. the acquisition label with 
+%       Each tile shows the subject, the session with the quality rating
+%       SQR, and the scan (BIDS entities, e.g. the acquisition label with
 %       the series number and protocol).
 %   R2) Scan-row pages with one row per scan with a header (BIDS filename
 %       and an underline over the whole page), an information panel
 %       (quality ratings, image and acquisition parameters, registration),
-%       and the slices axial z=+10, sagittal x=0 (x=+30 for EPI), and 
+%       and the slices axial z=+10, sagittal x=0 (x=+30 for EPI), and
 %       coronal y=0:
 %         [dataset/]datatype/subtype/render_<subtype>_rows_p##.png
 %       with 6 scans per page.
 %   R3) Subject and session reports with the scan rows (as R2) of selected images of a
-%       subject (subject perspective, see renderSubjectOrder): original 
+%       subject (subject perspective, see renderSubjectOrder): original
 %       anatomical scan of the segmentation (e.g. T1w), its label map (c0),
-%       normalized GM, DEC map with the bias-corrected T1w as underlay, and 
+%       normalized GM, DEC map with the bias-corrected T1w as underlay, and
 %       mean EPI with the network of the rs-fMRI (similar images of several
-%       scans together), otherwise all  
+%       scans together), otherwise all
 %       scans, as one PNG file per page of each subject with the page number
-%       first (i.e. the same page of all subjects one after another, e.g. 
-%       the T1w rows of the first page) and a summary page with the best 
-%       image of each selected type (p00), and as one PDF per session (scans
-%       of the session in the order of the subject report):
+%       first (i.e. the same page of all subjects one after another, e.g.
+%       the T1w rows of the first page) and a summary page with the best
+%       image of each selected type (p00, with the thickness of the quick
+%       surfaces instead of the label map if available), a surface report
+%       with all values of the quick surfaces of each session (one page
+%       with 8 rows per session, see surfaceOrder), and as one PDF per
+%       session (scans of the session in the order of the subject report,
+%       followed by its surface report):
 %         [dataset/]subjects/p<page>_<sub>.png
+%         [dataset/]subjects/surf_p<page>_<sub>.png
 %         [dataset/]sessions/render_<sub>_<ses>.pdf
 %   rows/  .. slice row of each scan without text as separate image
 %             (e.g. for a later interactive HTML report)
@@ -72,18 +77,18 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 %  The A4 portrait format of SPM is used. It allows to compare multiple
 %  pages on one screen and limits the number of output pages.
 %  4D data is represented by the denoised average of its first volumes of
-%  the QC (see cat_io_dcm2bids_qc), otherwise by its first volume. The 
-%  denoised average is not rendered as own image type, realigned 4D data 
+%  the QC (see cat_io_dcm2bids_qc), otherwise by its first volume. The
+%  denoised average is not rendered as own image type, realigned 4D data
 %  (prefix r) not at all, as it equals its scan, as well as field maps
-%  (fmap) and the normalized FA (wFA, for voxel-based analyses). 
+%  (fmap) and the normalized FA (wFA, for voxel-based analyses).
 %  The DTI maps of cat_io_dcm2bids_pp_dwi (FA, the direction-encoded color
-%  map DEC, and MD, AD, and RD for opts.dtimaps > 1) are rendered as own 
-%  image types (e.g. dwi/dwi_FA) with fixed intensity windows (FA 0-1, 
-%  diffusivities 0-0.003 mm2/s, see renderWindow), the DEC map in color 
-%  (principal direction in head orientation: x red, y green, z blue, with 
+%  map DEC, and MD, AD, and RD for opts.dtimaps > 1) are rendered as own
+%  image types (e.g. dwi/dwi_FA) with fixed intensity windows (FA 0-1,
+%  diffusivities 0-0.003 mm2/s, see renderWindow), the DEC map in color
+%  (principal direction in head orientation: x red, y green, z blue, with
 %  the FA as brightness).
 %  Composite images are rendered as own image types (e.g. for the subject
-%  report): the DEC map on the darkened bias-corrected image of the 
+%  report): the DEC map on the darkened bias-corrected image of the
 %  segmentation of the session (e.g. dwi_DECt1w, FA as opacity, the DEC map
 %  in the space of the T1w by the non-linear coregistration if available,
 %  see toT1w in cat_io_dcm2bids_pp_anat, with the abbreviations of the
@@ -93,24 +98,31 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 %  FreeSurfer colors and the GM as opacity, the abbreviations of the larger
 %  GM regions in the slices of the scan rows, see sliceLabels, and the
 %  volumes of the lobes in the information panel, see lobeVolumes in
-%  cat_io_dcm2bids_pp_anat), and the mean EPI with the network of the
+%  cat_io_dcm2bids_pp_anat), the quick surfaces of the T1w (see
+%  cat_io_dcm2bids_pp_surf) with its intensity, thickness, curvature,
+%  sulcal depth, and atlas regions (with the abbreviations of the larger
+%  visible regions), with the superficial WM directions of the DEC map, and
+%  with the mean EPI of the rs-fMRI (left, top, and right view in MNI
+%  orientation instead of the slices, sulci darkened by the depth, the
+%  values of the lobes in the information panel, see surfComposite,
+%  surfaceViews, and surfaceLobes), and the mean EPI with the network of the
 %  rs-fMRI (bold_conn: schematic network as vector graphics on the pages,
-%  i.e. axial slices with the 7 networks of both hemispheres, sagittal 
-%  slices with the parts of the networks (hemispheres averaged, ring for 
+%  i.e. axial slices with the 7 networks of both hemispheres, sagittal
+%  slices with the parts of the networks (hemispheres averaged, ring for
 %  the connectivity between the hemispheres), both at schematic positions
-%  where the edges do not pass other nodes, and the matrix of the 
+%  where the edges do not pass other nodes, and the matrix of the
 %  connectivity within and between the
 %  networks instead of the coronal slice, nodes by the connectivity within
 %  and edges by the connectivity between them, and the segregation of each
-%  network in the legend, see networkGeometry). DWI and fMRI scans with a     
-%  coregistration to the T1w of their preprocessing (see coregAnat in 
-%  cat_io_dcm2bids_pp_anat) use the registration of the T1w and this 
+%  network in the legend, see networkGeometry). DWI and fMRI scans with a
+%  coregistration to the T1w of their preprocessing (see coregAnat in
+%  cat_io_dcm2bids_pp_anat) use the registration of the T1w and this
 %  coregistration (e.g. after a repositioning of the subject), i.e. the
-%  images are aligned by the rigid coregistration and the affine 
-%  registration of the session (the DEC composite by the non-linear 
-%  coregistration, without normalization), as well as other scans that 
+%  images are aligned by the rigid coregistration and the affine
+%  registration of the session (the DEC composite by the non-linear
+%  coregistration, without normalization), as well as other scans that
 %  are not aligned with the anatomical scan of the session (coregistration
-%  of the alignment test in their QC JSON, see scannerAlignment in 
+%  of the alignment test in their QC JSON, see scannerAlignment in
 %  cat_io_dcm2bids_pp_anat).
 %
 %  cat_io_dcm2bids_render(PBIDS,Preport,ropts)
@@ -143,19 +155,19 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 %   .rowimg    .. write the slice row of each scan as image (1)
 %   .cache     .. use and write the slice cache (1)
 %   .fov       .. in-plane field of view in mm (200)
-%   .res       .. in-plane resolution in mm (default 300/dpi, i.e., 1 mm 
+%   .res       .. in-plane resolution in mm (default 300/dpi, i.e., 1 mm
 %                 for 300 dpi and 0.5 mm for 600 dpi)
 %   .interp    .. interpolation: 0-nearest neighbor, 1-trilinear, 2-7 B-spline
-%                 degree (default: trilinear for dpi<=300 (fast), otherwise 
+%                 degree (default: trilinear for dpi<=300 (fast), otherwise
 %                 4th degree B-spline for the finer sampling (slower))
 %   .dpi       .. print resolution (300)
-%   .subfilter .. only the subject and session reports (R3) of these 
-%                 subjects (BIDS labels, e.g. sub-01) with the slice cache 
+%   .subfilter .. only the subject and session reports (R3) of these
+%                 subjects (BIDS labels, e.g. sub-01) with the slice cache
 %                 and the slice rows for R1/R2, e.g. of a subject package of
-%                 a parallel process (see cat_io_dcm2bids_parallel), whereas 
+%                 a parallel process (see cat_io_dcm2bids_parallel), whereas
 %                 R1/R2 of all subjects are rendered after all packages ({})
-%   .dbdir     .. database directory with the derivatives index, i.e. the 
-%                 derivatives that were not exported to the BIDS 
+%   .dbdir     .. database directory with the derivatives index, i.e. the
+%                 derivatives that were not exported to the BIDS
 %                 derivatives (opts.preprocessing = 1, see registerDerivative
 %                 in cat_io_dcm2bids_helper) are rendered from the database
 %                 as if they were exported ('' - catDCM2BIDSdb of the output
@@ -183,8 +195,8 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
   ropts = cat_io_checkinopt(ropts,def);
   ropts.slices = slices;
   ropts.rows   = ropts.rows > 0;  % former option with two rows (2)
-  % the sampling resolution follows the print resolution (300 dpi - 1 mm), 
-  % i.e., only higher resolutions use the slower B-spline interpolation 
+  % the sampling resolution follows the print resolution (300 dpi - 1 mm),
+  % i.e., only higher resolutions use the slower B-spline interpolation
   if isempty(ropts.res),    ropts.res    = 300 / ropts.dpi; end
   if isempty(ropts.interp), ropts.interp = 1 + 3*(ropts.dpi > 300); end
 
@@ -209,7 +221,7 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
 
   % derivatives index of the database (see sourceFile)
   if isempty(ropts.dbdir), ropts.dbdir = databaseDir(PBIDS); end
-  Ddb = cat_io_dcm2bids_helper('derivativeIndex',ropts.dbdir); 
+  Ddb = cat_io_dcm2bids_helper('derivativeIndex',ropts.dbdir);
   sourceFile('',Ddb);
 
   % all slices (K) of R1 and of the scan rows of R2/R3 to sample each scan
@@ -231,8 +243,8 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
   %% find and describe images
   % (with the derivatives that are only in the database, see sourceFile)
   P  = cat_vol_findfiles(PBIDS,'*sub-*.nii*');
-  Pv = keys(Ddb); Pv = Pv(strncmp(Pv,[PBIDS filesep],numel(PBIDS)+1)); 
-  Pv = Pv(~cellfun(@(f) exist(f,'file')>0,Pv)); 
+  Pv = keys(Ddb); Pv = Pv(strncmp(Pv,[PBIDS filesep],numel(PBIDS)+1));
+  Pv = Pv(~cellfun(@(f) exist(f,'file')>0,Pv));
   P  = [P(:); Pv(:)];
   P = P( ~cellfun('isempty',regexp(P,'\.nii(\.gz)?$','once')) );
   P = P( cellfun('isempty',regexp(spm_file(P,'filename'),'^catDCM2BIDS(qc|dwi_wFA|dwi_DECt1w|dwimix_wFA|dwimix_DECt1w)_','once')) ); % QC maps (shown with their scan), wFA (analyses), and DECt1w (composite)
@@ -247,8 +259,8 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
     case 2, P = P( isderiv); isderiv = isderiv( isderiv);
   end
   if ~isempty(ropts.subfilter) % (subject packages, see cat_io_dcm2bids_parallel)
-    psub = cellfun(@(f) regexp(f,'sub-[^_]+','match','once'),spm_file(P,'filename'),'UniformOutput',false); 
-    P    = P(ismember(psub,cellstr(ropts.subfilter))); isderiv = isderiv(ismember(psub,cellstr(ropts.subfilter))); 
+    psub = cellfun(@(f) regexp(f,'sub-[^_]+','match','once'),spm_file(P,'filename'),'UniformOutput',false);
+    P    = P(ismember(psub,cellstr(ropts.subfilter))); isderiv = isderiv(ismember(psub,cellstr(ropts.subfilter)));
   end
   if isempty(P), return; end
 
@@ -313,19 +325,19 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
     end
 
     % denoised average of 4D data of the QC (see cat_io_dcm2bids_qc), but
-    % not of phase images (e.g. part-phase or phasediff) 
+    % not of phase images (e.g. part-phase or phasediff)
     if ~isderiv(fi) && isempty(regexp(bidsname,'_part-phase_|_phase(diff|1|2)$','once'))
       Pm = niiOf(fullfile(droot,reldir,['catDCM2BIDSqc_denoisedavg_' bidsname]));
       if ~isempty(Pm), F(fi).qcmaps.denoisedavg = Pm; end
     end
 
-    % results of the DTI and rs-fMRI preprocessing of the scan (see 
+    % results of the DTI and rs-fMRI preprocessing of the scan (see
     % cat_io_dcm2bids_pp_dwi/_rsfmri): the coregistration to the T1w, i.e.
     % the scan and its maps in the space of the scan use the registration of
-    % the T1w and the coregistration (e.g. after a repositioning of the 
+    % the T1w and the coregistration (e.g. after a repositioning of the
     % subject), and the global values (information panel)
     pps = {'dwi','rsfmri'}; if startsWith(prefix,'mix'), pps = {'dwimix'}; end % (mixed DTI, see cat_io_dcm2bids_pp_dwi)
-    ppcoreg = false; 
+    ppcoreg = false;
     for pp = pps
       Pj = fullfile(droot,reldir,['catDCM2BIDS' pp{1} '_' bidsname '.json']);
       if exist(Pj,'file')
@@ -334,7 +346,7 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
           if isempty(regexp(prefix,'^m?w','once')) && isfield(F(fi).pp,'coreg') && ...
               isnumeric(F(fi).pp.coreg) && isequal(size(F(fi).pp.coreg),[4 4])
             % (the T1w of another session, i.e. a session without anatomical
-            % scan, with the registration of the session of the T1w, 
+            % scan, with the registration of the session of the T1w,
             % otherwise the registration of the session by the coregistration,
             % see coregSessionAffine in cat_io_dcm2bids_pp_anat)
             so = regexp(otherT1w(F(fi)),'_(ses-[^_]+)_','tokens','once');
@@ -393,18 +405,18 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
       end
     end
   end
-  % derivatives of the database without their raw scan (e.g. of former 
+  % derivatives of the database without their raw scan (e.g. of former
   % runs with other BIDS names)
-  idb = find(ismember({F.file},Pv)); 
-  F(idb(~arrayfun(@(f) exist(f.json,'file')>0,F(idb)))) = []; 
+  idb = find(ismember({F.file},Pv));
+  F(idb(~arrayfun(@(f) exist(f.json,'file')>0,F(idb)))) = [];
   if isempty(F), return; end
 
 
-  % sessions without anatomical scan: the T1w of another session (BIDS 
-  % name) for all images of the session that rely on it, i.e. the DTI and 
-  % rs-fMRI results of the session (method.T1w_other_session, see otherT1w) 
-  % and the scans with the registration of the session by their 
-  % coregistration (see coregSessionAffine in cat_io_dcm2bids_pp_anat), 
+  % sessions without anatomical scan: the T1w of another session (BIDS
+  % name) for all images of the session that rely on it, i.e. the DTI and
+  % rs-fMRI results of the session (method.T1w_other_session, see otherT1w)
+  % and the scans with the registration of the session by their
+  % coregistration (see coregSessionAffine in cat_io_dcm2bids_pp_anat),
   % shown as warning (see anatOther)
   t1o = containers.Map('KeyType','char','ValueType','char');
   for fi = 1:numel(F), t1 = otherT1w(F(fi)); if ~isempty(t1), t1o([F(fi).dataset '|' F(fi).sub '|' F(fi).ses]) = t1; end, end
@@ -418,11 +430,11 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
   %% composite images (own image types, e.g. for the subject report): the
   % DEC map on the bias-corrected image of the segmentation of the session
   % (see method.T1w of the DTI) as underlay with its own registration (e.g.
-  % dwi_DECt1w), where the DEC map in the space of the T1w (non-linear 
-  % coregistration, see toT1w in cat_io_dcm2bids_pp_anat) is used if 
-  % available (otherwise the DEC map of the scan with the rigid 
-  % coregistration), and the mean EPI with the network of the rs-fMRI 
-  % (bold_conn)
+  % dwi_DECt1w), where the DEC map in the space of the T1w (non-linear
+  % coregistration, see toT1w in cat_io_dcm2bids_pp_anat) is used if
+  % available (otherwise the DEC map of the scan with the rigid
+  % coregistration), the mean EPI with the network of the rs-fMRI
+  % (bold_conn), and the quick surfaces of the T1w (see surfComposite)
   Fc = F([]);
   for fi = 1:numel(F)
     pp = fileparts(F(fi).file);
@@ -440,11 +452,31 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
             Pt = niiOf(fullfile(pp,[pf '_DECt1w_' F(fi).bidsname]));
             if ~isempty(Pt), C.file = Pt; C.T = Fm(1).T; end % (DEC map in the space of the T1w)
             Fc(end+1) = C; %#ok<AGROW>
+            % superficial WM directions on the surfaces of the T1w (DEC map in
+            % its space, otherwise of the scan by the coregistration)
+            if ~isempty(surfFiles(Fm(1)))
+              Pd = Pt; if isempty(Pd), Pd = F(fi).file; end
+              Fc(end+1) = surfComposite(F(fi),Fm(1),Pd,[F(fi).prefix 'surf']); %#ok<AGROW>
+            end
           end
         end
       case 'mean'
         Pc = fullfile(pp,['catDCM2BIDSrsfmri_conn_' F(fi).bidsname '.tsv']);
         if exist(sourceFile(Pc),'file'), Fc(end+1) = composite(F(fi),'conn','',Pc,'conn'); end %#ok<AGROW>
+        % mean EPI on the surfaces of the T1w (by the coregistration of the rs-fMRI)
+        if isstruct(F(fi).pp) && isfield(F(fi).pp,'coreg') && isfield(F(fi).pp,'method') && isfield(F(fi).pp.method,'T1w')
+          ba = regexprep(char(F(fi).pp.method.T1w),'\.nii$','');
+          Fm = F(strcmp({F.prefix},'m') & strcmp({F.bidsname},ba) & strcmp({F.dataset},F(fi).dataset));
+          if ~isempty(Fm) && ~isempty(Fm(1).T) && ~isempty(surfFiles(Fm(1)))
+            Fc(end+1) = surfComposite(F(fi),Fm(1),F(fi).file,'meansurf'); %#ok<AGROW>
+          end
+        end
+      case 'm' % (bias-corrected T1w of the segmentation: its quick surfaces, see cat_io_dcm2bids_pp_surf)
+        if strcmp(F(fi).datatype,'anat') && ~isempty(F(fi).T) && ~isempty(surfFiles(F(fi)))
+          for tag = {'surfT1w','surfthickness','surfcurvature','surfdepth','surfatlas'}
+            Fc(end+1) = surfComposite(F(fi),F(fi),'',tag{1}); %#ok<AGROW>
+          end
+        end
     end
   end
   F = [F(:); Fc(:)];
@@ -469,7 +501,7 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
     [~,k1] = ismember(unique(epiSlices(Fg(1),ropts.slices),'rows','stable'),Kg,'rows');
     [~,k2] = ismember(epiSlices(Fg(1),rowslices),Kg,'rows');
 
-    % prepare output directory (remove old pages, not for the subject 
+    % prepare output directory (remove old pages, not for the subject
     % packages that only fill the cache, see ropts.subfilter)
     Pout = fullfile(Preport,groups{gi});
     if ~exist(Pout,'dir'), mkdir(Pout); end
@@ -530,30 +562,40 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
   if ropts.subjects
     [subs,~,sid] = unique(strcat({F.dataset},'|',{F.sub}));
     for si = 1:numel(subs)
-      Fs = renderSubjectOrder(F(sid==si),ropts);
-      Y  = zeros(n,n,3,numel(Fs),'uint8'); Yov = Y; Yc = cell(1,numel(Fs)); Ks = zeros(3,2,numel(Fs));
-      for fi = 1:numel(Fs)
-        Ks(:,:,fi) = epiSlices(Fs(fi),rowslices); % (slices of each scan, e.g. sagittal x=+30 for EPI)
-        S = renderScanSlices(Fs(fi),Ks(:,:,fi),ropts,Pcache(Fs(fi)));
-        Y(:,:,:,fi) = S.Y; Yov(:,:,:,fi) = S.Yov; Yc{fi} = S.C; Fs(fi).lab = S.lab;
-        Fs(fi).readerr = S.readerr; Fs(fi).dim = S.dim; Fs(fi).vx = S.vx; Fs(fi).nvol = S.nvol; Fs(fi).qcused = S.qc;
-      end
+      [Fs,Y,Yov,Yc,Ks] = subjectSlices(renderSubjectOrder(F(sid==si),ropts),rowslices,ropts,Pcache,n);
+      [Fu,Yu,Yuov,Yuc,Ku] = subjectSlices(surfaceOrder(F(sid==si),ropts),rowslices,ropts,Pcache,n); % (surface report)
+      if isempty(Fs), continue; end
       Pout = fullfile(Preport,Fs(1).dataset,'subjects');
       if ~exist(Pout,'dir'), mkdir(Pout); end
-      Pold = [cat_vol_findfiles(Pout,['p*_' Fs(1).sub '.png'],struct('depth',0)); {fullfile(Pout,['render_' Fs(1).sub '.pdf'])}];
+      Pold = [cat_vol_findfiles(Pout,['p*_' Fs(1).sub '.png'],struct('depth',0)); cat_vol_findfiles(Pout,['surf_p*_' Fs(1).sub '.png'],struct('depth',0)); ...
+        {fullfile(Pout,['render_' Fs(1).sub '.pdf'])}];
       for oi = 1:numel(Pold), if exist(Pold{oi},'file'), delete(Pold{oi}); end, end % (former runs and versions)
-      % summary page with the best image of each selected type (page 0) and
-      % the pages of the subject report as separate files with the page 
-      % number first (e.g. p01_<sub>.png, i.e. the same page of all subjects
-      % one after another)
-      bi = summaryScans(Fs);
+      % summary page with the best image of each selected type (page 0, also
+      % the thickness of the quick surfaces) and the pages of the subject
+      % report as separate files with the page number first (e.g.
+      % p01_<sub>.png, i.e. the same page of all subjects one after another)
+      Fa = [Fs(:); Fu(:)]; Ya = cat(4,Y,Yu); Yaov = cat(4,Yov,Yuov); Yac = [Yc Yuc]; Ka = cat(3,Ks,Ku);
+      bi = summaryScans(Fa);
       if ~isempty(bi)
-        renderRowPages(fh,Fs(bi),Y(:,:,:,bi),Yov(:,:,:,bi),Yc(bi),Ks(:,:,bi),[fullfile(Fs(1).dataset,Fs(1).sub) ' summary'], ...
+        renderRowPages(fh,Fa(bi),Ya(:,:,:,bi),Yaov(:,:,:,bi),Yac(bi),Ka(:,:,bi),[fullfile(Fs(1).dataset,Fs(1).sub) ' summary'], ...
           fullfile(Pout,['p00_' Fs(1).sub '.png']),1,ropts,G);
       end
+      clear Fa Ya Yaov Yac Ka
       np = renderRowPages(fh,Fs,Y,Yov,Yc,Ks,fullfile(Fs(1).dataset,Fs(1).sub),fullfile(Pout,['p%02d_' Fs(1).sub '.png']),1,ropts,G);
       cat_io_cprintf('blue',sprintf('  Rendered %4d images in %3d subject page(s) and a summary: %s\n', ...
         numel(Fs), np, fullfile(Pout,['p*_' Fs(1).sub '.png'])));
+      % surface report: all values of the quick surfaces of each session
+      % (one page per session with 8 rows, see surfaceOrder)
+      if ~isempty(Fu)
+        [useu,~,ieu] = unique({Fu.ses},'stable'); np = 0;
+        for ei = 1:numel(useu)
+          k  = find(ieu(:)' == ei);
+          np = np + renderRowPages(fh,Fu(k),Yu(:,:,:,k),Yuov(:,:,:,k),Yuc(k),Ku(:,:,k),[fullfile(Fs(1).dataset,Fs(1).sub) ' surfaces'], ...
+            fullfile(Pout,['surf_p%02d_' Fs(1).sub '.png']),1,ropts,G,8,np);
+        end
+        cat_io_cprintf('blue',sprintf('  Rendered %4d surfaces in %3d surface page(s): %s\n', ...
+          numel(Fu), np, fullfile(Pout,['surf_p*_' Fs(1).sub '.png'])));
+      end
       % session reports (scans of each session in the order of the subject report)
       [uses,~,ise] = unique({Fs.ses},'stable');
       for ei = find(~cellfun('isempty',uses(:)'))
@@ -576,21 +618,43 @@ function cat_io_dcm2bids_render(PBIDS,Preport,ropts)
         if exist(Ppdf,'file'), delete(Ppdf); end
         np = renderRowPages(fh,Fk(k),Y(:,:,:,k),Yov(:,:,:,k),Yc(k),Ks(:,:,k),fullfile(Fs(1).dataset,[Fs(1).sub '_' uses{ei}]), ...
           Ppdf,1,ropts,G);
-        cat_io_cprintf('blue',sprintf('  Rendered %4d images in %3d session page(s): %s\n',numel(k),np,Ppdf));
+        ku = find(strcmp({Fu.ses},uses{ei})); % (surface report of the session)
+        if ~isempty(ku)
+          np = np + renderRowPages(fh,Fu(ku),Yu(:,:,:,ku),Yuov(:,:,:,ku),Yuc(ku),Ku(:,:,ku), ...
+            fullfile(Fs(1).dataset,[Fs(1).sub '_' uses{ei} ' surfaces']),Ppdf,1,ropts,G,8);
+        end
+        cat_io_cprintf('blue',sprintf('  Rendered %4d images in %3d session page(s): %s\n',numel(k) + numel(ku),np,Ppdf));
       end
     end
   end
 end
 % =========================================================================
+function [Fs,Y,Yov,Yc,Ks] = subjectSlices(Fs,rowslices,ropts,Pcache,n)
+%subjectSlices. Slices (or surface views) of the scan rows of the scans Fs
+%  of a subject report (rowslices of each scan, e.g. sagittal x=+30 for
+%  EPI, see epiSlices) from the cache (see renderScanSlices with the cache
+%  file Pcache(F)) with the slice size n, and the header information of
+%  the scans.
+  Y  = zeros(n,n,3,numel(Fs),'uint8'); Yov = Y; Yc = cell(1,numel(Fs)); Ks = zeros(3,2,numel(Fs));
+  for fi = 1:numel(Fs)
+    Ks(:,:,fi) = epiSlices(Fs(fi),rowslices);
+    S = renderScanSlices(Fs(fi),Ks(:,:,fi),ropts,Pcache(Fs(fi)));
+    Y(:,:,:,fi) = S.Y; Yov(:,:,:,fi) = S.Yov; Yc{fi} = S.C; Fs(fi).lab = S.lab;
+    Fs(fi).readerr = S.readerr; Fs(fi).dim = S.dim; Fs(fi).vx = S.vx; Fs(fi).nvol = S.nvol; Fs(fi).qcused = S.qc;
+  end
+end
+% =========================================================================
 function bi = summaryScans(Fs)
-%summaryScans. Scans of the summary page of a subject (see 
-%  renderSubjectOrder): the best scan (lowest SQR, the first for equal
-%  ratings) of each selected image type, i.e. the anatomical scan of the
-%  segmentation, its label map, atlas labels, and normalized GM, the DEC map (of the 
-%  mixed DTI if available), and the network of the rs-fMRI.
+%summaryScans. Scans of the summary page of a subject (see
+%  renderSubjectOrder and surfaceOrder): the best scan (lowest SQR, the
+%  first for equal ratings) of each selected image type, i.e. the
+%  anatomical scan of the segmentation, its atlas labels, normalized GM,
+%  and the thickness of its quick surfaces (otherwise its label map), the
+%  DEC map (of the mixed DTI if available), and the network of the rs-fMRI.
   st  = regexprep({Fs(~cellfun('isempty',regexp({Fs.subtype},'_c0$','once'))).subtype},'_c0$','');
   dec = {Fs(strcmp({Fs.kind},'dec')).subtype}; mix = dec(contains(dec,'mix')); if ~isempty(mix), dec = mix; end
-  types = {st, strcat(st,'_c0'), strcat(st,'_lotter2025'), strcat(st,'_mwc1'), dec, {'bold_conn'}}; bi = [];
+  sf  = strcat(st,'_surfthickness'); if ~any(ismember({Fs.subtype},sf)), sf = strcat(st,'_c0'); end
+  types = {st, strcat(st,'_lotter2025'), strcat(st,'_mwc1'), sf, dec, {'bold_conn'}}; bi = [];
   for ti = 1:numel(types)
     k = find(ismember({Fs.subtype},types{ti}));
     if isempty(k), continue; end
@@ -599,7 +663,7 @@ function bi = summaryScans(Fs)
 end
 % =========================================================================
 function str = shellString(b)
-%shellString. Number of volumes of each b-value shell, e.g. '3x b0, 8x 
+%shellString. Number of volumes of each b-value shell, e.g. '3x b0, 8x
 %  b50, 64x b1200' (b-values rounded to 50, values within 10% combined, and
 %  shells with less than 3 volumes counted to the closest shell).
   b = 50 * round(b(:)' / 50); u = unique(b); c = arrayfun(@(v) nnz(b == v),u);
@@ -620,9 +684,9 @@ end
 % =========================================================================
 function np = renderOverviewPages(fh,Fg,Y,Yov,Yc,K,group,Pout,ropts,G)
 %renderOverviewPages. R1 pages with one slice per scan in m x n tiles.
-%  Y and Yov are the slices (n x n x slices x scans) of the slices K, Yc 
+%  Y and Yov are the slices (n x n x slices x scans) of the slices K, Yc
 %  the color slices of each scan (empty for gray-scale images). Each
-%  tile shows the subject, the session with the quality rating SQR, and 
+%  tile shows the subject, the session with the quality rating SQR, and
 %  the scan (BIDS entities besides the subject, session, and suffix, e.g.
 %  the acquisition label with series number and protocol) in its header.
   nx = ropts.tiles(1); ny = ropts.tiles(2); nt = nx*ny;
@@ -636,7 +700,7 @@ function np = renderOverviewPages(fh,Fg,Y,Yov,Yc,K,group,Pout,ropts,G)
   cw = round(max(n, (n+hd)*tw/th)); ch = round(max(n+hd, n*th/tw)); % tile size in pixel
   np = ceil(numel(Fg)/nt);
 
-  % labels: subject, session with the quality rating, and scan (e.g. 
+  % labels: subject, session with the quality rating, and scan (e.g.
   % acq-007T1wMPR, i.e. several scans or protocols of a subject) in rows
   lab = cell(1,numel(Fg));
   for fi = 1:numel(Fg)
@@ -657,7 +721,7 @@ function np = renderOverviewPages(fh,Fg,Y,Yov,Yc,K,group,Pout,ropts,G)
 
   Gn = cell(1,numel(Fg)); % schematic networks of the rs-fMRI (vector graphics, see networkGeometry)
   for fi = find(strcmp({Fg.kind},'conn')), Gn{fi} = networkGeometry(K,Fg(fi).over,ropts,n); end
-  Lv = arrayfun(@(F) overlayLines(F.T,K,ropts,n),Fg,'UniformOutput',false); % lines of the scanner planes
+  Lv = arrayfun(@(F) overlayLines(planeTransform(F),K,ropts,n),Fg,'UniformOutput',false); % lines of the scanner planes
 
   % pages for each orientation and slice position
   for ki = 1:size(K,1)
@@ -666,8 +730,10 @@ function np = renderOverviewPages(fh,Fg,Y,Yov,Yc,K,group,Pout,ropts,G)
 
       % page title and legend of the overlay lines
       ax = axes('Parent',fh,'Position',[mg 1-mg-ht 1-2*mg ht],'Color','k','Visible','off');
-      text(ax,0,0.5,sprintf('%s  (%s, %s, %s=%+0.0fmm, page %d/%d)', group, ...
-        G.orientnam{K(ki,1)}, ropts.slicemode, G.axisnam(K(ki,1)), K(ki,2), pgi, np), ...
+      ttl = sprintf('%s  (%s, %s, %s=%+0.0fmm, page %d/%d)', group, ...
+        G.orientnam{K(ki,1)}, ropts.slicemode, G.axisnam(K(ki,1)), K(ki,2), pgi, np);
+      if strcmp(Fg(1).kind,'surf'), ttl = sprintf('%s  (%s view, %s, page %d/%d)',group,surfViewName(K(ki,:)),ropts.slicemode,pgi,np); end
+      text(ax,0,0.5,ttl, ...
         'Color','w','FontSize',fs+1,'Interpreter','none','VerticalAlignment','middle');
       renderLegend(ax,1,0.5,fs,G.ovc);
 
@@ -709,19 +775,21 @@ function np = renderOverviewPages(fh,Fg,Y,Yov,Yc,K,group,Pout,ropts,G)
   np = np * size(K,1);
 end
 % =========================================================================
-function np = renderRowPages(fh,Fg,Y,Yov,Yc,K,ttl,Ppage,showgroup,ropts,G)
+function np = renderRowPages(fh,Fg,Y,Yov,Yc,K,ttl,Ppage,showgroup,ropts,G,nps,p0)
 %renderRowPages. Pages with one row of 3 slices per scan (R2 and R3), with
 %  the color slices Yc of each scan (empty for gray-scale images).
 %  Each scan starts with a header with its BIDS filename (and its image
 %  type for showgroup=1) and an underline over the whole page, followed by
 %  an information panel (see renderInfoText) and the slices K (common, or
 %  per scan as 3 x 2 x scans, e.g. the sagittal slice x=+30 of EPI images,
-%  see epiSlices). The tile size is given by the page height with 6 scans 
-%  per page, whereas the
+%  see epiSlices). The tile size is given by the page height with nps
+%  scans per page (6 by default, 8 for the surface report), whereas the
 %  panel uses the remaining width. Ppage is either a PNG filename pattern
-%  with the page number (%02d) or a PDF file to which all pages are
+%  with the page number (%02d, after the pages p0 of former calls, e.g. of
+%  other sessions) or a PDF file to which all pages are
 %  appended (one file, e.g. per subject).
-  nps = 6;                                       % scans per page
+  if ~exist('nps','var'), nps = 6; end           % scans per page
+  if ~exist('p0','var'), p0 = 0; end             % pages before
   n   = size(Y,1); fs = 7;
   mg  = 0.2; ht = 0.6; hh = 0.55;                % margin, page title, and scan header in cm
   s   = (G.ph - 2*mg - ht)/nps - hh;             % tile size in cm
@@ -736,7 +804,7 @@ function np = renderRowPages(fh,Fg,Y,Yov,Yc,K,ttl,Ppage,showgroup,ropts,G)
   ispdf = strcmpi(spm_file(Ppage,'ext'),'pdf');
   Gn = cell(1,numel(Fg)); % schematic networks of the rs-fMRI (vector graphics, see networkGeometry)
   for fi = find(strcmp({Fg.kind},'conn')), Gn{fi} = networkGeometry(Kf(fi),Fg(fi).over,ropts,n); end
-  Lv = arrayfun(@(fi) overlayLines(Fg(fi).T,Kf(fi),ropts,n),1:numel(Fg),'UniformOutput',false); % lines of the scanner planes
+  Lv = arrayfun(@(fi) overlayLines(planeTransform(Fg(fi)),Kf(fi),ropts,n),1:numel(Fg),'UniformOutput',false); % lines of the scanner planes
   lh = 1.02 * fs/72*2.54 * ppc;                  % line height of the information panel (about the font size)
 
   for pgi = 1:np
@@ -782,13 +850,14 @@ function np = renderRowPages(fh,Fg,Y,Yov,Yc,K,ttl,Ppage,showgroup,ropts,G)
       Ki = Kf(fi);
       for ci = 1:3
         sl = sprintf('%s=%+0.0f',G.axisnam(Ki(ci,1)),Ki(ci,2)); if ism(fi,ci), sl = 'networks (mean z)'; end
+        if strcmp(Fg(fi).kind,'surf'), sl = surfViewName(Ki(ci,:)); end
         text(ax,x0 + (ci-1)*n + 3,y0 + phh + n - 2,sl,'Color',[.6 .6 .6], ...
           'FontSize',fs-1,'Interpreter','none','VerticalAlignment','bottom');
       end
-      % session without anatomical scan: warning on top of the sagittal 
-      % slice of all images that rely on the T1w of another session (see 
+      % session without anatomical scan: warning on top of the sagittal
+      % slice of all images that rely on the T1w of another session (see
       % anatOther)
-      ao = anatOther(Fg(fi)); ci = find(Ki(:,1) == 1,1); 
+      ao = anatOther(Fg(fi)); ci = find(Ki(:,1) == 1,1);
       if ~isempty(ao) && ~isempty(ci)
         text(ax,x0 + (ci-1)*n + n/2,y0 + phh + 2,ao,'Color',[1 0.3 0.3],'FontSize',fs-1,'Interpreter','tex', ...
           'HorizontalAlignment','center','VerticalAlignment','top','BackgroundColor','k','Margin',1);
@@ -800,10 +869,9 @@ function np = renderRowPages(fh,Fg,Y,Yov,Yc,K,ttl,Ppage,showgroup,ropts,G)
     end
 
     if ispdf
-      exportgraphics(fh, Ppage, 'Append', true, 'ContentType', 'vector', ...
-        'Resolution', ropts.dpi, 'BackgroundColor', 'k');
+      cat_io_dcm2bids_helper('printPDF',fh,Ppage,true); % (page of its paper size, see printPDF)
     else
-      Pp = Ppage; if contains(Ppage,'%'), Pp = sprintf(Ppage,pgi); end % (pattern with the page number)
+      Pp = Ppage; if contains(Ppage,'%'), Pp = sprintf(Ppage,p0 + pgi); end % (pattern with the page number)
       print(fh, Pp, '-dpng', sprintf('-r%d',ropts.dpi));
     end
     drawnow;
@@ -813,9 +881,9 @@ end
 function txt = renderInfoText(F,col2mark)
 %renderInfoText. TeX lines of the information panel of a scan in R2/R3:
 %  subject and session (labels bold), quality ratings (the measures of the
-%  image quality to the SQR, and further ratings), acquisition (scanner 
-%  and timing of the sidecar of the raw scan, only for scans, their 
-%  bias-corrected images, and maps of DWI and fMRI, i.e. not for the 
+%  image quality to the SQR, and further ratings), acquisition (scanner
+%  and timing of the sidecar of the raw scan, only for scans, their
+%  bias-corrected images, and maps of DWI and fMRI, i.e. not for the
 %  segmentation), image size, and the results of the preprocessing, with
 %  the MNI registration (with the session orientation rating SOR, the
 %  coverage BBR, the phase-encoding reversal PRR, and the protocol PFR)
@@ -875,7 +943,7 @@ function txt = renderInfoText(F,col2mark)
   end
   if F.readerr,    txt{end+1} = [red 'read error']; end
 
-  % acquisition (scanner and timing of the raw scan) of scans, their 
+  % acquisition (scanner and timing of the raw scan) of scans, their
   % bias-corrected images, and maps of DWI and fMRI (not the segmentation)
   if ~(strcmp(F.datatype,'anat') && ~any(strcmp(F.prefix,{'','m'})))
     J = struct();
@@ -931,6 +999,36 @@ function txt = renderInfoText(F,col2mark)
       end
     end
   end
+  if strcmp(F.kind,'surf') && isstruct(F.seg) && isfield(F.seg,'global')
+    % values of the quick surfaces of the T1w (left/right): global values
+    % and the values of the lobes of the measure of the composite (not for
+    % the DEC map and mean EPI with their own values), and the colors (see
+    % surfaceColors, sulci darkened by the depth)
+    g = F.seg.global; m = fieldValue(F.seg,'method',struct()); lr = @(f,fmt) sprintf([fmt '/' fmt],g.lh.(f),g.rh.(f));
+    ms = struct('surfT1w',{{'intensity','%0.3f',1,'T1w intensity','gray 0.45-0.9 (GM 2/3)'}}, ...
+      'surfthickness',{{'thickness','%0.2f',1,'thickness in mm','jet 1-4 mm'}}, ...
+      'surfcurvature',{{'curvature','%0.0f',1,'|mean curvature| in degrees','hot 0-70'}}, ...
+      'surfdepth',{{'depth','%0.1f',1,'sulcal depth in mm','bone 0-25 mm'}}, ...
+      'surfatlas',{{'area','%0.0f',0.01,'area in cm^2','lotter2025 regions'}}, ...
+      'DECsurf',{{'','','','','superficial WM: DEC with the highest FA 0-3 mm below the GM'}}, ...
+      'mixDECsurf',{{'','','','','superficial WM: DEC with the highest FA 0-3 mm below the GM'}}, ...
+      'meansurf',{{'','','','','mean EPI at the central surface / median (parula 0.2-1.4)'}});
+    if isfield(ms,F.prefix), ms = ms.(F.prefix); else, ms = {'','','','',''}; end
+    if ~isempty(ms{1})
+      df = ''; if isfield(g.lh,'defects'), df = sprintf(', %d/%d defects',g.lh.defects,g.rh.defects); end
+      txt{end+1} = pv('quick surface:',sprintf('PBT %g mm, %0.0fk/%0.0fk faces%s (l/r)',fieldValue(m,'resolution',nan), ...
+        g.lh.faces/1000,g.rh.faces/1000,df));
+      txt{end+1} = strjoin({pv('thickness',[lr('thickness','%0.2f') ' mm']),pv('area',sprintf('%0.0f/%0.0f cm^2',g.lh.area/100,g.rh.area/100)), ...
+        pv('depth',[lr('depth','%0.1f') ' mm'])},sep);
+      txt{end+1} = strjoin({pv('|curvature|',lr('curvature','%0.1f')),pv('intensity',lr('intensity','%0.3f'))},sep);
+      [nam,v] = surfaceLobes(fieldValue(F.seg,'regional',struct()),ms{1});
+      str = arrayfun(@(k) pv(nam{k},regexprep(sprintf([ms{2} '/' ms{2}],ms{3} * v(k,:)),'(^|/)0\.','$1.')),find(any(isfinite(v),2))','UniformOutput',false);
+      for k = 1:3:numel(str), txt{end+1} = strjoin(str(k:min(end,k+2)),sep); end %#ok<AGROW>
+      txt{end+1} = [gry 'lobes: ' ms{4} ' (l/r), colors: ' ms{5}];
+    elseif ~isempty(ms{5})
+      txt{end+1} = [gry ms{5}];
+    end
+  end
   if startsWith(F.prefix,'mix') && isstruct(F.pp) && isfield(F.pp,'method') && isfield(F.pp.method,'mix')
     txt{end+1} = pv(sprintf('mixed DTI of %d scans:',1 + numel(fieldValue(F.pp.method.mix,'further',[]))), ...
       sprintf('%d volumes (b <= 1300)',fieldValue(F.pp.method,'volumes',nan)));
@@ -971,7 +1069,7 @@ function txt = renderInfoText(F,col2mark)
       end
     end
     if isfield(F.pp,'qc') && isfield(F.pp.qc,'FD_mean') && isfield(F.pp,'connectivity')
-      % (FD and tSNR in the color of their ratings FDR and TNR of the QC 
+      % (FD and tSNR in the color of their ratings FDR and TNR of the QC
       % JSON, see qualityRatings in cat_io_dcm2bids_pp_rsfmri)
       fc = wht; if isr('FDR'), fc = colstr(F.QR.FDR); end
       tc = wht; if isr('TNR'), tc = colstr(F.QR.TNR); end
@@ -998,19 +1096,21 @@ function txt = renderInfoText(F,col2mark)
 end
 % =========================================================================
 function Fs = renderSubjectOrder(Fs,ropts)
-%renderSubjectOrder. Scans of one subject in the subject report: the 
+%renderSubjectOrder. Scans of one subject in the subject report: the
 %  selected images of the subject perspective (if available) in the order
-%  (1) original anatomical scans of the type of the segmentation (e.g. 
-%  T1w), (2) label map of the segmentation (c0) and the atlas labels 
-%  (lotter2025 GM regions), (3) normalized GM (mwc1), (4) DEC map with the 
-%  bias-corrected image as underlay, and (5)  
-%  mean EPI with the network, i.e. similar images of several scans 
-%  together (e.g. first all original T1w), ordered by session and BIDS 
+%  (1) original anatomical scans of the type of the segmentation (e.g.
+%  T1w), (2) label map of the segmentation (c0) and the atlas labels
+%  (lotter2025 GM regions), (3) normalized GM (mwc1), (4) DEC map with the
+%  bias-corrected image as underlay, and (5)
+%  mean EPI with the network, i.e. similar images of several scans
+%  together (e.g. first all original T1w), ordered by session and BIDS
 %  name. Without these images (e.g. without anatomical scan), all scans by
 %  session, datatype (anat, dwi, func, perf, others), and BIDS name, where
 %  derivatives follow their scan (first the bias-corrected image m and the
-%  segmentation c0, the DTI maps FA, DEC, MD, AD, and RD, then the others 
-%  by prefix). Only the first session for ropts.sessions.
+%  segmentation c0, the DTI maps FA, DEC, MD, AD, and RD, then the others
+%  by prefix), without the quick surfaces (surface report, see
+%  surfaceOrder). Only the first session for ropts.sessions.
+  Fs  = Fs(~strcmp({Fs.kind},'surf')); % (quick surfaces in the surface report, see surfaceOrder)
   st  = regexprep({Fs(~cellfun('isempty',regexp({Fs.subtype},'_c0$','once'))).subtype},'_c0$',''); % (e.g. t1w)
   if isempty(st), st = {'t1w'}; end
   dec = unique({Fs(strcmp({Fs.kind},'dec')).subtype});
@@ -1019,13 +1119,13 @@ function Fs = renderSubjectOrder(Fs,ropts)
   [iss,ri] = ismember({Fs.subtype},sel);
   if any(iss)
     Fs = Fs(iss); row = nr(ri(iss));
-    [~,so] = sort(strcat(cellstr(num2str(row(:)))','|',{Fs.ses},'|',{Fs.bidsname})); Fs = Fs(so);
+    [~,so] = sort(strcat(arrayfun(@(r) sprintf('%05.1f',r),row,'UniformOutput',false),'|',{Fs.ses},'|',{Fs.bidsname})); Fs = Fs(so);
     if ropts.sessions && ~isempty(Fs), Fs = Fs( strcmp({Fs.ses},Fs(1).ses) ); end
     return
   end
   dto = {'anat','dwi','func','perf'};
   [~,dti] = ismember({Fs.datatype},dto); dti(dti==0) = numel(dto) + 1;
-  pro = {'','m','c0','FA','DEC','MD','AD','RD'}; 
+  pro = {'','m','c0','FA','DEC','MD','AD','RD'};
   [~,pri] = ismember({Fs.prefix},pro); pri(pri==0) = numel(pro) + 1;
   key = strcat({Fs.ses},'|',cellstr(num2str(dti(:)))','|',{Fs.datatype},'|',{Fs.bidsname},'|', ...
     cellstr(num2str(pri(:)))','|',{Fs.prefix});
@@ -1035,28 +1135,47 @@ function Fs = renderSubjectOrder(Fs,ropts)
   end
 end
 % =========================================================================
+function Fu = surfaceOrder(Fs,ropts)
+%surfaceOrder. Surface composites of one subject in the surface report
+%  (see surfComposite): by session, then the T1w intensity, thickness,
+%  curvature, depth, and atlas regions of the quick surfaces of the T1w,
+%  the superficial WM directions of the DEC map (of the mixed DTI if
+%  available, otherwise of each DWI scan), and the mean EPI, and by BIDS
+%  name. Only the first session for ropts.sessions.
+  Fu  = Fs(strcmp({Fs.kind},'surf'));
+  if isempty(Fu), return; end
+  for ses = unique({Fu.ses}) % (DEC of the mixed DTI of the session)
+    s = strcmp({Fu.ses},ses{1});
+    if any(s & strcmp({Fu.prefix},'mixDECsurf')), Fu(s & strcmp({Fu.prefix},'DECsurf')) = []; end
+  end
+  tag = {'surfT1w','surfthickness','surfcurvature','surfdepth','surfatlas','DECsurf','mixDECsurf','meansurf'};
+  [~,ri] = ismember({Fu.prefix},tag); ri(ri == 0) = numel(tag) + 1;
+  [~,so] = sort(strcat({Fu.ses},'|',arrayfun(@(r) sprintf('%02d',r),ri,'UniformOutput',false),'|',{Fu.bidsname})); Fu = Fu(so);
+  if ropts.sessions, Fu = Fu( strcmp({Fu.ses},Fu(1).ses) ); end
+end
+% =========================================================================
 function S = renderScanSlices(F,K,ropts,Pcache)
 %renderScanSlices. Sampled slices of a scan (with cache).
 %  Each scan is read only once and all slices K ([orientation position]
 %  rows) are sampled in MNI space and scaled together to uint8. The result
-%  is saved in Pcache and reused if the source file, its QC maps, the 
+%  is saved in Pcache and reused if the source file, its QC maps, the
 %  registration, and the sampling parameters were not changed and the cache
 %  includes all requested slices. This avoids reading all images again (e.g.
 %  for large datasets) and keeps the slices for further outputs (e.g. HTML).
 %  With the denoised average of the QC (F.qcmaps, see cat_io_dcm2bids_qc),
-%  it is sampled instead of the first volume of 4D data. 
+%  it is sampled instead of the first volume of 4D data.
 %  The DTI maps have fixed intensity windows (see renderWindow) and the DEC
-%  map (volumes red, green, blue) and the composite images give color 
+%  map (volumes red, green, blue) and the composite images give color
 %  slices S.C (uint8 n x n x 3 x slices, otherwise empty).
 %  S.Y (uint8 slices), S.Yov (overlay labels: 1-3 lines of the x/y/z-planes),
-%  S.lab (text labels of the regions of each slice of the atlas and DEC 
-%  composites, see sliceLabels), S.K (slices), S.readerr, header information of the scan (S.dim, S.vx, 
+%  S.lab (text labels of the regions of each slice of the atlas and DEC
+%  composites, see sliceLabels), S.K (slices), S.readerr, header information of the scan (S.dim, S.vx,
 %  S.nvol), S.qc (1 - denoised average), and S.new (newly sampled).
   n   = round(ropts.fov / ropts.res);
   srcdate = dateOf(F.file);
-  qcmaps = struct2cell(F.qcmaps); qcdate = nan(1,numel(qcmaps)); 
+  qcmaps = struct2cell(F.qcmaps); qcdate = nan(1,numel(qcmaps));
   for mi = 1:numel(qcmaps), D = dir(qcmaps{mi}); if ~isempty(D), qcdate(mi) = D(1).datenum; end; end
-  par = struct('version',18,'srcdate',srcdate,'qc',{fieldnames(F.qcmaps)'},'qcdate',qcdate, ...
+  par = struct('version',22,'srcdate',srcdate,'qc',{fieldnames(F.qcmaps)'},'qcdate',qcdate, ...
     'kind',F.kind,'part',{{F.under F.over}},'partdate',[dateOf(F.under) dateOf(F.over)], ...
     'T',F.T,'Tu',F.Tu,'fov',ropts.fov,'res',ropts.res,'interp',ropts.interp, ...
     'c0',F.c0,'c0date',dateOf(F.c0),'other',~isempty(otherT1w(F)));
@@ -1077,9 +1196,9 @@ function S = renderScanSlices(F,K,ropts,Pcache)
   S = struct('K',K,'Y',zeros(n,n,size(K,1),'uint8'),'Yov',zeros(n,n,size(K,1),'uint8'),'C',[], ...
     'lab',{cell(1,size(K,1))},'readerr',0,'dim',[],'vx',[],'nvol',nan,'qc',0,'new',1);
   try
-    % header (for .nii.gz without decompressing the whole file), where 4D 
+    % header (for .nii.gz without decompressing the whole file), where 4D
     % data is represented by its denoised average or first volume (see
-    % below), i.e. only images with up to 3 volumes are read completely 
+    % below), i.e. only images with up to 3 volumes are read completely
     % (spm_vol of a .nii.gz reads all volumes as double, e.g. 2.6 GB for a
     % 112x112x64x403 BOLD), e.g. the DEC map
     Pf = sourceFile(F.file);
@@ -1097,22 +1216,22 @@ function S = renderScanSlices(F,K,ropts,Pcache)
   if ~S.readerr && ~isempty(F.T)
     try
       % denoised average of 4D data of the QC (if it has finite values)
-      Yvol = []; 
+      Yvol = [];
       if isfield(F.qcmaps,'denoisedavg')
-        [Yvol,Vu] = renderAverage(F.qcmaps.denoisedavg); 
+        [Yvol,Vu] = renderAverage(F.qcmaps.denoisedavg);
         if ~isempty(Yvol), V = Vu; S.qc = 1; end
       end
       % first volume of other 4D data (without reading the whole file)
       if isempty(Yvol) && S.nvol > 3
         try
-          Yvol = cat_io_dcm2bids_helper('niiVolume',Pf,1); 
+          Yvol = cat_io_dcm2bids_helper('niiVolume',Pf,1);
         catch % (e.g. NIfTI-2)
           txt = evalc('V = spm_vol(Pf);'); V = V(1); %#ok<NASGU>
         end
       end
 
-      % B-spline coefficients of the volume (non-finite values set to 0) 
-      % for higher interpolation degrees or volumes in memory, otherwise 
+      % B-spline coefficients of the volume (non-finite values set to 0)
+      % for higher interpolation degrees or volumes in memory, otherwise
       % direct sampling
       if ropts.interp > 1 || ~isempty(Yvol)
         if isempty(Yvol), Yvol = spm_read_vols(V); end
@@ -1126,7 +1245,7 @@ function S = renderScanSlices(F,K,ropts,Pcache)
         [Ys(:,:,ki),S.Yov(:,:,ki)] = renderSlice(C,V,F.T,K(ki,1),K(ki,2),ropts);
       end
       clear C
-      % common intensity scaling of all slices of the scan (fixed for DTI 
+      % common intensity scaling of all slices of the scan (fixed for DTI
       % maps), for anatomical scans with segmentation the 98th percentile of
       % the WM (label map c0 > 2.5) as upper limit, i.e. bright fat or skull
       % do not darken the brain and the noise of the WM stays visible
@@ -1150,7 +1269,7 @@ function S = renderScanSlices(F,K,ropts,Pcache)
         for ci = 1:3
           Cc = [];
           if ropts.interp > 1
-            Yd = spm_read_vols(Vall(ci)); Yd(~isfinite(Yd)) = 0; Cc = spm_bsplinc(Yd,[ropts.interp*[1 1 1] 0 0 0]); 
+            Yd = spm_read_vols(Vall(ci)); Yd(~isfinite(Yd)) = 0; Cc = spm_bsplinc(Yd,[ropts.interp*[1 1 1] 0 0 0]);
           end
           for ki = 1:size(K,1)
             S.C(:,:,ci,ki) = uint8(255 * min(1,max(0,(renderSlice(Cc,Vall(ci),F.T,K(ki,1),K(ki,2),ropts) - clim(1)) / diff(clim))));
@@ -1200,6 +1319,13 @@ function S = renderScanSlices(F,K,ropts,Pcache)
           S.lab = arrayfun(@(ki) sliceLabels(L(:,:,ki) .* (gm(:,:,ki) > 0.5),T.id,T.abbr,[1 1 1],150,ropts,false),1:size(K,1),'UniformOutput',false);
         case 'conn' % mean EPI (the network is drawn as vector graphics on the pages, see networkGeometry)
           S.C = [];
+        case 'surf' % views of the quick surfaces of the T1w (see surfaceViews) with the abbreviations of the
+                    % larger visible atlas regions (surfatlas)
+          [S.C,L] = surfaceViews(F,K,n);
+          if ~isempty(L)
+            T = cat_io_dcm2bids_pp_anat('atlasTable','lotter2025_aparc');
+            S.lab = arrayfun(@(ki) sliceLabels(double(L(:,:,ki)),T.id,T.abbr,[1 1 1],150,ropts,false,30),1:size(K,1),'UniformOutput',false);
+          end
       end
     catch
       S.readerr = 1; % e.g. unsupported datatype
@@ -1214,12 +1340,12 @@ function S = renderScanSlices(F,K,ropts,Pcache)
 end
 % =========================================================================
 function [Y,V] = renderAverage(P)
-%renderAverage. Denoised average P of 4D data of the QC (see 
-%  cat_io_dcm2bids_qc) as image Y with the header V (same space as the 
+%renderAverage. Denoised average P of 4D data of the QC (see
+%  cat_io_dcm2bids_qc) as image Y with the header V (same space as the
 %  first volume of the scan, empty without finite values, e.g. of a failed
 %  QC).
   txt = evalc('V = spm_vol(P);'); %#ok<NASGU>
-  Y   = single(spm_read_vols(V)); 
+  Y   = single(spm_read_vols(V));
   if ~any(isfinite(Y(:)) & Y(:)~=0), Y = []; V = []; end
 end
 % =========================================================================
@@ -1265,17 +1391,18 @@ function sl = renderSliceList(s)
 end
 % =========================================================================
 function K = epiSlices(F,K)
-%epiSlices. Slices K ([orientation position] rows) of the image F, where 
-%  the sagittal slice x=0 of EPI images (datatypes func, dwi, and perf, 
-%  also their maps and composites) is replaced by x=+30, as the midline 
+%epiSlices. Slices K ([orientation position] rows) of the image F, where
+%  the sagittal slice x=0 of EPI images (datatypes func, dwi, and perf,
+%  also their maps and composites) is replaced by x=+30, as the midline
 %  shows little of their lower resolution (e.g. the cortex, insula, and
 %  hippocampus at x=+30).
+  if strcmp(F.kind,'surf'), K = [1 -1; 3 0; 1 1]; return; end % (views of the surfaces: left, top, right, see surfViewName)
   if any(strcmp(F.datatype,{'func','dwi','perf'})), K(K(:,1) == 1 & K(:,2) == 0,2) = 30; end
 end
 % =========================================================================
 function t1 = otherT1w(F)
 %otherT1w. BIDS name of the T1w of another session that the DTI or rs-fMRI
-%  of the image F used (session without anatomical scan, see 
+%  of the image F used (session without anatomical scan, see
 %  method.T1w_other_session of cat_io_dcm2bids_pp_dwi/_rsfmri), otherwise ''.
   t1 = '';
   if isstruct(F.pp) && isfield(F.pp,'method') && isfield(F.pp.method,'T1w_other_session') && ...
@@ -1286,16 +1413,16 @@ end
 % =========================================================================
 function s = anatOther(F)
 %anatOther. Warning of a session without anatomical scan in the image F
-%  (TeX, e.g. 'no ses-w0001 T1w -> use ses-w0000 T1w', otherwise ''): the 
+%  (TeX, e.g. 'no ses-w0001 T1w -> use ses-w0000 T1w', otherwise ''): the
 %  anatomical rows of the other session in the session report (F.foreign)
 %  and all images of the session that rely on the T1w of the other session
 %  (F.t1other, i.e. the DTI and rs-fMRI results and the scans with the
 %  registration by their coregistration).
-  s = ''; t = {}; 
+  s = ''; t = {};
   if ~isempty(F.foreign)
-    t = [{F.foreign F.ses} regexp(F.bidsname,'_([^_]+)$','tokens','once')]; 
+    t = [{F.foreign F.ses} regexp(F.bidsname,'_([^_]+)$','tokens','once')];
   elseif ~isempty(F.t1other)
-    t = [{F.ses} regexp(F.t1other,'_(ses-[^_]+)_','tokens','once') regexp(F.t1other,'_([^_]+)$','tokens','once')]; 
+    t = [{F.ses} regexp(F.t1other,'_(ses-[^_]+)_','tokens','once') regexp(F.t1other,'_([^_]+)$','tokens','once')];
   end
   if numel(t) == 3, s = sprintf('no %s %s \\rightarrow use %s %s',t{1},t{3},t{2},t{3}); end
 end
@@ -1316,8 +1443,8 @@ function T = sessionTransform(Paff,ropts)
 end
 % =========================================================================
 function Yrgb = renderTileRGB(Y,Yov,ovc,Yc)
-%renderTileRGB. Gray-scale slice (uint8) with colored overlay lines (Yov 
-%  1-3), or the color slice Yc (uint8 n x n x 3, e.g. of the DEC map of 
+%renderTileRGB. Gray-scale slice (uint8) with colored overlay lines (Yov
+%  1-3), or the color slice Yc (uint8 n x n x 3, e.g. of the DEC map of
 %  DTI) with the overlay lines.
   if exist('Yc','var') && ~isempty(Yc)
     Yrgb = single(Yc)/255;
@@ -1343,13 +1470,187 @@ function C = colorSlices(C,k)
 end
 % =========================================================================
 function C = composite(F,kind,under,over,tag)
-%composite. Composite image of the image F (see the composite images in 
-%  cat_io_dcm2bids_render): kind (dec, conn) with the underlay and 
-%  overlay files (or the connectivity matrix) as own image type with the 
+%composite. Composite image of the image F (see the composite images in
+%  cat_io_dcm2bids_render): kind (dec, conn) with the underlay and
+%  overlay files (or the connectivity matrix) as own image type with the
 %  tag (e.g. dwi_DEC to dwi_DECt1w).
   C = F; C.kind = kind; C.under = under; C.over = over; C.prefix = tag; C.name = [F.name '_' tag];
   C.subtype = regexprep(F.subtype,['_' F.prefix '$'],['_' tag]);
   C.group   = fullfile(F.dataset,F.datatype,C.subtype);
+end
+% =========================================================================
+function P = surfFiles(Fm)
+%surfFiles. Quick surfaces of both hemispheres of the bias-corrected T1w
+%  Fm (catDCM2BIDSsurf_<lh|rh>_<scan>.gii next to it, also in the
+%  database, see cat_io_dcm2bids_pp_surf), otherwise empty.
+  P = strcat(fullfile(fileparts(Fm.file),'catDCM2BIDSsurf_'),{'lh_','rh_'},Fm.bidsname,'.gii');
+  if ~all(cellfun(@(f) exist(sourceFile(f),'file') > 0,P)), P = {}; end
+end
+% =========================================================================
+function C = surfComposite(F,Fm,Pover,tag)
+%surfComposite. Surface composite of the image F with the quick surfaces
+%  of the bias-corrected T1w Fm (see surfFiles) and its registration as
+%  own image type with the tag: the T1w intensity, thickness, and atlas
+%  regions of the surfaces (surfT1w, surfthickness, surfatlas), and the
+%  values of another image Pover on the surfaces, i.e. the superficial WM
+%  directions of the DEC map (in the space of the T1w, otherwise of the 
+%  scan by its coregistration, DECsurf, mixDECsurf)
+%  and the mean EPI of the rs-fMRI by its coregistration (meansurf), with
+%  the surface values of the T1w (seg, for the information panel).
+  Ps = surfFiles(Fm);
+  C  = composite(F,'surf',Ps{1},Pover,tag); C.Tu = Fm.T; C.c0 = Fm.c0; C.seg = [];
+  Pj = fullfile(fileparts(Fm.file),['catDCM2BIDSsurf_' Fm.bidsname '.json']);
+  if exist(Pj,'file'), try, C.seg = cat_io_json(Pj); end, end %#ok<TRYNC>
+end
+% =========================================================================
+function [nam,v] = surfaceLobes(R,fn)
+%surfaceLobes. Values v (lobes x left/right) of the measure fn (e.g.
+%  thickness) of the cortical lobes nam (see atlasTable in
+%  cat_io_dcm2bids_pp_anat) by the regional values R of the quick surfaces
+%  (see cat_io_dcm2bids_pp_surf): area-weighted mean, or sum of the area.
+  T   = cat_io_dcm2bids_pp_anat('atlasTable','lotter2025_aparc');
+  nam = {'frontal','temporal','parietal','occipital','cingulate','insula'}; v = nan(numel(nam),2); hs = 'lr';
+  for li = 1:numel(nam)
+    for si = 1:2
+      k = T.key(strcmp(T.lobe,nam{li}) & startsWith(T.key,hs(si))); k = k(isfield(R,k));
+      if isempty(k), continue; end
+      a = cellfun(@(f) R.(f).area,k); x = cellfun(@(f) R.(f).(fn),k);
+      if strcmp(fn,'area'), v(li,si) = sum(a); else, v(li,si) = sum(a .* x) / sum(a); end
+    end
+  end
+end
+% =========================================================================
+function T = planeTransform(F)
+%planeTransform. Transformation of the lines of the scanner planes of the
+%  image F (see overlayLines), none for the views of the surfaces.
+  T = F.T; if strcmp(F.kind,'surf'), T = []; end
+end
+% =========================================================================
+function v = surfViewName(k)
+%surfViewName. View of the surfaces for the slice k ([orientation
+%  position], see epiSlices): left (sagittal, x < 0), right (sagittal,
+%  x > 0), top (axial), or front (coronal).
+  if k(1) == 1 && k(2) < 0, v = 'left'; elseif k(1) == 1, v = 'right'; elseif k(1) == 3, v = 'top'; else, v = 'front'; end
+end
+% =========================================================================
+function [C,L] = surfaceViews(F,K,n)
+%surfaceViews. Color views (uint8 n x n x 3 x views) of the quick surfaces
+%  of the surface composite F (see surfComposite) for the views K (see
+%  surfViewName), in MNI orientation (affine registration of the T1w) with
+%  fixed limits (comparable between subjects), the colors of the vertices
+%  (see surfaceColors), and a head light, and for the atlas regions
+%  (surfatlas) the visible ROIid of each pixel L (n x n x views, by a
+%  second view with the region index as unlit color, e.g. for the labels
+%  of the regions, see sliceLabels), otherwise empty.
+  Ph = {F.under, strrep(F.under,'catDCM2BIDSsurf_lh_','catDCM2BIDSsurf_rh_')};
+  fh = figure('Visible','off','Color','k','InvertHardcopy','off','Units','pixels','Position',[1 1 2*n 2*n],'GraphicsSmoothing','off');
+  fhclean = onCleanup(@() close(fh));
+  ax = axes('Parent',fh,'Position',[0 0 1 1],'Color','k'); hold(ax,'on'); h = gobjects(1,2); col = cell(1,2); lab = cell(1,2);
+  for si = 1:2
+    G = gifti(sourceFile(Ph{si})); V = double(G.vertices); Fa = double(G.faces); D = double(G.cdata);
+    W = [V ones(size(V,1),1)] * F.Tu(1:3,:)'; col{si} = surfaceColors(F,V,Fa,D); lab{si} = D(:,5);
+    h(si) = patch(ax,'Vertices',W,'Faces',Fa,'FaceVertexCData',col{si},'FaceColor','interp', ...
+      'EdgeColor','none','FaceLighting','gouraud','AmbientStrength',0.45,'DiffuseStrength',0.65,'SpecularStrength',0.1);
+  end
+  axis(ax,'equal','off'); set(ax,'XLim',[-80 80],'YLim',[-115 80],'ZLim',[-60 90]);
+  C = zeros(n,n,3,size(K,1),'uint8'); vis = {'off','on'};
+  isl = strcmp(F.prefix,'surfatlas'); L = []; if isl, L = zeros(n,n,size(K,1),'uint16'); u = unique([lab{1}; lab{2}]); end
+  for ki = 1:size(K,1)
+    switch surfViewName(K(ki,:))
+      case 'left',  vw = [-90 0]; sh = [1 0];
+      case 'right', vw = [ 90 0]; sh = [0 1];
+      case 'top',   vw = [  0 90]; sh = [1 1];
+      otherwise,    vw = [180 0]; sh = [1 1];
+    end
+    set(h(1),'Visible',vis{sh(1) + 1}); set(h(2),'Visible',vis{sh(2) + 1});
+    view(ax,vw); delete(findobj(ax,'Type','light')); camlight(ax,'headlight');
+    C(:,:,:,ki) = fitImage(print(fh,'-RGBImage','-r0'),n);
+    if isl % (index of the region as red and green, blue as marker of the surface)
+      for si = 1:2
+        [~,k] = ismember(lab{si},u);
+        set(h(si),'FaceVertexCData',[k k 128 + 0*k] / 255,'FaceColor','flat','FaceLighting','none');
+      end
+      I = double(print(fh,'-RGBImage','-r0')); I = I(round(linspace(1,size(I,1),n)),round(linspace(1,size(I,2),n)),:);
+      k = I(:,:,1); k(I(:,:,3) ~= 128 | I(:,:,1) ~= I(:,:,2) | k < 1 | k > numel(u)) = 0;
+      Ls = zeros(n,n); Ls(k > 0) = u(k(k > 0)); L(:,:,ki) = Ls;
+      for si = 1:2, set(h(si),'FaceVertexCData',col{si},'FaceColor','interp','FaceLighting','gouraud'); end
+    end
+  end
+end
+% =========================================================================
+function col = surfaceColors(F,V,Fa,D)
+%surfaceColors. RGB colors (0-1) of the vertices V (faces Fa, T1w world
+%  space) of a quick surface with the values D (columns thickness,
+%  intensity, curvature, depth, and ROIid, see cat_io_dcm2bids_pp_surf) for
+%  the surface composite F (see surfComposite): T1w intensity (gray, 0.45
+%  to 0.9, i.e. GM 2/3), thickness (jet, 1 to 4 mm), absolute mean
+%  curvature (hot, 0 to 70 degrees), sulcal depth (inverted bone, 0 to 25
+%  mm), atlas regions
+%  (lotter2025 colors), superficial WM directions (DEC map with the highest
+%  FA 0 to 3 mm below the central surface at the half thickness, on the
+%  darkened T1w intensity; the DEC map of the scan by its coregistration
+%  if no DEC map in the space of the T1w), and mean EPI (relative to its
+%  median, parula,
+%  0.2 to 1.4), with the sulci darkened by the sulcal depth (up to 50% at
+%  20 mm, not for the depth itself) and the medial wall in dark gray.
+  clip = @(x) min(1,max(0,x));
+  gi   = clip((D(:,2) - 0.45) / 0.45);
+  switch F.prefix
+    case 'surfT1w'
+      col = repmat(gi,1,3);
+    case 'surfthickness'
+      col = valueColors(D(:,1),[1 4],jet(256));
+    case 'surfcurvature'
+      cm  = hot(320); col = valueColors(D(:,3),[0 70],cm(65:end,:)); % (without black)
+    case 'surfdepth'
+      col = valueColors(D(:,4),[0 25],flipud(bone(256)));
+    case 'surfatlas'
+      lc  = atlasColors('lotter2025_aparc',max(1,max(D(:,5)))); col = lc(max(1,D(:,5)),:);
+    case {'DECsurf','mixDECsurf'}
+      N  = vertexNormals(V,Fa); Po = sourceFile(F.over); evalc('Vd = spm_vol(Po);'); best = zeros(size(V,1),3); bn = zeros(size(V,1),1); %#ok<NASGU> (avoid gz-messages)
+      M  = eye(4); if ~contains(F.over,'_DECt1w_'), M = inv(F.pp.coreg); end % (DEC map of the scan: T1w world to its world)
+      for d = 0:0.5:3 % (inwards from the central surface)
+        X   = Vd(1).mat \ (M * [(V - N .* (D(:,1)/2 + d))'; ones(1,size(V,1))]);
+        rgb = cell2mat(arrayfun(@(k) spm_sample_vol(Vd(k),X(1,:),X(2,:),X(3,:),1)',1:3,'UniformOutput',false));
+        nr  = sqrt(sum(rgb.^2,2)); u = nr > bn; best(u,:) = rgb(u,:); bn(u) = nr(u);
+      end
+      a   = 0.9 * clip((bn - 0.1) / 0.35);
+      col = (1 - a) .* (0.6 * gi) + a .* (best ./ max(eps,max(best,[],2)));
+    case 'meansurf'
+      Po  = sourceFile(F.over); evalc('Ve = spm_vol(Po);'); Ve = Ve(1); %#ok<NASGU,NODEF> (avoid gz-messages)
+      X   = Ve.mat \ (F.pp.coreg \ [V'; ones(1,size(V,1))]);  % (T1w world to the world of the scan)
+      v   = spm_sample_vol(Ve,X(1,:),X(2,:),X(3,:),1)'; m = median(v(D(:,5) > 0 & v > 0));
+      col = valueColors(v / max(eps,m),[0.2 1.4],parula(256));
+    otherwise
+      col = repmat(gi,1,3);
+  end
+  if ~strcmp(F.prefix,'surfdepth'), col = col .* (1 - 0.5 * clip(D(:,4) / 20)); end
+  col(D(:,5) == 0,:) = 0.25;
+end
+% =========================================================================
+function col = valueColors(v,range,cmap)
+%valueColors. Colors of the values v by the colormap cmap in the range.
+  i   = round(min(1,max(0,(v - range(1)) / diff(range))) * (size(cmap,1) - 1)) + 1; i(~isfinite(i)) = 1;
+  col = cmap(i,:);
+end
+% =========================================================================
+function N = vertexNormals(V,F)
+%vertexNormals. Outward unit normals of the vertices V of the faces F
+%  (area-weighted face normals, oriented away from the center).
+  fn = cross(V(F(:,2),:) - V(F(:,1),:),V(F(:,3),:) - V(F(:,1),:),2);
+  N  = zeros(size(V));
+  for d = 1:3, N(:,d) = accumarray(F(:),repmat(fn(:,d),3,1),[size(V,1) 1]); end
+  N  = N ./ max(eps,sqrt(sum(N.^2,2)));
+  if mean(sum((V - mean(V,1)) .* N,2)) < 0, N = -N; end
+end
+% =========================================================================
+function I = fitImage(I,n)
+%fitImage. Image I (RGB uint8) resized to n x n pixels.
+  if exist('imresize','file')
+    I = imresize(I,[n n]);
+  else
+    I = I(round(linspace(1,size(I,1),n)),round(linspace(1,size(I,2),n)),:);
+  end
 end
 % =========================================================================
 function P = niiOf(P)
@@ -1360,11 +1661,11 @@ end
 % =========================================================================
 function P = sourceFile(P,D)
 %sourceFile. File of the BIDS derivative P that is read, i.e. its database
-%  file for a derivative that was not exported (opts.preprocessing = 1, 
-%  see registerDerivative in cat_io_dcm2bids_helper), otherwise P. All 
+%  file for a derivative that was not exported (opts.preprocessing = 1,
+%  see registerDerivative in cat_io_dcm2bids_helper), otherwise P. All
 %  names and outputs of the rendering use the BIDS name P, only the reading
-%  uses the database file. The derivatives index D (map of the BIDS 
-%  derivatives to their database files, see derivativeIndex) is set once 
+%  uses the database file. The derivatives index D (map of the BIDS
+%  derivatives to their database files, see derivativeIndex) is set once
 %  per call of cat_io_dcm2bids_render by sourceFile('',D).
   persistent index
   if nargin > 1, index = D; return; end
@@ -1382,26 +1683,26 @@ function Pdb = databaseDir(PBIDS)
 end
 % =========================================================================
 function d = dateOf(P)
-%dateOf. Modification date of the file P (also in the database, see 
+%dateOf. Modification date of the file P (also in the database, see
 %  sourceFile, NaN if not available).
   d = nan; if ~isempty(P), D = dir(sourceFile(P)); if ~isempty(D), d = D(1).datenum; end, end
 end
 % =========================================================================
 function Ys = sampleSlices(P,vol,T,K,ropts,hold)
-%sampleSlices. Slices K of the volume vol of the image P (linear 
-%  interpolation, or hold 0 for nearest neighbor, e.g. of labels, 0 
+%sampleSlices. Slices K of the volume vol of the image P (linear
+%  interpolation, or hold 0 for nearest neighbor, e.g. of labels, 0
 %  outside) by the transformation T to MNI space (see renderSlice).
   if ~exist('hold','var'), hold = 1; end
   n = round(ropts.fov / ropts.res); Ys = zeros(n,n,size(K,1),'single');
-  P = sourceFile(P); 
+  P = sourceFile(P);
   txt = evalc('V = spm_vol(P);'); V = V(min(vol,numel(V))); o = ropts; o.interp = hold; %#ok<NASGU>
   for ki = 1:size(K,1), Ys(:,:,ki) = renderSlice([],V,T,K(ki,1),K(ki,2),o); end
 end
 % =========================================================================
 function [lc,la] = atlasColors(name,n)
-%atlasColors. RGB colors lc (0-1) of the labels 1 to n of the atlas name 
+%atlasColors. RGB colors lc (0-1) of the labels 1 to n of the atlas name
 %  of CAT (ROIcolor of its table templates_MNI152NLin2009cAsym/<name>.csv,
-%  gray for labels without color) and their opacity la (0 for the white 
+%  gray for labels without color) and their opacity la (0 for the white
 %  matter, i.e. White Matter in the name, otherwise 1).
   persistent cache
   if isempty(cache), cache = containers.Map('KeyType','char','ValueType','any'); end
@@ -1431,7 +1732,7 @@ end
 % =========================================================================
 function an = atlasOf(prefix)
 %atlasOf. CAT atlas (table) of the atlas label map with the prefix (e.g.
-%  lotter2025_aparc for lotter2025, see regionalVolumes in 
+%  lotter2025_aparc for lotter2025, see regionalVolumes in
 %  cat_io_dcm2bids_pp_anat), otherwise the prefix.
   if strcmp(prefix,'lotter2025'), an = 'lotter2025_aparc'; else, an = prefix; end
 end
@@ -1441,9 +1742,9 @@ function [c,a] = labelColors(L,name)
 %  otherwise 0, without white matter, see atlasColors) of the label slices
 %  L of the CAT atlas name.
   [lc,la] = atlasColors(name,max(1,max(L(:))));
-  c  = zeros([size(L) 3],'single'); 
+  c  = zeros([size(L) 3],'single');
   for d = 1:3, cd = lc(:,d); c(:,:,:,d) = reshape(cd(max(1,L(:))),size(L)) .* (L > 0); end
-  a  = 0.5 * single(L > 0) .* reshape(la(max(1,L(:))),size(L)); 
+  a  = 0.5 * single(L > 0) .* reshape(la(max(1,L(:))),size(L));
 end
 % =========================================================================
 function L = fillLabels(L,m)
@@ -1470,31 +1771,33 @@ function s = fmtValue(v)
   s = regexprep(sprintf('%0.2f',v),'^(-?)0\.','$1.');
 end
 % =========================================================================
-function lab = sliceLabels(L,id,str,col,minarea,ropts,box)
+function lab = sliceLabels(L,id,str,col,minarea,ropts,box,tile)
 %sliceLabels. Text labels of the regions id (texts str, colors col, one
 %  row or one per region) of the label slice L that cover at least minarea
 %  mm2 of the slice, at the point of the region with the largest distance
 %  to its border (i.e. within curved regions), without labels that would
-%  overlap the label of a larger region (text size of drawSliceLabels in 
-%  the scan rows, i.e. about 0.85 x 1.6 mm per character on a tile of 42 
-%  mm), with pixel positions x and y of the slice and a black box (e.g. on
-%  the colored DEC map, see drawSliceLabels).
+%  overlap the label of a larger region (text size of drawSliceLabels in
+%  the scan rows, i.e. about 0.85 x 1.6 mm per character on a tile of 42
+%  mm, e.g. 30 mm of the surface report), with pixel positions x and y of
+%  the slice and a black box (e.g. on the colored DEC map, see
+%  drawSliceLabels).
+  if ~exist('tile','var'), tile = 42; end
   lab = struct('x',{},'y',{},'str',{},'col',{},'box',{});
   if size(col,1) == 1, col = repmat(col,numel(id),1); end
-  u = unique(L(L > 0)); u = u(ismember(u,id)); 
+  u = unique(L(L > 0)); u = u(ismember(u,id));
   if isempty(u), return; end
   area = arrayfun(@(k) nnz(L == k),u) * ropts.res^2; [area,o] = sort(area,'descend'); u = u(o);
-  px = size(L,1) / 42; xyw = zeros(0,3);                       % pixel per mm of the tile, boxes of the labels
+  px = size(L,1) / tile; xyw = zeros(0,3);                     % pixel per mm of the tile, boxes of the labels
   for k = 1:numel(u)
     if area(k) < minarea, break; end
-    m = L == u(k); 
+    m = L == u(k);
     try
       D = cat_vbdist(single(repmat(~m,1,1,3)),true(size(m,1),size(m,2),3)); D = D(:,:,2) .* m;
       [~,i] = max(D(:)); [y,x] = ind2sub(size(m),i);
     catch % (centroid of the region)
       [r,c] = find(m); [~,i] = min((r - mean(r)).^2 + (c - mean(c)).^2); y = r(i); x = c(i);
     end
-    ri = find(id == u(k),1); w = (numel(str{ri}) * 0.85 + 0.6) * px; 
+    ri = find(id == u(k),1); w = (numel(str{ri}) * 0.85 + 0.6) * px;
     if ~isempty(xyw) && any(abs(xyw(:,1) - x) < (xyw(:,3) + w)/2 & abs(xyw(:,2) - y) < 1.8 * px), continue; end
     xyw(end+1,:) = [x y w]; %#ok<AGROW>
     lab(end+1) = struct('x',x,'y',y,'str',str{ri},'col',col(ri,:),'box',box); %#ok<AGROW>
@@ -1534,19 +1837,19 @@ end
 % =========================================================================
 function G = networkGeometry(K,Pconn,ropts,n)
 %networkGeometry. Schematic network of the connectivity matrix Pconn (Fisher
-%  z of the 100 cortical parcels of the Schaefer2018 atlas, see 
+%  z of the 100 cortical parcels of the Schaefer2018 atlas, see
 %  cat_io_dcm2bids_pp_rsfmri) for the slices K of n x n pixel at schematic
-%  positions (see networkNodes): axial slices with the 14 nodes of the 7 
-%  networks of both hemispheres, sagittal slices with the parts of the 
-%  networks (both hemispheres averaged) and a ring for the connectivity 
+%  positions (see networkNodes): axial slices with the 14 nodes of the 7
+%  networks of both hemispheres, sagittal slices with the parts of the
+%  networks (both hemispheres averaged) and a ring for the connectivity
 %  between the hemispheres (homotopic), and coronal slices with the matrix
-%  of the mean connectivity within and between the networks (both 
+%  of the mean connectivity within and between the networks (both
 %  hemispheres averaged). The node diameter (8
-%  to 16 mm) and opacity (0.5 to 1) are given by the internal connectivity 
+%  to 16 mm) and opacity (0.5 to 1) are given by the internal connectivity
 %  (mean z of the parcels within a hemisphere, 0.2 to 0.8), the edge width
 %  (0 to 8 mm) and opacity (0 to 1) by the mean z between the nodes (0.1
-%  to 0.7, within the hemispheres for the parts). G.v{slice} describes 
-%  each slice (type 'nodes' with xy, d, a, ring, col, edges, ew, ea, or 
+%  to 0.7, within the hemispheres for the parts). G.v{slice} describes
+%  each slice (type 'nodes' with xy, d, a, ring, col, edges, ew, ea, or
 %  'matrix' with M). Empty without matrix.
   G = []; N = networkNodes; R = readConn(Pconn);
   if isempty(R) || size(R,1) ~= numel(N.node), return; end
@@ -1575,7 +1878,7 @@ end
 % =========================================================================
 function V = nodeStruct(P,zin,Z,col,d0,show,ring)
 %nodeStruct. Nodes at the positions P (mm) with the internal connectivity
-%  zin, the mean z between the nodes Z, the colors col, the minimum 
+%  zin, the mean z between the nodes Z, the colors col, the minimum
 %  diameter d0 (pixel), and the ring weight (0 to 1, e.g. of the
 %  homotopic connectivity), see networkGeometry.
   w = min(1,max(0,(zin(:) - 0.2) / 0.6)); m = size(P,1);
@@ -1586,10 +1889,10 @@ function V = nodeStruct(P,zin,Z,col,d0,show,ring)
 end
 % =========================================================================
 function drawNetworkVector(ax,G,ki,x0,y0)
-%drawNetworkVector. Network G (see networkGeometry) of the slice ki as 
+%drawNetworkVector. Network G (see networkGeometry) of the slice ki as
 %  vector graphics in the axes ax of a page image (data units in pixel of
 %  the page, tile with the upper left corner x0,y0): edges as bands with
-%  the colors of their nodes (interpolated), nodes as disks with a ring 
+%  the colors of their nodes (interpolated), nodes as disks with a ring
 %  (homotopic connectivity), or the matrix of the networks.
   if isempty(G) || isempty(G.v{ki}), return; end
   V = G.v{ki};
@@ -1619,9 +1922,9 @@ end
 % =========================================================================
 function drawNetworkMatrix(ax,M,col,n,x0,y0)
 %drawNetworkMatrix. Matrix M of the mean Fisher z within (diagonal) and
-%  between the 7 networks (colors col) in the tile (n pixel, upper left 
-%  corner x0,y0) with the names of the networks and the values in the 
-%  cells (black for z <= 0, red to yellow for z of 0 to 0.8, blue for 
+%  between the 7 networks (colors col) in the tile (n pixel, upper left
+%  corner x0,y0) with the names of the networks and the values in the
+%  cells (black for z <= 0, red to yellow for z of 0 to 0.8, blue for
 %  negative z). The font size is given by the cell size on the page (about
 %  6 pt for the scan rows).
   nets = {'Vis','SMN','DAN','VAN','Lim','FPN','DMN'}; cs = 0.12 * n; gx = x0 + 0.14 * n; gy = y0 + 0.09 * n;
@@ -1649,7 +1952,7 @@ end
 function s = networkSegregation(R,net)
 %networkSegregation. System segregation of each of the 7 networks of the
 %  connectivity matrix R (Fisher z of the parcels with the network net),
-%  i.e. (within - between) / within with the mean z of the edges within 
+%  i.e. (within - between) / within with the mean z of the edges within
 %  the network and of the edges between the network and all other networks
 %  (Chan et al. 2014, as the segregation of the rs-fMRI of all networks).
   s = nan(1,7);
@@ -1661,17 +1964,17 @@ end
 % =========================================================================
 function N = networkNodes
 %networkNodes. Schematic network of the rs-fMRI (persistent) of the 100
-%  parcels of the Schaefer2018 atlas of CAT (see networks in 
-%  cat_io_dcm2bids_pp_rsfmri) with the network net (7 networks of Yeo et 
-%  al. 2011) and hemisphere (right) of each parcel: 
-%   - the 14 nodes of the networks of both hemispheres (node of each 
+%  parcels of the Schaefer2018 atlas of CAT (see networks in
+%  cat_io_dcm2bids_pp_rsfmri) with the network net (7 networks of Yeo et
+%  al. 2011) and hemisphere (right) of each parcel:
+%   - the 14 nodes of the networks of both hemispheres (node of each
 %     parcel, nodes 1 to 7 left and 8 to 14 right, colors col) with their
 %     axial positions pos (MNI x,y in mm)
 %   - the parts of the networks in the sagittal projection (part of each
 %     parcel, network pnet of each part, both hemispheres): 2 parts of the
 %     visual, somatomotor, dorsal and ventral attention, and frontoparietal
 %     network (e.g. anterior and posterior), one of the limbic, and 3 of the
-%     default mode network (frontal, posterior, and temporal), by k-means 
+%     default mode network (frontal, posterior, and temporal), by k-means
 %     of the parcel centers (y,z, deterministic initialization), with their
 %     sagittal positions ppos (MNI y,z in mm)
 %  The positions are schematic (designed once): close to the main spot of
@@ -1717,7 +2020,7 @@ end
 % =========================================================================
 function id = kmeansDet(Z,k)
 %kmeansDet. k-means clusters id of the points Z (rows) with a deterministic
-%  initialization (the point farthest from the mean, then the points 
+%  initialization (the point farthest from the mean, then the points
 %  farthest from the chosen centers).
   id = ones(size(Z,1),1); if k < 2, return; end
   dist = @(A,B) sqrt(max(0,sum(A.^2,2) + sum(B.^2,2)' - 2 * A * B'));
@@ -1747,8 +2050,8 @@ function R = readConn(P)
 end
 % =========================================================================
 function clim = renderWindow(F)
-%renderWindow. Fixed intensity window of the DTI maps (comparable scans): 
-%  FA 0-1, DEC 0-0.8 (FA weighted directions), MD/AD/RD 0-0.003 mm2/s, 
+%renderWindow. Fixed intensity window of the DTI maps (comparable scans):
+%  FA 0-1, DEC 0-0.8 (FA weighted directions), MD/AD/RD 0-0.003 mm2/s,
 %  otherwise empty (percentiles of the scan).
   switch F.prefix
     case 'FA',              clim = [0 1];
@@ -1761,7 +2064,7 @@ end
 function renderLegend(ax,x,y,fs,ovc)
 %renderLegend. Legend of the overlay lines (right aligned at x,y).
   str = sprintf(['original (scanner) planes:  \\color[rgb]{%g %g %g}x=0  ' ...
-    '\\color[rgb]{%g %g %g}y=0  \\color[rgb]{%g %g %g}z=0'], ovc'); 
+    '\\color[rgb]{%g %g %g}y=0  \\color[rgb]{%g %g %g}z=0'], ovc');
   text(ax,x,y,str,'Color','w','FontSize',fs,'Interpreter','tex', ...
     'HorizontalAlignment','right','VerticalAlignment','middle');
 end
@@ -1770,7 +2073,7 @@ function L = overlayLines(T,K,ropts,n)
 %overlayLines. Lines where the slices K (n x n pixel, see renderSlice)
 %  cross the coordinate planes x=0, y=0, and z=0 of the original (scanner)
 %  space with the transformation T from world to MNI space, as rows
-%  [plane x1 y1 x2 y2] in the pixel coordinates of the displayed tile 
+%  [plane x1 y1 x2 y2] in the pixel coordinates of the displayed tile
 %  (column and row) for each slice (cell, planes that are nearly parallel
 %  to the slice are ignored), e.g. for vector graphics on the pages.
   L = cell(1,size(K,1)); if isempty(T), return; end
@@ -1842,7 +2145,7 @@ function [Ys,Yov] = renderSlice(C,V,T,an,pos,ropts)
   end
 
   % original coordinate axes: pixels where the original world coordinate k
-  % is (about) zero, i.e., lines of about one pixel but at least 1 mm width 
+  % is (about) zero, i.e., lines of about one pixel but at least 1 mm width
   % (planes that are nearly parallel to the slice are ignored)
   A   = T \ Mw;                      % slice voxel to world (scanner) coordinates
   Yov = zeros(n,'uint8');

@@ -1,0 +1,14 @@
+{
+  "_Description": "Study description of the German Center for Mental Health (DZPG) for the dataset_description.json of the BIDS dataset (public information of https://www.dzpg.org, please complete the fields of your study before publication, see studies/template/study_example.json).",
+  "Name": "German Center for Mental Health (DZPG)",
+  "License": "",
+  "Authors": [],
+  "Acknowledgements": "",
+  "HowToAcknowledge": "",
+  "Funding": [],
+  "EthicsApprovals": [],
+  "ReferencesAndLinks": [
+    "https://www.dzpg.org"
+  ],
+  "DatasetDOI": ""
+}

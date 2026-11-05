@@ -16,19 +16,13 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   datadir.help     = {
    ['Select directories with DICOM data. The directories and all their sub-directories are imported ' ...
     'into the database of the output directory (outputdir/studyDBdir/catDCM2BIDSdb) and then exported ' ...
-    'to BIDS. The import first reads only the DICOM headers (fast) to store the JSON sidecars of new ' ...
-    'scans together with their DICOM directory, whereas the images are converted only if they are ' ...
-    'required (not for the JSON-only output levels). Directories that were imported before are not ' ...
-    'read again (only with the rerun option, opts.rerun, in scripts). Series that are split over several ' ...
-    'directories are incomplete and not imported (error message). ']
+    'to BIDS. ']
     ''
    ['To export already imported data again (e.g. with other protocols or if the DICOM data is no ' ...
     'longer available), select directories of this database: ']
-    '  catDCM2BIDSdb                  .. all scans of the database'
+    '  catDCM2BIDSdb .. all scans of the database'
     '  catDCM2BIDSdb/sub-*[/ses-*[/snr-*]] .. all scans of a subject, session, or a single scan'
     ''
-   ['Directories of the database of another output directory are not supported. ' ...
-    'DICOM and database directories can be combined, where each scan is only processed once. ']
     };
 
   % parallel processes (as nproc of the CAT segmentation, but at most 4, 
@@ -97,23 +91,22 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   
   subdir            = cfg_entry;
   subdir.tag        = 'subdir';
-  subdir.name       = 'Study Directory';
+  subdir.name       = 'Database Directory';
   subdir.strtype    = 's';
-  subdir.num        = [0 Inf];
+  subdir.num        = [1 Inf];
   subdir.val        = {def.subdir};
   subdir.help       = {
    ['The directory is created within the chosen output directory. ' ...
-    'To use it also in BIDS use only letters and digits. ' ...
-    'If no name is given no subdirectory is created. ']
+    'To use it also in BIDS use only letters and digits. ']
     ''
     };
 
 
 
 
-  % Dictionaries 
+  % Study setup (see dataset below)
   % =======================================================================
-  % define directory with protocol filter
+  % directories with the protocol definitions (see cat_io_dcm2bids_protocols)
   protocoldir          = cfg_files;
   protocoldir.tag      = 'Pprotocoldirs';
   protocoldir.name     = 'Protocol Directories';
@@ -122,94 +115,14 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   protocoldir.val      = {{''}};
   protocoldir.num      = [0 Inf];
   protocoldir.help     = {
-   ['Select directories with JSON files with specified DICOM entries to filter for relevant protocols. ' ...
-    'If no directory is specified then all data will be exported to a BIDS directory. ' ...
-    'The file name of the JSON filter file together with the series number ' ...
-    'will be used to specify the BIDS acquisition entity "acq-###FILENAME", where scans of one acquisition ' ...
-    '(e.g. SBRef and bold, field-map magnitude and phase, AP and PA) get the series number of the first one ' ...
-    'and the file name without the information of the suffix and further entities (e.g. AP for dir-AP).']
+   ['Directories with the MRI protocols of the study, i.e. one JSON file per protocol with its DICOM parameters ' ...
+    '(e.g. SeriesDescription, EchoTime, RepetitionTime) and an optional qc*.json file with the ranges of its ' ...
+    'quality measures. The scans are tested against these protocols and named by the file name of the fitting ' ...
+    'protocol (acq-<series number><file name>). Without directory, all scans are exported. ']
     ''
-    'E.g., a "myt1w.json" with:'
-    '  {'
-    '    "SeriesDescription":                   "mprage_sag_0p8mm",'
-  	'    "SliceThickness":                      0.8,'
-  	'    "EchoTime":                            0.00222,'
-  	'    "RepetitionTime":                      2.4,'
-  	'    "InversionTime":                       1.03,'
-  	'    "FlipAngle":                           8'
-    '  }'
-    ''
-   ['It is possible to define a quality file with additional prefix "qc" that ' ...
-    'defines the range of the following quality measures:']
-   ... ['To convert the quality measures into a standardized rating, each protocol JSON file ' ...
-   ... 'requires an addition file with prefix "qc" that includes the scaling range for each ' ...
-   ... 'quality measure ranging from perfect to unacceptable quality: ']
-    ''
-    'E.g., a "qcmyt1w.json" with:'
-    '  {'
-    '    "BSM": NaN,'
-  	'  	 "WSM": NaN,'
-  	'  	 "ISR": [0.10, 0.30],'
-  	'    "NSR": [0.03, 0.09],'
-  	'  	 "RES": [0.80, 1.00]'
-    '  }'
-    ''
-   ['with Between Scan Movement (BSM), Within Scan Movement (WSM) for high-dimensional data ' ...
-    '(e.g., functional and diffusion data but also anatomical rescans); ' ...
-    'Inhomogeneity Signal Ratio (ISR), Noise Signal Ratio (NSR), and ' ...
-    'RMS resolution value RES of the voxel dimension. ']
-    }; 
-  
-
-  % define directory with protocol filter
-  %%%%%% NOT FULLY IMPLEMENTED YET  
-  studydict          = cfg_files;
-  studydict.tag      = 'Pstudydict';
-  studydict.name     = 'Study Dictionary File (expert)';
-  studydict.filter   = 'any';
-  studydict.ufilter  = '.*\.json$';
-  studydict.val      = {{''}};
-  studydict.num      = [0 Inf];
-  studydict.hidden   = expert<1;
-  studydict.help     = {
-    ['In case of multiple centers it is possible to add this to the BIDS subject code to improve readability. ' ...
-    'Define and link a json file that specifies your "StudySerialNumber" ' ...
-    'and defines the desired "StudyAbbreviation". '] 
-    ''
-    'E.g., a "mystudies.json" with:'
-    '  ['
-    '    {'
-    '      "StudySerialNumber":      "000815",'
-    '      "StudyAbbreviation":      "Motion"'
-    '    }'
-    '    {'
-    '      "StudyNumber":           "000007",'
-    '      "StudyAbbreviation":      "ADNI"'
-    '    }'
-    '  ]'
-    ''
-    };   
-
-  % Subject table
-  % csv file to redefine IDs and add further data 
-  %
-  subjectdict          = cfg_files;
-  subjectdict.tag      = 'Psubjectdict';
-  subjectdict.name     = 'Subject Dictionary Table (expert)';
-  subjectdict.filter   = 'any';
-  subjectdict.ufilter  = '.*\.csv$';
-  subjectdict.val      = {{''}};
-  subjectdict.num      = [0 Inf];
-  subjectdict.hidden   = expert<1;
-  subjectdict.help     = {
-    'Integration of phenotypical data by CSV tables with subject-specific "PatientID" or session-specific "StudyNumber".'
-    ''
-    'E.g., a "subjects.csv" with:'
-    'PatientID, MMSE, GROUP'
-    '000000001, 30,   0'
-    '000000002, 12,   1'
-    ''
-    }; 
+   ['Examples: DCM2BIDS/protocols/ADNI4, DZPG3T, NKI-RS, and NKI-TRT. See DCM2BIDS/readme.txt and the CAT manual ' ...
+    'for the setup of own protocols. ']
+    };
 
   % select files with center information 
   % automatic naming based on the site name and scanner field strength.
@@ -222,43 +135,9 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   centerdict.num      = [0 Inf];
   centerdict.hidden   = true;
   centerdict.help     = {
-    [ ...
-    'In case of multiple centers it is possible to include a centerID into ' ...
-    'the subject code to avoid overlap of center specific subject IDs. ' ...
-    'Define and link a json file that specifies your "DeviceSerialNumber" ' ...
-    'and defines the desired "InstitutionAbbreviation". ' ...
-    ] 
-    ''
-    'E.g., a "mysites.json" with:'
-    '  ['
-    '    {'
-    '      "DeviceSerialNumber":           "000815",'
-    '      "InstitutionAbbreviation":      "JE",'
-    '      "siteID":                       "07",'
-    '      "Color":                        "#A82117"'
-    '    },'
-    '    {'
-    '      "DeviceSerialNumber":           "000007",'
-    '      "InstitutionAbbreviation":      "NA"'
-    '    },'
-    '    {'
-    '      "Name":                         "partner site Halle-Jena-Magdeburg",'
-    '      "Cities":                       ["Halle","Jena","Magdeburg"],'
-    '      "Color":                        "#A82117"'
-    '    }'
-    '  ]'
-    ''
-    ['The optional "siteID" is the site code of the anonymization level 2 (without location, e.g. given centrally ' ...
-     'for all sites of a federated study): the site label is the siteID with the manufacturer and field strength ' ...
-     '(e.g. 07SI30T), without siteID only the manufacturer and field strength (e.g. SI30T, i.e. the site is not ' ...
-     'available and the subject labels of different databases are not unique). Scanners without dictionary get ' ...
-     'an empty siteID in the site registry of the database (catDCM2BIDSdb/catDCM2BIDSsites.json) that can be ' ...
-     'defined there. ']
-    ['The optional "Color" (RGB hex) is the color of the site in the report figure. Entries with "Cities" and ' ...
-     '"Color" (without "DeviceSerialNumber") define the color of all scanners of these cities (city of the ' ...
-     '"InstitutionAddress", also of scanners that are not in the dictionary, "*" for all other cities) without ' ...
-     'own color, e.g. of all scanners of a partner site, where scanners with the same color differ slightly in ' ...
-     'brightness. See also DCM2BIDS/sites.json. ']
+    ['JSON file with the sites of the scanners (DeviceSerialNumber): site abbreviation of the BIDS labels, ' ...
+     'optional siteID of the anonymized BIDS, and optional color in the report figure. ' ...
+     'Template and details: DCM2BIDS/studies/template/sites.json and DCM2BIDS/readme.txt. ']
     ''
     };
     
@@ -282,48 +161,10 @@ function dcm2bids = cat_conf_dcm2bids(expert)
     'sub-SITE-PID', ...
     };
   subIDform.values  = {1,2};
-  if expert > 1 % extended version 
-    % to run multiple studies a study dictionary json/tsv file could be used
-    subIDform.name    = 'Subject ID form (developer)';
-    subIDform.labels  = {
-      'sub-PID', ...
-      'sub-SITE-PID', ...
-      'sub-STUDY-PID', ...
-      'sub-SITE-STUDY-PID', ...
-      'sub-STUDY-SITE-PID'
-      };
-    subIDform.values  = {1,2,3,4,5};
-    subIDform.help    = [subIDform.help; {
-      'The STUDY is defined by the GUI entry here. '; 
-      }];
-  end
   subIDform.val     = {def.opts.subIDform};
   subIDform.hidden  = expert<1;
 
 
-
-  % === not implemented yet ===
-  ProtocolFileName         = cfg_menu;
-  ProtocolFileName.tag     = 'ProtocolFileName';
-  ProtocolFileName.name    = 'Use Fitting Protocol Filter File Name';
-  ProtocolFileName.labels  = {'Yes','No'};
-  ProtocolFileName.values  = {1,0};
-  ProtocolFileName.val     = {def.opts.ProtocolFileName};
-  ProtocolFileName.hidden  = true; %expert<1;
-  ProtocolFileName.help    = {
-    'Redefine the name of a protocol by the filename of the fitting protocol filter.'
-    };
-
-  % study selector/filter - NOT WORKING YET
-  studies         = cfg_entry;
-  studies.tag     = 'studies';
-  studies.name    = 'Study Selector/Filter (expert)';
-  studies.strtype = 's';
-  studies.num     = [0 Inf];
-  studies.val     = {''};
-  studies.hidden  = true; %expert<1;
-  studies.help    = {
-    'Specify the export of specific studies by studyID or the defined study abbreviations.' ''};
 
   % zipping
   gzipi            = cfg_menu;
@@ -362,7 +203,7 @@ function dcm2bids = cat_conf_dcm2bids(expert)
       ['Option 2 exports the scans with a conform or semiconform protocol (protocol fit rating PFR of at most 4.5, ' ...
       'see opts.protocol.status), i.e. scans with a nonconform protocol are only part of the tables of the database ' ...
       '(all scans without protocol definitions), unless they fit a broad fallback protocol of the scans that are ' ...
-      'required for the evaluation (T1w, T2w, FLAIR, BOLD, and DWI of all vendors, see DCM2BIDS/nonconform), e.g. the ' ...
+      'required for the evaluation (T1w, T2w, FLAIR, BOLD, and DWI of all vendors, see DCM2BIDS/protocols/nonconform), e.g. the ' ...
       'T1w of another sequence, which are exported with "nonconform" in the acq label and preprocessed. ']
       'Option 3 exports all scans to BIDS (with protocolsubdirs the scans without conform protocol in "mismatch"). '
       ['The options 0 and 1 only use the DICOM header information (JSON), i.e., the images are not ' ...
@@ -438,6 +279,7 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   agelimit.strtype  = 'r';
   agelimit.num      = [1 2];
   agelimit.val      = {def.opts.agelimit};
+  agelimit.hidden   = expert < 1;
   agelimit.help     = {
    ['Age range [min max] of the sessions in years. Sessions outside the range or without age are not processed ' ...
     '(listed as warning and in the table catDCM2BIDSdb-tables/excluded_sessions), e.g. the age 0 of many DICOMs is ' ...
@@ -595,6 +437,130 @@ function dcm2bids = cat_conf_dcm2bids(expert)
      'color map DEC, and the normalized FA wFA (e.g. for voxel-based analyses), optionally also the mean, axial, ' ...
      'and radial diffusivity MD, AD, and RD (their white matter values are always estimated for the tables). ']
     };
+
+  % CAT preprocessing as final step (see cat_io_dcm2bids_pp_cat)
+  catrun          = cfg_menu;
+  catrun.tag      = 'run';
+  catrun.name     = 'CAT preprocessing';
+  catrun.labels   = {'No','Yes'};
+  catrun.values   = {0,1};
+  catrun.val      = {def.opts.cat.run};
+  catrun.help     = { ...
+   ['CAT segmentation with surfaces of one T1w scan per session (the one with the best quality rating) of the ' ...
+    'exported BIDS directory as final step, with further surface measures (gyrification, sulcal depth, area) and ' ...
+    'the resampled and smoothed surface data (32k mesh). The results are written in an own derivatives ' ...
+    'directory of the main CAT version (e.g. derivatives/CAT26), i.e. results of different CAT versions are not ' ...
+    'mixed, and the SPM batches are saved there (e.g. to load them into the batch editor). Only scans without ' ...
+    'results are processed. This takes about 10-30 minutes per scan. ']};
+
+  catlong         = cfg_menu;
+  catlong.tag     = 'long';
+  catlong.name    = 'CAT longitudinal pipeline';
+  catlong.labels  = {'No (cross-sectional)','Yes (subjects with several sessions)','Both'};
+  catlong.values  = {0,1,2};
+  catlong.val     = {def.opts.cat.long};
+  catlong.help    = { ...
+   ['Subjects with several sessions are processed by the longitudinal pipeline of CAT in the derivatives ' ...
+    'directory with the suffix _long (e.g. derivatives/CAT26_long), the other subjects cross-sectionally. ' ...
+    '"Both" processes all scans also cross-sectionally (e.g. for cross-sectional analyses of all sessions). ']};
+
+  catfwhm         = cfg_entry;
+  catfwhm.tag     = 'fwhm';
+  catfwhm.name    = 'CAT surface smoothing (expert)';
+  catfwhm.strtype = 'r';
+  catfwhm.num     = [1 2];
+  catfwhm.val     = {def.opts.cat.fwhm};
+  catfwhm.hidden  = expert < 1;
+  catfwhm.help    = {'FWHM in mm of the resampled (32k mesh) thickness and of the folding measures (gyrification, sulcal depth, area). '};
+
+  catpp           = cfg_branch;
+  catpp.tag       = 'cat';
+  catpp.name      = 'CAT preprocessing';
+  catpp.val       = {catrun catlong catfwhm};
+  catpp.help      = catrun.help;
+
+  % participant report of each session (see cat_io_dcm2bids_participantreport)
+  prun            = cfg_menu;
+  prun.tag        = 'run';
+  prun.name       = 'Participant report';
+  prun.labels     = {'No','Yes'};
+  prun.values     = {0,1};
+  prun.val        = {def.opts.participantreport.run};
+  prun.help       = { ...
+   ['Illustrated A4 report for the scanned person (brain images, surface, and some measures with reference ' ...
+    'values), saved only in the private directory (<BIDS>-private/<BIDS>/participantreports). Not for diagnostic ' ...
+    'purposes. See DCM2BIDS/readme.txt. ']};
+
+  pvariant        = cfg_menu;
+  pvariant.tag    = 'variant';
+  pvariant.name   = 'Layout';
+  pvariant.labels = {'A - magazine rows','B - sidebar','C - infographic','D - landscape'};
+  pvariant.values = {'A','B','C','D'};
+  pvariant.val    = {def.opts.participantreport.variant};
+  pvariant.help   = {'Layout of the participant report. '};
+
+  plang           = cfg_entry;
+  plang.tag       = 'lang';
+  plang.name      = 'Languages';
+  plang.strtype   = 's';
+  plang.num       = [1 Inf];
+  plang.val       = {strjoin(cellstr(def.opts.participantreport.lang),' ')};
+  plang.help      = {'Languages of the participant report (one PDF each, e.g. "en de"): en, de, es, fr, it, ru, ar, zh, ja. '};
+
+  preport         = cfg_branch;
+  preport.tag     = 'participantreport';
+  preport.name    = 'Participant report';
+  preport.val     = {prun pvariant plang};
+  preport.help    = prun.help;
+
+  % quick surfaces of the segmented scan of each session (see cat_io_dcm2bids_pp_surf)
+  surfrun         = cfg_menu;
+  surfrun.tag     = 'run';
+  surfrun.name    = 'Quick surfaces';
+  surfrun.labels  = {'No','Yes'};
+  surfrun.values  = {0,1};
+  surfrun.val     = {def.opts.surf.run};
+  surfrun.help    = { ...
+   ['Fast surface reconstruction of the segmented anatomical scan of each session (about 1-2 minutes) without ' ...
+    'topology correction and surface registration, as the regions are given by the volume atlas (lotter2025): ' ...
+    'regional thickness, T1w intensity, area, absolute mean curvature, and sulcal depth independent of the CAT ' ...
+    'version, and the surfaces for the rendering (T1w intensity, thickness, atlas, superficial WM directions of ' ...
+    'the DTI, and the mean EPI of the rs-fMRI). Requires the basic preprocessing. ']};
+
+  surfres         = cfg_entry;
+  surfres.tag     = 'res';
+  surfres.name    = 'Resolution of the thickness estimation (expert)';
+  surfres.strtype = 'r';
+  surfres.num     = [1 1];
+  surfres.val     = {def.opts.surf.res};
+  surfres.hidden  = expert < 1;
+  surfres.help    = {['Resolution in mm of the projection-based thickness estimation (0.8 mm by default, about 2 times faster ' ...
+    'than 0.5 mm as CAT, with fewer topology defects; the thickness offset of the resolution is corrected by thickness ' ...
+    'phantoms, whereas 1.0 mm shifts the surface about 0.5 mm towards the WM). ']};
+
+  surfred         = cfg_entry;
+  surfred.tag     = 'reduction';
+  surfred.name    = 'Surface reduction (expert)';
+  surfred.strtype = 'r';
+  surfred.num     = [1 1];
+  surfred.val     = {def.opts.surf.reduction};
+  surfred.hidden  = expert < 1;
+  surfred.help    = {'Number of faces of the surface relative to CAT (1 - as CAT, 2-4 - 2 to 4 times less, e.g. for a quick review). '};
+
+  surfvert        = cfg_entry;
+  surfvert.tag    = 'reduce';
+  surfvert.name   = 'Vertices of the saved surfaces (expert)';
+  surfvert.strtype = 'n';
+  surfvert.num    = [1 1];
+  surfvert.val    = {def.opts.surf.reduce};
+  surfvert.hidden = expert < 1;
+  surfvert.help   = {'Number of vertices of the saved surfaces of each hemisphere (e.g. for the rendering). '};
+
+  surfpp          = cfg_branch;
+  surfpp.tag      = 'surf';
+  surfpp.name     = 'Quick surfaces';
+  surfpp.val      = {surfrun surfres surfred surfvert};
+  surfpp.help     = surfrun.help;
 
   dtimix          = cfg_menu;
   dtimix.tag      = 'dtimix';
@@ -829,7 +795,8 @@ function dcm2bids = cat_conf_dcm2bids(expert)
  
 
 
-  % dataset description (dataset_description.json, README.md)
+  % dataset description (dataset_description.json, README.md) and phenotypic 
+  % data of the study (templates and examples of DCM2BIDS/studies)
   % =======================================================================
   dsstudy          = cfg_files;
   dsstudy.tag      = 'study';
@@ -839,18 +806,10 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   dsstudy.num      = [0 1];
   dsstudy.val      = {def.dataset.study};
   dsstudy.help     = {
-   ['JSON file with the BIDS fields of the dataset_description.json of the BIDS dataset, i.e. Name, License, ' ...
-    'Authors, Acknowledgements, HowToAcknowledge, Funding, EthicsApprovals, ReferencesAndLinks, and DatasetDOI. ' ...
-    'Copy the empty DCM2BIDS/study/cat_study_default.json (or the filled DCM2BIDS/study/cat_study_example.json) ' ...
-    'to your study, fill in the fields, and select it here. ']
-    ''
-   ['Empty fields are not written, and an empty Name is replaced by the study subdirectory. BIDSVersion, ' ...
-    'DatasetType, and GeneratedBy (catDCM2BIDS and dcm2niix) are set automatically, and fields with a leading ' ...
-    'underscore (e.g. "_Description") are ignored. Further BIDS fields (e.g. Keywords) are written as given. ']
-    ''
-   ['The License is given as SPDX identifier (e.g. CC0-1.0, PDDL-1.0, CC-BY-4.0, CC-BY-SA-4.0, CC-BY-NC-4.0, ' ...
-    'ODC-BY-1.0, or empty, e.g. for data under a data use agreement). For the import of BIDS datasets, the ' ...
-    'most restrictive license of the study and the source datasets is used (with a warning). ']
+   ['JSON file with the description of the BIDS dataset (dataset_description.json, e.g. Name, License, Authors, ' ...
+    'Acknowledgements, and Funding). Copy DCM2BIDS/studies/template/study.json (or the file of an example study, ' ...
+    'e.g. studies/ADNI4) to your study, fill in the fields, and select it here. Empty fields are not written. ' ...
+    'An optional colormap.json in the same directory defines the design of the report figure (e.g. studies/DZPG). ']
     };
 
   dsreadme         = cfg_files;
@@ -861,11 +820,9 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   dsreadme.num     = [0 1];
   dsreadme.val     = {def.dataset.README};
   dsreadme.help    = {
-   ['Text file (txt/md) that defines the head of the README.md file of the BIDS dataset, e.g. with a ' ...
-    'description of the study, where "<Name>" is replaced by the name of the dataset. The default ' ...
-    'DCM2BIDS/study/cat_study_readme.txt contains only a short standard text, i.e. copy it to your study ' ...
-    'and extend it. For the import of BIDS datasets, it is extended by their README files with the dataset ' ...
-    'name as header. ']};
+   ['Text file (txt/md) with the description of the study for the README.md of the BIDS dataset ("<Name>" is ' ...
+    'replaced by the name of the dataset). Copy DCM2BIDS/studies/template/readme.txt to your study and extend it. ']
+    };
 
   % phenotypic data of the sessions (see cat_io_dcm2bids_phenotypic)
   dspheno          = cfg_files;
@@ -876,37 +833,13 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   dspheno.num      = [0 Inf];
   dspheno.val      = {{''}};
   dspheno.help     = {
-   ['CSV or TSV tables with data of the scan sessions (e.g. clinical or behavioral data) with one row per session ' ...
-    '(or per subject). The rows are matched to the sessions of the internal database by their key columns, and ' ...
-    'all other columns are added to the BIDS sessions files (sub-<label>_sessions.tsv). The key columns are not ' ...
-    'exported, but please check the other columns for personal data. ']
+   ['CSV/TSV tables with data of the sessions (e.g. group, diagnosis, or scores) that are added to the BIDS sessions ' ...
+    'files. The rows are matched to the sessions by their key columns (participantID, name, birth date, scan date, ' ...
+    'or visit), which are not exported, but please check the other columns for personal data. Key values can be ' ...
+    'patterns, e.g. a first row with "*" gives the defaults of all sessions. ']
     ''
-   ['Key columns (if not given by their numbers): participantID (participantid, subject, patientid, pid; the ID of ' ...
-    'the participant as stored in the DICOM PatientID by the scanner, not the BIDS participant label sub-<label> that ' ...
-    'is created by this batch), name (name, patientname, firstname, ' ...
-    'lastname, surname, vorname, nachname; the words of all name columns and of the DICOM name in any order), birth ' ...
-    'date (birthdate, dateofbirth, dob, geburtsdatum; year and month), scan date (scandate, date, datetime, ' ...
-    'acquisitiondate, datum; day and the closest time), and visit (visit, session, timepoint; number of the session ' ...
-    'of the participant by date). Dates as yyyy-mm-dd, yyyymmdd, dd.mm.yyyy, or dd/mm/yyyy (with optional time). ']
-    ''
-   ['Rows with a scan date or visit (session rows) have to match one session, rows without (participant rows) all ' ...
-    'sessions of one participant (also of several scanners). Key values can also be patterns: "*" for all values, ' ...
-    'wildcards (e.g. 002_S_* for all participants of the ADNI site 002, or Muster*), a year or month (e.g. 2023 or ' ...
-    '2023-05), and ranges of dates or visits (e.g. 2023-09-01..2026-12-31, 2023.., or 2..3). The values of a session ' ...
-    'are combined from all its rows by their specificity: session rows replace participant rows, and these replace ' ...
-    'pattern rows, where pattern rows replace the values of former pattern rows (e.g. study defaults in a first row ' ...
-    '"*,*,*,*,DZPG,JE1,NC" and the site or participant values below). Empty cells replace nothing. Different values ' ...
-    'of rows of the same specificity (participant or session) are a conflict, i.e. the session gets no value of ' ...
-    'this column. The data of a table are replaced by each import of the table (by its file name). The match of ' ...
-    'each row is given in the private table catDCM2BIDSdb-tables/phenotypic_<table>.csv. ']
-    ''
-   ['See DCM2BIDS/study/cat_study_phenotype.csv as template with the key columns name, surname, scandate, and ' ...
-    'participantID and the data columns organizationName (e.g. DZPG, ADNI, NKI), studyName (substudy or version, ' ...
-    'e.g. JE1, ADNI4), participantGroup (analysis group, e.g. NC, MCI, AD), sex, and handedness (described in ' ...
-    'cat_study_phenotype.json), e.g.:']
-    '  name, surname, scandate, participantID, organizationName, studyName, participantGroup, sex, handedness'
-    '  Max, Mustermann, 2025-11-20, , DZPG, JE1, NC, M, R'
-    ''
+   ['See DCM2BIDS/studies/template/phenotype.csv (with its column description phenotype.json) and ' ...
+    'DCM2BIDS/readme.txt for the matching rules. ']
     };
 
   dsphenodict         = cfg_files;
@@ -917,14 +850,9 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   dsphenodict.num     = [0 1];
   dsphenodict.val     = {def.dataset.phenotypicdict};
   dsphenodict.help    = {
-   ['JSON file for a common coding of the phenotypic data tables of different studies. Columns with a variant of ' ...
-    'a field name are renamed (e.g. gender, geschlecht -> sex; Research Group -> participantGroup), and their ' ...
-    'values with a variant of a level are replaced by its code (e.g. female, weiblich -> F; CN, HC -> NC). Numbers ' ...
-    'are never recoded by the dictionary (e.g. 1 is male in one study and female in another), but by the coding ' ...
-    'of each table, i.e. by the description of its header (e.g. "SEX (male = 1, female = 2)") or by the Levels of ' ...
-    'its JSON sidecar (e.g. table.json of table.csv). Other values are kept (with a warning). The default ' ...
-    'DCM2BIDS/study/cat_study_phenotype_dictionary.json contains organizationName, studyName, participantGroup, ' ...
-    'sex, and handedness, i.e. copy and extend it for your studies. ']
+   ['JSON file for a common coding of the phenotypic tables of different studies, i.e. column names and values are ' ...
+    'renamed (e.g. gender -> sex, weiblich -> F, CN -> NC). The default DCM2BIDS/studies/phenotype_dictionary.json ' ...
+    'covers organizationName, studyName, participantGroup, sex, and handedness (copy and extend it if required). ']
     };
 
   dsphenokeys         = cfg_entry;
@@ -933,6 +861,7 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   dsphenokeys.strtype = 'n';
   dsphenokeys.num     = [0 Inf];
   dsphenokeys.val     = {def.dataset.phenotypickeys};
+  dsphenokeys.hidden  = true; 
   dsphenokeys.help    = {
    ['Numbers of the key columns of the phenotypic data tables for the matching to the sessions, e.g. 1:3 for name, ' ...
     'surname, and scan date. Empty: detection of the key columns by their names (see the help of the tables). ' ...
@@ -941,55 +870,63 @@ function dcm2bids = cat_conf_dcm2bids(expert)
 
   dataset          = cfg_branch;
   dataset.tag      = 'dataset';
-  dataset.name     = 'Dataset Descriptor';
-  dataset.val      = {dsstudy, dsreadme, dspheno, dsphenokeys, dsphenodict};
+  dataset.name     = 'Study setup';
+  dataset.val      = {dsstudy, dsreadme, protocoldir, dsphenodict, dspheno, dsphenokeys, centerdict};
   dataset.help     = {
-   ['Description of the BIDS dataset that is written to the dataset_description.json (by the study JSON) and ' ...
-    'README.md (by the study README) files of the BIDS directory, and phenotypic data of the sessions. ' ...
-    'BIDSVersion, DatasetType, and GeneratedBy (catDCM2BIDS and dcm2niix) are set automatically. ']};
+   ['MRI protocols, description, and phenotypic data of the study, i.e. the tested protocols, the ' ...
+    'dataset_description.json and README.md of the BIDS dataset, and the data of the sessions. Templates and ' ...
+    'examples (ADNI4, DZPG, NKI) are given in DCM2BIDS/protocols and DCM2BIDS/studies (see DCM2BIDS/readme.txt). ']};
 
 
   % main fields
   % =======================================================================
-  dicts            = cfg_branch;
-  dicts.tag        = 'dicts';
-  dicts.name       = 'Dictionary Files';
-  dicts.val        = {protocoldir, centerdict, studydict, subjectdict, };
-  dicts.help       = {'Optional files to replace standard variables by more handy names or codes. '}; 
-
-  % report figure (see cat_io_dcm2bids_reportfig): designs of DCM2BIDS/colormaps
-  % (all or one, other combinations by the defaults or a batch script)
+  % report figure (see cat_io_dcm2bids_reportfig): by default the design of
+  % the study (colormap.json of the study directory) or CAT_bright, other 
+  % designs of DCM2BIDS/colormaps only for experts
   Pdes            = dir(fullfile(fileparts(mfilename('fullpath')),'DCM2BIDS','colormaps','*.json'));
   dnames          = regexprep({Pdes.name},'\.json$','');
   rdesign         = cfg_menu;
   rdesign.tag     = 'design';
-  rdesign.name    = 'Designs';
-  rdesign.labels  = [{'All designs'} strrep(dnames,'_',' ')];
-  rdesign.values  = [{dnames} cellfun(@(d) {d},dnames,'UniformOutput',false)];
+  rdesign.name    = 'Designs (expert)';
+  rdesign.labels  = [{'Study design'} strrep(dnames,'_',' ') {'All designs'}];
+  rdesign.values  = [{{'study'}} cellfun(@(d) {d},dnames,'UniformOutput',false) {[{'study'} dnames]}];
   ddef            = cellstr(def.opts.reportfig.design);
   if ~any(cellfun(@(v) isequal(v,ddef),rdesign.values))
     rdesign.labels = [{'Default designs'} rdesign.labels]; rdesign.values = [{ddef} rdesign.values];
   end
   rdesign.val     = {ddef};
+  rdesign.hidden  = expert < 1;
   rdesign.help    = {
-   ['Designs of the report figure, i.e. one PDF file per design (BIDS-report/report_<BIDSsubdir>_<design>.pdf): ' ...
-    'the bright and dark CAT designs and the bright DZPG design with the logos, rating icons, colors, and ' ...
-    'colormaps of DCM2BIDS/colormaps/<design>.json (further designs can be added there). ']};
+   ['Designs of the report figure (one PDF per design): the study design is the colormap.json of the study ' ...
+    'directory (directory of the Study JSON, e.g. DCM2BIDS/studies/DZPG), otherwise the bright CAT design. ' ...
+    'See DCM2BIDS/readme.txt. ']};
 
   reportfig       = cfg_branch;
   reportfig.tag   = 'reportfig';
-  reportfig.name  = 'Report figure';
+  reportfig.name  = 'Report figure (expert)';
   reportfig.val   = {rdesign};
+  reportfig.hidden = expert < 1;
   reportfig.help  = {
    ['A4 pages with the diagrams of the report tables of each BIDS directory (overview and one page per site): ' ...
     'number of sessions per month and per site, age and sex of the subjects, brain measures by age, sample ' ...
     'homogeneity, and quality ratings (see cat_io_dcm2bids_reportfig). ']};
 
+  reportxlsx         = cfg_menu;
+  reportxlsx.tag     = 'reportxlsx';
+  reportxlsx.name    = 'Excel report tables (expert)';
+  reportxlsx.labels  = {'Fixed colors','Color scale','None'};
+  reportxlsx.values  = {'fixed','scale','none'};
+  reportxlsx.val     = {def.opts.reportxlsx};
+  reportxlsx.hidden  = expert < 1;
+  reportxlsx.help    = {
+   ['Excel file of the report tables (<BIDS>-report/report_<BIDS>.xlsx) with colored ratings: fixed colors ' ...
+    '(as the report figure) or a color scale (conditional formatting, e.g. of Google Sheets). ']};
+
   opts            = cfg_branch;
   opts.tag        = 'opts';
   opts.name       = 'Options';
-  opts.val        = {ProtocolFileName, studies, anonymize, tolerance, preprocessing, pplevel, dtimaps, dtimix, ...
-                      gzipi, gzipe, output, agelimit, dicomexport, exportmode, protocolsubdirs, subIDform, render, reportfig};
+  opts.val        = {anonymize, tolerance, preprocessing, pplevel, dtimaps, dtimix, surfpp, catpp, preport, ...
+                      gzipi, gzipe, output, agelimit, dicomexport, exportmode, protocolsubdirs, subIDform, render, reportfig, reportxlsx};
   opts.help       = {['Parameters to control the processing and output of ' ...
                       'the converted data and its export to BIDS. ']}; 
 
@@ -1001,16 +938,17 @@ function dcm2bids = cat_conf_dcm2bids(expert)
   dcm2bids.name   = 'DICOM2BIDS';
   dcm2bids.prog   = @cat_io_dcm2bids;
   dcm2bids.vout   = @vout_io_dcm2bids;
-  dcm2bids.val    = {datadir, outdir, subdir, dicts, dataset, opts, nproc}; 
+  dcm2bids.val    = {datadir, outdir, subdir, dataset, opts, nproc}; 
   dcm2bids.help   = { ...
    ['This batch uses DCM2NIIX to convert DICOM into NIFTI images with JSON sidecars. ' ...
-    'It stores the converted data and reorganizes the output in BIDS. ' ...
-    'It allows filtering for specific MRI protocols within a directory that outline relevant MR parameters within a JSON file. '] 
+    'It stores the converted data and reorganizes the output in BIDS. ']
     ''
-   ['Please check out the CAT subdirectory DCM2BIDS/DZPG3T for an example that includes the definition for ' ...
-    'structural, functional, and diffusion scans used by the DZPG (German Center for Mental Health, https://www.dzpg.org/). ']
+   ['It allows filtering for specific MRI protocols defined as JSONs within the "protocol directory". ' ...
+    'Examples for the ADNI, NKI, and DZPG can be found in the DCM2BIDS/protocols subdirectory, and the setup ' ...
+    'of a study is described in DCM2BIDS/readme.txt (see also the CAT manual). ']
     ''
-    'The batch also applies the SPM anonymization routine and runs a basic image quality control. '
+   ['The batch also applies the SPM anonymization routine and runs a basic image quality control and preprocessing ' ...
+    'that are used to create CSV/TSV tables and render PNG/PDF reports. ']
     ''
    ['The anonymized DICOM export (option) writes the DICOM files of the imported scans with cleaned headers and ' ...
     'defaced images as zip files of the sessions, e.g. to transfer the data to a central site that runs this batch again. ']
@@ -1030,9 +968,6 @@ function dcm2bids = cat_conf_dcm2bids(expert)
     'outdir/<BIDSdir>-report/tables/<BIDSsubdir> and the settings of the job of these tables (BIDS directory names, ' ...
     'table format, scan types, and designs). Tables of different outputs (e.g. sites) are not merged, as the z-scores ' ...
     'and models are estimated within each output. ']
-   ['  Separate batches for these stages (QC with preprocessing of BIDS data, report tables and rendering, and the ' ...
-    'report figure of tables) would process directly in the derivatives of the given BIDS dataset with its names ' ...
-    '(instead of the database), which is planned but requires a redesign of the processing steps. ']
     };
 end
 function cdep = vout_io_dcm2bids(job)

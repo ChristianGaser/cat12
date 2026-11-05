@@ -1,0 +1,19 @@
+{
+  "Description": "Reference models of the participant report (cat_io_dcm2bids_participantreport): mean (quadratic in age - AgeCenter, coefficients [b0 b1 b2]) and SD of each measure and sex within the AgeRange in years. APPROXIMATE PLACEHOLDER VALUES of typical adult ranges for the layout, to be replaced by normative models of the segmentation and surfaces (e.g. of CAT or the study sample) before reports are given to participants.",
+  "AgeCenter": 50,
+  "AgeRange": [18, 90],
+  "Measures": [
+    {"Name": "GMV", "Unit": "ml", "Format": "%0.0f",
+     "Male":   {"Mean": [690, -2.6, -0.005], "SD": 55},
+     "Female": {"Mean": [625, -2.3, -0.005], "SD": 50}},
+    {"Name": "WMV", "Unit": "ml", "Format": "%0.0f",
+     "Male":   {"Mean": [540, -0.8, -0.040], "SD": 45},
+     "Female": {"Mean": [480, -0.7, -0.035], "SD": 40}},
+    {"Name": "CT", "Unit": "mm", "Format": "%0.2f",
+     "Male":   {"Mean": [2.35, -0.005, -0.00003], "SD": 0.10},
+     "Female": {"Mean": [2.37, -0.005, -0.00003], "SD": 0.10}},
+    {"Name": "HCV", "Unit": "ml", "Format": "%0.1f",
+     "Male":   {"Mean": [8.3, -0.025, -0.0006], "SD": 0.70},
+     "Female": {"Mean": [7.9, -0.022, -0.0006], "SD": 0.65}}
+  ]
+}

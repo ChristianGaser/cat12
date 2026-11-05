@@ -1,0 +1,77 @@
+{
+  "Language": "de",
+  "Name": "Deutsch",
+  "Status": "draft, to be checked by a native speaker",
+  "Direction": "ltr",
+  "Font": "Helvetica",
+  "Render": "text",
+  "ImageFont": "",
+  "Title": "Ihr Gehirn in Bildern",
+  "Subtitle": "Persönliche MRT-Rückmeldung für Studienteilnehmende",
+  "Identity": {
+    "PID": "Teilnehmer-ID",
+    "Name": "Name",
+    "Birth": "Geburtsdatum",
+    "Sex": "Geschlecht",
+    "Weight": "Gewicht",
+    "Scan": "Untersuchung",
+    "Age": "Alter"
+  },
+  "Sex": {
+    "M": "männlich",
+    "F": "weiblich",
+    "O": "divers"
+  },
+  "Intro": {
+    "BrainHead": "Ihr Gehirn",
+    "Brain": "Das Gehirn besteht aus drei Hauptgeweben. Die graue Substanz (GM) bildet die gefaltete äußere Schicht, die Hirnrinde, in der Milliarden von Nervenzellen Informationen verarbeiten. Die weiße Substanz (WM) besteht aus Nervenfasern, die die Hirnregionen wie Kabel verbinden. Das Nervenwasser (CSF) umgibt und schützt das Gehirn und füllt seine inneren Hohlräume.",
+    "ScannerHead": "Der MRT-Scanner",
+    "Scanner": "Die Magnetresonanztomographie (MRT, engl. MRI) misst mit einem starken Magnetfeld und Radiowellen das Signal des Wassers in Ihrem Körper - ganz ohne Röntgenstrahlen.",
+    "ImagesHead": "Bilder und Messwerte",
+    "Images": "Das T1-gewichtete Bild (T1w) zeigt die Anatomie: GM grau, WM hellgrau und CSF dunkel. Das Diffusionsbild misst die Bewegung des Wassers entlang der Fasern und zeigt deren Hauptrichtung farbig (DEC). Aus den Bildern schätzen wir die Dicke der Hirnrinde (CT) sowie die Volumen von GM, WM und Hippocampus (HC), einer für das Gedächtnis wichtigen Struktur.",
+    "Disclaimer": "Dieser Bericht ist eine schnelle automatische Schätzung nur zur visuellen Rückmeldung und nicht für diagnostische Zwecke bestimmt."
+  },
+  "Notes": {
+    "Head": "Gut zu wissen",
+    "QualityHead": "Bildqualität",
+    "Quality": "Die Bildverarbeitung hängt stark von der Bildqualität ab, die durch Bewegungen während der Messung beeinträchtigt werden kann. Die Qualitätskontrolle (QC) bewertet Ihre Bilder von A (ausgezeichnet) bis F (nicht verwendbar).",
+    "IndividualHead": "Jedes Gehirn ist einzigartig",
+    "Individual": "Muster und Messwerte des Gehirns sind sehr individuell. Statistische Auswertungen von Gruppen zeigen deutliche Muster, eine individuelle Diagnose bleibt aber sehr schwierig und erfordert geschulte Ärztinnen und Ärzte.",
+    "PrivacyHead": "Datenschutz",
+    "Privacy": "In unserer Studie werden Ihre persönlichen Daten und Bilder anonymisiert: So wurde zum Beispiel das Gesicht aus den Bildern entfernt („Defacing“, siehe Abbildung)."
+  },
+  "Captions": {
+    "Slices": "Ihr Gehirn von der Seite, von vorn und von unten, geschnitten durch den Hippocampus (HC, umrandet). Die Farben der WM zeigen die Richtung der Fasern (DEC), die hellen Farben der GM die Hirnlappen. Zum Schutz Ihrer Privatsphäre wurde das Gesicht entfernt (schraffiert).",
+    "SlicesNoDEC": "Ihr Gehirn von der Seite, von vorn und von unten, geschnitten durch den Hippocampus (HC, umrandet). Die hellen Farben der GM zeigen die Hirnlappen. Zum Schutz Ihrer Privatsphäre wurde das Gesicht entfernt (schraffiert).",
+    "Surface": "Die Oberfläche Ihres Gehirns von rechts und etwas von vorn oben gesehen, in Ihrem Kopf (durchsichtig). Die Farbe zeigt die Dicke der Hirnrinde (CT) von dünn und dunkel (2 mm) bis dick und hell (4 mm), tiefe Furchen (Sulci) sind schattiert.",
+    "SurfaceNoCT": "Die Oberfläche Ihres Gehirns von rechts und etwas von vorn oben gesehen, in Ihrem Kopf (durchsichtig).",
+    "Norms": "Ihre Werte (Punkt) im Vergleich mit Menschen gleichen Alters: Das dunkle Band enthält die mittlere Hälfte, das helle Band 90 % aller Menschen."
+  },
+  "Labels": {
+    "Age": "Alter (Jahre)",
+    "Values": "Ihre Werte",
+    "Measure": "Maß",
+    "Value": "Wert",
+    "Typical": "typisch",
+    "Percentile": "Perzentil (P): Anteil der Menschen Ihres Alters mit niedrigeren Werten",
+    "Abbreviations": "Abkürzungen"
+  },
+  "Abbreviations": {
+    "MRI": "Magnetresonanztomographie (MRT)",
+    "T1w": "T1-gewichtetes Bild",
+    "DEC": "Farbe der Faserrichtung: rot links-rechts, grün vorn-hinten, blau oben-unten",
+    "GM": "graue Substanz (Hirnrinde)",
+    "WM": "weiße Substanz (Fasern)",
+    "CSF": "Nervenwasser (Liquor)",
+    "HC": "Hippocampus",
+    "CT": "Dicke der Hirnrinde",
+    "QC": "Qualitätskontrolle: Bewertung der Bildqualität von A (ausgezeichnet) bis F (nicht verwendbar)",
+    "GMV": "Volumen der grauen Substanz",
+    "WMV": "Volumen der weißen Substanz",
+    "HCV": "Volumen des Hippocampus",
+    "P": "Perzentil",
+    "T": "Tesla, Stärke des Magnetfelds",
+    "LRAPSI": "links, rechts, anterior (vorn), posterior (hinten), superior (oben), inferior (unten)"
+  },
+  "Footer": "Automatischer Bericht von CAT für die Teilnehmenden der Studie {Study} ({Organization}, {Website}). MRT: {Institution}, {Address}. Dies ist kein ärztlicher Befund. Bei Fragen wenden Sie sich bitte an das Studienteam."
+}

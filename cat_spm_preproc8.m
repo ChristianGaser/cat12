@@ -84,6 +84,48 @@ function results = cat_spm_preproc8(obj)
 %             parameter estimation in cat_run but also in cat_main_gintnorm.  
 wp_reg    = 1; % Bias wp towards 1/kB 
 
+% RD20261103: Optional regularisation of the Gaussian variances in each
+%             M-step (obj.varreg, off by default, single channel only). In 
+%             data with low noise (e.g. after SANLM), the GM Gaussian is 
+%             widened by the partial volume with CSF and WM, whereas the WM
+%             Gaussian stays narrow, so that GM takes the GM/WM boundary.
+%             .mode ''       .. no regularisation (default)
+%                   'robust' .. SD of the Gaussians (without the background
+%                               class, whose SD describes the noise floor)
+%                               limited to exp(m - .par(1)*s) and
+%                               exp(m + .par(end)*s), with m and s the mean
+%                               and SD of the log(SD) weighted by the voxels
+%                               of each Gaussian (Inf = no limit on this side)
+%             .par  [lower upper] or one value for both (default [1 Inf]).
+%             Only the lower limit is required against the collapse of
+%             narrow classes (WM in noise-free data), whereas the upper limit
+%             changed the head classes between sites (2026-11-04).
+if isfield(obj,'varreg') && isfield(obj.varreg,'mode') && ~isempty(obj.varreg.mode) && numel(obj.image)==1
+  varreg = obj.varreg;
+  if ~isfield(varreg,'par'), varreg.par = [1 Inf]; end
+else
+  varreg = struct('mode','');
+end
+
+% RD20261104: Optional reduction of the number of Gaussians (obj.redgaus,
+%             off by default). The Gaussians of obj.lkp are the maximum.
+%             After the first outer iteration, a class with more than one
+%             Gaussian loses one (its two closest Gaussians are merged) if
+%             the whole class is not wider than a typical Gaussian, i.e.
+%             log(SD of the class) <= mean + .redgaus * std of the voxel
+%             weighted log(SD) of all Gaussians (without the background,
+%             as varreg 'robust'). Hence, the model is simplified if the tissue
+%             is homogeneous or not differentiable (e.g. in noisy data or
+%             other contrasts). An optional second value sets the maximum
+%             number of reductions per class (default 1, one per outer
+%             iteration from iteration 2 on).
+if isfield(obj,'redgaus') && ~isempty(obj.redgaus) && ~isnan(obj.redgaus(1))
+  redgaus = obj.redgaus(1);
+  if numel(obj.redgaus) > 1, redn = obj.redgaus(2); else, redn = 1; end
+else
+  redgaus = NaN; redn = 0;
+end
+
 Affine    = obj.Affine;
 tpm       = obj.tpm;
 V         = obj.image;
@@ -419,6 +461,14 @@ for iter=1:60 % RD202012: increased from 30
         end
     end
 
+    if iter>=2 && iter<=1+redn && use_mog && ~isnan(redgaus) % RD20261104: optional reduction of the Gaussians
+        ngaus0 = accumarray(lkp(:),1,[Kb 1])';
+        [mg,mn,vr,lkp] = reduceGaussians(mg,mn,vr,mom0,lkp,redgaus);
+        K      = numel(lkp);
+        lllog  = []; % new model, new ll-log
+        my_fprintf('Gaussians: %s > %s\n',mat2str(ngaus0),mat2str(accumarray(lkp(:),1,[Kb 1])'));
+    end
+
     for iter1=1:8 + 8*(iter==1) % double initial iterations
         if use_mog
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -459,6 +509,9 @@ for iter=1:60 % RD202012: increased from 30
                     mg(k)     = (mom0(k)+tiny)/sum(tmp+tiny);  % US eq. 27 (partly)
                     mn(:,k)   = mom1(:,k)/(mom0(k)+tiny);      % US eq. 23
                     vr(:,:,k) = (mom2(:,:,k) - mom1(:,k)*mom1(:,k)'/mom0(k) + N*vr0)/(mom0(k)+N); % US eq. 25
+                end
+                if ~isempty(varreg.mode) % RD20261103: optional variance regularisation
+                    vr = regVariance(vr,mom0,lkp,varreg);
                 end
                 for k1=1:Kb
                     wp(k1) = (sum(mom0(lkp==k1)) + wp_reg*1)/(mgm(k1) + wp_reg*Kb); % bias the solution towards 1/kB
@@ -1021,6 +1074,77 @@ results.llpc   = llpc;
 results.lllog  = lllog ./ nm; 
 results.AUC    = AUC; 
 return;
+%=======================================================================
+function vr = regVariance(vr,mom0,lkp,varreg)
+% RD20261103: Robust limits of the Gaussian variances (single channel, see
+% obj.varreg) without the background class, with the log(SD) statistics
+% weighted by the moments of the Gaussians.
+if ~strcmp(varreg.mode,'robust')
+    error('cat_spm_preproc8:varreg','Unknown variance regularisation "%s".',varreg.mode);
+end
+v    = reshape(vr,1,[]);
+w    = reshape(mom0,1,[]);
+k    = lkp < max(lkp);
+ls   = 0.5*log(v(k));
+wk   = w(k) / sum(w(k));
+mls  = sum(wk.*ls);
+sls  = sqrt(sum(wk.*(ls - mls).^2));
+lo   = mls - varreg.par(1)*sls;   if isinf(varreg.par(1)),   lo = -Inf; end
+hi   = mls + varreg.par(end)*sls; if isinf(varreg.par(end)), hi =  Inf; end
+v(k) = exp(2*min(max(ls, lo), hi));
+vr   = reshape(v,size(vr));
+%=======================================================================
+
+%=======================================================================
+function [mg,mn,vr,lkp] = reduceGaussians(mg,mn,vr,mom0,lkp,par)
+% RD20261104: Reduce each class (without the background) with more than
+% one Gaussian by one Gaussian if the class is not wider than a typical
+% Gaussian (see obj.redgaus). The two closest Gaussians of the class are
+% merged by moment matching. The SD of N channels is det(vr)^(1/2N).
+N   = size(mn,1);
+Kb  = max(lkp);
+lsd = @(C) log(max(det(C),eps)) / (2*N);
+k   = find(lkp < Kb);
+ls  = arrayfun(@(i) lsd(vr(:,:,i)),k);
+w   = reshape(mom0(k),1,[]) / sum(mom0(k));
+mls = sum(w.*ls);
+sls = sqrt(sum(w.*(ls - mls).^2));
+del = [];
+for k1 = 1:Kb-1
+    kk = find(lkp==k1);
+    if numel(kk) < 2, continue; end
+    % class mean and covariance (mg is the mixing within the class)
+    a  = mg(kk) / sum(mg(kk));
+    m  = mn(:,kk) * a(:);
+    C  = zeros(N);
+    for i = 1:numel(kk)
+        C = C + a(i) * (vr(:,:,kk(i)) + (mn(:,kk(i)) - m) * (mn(:,kk(i)) - m)');
+    end
+    if lsd(C) > mls + par*sls, continue; end
+    % merge the two closest Gaussians (Mahalanobis distance of the means)
+    dmin = Inf;
+    for i = 1:numel(kk)-1
+        for j = i+1:numel(kk)
+            dm = mn(:,kk(i)) - mn(:,kk(j));
+            d  = dm' / ((vr(:,:,kk(i)) + vr(:,:,kk(j)))/2) * dm;
+            if d < dmin, dmin = d; ij = kk([i j]); end
+        end
+    end
+    g  = mg(ij) / sum(mg(ij));
+    m  = mn(:,ij) * g(:);
+    C  = zeros(N);
+    for i = 1:2
+        C = C + g(i) * (vr(:,:,ij(i)) + (mn(:,ij(i)) - m) * (mn(:,ij(i)) - m)');
+    end
+    mg(ij(1))      = sum(mg(ij));
+    mn(:,ij(1))    = m;
+    vr(:,:,ij(1))  = C;
+    del            = [del ij(2)]; %#ok<AGROW>
+end
+mg(del)       = [];
+mn(:,del)     = [];
+vr(:,:,del)   = [];
+lkp(del)      = [];
 %=======================================================================
 
 %=======================================================================

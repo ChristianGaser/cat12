@@ -4,7 +4,8 @@ function varargout = cat_io_dcm2bids_process(action,varargin)
 %  sessions one after another) are tested by the protocols, named and 
 %  exported in BIDS, rated by the QC, and each session is preprocessed at
 %  its end (segmentation of one anatomical scan, registration, coverage, 
-%  DTI and rs-fMRI measures), and the sessions without anatomical scan at
+%  left-right test with the quarantine of mirrored sessions, see
+%  quarantineSession, DTI and rs-fMRI measures), and the sessions without anatomical scan at
 %  the end with the T1w of another session of the subject (processScans).
 %  The scans are processed in subject packages, i.e. all scans of a 
 %  subject (PatientID) in one call, also by parallel processes (see 
@@ -49,12 +50,15 @@ function R = processScans(C,Psnr,convmsg)
   Panon = Vjson; Pdbdir = Vjson; Pdbjson = Vjson; pstatus = Vjson;
   Pdbdirpath = Vjson; BIDSpathd = Vjson; Pdbnii = Vjson;
   BIDSpath = Vjson; BIDSdir = Vjson; BIDSfile = Vjson; BIDSsub = Vjson; Pprot = Vjson;
-  PID = ''; sni = 0; stime = datetime('now'); bidsroots = {}; convver = {}; 
+  PID = ''; sni = 0; bidsroots = {}; convver = {}; 
+  tpp = 0; % time of the preprocessing of the sessions (see processPackage in cat_io_dcm2bids_parallel)
   srcmap   = containers.Map('KeyType','char','ValueType','any'); % new names of BIDS inputs
   intended = {}; % exported JSONs with IntendedFor references
   partdata = containers.Map('KeyType','char','ValueType','any'); % participant data
   anatrun  = containers.Map('KeyType','char','ValueType','any'); % anatomical scans of the sessions of each subject (this run)
   sesnoanat = {}; % sessions without anatomical scan (DTI and rs-fMRI at the end of the run)
+  qrec      = {}; % sessions with left-right mirrored scans (see quarantineSession)
+  if isfield(C,'quarantine'), qpass = C.quarantine; else, qpass = {}; end % (sessions passed by the user)
   QM = struct('NSR',[],'ISR',[],'RES',[],'BSM',[],'WSM',[],'vx_vol',[],'SQR',[]); 
   varg = Vjson; dbV = {}; % deferred protocol variants and subject table rows (see scanRecord)
   if job.opts.gzipi, niiext = '.nii.gz'; else, niiext = '.nii'; end
@@ -99,13 +103,14 @@ function R = processScans(C,Psnr,convmsg)
       % create table header (command line output only)
       % ===================================================================
       if ~strcmp(PID, Vjson{sci}.PatientID)
-        sni = sni + 1;
-
-        if sci>1
-          fprintf('%s\n',repmat('-',1,154)); 
-          fprintf('%154s\n',['duration: ' char(duration(datetime('now') - stime))]); 
-          stime = datetime('now'); 
+        % subject number of the run (package number, see run in 
+        % cat_io_dcm2bids_parallel)
+        if isfield(C,'subnum') && isKey(C.subnum,fileparts(fileparts(Pdirfi)))
+          sni = C.subnum(fileparts(fileparts(Pdirfi))); 
+        else
+          sni = sni + 1;
         end
+        if sci>1, fprintf('%s\n',repmat('-',1,154)); end
 
         sname = sprintf('sub-%s-%s',Vjson{sci}.DeviceSerialNumber,strrep(Vjson{sci}.PatientID,'_',''));
         if numel(sname) > 39, sname = ['..' sname(end-36:end)]; end % keep the end of long names
@@ -232,10 +237,6 @@ function R = processScans(C,Psnr,convmsg)
       % level 2, see setupSites) and of the tables of the database (siteDB)
       site{sci} = cat_io_dcm2bids_protocols('setupSites',Vjson{sci},sites,job.opts);
       siteDB    = cat_io_dcm2bids_protocols('setupSites',Vjson{sci},sites);
-  
-      % study definition %%% need later refinement
-      studynam = cat_io_dcm2bids_bids('bidsLabel',job.subdir);
-
 
       % main BIDS fields (subject, session, datatype, weighting, ...)
       % ===================================================================
@@ -253,9 +254,7 @@ function R = processScans(C,Psnr,convmsg)
       switch job.opts.subIDform
         case 1, pre = {};                  % sub-PID
         case 2, pre = {sitelab};           % sub-SITE-PID
-        case 3, pre = {studynam};          % sub-STUDY-PID
-        case 4, pre = {sitelab,studynam};  % sub-SITE-STUDY-PID
-        case 5, pre = {studynam,sitelab};  % sub-STUDY-SITE-PID
+        otherwise, error('cat_io_dcm2bids:subIDform','Unknown subject ID form %d (1 - sub-PID, 2 - sub-SITE-PID).',job.opts.subIDform);
       end
       if ~isempty(pre) && numel(NPID) > numel([pre{:}]) && startsWith(NPID,[pre{:}])
         NPID = NPID(numel([pre{:}]) + 1:end); 
@@ -447,7 +446,7 @@ function R = processScans(C,Psnr,convmsg)
           Dold = Dold(~[Dold.isdir]);
           if ~job.opts.preprocessing
             pre  = regexprep({Dold.name},'sub-.*$','');
-            Dold = Dold(cellfun('isempty',regexp(pre,'^(c0|m|mwc1|lotter2025_|hcp1065_|catDCM2BIDS(segus|dwi|dwimix|rsfmri)_.*)$','once')));
+            Dold = Dold(cellfun('isempty',regexp(pre,'^(c0|m|mwc1|lotter2025_|hcp1065_|catDCM2BIDS(segus|surf|dwi|dwimix|rsfmri)_.*)$','once')));
           end
           for di = 1:numel(Dold), delete(fullfile(Dold(di).folder,Dold(di).name)); end
           % scan, b-values and directions, QC, and the realignment of 4D data
@@ -581,6 +580,7 @@ function R = processScans(C,Psnr,convmsg)
     % cat_io_dcm2bids_pp_anat), the phase-encoding reversal test of its scans 
     % (checkPEreversal), and the session data of the subject (sessions.tsv) 
     if job.opts.output > 0 && (fdiri == numel(Psnr) || ~strcmp(fileparts(Psnr{fdiri+1}),fileparts(Pdirfi)))
+      tpps = tic; 
       % (BIDSsub is only set for exported scans, i.e. shorter than sci if the
       % last scans are not exported and a scan directory has several images)
       BIDSsub(end+1:sci) = {''};
@@ -601,45 +601,56 @@ function R = processScans(C,Psnr,convmsg)
             cat_io_cprintf('err','%60s : segmentation failed: %s\n',spm_file(BIDSfile{ia},'basename'),e.message); 
           end
         end
-        % anatomical scans of each subject (by the BIDS label, i.e. also of
-        % other scanners for subject labels without site, see opts.subIDform)
-        % for the sessions without anatomical scan, whose DTI and rs-fMRI 
-        % are processed at the end of the run (see below)
-        if ~isempty(ia)
-          if isKey(anatrun,sub{ia}), anatrun(sub{ia}) = [anatrun(sub{ia}) ia]; else, anatrun(sub{ia}) = ia; end
-        end
-        noanat = isempty(ia) && job.opts.preprocessing && any(ismember(datatype(sesids),{'dwi','func'})); 
+        noanat = isempty(ia) && job.opts.preprocessing && any(ismember(datatype(sesids),{'dwi','func'}));
+        quar   = false; 
         if noanat
           sesnoanat{end+1} = sesids; %#ok<AGROW>
         else
           S = cat_io_dcm2bids_pp_anat('writeSessionAffines',Pdbdirpath(sesids), Pdbnii(sesids), datatype(sesids), ...
-            suffix(sesids), BIDSpathd(sesids), sub(sesids), ses(sesids), job.opts, BIDSfile(sesids), Pprot(sesids)); 
+            suffix(sesids), BIDSpathd(sesids), sub(sesids), ses(sesids), job.opts, BIDSfile(sesids), Pprot(sesids));
           if ~isempty(S), SOR = S(1).SOR; end
+          % quarantine of a session with left-right mirrored scans (see
+          % flipVerdict in cat_io_dcm2bids_pp_anat and quarantineSession)
+          if ~isempty(S) && ~isempty(S(1).leftright) && strcmp(S(1).leftright.verdict,'mirrored')
+            [quar,qrec{end+1}] = quarantineSession(S(1).leftright,sesids,Pdirfi,Pmdbdir,Poutdir,BIDSsub,sub,ses,qpass); %#ok<AGROW>
+            if quar, BIDSsub(sesids) = {''}; end
+          end
         end
-        cat_io_dcm2bids_pp_anat('checkPEreversal',Pdbnii(sesids),Vjson(sesids),datatype(sesids), ...
-          BIDSpathd(sesids),BIDSfile(sesids),job.opts); 
+        % anatomical scans of each subject (by the BIDS label, i.e. also of
+        % other scanners for subject labels without site, see opts.subIDform)
+        % for the sessions without anatomical scan, whose DTI and rs-fMRI 
+        % are processed at the end of the run (see below)
+        if ~isempty(ia) && ~quar
+          if isKey(anatrun,sub{ia}), anatrun(sub{ia}) = [anatrun(sub{ia}) ia]; else, anatrun(sub{ia}) = ia; end
+        end
+        if ~quar
+          cat_io_dcm2bids_pp_anat('checkPEreversal',Pdbnii(sesids),Vjson(sesids),datatype(sesids), ...
+            BIDSpathd(sesids),BIDSfile(sesids),job.opts);
+        end
         if noanat
           cat_io_cprintf([.5 .5 .5],'%60s : no anatomical scan (DTI and rs-fMRI at the end of the run)\n', ...
-            sprintf('session %s',spm_str_manip(spm_file(fileparts(Pdirfi),'basename'),'l50'))); 
-        elseif job.opts.preprocessing % DTI and rs-fMRI measures of the session (see cat_io_dcm2bids_pp_dwi/_rsfmri)
+            sprintf('session %s',spm_str_manip(spm_file(fileparts(Pdirfi),'basename'),'l50')));
+        elseif job.opts.preprocessing && ~quar % DTI and rs-fMRI measures of the session (see cat_io_dcm2bids_pp_dwi/_rsfmri)
           cat_io_dcm2bids_pp_dwi('processSession',Pdbnii(sesids),Vjson(sesids),datatype(sesids), ...
-            suffix(sesids),BIDSpathd(sesids),BIDSfile(sesids),job.opts); 
+            suffix(sesids),BIDSpathd(sesids),BIDSfile(sesids),job.opts);
           cat_io_dcm2bids_pp_rsfmri('processSession',Pdbnii(sesids),Vjson(sesids),datatype(sesids), ...
-            suffix(sesids),BIDSpathd(sesids),BIDSfile(sesids),job.opts); 
+            suffix(sesids),BIDSpathd(sesids),BIDSfile(sesids),job.opts);
+          if isfield(job.opts,'surf') && job.opts.surf.run % quick surface values (see cat_io_dcm2bids_pp_surf)
+            cat_io_dcm2bids_pp_surf('processSession',Pdbnii(sesids),Vjson(sesids),datatype(sesids), ...
+              suffix(sesids),BIDSpathd(sesids),BIDSfile(sesids),job.opts);
+          end
         end
       end
       for bsd = reshape(unique(BIDSsub(sesids)),1,[]) % each BIDS (protocol) directory of the session
+        if isempty(bsd{1}), continue; end % (quarantine)
         id = sesids(find(strcmp(BIDSsub(sesids),bsd{1}),1,'last')); 
         cat_io_dcm2bids_bids('writeSubjectTSV',Vjson{id}, sub{id}, ses{id}, Poutdir, bsd{1}, job.opts.anonymize, SOR, site{id}, ...
           cat_io_dcm2bids_phenotypic('sessionData',fileparts(Pdbdirpath{id})), acqtime{id}); 
       end
       cat_io_dcm2bids_helper('workClear'); % (unzipped images of the session)
+      tpp = tpp + toc(tpps); 
     end
   end 
-  if sci>1
-    fprintf('%s\n',repmat('-',1,154)); 
-    fprintf('%154s\n',['duration: ' char(duration(datetime('now') - stime))]); 
-  end
 
   % sessions without anatomical scan (e.g. longitudinal studies with one 
   % T1w): DTI and rs-fMRI with the segmented anatomical scan of the closest
@@ -648,11 +659,12 @@ function R = processScans(C,Psnr,convmsg)
   % rs-fMRI, the tables, and the renderings), and the registration of the
   % session by the coregistration of its DTI or rs-fMRI to this scan (see 
   % coregSessionAffine in cat_io_dcm2bids_pp_anat) 
+  tpps = tic; 
   if ~isempty(sesnoanat)
     fprintf('\nDCM2BIDS - sessions without anatomical scan\n'); 
     for ni = 1:numel(sesnoanat)
-      sesids = sesnoanat{ni}; pses = sesids; R = []; SOR = nan; 
-      sesline = [sub{sesids(1)} '_' ses{sesids(1)}]; 
+      sesids = sesnoanat{ni}; pses = sesids; R = []; SOR = nan;
+      sesline = [sub{sesids(1)} '_' ses{sesids(1)}];
       if isKey(anatrun,sub{sesids(1)})
         ix = anatrun(sub{sesids(1)}); 
         dd = arrayfun(@(k) abs(days(Vjson{k}.ScanDate - Vjson{sesids(1)}.ScanDate)),ix); dd(isnan(dd)) = inf;
@@ -662,15 +674,15 @@ function R = processScans(C,Psnr,convmsg)
         cat_io_cprintf([.5 .5 .5],'%60s : no anatomical scan of the subject\n',sesline); 
       end
       cat_io_dcm2bids_pp_dwi('processSession',Pdbnii(pses),Vjson(pses),datatype(pses), ...
-        suffix(pses),BIDSpathd(pses),BIDSfile(pses),job.opts); 
+        suffix(pses),BIDSpathd(pses),BIDSfile(pses),job.opts);
       cat_io_dcm2bids_pp_rsfmri('processSession',Pdbnii(pses),Vjson(pses),datatype(pses), ...
-        suffix(pses),BIDSpathd(pses),BIDSfile(pses),job.opts); 
+        suffix(pses),BIDSpathd(pses),BIDSfile(pses),job.opts);
       if numel(pses) > numel(sesids)
         R = cat_io_dcm2bids_pp_anat('coregSessionAffine',Pdbnii(sesids),fileparts(Pdbdirpath{ix}), ...
-          Pdbnii{ix},datatype{ix},suffix{ix},ses{ix},job.opts); 
+          Pdbnii{ix},datatype{ix},suffix{ix},ses{ix},job.opts);
       end
       S = cat_io_dcm2bids_pp_anat('writeSessionAffines',Pdbdirpath(sesids), Pdbnii(sesids), datatype(sesids), ...
-        suffix(sesids), BIDSpathd(sesids), sub(sesids), ses(sesids), job.opts, BIDSfile(sesids), Pprot(sesids), R); 
+        suffix(sesids), BIDSpathd(sesids), sub(sesids), ses(sesids), job.opts, BIDSfile(sesids), Pprot(sesids), R);
       if ~isempty(S), SOR = S(1).SOR; end
       for bsd = reshape(unique(BIDSsub(sesids)),1,[]) % (session orientation rating in the sessions file)
         id = sesids(find(strcmp(BIDSsub(sesids),bsd{1}),1,'last')); 
@@ -680,7 +692,17 @@ function R = processScans(C,Psnr,convmsg)
       cat_io_dcm2bids_helper('workClear'); 
     end
   end
+  tpp = tpp + toc(tpps); 
   clear wclean
+
+  % participants without exported session (quarantine, see removeSession
+  % in cat_io_dcm2bids_bids)
+  for qi = 1:numel(qrec)
+    for bsd = qrec{qi}.BIDSsubdir
+      pkey = [bsd{1} '|' qrec{qi}.sub]; 
+      if ~qrec{qi}.pass && isKey(partdata,pkey) && ~exist(fullfile(Poutdir,bsd{1},qrec{qi}.sub),'dir'), remove(partdata,pkey); end
+    end
+  end
 
   % results of the scans for the outputs of all packages (see cat_io_dcm2bids)
   % (fields of the scans with sci elements, e.g. without BIDS name for output 0)
@@ -688,7 +710,7 @@ function R = processScans(C,Psnr,convmsg)
   R  = struct('rec',{fs(rec)},'varg',{fs(varg)},'dbV',{dbV},'Pdbjson',{fs(Pdbjson)}, ...
     'datatype',{fs(datatype)},'pstatus',{fs(pstatus)},'site',{fs(site)},'sub',{fs(sub)}, ...
     'ses',{fs(ses)},'BIDSfile',{fs(BIDSfile)},'BIDSsub',{fs(BIDSsub)},'intended',{intended}, ...
-    'srcmap',srcmap,'partdata',partdata,'bidsroots',{bidsroots},'convver',{convver}); 
+    'srcmap',srcmap,'partdata',partdata,'bidsroots',{bidsroots},'convver',{convver},'quarantine',{qrec},'tpp',tpp); 
 
   if 0 
       job.opts.reg2MNI = 2; % 0-no, 1-yes,mat-sidecar, 2-yes,permanent
@@ -773,6 +795,32 @@ function [R,varg] = scanRecord(V,scanid,site,session,datatype,suffix,ent,PT,BIDS
   R    = cat_io_dcm2bids_tables('scanRecord',V,scanid,site,session,datatype,suffix,ent, ...
     '',PT,BIDSfile);
   varg = struct('PT',PT,'ProtocolName',V.ProtocolName,'datatype',datatype,'type',[suffix ent]); 
+end
+% =========================================================================
+function [quar,Q] = quarantineSession(F,sesids,Pdirfi,Pmdbdir,Poutdir,BIDSsub,sub,ses,qpass)
+%quarantineSession. Quarantine of a session with left-right mirrored scans
+%  (verdict F, see flipVerdict in cat_io_dcm2bids_pp_anat): its BIDS
+%  session is removed (see removeSession in cat_io_dcm2bids_bids) and not
+%  processed further (e.g. DTI, rs-fMRI, and sessions without anatomical
+%  scan), as it is unknown which scans are mirrored, i.e. the user has to
+%  check the scans and correct the DICOM data (a changed DICOM directory of
+%  a quarantined session is imported again, see importDICOMheaders in
+%  cat_io_dcm2bids_importDCM) or pass the session (Action "pass" in the
+%  table quarantined_sessions of the database, qpass, see quarantineList in
+%  cat_io_dcm2bids). quar is false for passed sessions, Q is the record of
+%  the session for this table.
+  dbses = fileparts(Pdirfi); key = dbses(numel(Pmdbdir)+2:end); 
+  i1    = sesids(1); 
+  quar  = ~ismember(key,qpass); 
+  Q     = struct('Session',key,'sub',sub{i1},'ses',ses{i1},'BIDSsubdir',{unique(BIDSsub(sesids))}, ...
+    'Scans',strjoin(cellfun(@(n,d) sprintf('%s %+0.2f',n,d),F.scans(:)',num2cell(F.d(:)'),'UniformOutput',false),', '), ...
+    'pass',~quar); 
+  if quar
+    for bsd = Q.BIDSsubdir, cat_io_dcm2bids_bids('removeSession',Poutdir,bsd{1},sub{i1},ses{i1}); end
+    cat_io_cprintf('err','%60s : quarantine, not exported (correct the DICOM data or pass the session, see quarantined_sessions)\n','');
+  else
+    cat_io_cprintf('warn','%60s : exported (passed by the user, see quarantined_sessions)\n','');
+  end
 end
 % =========================================================================
 function exportSegmentation(Pdbnii,BIDSpathd,BIDSfile,opts)

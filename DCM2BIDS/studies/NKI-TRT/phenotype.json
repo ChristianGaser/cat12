@@ -1,0 +1,24 @@
+{
+  "_Description": "Column description of the phenotype table of the NKI-RS multiband test-retest pilot (NKI-TRT) (sidecar of phenotype.csv, see studies/template/phenotype.json). The first row gives the study defaults of all sessions, add one row per participant or session below (e.g. of the phenotypic table of INDI).",
+  "participantID": {
+    "Description": "ID of the participant (key column, not exported), i.e. the participant label of the imported BIDS dataset (without sub-) or the DICOM PatientID."
+  },
+  "scandate": {
+    "Description": "Date of the scan session (key column, not exported). Empty: all sessions of the participant."
+  },
+  "organizationName": {
+    "Description": "NKI."
+  },
+  "studyName": {
+    "Description": "NKI-RS-TRT."
+  },
+  "participantGroup": {
+    "Description": "Analysis group of the participant, e.g. NC (no psychiatric diagnosis) or PSY (psychiatric diagnosis)."
+  },
+  "sex": {
+    "Description": "Sex of the participant (M or F)."
+  },
+  "handedness": {
+    "Description": "Handedness of the participant (R, L, or A)."
+  }
+}

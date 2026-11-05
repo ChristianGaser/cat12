@@ -1,0 +1,21 @@
+{
+  "_Description": "Column description of the ADNI4 phenotype table (sidecar of phenotype.csv, see studies/template/phenotype.json). The first row gives the study defaults of all sessions, add one row per participant or session below (e.g. of the IDA search table of the images).",
+  "participantID": {
+    "Description": "ADNI subject ID as stored in the DICOM PatientID, e.g. 123_S_4567 (key column, not exported)."
+  },
+  "scandate": {
+    "Description": "Date of the scan session (key column, not exported), e.g. the acquisition date of the IDA search table. Empty: all sessions of the participant."
+  },
+  "organizationName": {
+    "Description": "ADNI."
+  },
+  "studyName": {
+    "Description": "ADNI phase of the session, e.g. ADNI3 or ADNI4."
+  },
+  "participantGroup": {
+    "Description": "Research group of the enrollment, i.e. CN, SMC, EMCI, MCI, LMCI, or AD (CN is coded as NC by the phenotype dictionary)."
+  },
+  "sex": {
+    "Description": "Sex of the participant (M or F)."
+  }
+}

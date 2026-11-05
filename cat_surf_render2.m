@@ -49,6 +49,15 @@ function varargout = cat_surf_render2(action,varargin)
 % FORMAT MAP = cat_surf_render2('ColourMap',AX)
 % Retrieves the current colourmap.
 %
+% FORMAT H = cat_surf_render2('ViewTransparency',AX,[amin amax p])
+% AX       - axis handle, structure given by cat_surf_render2('Disp',...),
+%            or patch handle(s) of any axis
+% amin amax p - opacity of faces towards the camera (amin) and of faces
+%            parallel to the line of sight (amax, i.e. the silhouette) with
+%            the exponent p of 1 - |cos| (default [0.05 0.6 2], e.g. a
+%            sphere looks like a ring), updated by the rotation, 'off'
+%            switches it off
+%
 % FORMAT H = cat_surf_render2('Underlay',AX,P)
 % AX       - axis handle or structure given by cat_surf_render2('Disp',...)
 % P        - data (curvature) to be underlayed on mesh (see spm_mesh_project)
@@ -1074,12 +1083,14 @@ switch lower(action)
         if expert
           c = uimenu(cmenu, 'Label','Transparency'); tlevel = 0:20:80; 
           uimenu(c, 'Label','TextureTransparency', 'Checked','off',  'Callback', {@myTextureTransparency, H});
+          uimenu(c, 'Label','ViewTransparency', 'Checked','off',  'Callback', {@myViewTransparency, H});
           uimenu(c, 'Label',sprintf('%0.0f%%',tlevel(1)), 'Checked','on',  'Callback', {@myTransparency, H}, 'Separator', 'on');
           for ti=2:numel(tlevel)
             uimenu(c, 'Label',sprintf('%0.0f%%',tlevel(ti)), 'Checked','off', 'Callback', {@myTransparency, H});
           end
         else
           uimenu(cmenu, 'Label','TextureTransparency', 'Checked','off',  'Callback', {@myTextureTransparency, H});
+          uimenu(cmenu, 'Label','ViewTransparency', 'Checked','off',  'Callback', {@myViewTransparency, H});
         end
         
         
@@ -1527,9 +1538,21 @@ switch lower(action)
     %======================================================================
     case 'texturetransparency'
         if isempty(varargin), varargin{1} = gca; end
-        H = getHandles(varargin{1}); 
+        H = getHandles(varargin{1});
         myTextureTransparency(H,[],H)
-   
+
+    %-ViewTransparency
+    %======================================================================
+    case 'viewtransparency'
+        if isempty(varargin), varargin{1} = gca; end
+        if numel(varargin) < 2, varargin{2} = [0.05 0.6 2]; end
+        if ~isstruct(varargin{1}) && all(ishandle(varargin{1})) && all(strcmp(get(varargin{1},'Type'),'patch'))
+            H = varargin{1}; P = H;
+        else
+            H = getHandles(varargin{1}); P = H.patch;
+        end
+        setViewTransparency(P,varargin{2});
+
     %-Otherwise...
     %======================================================================
     otherwise
@@ -1819,6 +1842,7 @@ function myPostCallback(obj,evt,H)
   else
     if strcmp(H.light(1).Visible,'on'), camlight(H.light(1),'headlight','infinite'); end
   end
+  updateViewTransparency(findobj('Tag','CATSurfRender','Type','Patch'));
   axis vis3d;
 %P = findobj(obj,'Tag','CATSurfRender','Type','Patch');
 %if numel(P) == 1
@@ -1914,10 +1938,54 @@ end
 function myTransparency(obj,evt,H)
 t = 1 - sscanf(get(obj,'Label'),'%d%%') / 100;
 for pi=1:numel(H.patch)
+  if isappdata(H.patch(pi),'viewTransparency'), rmappdata(H.patch(pi),'viewTransparency'); end
   set(H.patch(pi),'FaceAlpha',t);
 end
 set(get(get(obj,'parent'),'children'),'Checked','off');
 set(obj,'Checked','on');
+%==========================================================================
+function myViewTransparency(obj,evt,H)
+if strcmpi(get(obj,'Checked'),'on')
+  setViewTransparency(H.patch,'off'); set(obj,'Checked','off');
+else
+  setViewTransparency(H.patch,[0.05 0.6 2]); set(obj,'Checked','on');
+end
+%==========================================================================
+function setViewTransparency(P,par)
+% view-dependent transparency of the patches P with the parameters par =
+% [amin amax p] (see 'ViewTransparency') or 'off'
+for pi=1:numel(P)
+  if ischar(par) || isempty(par)
+    if isappdata(P(pi),'viewTransparency'), rmappdata(P(pi),'viewTransparency'); end
+    set(P(pi),'FaceAlpha',1);
+  else
+    setappdata(P(pi),'viewTransparency',par);
+  end
+end
+updateViewTransparency(P);
+%==========================================================================
+function updateViewTransparency(P)
+% opacity of the vertices by the angle between their normal and the line
+% of sight (camera direction, per vertex for perspective projection):
+% amin + (amax - amin) * (1 - |cos|)^p, i.e. nearly transparent where the
+% surface faces the camera and more opaque at its silhouette
+for pi=1:numel(P)
+  if ~ishandle(P(pi)) || ~isappdata(P(pi),'viewTransparency'), continue; end
+  par = getappdata(P(pi),'viewTransparency'); ax = ancestor(P(pi),'axes');
+  V   = get(P(pi),'Vertices'); F = get(P(pi),'Faces');
+  fn  = cross(V(F(:,2),:) - V(F(:,1),:),V(F(:,3),:) - V(F(:,1),:),2);
+  N   = zeros(size(V));
+  for d=1:3, N(:,d) = accumarray(F(:),repmat(fn(:,d),3,1),[size(V,1) 1]); end
+  N   = N ./ max(eps,sqrt(sum(N.^2,2)));
+  cp  = get(ax,'CameraPosition'); ct = get(ax,'CameraTarget');
+  if strcmpi(get(ax,'Projection'),'perspective')
+    L = cp - V; L = L ./ max(eps,sqrt(sum(L.^2,2)));
+  else
+    L = repmat((cp - ct) / max(eps,norm(cp - ct)),size(V,1),1);
+  end
+  a   = par(1) + (par(2) - par(1)) * (1 - abs(sum(N .* L,2))).^par(3);
+  set(P(pi),'FaceVertexAlphaData',a,'FaceAlpha','interp','AlphaDataMapping','none');
+end
 %==========================================================================
 function myTextureTransparency(obj,evt,H)
 y = {'on','off'}; toggle = @(x) y{1+strcmpi(x,'on')};
@@ -1990,6 +2058,7 @@ function myView(obj,evt,H,varargin)
 view(H.axis,varargin{1});
 axis(H.axis,'image');
 if strcmp(H.catLighting,'cam') && ~isempty(H.light), camlight(H.light(1),'headlight','infinite'); end
+updateViewTransparency(H.patch);
 
 %==========================================================================
 function myZoom(obj,evt,H,action)

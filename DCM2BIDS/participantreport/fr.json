@@ -1,0 +1,77 @@
+{
+  "Language": "fr",
+  "Name": "Français",
+  "Status": "draft, to be checked by a native speaker",
+  "Direction": "ltr",
+  "Font": "Helvetica",
+  "Render": "text",
+  "ImageFont": "",
+  "Title": "Votre cerveau en images",
+  "Subtitle": "Retour personnel de l'IRM pour les participants à l'étude",
+  "Identity": {
+    "PID": "ID du participant",
+    "Name": "Nom",
+    "Birth": "Date de naissance",
+    "Sex": "Sexe",
+    "Weight": "Poids",
+    "Scan": "Date de l'examen",
+    "Age": "Âge à l'examen"
+  },
+  "Sex": {
+    "M": "masculin",
+    "F": "féminin",
+    "O": "autre"
+  },
+  "Intro": {
+    "BrainHead": "Votre cerveau",
+    "Brain": "Le cerveau se compose de trois tissus principaux. La substance grise (GM) forme la couche externe plissée, le cortex, où des milliards de cellules nerveuses traitent l'information. La substance blanche (WM) est constituée de fibres nerveuses qui relient les régions du cerveau comme des câbles. Le liquide cérébrospinal (CSF) entoure et protège le cerveau et remplit ses cavités internes.",
+    "ScannerHead": "L'appareil d'IRM",
+    "Scanner": "L'imagerie par résonance magnétique (IRM, en anglais MRI) utilise un champ magnétique puissant et des ondes radio pour mesurer le signal de l'eau de votre corps, sans rayons X.",
+    "ImagesHead": "Images et mesures",
+    "Images": "L'image pondérée en T1 (T1w) montre l'anatomie : la GM en gris, la WM en gris clair et le CSF en foncé. L'image de diffusion mesure le mouvement de l'eau le long des fibres et montre leur direction principale en couleur (DEC). À partir des images, nous estimons l'épaisseur du cortex (CT) ainsi que les volumes de la GM, de la WM et de l'hippocampe (HC), une structure importante pour la mémoire.",
+    "Disclaimer": "Ce rapport est une estimation automatique rapide, uniquement à titre de retour visuel, et non à des fins diagnostiques."
+  },
+  "Notes": {
+    "Head": "Bon à savoir",
+    "QualityHead": "Qualité d'image",
+    "Quality": "Le traitement des images dépend fortement de leur qualité, qui peut être réduite par des mouvements pendant l'examen. Le contrôle qualité (QC) note vos images de A (excellent) à F (inutilisable).",
+    "IndividualHead": "Chaque cerveau est unique",
+    "Individual": "Les structures et les mesures du cerveau sont très individuelles. Les statistiques de groupes montrent des tendances claires, mais un diagnostic individuel reste très difficile et nécessite des médecins formés.",
+    "PrivacyHead": "Confidentialité",
+    "Privacy": "Dans notre étude, vos données personnelles et vos images sont anonymisées : par exemple, le visage a été supprimé des images (defacing, voir figure)."
+  },
+  "Captions": {
+    "Slices": "Votre cerveau de côté, de face et par en dessous, coupé à travers l'hippocampe (HC, contouré). Les couleurs de la WM montrent la direction des fibres (DEC), les couleurs claires de la GM les lobes du cerveau. Pour protéger votre vie privée, le visage a été supprimé (hachuré).",
+    "SlicesNoDEC": "Votre cerveau de côté, de face et par en dessous, coupé à travers l'hippocampe (HC, contouré). Les couleurs claires de la GM montrent les lobes du cerveau. Pour protéger votre vie privée, le visage a été supprimé (hachuré).",
+    "Surface": "La surface de votre cerveau vue de droite, un peu de face et d'en haut, à l'intérieur de votre tête (transparente). La couleur montre l'épaisseur du cortex (CT), de fin et foncé (2 mm) à épais et clair (4 mm) ; les plis profonds (sillons) sont ombrés.",
+    "SurfaceNoCT": "La surface de votre cerveau vue de droite, un peu de face et d'en haut, à l'intérieur de votre tête (transparente).",
+    "Norms": "Vos valeurs (point) comparées à celles de personnes du même âge : la bande foncée contient la moitié centrale et la bande claire 90 % de toutes les personnes."
+  },
+  "Labels": {
+    "Age": "âge (années)",
+    "Values": "Vos valeurs",
+    "Measure": "mesure",
+    "Value": "valeur",
+    "Typical": "typique",
+    "Percentile": "percentile (P) : pourcentage des personnes de votre âge ayant des valeurs plus basses",
+    "Abbreviations": "Abréviations"
+  },
+  "Abbreviations": {
+    "MRI": "imagerie par résonance magnétique (IRM)",
+    "T1w": "image pondérée en T1",
+    "DEC": "couleur de la direction des fibres : rouge gauche-droite, vert avant-arrière, bleu haut-bas",
+    "GM": "substance grise (cortex)",
+    "WM": "substance blanche (fibres)",
+    "CSF": "liquide cérébrospinal",
+    "HC": "hippocampe",
+    "CT": "épaisseur corticale",
+    "QC": "contrôle qualité : note de la qualité d'image de A (excellent) à F (inutilisable)",
+    "GMV": "volume de substance grise",
+    "WMV": "volume de substance blanche",
+    "HCV": "volume de l'hippocampe",
+    "P": "percentile",
+    "T": "tesla, intensité du champ magnétique",
+    "LRAPSI": "gauche, droite, antérieur (avant), postérieur (arrière), supérieur (haut), inférieur (bas)"
+  },
+  "Footer": "Rapport automatique de CAT pour les participants de l'étude {Study} ({Organization}, {Website}). IRM : {Institution}, {Address}. Ceci n'est pas un diagnostic médical. Pour toute question, veuillez contacter l'équipe de l'étude."
+}

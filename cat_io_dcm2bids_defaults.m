@@ -15,38 +15,35 @@ function def = cat_io_dcm2bids_defaults
 
   def.data                  = {};    % input DCM directories (add JSON/NII input later)
   def.outdir                = {pwd}; % main output directory
-  def.subdir                = 'study'; % default
+  def.subdir                = 'catMRIdb'; % default database name
   def.BIDSdir               = 'BIDS';
   def.nproc                 = 0;     % parallel background MATLAB processes for the subject packages (0 - none, i.e.
                                      % this process; each process needs about 4 GB RAM, see cat_io_dcm2bids_parallel)
 
-  % dataset description (dataset_description.json and README.md) by the study
-  % files of DCM2BIDS/study (cat_study_example.json as filled example), where
-  % scripts can still set the BIDS fields directly (e.g. def.dataset.Name),
-  % which replace the fields of the study JSON
-  Pstudy                         = fullfile(fileparts(mfilename('fullpath')),'DCM2BIDS','study');
-  def.dataset.study              = {fullfile(Pstudy,'cat_study_default.json')}; % BIDS fields of dataset_description.json
-  def.dataset.README             = {fullfile(Pstudy,'cat_study_readme.txt')};   % head of the README.md (<Name> is replaced)
-  def.dataset.phenotypic         = {};         % tables (CSV/TSV) with phenotypic data of the sessions (see 
+  % study setup: protocol directories (e.g. DCM2BIDS/protocols/DZPG3T), site
+  % dictionary, and the dataset description (dataset_description.json and
+  % README.md) and phenotypic data by the files of DCM2BIDS/studies (the
+  % empty template or a study, e.g. ADNI4), where scripts can still set the
+  % BIDS fields directly (e.g. def.dataset.Name), which replace the fields of
+  % the study JSON (see DCM2BIDS/readme.txt)
+  Pstudy                         = fullfile(fileparts(mfilename('fullpath')),'DCM2BIDS','studies');
+  def.dataset.Pprotocoldirs      = {};         % protocol directories (JSON files of the protocols, see cat_io_dcm2bids_protocols)
+  def.dataset.Pcenterdict        = {};         % site dictionary (JSON, template studies/template/sites.json, otherwise
+                                               % site labels by the scanner, see getSites in cat_io_dcm2bids_protocols)
+  def.dataset.study              = {fullfile(Pstudy,'template','study.json')};   % BIDS fields of dataset_description.json
+  def.dataset.README             = {fullfile(Pstudy,'template','readme.txt')};   % head of the README.md (<Name> is replaced)
+  def.dataset.phenotypic         = {};         % tables (CSV/TSV) with phenotypic data of the sessions (see
                                                % cat_io_dcm2bids_phenotypic), exported to the sessions files
   def.dataset.phenotypickeys     = [];         % key columns of the tables (numbers, empty: detected by their names)
-  def.dataset.phenotypicdict     = {fullfile(Pstudy,'cat_study_phenotype_dictionary.json')}; % column names and value
+  def.dataset.phenotypicdict     = {fullfile(Pstudy,'phenotype_dictionary.json')}; % column names and value
                                                % codes of the tables (e.g. gender -> sex, weiblich -> F)
 
-  def.dicts.Pprotocoldirs   = {};    % input DCM protocol directories
-  def.dicts.Pcenterdict     = {};    % dictionary for center names (otherwise scanner ID)
-  def.dicts.Pstudydict      = {};    % not implemented yet
-  def.dicts.Psubjdict       = {};    % not implemented yet
-
-  def.opts.ProtocolFileName = 1;     % replace protocol name by the filenames
-                                     % of the evaluation protocols under protocol directories
-  def.opts.gzipi            = 1;     % internal use of nii.gz (save disk space but maybe a bit slower)
+  def.opts.gzipi           = 1;     % internal use of nii.gz (save disk space but maybe a bit slower)
   def.opts.gzipe            = 1;     % external use of nii.gz (save disk space but nonoptimal for SPM processing)
   def.opts.tolerance        = 0.5;   % tolerance in percent for numeric MR parameters (only for rounding, as the same
                                      % protocol results in the same values, see testProtocols in cat_io_dcm2bids_protocols)
   def.opts.Pdcm2nii         = '';    % dcm2niix executable ('' - detected if required, see cat_io_dcm2bids_importDCM)
   def.opts.output           = 2;     % 0-tables only, 1-only json, 2-json+nii of scans with (semi)conform protocol, 3-all
-  %def.opts.studies          = '';    % study filter >> file
   def.opts.sitelength       = 3;     % letters of the city in the site abbreviation without site dictionary (city, 
                                      % manufacturer, and field strength, e.g. HeiSI30T, see siteRegistry in 
                                      % cat_io_dcm2bids_protocols)
@@ -55,8 +52,6 @@ function def = cat_io_dcm2bids_defaults
   def.opts.subIDform        = 2;     % (1) use only PatientID, i.e. sub-PID (links the scanners of a subject in 
                                      %     the BIDS output and for the T1w of other sessions, only for unique IDs)
                                      % (2) add the site, i.e. sub-SITE-PID
-                                     % (3) add the StudyName, i.e. sub-STUDY-PID
-                                     % (4) sub-SITE-STUDY-PID, (5) sub-STUDY-SITE-PID
   def.opts.anonymize        = 1;     % anonymization (BIDS directory BIDS-<level> and DICOM export): 0 - no, 1 - pseudonymized 
                                      % (site and PatientID, scan date, defaced anatomical scans), 2 - anonymized (site and
                                      % number, time since the first session, shifted dates, defaced scans, see 
@@ -80,6 +75,10 @@ function def = cat_io_dcm2bids_defaults
   def.opts.hrrealign       = 0;     % highres-realignment for further use? difficult to keep this persistent
   def.opts.rerun            = 0;     % rerun - overwrite existing
   def.opts.tableformat      = 'csv'; % csv/tsv
+  def.opts.reportxlsx       = 'fixed'; % Excel file of the report tables with colored ratings (<BIDSdir>-report/
+                                     % report_<BIDSsubdir>.xlsx, see cat_io_dcm2bids_report): 'fixed' - cell colors
+                                     % (as the report figure), 'scale' - color scale (conditional formatting, e.g. of
+                                     % Google Sheets), 'none' - no Excel file
   def.opts.scantypes        = {'anat/T1w','anat/T2w','dwi/dwi','func/bold'}; % typical scan types (datatype/
                                      % suffix) for the counts of the site table and the columns of the session
                                      % table (see cat_io_dcm2bids_tables and cat_io_dcm2bids_report)
@@ -112,6 +111,18 @@ function def = cat_io_dcm2bids_defaults
                                      % DEC (direction-encoded colors), and the normalized FA (wFA, e.g. for voxel-
                                      % based analyses), 2 - also MD, AD, and RD (their white matter values are
                                      % always estimated)
+  def.opts.cat.run          = 0;     % CAT preprocessing of one T1w scan per session as final step (see 
+                                     % cat_io_dcm2bids_pp_cat): 0 - no, 1 - yes (segmentation with surfaces, further
+                                     % surface measures, resampling and smoothing, in derivatives/CAT<main version>, e.g. CAT26)
+  def.opts.cat.long         = 1;     % subjects with several sessions: 0 - cross-sectional, 1 - longitudinal 
+                                     % pipeline (derivatives/CAT<main version>_long), 2 - both
+  def.opts.cat.fwhm         = [12 20]; % FWHM in mm of the resampled (32k) thickness and the folding measures
+  def.opts.surf.run         = 0;     % quick surface values of the segmented anatomical scan of each session (see
+                                     % cat_io_dcm2bids_pp_surf, regional thickness and intensity independent of CAT)
+  def.opts.surf.reduction   = 2;     % surface reduction: 1 - number of faces as CAT, 2-4 - faster (2-4 times less)
+  def.opts.surf.res         = 0.8;   % resolution of the thickness estimation in mm (0.8 about 2 times faster than 0.5 as
+                                     % CAT with the offset of the resolution corrected, 1.0 shifts the surface to the WM)
+  def.opts.surf.reduce      = 32000; % vertices of the saved surfaces (e.g. for the rendering)
   def.opts.ignoreScouts     = 1;     % remove localizer/scouts ASAP (also derived images except the MP2RAGE uniform 
                                      % image and T1 map, and 2D images, see ignoredDerived in cat_io_dcm2bids_db)
   def.opts.protocolsubdirs  = 0;     % use additional sub-directories to separate between protocols
@@ -157,7 +168,7 @@ function def = cat_io_dcm2bids_defaults
   % 2.5 times the median or its 90th percentile (mark 6) of the scans of the
   % NKI-RS, NKI-TRT, and Buchert test data with the default definition
   % (2026-10, n = 470-1290 per datatype; the DZPG definitions use the same
-  % factors of the DZPG pilot data without percentile, see DCM2BIDS/DZPG3T)
+  % factors of the DZPG pilot data without percentile, see DCM2BIDS/protocols/DZPG3T)
   % The rs-fMRI measures of the preprocessing (not part of the SQR, see 
   % qualityRatings in cat_io_dcm2bids_pp_rsfmri) are the mean framewise 
   % displacement FDM (mm) and the temporal noise TNM (1/tSNR of the GM) 
@@ -186,7 +197,7 @@ function def = cat_io_dcm2bids_defaults
   % opts.output 2) and preprocessed (e.g. the T1w of another sequence for
   % the segmentation, see fallbackProtocol in cat_io_dcm2bids_protocols,
   % '' - nonconform scans are only part of the tables of the database)
-  def.opts.protocol.fallback = fullfile(fileparts(mfilename('fullpath')),'DCM2BIDS','nonconform');
+  def.opts.protocol.fallback = fullfile(fileparts(mfilename('fullpath')),'DCM2BIDS','protocols','nonconform');
   % critical parameters, which are never the same if they differ (10 points,
   % i.e., nonconform), as well as the image component of the ImageType
   % (magnitude/phase) and the direction in the series name (e.g. PA of
@@ -230,9 +241,10 @@ function def = cat_io_dcm2bids_defaults
   % overview page and one page per site (for several sites) with diagrams 
   % of the report tables in <BIDSdir>-report/report_<BIDSsubdir>_<design>.pdf
   def.opts.reportfig.run       = 1;            % create the report figure
-  def.opts.reportfig.design    = {'CAT_bright','CAT_dark','DZPG_bright'}; % designs (one PDF each, 
-                                              % DCM2BIDS/colormaps/<design>.json with the logos, rating icons, colors, 
-                                              % and colormaps): 'CAT_bright', 'CAT_dark', and/or 'DZPG_bright'
+  def.opts.reportfig.design    = {'study'};    % designs (one PDF each): 'study' - colormap.json of the study 
+                                              % directory (of the study JSON, e.g. DCM2BIDS/studies/DZPG) or CAT_bright
+                                              % without, and/or the designs DCM2BIDS/colormaps/<design>.json ('CAT_bright',
+                                              % 'CAT_dark'), see reportDesigns in cat_io_dcm2bids_reportfig
   def.opts.reportfig.fontsize  = 8;            % font size of the text in pt
   def.opts.reportfig.fontscale = [0.96 0.8];   % relative font size of header-like elements (titles of the diagrams) 
                                               % and of axes, table entries, and legends
@@ -241,8 +253,19 @@ function def = cat_io_dcm2bids_defaults
                                               % years, to 5 years for 10 to 20 years, and to 1 year below)
   def.opts.reportfig.agestep   = [];           % bin size of the age pyramid in years (empty: 1, 2, 5, or 10 years
                                               % for at most 20 bins)
-  def.opts.reportfig.maxsites  = 20;           % maximum number of sites shown separately (site table columns, 
-                                              % site labels, and site pages), more sites only together 
+  def.opts.reportfig.maxsites  = 20;           % maximum number of sites shown separately (site table columns,
+                                              % site labels, and site pages), more sites only together
+
+  % participant report of each session with segmented T1w (see
+  % cat_io_dcm2bids_participantreport): illustrated A4 page for the scanned
+  % person, only in <BIDSdir>-private/<BIDSsubdir>/participantreports
+  def.opts.participantreport.run     = 1;      % create the participant reports (after the CAT preprocessing)
+  def.opts.participantreport.variant = 'B';    % layout: 'A' magazine rows, 'B' sidebar, 'C' infographic, 'D' landscape
+  def.opts.participantreport.lang    = {'en','de'}; % languages (one PDF each) of DCM2BIDS/participantreport/<lang>.json
+                                              % (en, de, es, fr, it, ru, ar, zh, ja; <lang>.json of the study directory
+                                              % replaces it)
+  def.opts.participantreport.norms   = '';     % reference models (JSON, '' - DCM2BIDS/participantreport/norms.json
+                                              % with placeholder values)
 
   % datatypes and (lower case) suffixes of the output structure that is
   % used by the batch dependencies (see BIDSoutputs in cat_io_dcm2bids_bids),

@@ -1,5 +1,5 @@
 {
-  "_Description": "Example study description of catDCM2BIDS for the dataset_description.json of the BIDS dataset (see cat_study_default.json).",
+  "_Description": "Example study description of catDCM2BIDS for the dataset_description.json of the BIDS dataset (see study.json).",
   "Name": "Example MRI study",
   "License": "CC-BY-4.0",
   "Authors": [

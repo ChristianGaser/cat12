@@ -1,0 +1,48 @@
+{
+  "_Description": "Column description of the phenotype tables of catDCM2BIDS (BIDS-like sidecar of phenotype.csv, see DCM2BIDS/readme.txt). The first four columns identify the scan sessions (key columns, not exported), all other columns are data of the sessions (exported to the BIDS sessions files). Empty key values are ignored, i.e. rows without scandate are given to all sessions of the participant (also of several scanners). Key values can be patterns: \"*\" for all values, wildcards (e.g. 002_S_* or Muster*), a year or month (2023, 2023-05), or ranges (2023-09-01..2026-12-31). The values of a session are combined from all its rows by their specificity: session rows (participant and scandate) replace participant rows, these replace pattern rows, and pattern rows replace former pattern rows (e.g. the study defaults of the first row). Empty cells replace nothing, and different values of rows of the same specificity are a conflict (no value). Column names and values are recoded by the phenotype dictionary (studies/phenotype_dictionary.json, e.g. gender -> sex, weiblich -> F).",
+  "name": {
+    "Description": "First name of the participant (key column, not exported), compared with the words of the DICOM PatientName."
+  },
+  "surname": {
+    "Description": "Surname of the participant (key column, not exported), compared with the words of the DICOM PatientName."
+  },
+  "scandate": {
+    "Description": "Date of the scan session (key column, not exported), e.g. 2025-11-20 (also yyyymmdd, dd.mm.yyyy, or dd/mm/yyyy, with an optional time for several sessions of one day). Empty: all sessions of the participant."
+  },
+  "participantID": {
+    "Description": "ID of the participant as stored in the DICOM PatientID by the scanner (key column, not exported). It is not the BIDS participant label (sub-<label>), which is created from the site and the participantID (or a pseudonym) by catDCM2BIDS."
+  },
+  "organizationName": {
+    "Description": "Main organization, project, or institution of the data, e.g. DZPG, ADNI, NKI. Used for organization-specific reports."
+  },
+  "studyName": {
+    "Description": "Substudy or version within the organization, e.g. JE1 (DZPG), ADNI4 (ADNI), NKI-RS1 (NKI). Used for study-specific reports."
+  },
+  "participantGroup": {
+    "Description": "Analysis group of the participant, e.g. for the comparison of brain measures (rGMV).",
+    "Levels": {
+      "NC": "normal control",
+      "SMC": "subjective memory complaints",
+      "MCI": "mild cognitive impairment",
+      "AD": "Alzheimer's disease",
+      "MDD": "major depressive disorder",
+      "PSY": "other psychiatric diagnosis"
+    }
+  },
+  "sex": {
+    "Description": "Sex of the participant (exported to the sessions files in addition to the DICOM PatientSex of the participants.tsv).",
+    "Levels": {
+      "M": "male",
+      "F": "female",
+      "O": "other"
+    }
+  },
+  "handedness": {
+    "Description": "Handedness of the participant.",
+    "Levels": {
+      "R": "right",
+      "L": "left",
+      "A": "ambidextrous"
+    }
+  }
+}

@@ -579,8 +579,8 @@ function Pfname = fallbackProtocol(Vjsonn,Vjson,tol,opts)
 %fallbackProtocol. Protocol file of the fallback protocols that the
 %  nonconform scan fits (normalized fields Vjsonn, sidecar Vjson), i.e.
 %  the broad protocol definitions opts.protocol.fallback (default
-%  DCM2BIDS/nonconform, ranges of the major parameters of all vendors and
-%  field strengths, similar to DCM2BIDS/ADNI4) of the scans that are
+%  DCM2BIDS/protocols/nonconform, ranges of the major parameters of all
+%  vendors and field strengths, similar to ADNI4) of the scans that are
 %  required for the evaluation (T1w, T2w, FLAIR, BOLD, DWI), e.g. the T1w
 %  of another sequence for the segmentation and the preprocessing of the
 %  DWI and rs-fMRI of the session. These scans keep the nonconform status

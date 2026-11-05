@@ -47,7 +47,8 @@ function Psnr = importDICOMheaders(Pdcmdirs, Pmdbdir, Ptmp, opts)
 %  and the last modification), i.e., DICOM directories that were imported
 %  before (with the same options) are not read again (only with opts.rerun
 %  or changed files, e.g. an incomplete transfer, with a warning, where the
-%  images of existing scans are kept). For outputs with images (opts.output
+%  images of existing scans are kept, but not the scans of quarantined
+%  sessions, opts.quarantined, see quarantineRead in cat_io_dcm2bids). For outputs with images (opts.output
 %  > 1), the new scans of a directory are converted directly after its
 %  header (see convertImages), i.e., the files are read once from the disk
 %  (cached by the system, see prefetchFiles).
@@ -59,7 +60,7 @@ function Psnr = importDICOMheaders(Pdcmdirs, Pmdbdir, Ptmp, opts)
 %  Psnr is the sorted list of the scan directories of all scans of the 
 %  DICOM directories (new and previously imported). 
 
-  Psnr = {}; nnew = 0; nold = 0; 
+  Psnr = {}; nnew = 0; nold = 0; t0 = tic; 
   if isempty(Pdcmdirs), return; end
   fprintf('DCM2BIDS - import DICOM headers of %d directories\n', numel(Pdcmdirs)); 
   
@@ -95,6 +96,22 @@ function Psnr = importDICOMheaders(Pdcmdirs, Pmdbdir, Ptmp, opts)
       Psnr = [Psnr; Pimpsnr(imported)]; %#ok<AGROW>
       nold = nold + 1;
       continue
+    end
+    % changed DICOM directory of a quarantined session (left-right mirrored
+    % scans, opts.quarantined, see quarantineRead in cat_io_dcm2bids, e.g.
+    % corrected DICOM data): its scans are removed from the database, i.e.
+    % imported, converted, and tested again
+    if changed && isfield(opts,'quarantined') && ~isempty(opts.quarantined)
+      Pq = unique(Pimpsnr(imported));
+      Pq = Pq(ismember(cellfun(@(p) fileparts(p(numel(Pmdbdir)+2:end)),Pq,'UniformOutput',false),opts.quarantined));
+      for qi = 1:numel(Pq)
+        if exist(Pq{qi},'dir'), rmdir(Pq{qi},'s'); end
+      end
+      if ~isempty(Pq)
+        cat_io_cprintf('warn','  The DICOM directory of a quarantined session changed, i.e. its %d scan(s) are imported again:\n    %s\n', ...
+          numel(Pq),Pdcmdirs{di});
+        nchanged = nchanged + 1; changed = false;
+      end
     end
     if changed && ~opts.rerun
       cat_io_cprintf('warn',['  The files of the DICOM directory changed since its import (e.g. an incomplete ' ...
@@ -225,8 +242,8 @@ function Psnr = importDICOMheaders(Pdcmdirs, Pmdbdir, Ptmp, opts)
   % existing scan directories (without revoked split series)
   Psnr = unique(Psnr);
   Psnr = Psnr( cellfun(@(P) exist(P,'dir') && ~isempty(cat_io_dcm2bids_db('getDBscanJSONs',P)), Psnr) );
-  fprintf('  %d new scans, %d directories read (%d changed), %d directories imported before\n\n', ...
-    nnew, nread, nchanged, nold);
+  fprintf('  %d new scans, %d directories read (%d changed), %d directories imported before (DCM2NII %s)\n\n', ...
+    nnew, nread, nchanged, nold, char(duration(0,0,round(toc(t0)),'Format','hh:mm:ss')));
 end
 % =========================================================================
 function F = dirFiles(P,flist)

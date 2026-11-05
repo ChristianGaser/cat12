@@ -3,12 +3,13 @@ function out = cat_io_dcm2bids(job)
 %
 % This batch uses DCM2NIIX to convert DICOM into NIFTI images with JSON  
 % sidecars. It stores the converted data and reorganizes the output in BIDS. 
-% It allows filtering for specific MRI protocols within a directory that 
+% It allows filtering for specific MRI protocols within a directory that
 % outline relevant MR parameters within a JSON file.
 %
-% Please check out the CAT sub-directory DCM2BIDS/DZPG3T for an example 
-% that includes the definition for structural, functional, and diffusion 
-% scans used by the DZPG (German Center for Mental Health, https://www.dzpg.org/).
+% Please check out the CAT sub-directory DCM2BIDS/protocols/DZPG3T for an
+% example that includes the definition for structural, functional, and
+% diffusion scans used by the DZPG (German Center for Mental Health,
+% https://www.dzpg.org/), and DCM2BIDS/readme.txt for the study setup.
 %
 % The batch also applies the SPM anonymizing routine and runs a basic image
 % quality control. 
@@ -66,6 +67,8 @@ function out = cat_io_dcm2bids(job)
 %                                 level 2
 %   cat_io_dcm2bids_report     .. report tables
 %   cat_io_dcm2bids_reportfig  .. report figure (PDF)
+%   cat_io_dcm2bids_participantreport .. report for the scanned persons (PDF,
+%                                 private directory)
 %   cat_io_dcm2bids_stats      .. statistics of the report figure
 %   cat_io_dcm2bids_render     .. rendering of the BIDS images
 %   cat_io_dcm2bids_readme     .. readme files of the output directories
@@ -85,6 +88,14 @@ function out = cat_io_dcm2bids(job)
   def = cat_io_dcm2bids_defaults; 
 
   if ~exist('job','var'), job = struct(); end
+  % protocol directories and site dictionary of scripts of former versions
+  % (job.dicts, now part of the study setup job.dataset)
+  if isfield(job,'dicts')
+    for fn = intersect(fieldnames(job.dicts),{'Pprotocoldirs','Pcenterdict'})'
+      if ~isfield(job,'dataset') || ~isfield(job.dataset,fn{1}), job.dataset.(fn{1}) = job.dicts.(fn{1}); end
+    end
+    job = rmfield(job,'dicts');
+  end
   if isfield(job,'opts') && isfield(job.opts,'render') && ~isstruct(job.opts.render)
     job.opts = rmfield(job.opts,'render'); 
     job.opts.render = def.opts.render; 
@@ -128,11 +139,9 @@ function out = cat_io_dcm2bids(job)
 
   %% ======================================================================
   Pdcmdir      = job.data;
-  Pcenterdict  = job.dicts.Pcenterdict;
-  Pprodictdirs = job.dicts.Pprotocoldirs;
-  %Pstudydict   = job.dicts.Pstudydict;
-  %Psubjdict    = job.dicts.Psubjdict;
-  Poutdir      = fullfile(job.outdir{1},job.subdir); 
+  Pcenterdict  = job.dataset.Pcenterdict;
+  Pprodictdirs = job.dataset.Pprotocoldirs;
+  Poutdir      = fullfile(job.outdir{1},job.subdir);
 
   % main DB directory
   Pdbdirnam = 'catDCM2BIDSdb'; 
@@ -186,10 +195,8 @@ function out = cat_io_dcm2bids(job)
 
   % read site-names and protocol definitions
   sites     = cat_io_dcm2bids_protocols('getSites',Pcenterdict);
-  protocols = cat_io_dcm2bids_protocols('getProtocols',Pprodictdirs);  
-  %studies   = getStudies(Pstudydict);  %%%%%%%%%%%%
-  %subj      = getSubjects(Psubjdict);  %%%%%%%%%%%%
- 
+  protocols = cat_io_dcm2bids_protocols('getProtocols',Pprodictdirs);
+
 
   % DB subdirs
   Ptbldir = fullfile(Poutdir,[Pdbdirnam '-tables']); 
@@ -208,7 +215,13 @@ function out = cat_io_dcm2bids(job)
   % see cat_io_dcm2bids_import (the images of new scans are converted by the
   % import for outputs with images, missing images for each subject package,
   % see below)
-  Psnr = cat_io_dcm2bids_import('importSources', Psrc, Pmdbdir, job.opts);
+  % sessions with left-right mirrored scans of former runs (table 
+  % quarantined_sessions of the database, see quarantineRead), whose changed
+  % DICOM directories are imported again (see importDICOMheaders in 
+  % cat_io_dcm2bids_importDCM), and the sessions passed by the user
+  [qpass,qopen] = quarantineRead(Ptbldir,job.opts); 
+  iopts = job.opts; iopts.quarantined = qopen; 
+  Psnr = cat_io_dcm2bids_import('importSources', Psrc, Pmdbdir, iopts); clear iopts
 
   % site abbreviations of the scanners: the site dictionary and for all
   % other scanners the registry of the database (i.e. no serial numbers in
@@ -259,7 +272,7 @@ function out = cat_io_dcm2bids(job)
     cat_io_dcm2bids_helper('diskCheck',Psnr,Pmdbdir,fullfile(Poutdir,job.BIDSdir),job.opts,job.nproc); 
   end
   C = struct('job',job,'Poutdir',Poutdir,'Pmdbdir',Pmdbdir,'Ptbldir',Ptbldir, ...
-    'Pprodictdirs',{Pprodictdirs},'sites',{sites},'protocols',{protocols},'anon',anon); 
+    'Pprodictdirs',{Pprodictdirs},'sites',{sites},'protocols',{protocols},'anon',anon,'quarantine',{qpass}); 
   R = cat_io_dcm2bids_parallel('run',C,Psnr,job.nproc); clear C
   fprintf('\nDCM2BIDS - import done.\n')
 
@@ -306,6 +319,10 @@ function out = cat_io_dcm2bids(job)
       cat_io_dcm2bids_bids('writePrivateTSV',Pb, fullfile(Poutdir,BIDSsubdirprivate,'private_participants.tsv')); 
     end
   end
+
+  % table of the quarantined sessions (left-right mirrored scans, see
+  % quarantineWrite) and the participants without exported session
+  quarantineWrite(Ptbldir,Pmdbdir,Poutdir,R,job); 
 
   
   if job.opts.output > 0  &&  isfield(job,'BIDSsubdir')
@@ -355,6 +372,25 @@ function out = cat_io_dcm2bids(job)
       fprintf('\nDCM2BIDS - Render BIDS NIFTIs done.\n')
     end
 
+    % CAT preprocessing of the T1w scans as final and independent step 
+    % (own derivatives directory of the CAT version, see 
+    % cat_io_dcm2bids_pp_cat)
+    if isfield(job.opts,'cat') && job.opts.cat.run && job.opts.output > 1
+      cat_io_dcm2bids_pp_cat('processBIDS',fullfile(Poutdir,job.BIDSdir,job.BIDSsubdir),job.opts,job.nproc);
+    end
+
+    % participant reports of the sessions (only in the private directory,
+    % see cat_io_dcm2bids_participantreport), if not written by the 
+    % packages (e.g. after the CAT preprocessing, see cat_io_dcm2bids_parallel)
+    if isfield(job.opts,'participantreport') && job.opts.participantreport.run && job.opts.output > 1 && ...
+        ~(isfield(R,'reported') && R.reported)
+      try
+        cat_io_dcm2bids_participantreport('writeReports',Poutdir,job);
+      catch e
+        cat_io_cprintf('err','  Participant reports failed: %s (%s, line %d)\n',e.message,e.stack(1).name,e.stack(1).line);
+      end
+    end
+
     % converted raw BIDS images for the batch dependencies
     out = cat_io_dcm2bids_bids('getBIDSoutputs', fullfile(Poutdir,job.BIDSdir,job.BIDSsubdir), out ); 
   end
@@ -362,6 +398,7 @@ function out = cat_io_dcm2bids(job)
   % readme files of the new directories of this run
   cat_io_dcm2bids_readme('writeReadmes',Poutdir,job);
   if disclaimer, cat_io_cprintf('err','\n%s\n',cat_io_dcm2bids_readme('disclaimer',job.opts.anonymize)); end
+  quarantineSummary(Ptbldir,job.opts); 
   if R.failed > 0
     cat_io_cprintf('err','DCM2BIDS - %d subject package(s) failed (see above).\n',R.failed); 
   end
@@ -373,22 +410,23 @@ function [same,job] = checkPreviousSetting(Popts,job)
     load(Popts,'opts','dicts');
     % only the fields that define the BIDS structure (independent of other, 
     % e.g. removed or new, fields of the current or previous options)
-    KEEP   = {'ProtocolFileName','anonymize','gzipe','tolerance','subIDform','sesunit'}; 
+    KEEP   = {'anonymize','gzipe','tolerance','subIDform','sesunit'}; 
     KEEP   = intersect(KEEP,intersect(fieldnames(job.opts),fieldnames(opts))); % fields of both settings
-    jopts0 = rmfield(job.opts, setdiff(fieldnames(job.opts),KEEP));  
-    opts0  = rmfield(opts    , setdiff(fieldnames(opts),KEEP));  
-    same   = cat_io_structEqual(jopts0,opts0) && cat_io_structEqual(job.dicts,dicts);
+    jopts0 = rmfield(job.opts, setdiff(fieldnames(job.opts),KEEP));
+    opts0  = rmfield(opts    , setdiff(fieldnames(opts),KEEP));
+    samed  = cat_io_structEqual(settingDicts(job.dataset),settingDicts(dicts));
+    same   = cat_io_structEqual(jopts0,opts0) && samed;
     if ~same
       cat_io_cprintf('err', ...
         ['  Error the underlying structure of the BIDS directory does not fit to the current settings. \n', ...
          '  Use previous parameters or change the output directory! \n\n']);
       if ~cat_io_structEqual(jopts0,opts0)
-        cat_io_cprintf('blue','    Old opts:\n'); 
-        disp(opts); 
+        cat_io_cprintf('blue','    Old opts:\n');
+        disp(opts);
       end
-      if ~cat_io_structEqual(job.dicts,dicts)
-        cat_io_cprintf('blue','    Old dicts:\n'); 
-        disp(dicts); 
+      if ~samed
+        cat_io_cprintf('blue','    Old protocol directories and site dictionary:\n');
+        disp(dicts);
       end
       
       % Request user interaction 
@@ -399,7 +437,7 @@ function [same,job] = checkPreviousSetting(Popts,job)
         for fni = 1:numel(KEEP) % only the BIDS-defining fields
           if isfield(opts,KEEP{fni}), job.opts.(KEEP{fni}) = opts.(KEEP{fni}); end
         end
-        job.dicts = dicts; 
+        for fn = intersect(fieldnames(dicts),{'Pprotocoldirs','Pcenterdict'})', job.dataset.(fn{1}) = dicts.(fn{1}); end
       elseif p == 2
         spm_figure('Clear',spm_figure('FindWin','Interactive'));
         p = spm_input('Really replace old directory?',1,'Yes|No',[1 0],2); 
@@ -416,7 +454,7 @@ function [same,job] = checkPreviousSetting(Popts,job)
     % cat_io_dcm2bids_bids): scans can get other names, whereas the files of
     % their former names remain in the BIDS directory
     if same
-      S = load(Popts); prot = protocolSetup(job.dicts.Pprotocoldirs);
+      S = load(Popts); prot = protocolSetup(job.dataset.Pprotocoldirs);
       nver = cat_io_dcm2bids_bids('namingVersion');
       if ~isfield(S,'protocols'), S.protocols = cell(0,2); end
       if ~isfield(S,'namingver'), S.namingver = 1; end % (BIDS directories without version)
@@ -470,11 +508,25 @@ end
 % =========================================================================
 function saveSetting(Popts,job)
 %saveSetting. Settings of the BIDS directory (see checkPreviousSetting):
-%  options, dictionaries, protocol definitions, and the BIDS naming version.
-  opts = job.opts; dicts = job.dicts;
-  protocols = protocolSetup(job.dicts.Pprotocoldirs);
+%  options, protocol directories and site dictionary (dicts), protocol
+%  definitions, and the BIDS naming version.
+  opts = job.opts;
+  dicts = struct('Pprotocoldirs',{job.dataset.Pprotocoldirs},'Pcenterdict',{job.dataset.Pcenterdict});
+  protocols = protocolSetup(job.dataset.Pprotocoldirs);
   namingver = cat_io_dcm2bids_bids('namingVersion');
   save(Popts,'opts','dicts','protocols','namingver');
+end
+% =========================================================================
+function d = settingDicts(d)
+%settingDicts. Names of the protocol directories and of the site dictionary
+%  of the settings (job.dataset, or dicts of the saved settings), i.e.
+%  independent of their location (e.g. of the protocols of CAT), as the
+%  protocol definitions are compared separately (see protocolSetup).
+  p = {}; c = {};
+  if isfield(d,'Pprotocoldirs'), p = cellstr(d.Pprotocoldirs); end
+  if isfield(d,'Pcenterdict'),   c = cellstr(d.Pcenterdict);   end
+  p = regexprep(p(~cellfun('isempty',p)),'[\\/]+$',''); c = c(~cellfun('isempty',c));
+  d = struct('Pprotocoldirs',{reshape(spm_file(p,'filename'),1,[])},'Pcenterdict',{reshape(spm_file(c,'filename'),1,[])});
 end
 % =========================================================================
 function prot = protocolSetup(Pprodictdirs)
@@ -546,6 +598,100 @@ function Psnr = ageLimit(Psnr,Pmdbdir,Ptbldir,opts)
     save(Pmat,'T');
     cat_io_dcm2bids_helper('writeTable',fullfile(Ptbldir,['excluded_sessions.' opts.tableformat]),[hdr; T],opts.tableformat);
   end
+end
+% =========================================================================
+function [pass,open,T,hdr] = quarantineRead(Ptbldir,opts,quiet)
+%quarantineRead. Sessions of the table quarantined_sessions.<fmt> of the
+%  database tables (cumulative, see quarantineWrite) that are passed by the
+%  user (pass, Action "pass", i.e. exported as they are) and the open
+%  sessions (open, without action), with a reminder of the open sessions
+%  (not for quiet). T is the table (rows) with the actions of the user and
+%  hdr its header.
+  if ~exist('quiet','var'), quiet = 0; end
+  hdr  = {'Session','Subject','BIDSsession','Tested','Scans','Action'}; 
+  pass = {}; open = {}; T = cell(0,numel(hdr)); 
+  Pmat = fullfile(Ptbldir,'quarantined_sessions.mat'); 
+  if ~exist(Pmat,'file'), return; end
+  S = load(Pmat,'T'); T = S.T; 
+  if isempty(T), return; end
+  % actions of the user (table, e.g. edited by a spreadsheet program)
+  Ptbl = fullfile(Ptbldir,['quarantined_sessions.' opts.tableformat]); 
+  if exist(Ptbl,'file')
+    try
+      if strcmpi(opts.tableformat,'tsv'), dl = sprintf('\t'); else, dl = ','; end
+      U  = readcell(Ptbl,'FileType','text','Delimiter',dl,'DatetimeType','text','DurationType','text'); 
+      U(cellfun(@(x) isa(x,'missing'),U)) = {''}; 
+      cs = find(strcmp(U(1,:),'Session'),1); ca = find(strcmp(U(1,:),'Action'),1); 
+      for ri = 2:size(U,1)
+        ti = find(strcmp(T(:,1),char(string(U{ri,cs}))),1); 
+        if ~isempty(ti), T{ti,6} = lower(strtrim(char(string(U{ri,ca})))); end
+      end
+    catch e
+      cat_io_cprintf('warn','  The table %s is not readable (%s), i.e. the actions of the former run are used.\n',Ptbl,e.message); 
+    end
+  end
+  T(~strcmp(T(:,6),'pass'),6) = {''}; 
+  pass = T(strcmp(T(:,6),'pass'),1); open = T(~strcmp(T(:,6),'pass'),1); 
+  if ~isempty(open) && ~quiet
+    cat_io_cprintf('err',['  %d session(s) in quarantine (left-right mirrored scans, not exported), i.e. correct the ' ...
+      'DICOM data or set the Action "pass" in %s (see the end of the run).\n'],numel(open),Ptbl); 
+  end
+end
+% =========================================================================
+function quarantineWrite(Ptbldir,Pmdbdir,Poutdir,R,job)
+%quarantineWrite. Table quarantined_sessions.<fmt> of the database tables
+%  (cumulative) with the sessions of this run with left-right mirrored
+%  scans (R.quarantine, see quarantineSession in cat_io_dcm2bids_process)
+%  and the sessions of former runs that are not part of this run (the
+%  sessions of this run are tested again, i.e. a corrected session is
+%  removed): DB session, BIDS subject and session, date of the test, scans
+%  with their left-right difference d (see flipTest in 
+%  cat_io_dcm2bids_pp_anat), and the Action of the user ("pass": exported
+%  as they are, see quarantineRead). The rows of quarantined subjects
+%  without exported session are removed from the participants tables (see
+%  removeParticipants in cat_io_dcm2bids_bids).
+  [~,~,T,hdr] = quarantineRead(Ptbldir,job.opts,1); 
+  Pmat = fullfile(Ptbldir,'quarantined_sessions.mat'); 
+  Pj   = R.Pdbjson(~cellfun('isempty',R.Pdbjson)); 
+  uses = unique(cellfun(@(p) p(numel(Pmdbdir)+2:end),cellfun(@(p) fileparts(fileparts(p)),Pj,'UniformOutput',false), ...
+    'UniformOutput',false)); 
+  if ~isempty(T), T = T(~ismember(T(:,1),uses),:); end
+  Q = R.quarantine; Q = [Q{:}]; 
+  for qi = 1:numel(Q)
+    act = ''; if Q(qi).pass, act = 'pass'; end
+    T(end+1,:) = {Q(qi).Session, Q(qi).sub, Q(qi).ses, char(datetime('now','Format','yyyy-MM-dd')), Q(qi).Scans, act}; %#ok<AGROW>
+    for bsd = Q(qi).BIDSsubdir
+      if ~Q(qi).pass && ~isempty(bsd{1}) && ~exist(fullfile(Poutdir,bsd{1},Q(qi).sub),'dir')
+        cat_io_dcm2bids_bids('removeParticipants',fullfile(Poutdir,bsd{1},'participants.tsv'),{Q(qi).sub}); 
+        cat_io_dcm2bids_bids('removeParticipants',fullfile(Poutdir,strrep(bsd{1},fullfile(job.BIDSdir,job.BIDSsubdir), ...
+          fullfile([job.BIDSdir '-private'],job.BIDSsubdir)),'private_participants.tsv'),{Q(qi).sub}); 
+      end
+    end
+  end
+  if ~isempty(T) || exist(Pmat,'file')
+    [~,so] = sort(T(:,1)); T = T(so,:); 
+    save(Pmat,'T'); 
+    cat_io_dcm2bids_helper('writeTable',fullfile(Ptbldir,['quarantined_sessions.' job.opts.tableformat]),[hdr; T],job.opts.tableformat); 
+  end
+end
+% =========================================================================
+function quarantineSummary(Ptbldir,opts)
+%quarantineSummary. Summary of the open sessions of the quarantine (see
+%  quarantineRead) at the end of the run.
+  [~,open,T] = quarantineRead(Ptbldir,opts,1); 
+  if isempty(open), return; end
+  T = T(ismember(T(:,1),open),:); 
+  cat_io_cprintf('err',['\n%s\nDCM2BIDS - %d session(s) in QUARANTINE: left-right mirrored scans (some scans of the session ' ...
+    'fit the mirror of the anatomical scan better), i.e. the sessions are not exported and not processed. It is ' ...
+    'unknown which scans are mirrored (e.g. by a faulty export of the data provider). Check the scans of the ' ...
+    'database, correct the DICOM data (changed DICOM directories are imported again), or set the Action "pass" ' ...
+    'for a false alarm (exported as they are) in\n  %s\n'],repmat('=',1,154),size(T,1), ...
+    fullfile(Ptbldir,['quarantined_sessions.' opts.tableformat])); 
+  for ti = 1:min(size(T,1),50)
+    cat_io_cprintf('err','  %-70s %s\n',T{ti,1},T{ti,5}); 
+  end
+  if size(T,1) > 50, cat_io_cprintf('err','  ... and %d further sessions\n',size(T,1) - 50); end
+  cat_io_cprintf('err','%s\n',repmat('=',1,154)); 
 end
 % =========================================================================
 function V = sessionAge(Psnr)

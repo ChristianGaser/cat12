@@ -14,8 +14,9 @@ function varargout = cat_io_dcm2bids_tables(action,varargin)
 %                      coils, scan period, number of subjects, sessions, and
 %                      scans (also of the typical scan types opts.scantypes),
 %                      protocol status, and median ratings
-%    sites.json        template for the site dictionary (protocols/sites.json)
-%                      with the abbreviation of the dictionary or a proposal
+%    sites.json        template for the site dictionary (see DCM2BIDS/
+%                      studies/template/sites.json) with the abbreviation
+%                      of the dictionary or a proposal
 %    protocols.<fmt>   one row per protocol variant (see protocolVariant in
 %                      cat_io_dcm2bids_protocols) with the sites using it
 %                      and its main parameters (with the acquisition 

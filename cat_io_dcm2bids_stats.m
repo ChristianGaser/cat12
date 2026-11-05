@@ -3,9 +3,10 @@ function varargout = cat_io_dcm2bids_stats(action,varargin)
 %  Evaluations of the session data for the report tables and the report
 %  figure (see cat_io_dcm2bids_report and cat_io_dcm2bids_reportfig),
 %  i.e., descriptive quality control and no research results:
-%    volumeModel   robust linear model of measures (e.g. the relative
-%                  tissue volumes) by age and sex with the z-score of each
-%                  session (residual / robust SD), e.g. to find outliers
+%    volumeModel   robust linear (or quadratic) model of measures (e.g. 
+%                  the relative tissue volumes) by age and sex with the 
+%                  z-score of each session (residual / robust SD), e.g. to
+%                  find outliers
 %    homogeneity   sample homogeneity of the (modulated and normalized)
 %                  tissue maps as quartic mean Z-score (QMZ) of each map
 %                  as in cat_stat_homogeneity (with the scaling of the head
@@ -39,41 +40,44 @@ function [z,M] = volumeModel(Y,age,sex)
 %  measures) by age and sex with the z-score of each session, i.e., the
 %  residual divided by the robust SD of the residuals (NaN for missing
 %  values). The model needs at least 10 sessions with age (and an age
-%  range of more than one year). The sex (M/F) is modeled if there are at
-%  least 3 males and 3 females, where sessions of other or unknown sex are
-%  evaluated at the mean sex. Otherwise, the z-score is the robust z-score
-%  of the measure (median and MAD, at least 5 sessions). M (1 x k)
-%  describes the model of each column: method, number of sessions n of the
-%  model, coefficients b (intercept at the mean age and sex, slope per
-%  year, and sex effect male - female), mean age mage, mean male fraction
-%  mmale, and robust SD s.
+%  range of more than one year). Samples of at least 30 sessions with an
+%  age range of more than 20 years get a quadratic age term for the non-
+%  linear aging of the tissues (e.g. the inverted U of the WM volume). The
+%  sex (M/F) is modeled if there are at least 3 males and 3 females, where
+%  sessions of other or unknown sex are evaluated at the mean sex. 
+%  Otherwise, the z-score is the robust z-score of the measure (median and
+%  MAD, at least 5 sessions). M (1 x k) describes the model of each 
+%  column: method, number of sessions n of the model, coefficients b 
+%  (intercept at the mean age and sex, slope per year at the mean age, sex
+%  effect male - female, and quadratic age term per year^2), mean age 
+%  mage, mean male fraction mmale, and robust SD s.
   [n,k] = size(Y); age = double(age(:));
   male  = double(strcmpi(sex(:),'M'));
   known = double(strcmpi(sex(:),'M') | strcmpi(sex(:),'F'));
   z = nan(n,k);
-  M = repmat(struct('method','none','n',0,'b',nan(1,3),'mage',nan,'mmale',nan,'s',nan),1,k);
+  M = repmat(struct('method','none','n',0,'b',nan(1,4),'mage',nan,'mmale',nan,'s',nan),1,k);
   for ki = 1:k
     y  = double(Y(:,ki));
     va = isfinite(y) & isfinite(age);
     if sum(va) >= 10 && std(age(va)) > 1
       % robust linear model (age and sex) of the sessions with known sex
+      % (quadratic age term for larger samples with a broad age range)
       withsex = sum(male(va) & known(va)) >= 3 && sum(~male(va) & known(va)) >= 3;
       vf = va; if withsex, vf = va & known; end
+      quad = sum(vf) >= 30 && max(age(vf)) - min(age(vf)) > 20;
       M(ki).mage = mean(age(vf)); M(ki).mmale = mean(male(vf));
-      X  = [ones(n,1) age - M(ki).mage (male - M(ki).mmale) .* known];
-      [b,s] = robustFit(X(vf,1:2+withsex),y(vf));
-      M(ki).b = [reshape(b,1,[]) zeros(1,3-numel(b))]; M(ki).s = s; M(ki).n = sum(vf);
-      if withsex
-        M(ki).method = 'robust linear model (age, sex)';
-      else
-        M(ki).method = 'robust linear model (age)';
-      end
+      X  = [ones(n,1) age - M(ki).mage (male - M(ki).mmale) .* known (age - M(ki).mage).^2];
+      cols = find([true true withsex quad]);
+      [b,s] = robustFit(X(vf,cols),y(vf));
+      M(ki).b = zeros(1,4); M(ki).b(cols) = b; M(ki).s = s; M(ki).n = sum(vf);
+      tm = {'linear','quadratic'}; ts = {'age','age, sex'};
+      M(ki).method = sprintf('robust %s model (%s)',tm{1 + quad},ts{1 + withsex});
       z(va,ki) = (y(va) - X(va,:)*M(ki).b') / s;
     elseif sum(isfinite(y)) >= 5
       % robust z-score (median and MAD)
       vy = isfinite(y);
       M(ki).method = 'robust z-score (median, MAD)'; M(ki).n = sum(vy);
-      M(ki).b = [median(y(vy)) 0 0];
+      M(ki).b = [median(y(vy)) 0 0 0];
       M(ki).s = max(eps,1.4826 * median(abs(y(vy) - median(y(vy)))));
       z(vy,ki) = (y(vy) - M(ki).b(1)) / M(ki).s;
     end

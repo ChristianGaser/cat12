@@ -9,7 +9,8 @@ function varargout = cat_io_dcm2bids_bids(action,varargin)
 %  Output files: sessions.tsv of each subject (writeSubjectTSV, with SOR and
 %  the phenotypic data of cat_io_dcm2bids_phenotypic), 
 %  participants.tsv and the private participants table (writeParticipantTSV,
-%  writePrivateTSV), the IntendedFor references of BIDS inputs 
+%  writePrivateTSV), the removal of a session or participant, e.g. of a
+%  quarantined session (removeSession, removeParticipants), the IntendedFor references of BIDS inputs 
 %  (remapIntendedFor), dataset_description.json, README.md, 
 %  participants.json, and .bidsignore (writeDatasetFiles with the information
 %  of the imported BIDS datasets, see getBIDSsources), the generalized MRI
@@ -31,6 +32,8 @@ function varargout = cat_io_dcm2bids_bids(action,varargin)
 %    cat_io_dcm2bids_bids('writeSubjectTSV',Vjson,sub,ses,Poutdir,BIDSsubdir,anon,SOR,site,extra)
 %    cat_io_dcm2bids_bids('writeParticipantTSV',P,Pparticipants,anon)
 %    cat_io_dcm2bids_bids('writePrivateTSV',P,Pprivate)
+%    removed = cat_io_dcm2bids_bids('removeSession',Poutdir,BIDSsubdir,sub,ses)
+%    cat_io_dcm2bids_bids('removeParticipants',Ptsv,subs)
 %    sources = cat_io_dcm2bids_bids('getBIDSsources',roots)
 %    cat_io_dcm2bids_bids('writeDatasetFiles',Pbids,job,sources,convver)
 %    cat_io_dcm2bids_bids('checkStudy',ds)
@@ -43,7 +46,7 @@ function varargout = cat_io_dcm2bids_bids(action,varargin)
   switch action
     case {'bidsLabel','sessionLabel','setupDatatype','setupSuffix','entityString','setupTask','BIDSoutputs', ...
           'getBIDSoutputs','remapIntendedFor','writeSubjectTSV', ...
-          'writeParticipantTSV','writePrivateTSV','getBIDSsources', ...
+          'writeParticipantTSV','writePrivateTSV','removeSession','removeParticipants','getBIDSsources', ...
           'writeDatasetFiles','checkStudy','writeProtocols','gzipunzipOutputdata','namingVersion'}
       [varargout{1:nargout}] = feval(action,varargin{:});
     otherwise
@@ -681,6 +684,52 @@ function writePrivateTSV(P,Pprivate)
   % subreports
 end
 % =========================================================================
+function removed = removeSession(Poutdir,BIDSsubdir,sub,ses)
+%removeSession. Remove the session ses of the subject sub of the BIDS
+%  directory BIDSsubdir of the output Poutdir (raw data, derivatives, its
+%  row of the sessions file, and its participant reports in the private
+%  directory), e.g. a quarantined session (see
+%  quarantineSession in cat_io_dcm2bids_process), and the subject
+%  directories without further sessions (removed, the rows of the
+%  participants tables are removed by cat_io_dcm2bids, see
+%  removeParticipants).
+  removed = false;
+  if isempty(sub) || isempty(ses), return; end
+  Pbids = fullfile(Poutdir,BIDSsubdir);
+  Pder  = cat_io_dcm2bids_helper('derivativesDir',Pbids);
+  for P = {fullfile(Pbids,sub,ses), fullfile(Pder,sub,ses)}
+    if exist(P{1},'dir'), rmdir(P{1},'s'); end
+  end
+  % participant reports of the session (private directory, see
+  % cat_io_dcm2bids_participantreport)
+  D = dir(fullfile(Poutdir,regexprep(BIDSsubdir,'^([^/\\]+)','$1-private'),'participantreports', ...
+    [sub '_' ses '_participantreport_*.pdf']));
+  for di = 1:numel(D), delete(fullfile(D(di).folder,D(di).name)); end
+  Psessions = fullfile(Pbids,sub,sprintf('%s_sessions.tsv',sub));
+  if exist(Psessions,'file')
+    T = cat_io_csv(Psessions,'','',struct('delimiter','\t','convert2double',-1));
+    T = T([true; ~strcmp(T(2:end,1),ses)],:);
+    if size(T,1) > 1, cat_io_csv(Psessions,T,'','',struct('delimiter','\t','format','%g')); else, delete(Psessions); end
+  end
+  for P = {fullfile(Pbids,sub), fullfile(Pder,sub)} % (empty subject directories)
+    D = dir(P{1});
+    if exist(P{1},'dir') && all(ismember({D.name},{'.','..','.DS_Store'})), rmdir(P{1},'s'); end
+  end
+  removed = ~exist(fullfile(Pbids,sub),'dir');
+end
+% =========================================================================
+function removeParticipants(Ptsv,subs)
+%removeParticipants. Remove the rows of the subjects subs (participant_id,
+%  first column) of the table Ptsv (participants.tsv or the private
+%  participants table), e.g. of subjects without exported session (see
+%  removeSession). The other rows are kept as they are.
+  if ~exist(Ptsv,'file') || isempty(subs), return; end
+  L    = splitlines(cat_io_dcm2bids_helper('readText',Ptsv));
+  keep = ~ismember(regexprep(L,'\t.*$',''),subs); keep(1) = true;
+  if all(keep), return; end
+  cat_io_dcm2bids_helper('writeText',Ptsv,strjoin(L(keep),newline));
+end
+% =========================================================================
 function sources = getBIDSsources(roots)
 %getBIDSsources. Name, license, README text, and participants.json of the 
 %  imported BIDS datasets (for the dataset files of the output). 
@@ -815,7 +864,7 @@ end
 % =========================================================================
 function S = studyDescription(ds)
 %studyDescription. Non-empty BIDS fields of the study JSON ds.study (e.g.
-%  DCM2BIDS/study/cat_study_default.json) without the fields with a leading
+%  DCM2BIDS/studies/template/study.json) without the fields with a leading
 %  underscore (comments), where BIDS fields of the job (ds.Name etc. of
 %  scripts and batches of former versions) replace the fields of the JSON.
   S = struct();
@@ -833,7 +882,7 @@ function S = studyDescription(ds)
   end
   if ~isstruct(S) || ~isscalar(S), S = struct(); end
   fn = fieldnames(S); S = rmfield(S,fn(strncmp(fn,'x_',2))); % "_..." fields (named "x_..." by jsondecode)
-  fn = setdiff(fieldnames(ds),{'study','README','phenotypic','phenotypickeys','phenotypicdict'});
+  fn = setdiff(fieldnames(ds),{'Pprotocoldirs','Pcenterdict','study','README','phenotypic','phenotypickeys','phenotypicdict'});
   for fi = 1:numel(fn), S.(fn{fi}) = ds.(fn{fi}); end
 
   % only non-empty fields (texts, lists of texts, and other values), where

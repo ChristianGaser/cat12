@@ -10,8 +10,8 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
 %  realigned 
 %  volumes of 4D data resliced in memory (realignedVolumes, 
 %  realignedVolume), tables (updateTable, writeTable, and lists of 
-%  records with catRecords), and the software versions of the results
-%  (software).
+%  records with catRecords), the software versions of the results
+%  (software), and the vector PDF pages of figures (printPDF).
 %
 %  varargout = cat_io_dcm2bids_helper(action,varargin)
 %
@@ -44,6 +44,7 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
 %    cat_io_dcm2bids_helper('writeTable',Ptable,T,format)
 %    R = cat_io_dcm2bids_helper('catRecords',R,S)
 %    S = cat_io_dcm2bids_helper('software')
+%    cat_io_dcm2bids_helper('printPDF',fh,Ppdf,append)
 %
 %  See also cat_io_dcm2bids.
 
@@ -52,7 +53,7 @@ function varargout = cat_io_dcm2bids_helper(action,varargin)
           'niiHeaderInfo','niiVolume','prepNii','prepNiigz','gzipFile','exportNii','removeAcquisitionTime', ...
           'registerDerivative','derivativeIndex','diskSpeed','workSetup','workCheck','workClear','diskCheck', ...
           'conversionInfo','realignedVolumes','realignedVolume', ...
-          'updateTable','writeTable','catRecords','software'}
+          'updateTable','writeTable','catRecords','software','printPDF'}
       [varargout{1:nargout}] = feval(action,varargin{:});
     otherwise
       error('cat_io_dcm2bids_helper:unknownAction','Unknown action "%s".',action);
@@ -955,4 +956,36 @@ function Y = realignedVolume(V,t)
     Y = spm_sample_vol(Vt,X{1},X{2},X{3},1);
   end
   Y = reshape(Y,d); Y(~V(1).rmask) = 0;
+end
+% =========================================================================
+function printPDF(fh,Ppdf,append)
+%printPDF. Vector PDF of the figure fh with its paper size (PaperSize,
+%  e.g. A4, as exportgraphics halves the page in batch mode on HiDPI
+%  systems) as file Ppdf, or appended as page to Ppdf for append (merged
+%  by the PDFBox library of MATLAB, otherwise exportgraphics with its own
+%  page size).
+  if nargin < 3, append = false; end
+  if ~append || ~exist(Ppdf,'file'), printVector(fh,Ppdf); return; end
+  Ptmp = [tempname '.pdf']; Pm = [tempname '.pdf']; printVector(fh,Ptmp);
+  try
+    m = org.apache.pdfbox.multipdf.PDFMergerUtility;
+    m.addSource(java.io.File(Ppdf)); m.addSource(java.io.File(Ptmp)); m.setDestinationFileName(Pm);
+    m.mergeDocuments(org.apache.pdfbox.io.MemoryUsageSetting.setupMainMemoryOnly());
+    movefile(Pm,Ppdf,'f');
+  catch e
+    cat_io_cprintf('warn','  PDF page not merged (%s), exportgraphics is used.\n',e.message);
+    exportgraphics(fh,Ppdf,'ContentType','vector','Append',true);
+  end
+  if exist(Ptmp,'file'), delete(Ptmp); end
+  if exist(Pm,'file'), delete(Pm); end
+end
+% -------------------------------------------------------------------------
+function printVector(fh,P)
+%printVector. Vector PDF of the figure fh (-vector, -painters in older
+%  MATLAB versions).
+  try
+    print(fh,P,'-dpdf','-vector');
+  catch
+    print(fh,P,'-dpdf','-painters');
+  end
 end

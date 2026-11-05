@@ -33,8 +33,8 @@ function varargout = cat_io_dcm2bids_phenotypic(action,varargin)
 %  (if their values are dates), visits (numbers up to 99), or names. Dates
 %  are read as yyyy-mm-dd, yyyymmdd, dd.mm.yyyy, or dd/mm/yyyy (with an
 %  optional time). Empty key values are ignored. See
-%  DCM2BIDS/study/cat_study_phenotype.csv as template (with the column
-%  description cat_study_phenotype.json).
+%  DCM2BIDS/studies/template/phenotype.csv as template (with the column
+%  description phenotype.json).
 %
 %  Key values can be patterns: "*" (all values), wildcards "*" and "?"
 %  (e.g. 002_S_* for the participants of the ADNI site 002, or Muster*), a
@@ -58,8 +58,8 @@ function varargout = cat_io_dcm2bids_phenotypic(action,varargin)
 %
 %  The column names are the table headers without a description in
 %  brackets at their end (e.g. "SEX (male = 1, female = 2)" gives SEX).
-%  The phenotype dictionary (JSON file, e.g. DCM2BIDS/study/
-%  cat_study_phenotype_dictionary.json, see readDictionary) renames columns
+%  The phenotype dictionary (JSON file, e.g. DCM2BIDS/studies/
+%  phenotype_dictionary.json, see readDictionary) renames columns
 %  with a variant of a field name (e.g. gender -> sex) and recodes their
 %  values with a variant of a level (e.g. weiblich -> F). Numbers are only
 %  recoded by the coding of each table, i.e. the description of the header
@@ -232,7 +232,7 @@ function S = dbSessions(Pmdbdir)
       'name',{nameWords(V.PatientName)},'birth',birth,'date',dateshift(parseDate(char(V.ScanDate)),'start','day'), ...
       'time',parseDate(fieldText(V,'AcquisitionDateTime')),'study',normID(V.StudyID),'visit',0); %#ok<AGROW>
   end
-  for p = unique({S.part})
+  for p = reshape(unique({S.part}),1,[]) % (no loop without sessions)
     i = find(strcmp({S.part},p{1}));
     t = datenum([S(i).date]); t(isnan(t)) = inf; %#ok<DATNM>
     h = datenum([S(i).time]); h(isnan(h)) = inf; %#ok<DATNM>
@@ -299,7 +299,7 @@ end
 % =========================================================================
 function Dict = readDictionary(P,verb)
 %readDictionary. Phenotype dictionary of the JSON file P (e.g.
-%  DCM2BIDS/study/cat_study_phenotype_dictionary.json) as structure array
+%  DCM2BIDS/studies/phenotype_dictionary.json) as structure array
 %  with the column name, its normalized variants (incl. the name), and the
 %  codes of its levels with their normalized variants (incl. the code and
 %  its description). Variants with only digits are ignored, as numeric
